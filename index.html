@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d1020">
+<title>Ball Run</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#0d1020;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#fff;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+  canvas#cv{position:fixed;left:0;top:0;width:100%;height:100%;display:block}
+  .hide{display:none!important}
+  .panel{background:rgba(10,14,30,.72);border-radius:12px;padding:8px 12px;font-size:13px;line-height:1.4}
+  button{font:inherit;color:inherit;cursor:pointer}
+  #hl{position:fixed;left:10px;top:10px;top:max(10px,env(safe-area-inset-top))}
+  #mapname{font-weight:700;font-size:15px}
+  #roominfo,#onlineinfo{opacity:.85}
+  #hr{position:fixed;right:10px;top:10px;top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  #timer{text-align:center;padding:6px 14px;min-width:132px}
+  #timer small{display:block;opacity:.75;font-size:10px;letter-spacing:1px;text-transform:uppercase}
+  #nexttimer{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+  #nextat{opacity:.65;font-size:11px}
+  #timer.low #nexttimer{color:#ffb020}
+  #timer.final{background:rgba(120,0,0,.85);animation:flash 1s steps(1) infinite;transform-origin:top right;transform:scale(2.3)}
+  #timer.final #nexttimer{color:#fff;font-size:34px}
+  @keyframes flash{0%{opacity:1}50%{opacity:.35}}
+  #btns{display:flex;gap:6px}
+  #btns button{background:rgba(10,14,30,.72);border:0;border-radius:10px;padding:8px 13px;font-size:15px}
+  #btns button:hover{background:rgba(60,70,110,.85)}
+  #notice{position:fixed;left:50%;top:84px;transform:translateX(-50%) translateY(-8px);background:rgba(20,26,60,.94);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:10px 18px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:min(92vw,520px);text-align:center;z-index:6}
+  #notice.show{opacity:1;transform:translateX(-50%)}
+  #notice.urgent{background:rgba(120,20,20,.95)}
+  #settings{position:fixed;right:10px;top:140px;width:300px;max-height:calc(100% - 150px);overflow:auto;z-index:8;-webkit-user-select:none;padding:12px 14px;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+  #settings h4{margin:14px 0 6px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:.6}
+  #settings .sh{display:flex;justify-content:space-between;align-items:center;font-size:15px}
+  #settings .sh button{background:none;border:0;font-size:18px;opacity:.7}
+  #settings .row{margin:8px 0}
+  #settings label.t{display:block;font-size:12px;opacity:.8;margin-bottom:4px}
+  .dim{opacity:.6}
+  input[type=text]{background:#0c1024;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:8px 10px;font:inherit;font-size:16px;width:100%;-webkit-user-select:text;user-select:text}
+  .colors{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .colors .c{width:24px;height:24px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+  .colors .c.on{border-color:#fff}
+  .colors input[type=color]{width:30px;height:26px;border:0;padding:0;background:none;cursor:pointer}
+  .pats{display:flex;gap:6px;flex-wrap:wrap}
+  .pats canvas{width:38px;height:38px;border-radius:50%;cursor:pointer;border:3px solid transparent;background:#1b2038}
+  .pats canvas.on{border-color:#fff}
+  .you{display:flex;gap:12px;align-items:center}
+  #preview{width:64px;height:64px;flex:none;background:#1b2038;border-radius:12px}
+  .sw2{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0;font-size:13.5px;cursor:pointer}
+  .sw2 input{position:absolute;opacity:0;pointer-events:none}
+  .sw2 i{width:40px;height:22px;border-radius:11px;background:#3a4066;position:relative;flex:none;transition:background .15s}
+  .sw2 i:after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+  .sw2 input:checked+i{background:#2fbf71}
+  .sw2 input:checked+i:after{left:21px}
+  .sw2.sub{margin-left:12px}
+  select{background:#0c1024;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 8px;font:inherit;font-size:14px}
+  input[type=range]{width:100%;margin:4px 0}
+  .zrow{display:flex;align-items:center;gap:8px}
+  .zrow button,.btn{background:rgba(255,255,255,.12);border:0;border-radius:8px;padding:6px 11px;font-size:13px}
+  .btn.danger{background:#b3261e}
+  .btn.full{width:100%;margin-top:6px}
+  #feed{position:fixed;left:10px;bottom:14px;bottom:max(14px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:4px;pointer-events:none;max-width:60vw}
+  .msg{background:rgba(10,14,30,.7);border-radius:8px;padding:4px 10px;font-size:13px;animation:fade 8s forwards}
+  .msg.join{border-left:4px solid #4cd964}.msg.leave{border-left:4px solid #ff5b5b}
+  .msg.fin{border-left:4px solid #ffd93d}.msg.bad{border-left:4px solid #ff9f43}
+  @keyframes fade{0%{opacity:0}4%{opacity:1}85%{opacity:1}100%{opacity:0}}
+  #netstat{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);background:#b8860b;padding:5px 14px;border-radius:14px;font-size:12px;font-weight:600;max-width:90vw;text-align:center}
+  #touch{position:fixed;left:0;right:0;bottom:0;height:160px;pointer-events:none}
+  #touch button{position:absolute;bottom:26px;bottom:calc(26px + env(safe-area-inset-bottom));width:84px;height:84px;border-radius:50%;border:0;background:rgba(255,255,255,.22);font-size:34px;pointer-events:auto;touch-action:none}
+  #touch button.on{background:rgba(255,255,255,.5)}
+  #tl{left:16px}#tr{left:110px}#tj{right:20px;width:104px;height:104px;font-size:20px;font-weight:700}
+  .overlay{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:14px}
+  #intro{background:rgba(5,8,22,.72);z-index:10}
+  #confirm{background:rgba(5,8,22,.78);z-index:30}
+  .card{background:#151a33;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px 24px;width:min(520px,100%);max-height:100%;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);-webkit-overflow-scrolling:touch}
+  .card h1{margin:0 0 6px;font-size:26px;letter-spacing:2px}
+  .card h3{margin:0 0 8px;font-size:19px}
+  .card p{margin:8px 0;font-size:14.5px;line-height:1.5;opacity:.92}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:12px 0;font-size:13.5px}
+  .legend span{display:flex;align-items:center;gap:8px}
+  .lg{width:18px;height:18px;border-radius:4px;flex:none;border:1px solid rgba(255,255,255,.4);display:inline-block}
+  kbd{background:rgba(255,255,255,.14);border-radius:6px;padding:1px 6px;font-size:12px;border:1px solid rgba(255,255,255,.2)}
+  .ok{display:block;width:100%;margin-top:14px;padding:12px;border:0;border-radius:12px;background:#2fbf71;font-size:18px;font-weight:800;letter-spacing:2px}
+  .ok:hover{background:#38d982}
+  .dont{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;cursor:pointer;opacity:.9}
+  .btns{display:flex;gap:10px;margin-top:14px}.btns button{flex:1;padding:11px;border:0;border-radius:10px;background:rgba(255,255,255,.14);font-size:15px;font-weight:600}
+  .btns button.danger{background:#b3261e}
+  #fade{position:fixed;left:0;top:0;right:0;bottom:0;background:#000;opacity:0;pointer-events:none;transition:opacity .9s ease;z-index:50;display:flex;align-items:center;justify-content:center;text-align:center;flex-direction:column}
+  #fade.on{opacity:1;pointer-events:auto}
+  #fade b{font-size:clamp(26px,6vw,46px);letter-spacing:3px}
+  #fade span{opacity:.8;margin-top:10px;font-size:17px}
+  #finishbanner{position:fixed;left:50%;top:24%;transform:translateX(-50%);background:rgba(20,20,10,.88);border:2px solid #ffd93d;border-radius:18px;padding:16px 28px;text-align:center;z-index:5}
+  #finishbanner h2{margin:0 0 4px;font-size:28px;color:#ffd93d}
+  #finishbanner div{font-size:18px}
+  #unsupported{display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:#0d1020;z-index:100;align-items:center;justify-content:center;text-align:center;padding:24px;flex-direction:column}
+  #unsupported h2{margin:0 0 10px;font-size:26px}
+  #unsupported p{max-width:440px;line-height:1.55;opacity:.9;margin:6px 0}
+  @media (max-width:640px){
+    #settings{left:8px;right:8px;width:auto;top:auto;bottom:8px;max-height:62%}
+    #timer.final{transform:scale(1.7)}
+    #notice{top:92px}
+  }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hl" class="panel"><div id="mapname">Loading…</div><div id="roominfo"></div><div id="onlineinfo"></div></div>
+<div id="hr">
+  <div id="timer" class="panel"><small>Session ends in</small><div id="nexttimer">--:--:--</div><div id="nextat"></div></div>
+  <div id="btns"><button id="btnSettings" title="Settings (Esc)">⚙</button><button id="btnInfo" title="How to play">?</button></div>
+</div>
+<div id="notice"></div>
+
+<div id="settings" class="panel hide">
+  <div class="sh"><b>Settings</b><button id="btnCloseSet" title="Close">✕</button></div>
+
+  <h4>You</h4>
+  <div class="you"><canvas id="preview" width="64" height="64"></canvas>
+    <div style="flex:1"><label class="t" for="setName">Name <span class="dim">(up to 6, blank is fine)</span></label><input type="text" id="setName" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div></div>
+  <div class="row"><label class="t">Ball colour</label><div class="colors" id="colors1"></div></div>
+  <div class="row"><label class="t">Pattern</label><div class="pats" id="pats"></div></div>
+  <div class="row"><label class="t">Pattern colour</label><div class="colors" id="colors2"></div></div>
+
+  <h4>View</h4>
+  <div class="row"><label class="t">Zoom <span id="zoomval" class="dim"></span></label>
+    <div class="zrow"><button id="zOut">−</button><input type="range" id="setZoom" min="0.5" max="2" step="0.05"><button id="zIn">+</button></div>
+    <div class="dim" style="font-size:11px;margin-top:2px">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div>
+  <label class="sw2"><span>Show name tags</span><input type="checkbox" id="setTags"><i></i></label>
+  <label class="sw2"><span>Low-power mode <span class="dim">(30 fps)</span></span><input type="checkbox" id="setLow"><i></i></label>
+  <label class="sw2"><span>Show welcome popup at start</span><input type="checkbox" id="setIntro"><i></i></label>
+
+  <h4>Multiplayer</h4>
+  <label class="sw2"><span>Multiplayer <span class="dim">(play with others)</span></span><input type="checkbox" id="setMp"><i></i></label>
+  <div class="dim" style="font-size:12px" id="mpstats"></div>
+
+  <h4>Bots <span class="dim" style="text-transform:none;letter-spacing:0">(only you see them)</span></h4>
+  <label class="sw2"><span>Bots</span><input type="checkbox" id="setBots"><i></i></label>
+  <div class="row" style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13.5px">How many</span>
+    <select id="setBotAmt"><option value="0">Few (1–3)</option><option value="1">Some (2–7)</option><option value="2">Many (6–12)</option></select></div>
+  <label class="sw2"><span>Mark bots with a robot icon</span><input type="checkbox" id="setBotMark"><i></i></label>
+
+  <h4>Other</h4>
+  <button class="btn full" id="btnReset">Reset all settings to default</button>
+</div>
+
+<div id="feed"></div>
+<div id="netstat" class="hide"></div>
+<div id="touch" class="hide"><button id="tl">◀</button><button id="tr">▶</button><button id="tj">JUMP</button></div>
+<div id="finishbanner" class="hide"><h2>🏁 YOU FINISHED!</h2><div id="fbText"></div></div>
+
+<div id="intro" class="overlay hide"><div class="card">
+  <h1>⚪ BALL RUN</h1>
+  <p>You're a ball. Everyone online shares one huge world and is trying to find the <b>checkered flag</b>. Nothing tells you where it is — or where anyone else is. Pick a direction and explore.</p>
+  <div class="legend">
+    <span><i class="lg" style="background:#a07a52"></i>Ground — safe</span>
+    <span><i class="lg" style="background:#8fe3ff"></i>Ice — you slide</span>
+    <span><i class="lg" style="background:#ff4a1c"></i>Lava — back to spawn</span>
+    <span><i class="lg" style="background:#2e7be6"></i>Water — hold jump to swim</span>
+  </div>
+  <p><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd> move &nbsp; <kbd>W</kbd> / <kbd>↑</kbd> / <kbd>Space</kbd> jump (hold = higher). Get the <i>middle</i> of your ball onto a block, or you'll roll off. On a phone, use the on-screen buttons.</p>
+  <p>A new map starts every 6 hours; you'll get warnings before it ends and everyone moves together. Open ⚙ to change your name, colours, zoom, bots and more.</p>
+  <label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
+  <button class="ok" id="btnOk">OK</button>
+</div></div>
+
+<div id="confirm" class="overlay hide"><div class="card" style="width:min(420px,100%)">
+  <h3 id="cfTitle"></h3><p id="cfText"></p>
+  <div class="btns"><button id="cfNo">Cancel</button><button id="cfYes" class="danger">Yes</button></div>
+</div></div>
+
+<div id="fade"><b>SESSION OVER</b><span id="fadeText"></span></div>
+
+<div id="unsupported">
+  <h2>This game can't run here</h2>
+  <p>Ball Run needs a reasonably modern browser, and it looks like this device or browser can't run it.</p>
+  <p>Please try a different device, or open this page in an up-to-date Chrome, Edge, Firefox or Safari.</p>
+</div>
+<noscript><div style="position:fixed;left:0;top:0;right:0;bottom:0;background:#0d1020;color:#fff;z-index:200;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px">This game needs JavaScript. Please enable it, or try a different browser or device.</div></noscript>
+
+<script>
+/* Plain ES5 safety net: if the browser is too old to run the game, say so instead of showing a blank page. */
+(function () {
+  var ok = true;
+  try {
+    var c = document.createElement('canvas');
+    if (!(c.getContext && c.getContext('2d'))) ok = false;
+    if (!window.Uint8Array || !Math.imul || !window.requestAnimationFrame) ok = false;
+  } catch (e) { ok = false; }
+  window.__ballFail = function () { var d = document.getElementById('unsupported'); if (d) d.style.display = 'flex'; };
+  if (!ok) window.__ballFail();
+  window.onerror = function () { if (!window.__ballOk) window.__ballFail(); };
+  setTimeout(function () { if (!window.__ballOk) window.__ballFail(); }, 5000);
+})();
+</script>
+<script src="maps.js"></script>
+<script src="physics.js"></script>
+<script>
+(function () {
+'use strict';
+const TS = BallMaps.TS, R = BallMaps.R, P = BallPhysics, STEP = 1 / 120, SLOT_MS = 6 * 3600 * 1000;
+const $ = id => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+const COL = { solid: '#a07a52', ice: '#8fe3ff', lava: '#ff4a1c', water: '#2e7be6' };
+const PALETTE = ['#ff4d4d', '#ff8a3d', '#ffd23d', '#a3e635', '#34d058', '#2ec4b6', '#38bdf8', '#4a7dff', '#8b5cf6', '#d946ef', '#ff6fb5', '#ffffff', '#bfc5d2', '#7a5c3b', '#2b2b2b', '#000000'];
+const PATTERNS = ['Solid', 'Stripe', 'Half', 'Dots', 'Rings', 'Checker'];
+const HEX = /^#[0-9a-f]{6}$/i;
+const NAME_BAD = /[^A-Za-z0-9À-ɏ _\-.!']/g;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const TAU = 6.2832;
+
+/* ================= settings ================= */
+function defaults() {
+  return { name: 'Ball' + ri(10, 99), color: PALETTE[ri(0, 10)], color2: '#ffffff', pat: 0, zoom: 1,
+    tags: true, low: false, intro: true, mp: true, bots: false, botAmt: 1, botMark: false };
+}
+let settings = defaults();
+try { const o = JSON.parse(localStorage.getItem('ballrun3') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
+function normalize() {
+  const d = defaults();
+  settings.name = String(settings.name == null ? '' : settings.name).replace(NAME_BAD, '').slice(0, 6);
+  if (!HEX.test(settings.color)) settings.color = d.color;
+  if (!HEX.test(settings.color2)) settings.color2 = '#ffffff';
+  settings.pat = clamp(settings.pat | 0, 0, PATTERNS.length - 1);
+  settings.zoom = clamp(+settings.zoom || 1, 0.5, 2);
+  settings.botAmt = clamp(settings.botAmt | 0, 0, 2);
+  ['tags', 'low', 'intro', 'mp', 'bots', 'botMark'].forEach(k => { settings[k] = !!settings[k]; });
+}
+normalize();
+const save = () => { try { localStorage.setItem('ballrun3', JSON.stringify(settings)); } catch (e) {} };
+
+/* ================= state ================= */
+const S = {
+  mode: 'play', slot: -1, map: null, world: null, b: null, t: 0, nextAt: 0, pending: -1, pendingNext: 0, fadeT0: 0,
+  dead: 0, started: false, runStart: 0, finished: false, finT: 0, finMs: 0, camx: 0, camy: 0, water: []
+};
+const inp = { left: false, right: false, jump: false };
+const others = new Map();
+const net = { online: 0, peak: 0 };
+let myId = 0, online = false, ws = null, clockOff = 0, retry = 0, retryTimer = 0, room = { id: 0, n: 1, max: 50 };
+let netState = 'connecting', lastSent = '';
+let params = null; try { params = new URLSearchParams(location.search); } catch (e) {}
+const forced = params ? params.get('map') : null;      // testing only: ?map=1
+const forcedLeft = params ? params.get('left') : null; // testing only: ?left=75 (seconds until session end, solo)
+const nowMs = () => Date.now() + clockOff;
+
+/* ================= small helpers ================= */
+const fmtT = ms => { ms = Math.max(0, ms); const m = Math.floor(ms / 60000), s = (ms % 60000) / 1000; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
+const fmtHMS = ms => { const s = Math.ceil(ms / 1000), p = n => (n < 10 ? '0' : '') + n; return Math.floor(s / 3600) + ':' + p(Math.floor(s / 60) % 60) + ':' + p(s % 60); };
+const who = n => n || 'A player';
+function addFeed(text, cls) {
+  const d = document.createElement('div'); d.className = 'msg ' + (cls || ''); d.textContent = text;
+  const f = $('feed'); f.appendChild(d);
+  while (f.children.length > 6) f.removeChild(f.firstChild);
+  setTimeout(() => { if (d.parentNode) d.parentNode.removeChild(d); }, 8000);
+}
+let noticeT = 0;
+function notice(text, urgent) {
+  const n = $('notice'); n.textContent = text; n.className = 'show' + (urgent ? ' urgent' : '');
+  clearTimeout(noticeT); noticeT = setTimeout(() => { n.className = ''; }, 7000);
+}
+
+/* ================= ball sprites (cached, so many balls stay cheap) ================= */
+const SPN = 96, SPK = (SPN / 2 - 4) / R, SPW = SPN / SPK;
+const sprites = new Map();
+function makeSprite(c1, c2, pat) {
+  const c = document.createElement('canvas'); c.width = c.height = SPN; const g = c.getContext('2d');
+  g.translate(SPN / 2, SPN / 2); g.scale(SPK, SPK);
+  g.beginPath(); g.arc(0, 0, R, 0, TAU); g.fillStyle = c1; g.fill();
+  g.save(); g.beginPath(); g.arc(0, 0, R, 0, TAU); g.clip(); g.fillStyle = c2;
+  if (pat === 1) g.fillRect(-R, -3.5, 2 * R, 7);
+  else if (pat === 2) g.fillRect(0, -R, R, 2 * R);
+  else if (pat === 3) { [[-5, -4], [5, -4], [0, 6]].forEach(p => { g.beginPath(); g.arc(p[0], p[1], 3.2, 0, TAU); g.fill(); }); }
+  else if (pat === 4) { g.beginPath(); g.arc(0, 0, 9, 0, TAU); g.fill(); g.fillStyle = c1; g.beginPath(); g.arc(0, 0, 4.5, 0, TAU); g.fill(); }
+  else if (pat === 5) { g.fillRect(-R, -R, R, R); g.fillRect(0, 0, R, R); }
+  g.restore();
+  g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.arc(R * 0.6, 0, 2.4, 0, TAU); g.fill();   // marker so you can see it roll
+  g.lineWidth = 2; g.strokeStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.arc(0, 0, R - 1, 0, TAU); g.stroke();
+  return c;
+}
+function sprite(c1, c2, pat) {
+  const k = c1 + c2 + pat; let s = sprites.get(k);
+  if (!s) { if (sprites.size > 150) sprites.clear(); s = makeSprite(c1, c2, pat); sprites.set(k, s); }
+  return s;
+}
+function drawBall(x, y, rot, c1, c2, pat, alpha, me) {
+  ctx.save(); ctx.translate(x, y);
+  if (me) {   // you are always on top and ringed, so you can always find yourself
+    ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.arc(0, 0, R + 3.8, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, R + 2, 0, TAU); ctx.stroke();
+  }
+  ctx.rotate(rot); ctx.globalAlpha = alpha;
+  ctx.drawImage(sprite(c1, c2, pat), -SPW / 2, -SPW / 2, SPW, SPW);
+  ctx.restore();
+}
+function drawTag(name, x, y) {
+  ctx.font = 'bold 12px system-ui,Arial,sans-serif'; ctx.textAlign = 'center';
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.strokeText(name, x, y);
+  ctx.fillStyle = '#fff'; ctx.fillText(name, x, y);
+}
+function drawBotMark(x, y) {   // a robot-head icon — players can't get this, so it always means "bot"
+  ctx.save(); ctx.translate(x, y);
+  ctx.strokeStyle = '#06323b'; ctx.lineWidth = 2; ctx.fillStyle = '#22d3ee';
+  ctx.beginPath(); ctx.moveTo(0, -5); ctx.lineTo(0, -9); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, -10, 2.2, 0, TAU); ctx.fill();
+  ctx.fillRect(-6.5, -5, 13, 10); ctx.strokeRect(-6.5, -5, 13, 10);
+  ctx.fillStyle = '#06323b'; ctx.fillRect(-4, -2.5, 2.6, 2.6); ctx.fillRect(1.4, -2.5, 2.6, 2.6);
+  ctx.restore();
+}
+function drawNameAndMark(name, isBot, x, y) {
+  const hasTag = settings.tags && name;
+  if (hasTag) drawTag(name, x, y - R - 7);
+  if (isBot && settings.botMark) drawBotMark(x, y - R - (hasTag ? 25 : 12));
+}
+
+/* ================= map / game flow ================= */
+const TH = [60, 30, 10, 5, 1];   // minutes-before-the-end warnings
+let warned = {};
+function respawn() {
+  const m = S.map;
+  S.b = P.newBody(m.start[0] + rnd(-80, 80), m.start[1]);   // one shared default spawn for everyone
+  S.dead = 0;
+}
+function initWarnings() {
+  const rem = S.nextAt - nowMs();
+  warned = {};
+  TH.forEach(t => { if (rem <= t * 60000) warned[t] = true; });   // thresholds already passed when you arrived are skipped
+  if (rem <= 3600000 && rem > 5000) {
+    const mins = Math.round(rem / 60000);
+    notice(mins < 1 ? 'This session ends in less than a minute.' : 'This session ends in ' + mins + ' minute' + (mins === 1 ? '' : 's') + '.', rem < 600000);
+  }
+}
+function loadMap(slot, next) {
+  const m = BallMaps.generate(slot % BallMaps.count);
+  S.slot = slot; S.map = m; S.world = P.makeWorld(m);
+  if (next) S.nextAt = next;
+  S.started = false; S.finished = false; S.mode = 'play';
+  bots.length = 0; botNextSpawn = rnd(1, 4);
+  respawn();
+  S.camx = S.b.x; S.camy = S.b.y;
+  $('finishbanner').classList.add('hide');
+  $('mapname').textContent = m.name;
+  $('fade').classList.remove('on');
+  initWarnings();
+}
+function die() { if (S.dead > 0 || S.mode !== 'play') return; S.dead = 0.5; }
+function finishRun() {
+  S.finished = true; S.finT = 6;
+  S.finMs = S.started ? performance.now() - S.runStart : 0;
+  $('fbText').textContent = 'Time ' + fmtT(S.finMs);
+  $('finishbanner').classList.remove('hide');
+  if (online && ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'finish', m: S.slot, ms: Math.round(S.finMs) }));
+}
+function startTransition(slot, next) {
+  S.pending = slot; S.pendingNext = next || (S.nextAt + SLOT_MS);
+  if (S.mode === 'fade') return;
+  S.mode = 'fade'; S.fadeT0 = performance.now(); bots.length = 0;
+  $('finishbanner').classList.add('hide');
+  $('fadeText').textContent = 'Next map: ' + BallMaps.names[slot % BallMaps.count];
+  $('fade').classList.add('on');
+  others.forEach(o => { o.seen = 0; o.t0 = 0; });
+}
+
+const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text'; };
+const blocked = () => !$('intro').classList.contains('hide') || !$('confirm').classList.contains('hide') || typing();
+
+function update(dt) {
+  S.t += dt;
+  if (S.mode !== 'play') return;
+  botsTick(dt);
+  if (S.dead > 0) { S.dead -= dt; if (S.dead <= 0) respawn(); return; }
+  if (S.finished) {
+    S.finT -= dt;
+    if (S.finT <= 0) { S.finished = false; S.started = false; respawn(); $('finishbanner').classList.add('hide'); return; }
+  }
+  const b = S.b, bl = blocked();
+  const ax = bl ? 0 : (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
+  const jheld = !bl && inp.jump;
+  if (!S.started && !S.finished && (ax !== 0 || b.jbuf > 0)) { S.started = true; S.runStart = performance.now(); }
+  const ev = P.step(b, S.world, ax, jheld, dt);
+  if (ev.lava || b.y > S.map.killY) { die(); return; }
+  const f = S.map.finish;
+  if (!S.finished && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) finishRun();
+}
+
+/* ================= bots (filler players that exist only in YOUR browser) ================= */
+// Nothing about bots is ever sent to the server, so other players never see yours (and you never see theirs).
+const bots = [];
+const HUMAN = ['Max', 'Luna', 'Kai', 'Zoe', 'Finn', 'Nova', 'Leo', 'Mia', 'Axel', 'Ruby', 'Jax', 'Ivy', 'Otto', 'Eli', 'Sky', 'Dex', 'Remy', 'Tess', 'Bo', 'Nico', 'Pip', 'Gus', 'Vee', 'Cleo', 'Rex', 'Juno', 'Milo', 'Ash', 'Fox', 'Zed'];
+const WEIRD = ['xX_', 'n0pe', 'qwerty', 'zzz', 'a', '...', 'lol', 'asdf', 'TEST', 'uwu', '???', 'x_x', 'ok', 'hi', 'P1ayer', 'bob', '.', '_', '~~', 'No1', 'u8', 'dfgh'];
+const BOT_RANGES = [[1, 3], [2, 7], [6, 12]];
+let botTarget = 3, botNextSpawn = 1, botNextRetarget = 30;
+const isSolid = t => t === 1 || t === 3 || t === 4;
+function newBotTarget() { const r = BOT_RANGES[settings.botAmt]; botTarget = ri(r[0], r[1]); botNextRetarget = rnd(25, 70); }
+function botName() {
+  const r = Math.random();
+  if (r < 0.12) return '';                       // some people use no name
+  if (r < 0.30) return pick(WEIRD);
+  let n = pick(HUMAN); if (Math.random() < 0.4) n += ri(0, 99);
+  return n.slice(0, 6);
+}
+function botRuns(A) {
+  const w = S.world, out = []; let s = null;
+  for (let x = A[0]; x < A[0] + A[2]; x++) {
+    if (isSolid(P.tile(w, x, A[1]))) { if (s === null) s = x; } else if (s !== null) { out.push([s, x - 1]); s = null; }
+  }
+  if (s !== null) out.push([s, A[0] + A[2] - 1]);
+  return out;
+}
+const runMid = r => (r[0] + r[1] + 1) / 2 * TS;
+const inRun = (x, r) => { const t = Math.floor(x / TS); return t >= r[0] && t <= r[1]; };
+function botPlan(bt) {
+  const path = S.map.path, A = path[bt.i], B = path[bt.i + 1];
+  if (!B) { bt.far = null; bt.bRun = botRuns(A)[0]; bt.tcx = S.map.flag[0] * TS; return; }
+  const dir = Math.sign((B[0] + B[2] / 2) - (A[0] + A[2] / 2)) || 1;
+  const ra = botRuns(A), rb = botRuns(B);
+  let water = false;
+  for (let x = A[0]; x < A[0] + A[2]; x++) if (P.tile(S.world, x, A[1]) === 5) { water = true; break; }
+  bt.far = water ? (dir > 0 ? ra[ra.length - 1] : ra[0]) : null;
+  bt.bRun = dir > 0 ? rb[0] : rb[rb.length - 1];
+}
+function botSpawnAt(bt) {
+  const m = S.map;
+  if (bt.pro && bt.i > 0) { const A = m.path[bt.i]; bt.b = P.newBody((A[0] + 0.8) * TS, A[1] * TS - R - 1); }
+  else { bt.i = 0; bt.b = P.newBody(m.start[0] + rnd(-80, 80), m.start[1]); }
+  botPlan(bt); bt.jumpAt = 0; bt.idle = rnd(0.2, 1.2);
+}
+function spawnBot() {
+  let name, tries = 0;
+  do { name = botName(); } while (tries++ < 20 && name && (bots.some(b => b.name === name) || name === settings.name));
+  const wander = Math.random() < 0.3, pro = !wander && Math.random() < 0.25;
+  const bt = {
+    name, color: pick(PALETTE.slice(0, 14)), color2: pick(PALETTE), pat: ri(0, PATTERNS.length - 1),
+    type: wander ? 'wander' : 'runner', pro, err: pro ? 0.01 : 0.08,
+    life: wander ? rnd(30, 120) : pro ? rnd(420, 900) : rnd(90, 360),
+    age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0, finished: false, leaveT: 0,
+    wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null
+  };
+  botSpawnAt(bt); bots.push(bt);
+  addFeed(who(bt.name) + ' joined', 'join');
+}
+function botLand(bt) {
+  const b = bt.b, path = S.map.path, tx = Math.floor(b.x / TS), ty = Math.floor((b.y + R + 2) / TS);
+  for (let j = Math.max(0, bt.i - 2); j <= Math.min(path.length - 1, bt.i + 8); j++) {
+    const A = path[j];
+    if (ty === A[1] && tx >= A[0] && tx < A[0] + A[2]) {
+      bt.lostT = 0;
+      if (j !== bt.i) { bt.i = j; botPlan(bt); if (Math.random() < 0.1) bt.idle = rnd(0.4, 1.6); }
+      return true;
+    }
+  }
+  return false;
+}
+function botStep(bt, dt) {
+  const b = bt.b, w = S.world;
+  bt.age += dt;
+  if (bt.dead > 0) { bt.dead -= dt; if (bt.dead <= 0) botSpawnAt(bt); return; }
+  let ax = 0, jheld = false;
+  if (bt.finished) { /* enjoying the win */ }
+  else if (bt.idle > 0) { bt.idle -= dt; }
+  else if (bt.type === 'wander') {
+    bt.wT -= dt;
+    if (bt.wT <= 0) { bt.wT = rnd(0.4, 1.6); const r = Math.random(); bt.wax = r < 0.4 ? -1 : r < 0.8 ? 1 : 0; }
+    const sx = S.map.start[0];
+    if (b.x < sx - 300) bt.wax = 1; else if (b.x > sx + 300) bt.wax = -1;
+    ax = bt.wax;
+    if (b.ground && ax) {
+      const below = P.tile(w, Math.floor((b.x + ax * (R + 6)) / TS), Math.floor((b.y + R + 6) / TS));
+      if (below === 0 || below === 2 || below === 5) { bt.wax = ax = -ax; }
+    }
+    if (b.ground && Math.random() < dt * 1.1) { b.jbuf = 0.12; bt.wHigh = Math.random() < 0.5; }
+    jheld = bt.wHigh;
+  } else {
+    if (b.ground && b.flat && !botLand(bt)) { bt.lostT += dt; if (bt.lostT > 5) { bt.type = 'wander'; bt.life = Math.min(bt.life, bt.age + 60); } }
+    if (b.ground && b.flat) {
+      if (bt.far && !inRun(b.x, bt.far)) bt.tcx = runMid(bt.far);
+      else if (bt.bRun) bt.tcx = S.map.path[bt.i + 1] ? runMid(bt.bRun) : S.map.flag[0] * TS;
+    }
+    const d = Math.sign(bt.tcx - b.x) || 1;
+    ax = d;
+    if (b.water) jheld = true;
+    else if (b.ground) {
+      const below = P.tile(w, Math.floor((b.x + d * (R + 4)) / TS), Math.floor((b.y + R + 6) / TS));
+      const ahead = P.tile(w, Math.floor((b.x + d * (R + 26)) / TS), Math.floor(b.y / TS));
+      const onTarget = Math.abs(bt.tcx - b.x) < 6;
+      if (!onTarget && (below === 0 || below === 2 || below === 5 || ahead === 2 || isSolid(ahead))) {
+        if (bt.jumpAt === 0) {
+          bt.jumpAt = bt.age + (Math.random() < bt.err ? rnd(0.1, 0.3) : 0.0001);   // sometimes mistime it, like a person
+          bt.tap = (below === 2) || (ahead === 2 && below !== 0 && below !== 5);    // short hops over lava, full jumps over gaps
+        }
+        if (bt.age >= bt.jumpAt) { b.jbuf = 0.12; bt.hold = 0; bt.jumpAt = 0; jheld = true; }
+      } else bt.jumpAt = 0;
+      if (b.flat && b.gType !== 3 && onTarget) ax = 0;
+    } else {
+      bt.hold += dt; jheld = !bt.tap || bt.hold < 0.13;
+      const dx = bt.tcx - b.x, stop = 0.5 * b.vx * b.vx / 1800 + 6;
+      if (Math.abs(dx) < stop && Math.sign(b.vx) === Math.sign(dx)) ax = -Math.sign(b.vx);
+    }
+  }
+  const ev = P.step(b, w, ax, jheld, dt);
+  if (ev.lava || b.y > S.map.killY) { bt.dead = 0.5; return; }
+  const f = S.map.finish;
+  if (!bt.finished && bt.type === 'runner' && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) {
+    bt.finished = true; bt.leaveT = rnd(4, 12);
+    addFeed('🏁 ' + who(bt.name) + ' finished', 'fin');
+  }
+}
+function botsTick(dt) {
+  if (!settings.bots) { if (bots.length) bots.length = 0; return; }
+  botNextRetarget -= dt;
+  if (botNextRetarget <= 0) newBotTarget();
+  botNextSpawn -= dt;
+  if (bots.length < botTarget && botNextSpawn <= 0) { spawnBot(); botNextSpawn = rnd(1.5, 6); }
+  for (let i = bots.length - 1; i >= 0; i--) {
+    const bt = bots[i];
+    botStep(bt, dt);
+    if (bt.finished) bt.leaveT -= dt;
+    const leave = (bt.finished && bt.leaveT <= 0) || (!bt.finished && bt.age > bt.life) || (bots.length > botTarget && Math.random() < dt * 0.05);
+    if (leave) { bots.splice(i, 1); addFeed(who(bt.name) + ' left', 'leave'); }
+  }
+}
+
+/* ================= input (keyboard, mouse wheel, touch) ================= */
+function pressJump() { if (!blocked() && S.mode === 'play' && S.b) S.b.jbuf = 0.12; }
+const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump' };
+const KEYMAP2 = { arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right', arrowup: 'jump', w: 'jump', ' ': 'jump', spacebar: 'jump', left: 'left', right: 'right', up: 'jump' };
+function keyOf(e) { if (e.code && KEYMAP[e.code]) return KEYMAP[e.code]; return KEYMAP2[String(e.key || '').toLowerCase()] || null; }
+function setZoom(z) { settings.zoom = clamp(Math.round(z * 100) / 100, 0.5, 2); $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%'; save(); }
+addEventListener('keydown', e => {
+  if (typing()) { if (e.key === 'Enter' || e.key === 'Escape') document.activeElement.blur(); return; }
+  if (e.key === 'Escape') {
+    if (!$('confirm').classList.contains('hide')) $('cfNo').click(); else if ($('intro').classList.contains('hide')) toggleSettings();
+    e.preventDefault(); return;
+  }
+  if (e.key === '-' || e.key === '_') { setZoom(settings.zoom - 0.1); return; }
+  if (e.key === '=' || e.key === '+') { setZoom(settings.zoom + 0.1); return; }
+  const k = keyOf(e);
+  if (!k) return;
+  e.preventDefault();
+  if (k === 'jump') { if (!inp.jump) pressJump(); inp.jump = true; } else inp[k] = true;
+});
+addEventListener('keyup', e => { const k = keyOf(e); if (k) inp[k] = false; });
+addEventListener('blur', () => { inp.left = inp.right = inp.jump = false; });
+document.addEventListener('visibilitychange', () => { if (document.hidden) inp.left = inp.right = inp.jump = false; });
+cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
+document.addEventListener('touchmove', e => { if (!e.target.closest || !e.target.closest('#settings, .card')) e.preventDefault(); }, { passive: false });
+document.addEventListener('contextmenu', e => { if (!typing()) e.preventDefault(); });
+
+function bindTouch(id, key) {
+  const b = $(id);
+  const down = e => { e.preventDefault(); b.classList.add('on'); if (key === 'jump' && !inp.jump) pressJump(); inp[key] = true; };
+  const up = e => { e.preventDefault(); b.classList.remove('on'); inp[key] = false; };
+  if (window.PointerEvent) {
+    b.addEventListener('pointerdown', down);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => b.addEventListener(n, up));
+  } else {   // older iPhones / browsers without pointer events
+    b.addEventListener('touchstart', down, { passive: false });
+    b.addEventListener('touchend', up, { passive: false }); b.addEventListener('touchcancel', up, { passive: false });
+  }
+}
+bindTouch('tl', 'left'); bindTouch('tr', 'right'); bindTouch('tj', 'jump');
+function showTouch() { $('touch').classList.toggle('hide', !(('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && matchMedia('(pointer: coarse)').matches))); }
+
+/* ================= UI: popup, settings, confirm ================= */
+let cfCb = null;
+function askConfirm(title, text, yes, cb) {
+  $('cfTitle').textContent = title; $('cfText').textContent = text; $('cfYes').textContent = yes; cfCb = cb;
+  $('confirm').classList.remove('hide');
+}
+$('cfNo').onclick = () => { $('confirm').classList.add('hide'); cfCb = null; };
+$('cfYes').onclick = () => { $('confirm').classList.add('hide'); const f = cfCb; cfCb = null; if (f) f(); };
+
+$('btnOk').onclick = () => { settings.intro = !$('dontShow').checked; $('setIntro').checked = settings.intro; save(); $('intro').classList.add('hide'); };
+$('btnInfo').onclick = () => { $('dontShow').checked = !settings.intro; $('intro').classList.remove('hide'); };
+function toggleSettings() { $('settings').classList.toggle('hide'); }
+$('btnSettings').onclick = toggleSettings;
+$('btnCloseSet').onclick = () => $('settings').classList.add('hide');
+
+function sendInfo() {
+  if (!online || !ws || ws.readyState !== 1) return;
+  const msg = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
+  if (msg === lastSent) return;
+  lastSent = msg; ws.send(msg);
+}
+const previewCtx = $('preview').getContext('2d');
+function refreshLook() {
+  previewCtx.clearRect(0, 0, 64, 64);
+  previewCtx.drawImage(sprite(settings.color, settings.color2, settings.pat), 0, 0, 64, 64);
+  const pats = $('pats').children;
+  for (let i = 0; i < pats.length; i++) {
+    const g = pats[i].getContext('2d'); g.clearRect(0, 0, 38, 38);
+    g.drawImage(sprite(settings.color, settings.color2, i), 0, 0, 38, 38);
+    pats[i].className = i === settings.pat ? 'on' : '';
+  }
+  ['colors1', 'colors2'].forEach((id, n) => {
+    const key = n ? 'color2' : 'color';
+    const kids = $(id).children;
+    for (let i = 0; i < PALETTE.length; i++) kids[i].className = 'c' + (PALETTE[i] === settings[key] ? ' on' : '');
+  });
+}
+function buildLook() {
+  [['colors1', 'color'], ['colors2', 'color2']].forEach(([id, key]) => {
+    const box = $(id); box.innerHTML = '';
+    PALETTE.forEach(c => {
+      const d = document.createElement('div'); d.className = 'c'; d.style.background = c;
+      d.onclick = () => { settings[key] = c; save(); refreshLook(); sendInfo(); };
+      box.appendChild(d);
+    });
+    const cp = document.createElement('input'); cp.type = 'color'; cp.value = settings[key]; cp.title = 'Custom colour';
+    cp.oninput = () => { settings[key] = cp.value; refreshLook(); };
+    cp.onchange = () => { save(); sendInfo(); };
+    box.appendChild(cp);
+  });
+  const pb = $('pats'); pb.innerHTML = '';
+  PATTERNS.forEach((n, i) => {
+    const c = document.createElement('canvas'); c.width = c.height = 38; c.title = n;
+    c.onclick = () => { settings.pat = i; save(); refreshLook(); sendInfo(); };
+    pb.appendChild(c);
+  });
+}
+function syncUI() {
+  $('setName').value = settings.name;
+  $('setTags').checked = settings.tags; $('setLow').checked = settings.low; $('setIntro').checked = settings.intro;
+  $('setMp').checked = settings.mp; $('setBots').checked = settings.bots; $('setBotAmt').value = String(settings.botAmt);
+  $('setBotMark').checked = settings.botMark;
+  $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%';
+  buildLook(); refreshLook();
+}
+function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); if (fn) fn(); }; }
+bindToggle('setTags', 'tags'); bindToggle('setLow', 'low'); bindToggle('setIntro', 'intro');
+bindToggle('setBotMark', 'botMark');
+bindToggle('setBots', 'bots', () => { bots.length = 0; if (settings.bots) { newBotTarget(); botNextSpawn = 0.8; } });
+$('setBotAmt').onchange = () => { settings.botAmt = +$('setBotAmt').value; save(); newBotTarget(); };
+$('setZoom').oninput = () => setZoom(+$('setZoom').value);
+$('zOut').onclick = () => setZoom(settings.zoom - 0.1);
+$('zIn').onclick = () => setZoom(settings.zoom + 0.1);
+$('setName').addEventListener('input', () => { const v = $('setName').value.replace(NAME_BAD, '').slice(0, 6); if (v !== $('setName').value) $('setName').value = v; settings.name = v; save(); });
+$('setName').addEventListener('change', sendInfo);
+$('setMp').onchange = () => {
+  if ($('setMp').checked) { setMultiplayer(true); return; }
+  $('setMp').checked = true;
+  askConfirm('Turn off multiplayer?', "Multiplayer is the main point of this game. If you turn it off, you'll be hidden from everyone, you won't see anyone else, and you'll play completely alone. You can turn it back on any time.", 'Turn off', () => { setMultiplayer(false); $('setMp').checked = false; });
+};
+$('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every setting back to its default (including your name, colours, zoom and the welcome popup).', 'Reset', () => {
+  const wasMp = settings.mp;
+  settings = defaults(); normalize(); save(); bots.length = 0; syncUI(); showTouch();
+  if (!wasMp) { retry = 0; connect(); }
+  lastSent = ''; sendInfo(); addFeed('Settings reset to default', 'bad');
+});
+
+/* ================= networking ================= */
+function setNet(state) {
+  netState = state;
+  const n = $('netstat');
+  if (state === 'online' || state === 'solo') { n.classList.add('hide'); return; }
+  n.classList.remove('hide');
+  n.textContent = state === 'connecting' ? 'Connecting to the server…' : (location.protocol === 'file:' ? 'Offline test mode — no server needed. Open ⚙ and turn on Bots to fill the room.' : 'No server found — playing solo (retrying…). Open ⚙ and turn on Bots to fill the room.');
+}
+function dropConnection() {
+  if (ws) { const s = ws; ws = null; try { s.close(); } catch (e) {} }
+  online = false; others.clear(); lastSent = '';
+}
+function setMultiplayer(on) {
+  settings.mp = on; save();
+  if (on) { retry = 0; setNet('connecting'); connect(); addFeed('Multiplayer on', 'join'); }
+  else { dropConnection(); setNet('solo'); addFeed('Multiplayer off — you are playing solo', 'bad'); }
+}
+function connect() {
+  if (!settings.mp || ws) return;
+  if (location.protocol === 'file:' || !('WebSocket' in window)) { setNet('offline'); return; }
+  let sock;
+  try { sock = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host); }
+  catch (e) { scheduleRetry(); return; }
+  ws = sock;
+  sock.binaryType = 'arraybuffer';
+  sock.onopen = () => { if (sock === ws) sock.send(JSON.stringify({ t: 'hello', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat })); };
+  sock.onmessage = e => { if (sock !== ws) return; if (typeof e.data !== 'string') { onBin(e.data); return; } let m; try { m = JSON.parse(e.data); } catch (x) { return; } onMsg(m); };
+  sock.onclose = () => {
+    if (sock !== ws) return;
+    ws = null;
+    if (online) addFeed('Disconnected — reconnecting…', 'bad');
+    online = false; others.clear();
+    if (settings.mp) { setNet('offline'); scheduleRetry(); }
+  };
+  sock.onerror = () => {};
+}
+function scheduleRetry() {
+  if (retryTimer || !settings.mp) return;
+  retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(10000, 1500 + retry * 1500));
+}
+setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
+
+const newOther = (name, color, color2, pat) => ({ name: name || '', color: HEX.test(color) ? color : '#ccc', color2: HEX.test(color2) ? color2 : '#fff', pat: pat | 0, x: 0, y: 0, cx: 0, cy: 0, px: 0, py: 0, t0: 0, rot: 0, seen: 0, dead: 0 });
+function onBin(buf) {   // compact position update: [1][slot u16][ id u32, x u16, y u16 ] ...
+  const dv = new DataView(buf);
+  if (buf.byteLength < 3 || dv.getUint8(0) !== 1) return;
+  const sl = dv.getUint16(1, true);
+  const okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;
+  if (sl !== okSlot) return;
+  const t = performance.now();
+  for (let off = 3; off + 8 <= buf.byteLength; off += 8) {
+    const id = dv.getUint32(off, true);
+    if (id === myId) continue;
+    const x = dv.getUint16(off + 4, true) * 2, y = dv.getUint16(off + 6, true);
+    let o = others.get(id);
+    if (!o) { o = newOther('', '#ccc', '#fff', 0); others.set(id, o); }
+    if (!o.seen) { o.cx = x; o.cy = y; o.t0 = 0; }
+    o.dur = o.t0 ? clamp(t - o.t0, 120, 450) : 200;
+    o.px = o.cx; o.py = o.cy; o.t0 = t; o.seen = t;
+    if (y === 65535) o.dead = 1; else { o.dead = 0; o.x = x; o.y = y; }
+  }
+}
+function onMsg(m) {
+  switch (m.t) {
+    case 'welcome':
+      online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
+      net.online = m.online; net.peak = m.peak;
+      settings.name = m.name; $('setName').value = m.name; save();
+      lastSent = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
+      others.clear();
+      m.players.forEach(p => others.set(p.id, newOther(p.name, p.color, p.color2, p.pat)));
+      setNet('online');
+      addFeed('You joined Room ' + m.room, 'join');
+      if (forcedLeft === null) S.nextAt = m.next;
+      if (m.slot !== S.slot && forced === null) loadMap(m.slot, m.next);
+      break;
+    case 'join': others.set(m.id, newOther(m.name, m.color, m.color2, m.pat)); room.n = m.n; addFeed(who(m.name) + ' joined', 'join'); break;
+    case 'leave': others.delete(m.id); room.n = m.n; addFeed(who(m.name) + ' left', 'leave'); break;
+    case 'info': { const o = others.get(m.id); if (o) { o.name = m.name; if (HEX.test(m.color)) o.color = m.color; if (HEX.test(m.color2)) o.color2 = m.color2; o.pat = m.pat | 0; } break; }
+    case 'stats': net.online = m.online; net.peak = m.peak; break;
+    case 'newmap': clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; startTransition(m.slot, m.next); break;
+    case 'fin':
+      if (m.id === myId) { $('fbText').textContent = 'Place #' + m.rank + ' · Time ' + fmtT(m.ms); addFeed('You finished #' + m.rank + '!', 'fin'); }
+      else addFeed('🏁 ' + who(m.name) + ' finished #' + m.rank, 'fin');
+      break;
+  }
+}
+let lastSend = { x: 0, y: 0, d: 0, t: 0 };
+setInterval(() => {   // share my position (only when it changed, a few times a second)
+  if (!online || !ws || ws.readyState !== 1 || S.mode !== 'play' || !S.b) return;
+  const x = Math.round(S.b.x), y = Math.round(S.b.y), d = S.dead > 0 ? 1 : 0, t = performance.now();
+  if (x === lastSend.x && y === lastSend.y && d === lastSend.d && t - lastSend.t < 8000) return;
+  lastSend = { x, y, d, t };
+  ws.send('{"t":"p","m":' + S.slot + ',"x":' + x + ',"y":' + y + ',"d":' + d + '}');
+}, 200);
+
+/* ================= drawing (everything is a flat colour) ================= */
+function drawTiles(camL, camT, vw, vh) {
+  const w = S.world, W = w.W, water = S.water; water.length = 0;
+  const x0 = Math.max(0, Math.floor(camL / TS)), x1 = Math.min(W - 1, Math.floor((camL + vw) / TS));
+  const y0 = Math.max(0, Math.floor(camT / TS)), y1 = Math.min(w.H - 1, Math.floor((camT + vh) / TS));
+  for (let ty = y0; ty <= y1; ty++) {
+    for (let tx = x0; tx <= x1; tx++) {
+      const t = w.grid[ty * W + tx];
+      if (!t) continue;
+      const px = tx * TS, py = ty * TS;
+      if (t === 5) { water.push(px, py, P.tile(w, tx, ty - 1) !== 5 ? 1 : 0); continue; }
+      if (t === 4) {
+        const h = TS / 2;
+        for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) { ctx.fillStyle = ((tx * 2 + i + ty * 2 + j) & 1) ? '#111' : '#fff'; ctx.fillRect(px + i * h, py + j * h, h + 0.5, h + 0.5); }
+        continue;
+      }
+      ctx.fillStyle = t === 1 ? COL.solid : t === 3 ? COL.ice : COL.lava;
+      ctx.fillRect(px, py, TS + 0.5, TS + 0.5);
+      if (t !== 2 && w.grid[(ty - 1) * W + tx] === 0 && ty > 0) { ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(px, py, TS + 0.5, 4); }   // lit top edge = walkable
+    }
+  }
+  const sy = S.map.killY - 70;   // lava sea at the very bottom of the world
+  if (camT + vh > sy) { ctx.fillStyle = COL.lava; ctx.fillRect(camL - 10, sy, vw + 20, camT + vh - sy + 20); }
+}
+function drawWater() {
+  const wt = S.water;
+  ctx.globalAlpha = 0.6; ctx.fillStyle = COL.water;
+  for (let i = 0; i < wt.length; i += 3) ctx.fillRect(wt[i], wt[i + 1], TS + 0.5, TS + 0.5);
+  ctx.globalAlpha = 1; ctx.fillStyle = '#9cc8ff';
+  for (let i = 0; i < wt.length; i += 3) if (wt[i + 2]) ctx.fillRect(wt[i], wt[i + 1], TS + 0.5, 3);
+}
+function drawFinishFlag() {
+  const f = S.map.flag, fx = f[0] * TS, by = f[1] * TS, ph = 200, cell = 24;
+  ctx.fillStyle = '#eee'; ctx.fillRect(fx - 4, by - ph, 8, ph);
+  for (let c = 0; c < 6; c++) for (let r = 0; r < 4; r++) { ctx.fillStyle = ((c + r) & 1) ? '#111' : '#fff'; ctx.fillRect(fx + 4 + c * cell, by - ph + r * cell, cell + 0.5, cell + 0.5); }
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(fx + 4, by - ph, 6 * cell, 4 * cell);
+}
+
+let lastFrame = performance.now(), lastDraw = lastFrame, acc = 0, errCount = 0;
+function frame(nowT) {
+  requestAnimationFrame(frame);
+  try {
+    const dt = Math.min(0.1, (nowT - lastFrame) / 1000); lastFrame = nowT;
+    acc += dt;
+    while (acc >= STEP) { update(STEP); acc -= STEP; }
+    if (S.mode === 'fade' && nowT - S.fadeT0 > 2300) loadMap(S.pending, S.pendingNext);
+    if (settings.low && nowT - lastDraw < 30) return;       // low-power mode: ~30 fps
+    render(Math.min(0.1, (nowT - lastDraw) / 1000), nowT); lastDraw = nowT;
+    errCount = 0;
+  } catch (e) { if (++errCount > 30 && window.__ballFail) window.__ballFail(); }
+}
+
+function render(dt, nowT) {
+  if (!S.map) return;
+  const dpr = settings.low ? 1 : Math.min(2, window.devicePixelRatio || 1), sw = window.innerWidth, sh = window.innerHeight;
+  if (cv.width !== Math.round(sw * dpr) || cv.height !== Math.round(sh * dpr)) { cv.width = Math.round(sw * dpr); cv.height = Math.round(sh * dpr); }
+  // Zoomed-in by default (about 12 tiles top to bottom); the Zoom setting scales this.
+  const sc = clamp(clamp(Math.min(sh / 480, sw / 700), 0.9, 2.6) * settings.zoom, 0.3, 5);
+  const vw = sw / sc, vh = sh / sc, b = S.b;
+
+  const k = 1 - Math.exp(-7 * dt);
+  S.camx += (b.x + b.vx * 0.25 - S.camx) * k;
+  S.camy += (b.y + clamp(b.vy * 0.12, -60, 90) - S.camy) * k;
+  const ww = S.world.W * TS;
+  const cx = ww > vw ? clamp(S.camx, vw / 2, ww - vw / 2) : ww / 2;
+  const camL = cx - vw / 2, camT = S.camy - vh / 2;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = S.map.bg; ctx.fillRect(0, 0, sw, sh);
+  ctx.setTransform(dpr * sc, 0, 0, dpr * sc, -camL * dpr * sc, -camT * dpr * sc);
+  drawTiles(camL, camT, vw, vh);
+  drawFinishFlag();
+
+  if (S.mode === 'play') {
+    const m = 50;
+    others.forEach(o => {            // other players (drawn first, so everyone goes behind you)
+      if (!o.seen || o.dead) return;
+      const u = clamp((nowT - o.t0) / (o.dur || 200), 0, 1);
+      const nx = o.px + (o.x - o.px) * u, ny = o.py + (o.y - o.py) * u;
+      o.rot += (nx - o.cx) / R; o.cx = nx; o.cy = ny;
+      if (nx < camL - m || nx > camL + vw + m || ny < camT - m * 2 || ny > camT + vh + m) return;
+      drawBall(nx, ny, o.rot, o.color, o.color2, o.pat, 0.85, false);
+      drawNameAndMark(o.name, false, nx, ny);
+    });
+    for (let i = 0; i < bots.length; i++) {
+      const bt = bots[i], bb = bt.b;
+      if (bt.dead > 0 || bb.x < camL - m || bb.x > camL + vw + m || bb.y < camT - m * 2 || bb.y > camT + vh + m) continue;
+      drawBall(bb.x, bb.y, bb.rot, bt.color, bt.color2, bt.pat, 0.85, false);
+      drawNameAndMark(bt.name, true, bb.x, bb.y);
+    }
+    if (S.dead <= 0) {               // you: always last = always on top
+      drawBall(b.x, b.y, b.rot, settings.color, settings.color2, settings.pat, 1, true);
+      drawNameAndMark(settings.name, false, b.x, b.y);
+    }
+  }
+  drawWater();   // translucent, drawn last so swimming balls look submerged
+}
+
+/* ================= HUD + session warnings ================= */
+function updateOnlineText() {
+  $('roominfo').textContent = online ? 'Room ' + room.id + ' · ' + room.n + '/' + room.max : (settings.mp ? 'Offline · solo test' : 'Solo');
+  $('onlineinfo').textContent = !settings.mp ? '🌐 Multiplayer off' : online ? '🌐 ' + net.online + ' online · record ' + net.peak : '🌐 Offline';
+  $('mpstats').textContent = online ? 'Online now: ' + net.online + ' · most ever: ' + net.peak : '';
+}
+function hudTick() {
+  const rem = S.nextAt - nowMs();
+  const tm = $('timer');
+  $('nexttimer').textContent = fmtHMS(Math.max(0, rem));
+  $('nextat').textContent = 'at ' + new Date(S.nextAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  tm.className = 'panel' + (rem <= 30000 && rem > 0 ? ' final' : rem <= 60000 ? ' low' : '');
+  if (S.mode === 'play') {
+    TH.forEach(t => {
+      if (!warned[t] && rem <= t * 60000) {
+        warned[t] = true;
+        notice('Session ends in ' + (t === 60 ? '1 hour' : t + ' minute' + (t > 1 ? 's' : '')) + ' — everyone moves to a new map.', t <= 5);
+      }
+    });
+    if (rem <= 0) startTransition(S.slot + 1, S.nextAt + SLOT_MS);
+  }
+  updateOnlineText();
+}
+setInterval(hudTick, 250);
+
+/* ================= boot ================= */
+syncUI(); showTouch();
+if (settings.intro) { $('dontShow').checked = false; $('intro').classList.remove('hide'); }
+{
+  const ls = forced !== null ? (+forced || 0) : Math.floor(Date.now() / SLOT_MS);
+  S.nextAt = forcedLeft !== null ? Date.now() + (+forcedLeft || 60) * 1000 : forced !== null ? Date.now() + 4 * 3600000 : (ls + 1) * SLOT_MS;
+  loadMap(ls, S.nextAt);
+}
+if (settings.mp) connect(); else setNet('solo');
+hudTick();
+requestAnimationFrame(frame);
+window.__ballOk = true;
+})();
+</script>
+</body>
+</html>
