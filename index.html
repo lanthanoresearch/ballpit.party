@@ -42,9 +42,7 @@
   .ldot{width:16px;height:16px;border-radius:50%;border:2px solid #000;flex:none;display:inline-block}
   .lname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lsub{font-size:12px;opacity:.65;white-space:normal}
   .btn.sm{padding:3px 9px;font-size:14px;flex:none}.btn:disabled{opacity:.5}
-  #lreqs{position:fixed;right:10px;top:100px;width:min(320px,calc(100vw - 20px));display:flex;flex-direction:column;gap:6px;z-index:6}
   #lreqs.hide{display:none}.lreqcard{padding:4px 8px;animation:pop .25s ease-out}
-  #cpanel{position:fixed;right:10px;top:58px;top:calc(58px + env(safe-area-inset-top));width:min(290px,calc(100vw - 20px));z-index:7;overflow:hidden}
   #chatLog{height:min(250px,calc(100vh - 260px));margin:0 10px;background:rgba(10,8,18,.55);border:2px solid var(--line);border-radius:var(--wob);padding:6px 8px;overflow-y:auto;touch-action:pan-y;font-size:15px}
   .cl{display:flex;align-items:center;gap:6px;padding:2px 0}.cl .ldot{width:12px;height:12px}.cl b{font-weight:normal;opacity:.85;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cl svg.emo{width:26px;height:26px;flex:none}
   .cl.me b{color:var(--accent)}.cnone{opacity:.55;font-size:14px;padding:6px 2px}
@@ -300,6 +298,70 @@
     #tpop{top:42px;font-size:13px;padding:7px 11px;width:min(280px,calc(100vw - 20px))}#tpop h3{font-size:17px}
   }
   #stack{display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+
+  /* =========== HUD v2: everything is anchored to a corner and stacked, nothing floats ===========
+     left: one info card (connection, world, time, coins) with the map right under it.
+     right: reset + settings, the chat button right under them, then chat popups; the chat window opens in the same column. */
+  #top{column-gap:10px}
+  #hl{--hlw:166px;display:flex;flex-direction:column;align-items:stretch;gap:6px;width:var(--hlw);pointer-events:none}
+  #infoWrap{position:relative;pointer-events:auto}
+  #info{display:flex;flex-direction:column;gap:3px;padding:6px 10px 7px;cursor:pointer;box-sizing:border-box}
+  #infoTop{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  #netstat{position:static!important;transform:none!important;display:flex;align-items:center;gap:6px;font-size:14px;padding:0;margin:0!important;background:none;border:0;box-shadow:none;pointer-events:none}
+  #netstat.hide{display:flex}
+  #netstat i{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+  #onl{display:block;font-size:13px;opacity:.9;text-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #onl:empty{display:none}
+  #timer{display:flex;align-items:center;gap:6px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;font-size:18px;line-height:1.1;cursor:pointer;pointer-events:none;transform:none}
+  #timer.low{color:#ffb020}
+  #timer.final{position:fixed;left:50%;top:max(64px,calc(env(safe-area-inset-top) + 56px));transform:translateX(-50%) scale(1.7);transform-origin:top center;padding:4px 14px;background:rgba(150,20,20,.95);border:2px solid #fff;border-radius:var(--wob);color:#fff;font-size:17px;animation:flash 1s steps(1) infinite;z-index:9}
+  #infoRow{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+  #infoRow:not(:has(.pill:not(.hide))){display:none}
+  #infoRow .pill{display:inline-flex;align-items:center;gap:5px;margin:0;font-size:13px;padding:0 8px;background:rgba(10,8,18,.5);box-shadow:none}
+  #linkpill{pointer-events:auto}
+  #mm{display:block;margin:0;width:100%;height:auto;aspect-ratio:170/110;box-sizing:border-box}
+  #tpop{position:absolute;left:0;right:auto;top:calc(100% + 6px);width:min(300px,calc(100vw - 20px));z-index:8}
+  #hr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;width:min(300px,60vw);justify-self:end}
+  #topbar{display:flex;gap:6px;pointer-events:auto}
+  #chatBtnWrap{position:relative;pointer-events:auto}
+  #chatBtnWrap .ibtn{width:34px}
+  #chBadge{position:absolute;left:auto;right:-5px;top:-6px;width:17px;height:17px;border-radius:50%;background:var(--bad);color:#fff;font:700 11px/17px var(--font);text-align:center;font-style:normal;pointer-events:none;margin:0}
+  #feed{display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:100%;pointer-events:none}
+  .msg{border-left:0;border-right:4px solid var(--good);text-align:right;max-width:100%}
+  .msg.leave{border-right-color:var(--bad);border-left-color:transparent}.msg.fin{border-right-color:var(--accent)}.msg.bad{border-right-color:#ff9f43}.msg.friend{border-right-color:#ffd23d}
+  body.copen #feed{display:none}
+  #lreqs{display:flex;flex-direction:column;gap:6px;width:100%;pointer-events:auto}#lreqs.hide{display:none}
+  .lreqcard{padding:4px 8px;animation:pop .25s ease-out}
+  /* chat window */
+  #cpanel{position:static;width:100%;max-height:calc(100vh - 150px);display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;text-align:left}
+  #cpanel.hide{display:none}
+  .ctabs{display:flex;gap:6px;padding:0 10px 8px}
+  .ctabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 4px;background:#241f36;border:2px solid var(--line);border-radius:var(--wob);color:var(--ink);font-size:15px;opacity:.7}
+  .ctabs button.on{opacity:1;background:#3a3355;border-color:var(--accent)}
+  .cpane{display:none;padding:0 10px 10px;overflow-y:auto;touch-action:pan-y;min-height:0}.cpane.on{display:block}
+  #chatLog{height:min(230px,calc(100vh - 380px));min-height:90px;margin:0;background:rgba(10,8,18,.55);border:2px solid var(--line);border-radius:var(--wob);padding:6px 8px;overflow-y:auto;touch-action:pan-y;font-size:15px}
+  #emoGrid{padding:8px 0 4px}
+  .cfoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.cfoot .small{flex:1;min-width:100px}
+  .cl{justify-content:flex-start}
+  .mycode{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(10,8,18,.5);border:2px solid var(--line);border-radius:var(--wob);padding:6px 10px;margin-bottom:2px}
+  .mycode b{font:700 20px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:3px;color:var(--accent)}
+  .cpane h4{margin:12px 0 4px;font-size:13px;letter-spacing:1px;text-transform:uppercase;opacity:.65;font-weight:400}
+  .code{font:12px ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px;color:var(--accent);background:rgba(255,204,61,.12);border-radius:5px;padding:0 5px;margin-left:5px}
+  #lpQ{margin-bottom:4px}
+  @media (max-aspect-ratio:1/1) and (max-width:700px),(max-width:480px){
+    #hl{--hlw:138px}
+    #top{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"hl hr" "mid mid"}
+    #top>#hr{justify-self:end;width:min(300px,calc(100vw - 168px))}
+    #top>#stack{justify-self:center}
+  }
+  @media (max-height:520px){
+    #hl{--hlw:128px}
+    #info{padding:4px 8px 5px}#timer{font-size:15px}#onl{font-size:12px}#netstat{font-size:12px}
+    #tpop{font-size:13px;padding:7px 11px}#cpanel{max-height:calc(100vh - 110px)}#chatLog{height:min(150px,calc(100vh - 300px))}
+  }
+  .lsub .code{margin-left:0}
+  .lreqcard .lrow,#lpReqs .lrow{flex-wrap:wrap}.lreqcard .lname,#lpReqs .lname{flex-basis:calc(100% - 24px);white-space:normal}.lreqcard .lrow .btn,#lpReqs .lrow .btn{margin-left:auto}
+  #lpRes .lrow,#mutedList .lrow,.frow>.lrow{flex-wrap:wrap}#lpRes .lname,#mutedList .lname,.frow>.lrow .lname{flex-basis:calc(100% - 24px);white-space:normal}#lpRes .lname b,#mutedList .lname b,.frow>.lrow .lname b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#lpRes .lrow .btn:first-of-type,#mutedList .lrow .btn,.frow>.lrow .btn{margin-left:auto}
 </style>
 </head>
 <body>
@@ -394,36 +456,58 @@
 <div id="gest" class="hide"></div>
 <div id="dflash"></div>
 
-<div id="top"><div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span></span><button id="linkpill" class="pill hide"><span data-ic="users"></span><span id="linkN"></span></button><canvas id="mm" width="170" height="110"></canvas></div>
-<div id="stack"><div id="netstat" class="pill hide"><i></i><span id="netText">Connecting</span></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div><div id="feed"></div></div>
+<div id="top"><div id="hl">
+  <div id="infoWrap">
+    <div id="info" class="paper" title="Map info">
+      <div id="infoTop"><div id="netstat"><i></i><span id="netText">Checking</span></div></div>
+      <span id="onl"></span>
+      <div id="timer"><span data-ic="clock"></span><span id="nexttimer">--:--</span></div>
+      <div id="infoRow"><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span></span><button id="linkpill" class="pill hide"><span data-ic="users"></span><span id="linkN"></span></button></div>
+    </div>
+    <div id="tpop" class="paper hide">
+      <h3><span data-ic="map"></span><span id="tpName"></span></h3>
+      <div class="tl"><span data-ic="clock"></span><span id="tpChange"></span></div>
+      <div class="tl"><span data-ic="gcoin"></span><span id="tpCoins"></span></div>
+      <div class="tl"><span data-ic="globe"></span><span id="tpWorld"></span></div>
+      <div class="tl"><span data-ic="beacon"></span><span id="tpBeacon"></span><span id="tpArrow" class="hide"><svg class="ic" viewBox="0 0 24 24"><use href="#i-up"/></svg></span></div>
+      <div class="nx"><span id="tpNext"></span></div>
+    </div>
+  </div>
+  <canvas id="mm" width="170" height="110"></canvas>
+</div>
+<div id="stack"><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
 <div id="hr">
   <div id="topbar">
-    <div id="timer" class="pill" title="Map info"><span data-ic="clock"></span><span id="nexttimer">--:--</span></div>
-    <button id="btnChat" class="ibtn hide" title="Chat" data-ic="chat"></button><i id="chBadge" class="hide"></i>
     <button id="btnRespawn" class="ibtn" title="Back to the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Settings (Esc)" data-ic="gear"></button>
   </div>
+  <div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Chat and friends" data-ic="chat"></button><i id="chBadge" class="hide"></i></div>
+  <div id="lreqs" class="hide"></div>
+  <div id="feed"></div>
+  <div id="cpanel" class="paper hide">
+    <div class="shead"><span>Chat</span><button id="cpClose" class="xbtn" title="Close" data-ic="close"></button></div>
+    <div class="ctabs" id="ctabs"><button data-ct="chat" class="on"><span data-ic="chat"></span>Chat</button><button data-ct="friends"><span data-ic="users"></span>Friends</button></div>
+    <section class="cpane on" data-cp="chat">
+      <div id="chatLog"></div>
+      <div id="emoGrid"></div>
+      <div class="cfoot"><button id="chatMute" class="chip">Mute public chat</button><span class="small dim">Everyone in your world sees these.</span></div>
+    </section>
+    <section class="cpane" data-cp="friends">
+      <div id="myCode" class="mycode"><span>Your code</span><b id="myCodeV">······</b><span class="small dim">Friends can check it matches</span></div>
+      <h4><span data-ic="users"></span> Friends <span id="lpCount" class="dim"></span></h4><div id="lpList"></div>
+      <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Wants to track you</h4><div id="lpReqs"></div>
+      <h4><span data-ic="eye"></span> Find a player</h4>
+      <input type="text" id="lpQ" maxlength="12" placeholder="Name or code" autocomplete="off" spellcheck="false"><div id="lpRes"></div>
+      <h4 id="mutedH" class="hide"><span data-ic="sound"></span> Muted</h4><div id="mutedList"></div>
+    </section>
+  </div>
 </div></div>
-<div id="tpop" class="paper hide">
-  <h3><span data-ic="map"></span><span id="tpName"></span></h3>
-  <div class="tl"><span data-ic="clock"></span><span id="tpChange"></span></div>
-  <div class="tl"><span data-ic="gcoin"></span><span id="tpCoins"></span></div>
-  <div class="tl"><span data-ic="globe"></span><span id="tpWorld"></span></div>
-  <div class="tl"><span data-ic="beacon"></span><span id="tpBeacon"></span><span id="tpArrow" class="hide"><svg class="ic" viewBox="0 0 24 24"><use href="#i-up"/></svg></span></div>
-  <div class="nx"><span id="tpNext"></span></div>
-</div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 
 <div id="touch" class="hide"><button id="tl" data-ic="left"></button><button id="tr" data-ic="right"></button><button id="tj" data-ic="up"></button><button id="tb" data-ic="bolt" class="hide"></button></div>
 <div id="joy" class="hide"><i class="jb"></i><i class="jk"></i></div>
 <div id="editbar" class="paper hide"><span>Drag the buttons where you want them</span><button class="btn" id="editReset">Reset</button><button class="btn prim" id="editDone">Done</button></div>
 
-<div id="lreqs" class="hide"></div>
-<div id="cpanel" class="paper hide">
-  <div class="shead"><span>Chat</span><button id="cpClose" class="xbtn" title="Close" data-ic="close"></button></div>
-  <div id="chatLog"></div>
-  <div id="emoGrid"></div>
-</div>
 <div id="sback"></div>
 <div id="settings" class="paper hide">
   <div class="shead"><span>Settings</span><button id="btnCloseSet" class="xbtn" title="Close" data-ic="close"></button></div>
@@ -433,14 +517,13 @@
     <button data-tab="display"><span data-ic="eye"></span><span>Display</span></button>
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Online</span></button>
-    <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
     <button data-tab="bots"><span data-ic="bot"></span><span>Bots</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
   </div>
   <div class="sbody">
     <section class="pane on" data-pane="you">
       <div class="you"><canvas id="preview" width="64" height="64"></canvas>
-        <div style="flex:1"><label class="lbl" for="setName">Name <span class="dim">(up to 6, blank is fine)</span></label><input type="text" id="setName" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="no name"></div></div>
+        <div style="flex:1"><label class="lbl" for="setName">Name</label><input type="text" id="setName" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Your name"><div class="small dim" id="nameNote" style="margin-top:3px">You can change your name once a day.</div></div></div>
       <h4><span data-ic="ball"></span> Ball colour</h4><div class="sw" id="colors1"></div>
       <h4><span data-ic="spark"></span> Pattern</h4><div class="pats" id="pats"></div>
       <h4><span data-ic="spark"></span> Pattern colour</h4><div class="sw" id="colors2"></div>
@@ -503,13 +586,6 @@
         <button class="btn full" id="btnSoloNew"><span data-ic="reset"></span>Start a fresh world</button>
       </div></div>
     </section>
-    <section class="pane" data-pane="friends">
-      <p class="small dim" style="margin:0 0 4px">Track up to 5 friends. When they accept, you both see each other wherever you are. It is tied to your device, so it is still here when you come back.</p>
-      <h4><span data-ic="users"></span> Your friends <span id="lpCount"></span></h4><div id="lpList"></div>
-      <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Wants to track you</h4><div id="lpReqs"></div>
-      <h4><span data-ic="eye"></span> Find a player</h4>
-      <input type="text" id="lpQ" maxlength="6" placeholder="Type a name, or pick from the list" autocomplete="off" spellcheck="false"><div id="lpRes"></div>
-    </section>
     <section class="pane" data-pane="bots">
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Pretend players that only you can see</small></span></span><input type="checkbox" id="setBots"><i></i></label>
       <div class="dep" data-dep="bots"><div>
@@ -550,6 +626,12 @@
   <button class="ok" id="btnOk">OK</button>
 </div></div>
 
+<div id="namecard" class="overlay hide"><div class="card" style="width:min(420px,100%)">
+  <h1><span data-ic="user"></span>Pick a name</h1>
+  <p>This is what other players see over your ball.</p>
+  <input type="text" id="nameIn" maxlength="12" placeholder="Your name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <div class="btns"><button id="nameDice" type="button">Surprise me</button><button id="nameOk" type="button" class="go">Done</button></div>
+</div></div>
 <div id="confirm" class="overlay hide"><div class="card" style="width:min(420px,100%)">
   <h3 id="cfTitle"></h3><p id="cfText"></p>
   <label class="dont hide" id="cfOptWrap"><input type="checkbox" id="cfOpt"><span id="cfOptText"></span></label>
@@ -592,8 +674,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=13"></script>
-<script src="physics.js?v=13"></script>
+<script src="maps.js?v=14"></script>
+<script src="physics.js?v=14"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -644,7 +726,7 @@ let settings = defaults();
 try { const o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
 function normalize() {
   const d = defaults();
-  settings.name = String(settings.name == null ? '' : settings.name).replace(NAME_BAD, '').slice(0, 6);
+  settings.name = String(settings.name == null ? '' : settings.name).replace(NAME_BAD, '').slice(0, 12);
   if (!HEX.test(settings.color)) settings.color = d.color;
   if (!HEX.test(settings.color2)) settings.color2 = d.color2;
   settings.pat = clamp(settings.pat | 0, 0, PATTERNS.length - 1);
@@ -1202,7 +1284,7 @@ function startTransition(slot, next) {
 }
 
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text'; };
-const blocked = () => !$('intro').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
+const blocked = () => !$('intro').classList.contains('hide') || !$('namecard').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 function update(dt) {
   S.t += dt;
@@ -1919,16 +2001,22 @@ $('setZoom').oninput = () => setZoom(+$('setZoom').value);
 $('zOut').onclick = () => setZoom(settings.zoom - 0.1);
 $('zIn').onclick = () => setZoom(settings.zoom + 0.1);
 $('setBtnSize').oninput = () => { settings.btnSize = +$('setBtnSize').value; $('btnSizeVal').textContent = Math.round(settings.btnSize * 100) + '%'; save(); layoutTouch(); };
-$('setName').addEventListener('input', () => { const v = $('setName').value.replace(NAME_BAD, '').slice(0, 6); if (v !== $('setName').value) $('setName').value = v; settings.name = v; save(); });
-$('setName').addEventListener('change', sendInfo);
+$('setName').addEventListener('input', () => { const v = $('setName').value.replace(NAME_BAD, '').slice(0, 12); if (v !== $('setName').value) $('setName').value = v; });
+$('setName').addEventListener('change', () => {
+  const v = $('setName').value.replace(NAME_BAD, '').trim().slice(0, 12);
+  if (!v || nameLocked()) { $('setName').value = settings.name; return; }   // a name is always there; an empty box just puts yours back
+  if (v === settings.name) return;
+  settings.name = v; save(); sendInfo();
+});
+$('setName').addEventListener('keydown', e => { if (e.key === 'Enter') $('setName').blur(); });
 $('setMp').onchange = () => {
   if ($('setMp').checked) { setMultiplayer(true); return; }
   $('setMp').checked = true;
   askConfirm('Leave multiplayer?', "You'll go to your own private world. Nobody else can see you and you won't see anyone. Your ball goes back to the start.", 'Play solo', () => { setMultiplayer(false); $('setMp').checked = false; }, { no: 'Stay online', yesClass: 'danger' });
 };
-$('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every setting back to its default: your name, colours, controls, zoom, bots and the welcome popup. This cannot be undone.', 'Reset everything', () => {
-  const wasMp = settings.mp, wasFs = settings.fs;
-  settings = defaults(); normalize(); save(); bots.length = 0; keysDown.clear(); syncKeys(); syncUI(); applyTouchUI(); auVol(); if (AU.ctx) musicStart();
+$('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every setting back to its default: colours, controls, zoom, bots and the welcome popup. This cannot be undone.', 'Reset everything', () => {
+  const wasMp = settings.mp, wasFs = settings.fs, keepName = settings.name;
+  settings = defaults(); settings.name = keepName; normalize(); save(); bots.length = 0; keysDown.clear(); syncKeys(); syncUI(); applyTouchUI(); auVol(); if (AU.ctx) musicStart();
   if (wasFs && isFs()) exitFs();
   if (!wasMp) setMultiplayer(true);
   lastSent = ''; sendInfo(); addFeed('Settings reset to default', 'bad', true);
@@ -1969,15 +2057,23 @@ if (!/^[A-Za-z0-9_-]{16,64}$/.test(devId)) {
   devId = [...a].map(v => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[v % 62]).join('');
   try { localStorage.setItem(DEVKEY, devId); } catch (e) {}
 }
-let lks = [];      // people I track (and who track me): { pub, name, color, ok (the server confirms it), on (online now), w (their world), x, y, sx, sy, dead, t }
-try { lks = (JSON.parse(localStorage.getItem(LKKEY) || '[]') || []).filter(l => l && /^[0-9a-f]{16}$/.test(l.pub)).slice(0, MAXLINK).map(l => ({ pub: l.pub, name: String(l.name || '').slice(0, 6), color: HEX.test(l.color) ? l.color : '#ccc', ok: false, on: 0, x: null, big: l.big !== false, arrow: l.arrow !== false, mute: (l.mute | 0) % 3 })); } catch (e) {}
-const saveLinks = () => { try { localStorage.setItem(LKKEY, JSON.stringify(lks.map(l => ({ pub: l.pub, name: l.name, color: l.color, big: l.big, arrow: l.arrow, mute: l.mute })))); } catch (e) {} };
+let lks = [];      // people I track (and who track me): { pub, code, name, color, last, ok (the server confirms it), on (online now), w (their world), x, y, sx, sy, dead, t, big, arrow, mute }
+try { lks = (JSON.parse(localStorage.getItem(LKKEY) || '[]') || []).filter(l => l && /^[0-9a-f]{16}$/.test(l.pub)).slice(0, MAXLINK).map(l => ({ pub: l.pub, code: String(l.code || '').slice(0, 6), name: String(l.name || '').slice(0, 12), color: HEX.test(l.color) ? l.color : '#ccc', last: +l.last || 0, ok: false, on: 0, x: null, big: l.big !== false, arrow: l.arrow !== false, mute: (l.mute | 0) % 3 })); } catch (e) {}
+const saveLinks = () => { try { localStorage.setItem(LKKEY, JSON.stringify(lks.map(l => ({ pub: l.pub, code: l.code, name: l.name, color: l.color, last: l.last, big: l.big, arrow: l.arrow, mute: l.mute })))); } catch (e) {} };
 const linkClaims = () => lks.map(l => l.pub);
 const ft = (dx, dy) => Math.round(Math.hypot(dx, dy) / TS / 2);   // distances are in feet; one foot is two blocks
 const lkNum = pub => parseInt(pub.slice(0, 8), 16) >>> 0;
-let reqs = [], sentTo = new Set();
+let linksReady = false;
+let reqs = [], sentTo = new Set(), lpFound = [], myCode = '';
+const MUTEKEY = 'ballrun4_mutes', CMKEY = 'ballrun4_chatmute', CTKEY = 'ballrun4_ctab';
+let mutes = {}; try { mutes = JSON.parse(localStorage.getItem(MUTEKEY) || '{}') || {}; } catch (e) {}   // players who are not friends but you muted: pub -> { n, c }
+let chatMuted = false; try { chatMuted = localStorage.getItem(CMKEY) === '1'; } catch (e) {}
+const saveMutes = () => { try { localStorage.setItem(MUTEKEY, JSON.stringify(mutes)); } catch (e) {} };
+const muteOf = pub => { if (!pub) return 0; const e = lks.find(l => l.pub === pub); return e ? e.mute : mutes[pub] ? 2 : 0; };   // 0 on, 1 no come-and-go, 2 silent
+function ago(ms) { if (!ms) return 'a while ago'; const s = Math.max(0, (Date.now() - ms) / 1000); return s < 90 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; }
 const lkOf = pub => lks.find(l => l.pub === pub);
 const nameOf = pub => { const a = lkOf(pub) || reqs.find(r => r.pub === pub) || lpFound.find(f => f.pub === pub); return a ? a.name : ''; };
+const codeTag = c => { const s = document.createElement('span'); s.className = 'code'; s.textContent = '#' + c; return s; };
 function friendNote(e, nm, on) {   // a special heads-up when someone you track comes online or goes offline
   if (e.mute >= 1 || !settings.mp) return;
   const t = who(nm || e.name) + (on ? ' is online' : ' went offline');
@@ -1988,22 +2084,24 @@ const wsSend = o => { if (ws && ws.readyState === 1 && online) ws.send(JSON.stri
 function linkMsg(m) {
   switch (m.t) {
     case 'links': {
-      const all = new Set(m.all || []), on = new Map((m.on || []).map(o => [o.pub, o]));
-      for (const pub of all) if (!lkOf(pub) && lks.length < MAXLINK) lks.push({ pub, name: '', color: '#ccc', ok: true, on: 0, x: null, big: true, arrow: true, mute: 0 });
-      for (const e of lks) {
-        e.ok = all.has(e.pub); const o = on.get(e.pub);
-        if (o) { e.name = o.name; e.color = o.color; e.w = o.w; e.on = 1; } else { e.on = 0; e.x = null; }
+      const list = m.list || [], seen = new Set();
+      for (const o of list) {
+        seen.add(o.pub); let e = lkOf(o.pub);
+        if (!e) { if (lks.length >= MAXLINK) continue; e = { pub: o.pub, code: '', name: '', color: '#ccc', last: 0, ok: false, on: 0, x: null, big: true, arrow: true, mute: 0 }; lks.push(e); if (linksReady) notice(who(o.name) + ' is now tracking you too', ''); }
+        e.ok = true; e.code = o.code; e.name = o.name; e.color = o.color; e.last = o.last; e.w = o.w;
+        if (o.on) e.on = 1; else { e.on = 0; e.x = null; }
       }
-      saveLinks(); lpRender(); return true;
+      for (const e of lks) if (!seen.has(e.pub)) { e.ok = false; e.on = 0; e.x = null; }
+      linksReady = true; saveLinks(); lpRender(); return true;
     }
     case 'treq':
-      if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, name: String(m.name || '').slice(0, 6), color: HEX.test(m.color) ? m.color : '#ccc' });
-      sfx('ready'); lpRender(); return true;
-    case 'tsent': sentTo.add(m.pub); notice('Request sent to ' + who(m.name), ''); lpRender(); return true;
+      if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, code: m.code || '', name: String(m.name || '').slice(0, 12), color: HEX.test(m.color) ? m.color : '#ccc' });
+      sfx('ready'); notice('★ ' + who(m.name) + ' wants to track you', ''); lpRender(); return true;
+    case 'tsent': sentTo.add(m.pub); notice(m.off ? who(m.name) + ' is offline. They will see your request when they are back' : 'Request sent to ' + who(m.name), ''); lpRender(); return true;
     case 'tno': {
       sentTo.delete(m.pub);
       const nm = who(m.name || (lkOf(m.pub) || {}).name || '');
-      notice(m.why === 'deny' ? nm + ' said not now' : m.why === 'off' ? 'That player has just left' : m.why === 'mine' ? 'You are already tracking ' + MAXLINK + ' people. Disconnect one first' : m.why === 'theirs' || m.why === 'full' ? nm + ' is already tracking ' + MAXLINK + ' people' : 'That request has run out. Ask again', '');
+      notice(m.why === 'deny' ? nm + ' said not now' : m.why === 'off' ? 'That player is not available' : m.why === 'mine' ? 'You are already tracking ' + MAXLINK + ' people. Disconnect one first' : m.why === 'theirs' || m.why === 'full' ? nm + ' is already tracking ' + MAXLINK + ' people' : 'That request has run out. Ask again', '');
       lpRender(); return true;
     }
     case 'tok': { sentTo.delete(m.pub); const nm = nameOf(m.pub); reqs = reqs.filter(r => r.pub !== m.pub); sfx('join'); notice('You and ' + who(nm) + ' are now tracking each other', ''); lpRender(); return true; }
@@ -2014,13 +2112,14 @@ function linkMsg(m) {
     case 'lon': { const e = lkOf(m.pub); if (e) { if (m.name != null) e.name = m.name; friendNote(e, m.name, true); } return true; }
     case 'emo': {
       const o = others.get(m.id), e = lkOf(m.pub);
-      if (e && e.mute >= 2) return true;                // that friend is fully muted
+      if (chatMuted || muteOf(m.pub) >= 2) return true;   // public chat muted, or that player is
       if (o) o.emo = { i: m.i | 0, t: S.t };
       chatAdd(m.name, o ? o.color : '#ccc', m.i | 0, false);
       addFeedEmo(who(m.name), m.i | 0, e ? 'friend' : '');
       return true;
     }
     case 'found': lpFound = m.list || []; lpRender(); return true;
+    case 'name': nameServer(m.name, m.left | 0, !!m.denied); return true;
   }
   return false;
 }
@@ -2138,70 +2237,82 @@ function addFeedEmo(name, i, cls) {   // "Name" + the emoji, in the same list as
   setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 600); }, 7000);
 }
 
-/* ----- chat: emoji only, kept in a little square for good ----- */
+/* ----- the chat window: Chat (public, emoji only) and Friends, in one panel under the chat button ----- */
 const CHATKEY = 'ballrun4_chat';
 let chatLog = []; try { chatLog = (JSON.parse(localStorage.getItem(CHATKEY) || '[]') || []).filter(c => c && c.i >= 0 && c.i < EMO.length).slice(-80); } catch (e) {}
-let chatOpen = false, chatUnread = 0, emoCool = 0;
+let chatOpen = false, chatUnread = 0, emoCool = 0, cTab = 'chat';
+try { cTab = localStorage.getItem(CTKEY) === 'friends' ? 'friends' : 'chat'; } catch (e) {}
 function chatAdd(name, color, i, me) {
-  chatLog.push({ n: String(name || '').slice(0, 6), c: color, i, me: me ? 1 : 0 }); if (chatLog.length > 80) chatLog.shift();
+  chatLog.push({ n: String(name || '').slice(0, 12), c: color, i, me: me ? 1 : 0 }); if (chatLog.length > 80) chatLog.shift();
   try { localStorage.setItem(CHATKEY, JSON.stringify(chatLog)); } catch (e) {}
-  if (!chatOpen && !me) chatUnread++;
+  if (!(chatOpen && cTab === 'chat') && !me) chatUnread++;
   chatRender();
 }
 function chatRender() {
-  const lg = $('chatLog'); if (!chatOpen) { trackVis(); return; }
-  const atEnd = lg.scrollTop + lg.clientHeight >= lg.scrollHeight - 30; lg.textContent = '';
+  if (!chatOpen || cTab !== 'chat') { trackVis(); return; }
+  const lg = $('chatLog'); lg.textContent = '';
   if (!chatLog.length) lg.appendChild(el('div', 'cnone', 'Nothing yet. Tap an emoji below to say something.'));
   for (const c of chatLog) {
     const d = el('div', 'cl' + (c.me ? ' me' : '')); d.appendChild(dot(c.c)); d.appendChild(el('b', '', c.me ? 'You' : who(c.n)));
     const sp = document.createElement('span'); sp.innerHTML = emoSvg(c.i); d.appendChild(sp.firstChild); lg.appendChild(d);
   }
-  if (atEnd || true) lg.scrollTop = lg.scrollHeight;
-  trackVis();
+  lg.scrollTop = lg.scrollHeight; trackVis();
 }
 function sendEmo(i) {
   if (performance.now() < emoCool || !online) return;
   emoCool = performance.now() + 1000; wsSend({ t: 'emo', i });
-  S.myEmo = { i, t: S.t }; chatAdd(settings.name, settings.color, i, true); addFeedEmo('You', i, ''); sfx('ui');
+  S.myEmo = { i, t: S.t }; chatAdd(settings.name, settings.color, i, true); if (!chatOpen) addFeedEmo('You', i, ''); sfx('ui');
   const g = $('emoGrid').children; for (const b of g) { b.classList.add('cool'); setTimeout(() => b.classList.remove('cool'), 1000); }
 }
 const eg = $('emoGrid');
 EMO.forEach((e, i) => { const b = document.createElement('button'); b.title = e.n; b.innerHTML = emoSvg(i); b.onclick = () => sendEmo(i); eg.appendChild(b); });
-function toggleChat(on) {
+function setChatMute(on) { chatMuted = on; try { localStorage.setItem(CMKEY, on ? '1' : '0'); } catch (e) {} const c = $('chatMute'); c.classList.toggle('on', on); c.textContent = on ? 'Public chat is muted' : 'Mute public chat'; }
+$('chatMute').onclick = () => setChatMute(!chatMuted); setChatMute(chatMuted);
+function showCTab(t) {
+  cTab = t; try { localStorage.setItem(CTKEY, t); } catch (e) {}
+  document.querySelectorAll('#ctabs button').forEach(x => x.classList.toggle('on', x.getAttribute('data-ct') === t));
+  document.querySelectorAll('.cpane').forEach(x => x.classList.toggle('on', x.getAttribute('data-cp') === t));
+  $('cpanel').querySelector('.shead span').textContent = t === 'chat' ? 'Chat' : 'Friends';
+  if (t === 'chat') chatUnread = 0;
+  if (chatOpen) { lpRefresh(); chatRender(); lpRender(); }
+}
+document.querySelectorAll('#ctabs button').forEach(x => x.onclick = () => { sfx('ui'); showCTab(x.getAttribute('data-ct')); });
+function toggleChat(on, tab) {
+  if (on && tab) { cTab = tab; try { localStorage.setItem(CTKEY, tab); } catch (e) {} }
   chatOpen = on; $('cpanel').classList.toggle('hide', !on);
-  if (on) { chatUnread = 0; if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); }
-  chatRender();
+  if (on) { if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); showCTab(cTab); }
+  else { clearInterval(lpTimer); lpTimer = 0; }
+  trackVis();
 }
 $('btnChat').onclick = () => toggleChat(!chatOpen);
 $('cpClose').onclick = () => toggleChat(false);
 addEventListener('keydown', e => { if (e.key === 'Escape' && chatOpen && !typing()) { toggleChat(false); e.preventDefault(); } });
+$('linkpill').onclick = e => { e.stopPropagation(); toggleChat(true, 'friends'); };
 
-/* ----- the Friends tab in settings ----- */
+/* ----- friends: your list, requests, and a search of everyone who has ever played ----- */
 const MUTE_NOTE = ['You see when they come and go, and you see their emojis.', 'No "came online" alerts or join / leave lines for them. Their emojis still show.', 'Nothing from them: no alerts, no join / leave lines, no emojis.'];
-let lpVisible = false, lpFound = lpFound0(), lpQ = '', lpTimer = 0, lpDeb = 0;
-function lpFound0() { return []; }
-const friendsShown = () => !$('settings').classList.contains('hide') && document.querySelector('.pane[data-pane="friends"]').classList.contains('on');
+let lpQ = '', lpTimer = 0, lpDeb = 0;
 function trackVis() {
   const solo = inSolo();
   $('btnChat').classList.toggle('hide', solo);
   const n = lks.filter(l => l.ok && l.on).length;
   $('linkpill').classList.toggle('hide', solo || n === 0);
   $('linkN').textContent = n === 1 ? '1 tracking you' : n + ' tracking you';
-  const b = $('chBadge'); b.classList.toggle('hide', solo || !chatUnread || chatOpen); b.textContent = chatUnread > 9 ? '9+' : chatUnread;
-  const fv = friendsShown();
-  $('lreqs').classList.toggle('hide', solo || fv || !reqs.length);
-  if (fv !== lpVisible) {
-    lpVisible = fv; clearInterval(lpTimer);
-    if (fv) { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 5000); lpRender(); }
-  }
+  const bd = $('chBadge'), ub = chatUnread + reqs.length; bd.classList.toggle('hide', solo || !ub || (chatOpen && cTab === 'chat' && !reqs.length)); bd.textContent = ub > 9 ? '9+' : ub;
+  $('lreqs').classList.toggle('hide', solo || !reqs.length || (chatOpen && cTab === 'friends'));
+  document.body.classList.toggle('copen', chatOpen);
+  if (solo && chatOpen) toggleChat(false);
 }
 setInterval(trackVis, 500);
 function dot(c) { const i = document.createElement('i'); i.className = 'ldot'; i.style.background = c; return i; }
 function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 function chip(label, on, fn, title) { const c = el('button', 'chip' + (on ? ' on' : ''), label); if (title) c.title = title; c.onclick = fn; return c; }
+function nameRow(name, code, color, sub) {   // dot, the name with its short code, and a line under it
+  const d = el('div', 'lrow'); d.appendChild(dot(color));
+  const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(name))); const sb = el('div', 'lsub'); if (code) { sb.appendChild(codeTag(code)); sb.appendChild(document.createTextNode(' · ')); } sb.appendChild(document.createTextNode(sub)); nm.appendChild(sb); d.appendChild(nm); return d;
+}
 function reqCard(r) {
-  const d = el('div', 'lrow'); d.appendChild(dot(r.color));
-  const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(r.name))); nm.appendChild(el('div', 'lsub', 'wants to track you. You would see each other.')); d.appendChild(nm);
+  const d = nameRow(r.name, r.code, r.color, 'wants to track you. Check that their code is right before you accept.');
   const ok = el('button', 'btn prim sm', 'Accept'), no = el('button', 'btn sm', 'Not now');
   ok.onclick = () => { wsSend({ t: 'tacc', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); };
   no.onclick = () => { wsSend({ t: 'tden', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); };
@@ -2211,15 +2322,13 @@ function lpRender() {
   const rq = $('lreqs'); rq.textContent = '';
   reqs.slice(0, 3).forEach(r => { const c = el('div', 'paper lreqcard'); c.appendChild(reqCard(r)); rq.appendChild(c); });
   trackVis();
-  if (!lpVisible) return;
+  if (!chatOpen || cTab !== 'friends') return;
+  $('myCodeV').textContent = myCode || '······';
   const list = $('lpList'); list.textContent = '';
   $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
   if (!lks.length) list.appendChild(el('div', 'small dim', 'Nobody yet. Find a player below.'));
   for (const l of lks) {
-    const f = el('div', 'frow'), d = el('div', 'lrow'); d.appendChild(dot(l.color));
-    const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(l.name)));
-    nm.appendChild(el('div', 'lsub', !l.ok ? 'Waiting for them to come back' : l.on ? 'Online, in World ' + (l.w || '?') : 'Offline'));
-    d.appendChild(nm);
+    const f = el('div', 'frow'), d = nameRow(l.name, l.code, l.color, !l.ok ? 'Waiting for them to come back' : l.on ? 'Online · World ' + (l.w || '?') : 'Last on ' + ago(l.last));
     const x = el('button', 'btn sm', 'Disconnect'); x.onclick = () => disconnectLink(l.pub); d.appendChild(x); f.appendChild(d);
     const o = el('div', 'fopts');
     o.appendChild(chip('Big on the map', l.big, () => { l.big = !l.big; saveLinks(); lpRender(); }, 'Show them bigger and glowing on both maps'));
@@ -2234,15 +2343,25 @@ function lpRender() {
   reqs.forEach(r => rl.appendChild(reqCard(r))); $('lpReqH').classList.toggle('hide', !reqs.length);
   const res = $('lpRes'); res.textContent = '';
   const shown = lpFound.filter(f => !reqs.some(r => r.pub === f.pub));
-  if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody online with that name.' : 'Nobody else is here right now.'));
+  if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody found. You can also type someone\'s code.' : 'Nobody else yet.'));
   for (const f of shown) {
-    const d = el('div', 'lrow'); d.appendChild(dot(f.color));
-    const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(f.name))); nm.appendChild(el('div', 'lsub', 'World ' + f.w)); d.appendChild(nm);
-    const linked = f.l || lkOf(f.pub), sent = sentTo.has(f.pub);
+    const linked = f.l || lkOf(f.pub), sent = sentTo.has(f.pub), muted = !!mutes[f.pub];
+    const d = nameRow(f.name, f.code, f.color, f.on ? 'Online now · World ' + f.w : 'Last on ' + ago(f.last));
+    if (!linked) {
+      const mb = el('button', 'btn sm', muted ? 'Unmute' : 'Mute');
+      mb.onclick = () => { if (muted) delete mutes[f.pub]; else mutes[f.pub] = { n: f.name, c: f.code }; saveMutes(); lpRender(); };
+      d.appendChild(mb);
+    }
     const b = el('button', 'btn sm' + (linked || sent ? '' : ' prim'), linked ? 'Tracking' : sent ? 'Sent' : 'Track');
     if (linked || sent || lks.length >= MAXLINK) b.disabled = true;
     b.onclick = () => { wsSend({ t: 'treq', to: f.pub }); b.disabled = true; b.textContent = 'Sent'; };
     d.appendChild(b); res.appendChild(d);
+  }
+  const ml = $('mutedList'); ml.textContent = ''; const mk = Object.keys(mutes);
+  $('mutedH').classList.toggle('hide', !mk.length);
+  for (const pub of mk) {
+    const d = nameRow(mutes[pub].n, mutes[pub].c, '#888', 'Muted: no emojis, no join / leave lines'); const ub = el('button', 'btn sm', 'Unmute');
+    ub.onclick = () => { delete mutes[pub]; saveMutes(); lpRender(); }; d.appendChild(ub); ml.appendChild(d);
   }
 }
 function disconnectLink(pub) {
@@ -2251,8 +2370,42 @@ function disconnectLink(pub) {
   saveLinks(); sfx('ui'); lpRender();
 }
 function lpSearch() { wsSend({ t: 'find', q: lpQ }); }
-$('linkpill').onclick = () => { if (typeof toggleSettings === 'function') { if ($('settings').classList.contains('hide')) toggleSettings(); } if (typeof showTab === 'function') showTab('friends'); };
+function lpRefresh() { clearInterval(lpTimer); lpTimer = 0; if (chatOpen && cTab === 'friends') { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 6000); } }
 $('lpQ').addEventListener('input', () => { clearTimeout(lpDeb); lpDeb = setTimeout(() => { lpQ = $('lpQ').value.trim(); lpSearch(); }, 250); });
+
+/* ----- names: everyone has one, and it can change once a day ----- */
+const NAMEKEY = 'ballrun4_nameat';
+let nameUnlockAt = 0; try { nameUnlockAt = +localStorage.getItem(NAMEKEY) || 0; } catch (e) {}
+const nameLocked = () => nameUnlockAt > Date.now();
+function hm(ms) { const m = Math.max(1, Math.ceil(ms / 60000)); return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'm' : m + ' min'; }
+function nameUI() {
+  const lk = nameLocked(), i = $('setName'), n = $('nameNote');
+  if (!i) return;
+  i.disabled = lk; if (document.activeElement !== i) i.value = settings.name;
+  n.textContent = lk ? 'You can change your name again in ' + hm(nameUnlockAt - Date.now()) + '.' : 'You can change your name once a day.';
+}
+function nameServer(name, left, denied) {   // the server has the last word on names
+  if (name) { settings.name = name; save(); }
+  nameUnlockAt = left > 0 ? Date.now() + left : 0; try { localStorage.setItem(NAMEKEY, String(nameUnlockAt)); } catch (e) {}
+  if (denied) notice('You can change your name again in ' + hm(left), '');
+  lastSent = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
+  nameUI();
+}
+const ADJ = ['Happy', 'Sunny', 'Cozy', 'Bouncy', 'Mellow', 'Swift', 'Lucky', 'Fuzzy', 'Jolly', 'Breezy', 'Zesty', 'Calm', 'Brave', 'Dizzy', 'Merry', 'Snappy'];
+const NOUN = ['Otter', 'Pebble', 'Comet', 'Waffle', 'Panda', 'Moss', 'Rocket', 'Beetle', 'Cloud', 'Pickle', 'Maple', 'Pixel', 'Koala', 'Biscuit', 'Fox', 'Turtle'];
+function randomName() { for (let k = 0; k < 20; k++) { const n = ADJ[Math.random() * ADJ.length | 0] + NOUN[Math.random() * NOUN.length | 0]; if (n.length <= 12) return n; } return 'Rolly' + (Math.random() * 90 + 10 | 0); }
+function showNameCard() { $('nameIn').value = ''; $('namecard').classList.remove('hide'); setTimeout(() => { try { $('nameIn').focus(); } catch (e) {} }, 50); }
+function finishName() {
+  const v = $('nameIn').value.replace(NAME_BAD, '').trim().slice(0, 12) || randomName();
+  settings.name = v; save(); $('setName').value = v; $('namecard').classList.add('hide'); sfx('ui');
+  if (settings.mp && !ws) { setNet('connecting'); connect(); }
+  setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
+  if (settings.intro) showIntro();
+}
+$('nameOk').onclick = finishName;
+$('nameDice').onclick = () => { $('nameIn').value = randomName(); sfx('ui'); };
+$('nameIn').addEventListener('input', () => { const v = $('nameIn').value.replace(NAME_BAD, '').slice(0, 12); if (v !== $('nameIn').value) $('nameIn').value = v; });
+$('nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') finishName(); });
 
 /* ================= networking ================= */
 function setNet(state) {
@@ -2281,7 +2434,7 @@ function setMultiplayer(on) {
   applyDeps(); syncUI(); newBotTarget();
 }
 function connect() {
-  if (!settings.mp || ws) return;
+  if (!settings.mp || ws || !settings.name) return;
   if (location.protocol === 'file:' || !('WebSocket' in window)) { setNet('offline'); return; }
   let sock;
   // the game server lives on Render. Any other address (like ballpit.party) still talks to it; only your own computer talks to itself.
@@ -2305,7 +2458,7 @@ function scheduleRetry() {
   if (retryTimer || !settings.mp) return;
   retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(10000, 1500 + retry * 1500));
 }
-setTimeout(() => { if (netState === "connecting") setNet("offline"); }, 3500);
+setTimeout(() => { if (netState === "connecting" && settings.name) setNet("offline"); }, 3500);
 function sendInfo() {
   if (!online || !ws || ws.readyState !== 1) return;
   const msg = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
@@ -2362,7 +2515,7 @@ function onMsg(m) {
     case 'welcome':
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
       net.online = m.online; net.peak = m.peak;
-      settings.name = m.name; $('setName').value = m.name; save();
+      myCode = m.code || myCode; nameServer(m.name, m.nameLeft | 0, false);
       lastSent = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
       others.clear();
       m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); });
@@ -3334,7 +3487,7 @@ function hudTick() {
   const tm = $('timer');
   const endless = inSolo() && settings.soloLen === 0;
   $('nexttimer').textContent = endless ? '∞' : fmtClock(rem);
-  tm.className = 'pill' + (endless ? '' : rem <= 30000 && rem > 0 ? ' final' : rem <= 60000 ? ' low' : '');
+  tm.className = endless ? '' : rem <= 30000 && rem > 0 ? 'final' : rem <= 60000 ? 'low' : '';
   if (S.mode === 'play') {
     TH.forEach(t => {
       if (!inSolo() && !warned[t] && rem <= t * 60000) {
@@ -3380,13 +3533,13 @@ function fillTimerPop(rem) {
   ar.classList.toggle('hide', !on);
   if (on && S.b) { const f = S.map.flag, a = Math.atan2(f[1] * TS - S.b.y, f[0] * TS - S.b.x) * 180 / Math.PI + 90; ar.style.transform = 'rotate(' + a.toFixed(0) + 'deg)'; }
 }
-$('timer').onclick = e => { e.stopPropagation(); const el = $('tpop'); const open = el.classList.contains('hide'); el.classList.toggle('hide', !open); if (open) { fillTimerPop(S.nextAt - nowMs()); sfx('ui'); } };
-document.addEventListener('pointerdown', e => { const el = $('tpop'); if (!el.classList.contains('hide') && !el.contains(e.target) && !$('timer').contains(e.target)) el.classList.add('hide'); });
+$('info').onclick = e => { if (e.target.closest('#linkpill,#tpop')) return; e.stopPropagation(); const el = $('tpop'); const open = el.classList.contains('hide'); el.classList.toggle('hide', !open); if (open) { fillTimerPop(S.nextAt - nowMs()); sfx('ui'); } };
+document.addEventListener('pointerdown', e => { const el = $('tpop'); if (!el.classList.contains('hide') && !el.contains(e.target) && !$('info').contains(e.target)) el.classList.add('hide'); });
 
 /* ================= boot ================= */
 applyZoomRange(); syncUI(); applyTouchUI();
 try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } catch (e) {}
-if (settings.intro) showIntro();
+if (!settings.name) showNameCard(); else if (settings.intro) showIntro();
 {
   if (!settings.mp && forced === null) { loadSolo(); soloGo(false); }
   else {
@@ -3397,6 +3550,7 @@ if (settings.intro) showIntro();
 }
 if (params && params.get('test')) window.__d = { S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
 if (settings.mp) { setNet('connecting'); connect(); } else setNet('solo');
+nameUI(); setInterval(nameUI, 20000);
 newBotTarget();
 hudTick();
 requestAnimationFrame(frame);
