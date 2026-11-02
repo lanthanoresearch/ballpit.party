@@ -430,6 +430,10 @@
   .pbtn.go{background:#2f9e61;font-size:25px}.pbtn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
   #pause{z-index:7;background:rgba(10,8,16,.5);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
   #home .card{color:var(--ink)}
+  #homeShare{position:fixed;left:12px;top:12px;top:calc(12px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left));z-index:4;width:42px;height:40px;font-size:20px;cursor:pointer}
+  #homeShare:hover{background:#3a3355}
+  #shareTip{position:fixed;left:62px;top:18px;top:calc(18px + env(safe-area-inset-top));z-index:4;background:var(--paper);border:2px solid var(--line);border-radius:var(--wob);padding:4px 12px;font-size:15px;color:var(--ink)}
+  #shareTip.hide{display:none}
   #home .scene{position:fixed;z-index:0}#home .hbox{z-index:2}#home .sball{z-index:1}
   @media (max-height:540px){
     #home{padding:8px}#home h1{font-size:34px}#home .hsub,#homeModeNote{display:none}
@@ -441,7 +445,7 @@
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
-  #nameModal{z-index:12;background:rgba(10,8,16,.55)}#confirm{z-index:13}
+  #nameModal,#shareModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:13}
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
   .nname.dim{opacity:.55}
@@ -575,6 +579,7 @@
 <symbol id="i-up" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7M12 8v12"/></symbol>
 <symbol id="i-reset" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.300 5.700M20 4v7h-7"/></symbol>
 <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5.500" r="2.800"/><circle cx="6" cy="12" r="2.800"/><circle cx="18" cy="18.500" r="2.800"/><path d="M8.500 10.700l7-4M8.500 13.300l7 4"/></symbol>
 <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.500 9.500a2.500 2.500 0 1 1 3.500 2.300c-.7.400-1 1-1 1.700M12 17v.5"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.500 2"/></symbol>
 <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
@@ -733,7 +738,7 @@
     <section class="pane" data-pane="bots">
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Pretend players that only you can see</small></span></span><input type="checkbox" id="setBots"><i></i></label>
       <div class="dep" data-dep="bots"><div>
-        <div class="row"><span class="lbl"><span data-ic="bot"></span> Up to <b id="botMaxVal"></b> bots</span><input type="range" id="setBotMax" min="0" max="200" step="1"></div>
+        <div class="row"><span class="lbl"><span data-ic="bot"></span> Up to <b id="botMaxVal"></b> bots</span><input type="range" id="setBotMax" min="1" max="200" step="1"><div class="small dim">Want none? Turn bots off above.</div></div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Mark bots with a robot icon</b><small>So you can tell them apart</small></span></span><input type="checkbox" id="setBotMark"><i></i></label>
       </div></div>
       <div class="dep" data-dep="!bots"><div>
@@ -755,6 +760,7 @@
 
 <div id="home" class="hide">
   <div class="scene" id="homeScene"></div>
+  <button id="homeShare" class="ibtn" type="button" title="Share ballpit.party" aria-label="Share the game" data-ic="share"></button><span id="shareTip" class="hide">Link copied</span>
   <div class="hbox">
     <h1>BALL<b>PIT</b>.PARTY</h1>
     <div class="hsub">Roll through a huge world and find the hidden finish flag.</div>
@@ -801,6 +807,12 @@
   <div class="small dim" id="nmNote"></div>
   <div class="btns"><button id="nmNo" type="button">Cancel</button><button id="nmOk" type="button" class="go">OK</button></div>
 </div></div>
+<div id="shareModal" class="overlay hide"><div class="card nmcard">
+  <h3>Share ballpit.party</h3>
+  <div class="small dim" id="shNote">Copy this link and send it to your friends.</div>
+  <input type="text" id="shText" readonly spellcheck="false" autocomplete="off">
+  <div class="btns"><button id="shClose" type="button">Close</button><button id="shCopy" type="button" class="go">Copy link</button></div>
+</div></div>
 <div id="confirm" class="overlay hide"><div class="card" style="width:min(420px,100%)">
   <h3 id="cfTitle"></h3><p id="cfText"></p>
   <label class="dont hide" id="cfOptWrap"><input type="checkbox" id="cfOpt"><span id="cfOptText"></span></label>
@@ -843,8 +855,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=18"></script>
-<script src="physics.js?v=18"></script>
+<script src="maps.js?v=20"></script>
+<script src="physics.js?v=20"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -900,7 +912,7 @@ function normalize() {
   if (!HEX.test(settings.color2)) settings.color2 = d.color2;
   settings.pat = clamp(settings.pat | 0, 0, PATTERNS.length - 1);
   settings.zoom = clamp(+settings.zoom || 1, 0.25, 2);
-  settings.botMax = clamp(Math.round(+settings.botMax), 0, 200); if (!isFinite(settings.botMax)) settings.botMax = 8;
+  settings.botMax = clamp(Math.round(+settings.botMax), 1, 200); if (!isFinite(settings.botMax)) settings.botMax = 8;
   settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
   settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
   if (['none', 'peaceful', 'upbeat', 'exciting'].indexOf(settings.music) < 0) settings.music = 'peaceful';
@@ -1453,7 +1465,7 @@ function startTransition(slot, next) {
 }
 
 let inHome = true, paused = false;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
-const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text'; };
+const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text' && !a.readOnly; };
 const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 function update(dt) {
@@ -2617,6 +2629,7 @@ function openPause() {
 function resumeGame() { if (!paused) return; paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); sfx('ui'); }
 const togglePause = () => { if (paused) resumeGame(); else openPause(); };
 function escMenu() {   // Escape: closes whatever is on top, then pauses / resumes
+  if (!$('shareModal').classList.contains('hide')) { closeShareModal(); return; }
   if (chatOpen) { toggleChat(false); return; }
   if (!$('nameModal').classList.contains('hide')) { closeNameModal(); return; }
   if (!$('settings').classList.contains('hide')) { closeSettingsNow(); return; }
@@ -2637,7 +2650,39 @@ $('homeAuto').onchange = () => { settings.autoEnter = $('homeAuto').checked; sav
 $('homeLook').onclick = () => { showTab('you'); toggleSettings(); };
 $('homeSet').onclick = () => toggleSettings();
 $('homeHelp').onclick = () => showIntro();
-addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && $('nameModal').classList.contains('hide') && !typing()) enterGame(false); });
+/* Share: 1) the system share sheet, 2) copy the link automatically, 3) a pop-up with the link to copy by hand, 4) say we can't. The first one that works stops the chain. */
+const shareUrl = () => (/onrender\.com$|^localhost$|^127\./.test(location.hostname) ? 'https://ballpit.party' : location.origin) + '/';
+async function copyText(t) {
+  try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(t); return true; } } catch (e) {}
+  try { const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, t.length); const ok = document.execCommand('copy'); ta.remove(); return !!ok; } catch (e) {}
+  return false;
+}
+function shareTip(text, ms) { const tip = $('shareTip'); tip.textContent = text; tip.classList.remove('hide'); clearTimeout(tip._t); tip._t = setTimeout(() => tip.classList.add('hide'), ms); }
+function openShareModal(url, note) {
+  $('shText').value = url; $('shNote').textContent = note || 'Copy this link and send it to your friends.'; $('shareModal').classList.remove('hide');
+  setTimeout(() => { try { $('shText').focus(); $('shText').select(); } catch (e) {} }, 30);
+}
+const closeShareModal = () => { $('shareModal').classList.add('hide'); try { $('shText').blur(); } catch (e) {} };
+$('shClose').onclick = closeShareModal;
+$('shareModal').addEventListener('pointerdown', e => { if (e.target === $('shareModal')) closeShareModal(); });
+$('shText').onfocus = () => { try { $('shText').select(); } catch (e) {} };
+$('shCopy').onclick = async () => {
+  const url = $('shText').value;
+  if (await copyText(url)) { closeShareModal(); shareTip('Link copied', 2000); return; }
+  try { $('shText').focus(); $('shText').select(); } catch (e) {}
+  $('shNote').textContent = "Sorry, we can't copy it for you here. The link is selected, so you can copy it yourself.";
+};
+$('homeShare').onclick = async () => {
+  const url = shareUrl(); sfx('ui');
+  const data = { title: 'ballpit.party', text: 'Roll a ball through a huge world with me. Find the hidden finish flag!', url };
+  try {   // 1. the system share menu
+    if (navigator.share && (!navigator.canShare || navigator.canShare(data))) { await navigator.share(data); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }   // closed the menu on purpose: nothing more to do
+  if (await copyText(url)) { shareTip('Link copied', 2000); return; }   // 2. copy it automatically
+  try { openShareModal(url); return; } catch (e) {}   // 3. show it so it can be copied by hand
+  shareTip("Sorry, we can't share right now", 4000);   // 4. nothing worked
+};
+addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && $('nameModal').classList.contains('hide') && $('shareModal').classList.contains('hide') && !typing()) enterGame(false); });
 
 /* ================= networking ================= */
 function setNet(state) {
