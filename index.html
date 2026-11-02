@@ -212,7 +212,6 @@
   #tpArrow{margin-left:auto;display:inline-flex;transition:transform .2s}#tpArrow svg{width:26px;height:26px;color:#ffd23d}
 
   /* ---- one tidy stack for every text popup, so nothing overlaps ---- */
-  #stack{position:fixed;left:50%;top:10px;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:6px;width:max-content;max-width:min(520px,calc(100vw - 460px));pointer-events:none}
   #stack>*{position:static!important;transform:none!important;left:auto!important;right:auto!important;top:auto!important;margin:0!important;max-width:100%}
   #stack #notice:not(.show){display:none}
   #stack #notice.show{animation:pop .25s ease-out}
@@ -220,7 +219,6 @@
   #feed{display:flex;flex-direction:column;align-items:center;gap:3px;max-width:100%}
   .msg{border-right:0;border-left:4px solid var(--good)}.msg.leave{border-left-color:var(--bad)}.msg.fin{border-left-color:var(--accent)}.msg.bad{border-left-color:#ff9f43}
   #timer.final{position:static;transform:none;background:rgba(150,20,20,.95);border-color:#fff;color:#fff;font-size:17px;padding:4px 12px;animation:flash 1s steps(1) infinite}
-  @media (max-width:820px){#stack{left:128px;right:10px;transform:none;top:52px;top:calc(52px + env(safe-area-inset-top));width:auto;max-width:none}}
   /* ---- settings: a pop-up in the middle, with the game dimmed behind it ---- */
   #sback{display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(14,12,22,.55);z-index:8;touch-action:none}
   #settings{left:50%!important;top:50%!important;right:auto!important;transform:translate(-50%,-50%);width:min(580px,calc(100vw - 20px))!important;max-height:min(90vh,800px)!important;z-index:9;box-shadow:0 16px 60px rgba(0,0,0,.6)}
@@ -231,6 +229,25 @@
   #mmbigc{height:min(66vh,640px);cursor:grab;touch-action:none}
   #mmbigc.drag{cursor:grabbing}
   #mmbig{z-index:12}
+
+  /* ---- the top of the screen is one grid: info on the left, messages in the middle, buttons on the right ---- */
+  #top{position:fixed;left:0;right:0;top:0;z-index:6;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"hl mid hr";column-gap:8px;align-items:start;pointer-events:none;
+    padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left))}
+  #top>#hl,#top>#hr,#top>#stack{position:static;left:auto;right:auto;top:auto;transform:none;z-index:auto}
+  #top>#hl{grid-area:hl}#top>#hr{grid-area:hr}
+  #top>#stack{grid-area:mid;justify-self:center;width:max-content;max-width:min(100%,520px);min-width:0}
+  @media (max-aspect-ratio:1/1) and (max-width:700px),(max-width:480px){
+    #top{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"hl hr" "hl mid";row-gap:6px}
+    #top>#hr{justify-self:end}#top>#stack{justify-self:stretch;width:auto;max-width:none}
+  }
+  @media (max-height:520px){
+    #mm{width:96px;height:64px;margin-top:3px}#onl{font-size:11px}#hl .pill{padding:1px 8px;font-size:13px}
+    .ibtn{width:30px;height:28px;font-size:15px}#timer{font-size:13px;padding:2px 8px}#timer.final{font-size:15px}
+    #worldpop{font-size:13px;line-height:1.2;padding:6px 12px}#worldpop b{font-size:15px}
+    #notice{font-size:13px;padding:4px 10px}#beaconbar{font-size:13px;padding:3px 10px}.msg{font-size:12px;padding:1px 7px}#netstat{font-size:12px}
+    #tpop{top:42px;font-size:13px;padding:7px 11px;width:min(280px,calc(100vw - 20px))}#tpop h3{font-size:17px}
+  }
+  #stack{display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
 </style>
 </head>
 <body>
@@ -279,7 +296,7 @@
 <div id="gest" class="hide"></div>
 <div id="dflash"></div>
 
-<div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="coin"></span><span id="coinN">0</span></span><canvas id="mm" width="170" height="110"></canvas></div>
+<div id="top"><div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="coin"></span><span id="coinN">0</span></span><canvas id="mm" width="170" height="110"></canvas></div>
 <div id="stack"><div id="netstat" class="pill hide"><i></i><span id="netText">Offline</span></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div><div id="feed"></div></div>
 <div id="hr">
   <div id="topbar">
@@ -287,7 +304,7 @@
     <button id="btnRespawn" class="ibtn" title="Back to the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Settings (Esc)" data-ic="gear"></button>
   </div>
-</div>
+</div></div>
 <div id="tpop" class="paper hide">
   <h3><span data-ic="map"></span><span id="tpName"></span></h3>
   <div class="tl"><span data-ic="clock"></span><span id="tpChange"></span></div>
@@ -451,8 +468,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=10"></script>
-<script src="physics.js?v=10"></script>
+<script src="maps.js?v=11"></script>
+<script src="physics.js?v=11"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2576,7 +2593,7 @@ function beaconInfo(t) {   // same answer for everyone, because it only depends 
 let lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
 const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 function worldText() {
-  if (inSolo()) return 'Solo world';
+  if (inSolo()) return '';
   if (online) return 'World ' + room.id + ' · ' + room.n + ' player' + (room.n === 1 ? '' : 's');
   return settings.mp ? 'Connecting…' : '';
 }
