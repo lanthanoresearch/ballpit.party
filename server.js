@@ -16,7 +16,7 @@ const MAX_PLAYERS = 50;                                   // players per room
 const SLOT_MS = 6 * 60 * 60 * 1000;                       // a map "session" lasts 6 hours
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
 const TICK_MS = 200;                                      // 5 position updates per second (the client smooths between them)
-const RANGE = 2600;                                       // you only receive players within this many pixels of you (more than a screen)
+const RANGE = 3000;                                       // you only receive players within this many pixels of you (more than a screen)
 const MAX_PER_IP = parseInt(process.env.MAX_PER_IP, 10) || 10;
 const STATS_FILE = process.env.STATS_FILE || path.join(__dirname, 'stats.json');
 const PATTERNS = 6;
@@ -122,7 +122,7 @@ wss.on('connection', (ws, req) => {
       send(p, {
         t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS,
         name: p.name, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak,
-        players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, name: o.name, color: o.color, color2: o.color2, pat: o.pat }))
+        players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === curSlot ? 1 : 0 }))
       });
       broadcast(room, { t: 'join', id: p.id, name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
       return;
@@ -132,7 +132,7 @@ wss.on('connection', (ws, req) => {
     if (m.t === 'p') {
       if (m.m !== curSlot || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
       const d = m.d ? 1 : 0;
-      const x = Math.max(0, Math.min(131068, Math.round(m.x))), y = Math.max(0, Math.min(65534, Math.round(m.y)));
+      const x = Math.max(0, Math.min(131068, Math.round(m.x))), y = Math.max(0, Math.min(65533, Math.round(m.y)));
       if (p.x !== x || p.y !== y || p.dead !== d || !p.has) p.moved = true;
       p.x = x; p.y = y; p.dead = d; p.has = true;
     } else if (m.t === 'info') {
@@ -173,13 +173,16 @@ setInterval(() => {
       let k = 0; const hits = [];
       for (const p of list) {
         if (p === r || !p.has) continue;
-        if (Math.abs(p.x - r.x) > RANGE || Math.abs(p.y - r.y) > RANGE) { r.vis.delete(p.id); continue; }
-        if (p.moved || !r.vis.has(p.id)) { hits.push(p); r.vis.add(p.id); }
+        if (Math.abs(p.x - r.x) > RANGE || Math.abs(p.y - r.y) > RANGE) {
+          if (r.vis.delete(p.id)) hits.push([p, 1]);   // they moved out of your range: tell the client to hide them (no stale ghosts)
+          continue;
+        }
+        if (p.moved || !r.vis.has(p.id)) { hits.push([p, 0]); r.vis.add(p.id); }
       }
       if (!hits.length) continue;
       const buf = Buffer.allocUnsafe(3 + hits.length * 8);
       buf[0] = 1; buf.writeUInt16LE(curSlot & 0xFFFF, 1);
-      for (const p of hits) { buf.writeUInt32LE(p.id, 3 + k * 8); buf.writeUInt16LE(p.x >> 1, 7 + k * 8); buf.writeUInt16LE(p.dead ? 65535 : p.y, 9 + k * 8); k++; }
+      for (const h of hits) { const p = h[0]; buf.writeUInt32LE(p.id, 3 + k * 8); buf.writeUInt16LE(p.x >> 1, 7 + k * 8); buf.writeUInt16LE(h[1] ? 65534 : p.dead ? 65535 : p.y, 9 + k * 8); k++; }   // y: 65535 = just died, 65534 = out of range
       r.ws.send(buf, { binary: true });
     }
     for (const p of list) p.moved = false;
