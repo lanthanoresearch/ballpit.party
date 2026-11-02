@@ -362,6 +362,31 @@
   .lsub .code{margin-left:0}
   .lreqcard .lrow,#lpReqs .lrow{flex-wrap:wrap}.lreqcard .lname,#lpReqs .lname{flex-basis:calc(100% - 24px);white-space:normal}.lreqcard .lrow .btn,#lpReqs .lrow .btn{margin-left:auto}
   #lpRes .lrow,#mutedList .lrow,.frow>.lrow{flex-wrap:wrap}#lpRes .lname,#mutedList .lname,.frow>.lrow .lname{flex-basis:calc(100% - 24px);white-space:normal}#lpRes .lname b,#mutedList .lname b,.frow>.lrow .lname b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#lpRes .lrow .btn:first-of-type,#mutedList .lrow .btn,.frow>.lrow .btn{margin-left:auto}
+  #tlab,.clab{font-size:11px;opacity:.65;margin-left:1px;white-space:nowrap}#timer.final #tlab{opacity:.85}
+  #home{position:fixed;inset:0;z-index:7;display:flex;padding:14px;overflow:auto;background:radial-gradient(ellipse at 50% 35%,#2a2240 0%,#14111c 70%);font-family:var(--font);color:var(--ink)}
+  #home.hide{display:none}
+  #homeBalls{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  #home .hbox{position:relative;z-index:1;width:min(480px,100%);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;margin:auto}
+  #home h1{margin:0;font-size:clamp(34px,9vw,60px);letter-spacing:3px;font-weight:400;text-shadow:3px 4px 0 rgba(0,0,0,.45);animation:bwob 3.2s ease-in-out infinite}
+  #home h1 b{color:var(--accent);font-weight:400}
+  .hsub{opacity:.75;font-size:17px;max-width:420px}
+  #home .card{text-align:left;width:100%;display:flex;flex-direction:column;gap:8px;overflow:visible}
+  .hrow{display:flex;gap:8px;align-items:stretch}.hrow .btn{white-space:nowrap}
+  .hplay{padding:12px;border:3px solid var(--line);border-radius:var(--wob);background:#2f9e61;font-size:28px;letter-spacing:3px;color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.4);margin-top:2px}
+  .hplay:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.4)}
+  .hbtns{display:flex;gap:8px;flex-wrap:wrap}.hbtns .btn{flex:1;min-width:110px}
+  #home .sw2{margin:4px 0 0}
+  body.home #top,body.home #stack,body.home #hr,body.home #touch,body.home #joy,body.home #editbar{display:none!important}
+  #intro,#confirm{z-index:12}
+  @media (prefers-reduced-motion:reduce){#home h1{animation:none}}
+  .epcard{width:min(400px,100%);text-align:center}
+  #emoGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:8px 0 12px}
+  #emoGrid button{height:auto;aspect-ratio:1;padding:6px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;display:flex;align-items:center;justify-content:center}
+  #emoGrid button:active{transform:scale(.92)}#emoGrid button.cool{opacity:.45}
+  #emoGrid svg{width:100%;height:100%}
+  #emoPop{z-index:11;background:rgba(10,8,16,.55)}
+  #emoPop .cfoot{display:flex;flex-direction:column;gap:6px;align-items:center}
+  @media (pointer:coarse){#tlab,.clab{display:none}}
 </style>
 </head>
 <body>
@@ -375,7 +400,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__', t0 = Date.now(), tips = ['Hold jump for 3 seconds for a super jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__', t0 = Date.now(), tips = ['Stand still and hold jump: a ring fills. Let go to jump, and after 3 seconds it is a super jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('bootFill'); if (f) f.style.width = p + '%'; }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   try { var c = ['#ff4d4d', '#ffcc3d', '#58d68d', '#4da6ff', '#c58bff', '#ff8a1f'], box = $('bootBalls'); for (var i = 0; i < 16; i++) { var b = document.createElement('i'); b.className = 'bb'; var s = 14 + Math.random() * 26; b.style.cssText = 'left:' + Math.random() * 100 + '%;width:' + s + 'px;height:' + s + 'px;background:' + c[i % c.length] + ';animation-duration:' + (5 + Math.random() * 6) + 's;animation-delay:-' + Math.random() * 8 + 's'; box.appendChild(b); } } catch (e) {}
@@ -410,7 +435,7 @@
 })();
 </script>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.6"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><path d="M10.08 4.85 L10.26 2.15 L13.74 2.15 L13.92 4.85 L15.70 5.59 L17.74 3.81 L20.19 6.26 L18.41 8.30 L19.15 10.08 L21.85 10.26 L21.85 13.74 L19.15 13.92 L18.41 15.70 L20.19 17.74 L17.74 20.19 L15.70 18.41 L13.92 19.15 L13.74 21.85 L10.26 21.85 L10.08 19.15 L8.30 18.41 L6.26 20.19 L3.81 17.74 L5.59 15.70 L4.85 13.92 L2.15 13.74 L2.15 10.26 L4.85 10.08 L5.59 8.30 L3.81 6.26 L6.26 3.81 L8.30 5.59Z"/><circle cx="12" cy="12" r="3.2"/></symbol>
 <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
 <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
 <symbol id="i-pad" viewBox="0 0 24 24"><path d="M6.5 7h11a4.5 4.5 0 0 1 4.4 4l.6 4.5a2.8 2.8 0 0 1-4.8 2.2L15.5 16h-7l-2.2 1.7A2.8 2.8 0 0 1 1.5 15.5L2.100 11A4.500 4.500 0 0 1 6.500 7z"/><path d="M8 10v4M6 12h4M16 11h.01M18 13h.01"/></symbol>
@@ -461,8 +486,8 @@
     <div id="info" class="paper" title="Map info">
       <div id="infoTop"><div id="netstat"><i></i><span id="netText">Checking</span></div></div>
       <span id="onl"></span>
-      <div id="timer"><span data-ic="clock"></span><span id="nexttimer">--:--</span></div>
-      <div id="infoRow"><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span></span><button id="linkpill" class="pill hide"><span data-ic="users"></span><span id="linkN"></span></button></div>
+      <div id="timer"><span data-ic="clock"></span><span id="nexttimer">--:--</span><span id="tlab">next map</span></div>
+      <div id="infoRow"><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span><span class="clab">coins</span></span><button id="linkpill" class="pill hide"><span data-ic="users"></span><span id="linkN"></span></button></div>
     </div>
     <div id="tpop" class="paper hide">
       <h3><span data-ic="map"></span><span id="tpName"></span></h3>
@@ -481,26 +506,14 @@
     <button id="btnRespawn" class="ibtn" title="Back to the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Settings (Esc)" data-ic="gear"></button>
   </div>
-  <div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Chat and friends" data-ic="chat"></button><i id="chBadge" class="hide"></i></div>
+  <div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Say it with an emoji" data-ic="chat"></button></div>
   <div id="lreqs" class="hide"></div>
   <div id="feed"></div>
-  <div id="cpanel" class="paper hide">
-    <div class="shead"><span>Chat</span><button id="cpClose" class="xbtn" title="Close" data-ic="close"></button></div>
-    <div class="ctabs" id="ctabs"><button data-ct="chat" class="on"><span data-ic="chat"></span>Chat</button><button data-ct="friends"><span data-ic="users"></span>Friends</button></div>
-    <section class="cpane on" data-cp="chat">
-      <div id="chatLog"></div>
-      <div id="emoGrid"></div>
-      <div class="cfoot"><button id="chatMute" class="chip">Mute public chat</button><span class="small dim">Everyone in your world sees these.</span></div>
-    </section>
-    <section class="cpane" data-cp="friends">
-      <div id="myCode" class="mycode"><span>Your code</span><b id="myCodeV">······</b><span class="small dim">Friends can check it matches</span></div>
-      <h4><span data-ic="users"></span> Friends <span id="lpCount" class="dim"></span></h4><div id="lpList"></div>
-      <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Wants to track you</h4><div id="lpReqs"></div>
-      <h4><span data-ic="eye"></span> Find a player</h4>
-      <input type="text" id="lpQ" maxlength="12" placeholder="Name or code" autocomplete="off" spellcheck="false"><div id="lpRes"></div>
-      <h4 id="mutedH" class="hide"><span data-ic="sound"></span> Muted</h4><div id="mutedList"></div>
-    </section>
-  </div>
+</div></div>
+<div id="emoPop" class="overlay hide"><div class="card epcard">
+  <h3>Say it with an emoji</h3>
+  <div id="emoGrid"></div>
+  <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute emojis</button><span class="small dim">Everyone in your world sees it.</span></div>
 </div></div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 
@@ -517,6 +530,7 @@
     <button data-tab="display"><span data-ic="eye"></span><span>Display</span></button>
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Online</span></button>
+    <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
     <button data-tab="bots"><span data-ic="bot"></span><span>Bots</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
   </div>
@@ -586,6 +600,14 @@
         <button class="btn full" id="btnSoloNew"><span data-ic="reset"></span>Start a fresh world</button>
       </div></div>
     </section>
+    <section class="pane" data-pane="friends">
+      <div id="myCode" class="mycode"><span>Your code</span><b id="myCodeV">······</b><span class="small dim">Friends can check it matches</span></div>
+      <h4><span data-ic="users"></span> Friends <span id="lpCount" class="dim"></span></h4><div id="lpList"></div>
+      <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Wants to track you</h4><div id="lpReqs"></div>
+      <h4><span data-ic="eye"></span> Find a player</h4>
+      <input type="text" id="lpQ" maxlength="12" placeholder="Name or code" autocomplete="off" spellcheck="false"><div id="lpRes"></div>
+      <h4 id="mutedH" class="hide"><span data-ic="sound"></span> Muted</h4><div id="mutedList"></div>
+    </section>
     <section class="pane" data-pane="bots">
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Pretend players that only you can see</small></span></span><input type="checkbox" id="setBots"><i></i></label>
       <div class="dep" data-dep="bots"><div>
@@ -597,6 +619,8 @@
       </div></div>
     </section>
     <section class="pane" data-pane="more">
+      <button class="btn full" id="btnQuit"><span data-ic="left"></span>Quit to the main screen</button>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Skip the main screen</b><small>Open the game straight into play</small></span></span><input type="checkbox" id="setAuto"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small>The how-to-play card</small></span></span><input type="checkbox" id="setIntro"><i></i></label>
       <button class="btn full" id="btnRefresh"><span data-ic="reset"></span>Refresh the game</button>
       <button class="btn full" id="btnWelcome"><span data-ic="help"></span>How to play</button>
@@ -608,6 +632,23 @@
   </div>
 </div>
 
+<div id="home" class="hide">
+  <div id="homeBalls"></div>
+  <div class="hbox">
+    <h1>BALL<b>PIT</b>.PARTY</h1>
+    <div class="hsub">Roll through a huge world and find the hidden finish flag.</div>
+    <div class="card">
+      <label class="lbl" for="homeName">Your name</label>
+      <div class="hrow"><input type="text" id="homeName" maxlength="12" placeholder="Type a name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="btn" id="homeDice" type="button"><span data-ic="spark"></span>Surprise me</button></div>
+      <div class="small dim" id="homeNote"></div>
+      <label class="mpbig"><input type="checkbox" id="homeMp"><span class="mptrack"><span class="mpL"><span data-ic="user"></span>Solo</span><span class="mpR"><span data-ic="globe"></span>Multiplayer</span><i></i></span></label>
+      <button id="homePlay" class="hplay" type="button">Play</button>
+      <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Skip this screen next time</b><small>Go straight into the game. Settings has a button to come back here.</small></span></span><input type="checkbox" id="homeAuto"><i></i></label>
+    </div>
+    <div class="small dim" id="homeOnline"></div>
+  </div>
+</div>
 <div id="intro" class="overlay hide"><div class="card">
   <h1><span data-ic="ball"></span>BALLPIT.PARTY</h1>
   <p>You're a ball. Everyone online shares one huge world and is racing to find the <b>checkered flag</b>. Nothing tells you where it is, or where anyone else is. Pick a direction and explore.</p>
@@ -621,17 +662,11 @@
     <span><i class="lg" style="background:#ff8a1f"></i>Checkpoint flag: your next fall brings you back</span>
   </div>
   <p>Move with <kbd>A</kbd><kbd>D</kbd> or the arrows, jump with <kbd>W</kbd> or <kbd>Space</kbd>: tap for a hop, hold for a big jump. On a phone, use the on-screen controls (you can pick swipe styles in settings). Get the <i>middle</i> of your ball onto a block or you'll roll off.</p>
-  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Hold jump for 3 seconds for a super jump. Touch a checkpoint flag and your next fall brings you back to it once. Tap the chat button to send emojis, and add friends in Settings to see where they are. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
+  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Stand still and hold jump: a ring fills. Let go to jump, and after 3 seconds it is a super jump. Touch a checkpoint flag and your next fall brings you back to it once. Tap the chat button to send emojis, and add friends in Settings to see where they are. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
   <label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
   <button class="ok" id="btnOk">OK</button>
 </div></div>
 
-<div id="namecard" class="overlay hide"><div class="card" style="width:min(420px,100%)">
-  <h1><span data-ic="user"></span>Pick a name</h1>
-  <p>This is what other players see over your ball.</p>
-  <input type="text" id="nameIn" maxlength="12" placeholder="Your name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-  <div class="btns"><button id="nameDice" type="button">Surprise me</button><button id="nameOk" type="button" class="go">Done</button></div>
-</div></div>
 <div id="confirm" class="overlay hide"><div class="card" style="width:min(420px,100%)">
   <h3 id="cfTitle"></h3><p id="cfText"></p>
   <label class="dont hide" id="cfOptWrap"><input type="checkbox" id="cfOpt"><span id="cfOptText"></span></label>
@@ -674,8 +709,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=14"></script>
-<script src="physics.js?v=14"></script>
+<script src="maps.js?v=15"></script>
+<script src="physics.js?v=15"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -716,7 +751,7 @@ fillIcons();
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], back: ['KeyR'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, bots: false, botMax: 8, botMark: false, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, autoEnter: false, mp: true, bots: false, botMax: 8, botMark: false, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: 'rotate', soloLen: 180, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: false, boostBtn: true, boostPull: true, joy: true,
@@ -1283,8 +1318,9 @@ function startTransition(slot, next) {
   others.forEach(o => { o.seen = 0; o.t0 = 0; o.crown = false; });
 }
 
+let inHome = true;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text'; };
-const blocked = () => !$('intro').classList.contains('hide') || !$('namecard').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
+const blocked = () => !$('intro').classList.contains('hide') || inHome || !$('emoPop').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 function update(dt) {
   S.t += dt;
@@ -1305,6 +1341,7 @@ function update(dt) {
   S.pbx = b.x; S.pby = b.y;
   b.bAuto = !bl && settings.boost && settings.boostAuto;
   if (!settings.boost) { b.bReq = false; S.bLatch = 0; } else if (S.bLatch > 0 && !bl) { S.bLatch -= dt; b.bReq = true; }
+  b.canCharge = true;
   const ev = P.step(b, w, ax, jheld, dt);
   P.stepSwitches(w, b);
   if (w.ev.length) worldEvents();
@@ -1421,10 +1458,9 @@ function botCap() { const others = online ? Math.max(0, room.n - 1) : 0, left = 
 function newBotTarget() { const cap = botCap(); botTarget = cap <= 10 ? ri(Math.floor(cap / 3), cap) : ri(Math.round(cap * 0.7), cap); botNextRetarget = rnd(25, 70); }
 function botName() {
   const r = Math.random();
-  if (r < 0.12) return '';                       // some people use no name
   if (r < 0.30) return pick(WEIRD);
   let n = pick(HUMAN); if (Math.random() < 0.4) n += ri(0, 99);
-  return n.slice(0, 6);
+  return n.slice(0, 12);
 }
 function botRuns(A) {
   const w = S.world, out = []; let s = null;
@@ -1468,13 +1504,15 @@ function spawnBot() {
   botSpawnAt(bt); bots.push(bt);
   if (botTarget <= 12) addFeed(who(bt.name) + ' joined', 'join');
 }
+function botSay(bt, i) { bt.emo = { i, t: S.t }; bt.emoCool = rnd(120, 240); }   // bots hardly ever emote: only when stuck, or when they are really getting somewhere
+function botCheer(bt) { if ((bt.emoCool || 0) > 0 || bt.i - (bt.emoI || 0) < 22 || Math.random() > 0.3) return; bt.emoI = bt.i; botSay(bt, pick([0, 1, 6])); }
 function botLand(bt) {
   const b = bt.b, path = S.map.path, tx = Math.floor(b.x / TS), ty = Math.floor((b.y + R + 2) / TS);
   for (let j = Math.max(0, bt.i - 2); j <= Math.min(path.length - 1, bt.i + 8); j++) {
     const A = path[j];
     if (ty === A[1] && tx >= A[0] && tx < A[0] + A[2]) {
       bt.lostT = 0;
-      if (j !== bt.i) { bt.i = j; botPlan(bt); if (Math.random() < 0.1) bt.idle = rnd(0.4, 1.6); }
+      if (j !== bt.i) { bt.i = j; botPlan(bt); if (Math.random() < 0.1) bt.idle = rnd(0.4, 1.6); botCheer(bt); }
       return true;
     }
   }
@@ -1506,7 +1544,7 @@ function botAirPick(bt, aa, thr) {
 }
 function botStep(bt, dt) {
   const b = bt.b, w = S.world;
-  bt.age += dt;
+  bt.age += dt; if (bt.emoCool > 0) bt.emoCool -= dt;
   if (bt.dead > 0) { bt.dead -= dt; if (bt.dead <= 0) botSpawnAt(bt); return; }
   let ax = 0, jheld = false;
   if (bt.finished) { /* enjoying the win */ }
@@ -1524,7 +1562,7 @@ function botStep(bt, dt) {
     if (b.ground && Math.random() < dt * 1.1) { b.jbuf = 0.12; bt.wHigh = Math.random() < 0.5; }
     jheld = bt.wHigh;
   } else {
-    if (b.ground && b.flat && !botLand(bt)) { bt.lostT += dt; if (bt.lostT > 5) { bt.type = 'wander'; bt.life = Math.min(bt.life, bt.age + 60); } }
+    if (b.ground && b.flat && !botLand(bt)) { bt.lostT += dt; if (bt.lostT > 5) { bt.type = 'wander'; bt.life = Math.min(bt.life, bt.age + 60); } if (bt.lostT > 3 && !(bt.emoCool > 0)) botSay(bt, 3); }
     if (b.ground && b.flat) {
       if (bt.far && !inRun(b.x, bt.far)) bt.tcx = runMid(bt.far);
       else if (bt.bRun) bt.tcx = S.map.path[bt.i + 1] ? runMid(bt.bRun) : S.map.flag[0] * TS;
@@ -1768,7 +1806,7 @@ function gMove(id, x, y) {
 }
 function gUp(id) {
   const p = gp.get(id); if (!p) return; gp.delete(id);
-  if (settings.scheme === 'tap' && !p.moved && performance.now() - p.t0 < 260) { pressJump(); tin.jumpUntil = performance.now() + 260; }
+  if (settings.scheme === 'tap' && !p.moved && performance.now() - p.t0 < 260) { pressJump(); if (S.b) S.b.noChg = 0.4; tin.jumpUntil = performance.now() + 260; }
   recomputeTouch();
 }
 (function () {
@@ -1819,7 +1857,7 @@ $('cfNo').onclick = () => cfClose(false);
 $('cfYes').onclick = () => cfClose(true);
 
 function maybeAskBots() {
-  if (botAsked || settings.bots || !settings.botAsk || !$('intro').classList.contains('hide') || !$('confirm').classList.contains('hide')) return;
+  if (inHome || botAsked || settings.bots || !settings.botAsk || !$('intro').classList.contains('hide') || !$('confirm').classList.contains('hide')) return;
   const alone = netState === 'offline' || netState === 'solo' || (online && others.size === 0);
   if (!alone) return;
   botAsked = true;
@@ -1833,8 +1871,9 @@ function showIntro() { $('dontShow').checked = !settings.intro; $('intro').class
 function closeSettingsNow() {
   $('settings').classList.add('hide'); if (closeSelectFn) closeSelectFn(); closePicker();
   try { const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); } catch (e) {}
+  if (typeof lpAfterTab === 'function') lpAfterTab();
 }
-function toggleSettings() { if ($('settings').classList.contains('hide')) { $('settings').classList.remove('hide'); } else closeSettingsNow(); }
+function toggleSettings() { if ($('settings').classList.contains('hide')) { $('settings').classList.remove('hide'); if (typeof lpAfterTab === 'function') lpAfterTab(); } else closeSettingsNow(); }
 // the dimmed backdrop: any tap outside the pop-up closes it (the game keeps running behind it)
 new MutationObserver(() => { $('sback').style.display = $('settings').classList.contains('hide') ? 'none' : 'block'; }).observe($('settings'), { attributes: true, attributeFilter: ['class'] });
 $('sback').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); closeSettingsNow(); });
@@ -1856,6 +1895,7 @@ function showTab(name) {
   for (let i = 0; i < panes.length; i++) panes[i].classList.toggle('on', panes[i].getAttribute('data-pane') === name);
   if (closeSelectFn) closeSelectFn(); closePicker();
   try { sessionStorage.setItem('ballrun_tab', name); } catch (e) {}
+  if (typeof lpAfterTab === 'function') lpAfterTab();
 }
 for (let i = 0; i < tabBtns.length; i++) tabBtns[i].onclick = (function (b) { return function () { showTab(b.getAttribute('data-tab')); }; })(tabBtns[i]);
 
@@ -1911,7 +1951,7 @@ function buildLook() {
 }
 function syncUI() {
   $('setName').value = settings.name;
-  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
+  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setAuto', 'autoEnter'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
     ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setPerOrient', 'perOrient'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setJoy', 'joy']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
@@ -1925,7 +1965,7 @@ function syncUI() {
   buildLook(); refreshLook(); applyMmVisibility();
 }
 function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); sfx($(id).checked ? 'on' : 'off'); if (fn) fn(); }; }
-bindToggle('setTags', 'tags'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
+bindToggle('setTags', 'tags'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro'); bindToggle('setAuto', 'autoEnter');
 bindToggle('setBotMark', 'botMark'); bindToggle('setBotAsk', 'botAsk'); bindToggle('setMmPlayers', 'mmPlayers'); bindToggle('setMmBots', 'mmBots');
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
@@ -2114,7 +2154,6 @@ function linkMsg(m) {
       const o = others.get(m.id), e = lkOf(m.pub);
       if (chatMuted || muteOf(m.pub) >= 2) return true;   // public chat muted, or that player is
       if (o) o.emo = { i: m.i | 0, t: S.t };
-      chatAdd(m.name, o ? o.color : '#ccc', m.i | 0, false);
       addFeedEmo(who(m.name), m.i | 0, e ? 'friend' : '');
       return true;
     }
@@ -2238,69 +2277,39 @@ function addFeedEmo(name, i, cls) {   // "Name" + the emoji, in the same list as
 }
 
 /* ----- the chat window: Chat (public, emoji only) and Friends, in one panel under the chat button ----- */
-const CHATKEY = 'ballrun4_chat';
-let chatLog = []; try { chatLog = (JSON.parse(localStorage.getItem(CHATKEY) || '[]') || []).filter(c => c && c.i >= 0 && c.i < EMO.length).slice(-80); } catch (e) {}
-let chatOpen = false, chatUnread = 0, emoCool = 0, cTab = 'chat';
-try { cTab = localStorage.getItem(CTKEY) === 'friends' ? 'friends' : 'chat'; } catch (e) {}
-function chatAdd(name, color, i, me) {
-  chatLog.push({ n: String(name || '').slice(0, 12), c: color, i, me: me ? 1 : 0 }); if (chatLog.length > 80) chatLog.shift();
-  try { localStorage.setItem(CHATKEY, JSON.stringify(chatLog)); } catch (e) {}
-  if (!(chatOpen && cTab === 'chat') && !me) chatUnread++;
-  chatRender();
-}
-function chatRender() {
-  if (!chatOpen || cTab !== 'chat') { trackVis(); return; }
-  const lg = $('chatLog'); lg.textContent = '';
-  if (!chatLog.length) lg.appendChild(el('div', 'cnone', 'Nothing yet. Tap an emoji below to say something.'));
-  for (const c of chatLog) {
-    const d = el('div', 'cl' + (c.me ? ' me' : '')); d.appendChild(dot(c.c)); d.appendChild(el('b', '', c.me ? 'You' : who(c.n)));
-    const sp = document.createElement('span'); sp.innerHTML = emoSvg(c.i); d.appendChild(sp.firstChild); lg.appendChild(d);
-  }
-  lg.scrollTop = lg.scrollHeight; trackVis();
-}
+let emoCool = 0; try { localStorage.removeItem('ballrun4_chat'); } catch (e) {}   // there is no chat history: an emoji is shown and gone
 function sendEmo(i) {
   if (performance.now() < emoCool || !online) return;
   emoCool = performance.now() + 1000; wsSend({ t: 'emo', i });
-  S.myEmo = { i, t: S.t }; chatAdd(settings.name, settings.color, i, true); if (!chatOpen) addFeedEmo('You', i, ''); sfx('ui');
-  const g = $('emoGrid').children; for (const b of g) { b.classList.add('cool'); setTimeout(() => b.classList.remove('cool'), 1000); }
+  S.myEmo = { i, t: S.t }; addFeedEmo('You', i, ''); sfx('ui'); toggleChat(false);
 }
 const eg = $('emoGrid');
 EMO.forEach((e, i) => { const b = document.createElement('button'); b.title = e.n; b.innerHTML = emoSvg(i); b.onclick = () => sendEmo(i); eg.appendChild(b); });
-function setChatMute(on) { chatMuted = on; try { localStorage.setItem(CMKEY, on ? '1' : '0'); } catch (e) {} const c = $('chatMute'); c.classList.toggle('on', on); c.textContent = on ? 'Public chat is muted' : 'Mute public chat'; }
+function setChatMute(on) { chatMuted = on; try { localStorage.setItem(CMKEY, on ? '1' : '0'); } catch (e) {} const c = $('chatMute'); c.classList.toggle('on', on); c.textContent = on ? 'Emojis are muted' : 'Mute emojis'; }
 $('chatMute').onclick = () => setChatMute(!chatMuted); setChatMute(chatMuted);
-function showCTab(t) {
-  cTab = t; try { localStorage.setItem(CTKEY, t); } catch (e) {}
-  document.querySelectorAll('#ctabs button').forEach(x => x.classList.toggle('on', x.getAttribute('data-ct') === t));
-  document.querySelectorAll('.cpane').forEach(x => x.classList.toggle('on', x.getAttribute('data-cp') === t));
-  $('cpanel').querySelector('.shead span').textContent = t === 'chat' ? 'Chat' : 'Friends';
-  if (t === 'chat') chatUnread = 0;
-  if (chatOpen) { lpRefresh(); chatRender(); lpRender(); }
-}
-document.querySelectorAll('#ctabs button').forEach(x => x.onclick = () => { sfx('ui'); showCTab(x.getAttribute('data-ct')); });
-function toggleChat(on, tab) {
-  if (on && tab) { cTab = tab; try { localStorage.setItem(CTKEY, tab); } catch (e) {} }
-  chatOpen = on; $('cpanel').classList.toggle('hide', !on);
-  if (on) { if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); showCTab(cTab); }
-  else { clearInterval(lpTimer); lpTimer = 0; }
-  trackVis();
+let chatOpen = false;
+function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it
+  if (on && (inHome || inSolo())) return;
+  chatOpen = on; $('emoPop').classList.toggle('hide', !on);
+  if (on) { if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); }
 }
 $('btnChat').onclick = () => toggleChat(!chatOpen);
-$('cpClose').onclick = () => toggleChat(false);
-addEventListener('keydown', e => { if (e.key === 'Escape' && chatOpen && !typing()) { toggleChat(false); e.preventDefault(); } });
-$('linkpill').onclick = e => { e.stopPropagation(); toggleChat(true, 'friends'); };
+$('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop')) { e.preventDefault(); toggleChat(false); } });
+addEventListener('keydown', e => { if (e.key === 'Escape' && chatOpen) { toggleChat(false); e.preventDefault(); } });
+const openFriends = () => { if (chatOpen) toggleChat(false); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
+$('linkpill').onclick = e => { e.stopPropagation(); openFriends(); };
+const friendsShown = () => !$('settings').classList.contains('hide') && $('settings').querySelector('.pane.on[data-pane="friends"]') !== null;
 
 /* ----- friends: your list, requests, and a search of everyone who has ever played ----- */
 const MUTE_NOTE = ['You see when they come and go, and you see their emojis.', 'No "came online" alerts or join / leave lines for them. Their emojis still show.', 'Nothing from them: no alerts, no join / leave lines, no emojis.'];
 let lpQ = '', lpTimer = 0, lpDeb = 0;
 function trackVis() {
-  const solo = inSolo();
+  const solo = inSolo() || inHome;
   $('btnChat').classList.toggle('hide', solo);
   const n = lks.filter(l => l.ok && l.on).length;
   $('linkpill').classList.toggle('hide', solo || n === 0);
   $('linkN').textContent = n === 1 ? '1 tracking you' : n + ' tracking you';
-  const bd = $('chBadge'), ub = chatUnread + reqs.length; bd.classList.toggle('hide', solo || !ub || (chatOpen && cTab === 'chat' && !reqs.length)); bd.textContent = ub > 9 ? '9+' : ub;
-  $('lreqs').classList.toggle('hide', solo || !reqs.length || (chatOpen && cTab === 'friends'));
-  document.body.classList.toggle('copen', chatOpen);
+  $('lreqs').classList.toggle('hide', solo || !reqs.length || friendsShown());
   if (solo && chatOpen) toggleChat(false);
 }
 setInterval(trackVis, 500);
@@ -2322,7 +2331,7 @@ function lpRender() {
   const rq = $('lreqs'); rq.textContent = '';
   reqs.slice(0, 3).forEach(r => { const c = el('div', 'paper lreqcard'); c.appendChild(reqCard(r)); rq.appendChild(c); });
   trackVis();
-  if (!chatOpen || cTab !== 'friends') return;
+  if (!friendsShown()) return;
   $('myCodeV').textContent = myCode || '······';
   const list = $('lpList'); list.textContent = '';
   $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
@@ -2369,8 +2378,9 @@ function disconnectLink(pub) {
   const e = lkOf(pub); if (e) lks.splice(lks.indexOf(e), 1);
   saveLinks(); sfx('ui'); lpRender();
 }
+function lpAfterTab() { lpRefresh(); lpRender(); }
 function lpSearch() { wsSend({ t: 'find', q: lpQ }); }
-function lpRefresh() { clearInterval(lpTimer); lpTimer = 0; if (chatOpen && cTab === 'friends') { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 6000); } }
+function lpRefresh() { clearInterval(lpTimer); lpTimer = 0; if (friendsShown()) { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 6000); } }
 $('lpQ').addEventListener('input', () => { clearTimeout(lpDeb); lpDeb = setTimeout(() => { lpQ = $('lpQ').value.trim(); lpSearch(); }, 250); });
 
 /* ----- names: everyone has one, and it can change once a day ----- */
@@ -2383,6 +2393,7 @@ function nameUI() {
   if (!i) return;
   i.disabled = lk; if (document.activeElement !== i) i.value = settings.name;
   n.textContent = lk ? 'You can change your name again in ' + hm(nameUnlockAt - Date.now()) + '.' : 'You can change your name once a day.';
+  const h = $('homeName'); if (h) { h.disabled = lk; if (document.activeElement !== h) h.value = settings.name; $('homeNote').textContent = n.textContent; $('homeDice').disabled = lk; }
 }
 function nameServer(name, left, denied) {   // the server has the last word on names
   if (name) { settings.name = name; save(); }
@@ -2394,18 +2405,53 @@ function nameServer(name, left, denied) {   // the server has the last word on n
 const ADJ = ['Happy', 'Sunny', 'Cozy', 'Bouncy', 'Mellow', 'Swift', 'Lucky', 'Fuzzy', 'Jolly', 'Breezy', 'Zesty', 'Calm', 'Brave', 'Dizzy', 'Merry', 'Snappy'];
 const NOUN = ['Otter', 'Pebble', 'Comet', 'Waffle', 'Panda', 'Moss', 'Rocket', 'Beetle', 'Cloud', 'Pickle', 'Maple', 'Pixel', 'Koala', 'Biscuit', 'Fox', 'Turtle'];
 function randomName() { for (let k = 0; k < 20; k++) { const n = ADJ[Math.random() * ADJ.length | 0] + NOUN[Math.random() * NOUN.length | 0]; if (n.length <= 12) return n; } return 'Rolly' + (Math.random() * 90 + 10 | 0); }
-function showNameCard() { $('nameIn').value = ''; $('namecard').classList.remove('hide'); setTimeout(() => { try { $('nameIn').focus(); } catch (e) {} }, 50); }
-function finishName() {
-  const v = $('nameIn').value.replace(NAME_BAD, '').trim().slice(0, 12) || randomName();
-  settings.name = v; save(); $('setName').value = v; $('namecard').classList.add('hide'); sfx('ui');
-  if (settings.mp && !ws) { setNet('connecting'); connect(); }
-  setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
-  if (settings.intro) showIntro();
+
+/* ----- the main screen: where you land, and where "Quit to the main screen" brings you back ----- */
+let homeMode = settings.mp, firstEntry = true, reenter = false;
+function homeBase() { return /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(location.hostname) || /onrender\.com$/.test(location.hostname) ? '' : 'https://ballpit-party.onrender.com'; }
+function homeStats() {
+  const o = $('homeOnline'); o.textContent = '';
+  if (location.protocol === 'file:') return;
+  fetch(homeBase() + '/stats', { cache: 'no-store' }).then(r => r.json()).then(j => {
+    const n = j.online | 0; o.textContent = n > 0 ? n + (n === 1 ? ' player' : ' players') + ' online right now' : 'Nobody here yet. Be the first!';
+  }).catch(() => {});
 }
-$('nameOk').onclick = finishName;
-$('nameDice').onclick = () => { $('nameIn').value = randomName(); sfx('ui'); };
-$('nameIn').addEventListener('input', () => { const v = $('nameIn').value.replace(NAME_BAD, '').slice(0, 12); if (v !== $('nameIn').value) $('nameIn').value = v; });
-$('nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') finishName(); });
+(function () { try { const c = ['#ff4d4d', '#ffcc3d', '#58d68d', '#4da6ff', '#c58bff', '#ff8a1f'], box = $('homeBalls'); for (let i = 0; i < 14; i++) { const b = document.createElement('i'); b.className = 'bb'; const s = 16 + Math.random() * 30; b.style.cssText = 'left:' + (Math.random() * 100) + '%;width:' + s + 'px;height:' + s + 'px;background:' + c[i % c.length] + ';animation-duration:' + (7 + Math.random() * 9) + 's;animation-delay:-' + (Math.random() * 12) + 's'; box.appendChild(b); } } catch (e) {} })();
+function showHome() {
+  inHome = true; document.body.classList.add('home'); $('home').classList.remove('hide');
+  if (typeof closeSettingsNow === 'function') closeSettingsNow(); toggleChat(false);
+  clearTimeout(retryTimer); retryTimer = 0;
+  homeMode = settings.mp; $('homeMp').checked = settings.mp; $('homeAuto').checked = !!settings.autoEnter;
+  $('homeName').value = settings.name; nameUI(); homeStats();
+  keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0;
+}
+function enterGame(auto) {
+  const typed = $('homeName').value.replace(NAME_BAD, '').trim().slice(0, 12);
+  const v = auto || nameLocked() ? (settings.name || randomName()) : (typed || settings.name || randomName());   // everyone has a name
+  if (v !== settings.name) { settings.name = v; save(); }
+  $('setName').value = settings.name; $('homeName').value = settings.name;
+  inHome = false; document.body.classList.remove('home'); $('home').classList.add('hide');
+  try { auWake(); } catch (e) {}
+  if (settings.mp !== homeMode) setMultiplayer(settings.mp);
+  else if (settings.mp) { retry = 0; if (!ws) { setNet('connecting'); connect(); } }
+  else setNet('solo');
+  setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
+  if (reenter) backToStart(); reenter = true;
+  if (firstEntry && settings.intro && !auto) showIntro(); firstEntry = false;
+  nameUI(); trackVis();
+}
+function quitToHome() { dropConnection(); showHome(); setNet(settings.mp ? 'offline' : 'solo'); }
+$('homePlay').onclick = () => enterGame(false);
+$('homeName').addEventListener('input', () => { const v = $('homeName').value.replace(NAME_BAD, '').slice(0, 12); if (v !== $('homeName').value) $('homeName').value = v; });
+$('homeName').addEventListener('keydown', e => { if (e.key === 'Enter') enterGame(false); });
+$('homeDice').onclick = () => { if (nameLocked()) return; $('homeName').value = randomName(); sfx('ui'); };
+$('homeMp').onchange = () => { settings.mp = $('homeMp').checked; save(); $('setMp').checked = settings.mp; applyDeps(); syncUI(); };
+$('homeAuto').onchange = () => { settings.autoEnter = $('homeAuto').checked; save(); $('setAuto').checked = settings.autoEnter; };
+$('homeLook').onclick = () => { showTab('you'); toggleSettings(); };
+$('homeSet').onclick = () => toggleSettings();
+$('homeHelp').onclick = () => showIntro();
+$('btnQuit').onclick = quitToHome;
+addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && document.activeElement !== $('homeName')) enterGame(false); });
 
 /* ================= networking ================= */
 function setNet(state) {
@@ -2434,7 +2480,7 @@ function setMultiplayer(on) {
   applyDeps(); syncUI(); newBotTarget();
 }
 function connect() {
-  if (!settings.mp || ws || !settings.name) return;
+  if (!settings.mp || ws || !settings.name || inHome) return;
   if (location.protocol === 'file:' || !('WebSocket' in window)) { setNet('offline'); return; }
   let sock;
   // the game server lives on Render. Any other address (like ballpit.party) still talks to it; only your own computer talks to itself.
@@ -2455,7 +2501,7 @@ function connect() {
   sock.onerror = () => {};
 }
 function scheduleRetry() {
-  if (retryTimer || !settings.mp) return;
+  if (retryTimer || !settings.mp || inHome) return;
   retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(10000, 1500 + retry * 1500));
 }
 setTimeout(() => { if (netState === "connecting" && settings.name) setNet("offline"); }, 3500);
@@ -3041,8 +3087,8 @@ function drawTrail(b) {
   ctx.restore();
 }
 function drawSuper(b) {   // holding jump slowly winds a ring around the ball; when it is full, your next jump is a super jump
-  const q = b.jhold / P.SJ_T; if (q < 0.18) return;
-  const rdy = q >= 1, k = (q - 0.18) / 0.82;
+  const q = b.jhold / P.SJ_T; if (!b.charging || q < 0.05) return;
+  const rdy = q >= 1, k = (q - 0.05) / 0.95;
   ctx.save(); ctx.lineCap = 'round';
   ctx.globalAlpha = rdy ? 0.8 + 0.2 * Math.sin(S.t * 18) : 0.25 + 0.55 * k;
   ctx.strokeStyle = rdy ? '#e8fbff' : '#9be7ff'; ctx.lineWidth = rdy ? 4 : 3;
@@ -3219,6 +3265,7 @@ function renderInner(dt, nowT) {
   const ww = S.world.W * TS;
   const cx = ww > vw ? clamp(S.camx, vw / 2 - 3 * TS, ww - vw / 2 + 3 * TS) : ww / 2;
   const camL = cx - vw / 2 + shx, camT = S.camy - vh / 2 + shy;
+  S.vis = { l: camL, t: camT, r: camL + vw, b: camT + vh };
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = S.map.bg; ctx.fillRect(0, 0, sw, sh);
@@ -3269,6 +3316,7 @@ function renderInner(dt, nowT) {
       if (bt.dead > 0 || bb.x < camL - m || bb.x > camL + vw + m || bb.y < camT - m * 2 || bb.y > camT + vh + m) continue;
       drawBall(bb.x, bb.y, bb.rot, bt.color, bt.color2, bt.pat, 0.88, false);
       drawLabel(bt.name, true, bt.crown, bb.x, bb.y);
+      if (bt.emo) drawEmoBubble(bt.emo, bb.x, bb.y - R - (settings.tags && bt.name ? 38 : 22) - (bt.crown ? 14 : 0));
     }
     if (S.dead <= 0 && !S.away) {    // you: always last = always on top
       let s = 1; if (S.spawnT > 0) { const p = 1 - S.spawnT / 0.6; s = 0.25 + 0.75 * Math.min(1, p * 1.25) + 0.12 * Math.sin(p * 3.14); }
@@ -3487,6 +3535,7 @@ function hudTick() {
   const tm = $('timer');
   const endless = inSolo() && settings.soloLen === 0;
   $('nexttimer').textContent = endless ? '∞' : fmtClock(rem);
+  $('tlab').textContent = endless ? 'no limit' : 'next map';
   tm.className = endless ? '' : rem <= 30000 && rem > 0 ? 'final' : rem <= 60000 ? 'low' : '';
   if (S.mode === 'play') {
     TH.forEach(t => {
@@ -3539,7 +3588,6 @@ document.addEventListener('pointerdown', e => { const el = $('tpop'); if (!el.cl
 /* ================= boot ================= */
 applyZoomRange(); syncUI(); applyTouchUI();
 try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } catch (e) {}
-if (!settings.name) showNameCard(); else if (settings.intro) showIntro();
 {
   if (!settings.mp && forced === null) { loadSolo(); soloGo(false); }
   else {
@@ -3549,8 +3597,9 @@ if (!settings.name) showNameCard(); else if (settings.intro) showIntro();
   }
 }
 if (params && params.get('test')) window.__d = { S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
-if (settings.mp) { setNet('connecting'); connect(); } else setNet('solo');
+setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
+if (settings.autoEnter && settings.name) enterGame(true); else showHome();
 newBotTarget();
 hudTick();
 requestAnimationFrame(frame);

@@ -90,6 +90,9 @@ try {
 } catch (e) {}
 function saveLinks(sync) {
   if (!linksDirty) return; linksDirty = false;
+  // keep only what is needed: people not seen for a month (and not tied to a friend link or a waiting request) are forgotten
+  { const old = Date.now() - 30 * 86400000, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); });
+    known.forEach((v, k) => { if (v.last < old && !need.has(k) && !byPub.has(k)) known.delete(k); }); }
   if (known.size > 5000) [...known.entries()].sort((a, b) => a[1].last - b[1].last).slice(0, known.size - 5000).forEach(e => known.delete(e[0]));
   const o = { links: {}, gone: {}, known: {}, pend: [...pend.entries()].map(e => [e[0], e[1].t]) };
   links.forEach((v, k) => { if (v.size) o.links[k] = [...v]; }); gone.forEach((v, k) => { if (v.size) o.gone[k] = [...v]; }); known.forEach((v, k) => { o.known[k] = v; });
@@ -127,7 +130,7 @@ let curSlot = slotNow();
 const server = http.createServer((req, res) => {
   const url = req.url.split('?')[0];
   if (url === '/stats') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({
       online, peak, slot: curSlot, map: maps.names[curSlot % maps.count],
       rooms: [...rooms.values()].map(r => ({ id: r.id, players: r.players.size }))
