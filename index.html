@@ -319,16 +319,25 @@
   };
   if (!ok) window.__ballFail('browser is missing a basic feature (canvas / typed arrays)');
   window.onerror = function (msg, src, line) {
-    if (!window.__ballOk) window.__ballFail(String(msg) + (src ? ' (' + String(src).split('/').pop() + ':' + line + ')' : '') + '. If this mentions maps.js or physics.js, those files are out of date: upload all five files together.');
+    if (!window.__ballOk && !window.__ballStop) window.__ballFail(String(msg) + (src ? ' (' + String(src).split('/').pop() + ':' + line + ')' : '') + '. If this mentions maps.js or physics.js, those files are out of date: upload all five files together.');
   };
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js"></script>
-<script src="physics.js"></script>
+<script src="maps.js?v=5"></script>
+<script src="physics.js?v=5"></script>
+<script>
+(function () {
+  var m = window.BallMaps, p = window.BallPhysics, bad = [];
+  if (!m) bad.push('maps.js did not load'); else if (!m.themes) bad.push('maps.js is an OLD version');
+  if (!p) bad.push('physics.js did not load'); else if (!p.stepDyn) bad.push('physics.js is an OLD version');
+  if (bad.length && window.__ballFail) { window.__ballFail(bad.join(' and ') + ' on this site. Re-upload maps.js and physics.js from the newest batch (replace the old ones), wait for the redeploy, then refresh.'); window.__ballStop = true; }
+})();
+</script>
 <script>
 (function () {
 'use strict';
+if (window.__ballStop) return;
 const TS = BallMaps.TS, R = BallMaps.R, P = BallPhysics, STEP = 1 / 120, SLOT_MS = 6 * 3600 * 1000;
 const THEMES = BallMaps.themes;
 const $ = id => document.getElementById(id);
