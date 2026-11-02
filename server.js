@@ -1,8 +1,9 @@
 // ballpit.party - multiplayer relay server.   Run with:  npm install && npm start
 // Optional environment variables:
 //   PORT              port to listen on (hosts like Render/Railway set this for you)
-//   MAP_OFFSET_HOURS  shift the 6-hour map schedule (default 0 => switches at 00/06/12/18 UTC,
-//                     which is 12:00 noon US Central *Standard* Time; use -1 for noon during daylight time)
+//   MAX_PLAYERS      players per world (default 200). When a world is full, new players open World 2, 3, ...
+//   MAP_OFFSET_HOURS  shift the 3-hour map schedule (default 0 => switches every 3 hours on UTC multiples of 3,
+//                     which is 12, 3, 6, 9 o'clock US Central *Standard* Time; use -1 during daylight time)
 //   STATS_FILE        where the all-time record is saved (default ./stats.json)
 //   MAX_PER_IP        max simultaneous connections from one address (default 10)
 const http = require('http');
@@ -12,8 +13,8 @@ const { WebSocketServer } = require('ws');
 const maps = require('./maps.js');
 
 const PORT = process.env.PORT || 3000;
-const MAX_PLAYERS = 50;                                   // players per room
-const SLOT_MS = 6 * 60 * 60 * 1000;                       // a map "session" lasts 6 hours
+const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 200);   // players per world
+const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
 const TICK_MS = 200;                                      // 5 position updates per second (the client smooths between them)
 const RANGE = 3000;                                       // you only receive players within this many pixels of you (more than a screen)
@@ -31,7 +32,12 @@ for (const [url, name, type] of [
   ['/icon.svg', 'icon.svg', 'image/svg+xml'],
   ['/icon.png', 'icon.png', 'image/png'],
   ['/apple-touch-icon.png', 'apple-touch-icon.png', 'image/png'],
-  ['/share.png', 'share.png', 'image/png']
+  ['/share.png', 'share.png', 'image/png'],
+  ['/icon-192.png', 'icon-192.png', 'image/png'],
+  ['/icon-512.png', 'icon-512.png', 'image/png'],
+  ['/icon-maskable-512.png', 'icon-maskable-512.png', 'image/png'],
+  ['/manifest.webmanifest', 'manifest.webmanifest', 'application/manifest+json'],
+  ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 
 /* ---------- all-time record ---------- */
@@ -75,11 +81,17 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocketServer({ server, maxPayload: 1024, perMessageDeflate: false });
 
+// Worlds are numbered 1, 2, 3...  Everyone goes to the lowest-numbered world with space; a new world only opens when the others are full.
 function findRoom() {
-  for (const r of rooms.values()) if (r.players.size < MAX_PLAYERS) return r;
-  const r = { id: nextRoomId++, players: new Map(), finishers: [] };
-  rooms.set(r.id, r);
-  return r;
+  const full = [];
+  for (let id = 1; id <= rooms.size + 1; id++) {
+    const r = rooms.get(id);
+    if (r && r.players.size >= MAX_PLAYERS) { full.push(id); continue; }
+    if (r) return { room: r, full };
+    const nr = { id, players: new Map(), finishers: [] };
+    rooms.set(id, nr);
+    return { room: nr, full };
+  }
 }
 
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -125,13 +137,13 @@ wss.on('connection', (ws, req) => {
       if (p.room) return;
       p.name = cleanName(m.name);
       p.color = cleanColor(m.color, '#ff4d4d'); p.color2 = cleanColor(m.color2, '#ffffff'); p.pat = cleanPat(m.pat);
-      const room = findRoom();
+      const fr = findRoom(), room = fr.room;
       p.room = room;
       room.players.set(p.id, p);
       online++; statsDirty = true;
       if (online > peak) { peak = online; peakDirty = true; }
       send(p, {
-        t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS,
+        t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full,
         name: p.name, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak,
         players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === curSlot ? 1 : 0 }))
       });

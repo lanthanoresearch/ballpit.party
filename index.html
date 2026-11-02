@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#14111c">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="ballpit.party">
 <title>ballpit.party</title>
 <meta name="description" content="Race friends across huge hand-drawn worlds. A multiplayer ball platformer that runs right in your browser.">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
@@ -147,6 +150,41 @@
   #unsupported{display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:#14111c;z-index:100;align-items:center;justify-content:center;text-align:center;padding:24px;flex-direction:column}
   #unsupported h2{margin:0 0 10px;font-size:28px;font-weight:400}
   #unsupported p{max-width:440px;line-height:1.4;opacity:.9;margin:6px 0;font-size:18px}
+
+  /* ---- v5 additions ---- */
+  #onl{font-size:13px}
+  #coinpill{display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:14px;padding:1px 9px;pointer-events:none}
+  #coinpill svg{color:#ffd23d;fill:#ffd23d}
+  #timer{cursor:pointer;pointer-events:auto}
+  #tpop{position:fixed;right:10px;top:50px;top:calc(50px + env(safe-area-inset-top));width:min(310px,calc(100vw - 20px));z-index:7;padding:10px 14px 12px;font-size:15px}
+  #tpop h3{margin:0 0 6px;font-size:20px;font-weight:400;display:flex;align-items:center;gap:8px}
+  #tpop .tl{display:flex;align-items:center;gap:8px;margin:5px 0}
+  #tpop .tl svg{font-size:18px;opacity:.8}
+  #tpop .nx{opacity:.75;font-size:13px;margin-top:6px;border-top:2px dashed rgba(232,220,192,.3);padding-top:6px}
+  #worldpop{position:fixed;left:50%;top:96px;transform:translateX(-50%);z-index:9;padding:10px 16px;max-width:min(92vw,460px);text-align:center;font-size:16px;line-height:1.3}
+  #worldpop b{display:block;font-size:19px;font-weight:400;margin-bottom:2px}
+  #fallwarn{position:fixed;left:50%;top:44px;transform:translateX(-50%);z-index:5;background:rgba(150,30,20,.95);border:2px solid #fff;border-radius:var(--wob);padding:5px 14px;font-size:15px;text-align:center;max-width:92vw;pointer-events:none;display:flex;gap:8px;align-items:center;animation:flash 0.6s steps(1) infinite}
+  #beaconbar{position:fixed;left:50%;top:48px;transform:translateX(-50%);z-index:5;background:rgba(40,120,200,.95);border:2px solid #fff;border-radius:var(--wob);padding:5px 14px;font-size:15px;max-width:92vw;pointer-events:none;display:flex;gap:8px;align-items:center}
+  .ti{display:flex;gap:10px;align-items:center;min-width:0}
+  .ti>svg{font-size:21px;opacity:.9;flex:none}
+  .ti b{display:block;font-weight:400;font-size:15px}
+  .ti small{display:block;font-size:12px;opacity:.6;line-height:1.2}
+  .sw2.ic2{margin:10px 0}
+  .tabs button{min-width:0}
+  .keyrow{display:flex;align-items:center;gap:6px;margin:7px 0;flex-wrap:wrap}
+  .keyrow .kn{display:flex;gap:8px;align-items:center;width:112px;flex:none}
+  .keyrow .kn svg{font-size:19px}
+  .kchip{display:inline-flex;align-items:center;gap:5px;background:#120f1c;border:2px solid var(--line);border-radius:var(--wob);padding:2px 4px 2px 9px;font-size:14px}
+  .kchip button{background:none;border:0;padding:0 3px;opacity:.6;display:flex}
+  .kchip button:hover{opacity:1;color:var(--bad)}
+  .kadd{background:#3a3355;border:2px dashed var(--line);border-radius:var(--wob);padding:2px 9px;font-size:14px}
+  .kadd.wait{border-style:solid;border-color:var(--accent);color:var(--accent)}
+  #keymsg{min-height:18px;font-size:13px;color:#ff9a8f}
+  .slrow{display:flex;align-items:center;gap:8px}.slrow svg{font-size:19px;flex:none;opacity:.85}
+  .np{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:8px;background:#120f1c;border:2px solid var(--line);border-radius:var(--wob);padding:6px 10px}
+  .np span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #coinbig{pointer-events:none}
+  .tabs button span:last-child{font-size:11px}
   @media (max-width:640px),(max-height:520px){
     #mm{width:110px;height:74px}
     #settings{right:6px;top:50px;top:calc(50px + env(safe-area-inset-top));width:min(380px,calc(100vw - 12px));max-height:calc(100% - 56px)}
@@ -155,6 +193,7 @@
     #notice{top:80px;font-size:14px}
     .card{padding:14px 16px}.card h1{font-size:28px}.card p{font-size:15px}
   }
+  @media (max-width:600px){#netstat{left:auto;right:10px;transform:none;top:96px;top:calc(96px + env(safe-area-inset-top))}#edgewarn,#fallwarn,#beaconbar{top:94px;top:calc(94px + env(safe-area-inset-top))}}
 </style>
 </head>
 <body>
@@ -181,21 +220,46 @@
 <symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M12 12.500l5-2.500"/></symbol>
 <symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 18l-1-11 5.500 4L12 4l4.500 7L22 7l-1 11H3z"/></symbol>
 <symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-8 8c0 3 1.500 4.500 3 5.500V20h10v-3.500c1.500-1 3-2.500 3-5.500a8 8 0 0 0-8-8z"/><path d="M9 12h.01M15 12h.01M10 17v3M14 17v3"/></symbol>
+<symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M12 7.500v9M9.500 10c0-1 1-1.600 2.500-1.600s2.500.6 2.500 1.600-1 1.400-2.500 1.700-2.500.7-2.500 1.700 1 1.600 2.500 1.600 2.500-.6 2.500-1.600"/></symbol>
+<symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="17.500" cy="16" r="2.500"/></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.500v5h3.500L12 18.500v-13L7.500 9.500H4zM15.500 9a4 4 0 0 1 0 6M18 6.500a8 8 0 0 1 0 11"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><rect x="2.500" y="6" width="19" height="12" rx="3"/><path d="M6.500 10h.01M10 10h.01M13.500 10h.01M17 10h.01M7 14h10"/></symbol>
+<symbol id="i-beacon" viewBox="0 0 24 24"><path d="M12 12.500V21M8 21h8M12 12.500a2 2 0 1 0 0-.01M7.500 7.500a6.500 6.500 0 0 0 0 9M16.500 7.500a6.500 6.500 0 0 1 0 9M4.500 4.500a11 11 0 0 0 0 15M19.500 4.500a11 11 0 0 1 0 15"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7M12 16V4"/><path d="M5 20h14"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.500" cy="8.500" r="1.200"/></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.800 5.200L19 10l-5.200 1.800L12 17l-1.800-5.200L5 10l5.200-1.800L12 3zM19 16l.8 2.200L22 19l-2.200.8L19 22l-.8-2.200L16 19l2.200-.8L19 16z"/></symbol>
+<symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></symbol>
+<symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1.500A3.500 3.500 0 0 0 7.500 11M17 6h3v1.500A3.500 3.500 0 0 1 16.500 11M12 14v4M8 21h8M9 18h6"/></symbol>
+<symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7V5zM18 5v14"/></symbol>
+<symbol id="i-install" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
 </defs></svg>
 <canvas id="cv"></canvas>
 <div id="gest" class="hide"></div>
 <div id="dflash"></div>
 
-<div id="hl"><span id="mapname"></span><span id="onl"></span><canvas id="mm" width="150" height="100"></canvas></div>
+<div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="coin"></span><span id="coinN">0</span></span><canvas id="mm" width="170" height="110"></canvas></div>
 <div id="netstat" class="pill hide"><i></i><span id="netText">Offline</span></div>
 <div id="edgewarn" class="hide"><span data-ic="warn"></span><span>You're getting really close to the edge of the world. Turn back now!</span></div>
+<div id="fallwarn" class="hide"><span data-ic="down"></span><span>You're falling way too fast! Slow down or land soon!</span></div>
+<div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div>
 <div id="hr">
   <div id="topbar">
-    <div id="timer" class="pill"><span data-ic="clock"></span><span id="nexttimer">--:--</span></div>
+    <div id="timer" class="pill" title="Map info"><span data-ic="clock"></span><span id="nexttimer">--:--</span></div>
+    <button id="btnRespawn" class="ibtn" title="Back to the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Settings (Esc)" data-ic="gear"></button>
   </div>
   <div id="feed"></div>
 </div>
+<div id="tpop" class="paper hide">
+  <h3><span data-ic="map"></span><span id="tpName"></span></h3>
+  <div class="tl"><span data-ic="clock"></span><span id="tpChange"></span></div>
+  <div class="tl"><span data-ic="coin"></span><span id="tpCoins"></span></div>
+  <div class="tl"><span data-ic="globe"></span><span id="tpWorld"></span></div>
+  <div class="nx"><span id="tpNext"></span></div>
+</div>
+<div id="worldpop" class="paper hide"></div>
 <div id="notice"></div>
 <div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div>
 
@@ -208,6 +272,7 @@
     <button data-tab="you" class="on"><span data-ic="user"></span><span>You</span></button>
     <button data-tab="controls"><span data-ic="pad"></span><span>Controls</span></button>
     <button data-tab="display"><span data-ic="eye"></span><span>Display</span></button>
+    <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Online</span></button>
     <button data-tab="bots"><span data-ic="bot"></span><span>Bots</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
@@ -216,49 +281,53 @@
     <section class="pane on" data-pane="you">
       <div class="you"><canvas id="preview" width="64" height="64"></canvas>
         <div style="flex:1"><label class="lbl" for="setName">Name <span class="dim">(up to 6, blank is fine)</span></label><input type="text" id="setName" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="no name"></div></div>
-      <h4>Ball colour</h4><div class="sw" id="colors1"></div>
-      <h4>Pattern</h4><div class="pats" id="pats"></div>
-      <h4>Pattern colour</h4><div class="sw" id="colors2"></div>
+      <h4><span data-ic="ball"></span> Ball colour</h4><div class="sw" id="colors1"></div>
+      <h4><span data-ic="spark"></span> Pattern</h4><div class="pats" id="pats"></div>
+      <h4><span data-ic="spark"></span> Pattern colour</h4><div class="sw" id="colors2"></div>
       <p class="small dim">Other players see your changes with a little sparkle.</p>
     </section>
     <section class="pane" data-pane="controls">
       <div class="row"><span class="lbl">Input</span><div id="selInput"></div></div>
-      <div class="row"><span class="lbl">Touch style</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
+      <h4><span data-ic="key"></span> Keyboard</h4>
+      <div id="keyrows"></div><div id="keymsg"></div>
+      <button class="btn" id="keyReset"><span data-ic="reset"></span>Reset keys</button>
+      <p class="small dim">A key can only do one thing. Esc, <kbd>-</kbd> and <kbd>+</kbd> are always settings and zoom.</p>
+      <h4><span data-ic="pad"></span> Touch screen</h4>
+      <div class="row"><span class="lbl">Style</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
+      <div class="row" id="presetRow"><span class="lbl">Button layout</span><div id="selPreset"></div></div>
       <div class="row"><span class="lbl">Button size <span id="btnSizeVal" class="dim"></span></span><input type="range" id="setBtnSize" min="0.7" max="1.5" step="0.05"></div>
-      <div style="display:flex;gap:8px"><button class="btn" id="btnEditLayout" style="flex:1"><span data-ic="pad"></span>Move buttons</button><button class="btn" id="btnResetLayout"><span data-ic="reset"></span></button></div>
-      <p class="small dim">Keyboard: <kbd>A</kbd><kbd>D</kbd> / arrows to move, <kbd>W</kbd> / <kbd>Space</kbd> to jump (tap = small hop, hold = big jump), <kbd>R</kbd> to go back to the start.</p>
+      <div style="display:flex;gap:8px"><button class="btn" id="btnEditLayout" style="flex:1"><span data-ic="pad"></span>Move buttons</button><button class="btn" id="btnResetLayout" title="Back to the preset"><span data-ic="reset"></span></button></div>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Separate portrait / landscape layouts</b><small>Off: your buttons keep the same spacing when you turn your phone.</small></span></span><input type="checkbox" id="setPerOrient"><i></i></label>
     </section>
     <section class="pane" data-pane="display">
-      <div class="row"><span class="lbl">Zoom <span id="zoomval" class="dim"></span></span>
+      <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.35" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div>
-      <label class="sw2"><span>Name tags</span><input type="checkbox" id="setTags"><i></i></label>
-      <label class="sw2"><span>Mini-map</span><input type="checkbox" id="setMinimap"><i></i></label>
-      <label class="sw2"><span>Show players on mini-map</span><input type="checkbox" id="setMmPlayers"><i></i></label>
-      <label class="sw2"><span>Edge-of-world warning</span><input type="checkbox" id="setEdge"><i></i></label>
-      <label class="sw2"><span>Remember where I last died</span><input type="checkbox" id="setDeathMark"><i></i></label>
-      <label class="sw2"><span>Visual effects</span><input type="checkbox" id="setFx"><i></i></label>
-      <label class="sw2"><span>Low-power mode <span class="dim">(30 fps)</span></span><input type="checkbox" id="setLow"><i></i></label>
-      <label class="sw2"><span>Full screen</span><input type="checkbox" id="setFs"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>Only people on your screen</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Edge-of-world warning</b><small>Warns you near the edges</small></span></span><input type="checkbox" id="setEdge"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Falling warning</b><small>Warns you when you fall too fast</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
       <div class="small dim" id="fsNote"></div>
     </section>
+    <section class="pane" data-pane="sound">
+      <label class="sw2 ic2"><span class="ti"><span data-ic="sound"></span><span><b>Sound effects</b><small>Jumps, coins, doors, splashes and more</small></span></span><input type="checkbox" id="setSfx"><i></i></label>
+      <div class="row slrow"><span data-ic="sound"></span><input type="range" id="setSfxVol" min="0" max="1" step="0.05"></div>
+      <h4><span data-ic="music"></span> Music</h4>
+      <div class="row"><div id="selMusic"></div><div class="small dim" id="musicDesc" style="margin-top:4px"></div></div>
+      <div class="row slrow"><span data-ic="music"></span><input type="range" id="setMusicVol" min="0" max="1" step="0.05"></div>
+      <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnSkip" title="Next song"><span data-ic="skip"></span></button></div>
+    </section>
     <section class="pane" data-pane="online">
-      <label class="sw2"><span>Multiplayer <span class="dim">(play with others)</span></span><input type="checkbox" id="setMp"><i></i></label>
-      <label class="sw2"><span>Announce when someone finishes</span><input type="checkbox" id="setAnnounce"><i></i></label>
-      <label class="sw2"><span>Join / leave messages</span><input type="checkbox" id="setJoinMsg"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Multiplayer</b><small>Play with other people. Turning it off hides you and everyone else.</small></span></span><input type="checkbox" id="setMp"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="trophy"></span><span><b>Announce winners</b><small>"Someone won the level!" messages</small></span></span><input type="checkbox" id="setAnnounce"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Join / leave messages</b><small>When people come and go</small></span></span><input type="checkbox" id="setJoinMsg"><i></i></label>
       <div class="small dim" id="mpstats" style="margin-top:6px"></div>
     </section>
     <section class="pane" data-pane="bots">
       <p class="small dim" style="margin-top:0">Bots are filler players that only exist in your own browser. Nobody else ever sees them.</p>
-      <label class="sw2"><span>Bots</span><input type="checkbox" id="setBots"><i></i></label>
-      <div class="row"><span class="lbl">How many</span><div id="selBotAmt"></div></div>
-      <label class="sw2"><span>Mark bots with a robot icon</span><input type="checkbox" id="setBotMark"><i></i></label>
-      <label class="sw2"><span>Ask about bots when the room is empty</span><input type="checkbox" id="setBotAsk"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Fill the world with pretend players</small></span></span><input type="checkbox" id="setBots"><i></i></label>
+      <div class="row"><span class="lbl"><span data-ic="bot"></span> At most <b id="botMaxVal"></b> bots <span class="dim">(a cap, not a promise)</span></span><input type="range" id="setBotMax" min="0" max="200" step="1"><div class="small dim" id="botNote"></div></div>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Mark bots with a robot icon</b><small>So you can tell them apart</small></span></span><input type="checkbox" id="setBotMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Ask when the world is empty</b><small>A popup offering bots</small></span></span><input type="checkbox" id="setBotAsk"><i></i></label>
     </section>
     <section class="pane" data-pane="more">
-      <button class="btn full" id="btnRespawn"><span data-ic="flag"></span>Back to the start <span class="dim">(R)</span></button>
-      <label class="sw2" style="margin-top:12px"><span>Show the welcome popup at start</span><input type="checkbox" id="setIntro"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small></small></span></span><input type="checkbox" id="setIntro"><i></i></label>
       <button class="btn full" id="btnWelcome"><span data-ic="help"></span>How to play</button>
+      <button class="btn full hide" id="btnInstall"><span data-ic="install"></span>Install as an app</button>
       <div class="danger"><h4><span data-ic="warn"></span>Reset zone</h4>
         <div class="small">Puts every setting back the way it was on your first visit (name, colours, controls, zoom, everything).</div>
         <button class="btn red full" id="btnReset"><span data-ic="reset"></span>Reset all settings</button></div>
@@ -275,10 +344,10 @@
     <span><i class="lg" style="background:#ff4a1c"></i>Lava: back to the start</span>
     <span><i class="lg" style="background:#2e7be6"></i>Water: hold jump to swim</span>
     <span><i class="lg" style="background:#ffc233"></i>Yellow: push it! (only you feel it)</span>
-    <span><i class="lg" style="background:#ffd23d"></i>Crown: someone finished</span>
+    <span><i class="lg" style="background:#ffd23d;border-radius:50%"></i>Coins: just for fun</span>
   </div>
   <p>Move with <kbd>A</kbd><kbd>D</kbd> or the arrows, jump with <kbd>W</kbd> or <kbd>Space</kbd>: tap for a hop, hold for a big jump. On a phone, use the on-screen controls (you can pick swipe styles in settings). Get the <i>middle</i> of your ball onto a block or you'll roll off.</p>
-  <p>The map changes every 6 hours and everyone moves together. Open the gear for your name, colours, zoom, bots and more.</p>
+  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
   <label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
   <button class="ok" id="btnOk">OK</button>
 </div></div>
@@ -324,8 +393,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=5"></script>
-<script src="physics.js?v=5"></script>
+<script src="maps.js?v=6"></script>
+<script src="physics.js?v=6"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -338,7 +407,7 @@
 (function () {
 'use strict';
 if (window.__ballStop) return;
-const TS = BallMaps.TS, R = BallMaps.R, P = BallPhysics, STEP = 1 / 120, SLOT_MS = 6 * 3600 * 1000;
+const TS = BallMaps.TS, R = BallMaps.R, P = BallPhysics, STEP = 1 / 120, SLOT_MS = 3 * 3600 * 1000;
 const THEMES = BallMaps.themes;
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d');
@@ -363,11 +432,13 @@ function fillIcons(root) {
 fillIcons();
 
 /* ================= settings (saved in this browser, restored exactly on return) ================= */
+function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], back: ['KeyR'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, bots: false, botAmt: 1, botMark: false, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, bots: false, botMax: 8, botMark: false, botAsk: true,
     minimap: true, mmPlayers: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
-    inputMode: 'auto', scheme: 'buttons', btnSize: 1, btnPos: null };
+    beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
+    keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'spread', btnPos: null, btnPosP: null, perOrient: false };
 }
 let settings = defaults();
 try { const o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
@@ -378,16 +449,35 @@ function normalize() {
   if (!HEX.test(settings.color2)) settings.color2 = d.color2;
   settings.pat = clamp(settings.pat | 0, 0, PATTERNS.length - 1);
   settings.zoom = clamp(+settings.zoom || 1, 0.35, 2);
-  settings.botAmt = clamp(settings.botAmt | 0, 0, 2);
+  settings.botMax = clamp(Math.round(+settings.botMax), 0, 200); if (!isFinite(settings.botMax)) settings.botMax = 8;
+  settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
+  settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
+  if (['none', 'peaceful', 'upbeat', 'exciting'].indexOf(settings.music) < 0) settings.music = 'peaceful';
+  if (['spread', 'moveleft', 'moveright', 'custom'].indexOf(settings.preset) < 0) settings.preset = 'spread';
+  settings.keys = cleanKeys(settings.keys);
   settings.btnSize = clamp(+settings.btnSize || 1, 0.7, 1.5);
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg'].forEach(k => { settings[k] = !!settings[k]; });
-  const bp = settings.btnPos;
-  if (!bp || typeof bp !== 'object') settings.btnPos = null;
-  else ['l', 'r', 'j'].forEach(k => { if (!bp[k] || !isFinite(bp[k][0]) || !isFinite(bp[k][1])) settings.btnPos = null; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'perOrient'].forEach(k => { settings[k] = !!settings[k]; });
+  ['btnPos', 'btnPosP'].forEach(n => {
+    const bp = settings[n];
+    if (!bp || typeof bp !== 'object') settings[n] = null;
+    else ['l', 'r', 'j'].forEach(k => { const q = bp[k]; if (!q || ['l', 'r', 'c'].indexOf(q.a) < 0 || !isFinite(q.dx) || !isFinite(q.dy)) settings[n] = null; });
+  });
+  if (settings.btnPos === null && settings.preset === 'custom') settings.preset = 'spread';
+}
+// keys: each key may do only one thing, and every action needs at least one key
+function cleanKeys(k) {
+  const d = defKeys(), out = {}, used = {};
+  ['left', 'right', 'jump', 'back'].forEach(a => {
+    const list = (k && Array.isArray(k[a])) ? k[a] : d[a]; out[a] = [];
+    list.forEach(c => { if (typeof c === 'string' && c.length < 24 && c !== 'Escape' && !used[c] && out[a].length < 4) { used[c] = a; out[a].push(c); } });
+  });
+  ['left', 'right', 'jump', 'back'].forEach(a => { if (!out[a].length) { const c = d[a].find(x => !used[x]); if (c) { out[a].push(c); used[c] = a; } } });
+  return out;
 }
 normalize();
+settings.keys = cleanKeys(settings.keys);
 const save = () => { try { localStorage.setItem('ballrun4', JSON.stringify(settings)); } catch (e) {} };
 
 /* ================= small helpers ================= */
@@ -503,6 +593,198 @@ function drawFx() {
   ctx.globalAlpha = 1;
 }
 
+/* ================= sound: effects and music, all made live in the browser (nothing to download) ================= */
+const AU = { ctx: null, master: null, sfx: null, mus: null, noiseBuf: null, ok: true, wind: null, windG: null, song: null, style: '', timer: 0, nextT: 0, bar: 0, melody: null, chain: 0, chainT: 0 };
+function auInit() {
+  if (AU.ctx || !AU.ok) return;
+  try {
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) { AU.ok = false; return; }
+    const c = AU.ctx = new C();
+    const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(c.destination);
+    AU.master = c.createGain(); AU.master.gain.value = 0.9; AU.master.connect(comp);
+    AU.sfx = c.createGain(); AU.mus = c.createGain(); AU.sfx.connect(AU.master); AU.mus.connect(AU.master);
+    const nb = c.createBuffer(1, c.sampleRate, c.sampleRate), d = nb.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    AU.noiseBuf = nb;
+    // wind: always running very quietly, gets loud when you fall fast
+    const ws = c.createBufferSource(); ws.buffer = nb; ws.loop = true;
+    const wf = c.createBiquadFilter(); wf.type = 'bandpass'; wf.frequency.value = 700; wf.Q.value = 0.6;
+    AU.windG = c.createGain(); AU.windG.gain.value = 0; ws.connect(wf); wf.connect(AU.windG); AU.windG.connect(AU.sfx); ws.start(); AU.wind = wf;
+    auVol();
+  } catch (e) { AU.ok = false; AU.ctx = null; }
+}
+function auVol() {
+  if (!AU.ctx) return;
+  AU.sfx.gain.value = settings.sfx ? settings.sfxVol * 0.8 : 0;
+  AU.mus.gain.value = settings.music === 'none' ? 0 : settings.musicVol * 0.5;
+}
+function auWake() { auInit(); if (AU.ctx && AU.ctx.state === 'suspended') AU.ctx.resume(); musicStart(); }
+['pointerdown', 'keydown', 'touchend'].forEach(ev => addEventListener(ev, auWake, true));   // the first tap or key unlocks sound (a browser rule)
+document.addEventListener('visibilitychange', () => { if (!AU.ctx) return; if (document.hidden) AU.ctx.suspend(); else AU.ctx.resume(); });
+
+function tone(f, dur, type, vol, f2, t0, dest, attack) {
+  const c = AU.ctx; if (!c) return; t0 = t0 || c.currentTime;
+  const o = c.createOscillator(), g = c.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f, t0);
+  if (f2) o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t0 + dur);
+  const a = attack || 0.006; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(dur, a + 0.01));
+  o.connect(g); g.connect(dest || AU.sfx); o.start(t0); o.stop(t0 + dur + 0.05);
+}
+function noise(dur, vol, f1, f2, type, t0, dest) {
+  const c = AU.ctx; if (!c) return; t0 = t0 || c.currentTime;
+  const s = c.createBufferSource(); s.buffer = AU.noiseBuf; s.loop = true;
+  const fl = c.createBiquadFilter(); fl.type = type || 'lowpass'; fl.frequency.setValueAtTime(f1, t0); if (f2) fl.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+  const g = c.createGain(); g.gain.setValueAtTime(Math.max(0.0002, vol), t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  s.connect(fl); fl.connect(g); g.connect(dest || AU.sfx); s.start(t0, Math.random()); s.stop(t0 + dur + 0.05);
+}
+const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+const SFXGAP = { push: 140, thud: 80, land: 90, coin: 25, creak: 400, tick: 200, ui: 30 };
+const SFXLAST = {};
+const SFX = {
+  jump: () => { tone(300, 0.14, 'square', 0.07, 620); },
+  land: () => { noise(0.1, 0.22, 600, 120); tone(120, 0.1, 'sine', 0.22, 60); },
+  bounce: () => { const t = AU.ctx.currentTime; tone(200, 0.4, 'sine', 0.3, 900); tone(420, 0.3, 'triangle', 0.13, 1500, t + 0.04); },
+  coin: () => {
+    const c = AU.ctx, t = c.currentTime, now = performance.now();
+    AU.chain = now - AU.chainT < 1100 ? Math.min(AU.chain + 1, 7) : 0; AU.chainT = now;
+    const step = [0, 2, 4, 5, 7, 9, 11, 12][AU.chain], f = hz(79 + step);
+    tone(f, 0.08, 'square', 0.06, 0, t); tone(f * 1.5, 0.28, 'triangle', 0.1, 0, t + 0.06);
+  },
+  big: () => { const t = AU.ctx.currentTime; [0, 4, 7, 12].forEach((s, i) => tone(hz(76 + s), 0.25, 'triangle', 0.12, 0, t + i * 0.05)); },
+  gem: () => { const t = AU.ctx.currentTime; [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => tone(hz(72 + s), 0.35, 'triangle', 0.12, 0, t + i * 0.055)); noise(0.3, 0.04, 9000, 6000, 'highpass', t); },
+  death: () => { tone(320, 0.55, 'sawtooth', 0.14, 45); noise(0.45, 0.3, 2800, 150); },
+  splat: () => { noise(0.5, 0.5, 1800, 80); tone(90, 0.4, 'sine', 0.5, 35); tone(500, 0.2, 'sawtooth', 0.12, 60); },
+  lava: () => { noise(0.7, 0.2, 5000, 800, 'highpass'); tone(250, 0.5, 'sawtooth', 0.1, 50); },
+  respawn: () => { const t = AU.ctx.currentTime; tone(180, 0.45, 'sine', 0.2, 860); [0, 7, 12].forEach((s, i) => tone(hz(79 + s), 0.18, 'triangle', 0.07, 0, t + 0.28 + i * 0.07)); },
+  push: () => { noise(0.14, 0.1, 380, 160); },
+  thud: () => { noise(0.1, 0.18, 450, 90); tone(100, 0.1, 'sine', 0.2, 55); },
+  door: () => { const t = AU.ctx.currentTime; noise(0.8, 0.14, 500, 180, 'bandpass'); tone(110, 0.8, 'sawtooth', 0.05, 70); [0, 4, 7].forEach((s, i) => tone(hz(72 + s), 0.3, 'triangle', 0.08, 0, t + 0.3 + i * 0.07)); },
+  doorClose: () => { noise(0.6, 0.14, 300, 500, 'bandpass'); tone(90, 0.5, 'sawtooth', 0.05, 60); const t = AU.ctx.currentTime; noise(0.12, 0.3, 500, 100, 'lowpass', t + 0.5); },
+  plate: () => { tone(260, 0.07, 'square', 0.1, 140); },
+  btn: () => { const t = AU.ctx.currentTime; tone(420, 0.08, 'square', 0.1, 0, t); tone(630, 0.14, 'square', 0.09, 0, t + 0.07); },
+  splash: () => { noise(0.35, 0.2, 3200, 500, 'bandpass'); tone(500, 0.12, 'sine', 0.06, 200); },
+  finish: () => { const t = AU.ctx.currentTime; [0, 4, 7, 12, 7, 12, 16].forEach((s, i) => tone(hz(67 + s), 0.3, 'square', 0.07, 0, t + i * 0.1)); tone(hz(79), 0.9, 'triangle', 0.12, 0, t + 0.7); },
+  win: () => { const t = AU.ctx.currentTime; [0, 7, 12].forEach((s, i) => tone(hz(79 + s), 0.25, 'triangle', 0.08, 0, t + i * 0.08)); },
+  ui: () => { tone(900, 0.04, 'square', 0.04); },
+  on: () => { tone(520, 0.12, 'triangle', 0.09, 880); },
+  off: () => { tone(620, 0.12, 'triangle', 0.09, 360); },
+  warn: () => { const t = AU.ctx.currentTime; tone(740, 0.12, 'square', 0.09, 0, t); tone(740, 0.12, 'square', 0.09, 0, t + 0.2); },
+  beacon: () => { const t = AU.ctx.currentTime; tone(1300, 1, 'sine', 0.16, 900); tone(1300, 1, 'sine', 0.08, 900, t + 0.28); },
+  notice: () => { tone(660, 0.12, 'triangle', 0.08, 780); },
+  join: () => { tone(500, 0.1, 'sine', 0.06, 720); },
+  leave: () => { tone(500, 0.1, 'sine', 0.06, 340); },
+  swoosh: () => { noise(1.4, 0.3, 300, 4500, 'bandpass'); },
+  tick: () => { tone(1000, 0.03, 'square', 0.06); },
+  color: () => { const t = AU.ctx.currentTime; [0, 7, 12].forEach((s, i) => tone(hz(84 + s), 0.14, 'triangle', 0.06, 0, t + i * 0.04)); },
+  creak: () => { tone(170, 0.18, 'sawtooth', 0.03, 140); },
+  pop: () => { tone(700, 0.07, 'sine', 0.1, 300); }
+};
+function sfx(n) {
+  if (!settings.sfx || !AU.ctx || AU.ctx.state !== 'running') return;
+  const now = performance.now(), gap = SFXGAP[n] || 30;
+  if (SFXLAST[n] && now - SFXLAST[n] < gap) return; SFXLAST[n] = now;
+  try { SFX[n](); } catch (e) {}
+}
+function windSet(level) {   // 0..1
+  if (!AU.ctx || !AU.windG) return;
+  const v = settings.sfx ? level * 0.3 : 0;
+  AU.windG.gain.setTargetAtTime(v, AU.ctx.currentTime, 0.15); AU.wind.frequency.setTargetAtTime(500 + level * 1500, AU.ctx.currentTime, 0.2);
+}
+
+/* ---------- music: three moods, three songs each, written as chords + a little tune that the browser plays live ---------- */
+const SCALES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], lydian: [0, 2, 4, 6, 7, 9, 11], dorian: [0, 2, 3, 5, 7, 9, 10], mixo: [0, 2, 4, 5, 7, 9, 10] };
+const SONGS = {
+  peaceful: [
+    { name: 'Meadow Morning', bpm: 76, root: 60, scale: 'major', prog: [0, 5, 3, 4], seed: 11 },
+    { name: 'Drifting Clouds', bpm: 68, root: 62, scale: 'lydian', prog: [0, 4, 5, 3], seed: 23 },
+    { name: 'Lantern Pond', bpm: 72, root: 65, scale: 'major', prog: [0, 3, 5, 4], seed: 37 }
+  ],
+  upbeat: [
+    { name: 'Roll Call', bpm: 104, root: 55, scale: 'major', prog: [0, 4, 5, 3], seed: 41 },
+    { name: 'Wobble Walk', bpm: 98, root: 57, scale: 'dorian', prog: [0, 3, 0, 4], seed: 53 },
+    { name: 'Sunny Side Bounce', bpm: 112, root: 60, scale: 'mixo', prog: [0, 6, 3, 4], seed: 67 }
+  ],
+  exciting: [
+    { name: 'Turbo Tumble', bpm: 142, root: 52, scale: 'minor', prog: [0, 5, 2, 6], seed: 71 },
+    { name: 'Lava Rush', bpm: 132, root: 50, scale: 'minor', prog: [0, 3, 5, 4], seed: 83 },
+    { name: 'Skyline Sprint', bpm: 150, root: 57, scale: 'dorian', prog: [0, 6, 5, 6], seed: 97 }
+  ]
+};
+const MOOD = { peaceful: 0, upbeat: 1, exciting: 2 };
+const MUSIC_INFO = { none: 'No music', peaceful: 'Peaceful: soft and dreamy', upbeat: 'Upbeat: bouncy and relaxed', exciting: 'Exciting: fast and driving' };
+const RHY = [
+  [[[0, 1.5], [1.5, 0.5], [2, 2]], [[0, 1], [1, 1], [2, 1], [3, 1]], [[0.5, 1], [2, 1.5]], [[0, 2], [2, 1], [3, 1]]],
+  [[[0, 0.5], [0.5, 0.5], [1, 1], [2, 0.5], [3, 1]], [[0, 1], [1.5, 0.5], [2, 1], [3.5, 0.5]], [[0, 0.5], [1, 0.5], [2, 0.5], [3, 0.5], [3.5, 0.5]]],
+  [[[0, 0.5], [0.5, 0.5], [1, 0.5], [1.5, 0.5], [2, 0.5], [2.5, 0.5], [3, 1]], [[0, 0.75], [0.75, 0.75], [1.5, 0.5], [2, 0.5], [2.5, 0.5], [3, 1]], [[0, 0.5], [1, 0.5], [1.5, 0.5], [2, 1], [3, 0.5], [3.5, 0.5]]]
+];
+function auRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const scNote = (sg, deg) => { const n = SCALES[sg.scale], o = Math.floor(deg / 7), i = ((deg % 7) + 7) % 7; return sg.root + n[i] + 12 * o; };
+function genMelody(sg, mood) {   // eight bars of tune; bars 5-8 echo bars 1-4 so it feels like a song
+  const r = auRng(sg.seed * 7919), T = RHY[mood], pick = a => a[Math.floor(r() * a.length)], tmpl = [pick(T), pick(T), null, pick(T)]; tmpl[2] = tmpl[0];
+  const bars = []; let prev = 7 + sg.prog[0];
+  for (let b = 0; b < 8; b++) {
+    const ch = sg.prog[b % 4], tones = [ch, ch + 2, ch + 4, ch + 7, ch + 9, ch + 11], ev = [];
+    tmpl[b % 4].forEach((p, k) => {
+      let d;
+      if (k === 0) d = tones.reduce((best, x) => Math.abs(x - prev) < Math.abs(best - prev) ? x : best, tones[0]);
+      else d = prev + pick([-2, -1, -1, 0, 1, 1, 2]);
+      d = clamp(d, 4, 15); prev = d;
+      if (mood === 0 && b % 2 === 1 && r() < 0.4) return;
+      ev.push([p[0], d, p[1]]);
+    });
+    bars.push(ev);
+  }
+  return bars;
+}
+function musicBar(t0) {
+  const sg = AU.song, mood = MOOD[AU.style], beat = 60 / sg.bpm, bar = AU.bar, ch = sg.prog[bar % 4], mus = AU.mus;
+  const T = n => t0 + n * beat, cn = [ch, ch + 2, ch + 4];
+  // pad (soft chord held for the whole bar)
+  if (mood < 2) cn.forEach(d => tone(hz(scNote(sg, d) + 12), 4 * beat * 0.98, mood === 0 ? 'sine' : 'triangle', mood === 0 ? 0.05 : 0.035, 0, t0, mus, 0.5));
+  // bass
+  const bn = hz(scNote(sg, ch) - 12);
+  if (mood === 0) tone(bn, 4 * beat * 0.95, 'sine', 0.13, 0, t0, mus, 0.08);
+  else if (mood === 1) [0, 1.5, 2, 3.5].forEach((p, i) => tone(i === 3 ? bn * 1.5 : bn, beat * 0.7, 'triangle', 0.17, 0, T(p), mus));
+  else for (let i = 0; i < 8; i++) tone(i % 4 === 3 ? bn * 2 : bn, beat * 0.42, 'sawtooth', 0.075, 0, T(i * 0.5), mus);
+  // arpeggio / stabs
+  if (mood === 0) for (let i = 0; i < 8; i++) tone(hz(scNote(sg, cn[[0, 1, 2, 1, 0, 2, 1, 2][i]] + 7)), beat * 0.9, 'triangle', 0.045, 0, T(i * 0.5), mus);
+  else if (mood === 1) [0.5, 1.5, 2.5, 3.5].forEach(p => cn.forEach(d => tone(hz(scNote(sg, d) + 12), beat * 0.35, 'square', 0.018, 0, T(p), mus)));
+  else for (let i = 0; i < 16; i++) tone(hz(scNote(sg, cn[[0, 1, 2, 1][i % 4]] + 7)), beat * 0.22, 'square', 0.03, 0, T(i * 0.25), mus);
+  // melody
+  AU.melody[bar % 8].forEach(e => tone(hz(scNote(sg, e[1])), Math.max(0.15, e[2] * beat * (mood === 0 ? 1.4 : 0.95)), mood === 0 ? 'sine' : mood === 1 ? 'triangle' : 'sawtooth', mood === 2 ? 0.05 : 0.09, 0, T(e[0]), mus, 0.01));
+  // drums
+  if (mood >= 1) {
+    const kicks = mood === 2 ? [0, 1, 2, 3] : [0, 2, 2.5], snares = [1, 3];
+    kicks.forEach(p => { tone(150, 0.22, 'sine', 0.42, 42, T(p), mus); });
+    snares.forEach(p => { noise(0.14, mood === 2 ? 0.22 : 0.13, 2400, 900, 'highpass', T(p), mus); tone(190, 0.08, 'triangle', 0.1, 120, T(p), mus); });
+    for (let i = 0; i < 8; i++) if (mood === 2 ? (i % 2 === 1) : true) noise(0.035, mood === 2 ? 0.06 : 0.04, 9000, 7000, 'highpass', T(i * 0.5), mus);
+  } else if (bar % 2 === 0) noise(0.5, 0.025, 7000, 9000, 'highpass', T(2), mus);
+}
+function musicPick(avoid) {
+  const list = SONGS[AU.style]; let s, tries = 0;
+  do { s = list[Math.floor(Math.random() * list.length)]; } while (s === avoid && list.length > 1 && tries++ < 8);
+  AU.song = s; AU.melody = genMelody(s, MOOD[AU.style]); AU.bar = 0;
+  const np = $('nowPlaying'); if (np) np.textContent = s.name + ' · ' + settings.music;
+}
+function musicTick() {
+  if (!AU.ctx || AU.ctx.state !== 'running' || settings.music === 'none' || !AU.song) return;
+  const beat = 60 / AU.song.bpm;
+  let guard = 0;
+  while (AU.nextT < AU.ctx.currentTime + 0.7 && guard++ < 4) {
+    musicBar(AU.nextT); AU.bar++; AU.nextT += 4 * beat;
+    if (AU.bar >= 32) { musicPick(AU.song); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.1); }
+  }
+}
+function musicStart() {
+  if (!AU.ctx) return;
+  auVol();
+  const np = $('nowPlaying');
+  if (settings.music === 'none') { AU.style = ''; AU.song = null; if (np) np.textContent = 'Music is off'; return; }
+  if (AU.style === settings.music && AU.song) return;
+  AU.style = settings.music; musicPick(null); AU.nextT = AU.ctx.currentTime + 0.15;
+  if (!AU.timer) AU.timer = setInterval(musicTick, 150);
+}
+function musicSkip() { if (!AU.song || settings.music === 'none') return; musicPick(AU.song); AU.nextT = AU.ctx.currentTime + 0.1; }
+
 /* ================= ball sprites (hand-drawn look, cached so lots of balls stay cheap) ================= */
 const SPN = 96, SPK = (SPN / 2 - 5) / R, SPW = SPN / SPK;
 const sprites = new Map();
@@ -576,13 +858,14 @@ function drawLabel(name, isBot, crown, x, y) {
 const S = {
   mode: 'play', slot: -1, idx: 0, map: null, world: null, tg: null, b: null, t: 0, nextAt: 0, pending: -1, pendingNext: 0, fadeT0: 0,
   dead: 0, spawnT: 0, shake: 0, away: false, crown: false, started: false, runStart: 0, finished: false, finT: 0, finMs: 0,
-  camx: 0, camy: 0, water: [], deathPos: null, edgeWarn: false, mm: null
+  camx: 0, camy: 0, water: [], deathPos: null, edgeWarn: false, mm: null,
+  coinN: 0, coinGot: null, coinBest: 0, recordShown: false, fallWarn: false, wasWater: false, beaconOn: false, fallLvl: 0
 };
 const inp = { left: false, right: false, jump: false };               // keyboard
 const tin = { ax: 0, jump: false, btnL: false, btnR: false, btnJ: false, jumpUntil: 0 };   // touch
 const others = new Map();
 const net = { online: 0, peak: 0 };
-let myId = 0, online = false, ws = null, clockOff = 0, retry = 0, retryTimer = 0, room = { id: 0, n: 1, max: 50 };
+let myId = 0, online = false, ws = null, clockOff = 0, retry = 0, retryTimer = 0, room = { id: 0, n: 1, max: 200 };
 let netState = 'connecting', lastSent = '', botAsked = false;
 let params = null; try { params = new URLSearchParams(location.search); } catch (e) {}
 const forced = params ? params.get('map') : null;      // testing only: ?map=1
@@ -605,6 +888,9 @@ function loadMap(slot, next) {
     if (t === 2) cell[ci] = 201; else if (cur === 0 || cur === 203) { if (t === 3) cell[ci] = 202; else if (t === 5) { if (!cur) cell[ci] = 203; } else cell[ci] = 1 + tg[y * W + x]; }
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
+  S.world.focus = { x: m.start[0], y: m.start[1] };
+  S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.coinBest = getBest(m.idx); S.recordShown = false; S.fallWarn = false; S.wasWater = false;
+  restoreWorld(slot);
   S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
   others.forEach(o => { o.crown = false; });
   bots.length = 0; botNextSpawn = rnd(1, 4); fx.length = 0;
@@ -613,7 +899,7 @@ function loadMap(slot, next) {
   respawn(true);
   S.camx = S.b.x; S.camy = S.b.y;
   $('finishbanner').classList.add('hide');
-  $('mapname').textContent = m.name;
+  if (S.coinBest > 0) setTimeout(() => notice('Your coin record on this map: ' + S.coinBest, ''), 900);
   $('fade').classList.remove('on');
   initWarnings();
 }
@@ -623,11 +909,13 @@ function respawn(quiet) {
   S.dead = 0; S.spawnT = 0.6; S.finished = false;
   if (!quiet) { beam(S.b.x, S.b.y + R, settings.color); ring(S.b.x, S.b.y, '#fff', 4, 46, 0.6); burst(S.b.x, S.b.y, [settings.color, settings.color2, '#fff'], 12, 160, 100); }
 }
-function die() {
+function die(why) {
   if (S.dead > 0 || S.mode !== 'play') return;
-  const b = S.b; S.dead = 0.8; S.shake = 0.3;
-  burst(b.x, b.y, [settings.color, settings.color2, '#222', '#ff4a1c'], 30, 340);
-  ring(b.x, b.y, '#ff5b4a', 6, 60, 0.5);
+  const b = S.b; S.dead = 0.8; S.shake = why === 'splat' ? 0.6 : 0.3;
+  sfx(why === 'splat' ? 'splat' : why === 'lava' ? 'lava' : 'death'); windSet(0); S.fallWarn = false;
+  burst(b.x, b.y, [settings.color, settings.color2, '#222', '#ff4a1c'], why === 'splat' ? 60 : 30, why === 'splat' ? 460 : 340);
+  ring(b.x, b.y, '#ff5b4a', 6, why === 'splat' ? 110 : 60, 0.5);
+  if (why === 'splat') { ring(b.x, b.y, '#fff', 4, 160, 0.45); S.splatMsg = 1.6; notice('Splat! That was a very long fall.', 'urgent'); }
   if (fxOn()) { const f = $('dflash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
   if (settings.deathMark) {
     S.deathPos = { x: b.x, y: b.y };
@@ -636,14 +924,14 @@ function die() {
 }
 function outOfBounds(b) {
   const m = S.map;
-  return b.x < -2 * TS || b.x > (m.W + 2) * TS || b.y < -6 * TS || b.y > m.killY;
+  return b.x < -2 * TS || b.x > (m.W + 2) * TS || b.y < -6 * TS || b.y > P.killYAt(S.world, b.x);
 }
 function nearEdge(b) {
   const m = S.map;
-  return b.x < 9 * TS || b.x > (m.W - 9) * TS || b.y < 4 * TS || b.y > m.killY - 22 * TS;
+  return b.x < 9 * TS || b.x > (m.W - 9) * TS || b.y < 4 * TS || b.y > P.killYAt(S.world, b.x) - 9 * TS;
 }
 function finishRun() {
-  S.finished = true; S.finT = 5; S.crown = true;
+  S.finished = true; S.finT = 5; S.crown = true; sfx('finish');
   S.finMs = S.started ? performance.now() - S.runStart : 0;
   $('fbText').textContent = 'Time ' + fmtT(S.finMs);
   $('finishbanner').classList.remove('hide');
@@ -669,6 +957,7 @@ function initWarnings() {
 function startTransition(slot, next) {
   S.pending = slot; S.pendingNext = next || (S.nextAt + SLOT_MS);
   if (S.mode === 'fade') return;
+  saveWorld(true); sfx('swoosh');
   S.mode = 'fade'; S.fadeT0 = performance.now(); bots.length = 0;
   $('finishbanner').classList.add('hide');
   $('fadeText').textContent = 'Next map: ' + BallMaps.names[slot % BallMaps.count];
@@ -682,8 +971,10 @@ const blocked = () => !$('intro').classList.contains('hide') || !$('confirm').cl
 function update(dt) {
   S.t += dt;
   if (S.mode !== 'play') return;
+  const w = S.world;
+  w.focus.x = S.b.x; w.focus.y = S.b.y;
   botsTick(dt);
-  P.stepDyn(S.world, dt);
+  P.stepDyn(w, dt);
   if (S.spawnT > 0) S.spawnT -= dt;
   if (S.dead > 0) { S.dead -= dt; if (S.dead <= 0) respawn(); return; }
   if (S.away) return;
@@ -693,15 +984,85 @@ function update(dt) {
   const ax = bl ? 0 : clamp(kb + tin.ax, -1, 1);
   const jheld = !bl && (inp.jump || tin.jump || tin.btnJ || performance.now() < tin.jumpUntil);
   if (!S.started && !S.finished && (ax !== 0 || b.jbuf > 0)) { S.started = true; S.runStart = performance.now(); }
-  const ev = P.step(b, S.world, ax, jheld, dt);
-  if (ev.lava || outOfBounds(b)) { die(); return; }
+  const ev = P.step(b, w, ax, jheld, dt);
+  P.stepSwitches(w, b);
+  if (w.ev.length) worldEvents();
+  collectCoins();
+  if (ev.jumped) sfx('jump');
+  if (ev.landed) sfx('land');
+  if (ev.bounced) { sfx('bounce'); ring(b.x, b.y + R, '#9fe8ff', 6, 50, 0.4); burst(b.x, b.y + R, ['#fff', '#9fe8ff', '#ffd23d'], 10, 160, 60); }
+  if (b.water !== S.wasWater) { S.wasWater = b.water; sfx('splash'); burst(b.x, b.y, ['#d6ecff', '#2e7be6', '#fff'], 12, 170, 300); }
+  if (ev.splat) { die('splat'); return; }
+  if (ev.lava) { die('lava'); return; }
+  if (outOfBounds(b)) { die('void'); return; }
   S.edgeWarn = settings.edge && nearEdge(b);
+  const fw = settings.fallWarn && b.fall > P.FALL_WARN;
+  if (fw && !S.fallWarn) sfx('warn');
+  S.fallWarn = fw; S.fallLvl = clamp((b.vy - 600) / 1300, 0, 1); windSet(S.fallLvl);
   const f = S.map.finish;
   if (!S.finished && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) finishRun();
 }
 
+/* ----- coins (just for fun: they count up, and your browser remembers your best per map) ----- */
+const BESTKEY = 'ballrun4_coins', WKEY = 'ballrun4_world';
+function getBest(idx) { try { const o = JSON.parse(localStorage.getItem(BESTKEY) || '{}'); return +o[idx] || 0; } catch (e) { return 0; } }
+function setBest(idx, n) { try { const o = JSON.parse(localStorage.getItem(BESTKEY) || '{}'); o[idx] = n; localStorage.setItem(BESTKEY, JSON.stringify(o)); } catch (e) {} }
+let wDirty = false, lastWorldStr = '', lastSave = 0, bestDirty = false;
+function collectCoins() {
+  const cs = S.map.coins, b = S.b; if (!cs.length) return;
+  let lo = 0, hi = cs.length; const x0 = b.x - 36;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (cs[mid][0] < x0) lo = mid + 1; else hi = mid; }
+  for (let i = lo; i < cs.length && cs[i][0] <= b.x + 36; i++) {
+    if (S.coinGot[i]) continue;
+    const c = cs[i], dx = c[0] - b.x, dy = c[1] - b.y;
+    if (dx * dx + dy * dy > 32 * 32) continue;
+    S.coinGot[i] = 1; wDirty = true;
+    const v = c[2] === 2 ? 25 : c[2] === 1 ? 5 : 1; S.coinN += v;
+    sfx(c[2] === 2 ? 'gem' : c[2] === 1 ? 'big' : 'coin');
+    burst(c[0], c[1], c[2] === 2 ? ['#7af0ff', '#fff', '#c58bff'] : ['#ffd23d', '#fff3a0'], c[2] ? 14 : 6, c[2] ? 220 : 120, 40);
+    if (S.coinN > S.coinBest) {
+      if (S.coinBest > 0 && !S.recordShown) { S.recordShown = true; notice('New coin record on this map!', 'win'); sfx('win'); }
+      S.coinBest = S.coinN; bestDirty = true;
+    }
+  }
+}
+function worldEvents() {
+  const w = S.world, L = w.ev;
+  for (let i = 0; i < L.length; i++) {
+    const e = L[i];
+    if (e.k === 'door') { sfx(e.open ? 'door' : 'doorClose'); ring(e.x, e.y, '#ffd23d', 8, 70, 0.6); if (e.open) burst(e.x, e.y, ['#ffd23d', '#fff'], 16, 180, 80); S.shake = Math.max(S.shake, 0.15); wDirty = true; }
+    else if (e.k === 'plate') { sfx('plate'); ring(e.x, e.y, e.on ? '#58d68d' : '#999', 4, 36, 0.3); }
+    else if (e.k === 'btn') { sfx('btn'); ring(e.x, e.y, '#ff5b4a', 4, 50, 0.4); burst(e.x, e.y, ['#ff5b4a', '#fff'], 10, 150, 80); wDirty = true; }
+  }
+  L.length = 0;
+}
+function saveWorld(force) {
+  if (!S.world || S.slot < 0 || !S.map) return;
+  const w = S.world, dyn = [];
+  for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) dyn.push([i, 0, 0, 1]); else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2) dyn.push([i, Math.round(d.x), Math.round(d.y), 0]); }
+  const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
+  const str = JSON.stringify({ slot: S.slot, dyn, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN });
+  if (str !== lastWorldStr) { lastWorldStr = str; try { localStorage.setItem(WKEY, str); } catch (e) {} }
+  if (bestDirty) { bestDirty = false; setBest(S.idx, S.coinBest); }
+}
+function restoreWorld(slot) {
+  lastWorldStr = '';
+  try {
+    const o = JSON.parse(localStorage.getItem(WKEY) || 'null');
+    if (!o || o.slot !== slot) return;           // a new session: everything starts fresh
+    const w = S.world;
+    (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.vx = d.vy = 0; } });
+    (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
+    (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
+    (o.got || []).forEach(i => { if (i < S.coinGot.length) S.coinGot[i] = 1; });
+    S.coinN = o.n | 0; if (S.coinN > S.coinBest) { S.coinBest = S.coinN; bestDirty = true; }
+  } catch (e) {}
+}
+setInterval(() => { if (S.mode === 'play' && !S.away) saveWorld(); }, 4000);
+addEventListener('beforeunload', () => saveWorld(true));
+
 /* leaving the screen = you are gone; coming back = fresh start at the spawn */
-function goAway() { if (S.away || S.mode !== 'play') return; S.away = true; sendPos(true); }
+function goAway() { if (S.away || S.mode !== 'play') return; S.away = true; saveWorld(true); windSet(0); sendPos(true); }
 function comeBack() { if (!S.away) return; S.away = false; S.finished = false; S.started = false; $('finishbanner').classList.add('hide'); bots.length = 0; respawn(); sendPos(true); }
 document.addEventListener('visibilitychange', () => { inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; if (document.hidden) goAway(); else comeBack(); });
 addEventListener('pagehide', goAway);
@@ -711,10 +1072,11 @@ addEventListener('pageshow', () => { if (!document.hidden) comeBack(); });
 const bots = [];
 const HUMAN = ['Max', 'Luna', 'Kai', 'Zoe', 'Finn', 'Nova', 'Leo', 'Mia', 'Axel', 'Ruby', 'Jax', 'Ivy', 'Otto', 'Eli', 'Sky', 'Dex', 'Remy', 'Tess', 'Bo', 'Nico', 'Pip', 'Gus', 'Vee', 'Cleo', 'Rex', 'Juno', 'Milo', 'Ash', 'Fox', 'Zed'];
 const WEIRD = ['xX_', 'n0pe', 'qwerty', 'zzz', 'a', '...', 'lol', 'asdf', 'TEST', 'uwu', '???', 'x_x', 'ok', 'hi', 'P1ayer', 'bob', '.', '_', '~~', 'No1', 'u8', 'dfgh'];
-const BOT_RANGES = [[1, 3], [2, 7], [6, 12]];
 let botTarget = 3, botNextSpawn = 1, botNextRetarget = 30;
-const isSolid = t => t === 1 || t === 3 || t === 4;
-function newBotTarget() { const r = BOT_RANGES[settings.botAmt]; botTarget = ri(r[0], r[1]); botNextRetarget = rnd(25, 70); }
+const isSolid = t => t === 1 || t === 3 || t === 4 || t === 6;
+// the bot setting is a CAP: you might get fewer. Real players come first, and the world never goes over its limit.
+function botCap() { const left = Math.max(0, (room.max || 200) - (online ? room.n : 1)); return Math.max(0, Math.min(settings.botMax, left, settings.low ? 30 : 200)); }
+function newBotTarget() { const cap = botCap(); botTarget = cap <= 10 ? ri(Math.floor(cap / 3), cap) : ri(Math.round(cap * 0.7), cap); botNextRetarget = rnd(25, 70); }
 function botName() {
   const r = Math.random();
   if (r < 0.12) return '';                       // some people use no name
@@ -759,10 +1121,10 @@ function spawnBot() {
     type: wander ? 'wander' : 'runner', pro, err: pro ? 0.01 : 0.08,
     life: wander ? rnd(30, 120) : pro ? rnd(420, 900) : rnd(90, 360),
     age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0, finished: false, leaveT: 0,
-    wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, rot: 0
+    wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, rot: 0, lod: 0
   };
   botSpawnAt(bt); bots.push(bt);
-  addFeed(who(bt.name) + ' joined', 'join');
+  if (botTarget <= 12) addFeed(who(bt.name) + ' joined', 'join');
 }
 function botLand(bt) {
   const b = bt.b, path = S.map.path, tx = Math.floor(b.x / TS), ty = Math.floor((b.y + R + 2) / TS);
@@ -817,17 +1179,17 @@ function botStep(bt, dt) {
       } else bt.jumpAt = 0;
       if (b.flat && b.gType !== 3 && onTarget) ax = 0;
     } else {
-      bt.hold += dt; jheld = !bt.tap || bt.hold < 0.13;
+      bt.hold += dt; jheld = bt.hold < (bt.tap ? 0.1 : 0.36);
       const dx = bt.tcx - b.x, stop = 0.5 * b.vx * b.vx / 1800 + 6;
       if (Math.abs(dx) < stop && Math.sign(b.vx) === Math.sign(dx)) ax = -Math.sign(b.vx);
     }
   }
   const ev = P.step(b, w, ax, jheld, dt);
-  if (ev.lava || outOfBounds(b)) { bt.dead = 0.6; burst(b.x, b.y, [bt.color, bt.color2, '#222'], 14, 240); return; }
+  if (ev.lava || ev.splat || outOfBounds(b)) { bt.dead = 0.6; burst(b.x, b.y, [bt.color, bt.color2, '#222'], 14, 240); return; }
   const f = S.map.finish;
   if (!bt.finished && bt.type === 'runner' && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) {
     bt.finished = true; bt.leaveT = rnd(4, 12); bt.crown = true;
-    if (settings.announce) addFeed(who(bt.name) + ' finished', 'fin', true);
+    if (settings.announce && bots.length < 12) addFeed(who(bt.name) + ' finished', 'fin', true);
   }
 }
 function botsTick(dt) {
@@ -835,13 +1197,16 @@ function botsTick(dt) {
   botNextRetarget -= dt;
   if (botNextRetarget <= 0) newBotTarget();
   botNextSpawn -= dt;
-  if (bots.length < botTarget && botNextSpawn <= 0) { spawnBot(); botNextSpawn = rnd(1.5, 6); }
+  const cap = botCap();
+  if (bots.length < botTarget && bots.length < cap && botNextSpawn <= 0) { spawnBot(); botNextSpawn = botTarget > 30 ? rnd(0.1, 0.5) : rnd(1.5, 6); }
+  if (bots.length > cap) bots.pop();              // the world filled up with real people: bots make room
+  const px = S.b.x, py = S.b.y;
   for (let i = bots.length - 1; i >= 0; i--) {
-    const bt = bots[i];
-    botStep(bt, dt);
+    const bt = bots[i], far = Math.abs(bt.b.x - px) > 2600 || Math.abs(bt.b.y - py) > 1800;
+    if (far) { bt.lod = (bt.lod + 1) & 1; if (!bt.lod) botStep(bt, dt * 2); else bt.age += dt; } else botStep(bt, dt);
     if (bt.finished) bt.leaveT -= dt;
     const leave = (bt.finished && bt.leaveT <= 0) || (!bt.finished && bt.age > bt.life) || (bots.length > botTarget && Math.random() < dt * 0.05);
-    if (leave) { bots.splice(i, 1); addFeed(who(bt.name) + ' left', 'leave'); }
+    if (leave) { bots.splice(i, 1); if (botTarget <= 12) addFeed(who(bt.name) + ' left', 'leave'); }
   }
 }
 
@@ -857,13 +1222,15 @@ const SCHEMES = {
   swipebtn: { name: 'Swipe + jump button', desc: 'Drag left or right to move. A jump button sits on the screen.' }
 };
 function pressJump() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0) S.b.jbuf = 0.12; }
-function backToStart() { if (S.mode !== 'play') return; S.started = false; $('finishbanner').classList.add('hide'); bots.length = bots.length; respawn(); }
+function backToStart() { if (S.mode !== 'play') return; S.started = false; $('finishbanner').classList.add('hide'); respawn(); }
 
-const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump' };
-const KEYMAP2 = { arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right', arrowup: 'jump', w: 'jump', ' ': 'jump', spacebar: 'jump', left: 'left', right: 'right', up: 'jump' };
-function keyOf(e) { if (e.code && KEYMAP[e.code]) return KEYMAP[e.code]; return KEYMAP2[String(e.key || '').toLowerCase()] || null; }
+const keysDown = new Set();
+function actionOf(code) { const k = settings.keys; for (const a in k) if (k[a].indexOf(code) >= 0) return a; return null; }
+function syncKeys() { const k = settings.keys; inp.left = k.left.some(c => keysDown.has(c)); inp.right = k.right.some(c => keysDown.has(c)); const j = k.jump.some(c => keysDown.has(c)); if (j && !inp.jump) pressJump(); inp.jump = j; }
+let keyCapture = null;   // set while you are choosing a new key in settings
 function setZoom(z) { settings.zoom = clamp(Math.round(z * 100) / 100, 0.35, 2); $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%'; save(); }
 addEventListener('keydown', e => {
+  if (keyCapture) return;
   if (typing()) { if (e.key === 'Enter' || e.key === 'Escape') document.activeElement.blur(); return; }
   if (e.key === 'Escape') {
     if (closeSelectFn) { closeSelectFn(); return; }
@@ -873,31 +1240,53 @@ addEventListener('keydown', e => {
   }
   if (e.key === '-' || e.key === '_') { setZoom(settings.zoom - 0.1); return; }
   if (e.key === '=' || e.key === '+') { setZoom(settings.zoom + 0.1); return; }
-  if ((e.code === 'KeyR' || e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey) { if (blocked()) return; backToStart(); return; }
-  const k = keyOf(e);
-  if (!k) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const a = e.code ? actionOf(e.code) : null;
+  if (!a) return;
   e.preventDefault();
+  if (a === 'back') { if (!e.repeat && !blocked()) backToStart(); return; }
   if (detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); }
-  if (k === 'jump') { if (!inp.jump) pressJump(); inp.jump = true; } else inp[k] = true;
+  keysDown.add(e.code); syncKeys();
 });
-addEventListener('keyup', e => { const k = keyOf(e); if (k) inp[k] = false; });
-addEventListener('blur', () => { inp.left = inp.right = inp.jump = false; });
+addEventListener('keyup', e => { if (e.code && keysDown.delete(e.code)) syncKeys(); });
+addEventListener('blur', () => { keysDown.clear(); inp.left = inp.right = inp.jump = false; });
 cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
 document.addEventListener('touchmove', e => { if (!e.target.closest || !e.target.closest('#settings, .card, .csel-list')) e.preventDefault(); }, { passive: false });
 document.addEventListener('contextmenu', e => { if (!typing()) e.preventDefault(); });
 document.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', e => { if (!window.PointerEvent || e.pointerType === 'touch') { if (detected !== 'touch') { detected = 'touch'; applyTouchUI(); } } }, true);
 
 /* ----- on-screen buttons ----- */
-function defPos(k) {
-  const portrait = window.innerHeight > window.innerWidth, y = portrait ? 0.86 : 0.78;
-  if (settings.scheme === 'swipebtn') return k === 'j' ? [0.88, y] : [0.5, y];
-  return k === 'l' ? [0.12, y] : k === 'r' ? [0.88, y] : [0.5, y];
+/* Positions are stored as "this many pixels from the left / right edge (or the middle), this many up from the bottom".
+   Because they are real pixels, buttons keep the same spacing when you turn your phone. */
+const PRESETS = {
+  spread: { name: 'Spread out (jump in the middle)', pos: { l: { a: 'l', dx: 62, dy: 84 }, r: { a: 'r', dx: 62, dy: 84 }, j: { a: 'c', dx: 0, dy: 84 } } },
+  moveleft: { name: 'Move on the left, jump on the right', pos: { l: { a: 'l', dx: 58, dy: 84 }, r: { a: 'l', dx: 160, dy: 84 }, j: { a: 'r', dx: 66, dy: 84 } } },
+  moveright: { name: 'Move on the right, jump on the left', pos: { l: { a: 'r', dx: 160, dy: 84 }, r: { a: 'r', dx: 58, dy: 84 }, j: { a: 'l', dx: 66, dy: 84 } } },
+  custom: { name: 'Custom (the way you moved them)', pos: null }
+};
+const isPortrait = () => window.innerHeight > window.innerWidth;
+function curLayout() {
+  if (settings.preset === 'custom') {
+    const L = (settings.perOrient && isPortrait() && settings.btnPosP) ? settings.btnPosP : settings.btnPos;
+    if (L) return L;
+  }
+  let p = (PRESETS[settings.preset] && PRESETS[settings.preset].pos) || PRESETS.spread.pos;
+  if (settings.scheme === 'swipebtn') p = { l: p.l, r: p.r, j: settings.preset === 'moveright' ? { a: 'l', dx: 66, dy: 84 } : { a: 'r', dx: 66, dy: 84 } };
+  return p;
 }
-const bpos = k => (settings.btnPos && settings.btnPos[k]) || defPos(k);
+function btnSize(k) { return Math.round((k === 'j' ? 92 : 78) * settings.btnSize); }
+function btnXY(q, W, H, sz) { const r = sz / 2; return [clamp(q.a === 'l' ? q.dx : q.a === 'r' ? W - q.dx : W / 2 + q.dx, r + 4, W - r - 4), clamp(H - q.dy, r + 8, H - r - 4)]; }
 function layoutTouch() {
+  const W = window.innerWidth, H = window.innerHeight, L = curLayout(), ks = settings.scheme === 'swipebtn' ? ['j'] : ['l', 'r', 'j'], pts = {};
+  ks.forEach(k => { const sz = btnSize(k); pts[k] = btnXY(L[k], W, H, sz).concat(sz); });
+  // never let two buttons sit on top of each other (a narrow screen can squeeze them)
+  for (let it = 0; it < 3; it++) for (let a = 0; a < ks.length; a++) for (let b = a + 1; b < ks.length; b++) {
+    const p = pts[ks[a]], q = pts[ks[b]], need = (p[2] + q[2]) / 2 + 6, dx = q[0] - p[0], dy = q[1] - p[1];
+    if (Math.hypot(dx, dy) < need) { const push = (need - Math.abs(dx)) / 2 + 1, sg = dx >= 0 ? 1 : -1; p[0] = clamp(p[0] - sg * push, p[2] / 2 + 4, W - p[2] / 2 - 4); q[0] = clamp(q[0] + sg * push, q[2] / 2 + 4, W - q[2] / 2 - 4); }
+  }
   [['tl', 'l'], ['tr', 'r'], ['tj', 'j']].forEach(p => {
-    const el = $(p[0]), pos = bpos(p[1]), sz = Math.round((p[1] === 'j' ? 92 : 78) * settings.btnSize);
-    el.style.left = pos[0] * 100 + '%'; el.style.top = pos[1] * 100 + '%'; el.style.width = el.style.height = sz + 'px';
+    const el = $(p[0]), pt = pts[p[1]]; if (!pt) return;
+    el.style.left = pt[0] + 'px'; el.style.top = pt[1] + 'px'; el.style.width = el.style.height = pt[2] + 'px';
   });
 }
 function applyTouchUI() {
@@ -909,7 +1298,8 @@ function applyTouchUI() {
   ['tl', 'tr', 'tj'].forEach(id => $(id).classList.toggle('edit', editMode));
   layoutTouch();
   $('btnEditLayout').disabled = !(sc === 'buttons' || sc === 'swipebtn');
-  $('btnResetLayout').disabled = !settings.btnPos;
+  $('btnResetLayout').disabled = !(settings.btnPos || settings.btnPosP);
+  $('presetRow').classList.toggle('hide', !(sc === 'buttons' || sc === 'swipebtn'));
   if (!on) { tin.ax = 0; tin.jump = false; }
 }
 function recomputeTouch() {
@@ -929,12 +1319,17 @@ function bindBtn(id, key) {
 }
 bindBtn('tl', 'L'); bindBtn('tr', 'R'); bindBtn('tj', 'J');
 // drag the buttons around (edit mode)
+function layoutKey() { return (settings.perOrient && isPortrait()) ? 'btnPosP' : 'btnPos'; }
 [['tl', 'l'], ['tr', 'r'], ['tj', 'j']].forEach(p => {
   const el = $(p[0]);
   el.addEventListener('pointerdown', e => {
     if (!editMode) return; e.preventDefault(); el.setPointerCapture(e.pointerId);
-    if (!settings.btnPos) settings.btnPos = { l: defPos('l'), r: defPos('r'), j: defPos('j') };
-    const mv = ev => { settings.btnPos[p[1]] = [clamp(ev.clientX / window.innerWidth, 0.04, 0.96), clamp(ev.clientY / window.innerHeight, 0.08, 0.96)]; layoutTouch(); };
+    const key = layoutKey();
+    if (settings.preset !== 'custom' || !settings[key]) { const cur = curLayout(); settings[key] = { l: Object.assign({}, cur.l), r: Object.assign({}, cur.r), j: Object.assign({}, cur.j) }; settings.preset = 'custom'; selPreset.set('custom'); }
+    const mv = ev => {
+      const W = window.innerWidth, H = window.innerHeight, x = clamp(ev.clientX, 20, W - 20), y = clamp(ev.clientY, 40, H - 20), a = x < W * 0.4 ? 'l' : x > W * 0.6 ? 'r' : 'c';
+      settings[key][p[1]] = { a, dx: Math.round(a === 'l' ? x : a === 'r' ? W - x : x - W / 2), dy: Math.round(H - y) }; layoutTouch();
+    };
     const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); save(); $('btnResetLayout').disabled = false; };
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   });
@@ -945,10 +1340,11 @@ function startEdit() {
 }
 function endEdit() { editMode = false; $('editbar').classList.add('hide'); applyTouchUI(); $('settings').classList.remove('hide'); }
 $('editDone').onclick = endEdit;
-$('editReset').onclick = () => { settings.btnPos = null; save(); layoutTouch(); $('btnResetLayout').disabled = true; };
+function resetLayout() { settings.btnPos = null; settings.btnPosP = null; if (settings.preset === 'custom') settings.preset = 'spread'; selPreset.set(settings.preset); save(); applyTouchUI(); }
+$('editReset').onclick = resetLayout;
 $('btnEditLayout').onclick = startEdit;
-$('btnResetLayout').onclick = () => { settings.btnPos = null; save(); applyTouchUI(); };
-addEventListener('resize', layoutTouch);
+$('btnResetLayout').onclick = resetLayout;
+addEventListener('resize', layoutTouch); addEventListener('orientationchange', () => setTimeout(layoutTouch, 120));
 
 /* ----- swipe gestures (floating anchor: the farther you drag from where you started, the faster you roll) ----- */
 const gp = new Map();
@@ -1014,7 +1410,7 @@ function maybeAskBots() {
   }, { no: 'Not now', check: "Don't ask me again", yesClass: 'go', onCheck: v => { if (v) { settings.botAsk = false; save(); $('setBotAsk').checked = false; } } });
 }
 
-$('btnOk').onclick = () => { settings.intro = !$('dontShow').checked; $('setIntro').checked = settings.intro; save(); $('intro').classList.add('hide'); setTimeout(maybeAskBots, 400); };
+$('btnOk').onclick = () => { auWake(); settings.intro = !$('dontShow').checked; $('setIntro').checked = settings.intro; save(); $('intro').classList.add('hide'); setTimeout(maybeAskBots, 400); };
 function showIntro() { $('dontShow').checked = !settings.intro; $('intro').classList.remove('hide'); }
 function toggleSettings() {
   const s = $('settings'); s.classList.toggle('hide');
@@ -1023,7 +1419,7 @@ function toggleSettings() {
 $('btnSettings').onclick = toggleSettings;
 $('btnCloseSet').onclick = () => { $('settings').classList.add('hide'); if (closeSelectFn) closeSelectFn(); closePicker(); };
 $('btnWelcome').onclick = () => { $('settings').classList.add('hide'); showIntro(); };
-$('btnRespawn').onclick = () => { backToStart(); $('settings').classList.add('hide'); };
+$('btnRespawn').onclick = () => { backToStart(); };
 
 // tabs
 const tabBtns = $('tabs').querySelectorAll('button');
@@ -1041,8 +1437,10 @@ const selInput = makeSelect($('selInput'), [{ v: 'auto', label: 'Auto-detect' },
   v => { settings.inputMode = v; save(); applyTouchUI(); });
 const selScheme = makeSelect($('selScheme'), Object.keys(SCHEMES).map(k => ({ v: k, label: SCHEMES[k].name })),
   v => { settings.scheme = v; save(); $('schemeDesc').textContent = SCHEMES[v].desc; applyTouchUI(); });
-const selBotAmt = makeSelect($('selBotAmt'), [{ v: '0', label: 'A few (1–3)' }, { v: '1', label: 'Some (2–7)' }, { v: '2', label: 'Lots (6–12)' }],
-  v => { settings.botAmt = +v; save(); newBotTarget(); });
+const selPreset = makeSelect($('selPreset'), Object.keys(PRESETS).map(k => ({ v: k, label: PRESETS[k].name })),
+  v => { settings.preset = v; if (v !== 'custom') { settings.btnPos = null; settings.btnPosP = null; } else if (!settings.btnPos) { const c = curLayout(); settings.btnPos = { l: Object.assign({}, c.l), r: Object.assign({}, c.r), j: Object.assign({}, c.j) }; } save(); applyTouchUI(); });
+const selMusic = makeSelect($('selMusic'), [{ v: 'none', label: 'No music' }, { v: 'peaceful', label: 'Peaceful' }, { v: 'upbeat', label: 'Upbeat' }, { v: 'exciting', label: 'Exciting' }],
+  v => { settings.music = v; save(); $('musicDesc').textContent = MUSIC_INFO[v]; if (!AU.ctx) auInit(); musicStart(); auVol(); });
 
 // ball look
 const previewCtx = $('preview').getContext('2d');
@@ -1087,23 +1485,87 @@ function buildLook() {
 function syncUI() {
   $('setName').value = settings.name;
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
-    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setEdge', 'edge'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg']]
+    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setEdge', 'edge'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
+    ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setPerOrient', 'perOrient']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
-  selBotAmt.set(String(settings.botAmt)); selInput.set(settings.inputMode); selScheme.set(settings.scheme); $('schemeDesc').textContent = SCHEMES[settings.scheme].desc;
+  selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(settings.preset); selMusic.set(settings.music);
+  $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
+  $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMax; $('botMaxVal').textContent = settings.botMax; botNote();
+  buildKeys();
   $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%';
   $('setBtnSize').value = settings.btnSize; $('btnSizeVal').textContent = Math.round(settings.btnSize * 100) + '%';
   $('setFs').disabled = !fsSupported(); $('fsNote').textContent = fsSupported() ? '' : 'Full screen is not available on this device or browser.';
   $('setMmPlayers').disabled = !settings.minimap;
   buildLook(); refreshLook(); applyMmVisibility();
 }
-function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); if (fn) fn(); }; }
+function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); sfx($(id).checked ? 'on' : 'off'); if (fn) fn(); }; }
 bindToggle('setTags', 'tags'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
 bindToggle('setBotMark', 'botMark'); bindToggle('setBotAsk', 'botAsk'); bindToggle('setMmPlayers', 'mmPlayers');
-bindToggle('setEdge', 'edge', () => { if (!settings.edge) S.edgeWarn = false; });
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { $('setMmPlayers').disabled = !settings.minimap; applyMmVisibility(); });
 bindToggle('setBots', 'bots', () => { bots.length = 0; if (settings.bots) { newBotTarget(); botNextSpawn = 0.8; } });
+bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); bindToggle('setPerOrient', 'perOrient', () => layoutTouch());
+$('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
+$('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
+$('btnSkip').onclick = () => { auWake(); musicSkip(); };
+function botNote() { const cap = botCap(); $('botNote').textContent = 'Right now: up to ' + cap + (cap < settings.botMax ? (online && room.n > 1 ? ' (real players always come first, and you count too)' : ' (you count as one of the players)') : '') + '. Bots only fill free space, up to ' + (room.max || 200) + ' per world.'; }
+$('setBotMax').oninput = () => { settings.botMax = +$('setBotMax').value; $('botMaxVal').textContent = settings.botMax; save(); newBotTarget(); botNote(); };
+// the important switches ask first when you turn them OFF; the small ones just switch
+function guard(id, key, title, text, yes) {
+  $(id).onchange = () => {
+    if ($(id).checked) { settings[key] = true; save(); sfx('on'); return; }
+    $(id).checked = true;
+    askConfirm(title, text, yes || 'Turn it off', () => { settings[key] = false; $(id).checked = false; save(); sfx('off'); if (key === 'edge') S.edgeWarn = false; if (key === 'fallWarn') S.fallWarn = false; });
+  };
+}
+guard('setBeacon', 'beacon', 'Turn off the finish beacon?', 'For 15 seconds every 30 minutes, the beacon points toward the finish line. It may be the only thing that helps you find it, because nothing else on the map says where it is.');
+guard('setEdge', 'edge', 'Turn off the edge warning?', 'Without it you get no warning when you wander toward the edge of the world, so you could be thrown out of the map with no notice.');
+guard('setFallWarn', 'fallWarn', 'Turn off the falling warning?', 'Without it you will not be warned before a very long fall ends with a splat.');
+/* ----- keyboard: pick your own keys (a key can do only one thing) ----- */
+const KEYACT = [['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['back', 'flag', 'Back to start']];
+const KEYNAMES = { Space: 'Space', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Enter: 'Enter', ShiftLeft: 'L-Shift', ShiftRight: 'R-Shift', Tab: 'Tab', Backspace: 'Backspace', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`', CapsLock: 'Caps' };
+const keyLabel = c => KEYNAMES[c] || (c.indexOf('Key') === 0 ? c.slice(3) : c.indexOf('Digit') === 0 ? c.slice(5) : c.indexOf('Numpad') === 0 ? 'Num ' + c.slice(6) : c);
+const RESERVED = ['Escape', 'Minus', 'Equal', 'NumpadAdd', 'NumpadSubtract', 'MetaLeft', 'MetaRight', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ContextMenu'];
+function buildKeys() {
+  const box = $('keyrows'); box.innerHTML = '';
+  KEYACT.forEach(ka => {
+    const a = ka[0], row = document.createElement('div'); row.className = 'keyrow';
+    row.innerHTML = '<span class="kn">' + ic(ka[1]) + '<span>' + ka[2] + '</span></span>';
+    settings.keys[a].forEach((c, i) => {
+      const chip = document.createElement('span'); chip.className = 'kchip'; chip.textContent = keyLabel(c);
+      if (settings.keys[a].length > 1) { const x = document.createElement('button'); x.title = 'Remove'; x.innerHTML = ic('close'); x.onclick = () => { settings.keys[a].splice(i, 1); save(); buildKeys(); sfx('off'); }; chip.appendChild(x); }
+      row.appendChild(chip);
+    });
+    if (settings.keys[a].length < 4) {
+      const add = document.createElement('button'); add.className = 'kadd'; add.textContent = '+ key';
+      add.onclick = () => { if (keyCapture) cancelCapture(); keyCapture = { a, btn: add }; add.textContent = 'Press a key…'; add.classList.add('wait'); $('keymsg').textContent = ''; };
+      row.appendChild(add);
+    }
+    box.appendChild(row);
+  });
+}
+function cancelCapture() { keyCapture = null; buildKeys(); }
+addEventListener('keydown', e => {
+  if (!keyCapture) return;
+  e.preventDefault(); e.stopPropagation();
+  const code = e.code; if (!code || code === 'Unidentified') return;
+  if (code === 'Escape') { cancelCapture(); return; }
+  if (RESERVED.indexOf(code) >= 0) { $('keymsg').textContent = keyLabel(code) + ' is reserved for the game menu. Pick another key.'; return; }
+  const owner = actionOf(code);
+  if (owner) { const nm = KEYACT.filter(k => k[0] === owner)[0][2]; $('keymsg').textContent = keyLabel(code) + ' already does "' + nm + '". A key can only do one thing, so remove it there first.'; sfx('warn'); return; }
+  settings.keys[keyCapture.a].push(code); keyCapture = null; save(); buildKeys(); sfx('on'); $('keymsg').textContent = '';
+}, true);
+$('keyReset').onclick = () => { settings.keys = defKeys(); keysDown.clear(); syncKeys(); save(); buildKeys(); $('keymsg').textContent = ''; sfx('on'); };
+// little click sounds for buttons
+document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('button'); if (t && !t.id.startsWith('t') && t.id !== 'cfYes') sfx('ui'); });
+// install as an app
+let installEv = null;
+const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; if (!isStandalone()) $('btnInstall').classList.remove('hide'); });
+addEventListener('appinstalled', () => { installEv = null; $('btnInstall').classList.add('hide'); });
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !isStandalone()) $('btnInstall').classList.remove('hide');
+$('btnInstall').onclick = () => { if (installEv) { installEv.prompt(); installEv = null; $('btnInstall').classList.add('hide'); } else askConfirm('Install ballpit.party', 'On iPhone and iPad: tap the Share button, then "Add to Home Screen". On other browsers, open the browser menu and choose "Install app" or "Add to Home screen".', 'Got it', () => {}, { no: 'Close', yesClass: 'go' }); };
 $('setFs').onchange = () => setFullscreen($('setFs').checked);
 $('setZoom').oninput = () => setZoom(+$('setZoom').value);
 $('zOut').onclick = () => setZoom(settings.zoom - 0.1);
@@ -1118,7 +1580,7 @@ $('setMp').onchange = () => {
 };
 $('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every setting back to its default: your name, colours, controls, zoom, bots and the welcome popup. This cannot be undone.', 'Reset everything', () => {
   const wasMp = settings.mp, wasFs = settings.fs;
-  settings = defaults(); normalize(); save(); bots.length = 0; syncUI(); applyTouchUI();
+  settings = defaults(); normalize(); save(); bots.length = 0; keysDown.clear(); syncKeys(); syncUI(); applyTouchUI(); auVol(); if (AU.ctx) musicStart();
   if (wasFs && isFs()) exitFs();
   if (!wasMp) { retry = 0; setNet('connecting'); connect(); }
   lastSent = ''; sendInfo(); addFeed('Settings reset to default', 'bad', true);
@@ -1201,6 +1663,18 @@ function onBin(buf) {   // compact position update: [1][slot u16][ id u32, x/2 u
     o.px = o.cx; o.py = o.cy; o.x = x; o.y = y; o.t0 = t; o.seen = t;
   }
 }
+let lastWorldShown = 0, worldPopT = 0;
+function showWorldPop(id, full) {   // "You're in World 1" or "World 1 was too full, you've been pushed to World 2"
+  const el = $('worldpop'), list = full.slice().sort((a, b) => a - b);
+  let h;
+  if (list.length) {
+    const was = list.length === 1 ? 'World ' + list[0] + ' was' : 'Worlds ' + list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1] + ' were';
+    h = '<b>' + was + ' too full</b>You\'ve been pushed to World ' + id + '. Each world holds up to ' + room.max + ' players, so a new one opens when the others fill up.';
+  } else h = '<b>You\'re in World ' + id + '</b>Everyone in World ' + id + ' plays the same map and can see each other. Each world holds up to ' + room.max + ' players.';
+  el.innerHTML = h; el.classList.remove('hide'); sfx('notice');
+  clearTimeout(worldPopT); worldPopT = setTimeout(() => el.classList.add('hide'), list.length ? 10000 : 6000);
+}
+$('worldpop').onclick = () => $('worldpop').classList.add('hide');
 function onMsg(m) {
   switch (m.t) {
     case 'welcome':
@@ -1211,13 +1685,15 @@ function onMsg(m) {
       others.clear();
       m.players.forEach(p => others.set(p.id, newOther(p.name, p.color, p.color2, p.pat, p.crown)));
       setNet('online');
-      addFeed('You joined Room ' + m.room, 'join', true);
+      addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
       if (m.slot !== S.slot && forced === null) loadMap(m.slot, m.next);
+      if (lastWorldShown !== m.room) { lastWorldShown = m.room; showWorldPop(m.room, m.full || []); }
+      botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
-    case 'join': others.set(m.id, newOther(m.name, m.color, m.color2, m.pat)); room.n = m.n; addFeed(who(m.name) + ' joined', 'join'); break;
-    case 'leave': others.delete(m.id); room.n = m.n; addFeed(who(m.name) + ' left', 'leave'); break;
+    case 'join': others.set(m.id, newOther(m.name, m.color, m.color2, m.pat)); room.n = m.n; addFeed(who(m.name) + ' joined', 'join'); if (settings.joinMsg) sfx('join'); botNote(); break;
+    case 'leave': others.delete(m.id); room.n = m.n; addFeed(who(m.name) + ' left', 'leave'); if (settings.joinMsg) sfx('leave'); botNote(); break;
     case 'info': {   // someone changed how they look: show a clear little transformation
       const o = others.get(m.id);
       if (o) {
@@ -1309,6 +1785,8 @@ function drawTiles(camL, camT, vw, vh) {
       if (!t) continue;
       const px = tx * TS, py = ty * TS;
       if (t === 5) { water.push(px, py, (ty > 0 && g[i - W] !== 5) ? 1 : 0); continue; }
+      if (t === 9) continue;                       // closed doors are drawn with the gadgets
+      if (t === 6) { drawPad(px, py, tx); continue; }
       if (t === 4) {
         const h = TS / 2;
         for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) { ctx.fillStyle = ((tx * 2 + a + ty * 2 + b) & 1) ? '#111' : '#fff'; ctx.fillRect(px + a * h, py + b * h, h + 0.5, h + 0.5); }
@@ -1325,7 +1803,7 @@ function drawTiles(camL, camT, vw, vh) {
   for (let ty = y0; ty <= y1; ty++) {
     for (let tx = x0; tx <= x1; tx++) {
       const i = ty * W + tx, t = g[i];
-      if (!t || t === 5) continue;
+      if (!t || t === 5 || t === 6 || t === 9) continue;
       let n = ty > 0 ? g[i - W] : 0; if (n === 0 || n === 5) sketchSeg(tx, ty, tx + 1, ty, sketch);
       n = ty < w.H - 1 ? g[i + W] : 0; if (n === 0 || n === 5) sketchSeg(tx, ty + 1, tx + 1, ty + 1, sketch);
       n = tx > 0 ? g[i - 1] : 0; if (n === 0 || n === 5) sketchSeg(tx, ty, tx, ty + 1, sketch);
@@ -1350,6 +1828,115 @@ function drawTiles(camL, camT, vw, vh) {
       if (dn === 0 && hsh(tx, ty, 12) < 0.2) decoDown(th, tx * TS, ty * TS, hsh(tx, ty, 14));
     }
   }
+}
+function drawPad(px, py, tx) {   // bounce pad: a springy cushion with arrows that hop upward
+  const p = 0.5 + 0.5 * Math.sin(S.t * 5 + tx);
+  ctx.lineWidth = 2.4; ctx.strokeStyle = INK; ctx.lineJoin = 'round';
+  ctx.fillStyle = '#1c7f78'; ctx.fillRect(px + 4, py + TS * 0.5, TS - 8, TS * 0.5); ctx.strokeRect(px + 4, py + TS * 0.5, TS - 8, TS * 0.5);
+  ctx.fillStyle = '#35e0c2'; ctx.fillRect(px + 1, py + 1, TS - 2, TS * 0.5); ctx.strokeRect(px + 1, py + 1, TS - 2, TS * 0.5);
+  ctx.strokeStyle = 'rgba(255,255,255,' + (0.55 + 0.4 * p) + ')'; ctx.lineWidth = 2.4; ctx.beginPath();
+  const cx = px + TS / 2, cy = py + TS * 0.38 - p * 2;
+  ctx.moveTo(cx - 8, cy + 4); ctx.lineTo(cx, cy - 3); ctx.lineTo(cx + 8, cy + 4); ctx.stroke();
+  ctx.strokeStyle = INK;
+}
+function drawGadgets(camL, camT, vw, vh, dt) {
+  const w = S.world, m = S.map;
+  ctx.lineJoin = 'round'; ctx.lineWidth = 2.4; ctx.strokeStyle = INK;
+  // decorations: treasure chest, signs
+  for (let i = 0; i < m.decor.length; i++) {
+    const d = m.decor[i], x = (d[1] + 0.5) * TS, y = d[2] * TS;
+    if (x < camL - 60 || x > camL + vw + 60 || y < camT - 60 || y > camT + vh + 80) continue;
+    if (d[0] === 0) {   // treasure chest
+      ctx.fillStyle = '#8a5a2b'; ctx.fillRect(x - 17, y - 22, 34, 22); ctx.strokeRect(x - 17, y - 22, 34, 22);
+      ctx.fillStyle = '#a9702f'; ctx.beginPath(); ctx.arc(x, y - 22, 17, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffd23d'; ctx.fillRect(x - 4, y - 22, 8, 12); ctx.strokeRect(x - 4, y - 22, 8, 12);
+    } else if (d[0] === 2) {   // sign: "a crate-weight lock ahead"
+      ctx.fillStyle = '#6b4526'; ctx.fillRect(x - 2.5, y - 40, 5, 40); ctx.strokeRect(x - 2.5, y - 40, 5, 40);
+      ctx.fillStyle = '#d9a864'; ctx.fillRect(x - 20, y - 56, 40, 22); ctx.strokeRect(x - 20, y - 56, 40, 22);
+      ctx.fillStyle = '#ffc233'; ctx.fillRect(x - 8, y - 52, 12, 12); ctx.strokeRect(x - 8, y - 52, 12, 12);
+      ctx.beginPath(); ctx.moveTo(x + 8, y - 45); ctx.lineTo(x + 16, y - 45); ctx.moveTo(x + 13, y - 49); ctx.lineTo(x + 17, y - 45); ctx.lineTo(x + 13, y - 41); ctx.stroke();
+    }
+  }
+  // pressure plates and buttons
+  for (let i = 0; i < w.plates.length; i++) {
+    const q = w.plates[i], x = q.x * TS, y = q.y * TS, ww = q.w * TS;
+    if (x > camL + vw + 20 || x + ww < camL - 20 || y < camT - 30 || y > camT + vh + 30) continue;
+    const h = q.on ? 3 : 8;
+    ctx.fillStyle = q.on ? '#58d68d' : '#e0a93c'; ctx.fillRect(x + 3, y - h, ww - 6, h); ctx.strokeRect(x + 3, y - h, ww - 6, h);
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; for (let k = 0; k < q.w * 3; k++) if (k % 2) ctx.fillRect(x + 3 + k * (ww - 6) / (q.w * 3), y - h, (ww - 6) / (q.w * 3), h);
+  }
+  for (let i = 0; i < w.btns.length; i++) {
+    const q = w.btns[i], x = (q.x + 0.5) * TS, y = q.y * TS;
+    if (x < camL - 40 || x > camL + vw + 40 || y < camT - 40 || y > camT + vh + 40) continue;
+    ctx.fillStyle = '#555'; ctx.fillRect(x - 14, y - 5, 28, 5); ctx.strokeRect(x - 14, y - 5, 28, 5);
+    const h = q.on ? 3 : 11;
+    ctx.beginPath(); ctx.moveTo(x - 10, y - 5); ctx.quadraticCurveTo(x, y - 5 - h * 2, x + 10, y - 5); ctx.closePath();
+    ctx.fillStyle = q.on ? '#7a3b34' : '#ff5b4a'; ctx.fill(); ctx.stroke();
+  }
+  // doors (gates): bars slide up when open
+  for (let i = 0; i < w.doors.length; i++) {
+    const d = w.doors[i], px = d.x * TS, py = d.y * TS, ww = d.w * TS, hh = d.h * TS;
+    if (d.a === undefined) d.a = d.open ? 1 : 0;
+    d.a += ((d.open ? 1 : 0) - d.a) * Math.min(1, dt * 5);
+    if (px > camL + vw + 40 || px + ww < camL - 40 || py > camT + vh + 40 || py + hh < camT - 40) continue;
+    const bh = Math.max(6, hh * (1 - d.a)), n = Math.max(2, Math.round(ww / 12));
+    ctx.fillStyle = '#b8862b';
+    for (let k = 0; k < n; k++) { const bx = px + (k + 0.5) * ww / n - 3.5; ctx.fillRect(bx, py, 7, bh); ctx.strokeRect(bx, py, 7, bh); }
+    ctx.fillStyle = '#8c6420'; for (let k = 1; k <= 2; k++) { const by = py + hh * k / 3; if (by < py + bh - 4) { ctx.fillRect(px, by - 3, ww, 6); ctx.strokeRect(px, by - 3, ww, 6); } }
+    ctx.fillStyle = '#5b4a3a'; ctx.fillRect(px - 5, py - 9, ww + 10, 11); ctx.strokeRect(px - 5, py - 9, ww + 10, 11);
+    if (d.a < 0.3) {   // padlock
+      const lx = px + ww / 2, ly = py + hh / 2;
+      ctx.fillStyle = '#ffd23d'; ctx.fillRect(lx - 8, ly - 4, 16, 13); ctx.strokeRect(lx - 8, ly - 4, 16, 13);
+      ctx.beginPath(); ctx.arc(lx, ly - 4, 6, Math.PI, 0); ctx.stroke();
+    }
+  }
+  // teeter-totters
+  for (let i = 0; i < w.see.length; i++) {
+    const s = w.see[i];
+    if (s.cx + s.hl < camL - 20 || s.cx - s.hl > camL + vw + 20 || s.cy < camT - 120 || s.cy > camT + vh + 60) continue;
+    ctx.fillStyle = '#6b6b78'; tri(s.cx, s.cy + 4, s.cx - 24, s.cy + 46, s.cx + 24, s.cy + 46, '#6b6b78');
+    ctx.save(); ctx.translate(s.cx, s.cy); ctx.rotate(s.ang);
+    ctx.fillStyle = '#e8923a'; ctx.fillRect(-s.hl, -6, s.hl * 2, 12); ctx.strokeRect(-s.hl, -6, s.hl * 2, 12);
+    ctx.fillStyle = '#ffe0a8'; ctx.fillRect(-s.hl + 4, -6, 10, 12); ctx.fillRect(s.hl - 14, -6, 10, 12);
+    ctx.restore();
+    circ(s.cx, s.cy, 5, '#ddd');
+    if (Math.abs(s.av) > 0.35 && nearMe(s.cx, s.cy)) sfx('creak');
+  }
+}
+function drawCoins(camL, camT, vw, vh) {
+  const cs = S.map.coins, got = S.coinGot; if (!cs.length) return;
+  let lo = 0, hi = cs.length; const xa = camL - 30;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (cs[mid][0] < xa) lo = mid + 1; else hi = mid; }
+  const t = S.t; ctx.lineWidth = 2; ctx.strokeStyle = INK;
+  for (let i = lo; i < cs.length && cs[i][0] <= camL + vw + 30; i++) {
+    if (got[i]) continue;
+    const c = cs[i], y = c[1] + Math.sin(t * 3 + c[0] * 0.05) * 2.5;
+    if (y < camT - 30 || y > camT + vh + 30) continue;
+    const k = c[2], sp = Math.abs(Math.cos(t * 3.2 + c[0] * 0.03)) * 0.8 + 0.2;
+    if (k === 2) {   // gem
+      ctx.beginPath(); ctx.moveTo(c[0], y - 12); ctx.lineTo(c[0] + 9, y); ctx.lineTo(c[0], y + 12); ctx.lineTo(c[0] - 9, y); ctx.closePath();
+      ctx.fillStyle = '#6ee7ff'; ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(c[0] - 2, y - 7, 3, 6);
+    } else {
+      const r = k ? 13 : 9;
+      ctx.beginPath(); ctx.ellipse(c[0], y, r * sp, r, 0, 0, TAU); ctx.fillStyle = k ? '#ffb020' : '#ffd23d'; ctx.fill(); ctx.stroke();
+      if (sp > 0.5) { ctx.beginPath(); ctx.ellipse(c[0], y, r * sp * 0.55, r * 0.55, 0, 0, TAU); ctx.strokeStyle = 'rgba(160,100,0,.7)'; ctx.stroke(); ctx.strokeStyle = INK; }
+    }
+  }
+}
+function drawBeacon(camL, camT, vw, vh, sc) {   // every 30 minutes, for 15 seconds: shows where the finish is
+  const f = S.map.flag, fx = f[0] * TS + 30, fy = f[1] * TS - 100, p = (S.t * 1.2) % 1;
+  ctx.save();
+  const g = ctx.createLinearGradient(0, fy - 1600, 0, fy + 100); g.addColorStop(0, 'rgba(255,230,120,0)'); g.addColorStop(1, 'rgba(255,230,120,.55)');
+  ctx.fillStyle = g; ctx.fillRect(fx - 26, fy - 1600, 52, 1700);
+  ctx.lineWidth = 4; for (let k = 0; k < 3; k++) { const q = (p + k / 3) % 1; ctx.strokeStyle = 'rgba(255,220,90,' + (1 - q) * 0.8 + ')'; ctx.beginPath(); ctx.arc(fx, fy, 40 + q * 260, 0, TAU); ctx.stroke(); }
+  const vx = camL + vw / 2, vy = camT + vh / 2, dx = fx - vx, dy = fy - vy;
+  if (Math.abs(dx) > vw / 2 - 30 || Math.abs(dy) > vh / 2 - 30) {   // off screen: an arrow at the edge points the way
+    const k = Math.min((vw / 2 - 50) / (Math.abs(dx) || 1), (vh / 2 - 50) / (Math.abs(dy) || 1)), ax = vx + dx * k, ay = vy + dy * k, a = Math.atan2(dy, dx), z = 1 / Math.max(0.5, sc);
+    ctx.translate(ax, ay); ctx.rotate(a); ctx.scale(z, z);
+    ctx.beginPath(); ctx.moveTo(26, 0); ctx.lineTo(-14, -20); ctx.lineTo(-6, 0); ctx.lineTo(-14, 20); ctx.closePath();
+    ctx.fillStyle = '#ffd23d'; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
 }
 function drawWater() {
   const wt = S.water;
@@ -1384,21 +1971,28 @@ function drawDeathMark() {
   ctx.setLineDash([4, 5]); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 17 + p * 3, 0, TAU); ctx.stroke();
   ctx.restore();
 }
+const PIT = ['#ff6b8b', '#4fc3f7', '#81d46b', '#b58bff', '#ffa84f', '#ffe14d'];
 function drawDyn(camL, camT, vw, vh) {
   const L = S.world.dyn;
   ctx.lineWidth = 2.4; ctx.strokeStyle = INK; ctx.lineJoin = 'round';
   for (let i = 0; i < L.length; i++) {
     const d = L[i]; if (d.burn > 0 || d.x < camL - 80 || d.x > camL + vw + 80 || d.y < camT - 80 || d.y > camT + vh + 80) continue;
+    if (nearMe(d.x, d.y)) {   // sounds: pushing and landing
+      if (d.touch && Math.abs(d.vx) > 40 && d.gr) sfx('push');
+      if (d._pv > 280 && d.vy < d._pv - 220) sfx('thud');
+      d._pv = d.vy;
+    }
     if (d.k === 'b') {
       ctx.fillStyle = d.hw > 20 ? '#ffb020' : '#ffc233'; ctx.fillRect(d.x - d.hw, d.y - d.hh, d.hw * 2, d.hh * 2); ctx.strokeRect(d.x - d.hw, d.y - d.hh, d.hw * 2, d.hh * 2);
       ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(d.x - d.hw + 4, d.y - d.hh + 4); ctx.lineTo(d.x + d.hw - 4, d.y + d.hh - 4); ctx.moveTo(d.x + d.hw - 4, d.y - d.hh + 4); ctx.lineTo(d.x - d.hw + 4, d.y + d.hh - 4); ctx.stroke(); ctx.lineWidth = 2.4;
     } else {
-      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, TAU); ctx.fillStyle = '#ffc233'; ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, TAU); ctx.fillStyle = d.kind === 4 ? PIT[i % PIT.length] : d.kind === 3 ? '#ffa31a' : '#ffc233'; ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + Math.cos(d.rot) * d.r * 0.8, d.y + Math.sin(d.rot) * d.r * 0.8); ctx.lineWidth = 1.8; ctx.stroke(); ctx.lineWidth = 2.4;
     }
   }
 }
 
+const VIEW_MAX_W = 1700, VIEW_MAX_H = 1050;
 let lastFrame = performance.now(), lastDraw = lastFrame, acc = 0, errCount = 0, frameN = 0;
 function frame(nowT) {
   requestAnimationFrame(frame);
@@ -1418,7 +2012,10 @@ function render(dt, nowT) {
   const dpr = settings.low ? 1 : Math.min(2, window.devicePixelRatio || 1), sw = window.innerWidth, sh = window.innerHeight;
   if (cv.width !== Math.round(sw * dpr) || cv.height !== Math.round(sh * dpr)) { cv.width = Math.round(sw * dpr); cv.height = Math.round(sh * dpr); }
   // a comfortable view (about 15 tiles tall on a laptop); the Zoom setting scales it either way
-  const sc = clamp(clamp(Math.min(sh / 620, sw / 560), 0.7, 2.2) * settings.zoom, 0.2, 5);
+  // Fairness: the view is measured in WORLD units, never screen pixels. Physics runs on a fixed 120 Hz clock in world
+  // units, so screen size, pixel density and frame rate change nothing about how you move. Zooming out is also capped,
+  // so a huge monitor can never see more of the world than the largest allowed window (VIEW_MAX_W x VIEW_MAX_H).
+  const sc = Math.max(clamp(clamp(Math.min(sh / 620, sw / 560), 0.7, 2.2) * settings.zoom, 0.2, 5), sw / VIEW_MAX_W, sh / VIEW_MAX_H);
   const vw = sw / sc, vh = sh / sc, b = S.b;
   updateFx(dt);
   const k = 1 - Math.exp(-7 * dt);
@@ -1435,13 +2032,25 @@ function render(dt, nowT) {
   ctx.setTransform(dpr * sc, 0, 0, dpr * sc, -camL * dpr * sc, -camT * dpr * sc);
   drawZones(camL, camT, vw, vh);
   // the lava sea at the very bottom, and the edge of the world on the sides
-  const sy = S.map.killY - 70;
-  ctx.fillStyle = LAVA; if (camT + vh > sy) ctx.fillRect(camL - 10, sy, vw + 20, camT + vh - sy + 20);
+  { // the lava sea follows the land: it sits right under the level, wherever you are
+    const fl = S.map.floorY, xa = Math.max(0, Math.floor(camL / TS) - 1), xb = Math.min(S.world.W - 1, Math.ceil((camL + vw) / TS) + 1);
+    let low = 0; for (let x = xa; x <= xb; x++) low = Math.max(low, fl[x] * TS);
+    if (camT + vh > low - 60) {
+      ctx.beginPath(); ctx.moveTo(xa * TS, camT + vh + 40);
+      for (let x = xa; x <= xb; x++) ctx.lineTo(x * TS + TS / 2, fl[x] * TS - 26 + Math.sin(S.t * 2 + x * 0.7) * 4);
+      ctx.lineTo(xb * TS + TS, camT + vh + 40); ctx.closePath(); ctx.fillStyle = LAVA; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = '#ffc04a'; ctx.beginPath();
+      for (let x = xa; x <= xb; x++) { const yy = fl[x] * TS - 26 + Math.sin(S.t * 2 + x * 0.7) * 4; if (x === xa) ctx.moveTo(x * TS + TS / 2, yy); else ctx.lineTo(x * TS + TS / 2, yy); }
+      ctx.stroke();
+    }
+  }
   ctx.fillStyle = 'rgba(0,0,0,.55)';
   if (camL < -2 * TS) ctx.fillRect(camL - 10, camT - 10, -2 * TS - camL + 10, vh + 20);
   if (camL + vw > ww + 2 * TS) ctx.fillRect(ww + 2 * TS, camT - 10, camL + vw - ww - 2 * TS + 10, vh + 20);
   drawTiles(camL, camT, vw, vh);
-  drawSpawn(); drawDeathMark(); drawFinishFlag(); drawDyn(camL, camT, vw, vh);
+  drawSpawn(); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh);
+  if (S.beaconOn && settings.beacon) drawBeacon(camL, camT, vw, vh, sc);
+  S.view = { l: camL, t: camT, w: vw, h: vh };
 
   if (S.mode === 'play') {
     const m = 60;
@@ -1468,44 +2077,76 @@ function render(dt, nowT) {
     }
   }
   drawFx();
-  drawWater();   // translucent, drawn last so swimming balls look submerged
-  // remember which parts of the world you have seen (for the mini-map)
-  if ((++frameN & 7) === 0 && S.mm) {
-    const mm = S.mm, ax = Math.max(0, Math.floor(camL / TS / 2)), bx = Math.min(mm.cw - 1, Math.floor((camL + vw) / TS / 2));
-    const ay = Math.max(0, Math.floor(camT / TS / 2)), by = Math.min(mm.ch - 1, Math.floor((camT + vh) / TS / 2));
-    for (let y = ay; y <= by; y++) for (let x = ax; x <= bx; x++) mm.seen[y * mm.cw + x] = 1;
-  }
+  drawWater();
+  if (S.fallLvl > 0.05 && S.mode === 'play' && S.dead <= 0) {   // speed lines while you fall fast
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,' + (0.15 + S.fallLvl * 0.45) + ')'; ctx.beginPath();
+    for (let i = 0; i < 12; i++) { const x = Math.random() * sw, y = Math.random() * sh, l = 30 + S.fallLvl * 110; ctx.moveTo(x, y); ctx.lineTo(x, y - l); }
+    ctx.stroke();
+    if (S.fallWarn) { const gr = ctx.createRadialGradient(sw / 2, sh / 2, Math.min(sw, sh) * 0.3, sw / 2, sh / 2, Math.max(sw, sh) * 0.7); gr.addColorStop(0, 'rgba(255,0,0,0)'); gr.addColorStop(1, 'rgba(255,30,10,' + (0.15 + S.fallLvl * 0.4) + ')'); ctx.fillStyle = gr; ctx.fillRect(0, 0, sw, sh); }
+  }   // translucent, drawn last so swimming balls look submerged
 }
 
-/* ================= mini-map: only where you are (and what you have already seen) ================= */
+/* ================= mini-map: a big chunk of the world around you; other players only if they are on your screen ================= */
 function applyMmVisibility() { $('mm').classList.toggle('hide', !settings.minimap); }
+const MM_PPT = 1, PING_MS = 1600;
+let mmPing = 0, mmDots = [];
 function drawMinimap() {
   if (!settings.minimap || S.mode !== 'play' || !S.mm || !S.b) return;
-  const c = $('mm'), g = c.getContext('2d'), w = c.width, h = c.height, mm = S.mm, m = S.map, ppt = 2;
-  const ctx0 = g; ctx0.clearRect(0, 0, w, h);
+  const c = $('mm'), g = c.getContext('2d'), w = c.width, h = c.height, mm = S.mm, m = S.map, ppt = MM_PPT, now = performance.now();
+  g.clearRect(0, 0, w, h);
+  g.fillStyle = 'rgba(20,16,30,.55)'; g.fillRect(0, 0, w, h);
   const ctr = S.b.x / TS, ctrY = S.b.y / TS, left = ctr - w / (2 * ppt), top = ctrY - h / (2 * ppt);
   const cx0 = Math.max(0, Math.floor(left / 2)), cx1 = Math.min(mm.cw - 1, Math.floor((left + w / ppt) / 2));
   const cy0 = Math.max(0, Math.floor(top / 2)), cy1 = Math.min(mm.ch - 1, Math.floor((top + h / ppt) / 2));
+  const cs = 2 * ppt;
   for (let y = cy0; y <= cy1; y++) for (let x = cx0; x <= cx1; x++) {
-    const i = y * mm.cw + x, code = mm.cell[i]; if (!code || !mm.seen[i]) continue;
+    const code = mm.cell[y * mm.cw + x]; if (!code) continue;
     g.fillStyle = code === 201 ? LAVA : code === 202 ? ICE : code === 203 ? '#2e7be6' : THEMES[code - 1].top;
-    g.fillRect(Math.floor((x * 2 - left) * ppt), Math.floor((y * 2 - top) * ppt), 4, 4);
+    g.fillRect(Math.floor((x * 2 - left) * ppt), Math.floor((y * 2 - top) * ppt), cs, cs);
   }
-  // outside the world = danger
+  // the kill zone hugs the bottom of the level; the world's side edges are red too
+  const fl = m.floorY; g.fillStyle = 'rgba(255,60,40,.38)';
+  for (let px = 0; px < w; px += 2) { const tx = Math.floor(left + px / ppt); if (tx < 0 || tx >= m.W) continue; const yy = (fl[tx] - top) * ppt; if (yy < h) g.fillRect(px, Math.max(0, yy), 2, h - Math.max(0, yy)); }
   g.fillStyle = 'rgba(255,60,40,.3)'; g.strokeStyle = '#ff5b4a'; g.lineWidth = 2;
-  const xl = (0 - left) * ppt, xr = (m.W - left) * ppt, yt = (0 - top) * ppt, yb = (m.H - top) * ppt;
+  const xl = (0 - left) * ppt, xr = (m.W - left) * ppt, yt = (0 - top) * ppt;
   if (xl > 0) { g.fillRect(0, 0, xl, h); g.beginPath(); g.moveTo(xl, 0); g.lineTo(xl, h); g.stroke(); }
   if (xr < w) { g.fillRect(xr, 0, w - xr, h); g.beginPath(); g.moveTo(xr, 0); g.lineTo(xr, h); g.stroke(); }
-  if (yt > 0) { g.fillRect(0, 0, w, yt); g.beginPath(); g.moveTo(0, yt); g.lineTo(w, yt); g.stroke(); }
-  if (yb < h) { g.fillRect(0, yb, w, h - yb); g.beginPath(); g.moveTo(0, yb); g.lineTo(w, yb); g.stroke(); }
-  if (settings.mmPlayers) {
-    others.forEach(o => { if (!o.seen || o.dead) return; const x = (o.cx / TS - left) * ppt, y = (o.cy / TS - top) * ppt; if (x < 0 || y < 0 || x > w || y > h) return; g.fillStyle = o.color; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(x, y, 3, 0, TAU); g.fill(); g.stroke(); });
+  if (yt > 0) { g.fillRect(0, 0, w, yt); }
+  const v = S.view;
+  if (v) {   // the rectangle you can see on screen: only players inside it are shown
+    g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; g.setLineDash([3, 3]);
+    g.strokeRect((v.l / TS - left) * ppt, (v.t / TS - top) * ppt, v.w / TS * ppt, v.h / TS * ppt); g.setLineDash([]);
+    // radar "ping": once in a while take a snapshot of who is on screen, then let the dots fade (very light on bandwidth)
+    if (now - mmPing > PING_MS) {
+      mmPing = now; mmDots.length = 0;
+      if (settings.mmPlayers) others.forEach(o => { if (!o.seen || o.dead) return; if (o.cx > v.l && o.cx < v.l + v.w && o.cy > v.t && o.cy < v.t + v.h) mmDots.push({ x: o.cx / TS, y: o.cy / TS, c: o.color }); });
+    }
+    const age = (now - mmPing) / PING_MS;
+    if (settings.mmPlayers) {
+      g.strokeStyle = 'rgba(159,232,255,' + (0.5 * (1 - age)) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(w / 2, h / 2, age * Math.max(v.w, v.h) / TS * ppt * 0.6, 0, TAU); g.stroke();
+      for (let i = 0; i < mmDots.length; i++) {
+        const d = mmDots[i], x = (d.x - left) * ppt, y = (d.y - top) * ppt; if (x < 0 || y < 0 || x > w || y > h) continue;
+        g.globalAlpha = 1 - 0.75 * age; g.fillStyle = d.c; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(x, y, 3, 0, TAU); g.fill(); g.stroke();
+      }
+      g.globalAlpha = 1;
+    }
+  }
+  if (S.beaconOn && settings.beacon) {   // while the beacon is on, the finish blinks on the map's edge
+    const f = m.flag, fx = (f[0] - left) * ppt, fy = (f[1] - top) * ppt, bx = clamp(fx, 6, w - 6), by = clamp(fy, 6, h - 6);
+    if (((now / 300) | 0) % 2) { g.fillStyle = '#ffd23d'; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.beginPath(); g.arc(bx, by, 5, 0, TAU); g.fill(); g.stroke(); }
   }
   g.fillStyle = settings.color; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(w / 2, h / 2, 4, 0, TAU); g.fill(); g.stroke();
 }
 setInterval(drawMinimap, 160);
 
 /* ================= HUD + session warnings ================= */
+const BEACON_EVERY = 30 * 60000, BEACON_LEN = 15000;
+let lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
+const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+function worldText() {
+  if (online) return 'World ' + room.id + ' · ' + room.n + ' player' + (room.n === 1 ? '' : 's');
+  return settings.mp ? 'Connecting…' : '';
+}
 function hudTick() {
   const rem = S.nextAt - nowMs();
   const tm = $('timer');
@@ -1518,13 +2159,39 @@ function hudTick() {
         notice('Session ends in ' + (t === 60 ? '1 hour' : t + ' minute' + (t > 1 ? 's' : '')) + '. Everyone moves to a new map.', t <= 5 ? 'urgent' : '');
       }
     });
+    const sec = Math.ceil(rem / 1000);
+    if (sec <= 10 && sec > 0 && sec !== lastTickSec) { lastTickSec = sec; sfx('tick'); }
     if (rem <= 0) startTransition(S.slot + 1, S.nextAt + SLOT_MS);
   }
+  // beacon: every 30 minutes (on the clock) for 15 seconds
+  const ph = nowMs() % BEACON_EVERY, bon = !!(settings.beacon && S.mode === 'play' && !S.finished && S.dead <= 0 && ph < BEACON_LEN);
+  if (bon && !S.beaconOn) { sfx('beacon'); lastBeaconSfx = performance.now(); }
+  S.beaconOn = bon;
+  $('beaconbar').classList.toggle('hide', !bon);
+  if (bon && S.b) {
+    const f = S.map.flag, dx = f[0] * TS - S.b.x, dy = f[1] * TS - S.b.y, d = Math.round(Math.hypot(dx, dy) / TS);
+    const hz = Math.abs(dx) > 4 * TS ? (dx > 0 ? 'right' : 'left') : '', vt = Math.abs(dy) > 4 * TS ? (dy > 0 ? 'down' : 'up') : '';
+    $('beaconText').textContent = 'Beacon! The finish is ' + d + ' tiles away' + (hz || vt ? ': ' + [vt, hz].filter(Boolean).join(' and ') : '') + ' · ' + Math.ceil((BEACON_LEN - ph) / 1000) + 's';
+  }
   $('edgewarn').classList.toggle('hide', !(S.edgeWarn && S.mode === 'play' && S.dead <= 0));
-  $('onl').textContent = online ? net.online + ' online · best ' + net.peak : '';
-  $('mpstats').textContent = online ? 'In room ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online now: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : 'Multiplayer is off.');
+  $('fallwarn').classList.toggle('hide', !(S.fallWarn && settings.fallWarn && S.mode === 'play' && S.dead <= 0));
+  $('onl').textContent = worldText();
+  if (S.coinN !== lastCoinShown) { lastCoinShown = S.coinN; $('coinN').textContent = S.coinN; }
+  $('coinpill').title = 'Coins on this map. Your best: ' + S.coinBest;
+  $('mpstats').textContent = online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : 'Multiplayer is off.');
+  if (!$('tpop').classList.contains('hide')) fillTimerPop(rem);
 }
 setInterval(hudTick, 250);
+
+function fillTimerPop(rem) {
+  $('tpName').textContent = S.map.name;
+  $('tpChange').textContent = 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
+  $('tpCoins').textContent = 'Coins: ' + S.coinN + ' · Your best here: ' + S.coinBest;
+  $('tpWorld').textContent = online ? 'World ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
+  $('tpNext').textContent = 'Up next: ' + BallMaps.names[(S.slot + 1) % BallMaps.count];
+}
+$('timer').onclick = e => { e.stopPropagation(); const el = $('tpop'); const open = el.classList.contains('hide'); el.classList.toggle('hide', !open); if (open) { fillTimerPop(S.nextAt - nowMs()); sfx('ui'); } };
+document.addEventListener('pointerdown', e => { const el = $('tpop'); if (!el.classList.contains('hide') && !el.contains(e.target) && !$('timer').contains(e.target)) el.classList.add('hide'); });
 
 /* ================= boot ================= */
 syncUI(); applyTouchUI();
@@ -1535,11 +2202,12 @@ if (settings.intro) showIntro();
   S.nextAt = forcedLeft !== null ? Date.now() + (+forcedLeft || 60) * 1000 : forced !== null ? Date.now() + 4 * 3600000 : (ls + 1) * SLOT_MS;
   loadMap(ls, S.nextAt);
 }
-if (params && params.get('test')) window.__d = { S, settings, bots, others, P, fx, tin, inp };
+if (params && params.get('test')) window.__d = { S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap };
 if (settings.mp) { setNet('connecting'); connect(); } else setNet('solo');
 newBotTarget();
 hudTick();
 requestAnimationFrame(frame);
+try { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !(params && params.get('test'))) navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
 window.__ballOk = true;
 })();
 </script>

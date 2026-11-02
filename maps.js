@@ -10,7 +10,7 @@
   const TS = 40; // tile size in px
   const R = 14;  // ball radius in px
 
-  // Tile types: 0 air, 1 solid, 2 lava, 3 ice, 4 finish (solid, checkered), 5 water
+  // Tile types: 0 air, 1 solid, 2 lava, 3 ice, 4 finish (solid, checkered), 5 water, 6 bounce pad (flush with the floor), 9 door (added by the game, never in rects)
   const THEMES = [
     { id: 'meadow',   bg: '#78c4ec', solid: '#7b5a3a', top: '#5cbc42', deco: 'tree' },
     { id: 'forest',   bg: '#2c6a4a', solid: '#55402a', top: '#3f9a3a', deco: 'pine' },
@@ -49,19 +49,19 @@
 
   // Real route: segs. Every vertical segment must be followed by a 'right' one.
   const DEFS = [
-    { name: 'Emberfall Expanse', seed: 505, mirror: true, br: [3, 6],
+    { name: 'Emberfall Expanse', seed: 505, mirror: true, br: [2, 4],
       segs: [S('right', 34, 'meadow', { ice: 0.05, lava: 0.12 }), S('right', 30, 'desert', { ice: 0, lava: 0.22 }), S('down', 22, 'desert'),
         S('right', 44, 'cave', { cave: 1, water: 0.2 }), S('right', 34, 'crystal', { cave: 1, ice: 0.2 }), S('down', 24, 'crystal'),
         S('right', 44, 'volcano', { cave: 1, lavasea: 1, lava: 0.3, ice: 0, water: 0 }), S('up', 28, 'volcano'), S('right', 36, 'night', { ice: 0.2 })],
       decoy: [S('right', 36, 'forest'), S('right', 36, 'mushroom', { cave: 1 }), S('right', 36, 'snow', { ice: 0.35 }), S('right', 36, 'icecave', { cave: 1, ice: 0.4 })],
       ice: 0.14, lava: 0.18, pillar: 0.12, narrow: 0.08, water: 0.12 },
-    { name: 'Frostbite Descent', seed: 202, mirror: false, br: [3, 6],
+    { name: 'Frostbite Descent', seed: 202, mirror: false, br: [2, 4],
       segs: [S('down', 30, 'snow', { ice: 0.35 }), S('right', 22, 'snow', { ice: 0.35 }), S('down', 38, 'icecave', { ice: 0.45 }),
         S('right', 34, 'icecave', { cave: 1, ice: 0.45 }), S('down', 38, 'crystal'), S('right', 28, 'crystal', { cave: 1 }),
         S('down', 44, 'volcano', { lava: 0.25, ice: 0 }), S('right', 28, 'volcano', { cave: 1, lavasea: 1, lava: 0.28, ice: 0 })],
       decoy: [S('up', 40, 'forest'), S('right', 12, 'forest'), S('up', 40, 'sky'), S('right', 12, 'sky')],
       ice: 0.2, lava: 0.15, pillar: 0.08, narrow: 0.08, water: 0 },
-    { name: 'Skyline Climb', seed: 303, mirror: false, br: [3, 6],
+    { name: 'Skyline Climb', seed: 303, mirror: false, br: [2, 4],
       segs: [S('up', 30, 'forest'), S('right', 20, 'forest'), S('up', 34, 'mushroom'), S('right', 30, 'mushroom', { cave: 1 }),
         S('up', 38, 'sky'), S('right', 26, 'sky', { ice: 0.2 }), S('up', 40, 'night'), S('right', 20, 'night')],
       decoy: [S('down', 36, 'desert'), S('right', 14, 'desert'), S('down', 40, 'cave'), S('right', 14, 'crystal', { cave: 1 })],
@@ -128,22 +128,22 @@
       }
       sleft--;
 
-      const rest = (!last && i % 18 === 0);                                   // safe breather platform
+      const rest = (!last && i % 18 === 0 && mode === 'right');                                   // safe breather platform
       const narrow = (!last && !rest && Rn() < sp('narrow'));
       const water = (!last && !rest && !narrow && mode === 'right' && Rn() < sp('water'));
-      const L = last ? 14 : rest ? 8 : water ? ri(8, 10) : narrow ? ri(2, 3) : (mode === 'up' ? ri(3, 6) : ri(4, 8));
+      const L = last ? 16 : rest ? 12 : water ? ri(8, 11) : narrow ? ri(2, 3) : (mode === 'up' ? ri(4, 7) : ri(5, 10));
 
       let dy, gap;
       if (mode === 'right') {
-        let oo = [-2, -1, -1, 0, 0, 0, 1, 1, 2, 3];
+        let oo = [-3, -2, -1, -1, 0, 0, 0, 1, 1, 2, 3, 4];
         const off = py - baseY;
-        if (off > 10) oo = [-2, -1, -1, 0]; else if (off < -10) oo = [0, 1, 2, 3];
+        if (off > 12) oo = [-3, -2, -1, 0]; else if (off < -12) oo = [0, 1, 2, 3, 4];
         if (lock > 0) { oo = oo.filter(v => v * lockSign >= 0); if (!oo.length) oo = [0]; lock--; }
         dy = pick(oo);
-        gap = dy === -2 ? 2 : dy < 0 ? ri(2, 3) : dy >= 2 ? ri(2, 4) : ri(2, 3);
+        gap = dy <= -3 ? 2 : dy < 0 ? ri(2, 4) : dy >= 2 ? ri(2, 5) : ri(2, 5);
       } else if (mode === 'down') {
-        dy = ri(3, 4);   // big drops keep 3+ tiles of head-room between zig-zag layers
-        gap = ri(2, 4);
+        dy = ri(3, 5);   // big drops keep 3+ tiles of head-room between zig-zag layers
+        gap = ri(2, 5);
       } else {
         dy = -2;         // always a full 2-tile step so zig-zag layers keep head-room
         gap = 2;
@@ -181,7 +181,7 @@
         }
       }
       if (!rest && !last && !narrow && !water && (t === 1 || Rn() < 0.25)) {
-        if (L >= 7 && Rn() < sp('lava')) {
+        if (L >= 7 && !rest && Rn() < sp('lava')) {
           const lw = ri(1, 2), off = ri(2, L - lw - 2);
           rects.push([nx + off, ny, lw, 2, 2, thI, gid]);   // lava pit
           hz = 1;
@@ -196,7 +196,7 @@
         hz = 1;
       }
       path.push([nx, ny, L, thI, mode === 'right' ? 0 : mode === 'down' ? 1 : 2, gid, seg.cave ? 1 : 0, h, seg.lavasea ? 1 : 0,
-        (!hz && !last && !water && !narrow && t === 1 && L >= 8) ? 1 : 0]);
+        (!hz && !last && !water && !narrow && t === 1 && L >= 8) ? 1 : 0, rest ? 1 : 0]);
       px = nx; py = ny; pl = L;
     }
     return { rects, fin, path, ng };
@@ -208,10 +208,14 @@
     idx = ((idx % DEFS.length) + DEFS.length) % DEFS.length;
     if (cache[idx]) return cache[idx];
     const d = DEFS[idx];
-    const occ = Occ();
+    const occ = Occ(), occB = Occ();   // occ: platforms + their jump room; occB: just the solid bodies (for floating districts)
+    let ABS = null;
     const rects = [], gz = {};
     let gidN = 0, branchCount = 0;
-    const MAXB = 260;
+    const MAXB = 520;
+    const coins = [], gad = { doors: [], plates: [], btns: [], see: [] }, decor = [];
+    const coin = (x, y, k) => coins.push([x, y, k || 0]);
+    const coinRow = (x, y, n, st, k) => { for (let i = 0; i < n; i++) coin(x + i * st, y, k); };
     const BR = rng(d.seed + 4242);
     const bri = (a, b) => a + Math.floor(BR() * (b - a + 1));
     const BP = { ice: 0.08, lava: 0.1, pillar: 0.06, narrow: 0.05, water: 0.1 };
@@ -234,8 +238,8 @@
       const out = [];
       for (const e of res.path) {
         const x = dir > 0 ? X + e[0] : X + PL - e[0] - e[2];
-        const w = [x, Y + e[1], e[2], e[3], e[4], e[5] + gbase, e[6], e[7], e[8], e[9]];
-        out.push(w); const b = boxOf(w); occ.add(b[0], b[1], b[2], b[3]);
+        const w = [x, Y + e[1], e[2], e[3], e[4], e[5] + gbase, e[6], e[7], e[8], e[9], e[10] || 0];
+        out.push(w); const b = boxOf(w); occ.add(b[0], b[1], b[2], b[3]); occB.add(w[0] - 1, w[1] - 1, w[0] + w[2] + 1, w[1] + w[7] + 1);
       }
       return out;
     }
@@ -260,7 +264,7 @@
     function addStructures(pw) {
       for (let i = 0; i < pw.length; i++) {
         const e = pw[i];
-        if (!e[9] || e[4] !== 0 || BR() > 0.3) continue;
+        if (!e[9] || e[4] !== 0 || BR() > 0.5) continue;
         const L = e[2], y = e[1], th = e[3], g = e[5], k = BR();
         e[9] = 0;   // something stands here now
         if (k < 0.4) {            // little hill: steps up and down, one tile each
@@ -272,6 +276,9 @@
           addRect([x, y - 2, 1, 2, 1, th, g]); addRect([x + 4, y - 2, 1, 2, 1, th, g]);
         } else if (k < 0.85) {    // a single block
           addRect([e[0] + bri(2, L - 5), y - 1, 2, 1, 1, th, g]);
+        } else if (k < 0.93 && L >= 7) {   // a Jenga tower or a crate pyramid to knock down
+          const x = e[0] + bri(2, L - 5);
+          if (BR() < 0.55) jenga(x, y, bri(4, 7)); else cratePyramid(x, y, bri(3, 4));
         } else if (L >= 12 && !e[6]) {   // an arch to walk through
           const x = e[0] + bri(2, L - 9);
           addRect([x, y - 4, 1, 4, 1, th, g]); addRect([x + 5, y - 4, 1, 4, 1, th, g]); addRect([x - 1, y - 5, 8, 1, 1, th, g]);
@@ -280,16 +287,56 @@
     }
     // pushable yellow crates and balls (each player gets their own copy; they are optional toys and shortcuts)
     const props = [];
+    function jenga(x, y, layers) {      // a Jenga-style tower of small crates: knock it over
+      for (let k = 0; k < layers; k++) {
+        const ty = y - 0.9 * k - 0.02;
+        if (k % 2 === 0) { props.push([0, x, ty]); props.push([0, x + 0.96, ty]); } else { props.push([0, x + 0.48, ty]); }
+      }
+    }
+    function cratePyramid(x, y, rows) {
+      for (let r = 0; r < rows; r++) for (let c = 0; c < rows - r; c++) props.push([0, x + r * 0.5 + c * 0.96, y - 0.9 * r - 0.02]);
+    }
+    function crateColumn(x, y, n) { for (let k = 0; k < n; k++) props.push([0, x, y - 0.9 * k - 0.02]); }
+    function padShelf(e) {   // a bounce pad that throws you up to a shelf full of coins
+      const x = e[0] + 2 + bri(0, Math.max(0, e[2] - 9)), y = e[1];
+      if (!occ.free(x - 2, y - 14, x + 9, y - 5)) return false;
+      occ.add(x - 2, y - 14, x + 9, y - 5);
+      addRect([x, y, 3, 1, 6, e[3], e[5]]);
+      const sx = x + 2 + (BR() < 0.5 ? 0 : 1), sh = bri(6, 7);
+      addRect([sx, y - sh, 6, 2, 1, e[3], e[5]]);
+      coinRow(sx + 0.5 + 0.5, y - sh - 0.9, 5, 1, 0); coin(sx + 3, y - sh - 2.1, 1);
+      coinRow(x + 0.5, y - 3.2, 1, 1, 0); coin(x + 1.5, y - 4.4, 0); coin(x + 1.5, y - 5.6, 0);
+      return true;
+    }
     function addProps(pw, prob) {
       for (let i = 0; i < pw.length; i++) {
         const e = pw[i];
         if (!e[9] || BR() > prob) continue;
         const k = BR(), kind = k < 0.4 ? 0 : k < 0.62 ? 1 : k < 0.84 ? 2 : 3;
+        if (BR() < 0.14 && e[2] >= 10) { jenga(e[0] + bri(2, e[2] - 6), e[1], bri(4, 8)); continue; }
+        if (BR() < 0.25 && e[2] >= 9) { crateColumn(e[0] + bri(2, e[2] - 4), e[1], bri(3, 5)); continue; }
         const n = (kind === 0 && BR() < 0.4) ? 2 : 1;                    // sometimes two crates side by side
         const x = e[0] + bri(2, e[2] - 3);
         props.push([kind, x, e[1]]);
         if (n === 2 && x + 1 < e[0] + e[2] - 1) props.push([0, x + 1, e[1]]);
         else if (kind === 0 && BR() < 0.3) props.push([0, x, e[1] - 1]);  // stacked
+      }
+    }
+    function addCoins(pw, dens) {
+      for (let i = 0; i < pw.length; i++) {
+        const e = pw[i];
+        if (e[2] >= 3 && BR() < dens) {
+          const n = Math.min(6, Math.floor((e[2] - 1) / 2)), x0 = e[0] + e[2] / 2 - (n - 1);
+          for (let k = 0; k < n; k++) coin(x0 + k * 2, e[1] - 1.0, 0);
+        }
+        const nx = pw[i + 1];
+        if (nx && e[4] === 0 && nx[4] === 0 && BR() < dens * 0.7) {
+          const a = nx[0] >= e[0] + e[2] ? e[0] + e[2] : nx[0] + nx[2] <= e[0] ? nx[0] + nx[2] : null;
+          if (a !== null) {
+            const b = nx[0] >= e[0] + e[2] ? nx[0] : e[0], mid = (a + b) / 2, top = Math.min(e[1], nx[1]) - 3.4;
+            coin(mid - 1, top + 0.9, 0); coin(mid, top, 0); coin(mid + 1, top + 0.9, 0);
+          }
+        }
       }
     }
     // a river of lava a few tiles below the platforms
@@ -325,28 +372,144 @@
       return placeChain(best.res, X, Y, PL, best.dir, base);
     }
 
-    function room(e) {   // a destination at the end of a branch
-      const th = e[3], gid = e[5], k = BR();
-      if (k < 0.3) {   // climbable tiers
-        const tn = THEMES[th].id;
-        grow(e, [S('up', bri(5, 9), tn)], bri(1, 99999));
-        return;
+    // finds space next to a platform for a destination of width W; fn gets a mirror-aware helper
+    function place(e, W, up, down, fn) {
+      const A = ABS;
+      for (const dir of (A ? [A.side] : BR() < 0.5 ? [1, -1] : [-1, 1])) {
+        const nx = A ? (dir > 0 ? A.edge : A.edge - W) : dir > 0 ? e[0] + e[2] + 3 : e[0] - 3 - W, ny = A ? A.ny : e[1];
+        if (!(A ? occB : occ).free(nx - 1, ny - up, nx + W + 1, ny + down)) continue;
+        occ.add(nx - 1, ny - up, nx + W + 1, ny + down); occB.add(nx - 1, ny - up, nx + W + 1, ny + down);
+        fn({ nx, ny, W, dir, th: e[3], gid: e[5], X: (o, w) => (dir > 0 ? nx + o : nx + W - o - (w || 1)) });
+        return true;
       }
-      const W = k < 0.5 ? 20 : k < 0.68 ? 20 : k < 0.84 ? 18 : 16, hh = k < 0.5 ? 4 : 3;
-      for (const dir of (BR() < 0.5 ? [1, -1] : [-1, 1])) {
-        const nx = dir > 0 ? e[0] + e[2] + 3 : e[0] - 3 - W, ny = e[1];
-        if (!occ.free(nx - 1, ny - 7, nx + W + 1, ny + hh + 3)) continue;
-        occ.add(nx - 1, ny - 7, nx + W + 1, ny + hh + 3);
-        addRect([nx, ny, W, hh, 1, th, gid]);
-        addRect([nx + 2, ny + hh, W - 4, 1, 1, th, gid]);
-        if (k < 0.5) addRect([nx + 6, ny, 8, 3, 5, th, gid]);                                                // lake
-        else if (k < 0.68) { addRect([nx + 5, ny, 9, 3, 2, th, gid]); addRect([nx + 8, ny, 3, 3, 1, th, gid]); } // lava lake with an island
-        else if (k < 0.84) { addRect([nx + 3, ny - 1, 12, 1, 1, th, gid]); addRect([nx + 5, ny - 2, 8, 1, 1, th, gid]); addRect([nx + 7, ny - 3, 4, 1, 1, th, gid]); } // pyramid
-        else { addRect([nx + 3, ny - 4, 1, 4, 1, th, gid]); addRect([nx + 12, ny - 4, 1, 4, 1, th, gid]); addRect([nx + 2, ny - 5, 12, 1, 1, th, gid]); }  // arch hall
-        return;
-      }
+      return false;
+    }
+    const FLAT = (c, W, hh) => { addRect([c.nx, c.ny, W, hh, 1, c.th, c.gid]); addRect([c.nx + 2, c.ny + hh, W - 4, 1, 1, c.th, c.gid]); if (W > 14) addRect([c.nx + 5, c.ny + hh + 1, W - 10, 1, 1, c.th, c.gid]); };
+    function roomLake(e) { return place(e, 20, 7, 9, c => { FLAT(c, 20, 4); addRect([c.nx + 6, c.ny, 8, 3, 5, c.th, c.gid]); coinRow(c.nx + 7, c.ny + 1.5, 6, 1, 0); coin(c.nx + 10, c.ny - 2, 1); }); }
+    function roomLavaLake(e) { return place(e, 20, 7, 9, c => { FLAT(c, 20, 4); addRect([c.nx + 5, c.ny, 9, 3, 2, c.th, c.gid]); addRect([c.nx + 8, c.ny, 3, 3, 1, c.th, c.gid]); coin(c.nx + 9.5, c.ny - 1, 1); coinRow(c.nx + 6, c.ny - 3.2, 7, 1, 0); }); }
+    function roomPyramid(e) { return place(e, 18, 8, 7, c => { FLAT(c, 18, 3); addRect([c.nx + 3, c.ny - 1, 12, 1, 1, c.th, c.gid]); addRect([c.nx + 5, c.ny - 2, 8, 1, 1, c.th, c.gid]); addRect([c.nx + 7, c.ny - 3, 4, 1, 1, c.th, c.gid]); coin(c.nx + 9, c.ny - 4, 1); coinRow(c.nx + 4, c.ny - 1.9, 3, 1, 0); }); }
+    function roomArch(e) { return place(e, 16, 9, 7, c => { FLAT(c, 16, 3); addRect([c.nx + 3, c.ny - 4, 1, 4, 1, c.th, c.gid]); addRect([c.nx + 12, c.ny - 4, 1, 4, 1, c.th, c.gid]); addRect([c.nx + 2, c.ny - 5, 12, 1, 1, c.th, c.gid]); coinRow(c.nx + 5, c.ny - 1, 6, 1, 0); coin(c.nx + 8, c.ny - 6.2, 1); jenga(c.nx + 7, c.ny, 5); }); }
+    function roomPlay(e) {   // a playground: seesaws, a trampoline, a big ice slide, toys
+      const W = 46;
+      return place(e, W, 14, 8, c => {
+        const { ny, th, gid, X } = c; FLAT(c, W, 4);
+        addRect([X(2, 3), ny, 3, 1, 6, th, gid]); coin(X(2, 3) + 1.5, ny - 3.3, 0); coin(X(2, 3) + 1.5, ny - 5, 0);
+        const sA = X(7, 7), sB = X(17, 7);
+        gad.see.push([sA + 3.5, ny - 1.6, 3.2, BR() < 0.5 ? 0.12 : -0.12]); gad.see.push([sB + 3.5, ny - 1.6, 3.2, BR() < 0.5 ? 0.12 : -0.12]);
+        coinRow(sA + 0.5, ny - 3.4, 7, 1, 0); coinRow(sB + 0.5, ny - 3.4, 7, 1, 0);
+        props.push([3, X(26, 1), ny]); props.push([0, X(25, 1), ny]); props.push([0, X(27, 1), ny]);
+        for (let i = 0; i < 4; i++) addRect([X(29 + 2 * i, 2), ny - (i + 1), 2, i + 1, 1, th, gid]);
+        addRect([X(37, 3), ny - 5, 3, 5, 1, th, gid]); coin(X(37, 3) + 1.5, ny - 6.1, 1); coin(X(37, 3) + 0.5, ny - 6.1, 0); coin(X(37, 3) + 2.5, ny - 6.1, 0);
+        for (let j = 0; j < 3; j++) { const top = ny - (3 - j); addRect([X(40 + 2 * j, 2), top, 2, 1, 3, th, gid]); if (3 - j > 1) addRect([X(40 + 2 * j, 2), top + 1, 2, 3 - j - 1, 1, th, gid]); }
+      });
+    }
+    function roomPit(e) {   // a ball pit
+      const W = 26;
+      return place(e, W, 9, 8, c => {
+        const { ny, th, gid, X } = c; FLAT(c, W, 4);
+        addRect([X(0, 1), ny - 2, 1, 2, 1, th, gid]); addRect([X(W - 1, 1), ny - 4, 1, 4, 1, th, gid]);
+        const x0 = Math.min(X(1, 1), X(W - 2, 1)), n = 28;
+        for (let i = 0; i < n; i++) props.push([4, x0 + 0.3 + i * 0.82, ny]);
+        for (let i = 0; i < n - 1; i++) props.push([4, x0 + 0.7 + i * 0.82, ny - 0.74]);
+        coinRow(x0 + 4, ny - 3, 17, 1, 0); coin(x0 + 12, ny - 4.6, 1);
+      });
+    }
+    function roomTramp(e) {   // trampolines up to coin ledges
+      const W = 34;
+      return place(e, W, 22, 6, c => {
+        const { ny, th, gid, X } = c; FLAT(c, W, 3);
+        addRect([X(3, 3), ny, 3, 1, 6, th, gid]); addRect([X(26, 3), ny, 3, 1, 6, th, gid]);
+        addRect([X(8, 7), ny - 7, 7, 2, 1, th, gid]); addRect([X(11, 3), ny - 7, 3, 1, 6, th, gid]);
+        addRect([X(18, 8), ny - 15, 8, 2, 1, th, gid]); addRect([X(21, 3), ny - 15, 3, 1, 6, th, gid]);
+        coinRow(X(9, 5) + 0.5, ny - 8, 5, 1, 0); coin(X(20, 4) + 1, ny - 16.2, 1); coinRow(X(19, 6) + 0.5, ny - 16, 6, 1, 0);
+        coin(X(5, 1), ny - 5, 0); coin(X(9, 1), ny - 10, 0); coin(X(15, 1), ny - 12, 0); coin(X(25, 1), ny - 9, 0);
+        addRect([X(14, 6), ny - 22, 6, 1, 1, th, gid]); coin(X(14, 6) + 3, ny - 23.2, 2); coin(X(14, 6) + 2, ny - 23.2, 1); coin(X(14, 6) + 4, ny - 23.2, 1);
+      });
+    }
+    function roomGauntlet(e) {   // hard: lava below, lava ceilings above, tiny platforms. gems at the end
+      const n = bri(8, 12), W = n * 5 + 14;
+      return place(e, W, 12, 8, c => {
+        const { ny, th, gid, X } = c;
+        addRect([X(0, 4), ny, 4, 2, 1, th, gid]);
+        addRect([c.nx, ny + 3, W, 4, 2, th, gid]);
+        let h = 0;
+        for (let i = 0; i < n; i++) {
+          const o = 6 + i * 5; h = clamp2(h + bri(-1, 1), -3, 2);
+          addRect([X(o, 2), ny + h, 2, 2, 1, th, gid]);
+          if (BR() < 0.65) addRect([X(o - 1, 4), ny + h - 6, 4, 1, 2, th, gid]);     // a lava ceiling
+          else if (BR() < 0.4) addRect([X(o, 1), ny + h - 1, 1, 1, 2, th, gid]);       // a lava block on the platform
+          coin(X(o, 2) + 1, ny + h - 1.1, 0); if (i % 3 === 2) coin(X(o, 2) + 1, ny + h - 2.4, 1);
+        }
+        const eo = 6 + n * 5;
+        addRect([X(eo, 6), ny + h, 6, 2, 1, th, gid]);
+        coin(X(eo, 6) + 1, ny + h - 1.1, 2); coin(X(eo, 6) + 2.5, ny + h - 1.1, 2); coin(X(eo, 6) + 4, ny + h - 1.1, 2); coin(X(eo, 6) + 2.5, ny + h - 2.5, 1);
+      });
+    }
+    const clamp2 = (v, a, b) => (v < a ? a : v > b ? b : v);
+    function roomVault(e, pw) {   // a locked treasure room: open it with a button on the way in, or with a crate on a plate
+      const W = 20;
+      return place(e, W, 11, 6, c => {
+        const { ny, th, gid, X } = c, id = gad.doors.length;
+        addRect([c.nx, ny, W, 3, 1, th, gid]); addRect([c.nx + 2, ny + 3, W - 4, 1, 1, th, gid]);
+        addRect([X(7, W - 7), ny - 9, W - 7, 2, 1, th, gid]); addRect([X(W - 1, 1), ny - 9, 1, 9, 1, th, gid]);
+        gad.doors.push([X(7, 1), ny - 7, 1, 7]);
+        coinRow(X(9, 8) + 0.5, ny - 1, 8, 1, 1); coin(X(12, 4) + 1, ny - 3, 2); coin(X(14, 4) + 1, ny - 3, 2); coin(X(16, 4) + 1, ny - 3, 2);
+        decor.push([0, X(W - 3, 1), ny]);
+        let q = null;
+        for (let k = pw.length - 2; k >= Math.max(0, pw.length - 5); k--) if (pw[k][2] >= 3 && pw[k][4] === 0) { q = pw[k]; break; }
+        if (q && BR() < 0.5) { gad.btns.push([q[0] + 1, q[1], [id]]); decor.push([1, q[0] + 1, q[1]]); coinRow(q[0] + 1, q[1] - 1.5, 2, 1, 0); }
+        else { gad.plates.push([Math.min(X(3, 1), X(4, 1)), ny, 2, [id]]); props.push([0, X(0, 1), ny]); props.push([0, X(1, 1), ny]); }
+      });
+    }
+    function roomIsle(e) {   // a huge island: platforms above and below, a guaranteed floor in the middle, lots to push around
+      const W = 64;
+      return place(e, W, 20, 18, c => {
+        const { ny, th, gid, X } = c, x0 = c.nx;
+        addRect([x0, ny, W, 5, 1, th, gid]); addRect([x0 + 3, ny + 5, W - 6, 2, 1, th, gid]); addRect([x0 + 9, ny + 7, W - 18, 2, 1, th, gid]); addRect([x0 + 18, ny + 9, W - 36, 1, 1, th, gid]);
+        for (let i = 0; i < 5; i++) { const px = x0 + 4 + i * 12 + bri(0, 3), ph = bri(5, 8); addRect([px, ny - ph, bri(4, 7), 1, 1, th, gid]); coinRow(px + 0.5, ny - ph - 1, 3, 1, 0); }
+        for (let i = 0; i < 4; i++) { const px = x0 + 8 + i * 14 + bri(0, 3); addRect([px, ny + 12, bri(5, 8), 2, 1, th, gid]); coinRow(px + 1, ny + 11, 3, 1, 0); }
+        jenga(x0 + 14, ny, 6); jenga(x0 + 44, ny, 7); cratePyramid(x0 + 28, ny, 4); crateColumn(x0 + 36, ny, 5);
+        for (let i = 0; i < 5; i++) { const k = BR(); props.push([k < 0.4 ? 2 : k < 0.7 ? 3 : 0, x0 + 6 + i * 11 + bri(0, 4), ny]); }
+        addRect([x0 + 20, ny, 3, 1, 6, th, gid]); addRect([x0 + 50, ny, 3, 1, 6, th, gid]);
+        addRect([x0 + 22, ny - 14, 8, 2, 1, th, gid]); coin(x0 + 26, ny - 15.2, 1); coin(x0 + 24, ny - 15.2, 2); coin(x0 + 28, ny - 15.2, 2);
+        coinRow(x0 + 3, ny - 1, 28, 2, 0);
+      });
+    }
+    function room(e, pw) {
+      const k = BR() * 100;
+      let ok;
+      if (k < 7) { grow(e, [S('up', bri(6, 12), THEMES[e[3]].id)], bri(1, 99999)); return; }
+      else if (k < 15) ok = roomLake(e); else if (k < 22) ok = roomLavaLake(e); else if (k < 28) ok = roomPyramid(e); else if (k < 34) ok = roomArch(e);
+      else if (k < 46) ok = roomPlay(e); else if (k < 57) ok = roomPit(e); else if (k < 69) ok = roomVault(e, pw); else if (k < 80) ok = roomGauntlet(e);
+      else if (k < 91) ok = roomTramp(e); else ok = roomIsle(e);
+      if (!ok) roomLake(e) || roomArch(e);
     }
 
+    // floating districts: a bounce pad on the route throws you up to an island full of things to do
+    function skyDistricts(pw) {
+      let i = bri(2, 5);
+      while (i < pw.length - 3) {
+        const e = pw[i];
+        if (e[9] && e[4] === 0 && !e[6] && e[2] >= 8) {
+          let side = BR() < 0.5 ? 1 : -1, px = side > 0 ? e[0] + e[2] - 4 : e[0] + 1;
+          const kinds = [roomIsle, roomPlay, roomPit, roomVault, roomGauntlet, roomTramp, roomLake, roomArch, roomPyramid, roomPlay, roomPit, roomIsle, roomPlay, roomPlay, roomTramp];
+          for (let t = 0; t < 10; t++) {
+            if (t > 0 && t % 2 === 0) { side = -side; px = side > 0 ? e[0] + e[2] - 4 : e[0] + 1; }
+            const up = 6 + (t >> 2);
+            const fn = kinds[Math.floor(BR() * kinds.length)];
+            ABS = { side, edge: side > 0 ? px + 5 : px - 2, ny: e[1] - up };
+            const ok = fn(e, []);
+            ABS = null;
+            if (ok) {
+              addRect([px, e[1], 3, 1, 6, e[3], e[5]]); e[9] = 0;
+              coin(px + 1.5, e[1] - 3, 0); coin(px + 1.5, e[1] - 5, 0);
+              break;
+            }
+          }
+        }
+        i += bri(2, 4);
+      }
+    }
     function branches(pw, depth) {
       let i = bri(3, 6);
       while (i < pw.length - 3 && branchCount < MAXB) {
@@ -358,22 +521,28 @@
       const cand = UNDER[THEMES[e[3]].id] || ['cave'];
       const th = cand[Math.floor(BR() * cand.length)], cave = THEMES[TH[th]].cave ? 1 : 0;
       const ice = (th === 'snow' || th === 'icecave') ? 0.35 : 0.08;
-      let segs;
-      if (e[4] === 0) {   // route runs sideways -> shafts down or towers up
-        segs = BR() < 0.6 ? [S('down', bri(6, 18), th, { ice }), S('right', bri(4, 12), th, { cave, ice })]
-          : [S('up', bri(6, 16), th, { ice }), S('right', bri(4, 10), th, { ice })];
-      } else {            // route runs up/down -> tunnels out sideways
-        segs = [S('right', bri(8, 24), th, { cave, ice })];
-        if (BR() < 0.4) segs.push(S('down', bri(3, 8), th, { ice }), S('right', bri(4, 10), th, { cave, ice }));
+      let pw = null;
+      for (let attempt = 0; attempt < 4 && !pw; attempt++) {
+        const f = [1, 0.7, 0.45, 0.3][attempt], sc = (a, b) => bri(Math.max(3, Math.round(a * f)), Math.max(4, Math.round(b * f)));
+        let segs;
+        if (e[4] === 0) {   // route runs sideways -> shafts down or towers up
+          segs = BR() < 0.6 ? [S('down', sc(8, 26), th, { ice }), S('right', sc(6, 18), th, { cave, ice })]
+            : [S('up', sc(8, 22), th, { ice }), S('right', sc(6, 16), th, { ice })];
+        } else {            // route runs up/down -> tunnels out sideways
+          segs = [S('right', sc(10, 34), th, { cave, ice })];
+          if (BR() < 0.45) segs.push(S('down', sc(4, 12), th, { ice }), S('right', sc(6, 14), th, { cave, ice }));
+        }
+        pw = grow(e, segs, bri(1, 99999));
       }
-      const pw = grow(e, segs, bri(1, 99999));
       if (!pw) return;
       branchCount++;
       addStructures(pw);
       addProps(pw, 0.6);
       addCeilings(pw);
-      room(pw[pw.length - 1]);
-      if (depth < 2 && BR() < 0.55) branches(pw, depth + 1);
+      addCoins(pw, 0.7);
+      if (BR() < 0.22) padShelf(pw[bri(0, pw.length - 1)]);
+      room(pw[pw.length - 1], pw);
+      if (depth < 3 && BR() < 0.6) branches(pw, depth + 1);
     }
 
     /* --- the start platform, the real route, the decoy route --- */
@@ -392,7 +561,22 @@
     const fin = mainDir > 0 ? [real.fin[0], real.fin[1], real.fin[2]] : [9 - real.fin[0] - real.fin[2], real.fin[1], real.fin[2]];
 
     addStructures(decPath);   // (the real route stays plain so it is always fair)
-    addProps(mainPath, 0.3); addProps(decPath, 0.6);
+    // crate gates on the real route: a tall door that only opens while something heavy sits on the plate. Three crates are provided; waste them and you are stuck.
+    let gn = 0;
+    for (let i = 0; i < mainPath.length - 1; i++) {
+      const e = mainPath[i];
+      if (!e[10] || e[4] !== 0 || e[6] || e[2] < 11 || (++gn % 2) === 0) continue;
+      const L = e[2], X = o => (mainDir > 0 ? e[0] + o : e[0] + L - 1 - o), id = gad.doors.length;
+      gad.doors.push([X(9), e[1] - 7, 1, 7]);
+      gad.plates.push([Math.min(X(5), X(6)), e[1], 2, [id]]);
+      props.push([0, X(1), e[1]]); props.push([0, X(2), e[1]]); props.push([0, X(3), e[1]]);
+      decor.push([2, X(9), e[1]]); e[9] = 0;
+      coinRow(Math.min(X(5), X(6)) + 0.5, e[1] - 1.2, 2, 1, 0);
+    }
+    skyDistricts(mainPath); skyDistricts(decPath);
+    addProps(mainPath, 0.5); addProps(decPath, 0.7);
+    addCoins(mainPath, 0.62); addCoins(decPath, 0.55);
+    for (let i = 0; i < 9; i++) coin(fin[0] + 2 + i * (fin[2] - 4) / 8, fin[1] - 1.5 - Math.sin(i / 8 * Math.PI) * 1.5, i === 4 ? 2 : 1);
     addCeilings(mainPath); addCeilings(decPath);
     addLavaSea(mainPath); addLavaSea(decPath);
     branches(mainPath, 0);
@@ -410,6 +594,12 @@
     for (const q of path) { q[0] += ox; q[1] += oy; }
     fin[0] += ox; fin[1] += oy;
     for (const q of props) { q[1] += ox; q[2] += oy; }
+    for (const q of coins) { q[0] += ox; q[1] += oy; }
+    for (const q of decor) { q[1] += ox; q[2] += oy; }
+    for (const q of gad.doors) { q[0] += ox; q[1] += oy; }
+    for (const q of gad.plates) { q[0] += ox; q[1] += oy; }
+    for (const q of gad.btns) { q[0] += ox; q[1] += oy; }
+    for (const q of gad.see) { q[0] += ox; q[1] += oy; }
 
     // background regions (drawn in order, so later ones sit on top)
     // side branches and the decoy are painted first; the real route and the start area on top, so the spawn always looks like its own region
@@ -420,15 +610,30 @@
 
     const W = maxX + ox + 3;
     const maxBottom = maxY + oy;
-    const H = maxBottom + 12;
+    const H = maxBottom + 18;
+    // keep coins out of solid ground, and out of the doors' way
+    const gridT = new Uint8Array(W * H);
+    for (const r of rects) for (let yy = r[1]; yy < r[1] + r[3]; yy++) { if (yy < 0 || yy >= H) continue; for (let xx = r[0]; xx < r[0] + r[2]; xx++) if (xx >= 0 && xx < W) gridT[yy * W + xx] = r[4]; }
+    const coinsOut = [], seen = new Set();
+    for (const q of coins) {
+      const tx = Math.floor(q[0]), ty = Math.floor(q[1]); if (tx < 0 || tx >= W || ty < 0 || ty >= H) continue;
+      const t = gridT[ty * W + tx]; if (t === 1 || t === 3 || t === 4 || t === 6) continue;
+      const key = Math.round(q[0] * 2) * 100003 + Math.round(q[1] * 2); if (seen.has(key)) continue; seen.add(key);
+      coinsOut.push([Math.round((q[0]) * TS), Math.round(q[1] * TS), q[2]]);
+    }
+    coinsOut.sort((a, b) => a[0] - b[0]);
+    // the kill line follows the land: 14 tiles under the lowest ground within ~45 tiles either side, so you never fall for long
+    const colB = new Int16Array(W), floorY = new Int16Array(W);
+    for (const r of rects) for (let xx = Math.max(0, r[0]); xx < Math.min(W, r[0] + r[2]); xx++) colB[xx] = Math.max(colB[xx], r[1] + r[3]);
+    for (let x = 0; x < W; x++) { let m = 0; for (let k = Math.max(0, x - 45); k <= Math.min(W - 1, x + 45); k += 3) if (colB[k] > m) m = colB[k]; floorY[x] = m + 14; }
 
     const map = {
       idx, name: d.name, bg: '#0c0c16',
-      TS, W, H, rects, path, zones, props,
+      TS, W, H, rects, path, zones, props, coins: coinsOut, gadgets: gad, decor, floorY,
       start: [(ox + 4.5) * TS, oy * TS - R - 1],   // the one community spawn point
       finish: fin,
       flag: [fin[0] + fin[2] / 2, fin[1]],
-      killY: (maxBottom + 7) * TS
+      killY: (maxBottom + 14) * TS
     };
     cache[idx] = map;
     return map;

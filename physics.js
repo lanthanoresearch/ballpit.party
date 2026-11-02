@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const TS = 40, R = 14;
-  const GRAV = 1900, JUMP = 640, MAXV = 270, MAXFALL = 950;
+  const GRAV = 1900, JUMP = 900, MAXV = 270, MAXFALL = 950, BOUNCE = 1080, BOUNCE_HELD = 1300, FALL_WARN = 1.6, FALL_DIE = 2.8;   // jump is ~210px high (about 5 tiles)
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
   const approach = (a, t, d) => (a < t ? Math.min(a + d, t) : Math.max(a - d, t));
 
@@ -14,16 +14,27 @@
         for (let xx = r[0]; xx < r[0] + r[2]; xx++) if (xx >= 0 && xx < W) grid[yy * W + xx] = r[4];
       }
     }
-    const w = { W, H, grid, map, dyn: [] };
+    const w = { W, H, grid, map, dyn: [], doors: [], plates: [], btns: [], see: [], ev: [], focus: null };
+    const G = map.gadgets || {};
+    (G.doors || []).forEach((d, i) => { const o = { id: i, x: d[0], y: d[1], w: d[2], h: d[3], open: false, latched: false }; w.doors.push(o); setDoorTiles(w, o, false); });
+    (G.plates || []).forEach(p => w.plates.push({ x: p[0], y: p[1], w: p[2], to: p[3], on: false }));
+    (G.btns || []).forEach(p => w.btns.push({ x: p[0], y: p[1], to: p[2], on: false }));
+    (G.see || []).forEach(p => w.see.push({ cx: p[0] * TS, cy: p[1] * TS, hl: p[2] * TS, tilt: p[3], ang: p[3], av: 0, tq: 0 }));
     for (const p of (map.props || [])) {   // pushable yellow things; each player has their own copy (never shared)
       const kind = p[0], cx = (p[1] + 0.5) * TS, sy = p[2] * TS;
-      const hw = kind === 0 ? 18 : kind === 1 ? 36 : 0, r = kind === 2 ? 16 : kind === 3 ? 34 : 0;
+      const hw = kind === 0 ? 18 : kind === 1 ? 36 : 0, r = kind === 2 ? 16 : kind === 3 ? 34 : kind === 4 ? 14 : 0;
       const d = { k: r ? 'o' : 'b', x: cx, y: sy - (r || hw) - 0.5, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, gr: false, touch: false, burn: 0,
-        m: r ? (r * r) / 256 : (4 * hw * hw) / 1296 };
+        m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind };
       d.hx = d.x; d.hy = d.y; w.dyn.push(d);
     }
     return w;
   }
+
+  function setDoorTiles(w, d, open) {
+    d.open = open;
+    for (let yy = d.y; yy < d.y + d.h; yy++) for (let xx = d.x; xx < d.x + d.w; xx++) if (xx >= 0 && xx < w.W && yy >= 0 && yy < w.H) w.grid[yy * w.W + xx] = open ? 0 : 9;
+  }
+  const killYAt = (w, x) => { const f = w.map.floorY; return f ? f[clamp(Math.floor(x / TS), 0, w.W - 1)] * TS : w.map.killY; };
 
   function tile(w, tx, ty) {
     if (tx < 0 || tx >= w.W) return 0;      // beyond the world's edge is empty space (the game kills you out there)
@@ -32,7 +43,7 @@
   }
 
   function newBody(x, y) {
-    return { x, y, vx: 0, vy: 0, rot: 0, ground: false, flat: false, gType: 0, coyote: 0, jbuf: 0, water: false, swimCool: 0 };
+    return { x, y, vx: 0, vy: 0, fall: 0, rot: 0, ground: false, flat: false, gType: 0, coyote: 0, jbuf: 0, water: false, swimCool: 0 };
   }
 
   // Circle vs. square tiles. Because the ball is round, standing on an edge with your
@@ -45,19 +56,19 @@
     for (let ty = ty0; ty <= ty1; ty++) {
       for (let tx = tx0; tx <= tx1; tx++) {
         const t = tile(w, tx, ty);
-        if (!t || t === 5) continue;
+        if (!t || t === 5 || (t === 9 && b.ghost)) continue;
         const left = tx * TS, top = ty * TS;
         const cx = clamp(b.x, left, left + TS), cy = clamp(b.y, top, top + TS);
         const dx = b.x - cx, dy = b.y - cy, d2 = dx * dx + dy * dy;
         if (t === 2) { if (d2 < (R - 3) * (R - 3)) lava = true; continue; }
         if (d2 >= R * R) continue;
-        if (d2 === 0) { b.y = top - R; if (b.vy > 0) b.vy = 0; b.ground = true; b.flat = true; b.gType = t; continue; }
+        if (d2 === 0) { b.y = top - R; if (b.vy > 0) b.vy = 0; b.ground = true; b.flat = true; b.gType = t; if (t === 6) b.bnc = true; continue; }
         const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, pen = R - d;
         b.x += nx * pen; b.y += ny * pen;
         const vn = b.vx * nx + b.vy * ny;
         if (vn < 0) { b.vx -= vn * nx; b.vy -= vn * ny; }
         if (ny < -0.5) {
-          b.ground = true;
+          b.ground = true; if (t === 6) b.bnc = true;
           if (dx === 0) { b.flat = true; b.gType = t; }       // centre is over the tile: real footing
           else if (!b.flat) b.gType = t;                      // only touching its corner: no grip
         }
@@ -68,7 +79,7 @@
 
 
   /* ---------- pushable objects (yellow crates and balls) ---------- */
-  const isSol = t => t === 1 || t === 3 || t === 4;
+  const isSol = t => t === 1 || t === 3 || t === 4 || t === 6 || t === 9;
   function boxHits(w, x, y, hw, hh) {
     const tx0 = Math.floor((x - hw) / TS), tx1 = Math.floor((x + hw - 0.01) / TS), ty0 = Math.floor((y - hh) / TS), ty1 = Math.floor((y + hh - 0.01) / TS);
     for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) if (isSol(tile(w, tx, ty))) return true;
@@ -122,16 +133,94 @@
     a._nx = nx; a._ny = ny; b._nx = -nx; b._ny = -ny;
     return true;
   }
+  /* ---------- seesaws (teeter-totters): a tilting plank that you and the round toys can ride ---------- */
+  const SEE_MAX = 0.36, SEE_TH = 6;
+  function seeHit(s, o, r, wt) {   // circle o ({x,y,vx,vy}) vs plank; returns true if standing on it
+    const c = Math.cos(s.ang), sn = Math.sin(s.ang);
+    const rx = o.x - s.cx, ry = o.y - s.cy, u = clamp(rx * c + ry * sn, -s.hl, s.hl);
+    const qx = s.cx + u * c, qy = s.cy + u * sn, dx = o.x - qx, dy = o.y - qy, d2 = dx * dx + dy * dy, m = r + SEE_TH;
+    if (d2 >= m * m || (dy > 0 && Math.abs(dy) > m * 0.5 && o.vy < -50)) return false;
+    let nx, ny;
+    if (d2 < 0.0001) { nx = sn; ny = -c; } else { const d = Math.sqrt(d2); nx = dx / d; ny = dy / d; }
+    if (ny > 0.3) return false;                         // from underneath: pass through (you can jump up through a plank edge case)
+    const pen = m - Math.sqrt(d2); o.x += nx * pen; o.y += ny * pen;
+    const svx = -s.av * (qy - s.cy), svy = s.av * (qx - s.cx);   // the plank's own movement at that spot
+    const vn = (o.vx - svx) * nx + (o.vy - svy) * ny;
+    if (vn < 0) { o.vx -= vn * nx; o.vy -= vn * ny; }
+    s.tq += wt * u;
+    return ny < -0.35;
+  }
+  function stepSee(w, dt) {
+    for (let i = 0; i < w.see.length; i++) {
+      const s = w.see[i], f = w.focus;
+      if (f && (Math.abs(s.cx - f.x) > 900 || Math.abs(s.cy - f.y) > 700)) continue;
+      const target = s.tq === 0 ? s.tilt : clamp(s.tq / 3600, -1, 1) * SEE_MAX;
+      const a0 = s.ang; s.ang += (target - s.ang) * Math.min(1, 3.2 * dt);
+      s.av = (s.ang - a0) / dt; s.tq = 0;
+    }
+  }
+  function seeBody(b, w, wt) {   // the player (or a round toy) against every nearby plank
+    let on = false;
+    for (let i = 0; i < w.see.length; i++) {
+      const s = w.see[i]; if (Math.abs(s.cx - b.x) > s.hl + 40 || Math.abs(s.cy - b.y) > s.hl + 60) continue;
+      if (seeHit(s, b, b.r || R, wt)) {
+        on = true; b.onSee = s;
+        const sl = Math.sin(s.ang);
+        if (b.r === undefined) b.flat = Math.abs(sl) <= 0.06;   // on a tilted plank you slide; on a level one you grip
+        if (b.r === undefined) { b.ground = true; b.gType = 1; }
+      }
+    }
+    return on;
+  }
+  /* ---------- buttons, pressure plates and doors ---------- */
+  function doorBlocked(w, d, b) {
+    const x0 = d.x * TS, x1 = (d.x + d.w) * TS, y0 = d.y * TS, y1 = (d.y + d.h) * TS;
+    if (b && b.x + R > x0 && b.x - R < x1 && b.y + R > y0 && b.y - R < y1) return true;
+    for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const e = o.r || o.hw; if (o.x + e > x0 && o.x - e < x1 && o.y + e > y0 && o.y - e < y1) return true; }
+    return false;
+  }
+  function stepSwitches(w, b) {
+    const want = w.doors.map(d => d.latched);
+    for (let i = 0; i < w.btns.length; i++) {
+      const q = w.btns[i]; if (q.on || !b || b.ghost) continue;
+      const x0 = q.x * TS - R, x1 = (q.x + 1) * TS + R, fy = q.y * TS;
+      if (b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6) {
+        q.on = true; q.t = 1; w.ev.push({ k: 'btn', x: (q.x + 0.5) * TS, y: fy });
+        for (const di of q.to) { w.doors[di].latched = true; want[di] = true; }
+      }
+    }
+    for (let i = 0; i < w.plates.length; i++) {
+      const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = false;
+      if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true;
+      for (let j = 0; j < w.dyn.length && !on; j++) {
+        const o = w.dyn[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 300) continue;
+        const bot = o.y + (o.r || o.hh);
+        if (o.x > x0 && o.x < x1 && bot >= fy - 8 && bot <= fy + 6) on = true;
+      }
+      if (on !== q.on) { q.on = on; w.ev.push({ k: 'plate', on, x: (q.x + q.w / 2) * TS, y: fy }); }
+      if (on) for (const di of q.to) want[di] = true;
+    }
+    for (let i = 0; i < w.doors.length; i++) {
+      const d = w.doors[i];
+      if (want[i] && !d.open) { setDoorTiles(w, d, true); w.ev.push({ k: 'door', open: true, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
+      else if (!want[i] && d.open && !doorBlocked(w, d, b)) { setDoorTiles(w, d, false); w.ev.push({ k: 'door', open: false, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
+    }
+  }
+
   function stepDyn(w, dt) {
+    stepSee(w, dt);
     const L = w.dyn; if (!L.length) return;
-    const kill = w.map.killY;
+    const f = w.focus, FR = 1100;
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
       if (d.burn > 0) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; } continue; }
+      if (f && (Math.abs(d.x - f.x) > FR || Math.abs(d.y - f.y) > FR)) { d.sleep = true; continue; }   // far from you: frozen (saves work)
+      d.sleep = false;
       d.vy = Math.min(900, d.vy + GRAV * dt);
       let burn = false;
       if (d.k === 'o') {
         d.x += d.vx * dt; d.y += d.vy * dt; burn = ballTiles(d, w); d.rot += d.vx * dt / d.r;
+        if (w.see.length) seeBody(d, w, d.m * 60);
         if (d.gr || d.touch) d.vx *= Math.max(0, 1 - 0.5 * dt);
       } else {
         d.x += d.vx * dt; if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x -= d.vx * dt; d.vx = 0; }
@@ -143,12 +232,12 @@
         if (tl === 2) burn = true;
       }
       d.touch = false;
-      if (burn || d.y > kill || d.x < -200 || d.x > w.W * TS + 200) { d.burn = 12; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }
+      if (burn || d.y > killYAt(w, d.x) || d.x < -200 || d.x > w.W * TS + 200) { d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
     }
     for (let i = 0; i < L.length; i++) {
-      const a = L[i]; if (a.burn > 0) continue;
+      const a = L[i]; if (a.burn > 0 || a.sleep) continue;
       for (let j = i + 1; j < L.length; j++) {
-        const b = L[j]; if (b.burn > 0 || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
+        const b = L[j]; if (b.burn > 0 || b.sleep || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
         pairSep(a, b, 0.15);
       }
     }
@@ -159,6 +248,7 @@
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
       if (d.burn > 0 || Math.abs(d.x - b.x) > 90 || Math.abs(d.y - b.y) > 90) continue;
+      d.sleep = false;
       if (d.k === 'b') {
         const px = clamp(b.x, d.x - d.hw, d.x + d.hw), py = clamp(b.y, d.y - d.hh, d.y + d.hh);
         let dx = b.x - px, dy = b.y - py, d2 = dx * dx + dy * dy;
@@ -192,11 +282,11 @@
     }
   }
 
-  const ev = { lava: false, jumped: false, landed: false };
+  const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false };
 
   // ax: -1/0/1, jheld: jump button held. Set b.jbuf = 0.12 on a jump press.
   function step(b, w, ax, jheld, dt) {
-    ev.lava = false; ev.jumped = false; ev.landed = false;
+    ev.lava = false; ev.jumped = false; ev.landed = false; ev.bounced = false; ev.splat = false; ev.splat = false;
     const tx = Math.floor(b.x / TS), ty = Math.floor(b.y / TS);
     const water = tile(w, tx, ty) === 5;
     b.water = water;
@@ -226,19 +316,25 @@
       b.vx = approach(b.vx, target, rate * dt);
       b.coyote = b.ground ? 0.1 : Math.max(0, b.coyote - dt);
       if (b.jbuf > 0 && b.coyote > 0) { b.vy = -JUMP; b.coyote = 0; b.jbuf = 0; b.ground = false; ev.jumped = true; }
-      const g = GRAV * ((b.vy < 0 && !jheld) ? 3.6 : 1);   // let go early = tiny hop, hold = full jump
-      b.vy = Math.min(MAXFALL, b.vy + g * dt);
+      if (b.vy >= 0 || b.ground) b.launched = false;
+      const g = GRAV * ((b.vy < 0 && !jheld && !b.launched) ? 7 : 1);   // let go early = tiny hop, hold = full jump
+      b.vy = Math.min(MAXFALL + clamp((b.fall - 1.2) * 420, 0, 950), b.vy + g * dt);   // fall for long enough and you keep getting faster
     }
 
     b.x += b.vx * dt; b.y += b.vy * dt;
     b.rot += (b.vx * dt) / R;
+    b.bnc = false; b.onSee = null;
     ev.lava = collide(b, w);
     if (!b.ghost && w.dyn.length) collideDyn(b, w);
+    if (w.see.length) seeBody(b, w, 60);
+    if (b.ground || water) { if (!wasGround && !water && !b.bnc && b.fall >= FALL_DIE) ev.splat = true; b.fall = 0; }
+    else if (b.vy > 300) b.fall += dt; else if (b.vy < 0) b.fall = 0;
+    if (b.bnc && !water) { b.bnc = false; b.vy = -(jheld ? BOUNCE_HELD : BOUNCE); b.launched = true; b.ground = false; b.coyote = 0; ev.bounced = true; }
     if (!wasGround && b.ground && preVy > 380 && !water) ev.landed = true;
     return ev;
   }
 
-  const api = { TS, R, MAXV, makeWorld, tile, newBody, step, stepDyn };
+  const api = { TS, R, MAXV, makeWorld, tile, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
