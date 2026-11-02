@@ -210,6 +210,27 @@
   #mmbigc{display:block;width:100%;height:auto;border:2px solid var(--line);border-radius:var(--wob);background:#14111c}
   .mmtitle{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:18px}.mmtitle .dim{margin-left:auto;font-size:13px}
   #tpArrow{margin-left:auto;display:inline-flex;transition:transform .2s}#tpArrow svg{width:26px;height:26px;color:#ffd23d}
+
+  /* ---- one tidy stack for every text popup, so nothing overlaps ---- */
+  #stack{position:fixed;left:50%;top:10px;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:6px;width:max-content;max-width:min(520px,calc(100vw - 460px));pointer-events:none}
+  #stack>*{position:static!important;transform:none!important;left:auto!important;right:auto!important;top:auto!important;margin:0!important;max-width:100%}
+  #stack #notice:not(.show){display:none}
+  #stack #notice.show{animation:pop .25s ease-out}
+  @keyframes pop{0%{opacity:0;transform:translateY(-6px)}100%{opacity:1}}
+  #feed{display:flex;flex-direction:column;align-items:center;gap:3px;max-width:100%}
+  .msg{border-right:0;border-left:4px solid var(--good)}.msg.leave{border-left-color:var(--bad)}.msg.fin{border-left-color:var(--accent)}.msg.bad{border-left-color:#ff9f43}
+  #timer.final{position:static;transform:none;background:rgba(150,20,20,.95);border-color:#fff;color:#fff;font-size:17px;padding:4px 12px;animation:flash 1s steps(1) infinite}
+  @media (max-width:820px){#stack{left:128px;right:10px;transform:none;top:52px;top:calc(52px + env(safe-area-inset-top));width:auto;max-width:none}}
+  /* ---- settings: a pop-up in the middle, with the game dimmed behind it ---- */
+  #sback{display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(14,12,22,.55);z-index:8;touch-action:none}
+  #settings{left:50%!important;top:50%!important;right:auto!important;transform:translate(-50%,-50%);width:min(580px,calc(100vw - 20px))!important;max-height:min(90vh,800px)!important;z-index:9;box-shadow:0 16px 60px rgba(0,0,0,.6)}
+  /* ---- the big map ---- */
+  #mmbig .mmtitle{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:19px}
+  #mmbig .mmtools{margin-left:auto;display:flex;gap:6px;align-items:center}
+  #mmbig .mmtools .btn{padding:4px 9px}
+  #mmbigc{height:min(66vh,640px);cursor:grab;touch-action:none}
+  #mmbigc.drag{cursor:grabbing}
+  #mmbig{z-index:12}
 </style>
 </head>
 <body>
@@ -221,6 +242,9 @@
 <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
 <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.500 3 3.500 15 0 18M12 3c-3.500 3-3.500 15 0 18"/></symbol>
 <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4.500" y="8" width="15" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.500 16.500h5"/><circle cx="12" cy="3.500" r="1"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.500v4M12 17.500v4M2.500 12h4M17.500 12h4"/></symbol>
 <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></symbol>
 <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18v.5"/></symbol>
 <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V3.500M5 4h13l-3 4 3 4H5"/></symbol>
@@ -256,15 +280,13 @@
 <div id="dflash"></div>
 
 <div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="coin"></span><span id="coinN">0</span></span><canvas id="mm" width="170" height="110"></canvas></div>
-<div id="netstat" class="pill hide"><i></i><span id="netText">Offline</span></div>
-<div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div>
+<div id="stack"><div id="netstat" class="pill hide"><i></i><span id="netText">Offline</span></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div><div id="feed"></div></div>
 <div id="hr">
   <div id="topbar">
     <div id="timer" class="pill" title="Map info"><span data-ic="clock"></span><span id="nexttimer">--:--</span></div>
     <button id="btnRespawn" class="ibtn" title="Back to the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Settings (Esc)" data-ic="gear"></button>
   </div>
-  <div id="feed"></div>
 </div>
 <div id="tpop" class="paper hide">
   <h3><span data-ic="map"></span><span id="tpName"></span></h3>
@@ -274,14 +296,12 @@
   <div class="tl"><span data-ic="beacon"></span><span id="tpBeacon"></span><span id="tpArrow" class="hide"><svg class="ic" viewBox="0 0 24 24"><use href="#i-up"/></svg></span></div>
   <div class="nx"><span id="tpNext"></span></div>
 </div>
-<div id="worldpop" class="paper hide"></div>
-<div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="dim">tap anywhere to close</span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
-<div id="notice"></div>
-<div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div>
+<div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 
 <div id="touch" class="hide"><button id="tl" data-ic="left"></button><button id="tr" data-ic="right"></button><button id="tj" data-ic="up"></button></div>
 <div id="editbar" class="paper hide"><span>Drag the buttons where you want them</span><button class="btn" id="editReset">Reset</button><button class="btn prim" id="editDone">Done</button></div>
 
+<div id="sback"></div>
 <div id="settings" class="paper hide">
   <div class="shead"><span>Settings</span><button id="btnCloseSet" class="xbtn" title="Close" data-ic="close"></button></div>
   <div class="tabs" id="tabs">
@@ -363,6 +383,7 @@
     </section>
     <section class="pane" data-pane="more">
       <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small>The how-to-play card</small></span></span><input type="checkbox" id="setIntro"><i></i></label>
+      <button class="btn full" id="btnRefresh"><span data-ic="reset"></span>Refresh the game</button>
       <button class="btn full" id="btnWelcome"><span data-ic="help"></span>How to play</button>
       <button class="btn full hide" id="btnInstall"><span data-ic="install"></span>Install as an app</button>
       <div class="danger"><h4><span data-ic="warn"></span>Reset zone</h4>
@@ -430,8 +451,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=8"></script>
-<script src="physics.js?v=8"></script>
+<script src="maps.js?v=10"></script>
+<script src="physics.js?v=10"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -492,7 +513,7 @@ function normalize() {
   if (['none', 'peaceful', 'upbeat', 'exciting'].indexOf(settings.music) < 0) settings.music = 'peaceful';
   if (['spread', 'moveleft', 'moveright', 'custom'].indexOf(settings.preset) < 0) settings.preset = 'spread';
   settings.keys = cleanKeys(settings.keys);
-  if (['rotate', '0', '1', '2'].indexOf(String(settings.soloMap)) < 0) settings.soloMap = 'rotate'; settings.soloMap = String(settings.soloMap);
+  if (String(settings.soloMap) !== 'rotate' && !(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = 'rotate'; settings.soloMap = String(settings.soloMap);
   if ([0, 15, 30, 60, 180, 360, 720].indexOf(+settings.soloLen) < 0) settings.soloLen = 180; settings.soloLen = +settings.soloLen;
   settings.btnSize = clamp(+settings.btnSize || 1, 0.7, 1.5);
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
@@ -1000,7 +1021,7 @@ function soloRoll() {   // skip over any periods that ended while you were away
   if (len > 0) { const n = Math.floor((Date.now() - solo.t0) / len); if (n > 0) { solo.k += n; solo.t0 += n * len; } }
   saveSolo();
 }
-function soloSlot() { return SOLO_BASE + solo.k * 3 + (settings.soloMap === 'rotate' ? solo.k % 3 : +settings.soloMap); }
+function soloSlot() { const N = BallMaps.count; return SOLO_BASE + solo.k * N + (settings.soloMap === 'rotate' ? solo.k % N : +settings.soloMap); }
 function soloNext() { return settings.soloLen > 0 ? solo.t0 + settings.soloLen * 60000 : Date.now() + 3e11; }
 function soloGo(fade) {   // load (or fade into) your own world
   soloRoll(); clockOff = 0;
@@ -1048,6 +1069,7 @@ function update(dt) {
   const ax = bl ? 0 : clamp(kb + tin.ax, -1, 1);
   const jheld = !bl && (inp.jump || tin.jump || tin.btnJ || performance.now() < tin.jumpUntil);
   if (!S.started && !S.finished && (ax !== 0 || b.jbuf > 0)) { S.started = true; S.runStart = performance.now(); }
+  S.pbx = b.x; S.pby = b.y;
   const ev = P.step(b, w, ax, jheld, dt);
   P.stepSwitches(w, b);
   if (w.ev.length) worldEvents();
@@ -1296,13 +1318,15 @@ const keysDown = new Set();
 function actionOf(code) { const k = settings.keys; for (const a in k) if (k[a].indexOf(code) >= 0) return a; return null; }
 function syncKeys() { const k = settings.keys; inp.left = k.left.some(c => keysDown.has(c)); inp.right = k.right.some(c => keysDown.has(c)); const j = k.jump.some(c => keysDown.has(c)); if (j && !inp.jump) pressJump(); inp.jump = j; }
 let keyCapture = null;   // set while you are choosing a new key in settings
-function setZoom(z) { settings.zoom = clamp(Math.round(z * 100) / 100, 0.25, 2); $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%'; save(); }
+let zMin = 0.25;   // how far out this screen is allowed to zoom (set from the window size)
+function setZoom(z) { settings.zoom = clamp(Math.round(z * 100) / 100, zMin, 2); $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%'; save(); }
 addEventListener('keydown', e => {
   if (keyCapture) return;
   if (typing()) { if (e.key === 'Enter' || e.key === 'Escape') document.activeElement.blur(); return; }
   if (e.key === 'Escape') {
     if (closeSelectFn) { closeSelectFn(); return; }
     if (CP.open) { closePicker(); return; }
+    if (typeof mmBigOn !== 'undefined' && mmBigOn) { toggleMmBig(false); e.preventDefault(); return; }
     if (!$('confirm').classList.contains('hide')) $('cfNo').click(); else if (editMode) $('editDone').click(); else if ($('intro').classList.contains('hide')) toggleSettings();
     e.preventDefault(); return;
   }
@@ -1311,6 +1335,7 @@ addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const a = e.code ? actionOf(e.code) : null;
   if (!a) return;
+  if (!$('settings').classList.contains('hide')) closeSettingsNow();
   e.preventDefault();
   if (a === 'back') { if (!e.repeat && !blocked()) backToStart(); return; }
   if (detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); applyDeps(); }
@@ -1449,7 +1474,15 @@ const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenEle
 function reqFs() { try { const p = (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function exitFs() { try { const p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function setFullscreen(on) { settings.fs = on; save(); if (on) reqFs(); else if (isFs()) exitFs(); }
-['pointerdown', 'keydown', 'touchend'].forEach(ev => document.addEventListener(ev, () => { if (settings.fs && !isFs() && fsSupported()) reqFs(); }, true));
+function releaseInputs() {   // entering or leaving full screen cancels touches mid-air: let go of everything so nothing stays 'pressed'
+  keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnL = tin.btnR = tin.btnJ = false; tin.jumpUntil = 0;
+  document.querySelectorAll('#touch button.on').forEach(b => b.classList.remove('on'));
+}
+['fullscreenchange', 'webkitfullscreenchange'].forEach(n => document.addEventListener(n, () => {
+  const on = isFs(); if (settings.fs !== on) { settings.fs = on; save(); }
+  const sw = $('setFs'); if (sw) sw.checked = on;
+  releaseInputs(); applyTouchUI(); setTimeout(() => { dispatchEvent(new Event('resize')); }, 120);
+}));
 
 /* ================= UI: popups, settings tabs, drop-downs, colours ================= */
 let cfCb = null, cfOptCb = null;
@@ -1480,13 +1513,22 @@ function maybeAskBots() {
 
 $('btnOk').onclick = () => { auWake(); settings.intro = !$('dontShow').checked; $('setIntro').checked = settings.intro; save(); $('intro').classList.add('hide'); setTimeout(maybeAskBots, 400); };
 function showIntro() { $('dontShow').checked = !settings.intro; $('intro').classList.remove('hide'); }
-function toggleSettings() {
-  const s = $('settings'); s.classList.toggle('hide');
-  if (s.classList.contains('hide')) { if (closeSelectFn) closeSelectFn(); closePicker(); }
+function closeSettingsNow() {
+  $('settings').classList.add('hide'); if (closeSelectFn) closeSelectFn(); closePicker();
+  try { const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); } catch (e) {}
 }
+function toggleSettings() { if ($('settings').classList.contains('hide')) { $('settings').classList.remove('hide'); } else closeSettingsNow(); }
+// the dimmed backdrop: any tap outside the pop-up closes it (the game keeps running behind it)
+new MutationObserver(() => { $('sback').style.display = $('settings').classList.contains('hide') ? 'none' : 'block'; }).observe($('settings'), { attributes: true, attributeFilter: ['class'] });
+$('sback').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); closeSettingsNow(); });
+$('sback').addEventListener('touchstart', e => { e.preventDefault(); closeSettingsNow(); }, { passive: false });
 $('btnSettings').onclick = toggleSettings;
-$('btnCloseSet').onclick = () => { $('settings').classList.add('hide'); if (closeSelectFn) closeSelectFn(); closePicker(); };
+$('btnCloseSet').onclick = closeSettingsNow;
 $('btnWelcome').onclick = () => { $('settings').classList.add('hide'); showIntro(); };
+$('btnRefresh').onclick = () => {   // same as reloading the page: also checks for a newer version of the game
+  try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(r => { if (r) r.update(); }).catch(() => {}); } catch (e) {}
+  setTimeout(() => location.reload(), 250);
+};
 $('btnRespawn').onclick = () => { backToStart(); };
 
 // tabs
@@ -1586,7 +1628,7 @@ function guard(id, key, title, text, yes) {
     askConfirm(title, text, yes || 'Turn it off', () => { settings[key] = false; $(id).checked = false; save(); sfx('off');  });
   };
 }
-guard('setBeacon', 'beacon', 'Turn off the finish beacon?', 'For 15 seconds every 30 minutes, the beacon points toward the finish line. It may be the only thing that helps you find it, because nothing else on the map says where it is.');
+guard('setBeacon', 'beacon', 'Turn off the finish beacon?', 'For 15 seconds every 5 to 15 minutes, the beacon points toward the finish line. It may be the only thing that helps you find it, because nothing else on the map says where it is.');
 $('setFallWarn').onchange = () => {
   if ($('setFallWarn').checked) { settings.fallWarn = settings.edge = true; save(); sfx('on'); return; }
   $('setFallWarn').checked = true;
@@ -1857,6 +1899,35 @@ function decoUp(th, px, py, r) {
     case 'icicle': tri(x, py - 16 - r * 10, x - 5, py, x + 5, py, '#bfe9ff'); break;
     case 'spike': tri(x, py - 14 - r * 10, x - 6, py, x + 6, py, '#2a1616'); break;
     case 'cloud': circ(x - 6, py - 4, 6, '#fff'); circ(x + 2, py - 7, 8, '#fff'); circ(x + 9, py - 4, 6, '#fff'); break;
+    case 'palm': {
+      const lean = (r - 0.5) * 16;
+      ctx.beginPath(); ctx.moveTo(x - 3, py); ctx.quadraticCurveTo(x + lean * 0.3, py - 18, x + lean, py - 38); ctx.lineTo(x + lean + 4, py - 38); ctx.quadraticCurveTo(x + lean * 0.3 + 4, py - 18, x + 3, py); ctx.closePath(); ctx.fillStyle = '#9a6b3a'; ctx.fill(); ctx.stroke();
+      const tx = x + lean + 2, ty = py - 38;
+      for (let k = 0; k < 6; k++) { const a = -Math.PI * 0.95 + k * Math.PI * 0.38, ex = tx + Math.cos(a) * 24, ey = ty + Math.sin(a) * 14 + 7; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.quadraticCurveTo(tx + Math.cos(a) * 12, ty + Math.sin(a) * 18 - 4, ex, ey); ctx.lineWidth = 5; ctx.strokeStyle = '#2f9a45'; ctx.stroke(); }
+      ctx.lineWidth = 2.4; ctx.strokeStyle = INK; circ(tx - 2, ty + 3, 3, '#6b3f1d'); circ(tx + 3, ty + 4, 3, '#6b3f1d'); break;
+    }
+    case 'jungle': {
+      rct(x - 4, py - 26, 8, 26, '#5a3b1e');
+      circ(x - 9, py - 32, 11, '#1f9a3f'); circ(x + 9, py - 31, 11, '#27b04a'); circ(x, py - 40 - r * 6, 13, '#2fc156');
+      ctx.strokeStyle = '#1f7a35'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - 12, py - 24); ctx.lineTo(x - 12, py - 12 - r * 6); ctx.moveTo(x + 11, py - 24); ctx.lineTo(x + 12, py - 8 - r * 8); ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; break;
+    }
+    case 'dead': {
+      ctx.beginPath(); ctx.moveTo(x, py); ctx.lineTo(x - 1, py - 26); ctx.moveTo(x - 1, py - 18); ctx.lineTo(x - 11, py - 30 - r * 6); ctx.moveTo(x - 1, py - 22); ctx.lineTo(x + 9, py - 34); ctx.moveTo(x + 5, py - 29); ctx.lineTo(x + 12, py - 29); ctx.lineWidth = 3.2; ctx.strokeStyle = '#4a3a32'; ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; break;
+    }
+    case 'reed': {
+      ctx.lineWidth = 2; ctx.strokeStyle = '#4a6a2a'; ctx.beginPath(); for (let k = -1; k <= 1; k++) { ctx.moveTo(x + k * 6, py); ctx.quadraticCurveTo(x + k * 7, py - 14, x + k * 8 + (k ? 0 : 2), py - 24 - r * 8 + (k & 1) * 4); } ctx.stroke();
+      ctx.strokeStyle = INK; ctx.lineWidth = 2.2; for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.ellipse(x + k * 8 + (k ? 0 : 2), py - 27 - r * 8 + (k & 1) * 4, 3, 6, 0, 0, TAU); ctx.fillStyle = '#7a4a22'; ctx.fill(); ctx.stroke(); } ctx.lineWidth = 2.4; break;
+    }
+    case 'maple': rct(x - 3, py - 18, 6, 18, '#5b3b22'); circ(x - 6, py - 26, 10, '#d9501f'); circ(x + 6, py - 28, 10, '#f0902a'); circ(x, py - 35 - r * 4, 10, '#e5701f'); break;
+    case 'column': {
+      const h = 14 + r * 22; rct(x - 5, py - h, 10, h, '#b9bcc4');
+      ctx.beginPath(); ctx.moveTo(x - 5, py - h); ctx.lineTo(x - 2, py - h - 4); ctx.lineTo(x + 1, py - h - 1); ctx.lineTo(x + 5, py - h - 5); ctx.lineTo(x + 5, py - h); ctx.closePath(); ctx.fillStyle = '#b9bcc4'; ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(x - 1, py - h + 4); ctx.lineTo(x - 1, py - 3); ctx.moveTo(x + 2, py - h + 8); ctx.lineTo(x + 2, py - 5); ctx.stroke(); ctx.lineWidth = 2.4; break;
+    }
+    case 'ember': {
+      tri(x, py - 16 - r * 12, x - 6, py, x + 6, py, '#1d1514');
+      ctx.save(); ctx.globalAlpha = 0.45 + 0.25 * Math.sin(S.t * 5 + px); ctx.fillStyle = '#ff7a2a'; ctx.beginPath(); ctx.arc(x + 9, py - 4, 6, 0, TAU); ctx.fill(); ctx.restore(); circ(x + 9, py - 4, 3, '#ffb24a'); break;
+    }
     case 'star': ctx.beginPath(); ctx.moveTo(x, py - 16); ctx.lineTo(x, py - 6); ctx.moveTo(x - 5, py - 11); ctx.lineTo(x + 5, py - 11); ctx.stroke(); break;
   }
 }
@@ -1938,6 +2009,51 @@ function wob(x, y, w, h, j, seed) {   // a hand-drawn rectangle path: corners an
 const FLOWER = ['#ff6fb5', '#ffd23d', '#ffffff', '#ff8a3d', '#b58bff'];
 function decoExtra(tx, ty, th, g, i) {   // extra little things on top of solid ground: flowers, tufts, bushes, lamps, fences, signs
   const h = hsh(tx, ty, 31), x = tx * TS + 6 + hsh(tx, ty, 32) * 28, y = ty * TS;
+  if (th.deco === 'palm' || th.deco === 'cactus') {
+    if (h < 0.1) { rct(x - 2, y - 16, 4, 16, '#3f9a45'); rct(x - 8, y - 11, 6, 3, '#3f9a45'); rct(x - 8, y - 15, 3, 7, '#3f9a45'); }
+    else if (h < 0.22) { ctx.strokeStyle = '#b98f4a'; ctx.lineWidth = 2; ctx.beginPath(); for (let k = -2; k <= 2; k++) { ctx.moveTo(x + k * 3, y); ctx.quadraticCurveTo(x + k * 4, y - 6, x + k * 6, y - 9 - (k & 1) * 3); } ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; }
+    else if (h < 0.28) { circ(x, y - 5, 6, '#c99a5a'); circ(x + 8, y - 3, 4, '#b98a4a'); }
+    else if (h < 0.31) { rct(x - 1.5, y - 20, 3, 20, '#6b4526'); rct(x - 9, y - 28, 18, 10, '#e8c07a'); }
+    else if (h < 0.34) { ctx.beginPath(); ctx.arc(x, y - 3, 9, Math.PI, 0); ctx.closePath(); ctx.fillStyle = '#f2e7d0'; ctx.fill(); ctx.stroke(); }   // a tiny tent
+    return;
+  }
+  if (th.deco === 'dead') {
+    if (h < 0.1) { circ(x, y - 5, 5, '#e8e2d2'); rct(x - 3, y - 2, 6, 2, '#e8e2d2'); }
+    else if (h < 0.24) { ctx.strokeStyle = '#4a3a32'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - 8, y); ctx.lineTo(x, y - 9); ctx.lineTo(x + 8, y - 3); ctx.moveTo(x, y - 9); ctx.lineTo(x + 2, y - 15); ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; }
+    else if (h < 0.32) { circ(x, y - 5, 7, '#8a7a6c'); circ(x + 8, y - 3, 4, '#7a6a5c'); }
+    else if (h < 0.35) { rct(x - 1.5, y - 22, 3, 22, '#4a3a32'); rct(x - 9, y - 30, 18, 10, '#a89684'); }
+    return;
+  }
+  if (th.deco === 'ember') {
+    if (h < 0.16) { ctx.save(); ctx.globalAlpha = 0.4 + 0.25 * Math.sin(S.t * 4 + x); ctx.fillStyle = '#ff6a2a'; ctx.beginPath(); ctx.arc(x, y - 3, 9, 0, TAU); ctx.fill(); ctx.restore(); circ(x, y - 3, 4, '#ffa23a'); }
+    else if (h < 0.28) { tri(x - 6, y, x - 2, y - 12, x + 2, y, '#1d1514'); tri(x + 2, y, x + 6, y - 9, x + 10, y, '#1d1514'); }
+    else if (h < 0.33) { circ(x, y - 5, 6, '#3a2e2c'); }
+    return;
+  }
+  if (th.deco === 'reed') {
+    if (h < 0.16) { ctx.strokeStyle = '#4a6a2a'; ctx.lineWidth = 2; ctx.beginPath(); for (let k = -1; k <= 1; k++) { ctx.moveTo(x + k * 4, y); ctx.lineTo(x + k * 5, y - 14 - (k & 1) * 4); } ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; }
+    else if (h < 0.26) { ctx.beginPath(); ctx.ellipse(x, y - 2, 9, 3.5, 0, 0, TAU); ctx.fillStyle = '#3f9a45'; ctx.fill(); ctx.stroke(); circ(x + 3, y - 5, 2.4, '#ff8ad0'); }
+    else if (h < 0.32) { rct(x - 2, y - 8, 4, 8, '#e9dfd0'); ctx.beginPath(); ctx.arc(x, y - 8, 7, Math.PI, 0); ctx.closePath(); ctx.fillStyle = '#cf5a3a'; ctx.fill(); ctx.stroke(); }
+    return;
+  }
+  if (th.deco === 'column') {
+    if (h < 0.14) { rct(x - 5, y - 9, 10, 9, '#b9bcc4'); }
+    else if (h < 0.26) { circ(x - 5, y - 4, 4, '#a0a3ab'); circ(x + 3, y - 3, 3, '#9094a0'); circ(x + 9, y - 3, 3, '#a8abb3'); }
+    else if (h < 0.3) { rct(x - 1.5, y - 20, 3, 20, '#6b4526'); rct(x - 9, y - 28, 18, 10, '#d9c08a'); }
+    return;
+  }
+  if (th.deco === 'jungle') {
+    if (h < 0.14) { ctx.strokeStyle = '#2f7a35'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x, y - 12, x + 2, y - 15); ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2.2; for (let k = 0; k < 5; k++) { const a = k * 1.26; circ(x + 2 + Math.cos(a) * 4.5, y - 17 + Math.sin(a) * 4.5, 3.6, '#ff4a5a'); } circ(x + 2, y - 17, 2.6, '#ffd23d'); }
+    else if (h < 0.28) { ctx.strokeStyle = '#1f8a38'; ctx.lineWidth = 3; ctx.beginPath(); for (let k = -2; k <= 2; k++) { ctx.moveTo(x, y); ctx.quadraticCurveTo(x + k * 6, y - 14, x + k * 11, y - 8 - Math.abs(k) * 2); } ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; }
+    else if (h < 0.34) { circ(x, y - 5, 6, '#2f8a3a'); circ(x + 9, y - 4, 5, '#3a9a46'); }
+    return;
+  }
+  if (th.deco === 'maple') {
+    if (h < 0.2) { circ(x - 5, y - 3, 5, '#d9501f'); circ(x + 3, y - 4, 6, '#f0902a'); circ(x + 10, y - 2, 4, '#c8401a'); }
+    else if (h < 0.28) { circ(x, y - 6, 7, '#f08a1c'); ctx.strokeStyle = '#4a7a2a'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(x, y - 13); ctx.lineTo(x + 1, y - 17); ctx.stroke(); ctx.strokeStyle = INK; }
+    else if (h < 0.34) { rct(x - 1.5, y - 22, 3, 22, '#6b4526'); rct(x - 9, y - 30, 18, 10, '#d9a864'); }
+    return;
+  }
   if (th.cave) { if (h < 0.1) { circ(x, y - 4, 4, '#c9c0e0'); circ(x + 7, y - 3, 3, '#b0a8d0'); } return; }
   if (h < 0.09) {   // flowers
     ctx.lineWidth = 1.6; const n = 2 + ((hsh(tx, ty, 33) * 3) | 0);
@@ -2199,7 +2315,15 @@ function drawDyn(camL, camT, vw, vh) {
   }
 }
 
-const VIEW_MAX_W = 3200, VIEW_MAX_H = 2000;
+const VIEW_MAX_W = 4800, VIEW_MAX_H = 3200;
+function zoomBase() { return clamp(Math.min(window.innerHeight / 620, window.innerWidth / 560), 0.7, 2.2); }
+function applyZoomRange() {   // the slider's left end is the farthest you can really zoom out on this screen
+  const lim = Math.max(window.innerWidth / VIEW_MAX_W, window.innerHeight / VIEW_MAX_H, 0.2), z = clamp(Math.ceil(lim / zoomBase() * 20) / 20, 0.05, 1);
+  zMin = z;
+  const el = $('setZoom'); el.min = zMin; if (settings.zoom < zMin) { settings.zoom = zMin; }
+  el.value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%';
+}
+addEventListener('resize', applyZoomRange);
 let lastFrame = performance.now(), lastDraw = lastFrame, acc = 0, errCount = 0, frameN = 0;
 function frame(nowT) {
   requestAnimationFrame(frame);
@@ -2214,7 +2338,12 @@ function frame(nowT) {
   } catch (e) { if (++errCount > 30 && window.__ballFail) window.__ballFail(); }
 }
 
-function render(dt, nowT) {
+function render(dt, nowT) {   // the ball is drawn between its last two physics steps, so motion stays smooth on any screen refresh rate
+  const b = S.b; let rx = 0, ry = 0, sw = false;
+  if (b && S.pbx !== undefined && S.mode === 'play' && S.dead <= 0 && acc > 0 && Math.abs(b.x - S.pbx) < 90 && Math.abs(b.y - S.pby) < 90) { const a = Math.min(1, acc / STEP); rx = b.x; ry = b.y; sw = true; b.x = S.pbx + (b.x - S.pbx) * a; b.y = S.pby + (b.y - S.pby) * a; }
+  try { renderInner(dt, nowT); } finally { if (sw) { b.x = rx; b.y = ry; } }
+}
+function renderInner(dt, nowT) {
   if (!S.map) return;
   const dpr = settings.low ? 1 : Math.min(2, window.devicePixelRatio || 1), sw = window.innerWidth, sh = window.innerHeight;
   if (cv.width !== Math.round(sw * dpr) || cv.height !== Math.round(sh * dpr)) { cv.width = Math.round(sw * dpr); cv.height = Math.round(sh * dpr); }
@@ -2222,7 +2351,7 @@ function render(dt, nowT) {
   // Fairness: the view is measured in WORLD units, never screen pixels. Physics runs on a fixed 120 Hz clock in world
   // units, so screen size, pixel density and frame rate change nothing about how you move. Zooming out is also capped,
   // so a huge monitor can never see more of the world than the largest allowed window (VIEW_MAX_W x VIEW_MAX_H).
-  const sc = Math.max(clamp(clamp(Math.min(sh / 620, sw / 560), 0.7, 2.2) * settings.zoom, 0.2, 5), sw / VIEW_MAX_W, sh / VIEW_MAX_H);
+  const sc = Math.max(clamp(zoomBase() * settings.zoom, 0.2, 5), sw / VIEW_MAX_W, sh / VIEW_MAX_H);
   const vw = sw / sc, vh = sh / sc, b = S.b;
   updateFx(dt);
   const k = 1 - Math.exp(-7 * dt);
@@ -2351,42 +2480,99 @@ function drawMinimap() {
   g.fillStyle = settings.color; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(w / 2, h / 2, 4, 0, TAU); g.fill(); g.stroke();
 }
 setInterval(drawMinimap, 160);
+/* ----- the big map: drag to look around, scroll / pinch / buttons to zoom. It never shows where the finish is. ----- */
 let mmBigOn = false;
-function mmBigImage(mm, cw, ch) {   // terrain squeezed to the canvas size; any solid cell in a block wins, so thin platforms never vanish
-  if (mm.big && mm.big.width === cw && mm.big.height === ch) return mm.big;
-  const c = document.createElement('canvas'); c.width = cw; c.height = ch; const g = c.getContext('2d'), id = g.createImageData(cw, ch), d = id.data, pal = {};
-  const col = code => { if (pal[code]) return pal[code]; const h = code === 201 ? LAVA : code === 202 ? ICE : code === 203 ? '#2e7be6' : THEMES[code - 1].top, n = parseInt(h.slice(1), 16); return (pal[code] = [n >> 16 & 255, n >> 8 & 255, n & 255]); };
-  const kx = cw / mm.cw, ky = ch / mm.ch;
-  for (let y = 0; y < mm.ch; y++) { const ty = Math.min(ch - 1, (y * ky) | 0); for (let x = 0; x < mm.cw; x++) { const code = mm.cell[y * mm.cw + x]; if (!code) continue; const o = (ty * cw + Math.min(cw - 1, (x * kx) | 0)) * 4, q = col(code); d[o] = q[0]; d[o + 1] = q[1]; d[o + 2] = q[2]; d[o + 3] = 255; } }
-  g.putImageData(id, 0, 0); return (mm.big = c);
+const mb = { cx: 0, cy: 0, z: 4, ptr: new Map(), pd: 0 };
+const mbCanvas = () => $('mmbigc');
+function mbFit() { const c = mbCanvas(), m = S.map; return Math.min(c.width / m.W, c.height / m.H); }
+function mbClamp() {
+  const c = mbCanvas(), m = S.map, fit = mbFit();
+  mb.z = clamp(mb.z, fit * 0.98, 16);
+  const hw = c.width / (2 * mb.z), hh = c.height / (2 * mb.z);
+  mb.cx = hw * 2 >= m.W ? m.W / 2 : clamp(mb.cx, hw, m.W - hw);
+  mb.cy = hh * 2 >= m.H ? m.H / 2 : clamp(mb.cy, hh, m.H - hh);
+}
+function mbFind() { const c = mbCanvas(); mb.cx = S.b.x / TS; mb.cy = S.b.y / TS; mb.z = Math.max(mbFit(), c.width / 150); mbClamp(); }
+function mbZoomAt(f, px, py) {   // zoom by f, keeping the map point under (px, py) fixed
+  const c = mbCanvas(), z0 = mb.z, wx = mb.cx + (px - c.width / 2) / z0, wy = mb.cy + (py - c.height / 2) / z0;
+  mb.z = z0 * f; mbClamp(); const z1 = mb.z;
+  mb.cx = wx - (px - c.width / 2) / z1; mb.cy = wy - (py - c.height / 2) / z1; mbClamp();
+}
+function mbSize() {
+  const c = mbCanvas(), r = c.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1), cw = Math.max(240, Math.round(r.width * dpr)), ch = Math.max(160, Math.round(r.height * dpr));
+  if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; return true; } return false;
 }
 function drawMinimapBig() {
-  if (!mmBigOn || !S.mm || !S.b) return;
-  const c = $('mmbigc'), mm = S.mm, m = S.map, tw = mm.cw * 2, th = mm.ch * 2;
-  const cw = 1200, ch = clamp(Math.round(cw * th / tw), 200, 760);
-  if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
-  const g = c.getContext('2d'), k = Math.min(cw / tw, ch / th), iw = Math.round(tw * k), ih = Math.round(th * k), ox = (cw - iw) / 2, oy = (ch - ih) / 2;
-  g.clearRect(0, 0, cw, ch); g.fillStyle = '#14111c'; g.fillRect(0, 0, cw, ch);
-  g.drawImage(mmBigImage(mm, iw, ih), ox, oy);
-  g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1; g.strokeRect(ox, oy, iw, ih);
-  const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 1.5; g.strokeRect(ox + v.l / TS * k, oy + v.t / TS * k, Math.max(6, v.w / TS * k), Math.max(6, v.h / TS * k)); }
-  if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; g.fillStyle = bt.color; g.beginPath(); g.arc(ox + bt.b.x / TS * k, oy + bt.b.y / TS * k, 3, 0, TAU); g.fill(); });
-  if (settings.mmPlayers) others.forEach(o => { if (!o.seen || o.dead) return; g.fillStyle = o.color; g.beginPath(); g.arc(ox + o.cx / TS * k, oy + o.cy / TS * k, 3.4, 0, TAU); g.fill(); });
-  const px = ox + S.b.x / TS * k, py = oy + S.b.y / TS * k, pulse = 6 + Math.sin(performance.now() / 180) * 1.8;
+  if (!mmBigOn || !S.map || !S.b) return;
+  mbSize(); mbClamp();
+  const c = mbCanvas(), g = c.getContext('2d'), m = S.map, z = mb.z, cw = c.width, ch = c.height;
+  const L = mb.cx - cw / (2 * z), T = mb.cy - ch / (2 * z), Rr = L + cw / z, B = T + ch / z;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#100d18'; g.fillRect(0, 0, cw, ch);
+  const X = v => Math.round((v - L) * z), Y = v => Math.round((v - T) * z);
+  for (const q of m.zones) {   // coloured regions, so you can tell the biomes apart
+    if (q[2] < L || q[0] > Rr || q[3] < T || q[1] > B) continue;
+    g.globalAlpha = 0.55; g.fillStyle = THEMES[q[4]].bg; const x0 = X(q[0]), y0 = Y(q[1]); g.fillRect(x0, y0, X(q[2]) - x0, Y(q[3]) - y0);
+  }
+  g.globalAlpha = 1;
+  // the kill zone along the bottom of the level
+  g.fillStyle = 'rgba(255,70,40,.22)'; const fl = m.floorY, xs = Math.max(0, Math.floor(L)), xe = Math.min(m.W - 1, Math.ceil(Rr));
+  for (let x = xs; x <= xe; x += Math.max(1, Math.floor(3 / z))) { const y0 = Y(fl[x]); if (y0 < ch) g.fillRect(X(x), Math.max(0, y0), Math.max(2, Math.ceil(3)), ch - Math.max(0, y0)); }
+  const rects = m.rects, detail = z >= 3;
+  for (let i = 0; i < rects.length; i++) {
+    const r = rects[i]; if (r[0] > Rr || r[0] + r[2] < L || r[1] > B || r[1] + r[3] < T) continue;
+    const t = r[4], th = THEMES[r[5]], x0 = X(r[0]), y0 = Y(r[1]), w = Math.max(1, X(r[0] + r[2]) - x0), h = Math.max(1, Y(r[1] + r[3]) - y0);
+    if (t === 2) g.fillStyle = LAVA; else if (t === 3) g.fillStyle = ICE; else if (t === 5) g.fillStyle = '#2e7be6'; else if (t === 6) g.fillStyle = '#3bd1c0';
+    else { g.fillStyle = detail ? th.solid : th.top; g.fillRect(x0, y0, w, h); if (detail) { g.fillStyle = th.top; g.fillRect(x0, y0, w, Math.max(1, Math.round(z * 0.45))); } continue; }
+    g.fillRect(x0, y0, w, h);
+  }
+  if (z >= 6) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
+  if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; g.fillStyle = bt.color; g.beginPath(); g.arc(X(bt.b.x / TS), Y(bt.b.y / TS), 3.5, 0, TAU); g.fill(); });
+  if (settings.mmPlayers) others.forEach(o => { if (!o.seen || o.dead) return; g.fillStyle = o.color; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(X(o.cx / TS), Y(o.cy / TS), 4, 0, TAU); g.fill(); g.stroke(); });
+  const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
+  const px = X(S.b.x / TS), py = Y(S.b.y / TS), pulse = 6 + Math.sin(performance.now() / 180) * 1.8;
   g.strokeStyle = '#fff'; g.lineWidth = 2.4; g.fillStyle = settings.color; g.beginPath(); g.arc(px, py, pulse, 0, TAU); g.fill(); g.stroke();
   $('mmbigName').textContent = m.name;
-  $('mmbigNote').textContent = 'You are the big dot. The map goes on in every direction.';
+  $('mmbigNote').textContent = 'Drag to look around. Scroll, pinch or use + and − to zoom.';
 }
 function toggleMmBig(on) {
   mmBigOn = on; $('mmbig').classList.toggle('hide', !on);
-  if (on) { sfx('ui'); drawMinimapBig(); }
+  if (on) { sfx('ui'); mb.ptr.clear(); requestAnimationFrame(() => { mbSize(); mbFind(); drawMinimapBig(); }); }
 }
 $('mm').addEventListener('click', e => { e.stopPropagation(); toggleMmBig(true); });
-$('mmbig').addEventListener('pointerdown', e => { e.stopPropagation(); toggleMmBig(false); });
-setInterval(drawMinimapBig, 120);
+$('mmClose').onclick = () => toggleMmBig(false);
+$('mmZin').onclick = () => { const c = mbCanvas(); mbZoomAt(1.6, c.width / 2, c.height / 2); drawMinimapBig(); };
+$('mmZout').onclick = () => { const c = mbCanvas(); mbZoomAt(1 / 1.6, c.width / 2, c.height / 2); drawMinimapBig(); };
+$('mmFind').onclick = () => { mbFind(); drawMinimapBig(); };
+$('mmbig').addEventListener('pointerdown', e => { if (e.target === $('mmbig')) { e.preventDefault(); toggleMmBig(false); } });
+{
+  const c = mbCanvas(), pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) * c.width / r.width, (e.clientY - r.top) * c.height / r.height]; };
+  c.addEventListener('pointerdown', e => { try { c.setPointerCapture(e.pointerId); } catch (x) {} mb.ptr.set(e.pointerId, pos(e)); mb.pd = 0; c.classList.add('drag'); });
+  c.addEventListener('pointermove', e => {
+    if (!mb.ptr.has(e.pointerId)) return;
+    const old = mb.ptr.get(e.pointerId), now = pos(e); mb.ptr.set(e.pointerId, now);
+    if (mb.ptr.size === 1) { mb.cx -= (now[0] - old[0]) / mb.z; mb.cy -= (now[1] - old[1]) / mb.z; mbClamp(); }
+    else if (mb.ptr.size === 2) {
+      const pts = [...mb.ptr.values()], d = Math.hypot(pts[0][0] - pts[1][0], pts[0][1] - pts[1][1]);
+      if (mb.pd > 0 && d > 0) mbZoomAt(d / mb.pd, (pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2);
+      mb.pd = d;
+    }
+    drawMinimapBig();
+  });
+  const up = e => { mb.ptr.delete(e.pointerId); mb.pd = 0; if (!mb.ptr.size) c.classList.remove('drag'); };
+  c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
+  c.addEventListener('wheel', e => { e.preventDefault(); const p = pos(e); mbZoomAt(e.deltaY < 0 ? 1.25 : 0.8, p[0], p[1]); drawMinimapBig(); }, { passive: false });
+}
+setInterval(drawMinimapBig, 140);
 
 /* ================= HUD + session warnings ================= */
-const BEACON_EVERY = 30 * 60000, BEACON_LEN = 15000;
+const BEACON_LEN = 15000, BEACON_WIN = 600000;   // one beacon in every 10-minute window, at a random moment in its first 5 minutes: 5 to 15 minutes apart
+const bhash = n => { let h = Math.imul(n | 0, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; return (h >>> 0) / 4294967296; };
+const beaconStart = w => w * BEACON_WIN + Math.floor(bhash(w + 17) * 300000);
+function beaconInfo(t) {   // same answer for everyone, because it only depends on the clock
+  const w = Math.floor(t / BEACON_WIN), s0 = beaconStart(w);
+  if (t >= s0 && t < s0 + BEACON_LEN) return { on: true, ph: t - s0, next: 0 };
+  return { on: false, ph: 0, next: (t < s0 ? s0 : beaconStart(w + 1)) - t };
+}
 let lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
 const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 function worldText() {
@@ -2412,7 +2598,7 @@ function hudTick() {
     if (rem <= 0 && !endless) { if (inSolo()) { soloRoll(); startTransition(soloSlot(), soloNext()); } else startTransition(S.slot + 1, S.nextAt + SLOT_MS); }
   }
   // beacon: every 30 minutes (on the clock) for 15 seconds
-  const ph = nowMs() % BEACON_EVERY, bon = !!(settings.beacon && S.mode === 'play' && !S.finished && S.dead <= 0 && ph < BEACON_LEN);
+  const bi = beaconInfo(nowMs()), ph = bi.ph, bon = !!(settings.beacon && S.mode === 'play' && !S.finished && S.dead <= 0 && bi.on);
   if (bon && !S.beaconOn) { sfx('beacon'); lastBeaconSfx = performance.now(); }
   S.beaconOn = bon;
   $('beaconbar').classList.toggle('hide', !bon);
@@ -2430,8 +2616,8 @@ function hudTick() {
 setInterval(hudTick, 250);
 
 function soloNextName() {
-  const k1 = solo.k + 1, idx = settings.soloMap === 'rotate' ? k1 % 3 : +settings.soloMap;
-  return BallMaps.names[(SOLO_BASE + k1 * 3 + idx) % BallMaps.count];
+  const N = BallMaps.count, k1 = solo.k + 1, idx = settings.soloMap === 'rotate' ? k1 % N : +settings.soloMap;
+  return BallMaps.names[(SOLO_BASE + k1 * N + idx) % N];
 }
 function fillTimerPop(rem) {
   const sl = inSolo(), endless = sl && settings.soloLen === 0;
@@ -2440,8 +2626,8 @@ function fillTimerPop(rem) {
   $('tpCoins').textContent = 'Coins: ' + S.coinN + ' · Your best here: ' + S.coinBest;
   $('tpWorld').textContent = sl ? 'Solo world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'World ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
   $('tpNext').textContent = endless ? '' : 'Up next: ' + (sl ? soloNextName() : BallMaps.names[(S.slot + 1) % BallMaps.count]);
-  const ph = nowMs() % BEACON_EVERY, on = !!(settings.beacon && S.mode === 'play' && !S.finished && ph < BEACON_LEN), ar = $('tpArrow');
-  $('tpBeacon').textContent = !settings.beacon ? 'Finish beacon is off' : on ? 'Beacon is on! Follow the arrow' : 'Finish beacon in ' + fmtClock(BEACON_EVERY - ph);
+  const bi = beaconInfo(nowMs()), on = !!(settings.beacon && S.mode === 'play' && !S.finished && bi.on), ar = $('tpArrow');
+  $('tpBeacon').textContent = !settings.beacon ? 'Finish beacon is off' : on ? 'Beacon is on! Follow the arrow' : 'Finish beacon in ' + fmtClock(bi.next);
   ar.classList.toggle('hide', !on);
   if (on && S.b) { const f = S.map.flag, a = Math.atan2(f[1] * TS - S.b.y, f[0] * TS - S.b.x) * 180 / Math.PI + 90; ar.style.transform = 'rotate(' + a.toFixed(0) + 'deg)'; }
 }
@@ -2449,7 +2635,7 @@ $('timer').onclick = e => { e.stopPropagation(); const el = $('tpop'); const ope
 document.addEventListener('pointerdown', e => { const el = $('tpop'); if (!el.classList.contains('hide') && !el.contains(e.target) && !$('timer').contains(e.target)) el.classList.add('hide'); });
 
 /* ================= boot ================= */
-syncUI(); applyTouchUI();
+applyZoomRange(); syncUI(); applyTouchUI();
 try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } catch (e) {}
 if (settings.intro) showIntro();
 {

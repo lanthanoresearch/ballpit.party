@@ -260,13 +260,11 @@
           d.touch = true;
         } else if (ny > 0.6) {             // bonked the underside
           b.y += ny * pen; if (b.vy < 0) b.vy = 0;
-        } else {                           // pushing from the side: lighter crates give way, heavy ones barely move
-          const share = 1 / (1 + d.m * 0.7);
-          const mv = nx * pen * share;
+        } else {                           // pushing from the side: the crate is simply carried along; heavier ones slow you a little
+          const mv = nx * pen;               // push the crate completely out of the ball's way
           d.x -= mv;
-          if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x += mv; b.x += nx * pen; } else b.x += nx * pen * (1 - share);
-          const push = -nx * Math.sign(-nx * b.vx) ;
-          if (b.vx * nx < 0) { d.vx = b.vx * share; b.vx *= 0.6 + 0.4 * share; }
+          if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x += mv; b.x += nx * pen; if (b.vx * nx < 0) b.vx = 0; }   // it is jammed against something: it acts like a wall
+          else if (b.vx * nx < 0) { d.vx = b.vx; b.vx *= 1 / (1 + d.m * 0.18); }
           d.touch = true;
         }
       } else {
@@ -282,7 +280,7 @@
     }
   }
 
-  const ACC = 560;
+  const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
   const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false };
 
   // ax: -1/0/1, jheld: jump button held. Set b.jbuf = 0.12 on a jump press.
@@ -312,7 +310,7 @@
       // other way brakes you fairly quickly.
       // ax may be fractional (a gentle swipe = a slow roll). A short tap builds speed gradually, so it barely moves you.
       const turning = ax !== 0 && b.vx !== 0 && Math.sign(b.vx) !== Math.sign(ax);
-      const rate = b.flat ? (ice ? (ax ? 420 : 90) : (ax ? (turning ? 1500 : ACC) : 1100)) : (ax ? 900 : 140);   // a smooth build-up: about half a second to top speed
+      const rate = b.flat ? (ice ? (ax ? 520 : 90) : (ax ? (turning ? 2600 : ACC) : 1500)) : (ax ? 1100 : 140);
       const target = (ax && Math.sign(b.vx) === Math.sign(ax) && Math.abs(b.vx) > MAXV) ? b.vx : ax * MAXV;
       b.vx = approach(b.vx, target, rate * dt);
       b.coyote = b.ground ? 0.1 : Math.max(0, b.coyote - dt);
