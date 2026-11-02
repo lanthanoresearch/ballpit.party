@@ -431,8 +431,9 @@
   #pause{z-index:7;background:rgba(10,8,16,.5);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
   #home .card{color:var(--ink)}
   #homeShare{position:fixed;left:12px;top:12px;top:calc(12px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left));z-index:4;width:42px;height:40px;font-size:20px;cursor:pointer}
-  #homeShare:hover{background:#3a3355}
-  #shareTip{position:fixed;left:62px;top:18px;top:calc(18px + env(safe-area-inset-top));z-index:4;background:var(--paper);border:2px solid var(--line);border-radius:var(--wob);padding:4px 12px;font-size:15px;color:var(--ink)}
+  #homeShare{background:#fff4d8;border:2px solid #2b1d12;color:#2b1d12;box-shadow:2px 3px 0 rgba(43,29,18,.3)}
+  #homeShare:hover{background:#ffe8b0}#homeShare:active{transform:translateY(1px);box-shadow:1px 2px 0 rgba(43,29,18,.3)}
+  #shareTip{position:fixed;left:62px;top:18px;top:calc(18px + env(safe-area-inset-top));z-index:4;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);padding:4px 12px;font-size:15px;color:#2b1d12}
   #shareTip.hide{display:none}
   #home .scene{position:fixed;z-index:0}#home .hbox{z-index:2}#home .sball{z-index:1}
   @media (max-height:540px){
@@ -855,8 +856,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=20"></script>
-<script src="physics.js?v=20"></script>
+<script src="maps.js?v=21"></script>
+<script src="physics.js?v=21"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
