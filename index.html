@@ -166,6 +166,8 @@
   #gest{position:fixed;left:0;top:0;right:0;bottom:0;z-index:1;touch-action:none}
   #touch button{position:fixed;z-index:2;width:78px;height:78px;border-radius:50%;border:3px solid rgba(255,255,255,.55);background:rgba(255,255,255,.18);font-size:30px;touch-action:none;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;color:#fff;padding:0}
   #touch button.on{background:rgba(255,255,255,.5)}
+  #touch #tj{--p:0;background:conic-gradient(rgba(155,231,255,.8) calc(var(--p)*1%),rgba(255,255,255,.18) 0)}
+  #touch #tj.rdy{border-color:#fff;box-shadow:0 0 0 4px rgba(255,210,61,.55),0 0 20px rgba(255,210,61,.85);background:conic-gradient(rgba(255,210,61,.9) 100%,rgba(255,255,255,.18) 0)}
   #touch #tb{--p:0;border-color:rgba(255,210,61,.7);background:conic-gradient(rgba(255,210,61,.85) calc(var(--p)*1%),rgba(255,255,255,.18) 0);font-size:26px}
   #touch #tb svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
   #touch #tb.rdy{border-color:#fff;box-shadow:0 0 0 4px rgba(255,210,61,.55),0 0 22px rgba(255,210,61,.9);animation:rdy .55s ease-in-out infinite alternate}
@@ -435,6 +437,12 @@
     .scene{--gh:18vh}
   }
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
+  .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
+  #touch #tj.edit{background:rgba(255,204,61,.25)}
+  #nameModal{z-index:12;background:rgba(10,8,16,.55)}#confirm{z-index:13}
+  .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
+  .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
+  .nname.dim{opacity:.55}
 </style>
 </head>
 <body>
@@ -445,29 +453,77 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__', t0 = Date.now(), tips = ['Stand still and hold jump: a ring fills. Let go to jump, and after 3 seconds it is a super jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__', t0 = Date.now(), tips = ['Jump twice in a row, fast, and a ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
-  /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game */
-  window.__scene = function (box, ballLeft) {
-    var col = '#6c7bff'; try { var o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && /^#[0-9a-fA-F]{6}$/.test(o.color)) col = o.color; } catch (e) {}
-    var cl = '<svg viewBox="0 0 110 54"><path d="M14 46Q2 46 6 35Q10 24 26 28Q30 8 52 12Q66 0 82 14Q102 12 100 30Q110 38 98 46Z" fill="#fffaf0" stroke="#2b1d12" stroke-width="3" stroke-linejoin="round"/><path d="M26 38Q38 34 48 38M62 30Q72 27 82 32" fill="none" stroke="#2b1d12" stroke-width="2" stroke-linecap="round" opacity=".35"/></svg>';
+  /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
+     The ball is YOUR ball (colour and pattern), it rolls along the real shape of the ground, and the props are things you meet in the game. */
+  var INK = '#2b1d12', GROUND = 'M0 22C45 8 95 34 140 20S225 2 275 22S365 30 400 12';
+  var scenes = [];
+  window.__scene = function (box, mode) {
+    var set = {}; try { set = JSON.parse(localStorage.getItem('ballrun4') || 'null') || {}; } catch (e) {}
+    var col = /^#[0-9a-fA-F]{6}$/.test(set.color) ? set.color : '#6c7bff';
+    var cl = '<svg viewBox="0 0 110 54"><path d="M14 46Q2 46 6 35Q10 24 26 28Q30 8 52 12Q66 0 82 14Q102 12 100 30Q110 38 98 46Z" fill="#fffaf0" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M26 38Q38 34 48 38M62 30Q72 27 82 32" fill="none" stroke="' + INK + '" stroke-width="2" stroke-linecap="round" opacity=".35"/></svg>';
     var rays = ''; for (var i = 0; i < 12; i++) { var a = i * Math.PI / 6; rays += '<line x1="' + (50 + Math.cos(a) * 33).toFixed(1) + '" y1="' + (50 + Math.sin(a) * 33).toFixed(1) + '" x2="' + (50 + Math.cos(a) * 45).toFixed(1) + '" y2="' + (50 + Math.sin(a) * 45).toFixed(1) + '"/>'; }
-    var hatch = ''; for (var h = 0; h < 22; h++) { var hx = 12 + Math.random() * 376, hy = 34 + Math.random() * 56; hatch += '<path d="M' + hx.toFixed(0) + ' ' + hy.toFixed(0) + 'l7 -5"/>'; }
+    var hatch = ''; for (var h = 0; h < 22; h++) { var hx = 12 + Math.random() * 376, hy = 40 + Math.random() * 54; hatch += '<path d="M' + hx.toFixed(0) + ' ' + hy.toFixed(0) + 'l7 -5"/>'; }
+    var P = {   // game things, drawn the way the game draws them: ink outlines, flat colours
+      palm: '<svg viewBox="0 0 80 110"><path d="M40 108Q36 70 42 30" fill="none" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/><path d="M42 32Q20 14 4 26M42 32Q30 8 12 8M42 32Q58 6 76 14M42 32Q64 18 78 34" fill="none" stroke="' + INK + '" stroke-width="9" stroke-linecap="round"/><path d="M42 32Q20 14 4 26M42 32Q30 8 12 8M42 32Q58 6 76 14M42 32Q64 18 78 34" fill="none" stroke="#58b36a" stroke-width="5" stroke-linecap="round"/></svg>',
+      cactus: '<svg viewBox="0 0 40 70"><path d="M20 68V16Q20 6 26 12M20 44Q8 44 8 30M20 36Q32 36 32 24" fill="none" stroke="' + INK + '" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 68V16Q20 6 26 12M20 44Q8 44 8 30M20 36Q32 36 32 24" fill="none" stroke="#58b36a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      crates: '<svg viewBox="0 0 70 70"><g stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"><rect x="3" y="33" width="32" height="32" fill="#f1c04a"/><rect x="35" y="33" width="32" height="32" fill="#f1c04a"/><rect x="19" y="3" width="32" height="30" fill="#f1c04a"/></g><g stroke="' + INK + '" stroke-width="2.5" stroke-linecap="round" opacity=".8"><path d="M7 37L31 61M31 37L7 61M39 37L63 61M63 37L39 61M23 7L47 29M47 7L23 29"/></g></svg>',
+      pad: '<svg viewBox="0 0 60 36"><rect x="3" y="18" width="54" height="16" rx="3" fill="#1d8f8a" stroke="' + INK + '" stroke-width="3"/><rect x="9" y="6" width="42" height="14" rx="3" fill="#3ed6c8" stroke="' + INK + '" stroke-width="3"/><path d="M22 16L30 9L38 16" fill="none" stroke="' + INK + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      coins: '<svg viewBox="0 0 90 36"><g fill="#ffcf3a" stroke="' + INK + '" stroke-width="2.5"><ellipse cx="14" cy="22" rx="9" ry="11"/><ellipse cx="45" cy="14" rx="9" ry="11"/><ellipse cx="76" cy="22" rx="9" ry="11"/></g><g fill="none" stroke="' + INK + '" stroke-width="2" opacity=".6"><path d="M14 16v12M45 8v12M76 16v12"/></g></svg>',
+      cp: '<svg viewBox="0 0 50 90"><path d="M10 88V6" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/><path d="M10 8L46 20L10 34Z" fill="#ff8a1f" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/></svg>',
+      flag: '<svg viewBox="0 0 50 90"><path d="M10 88V6" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/><path d="M10 8H44V38H10Z" fill="#fffaf0" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M10 8H20V18H10ZM30 8H40V18H30ZM20 18H30V28H20ZM40 18H44V28H40ZM10 28H20V38H10ZM30 28H40V38H30Z" fill="' + INK + '"/></svg>'
+    };
+    var props = [['palm', .05, 96], ['crates', .21, 64], ['cactus', .34, 62], ['pad', .47, 34], ['coins', .56, 40, 58], ['cp', .69, 84], ['palm', .81, 84], ['flag', .94, 104]], ph = '';
+    for (var k = 0; k < props.length; k++) ph += '<i class="prop" data-x="' + props[k][1] + '" data-h="' + props[k][2] + '" data-up="' + (props[k][3] || 0) + '">' + P[props[k][0]] + '</i>';
     box.innerHTML =
-      '<svg class="sun" viewBox="0 0 100 100"><g stroke="#2b1d12" stroke-width="3" stroke-linecap="round">' + rays + '</g><circle cx="50" cy="50" r="27" fill="#ffe27a" stroke="#2b1d12" stroke-width="3"/><circle cx="41" cy="46" r="3" fill="#2b1d12"/><circle cx="59" cy="46" r="3" fill="#2b1d12"/><path d="M40 57Q50 66 60 57" fill="none" stroke="#2b1d12" stroke-width="3" stroke-linecap="round"/></svg>' +
+      '<svg class="sun" viewBox="0 0 100 100"><g stroke="' + INK + '" stroke-width="3" stroke-linecap="round">' + rays + '</g><circle cx="50" cy="50" r="27" fill="#ffe27a" stroke="' + INK + '" stroke-width="3"/><circle cx="41" cy="46" r="3" fill="' + INK + '"/><circle cx="59" cy="46" r="3" fill="' + INK + '"/><path d="M40 57Q50 66 60 57" fill="none" stroke="' + INK + '" stroke-width="3" stroke-linecap="round"/></svg>' +
       '<i class="cl" style="top:14%;width:clamp(90px,15vw,170px);animation-duration:70s;animation-delay:-18s">' + cl + '</i>' +
       '<i class="cl" style="top:30%;width:clamp(70px,11vw,120px);animation-duration:95s;animation-delay:-60s">' + cl + '</i>' +
       '<i class="cl" style="top:6%;width:clamp(60px,9vw,100px);animation-duration:120s;animation-delay:-90s">' + cl + '</i>' +
-      '<svg class="prop palm" viewBox="0 0 80 110"><path d="M40 108Q36 70 42 30" fill="none" stroke="#2b1d12" stroke-width="5" stroke-linecap="round"/><path d="M42 32Q20 14 4 26M42 32Q30 8 12 8M42 32Q58 6 76 14M42 32Q64 18 78 34" fill="none" stroke="#2b1d12" stroke-width="9" stroke-linecap="round"/><path d="M42 32Q20 14 4 26M42 32Q30 8 12 8M42 32Q58 6 76 14M42 32Q64 18 78 34" fill="none" stroke="#58b36a" stroke-width="5" stroke-linecap="round"/></svg>' +
-      '<svg class="prop cactus" viewBox="0 0 40 70"><path d="M20 68V16Q20 6 26 12M20 44Q8 44 8 30M20 36Q32 36 32 24" fill="none" stroke="#2b1d12" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 68V16Q20 6 26 12M20 44Q8 44 8 30M20 36Q32 36 32 24" fill="none" stroke="#58b36a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-      '<svg class="prop flag" viewBox="0 0 50 90"><path d="M10 88V6" stroke="#2b1d12" stroke-width="5" stroke-linecap="round"/><path d="M10 8H44V38H10Z" fill="#fffaf0" stroke="#2b1d12" stroke-width="3" stroke-linejoin="round"/><path d="M10 8H20V18H10ZM30 8H40V18H30ZM20 18H30V28H20ZM40 18H44V28H40ZM10 28H20V38H10ZM30 28H40V38H30Z" fill="#2b1d12"/></svg>' +
-      '<div class="gnd"><svg viewBox="0 0 400 100" preserveAspectRatio="none"><path d="M0 14C40 6 80 18 120 11S200 8 240 14S330 17 400 9L400 100L0 100Z" fill="#d8a25a" stroke="#2b1d12" stroke-width="3" vector-effect="non-scaling-stroke"/><path d="M0 30C60 24 120 36 200 28S340 30 400 26L400 100L0 100Z" fill="#c68f48" opacity=".55"/><g fill="none" stroke="#2b1d12" stroke-width="2" stroke-linecap="round" opacity=".4" vector-effect="non-scaling-stroke">' + hatch + '</g></svg></div>' +
-      '<div class="sball" style="--bc:' + col + (ballLeft ? ';left:' + ballLeft : '') + '"><div class="sb"></div></div>';
-    var ball = box.querySelector('.sball');
-    box.parentNode.addEventListener('pointerdown', function (e) { if (e.target.closest('button,input,label,.card')) return; ball.classList.remove('hop'); void ball.offsetWidth; ball.classList.add('hop'); });
+      '<div class="gnd"><svg viewBox="0 0 400 100" preserveAspectRatio="none"><path class="gtop" d="' + GROUND + 'L400 100L0 100Z" fill="#d8a25a" stroke="' + INK + '" stroke-width="3" vector-effect="non-scaling-stroke"/><path d="M0 44C60 36 120 52 200 42S340 46 400 40L400 100L0 100Z" fill="#c68f48" opacity=".55"/><g fill="none" stroke="' + INK + '" stroke-width="2" stroke-linecap="round" opacity=".4" vector-effect="non-scaling-stroke">' + hatch + '</g></svg></div>' +
+      ph + '<canvas class="sbc" width="112" height="112"></canvas>';
+    var path = box.querySelector('.gtop'), len = path.getTotalLength(), xs = [], ys = [];
+    for (var n = 0; n <= 240; n++) { var pt = path.getPointAtLength(len * (n / 240) * 0.93); xs.push(pt.x); ys.push(pt.y); }   // (the last bit of the path is the box below the hills)
+    var sc = { box: box, mode: mode, cv: box.querySelector('.sbc'), gnd: box.querySelector('.gnd'), props: [].slice.call(box.querySelectorAll('.prop')), xs: xs, ys: ys, col: col, set: set, hop: -1, x: 0, rot: 0, t0: Date.now() };
+    sc.cv.style.position = 'absolute'; sc.cv.style.zIndex = mode === 'boot' ? 3 : 1; sc.cv.style.cursor = 'pointer';
+    sc.cv.style.width = sc.cv.style.height = 'clamp(40px,6vw,56px)';
+    scenes.push(sc);
+    box.parentNode.addEventListener('pointerdown', function (e) { if (e.target.closest('button,input,label,.card')) return; sc.hop = 0; });
+    return sc;
   };
-  try { window.__scene($('bootScene')); } catch (e) {}
+  function groundY(sc, fx, W, H) { var gh = sc.gnd.clientHeight, X = fx * 400, xs = sc.xs, ys = sc.ys, lo = 0; while (lo < xs.length - 2 && xs[lo + 1] < X) lo++; var t = (X - xs[lo]) / ((xs[lo + 1] - xs[lo]) || 1); return H - gh + (ys[lo] + (ys[lo + 1] - ys[lo]) * t) * gh / 100; }
+  function drawBallTo(sc, rot) {
+    var c = sc.cv.getContext('2d'), w = 112, spr = window.__sprite ? window.__sprite() : null;
+    c.clearRect(0, 0, w, w); c.save(); c.translate(w / 2, w / 2); c.rotate(rot);
+    if (spr) c.drawImage(spr, -w / 2, -w / 2, w, w);
+    else { c.beginPath(); c.arc(0, 0, w / 2 - 4, 0, 6.2832); c.fillStyle = sc.col; c.fill(); c.lineWidth = 6; c.strokeStyle = INK; c.stroke(); c.fillStyle = INK; c.globalAlpha = .5; c.fillRect(0, -3, w / 3, 6); }
+    c.restore();
+  }
+  var lastT = 0;
+  function sceneLoop(now) {
+    var dt = Math.min(0.05, (now - lastT) / 1000 || 0.016); lastT = now;
+    for (var i = 0; i < scenes.length; i++) {
+      var sc = scenes[i], box = sc.box; if (!box.offsetWidth) continue;
+      var W = box.clientWidth, H = box.clientHeight, bw = sc.cv.offsetWidth || 48;
+      sc.props.forEach(function (p) {   // things stand on the ground wherever the ground really is
+        var fx = +p.getAttribute('data-x'), h = Math.min(+p.getAttribute('data-h'), H * 0.2), up = +p.getAttribute('data-up') || 0;
+        p.style.left = (fx * 100) + '%'; p.style.height = h + 'px'; p.style.top = (groundY(sc, fx, W, H) - h + 5 - up + (up ? Math.sin(now / 400 + fx * 9) * 3 : 0)) + 'px';
+      });
+      var fx, bounce = 0;
+      if (sc.mode === 'boot') { var p = parseFloat(getComputedStyle(box.parentNode).getPropertyValue('--p')) || 0; sc.x += ((0.06 + 0.84 * p) - sc.x) * Math.min(1, dt * 4); fx = sc.x; }
+      else { fx = 0.14; bounce = Math.abs(Math.sin(now / 520)) * 14; sc.x = fx; }
+      var px = fx * W, prevX = sc.px === undefined ? px : sc.px; sc.px = px; sc.rot += (px - prevX) / (bw / 2) + (sc.mode === 'boot' ? 0 : dt * 0.6);
+      if (sc.hop >= 0) { sc.hop += dt; if (sc.hop > 0.7) sc.hop = -1; }
+      var hy = sc.hop >= 0 ? Math.sin(Math.PI * sc.hop / 0.7) * 90 : 0;
+      sc.cv.style.left = (px - bw / 2) + 'px'; sc.cv.style.top = (groundY(sc, fx, W, H) - bw + 4 - hy - bounce) + 'px';
+      drawBallTo(sc, sc.rot);
+    }
+    requestAnimationFrame(sceneLoop);
+  }
+  requestAnimationFrame(sceneLoop);
+  try { window.__scene($('bootScene'), 'boot'); } catch (e) {}
   var steps = 8; window.__bootStep = function (m, p) { if (m) msg(m); fill(p); };
   window.__bootHide = function () {   // the game calls this once its first frame is on screen
     var left = Math.max(0, 1300 - (Date.now() - t0));
@@ -536,7 +592,7 @@
 <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></symbol>
 <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></symbol>
 <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1.500A3.500 3.500 0 0 0 7.500 11M17 6h3v1.500A3.500 3.500 0 0 1 16.500 11M12 14v4M8 21h8M9 18h6"/></symbol>
-<symbol id="i-pause" viewBox="0 0 24 24"><path d="M8.5 5v14M15.5 5v14" stroke-width="3.2"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5l12.500 7.500L7 19.500z"/></symbol><symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20l1.200-4.400L16.400 4.400a1.800 1.800 0 0 1 2.600 0l.6.6a1.800 1.800 0 0 1 0 2.600L8.400 18.800z M14.500 6.300l3.200 3.200"/></symbol><symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7V5zM18 5v14"/></symbol>
+<symbol id="i-dice" viewBox="0 0 24 24"><rect x="3.500" y="3.500" width="17" height="17" rx="4"/><circle cx="8.500" cy="8.500" r="1.300" fill="currentColor"/><circle cx="15.500" cy="8.500" r="1.300" fill="currentColor"/><circle cx="12" cy="12" r="1.300" fill="currentColor"/><circle cx="8.500" cy="15.500" r="1.300" fill="currentColor"/><circle cx="15.500" cy="15.500" r="1.300" fill="currentColor"/></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="M18 4.500v15L5 12z" fill="currentColor" stroke-width="2.600"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><path d="M8.5 5v14M15.5 5v14" stroke-width="3.2"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5l12.500 7.500L7 19.500z"/></symbol><symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20l1.200-4.400L16.400 4.400a1.800 1.800 0 0 1 2.600 0l.6.6a1.800 1.800 0 0 1 0 2.600L8.400 18.800z M14.500 6.300l3.200 3.200"/></symbol><symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7V5zM18 5v14"/></symbol>
 <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
 <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M2.500 20c0-3.600 3-5.500 6.500-5.500s6.500 1.900 6.500 5.500M16 5a3.300 3.300 0 0 1 0 6.200M18 14.800c2.200.6 3.700 2.200 3.700 5.200"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
@@ -716,7 +772,7 @@
   <div class="small dim" id="pauseSub"></div>
   <button id="pResume" class="pbtn go" type="button"><span data-ic="play"></span>Resume</button>
   <button id="pSettings" class="pbtn" type="button"><span data-ic="gear"></span>Settings</button>
-  <button id="pHome" class="pbtn" type="button"><span data-ic="left"></span>Main menu</button>
+  <button id="pHome" class="pbtn" type="button"><span data-ic="back"></span>Main menu</button>
 </div></div>
 <div id="intro" class="overlay hide"><div class="card">
   <h1><span data-ic="ball"></span>BALLPIT.PARTY</h1>
@@ -731,11 +787,18 @@
     <span><i class="lg" style="background:#ff8a1f"></i>Checkpoint flag: your next fall brings you back</span>
   </div>
   <p>Move with <kbd>A</kbd><kbd>D</kbd> or the arrows, jump with <kbd>W</kbd> or <kbd>Space</kbd>: tap for a hop, hold for a big jump. On a phone, use the on-screen controls (you can pick swipe styles in settings). Get the <i>middle</i> of your ball onto a block or you'll roll off.</p>
-  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Stand still and hold jump: a ring fills. Let go to jump, and after 3 seconds it is a super jump. Touch a checkpoint flag and your next fall brings you back to it once. Tap the chat button to send emojis, and add friends in Settings to see where they are. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
+  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Jump twice in a row, fast, and a ring fills. Then jump again for an extra tall jump. Touch a checkpoint flag and your next fall brings you back to it once. Tap the chat button to send emojis, and add friends in Settings to see where they are. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
   <label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
   <button class="ok" id="btnOk">OK</button>
 </div></div>
 
+<div id="nameModal" class="overlay hide"><div class="card nmcard">
+  <h3 id="nmTitle">Your name</h3>
+  <input type="text" id="nmIn" maxlength="12" placeholder="Type a name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <button type="button" class="btn nmdice" id="nmDice"><span data-ic="dice"></span>Surprise me</button>
+  <div class="small dim" id="nmNote"></div>
+  <div class="btns"><button id="nmNo" type="button">Cancel</button><button id="nmOk" type="button" class="go">OK</button></div>
+</div></div>
 <div id="confirm" class="overlay hide"><div class="card" style="width:min(420px,100%)">
   <h3 id="cfTitle"></h3><p id="cfText"></p>
   <label class="dont hide" id="cfOptWrap"><input type="checkbox" id="cfOpt"><span id="cfOptText"></span></label>
@@ -778,8 +841,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=16"></script>
-<script src="physics.js?v=16"></script>
+<script src="maps.js?v=17"></script>
+<script src="physics.js?v=17"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1411,7 +1474,7 @@ function update(dt) {
   S.pbx = b.x; S.pby = b.y;
   b.bAuto = !bl && settings.boost && settings.boostAuto;
   if (!settings.boost) { b.bReq = false; S.bLatch = 0; } else if (S.bLatch > 0 && !bl) { S.bLatch -= dt; b.bReq = true; }
-  b.canCharge = true;
+  b.noJm = false;   // only you have the jump meter
   const ev = P.step(b, w, ax, jheld, dt);
   P.stepSwitches(w, b);
   if (w.ev.length) worldEvents();
@@ -1876,7 +1939,7 @@ function gMove(id, x, y) {
 }
 function gUp(id) {
   const p = gp.get(id); if (!p) return; gp.delete(id);
-  if (settings.scheme === 'tap' && !p.moved && performance.now() - p.t0 < 260) { pressJump(); if (S.b) S.b.noChg = 0.4; tin.jumpUntil = performance.now() + 260; }
+  if (settings.scheme === 'tap' && !p.moved && performance.now() - p.t0 < 260) { pressJump(); tin.jumpUntil = performance.now() + 260; }
   recomputeTouch();
 }
 (function () {
@@ -2271,7 +2334,7 @@ function drawTrack(camL, camT, vw, vh, sc) {
       drawPerson(ctx, 0, 0, 14, e.color);
       const d = ft(e.sx - S.b.x, e.sy - S.b.y), tx = 0, ty = Math.sin(a) > 0.2 ? -26 : 30;
       ctx.font = '15px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
-      const txt = name + ' · ' + d + ' ft'; ctx.strokeText(txt, tx, ty); ctx.fillStyle = '#fff'; ctx.fillText(txt, tx, ty);
+      const txt = name + ' · ' + d + 'b'; ctx.strokeText(txt, tx, ty); ctx.fillStyle = '#fff'; ctx.fillText(txt, tx, ty);
     }
     ctx.restore();
   }
@@ -2466,44 +2529,46 @@ function commitName(v) {
   if (had) { nameUnlockAt = Date.now() + 86400000; try { localStorage.setItem(NAMEKEY, String(nameUnlockAt)); } catch (e) {} }   // the first name is free; after that, once a day
   sendInfo(); nameUI(); return true;
 }
-function makeNed(root) {
-  root.innerHTML = '<div class="nview"><span class="nlbl">Your name</span><b class="nname"></b><button type="button" class="nedit" title="Change your name">' + ic('edit') + '</button></div>' +
-    '<div class="nform hide"><label class="lbl nfl">Your name</label><input type="text" class="nin" maxlength="12" placeholder="Type a name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><div class="nrow"><button type="button" class="btn nsur">' + ic('spark') + 'Surprise me</button><button type="button" class="btn nno">Cancel</button><button type="button" class="btn nok">OK</button></div></div>' +
-    '<div class="small dim nnote"></div>';
-  const q = c => root.querySelector(c), view = q('.nview'), form = q('.nform'), inp2 = q('.nin'), sur = q('.nsur'), no = q('.nno'), ok = q('.nok'), note = q('.nnote'), edit = q('.nedit');
-  let editing = false, rolled = '', sure = false, forced = false;
+function makeNed(root) {   // the name as you see it: your name and a pencil. Changing it happens in a pop-up.
+  root.innerHTML = '<div class="nview"><span class="nlbl">Your name</span><b class="nname"></b><button type="button" class="nedit" title="Change your name">' + ic('edit') + '</button></div><div class="small dim nnote"></div>';
+  const edit = root.querySelector('.nedit'), note = root.querySelector('.nnote');
+  edit.onclick = () => { sfx('ui'); openNameModal(); };
   const o = {
-    pending: () => (!settings.name ? cleanNm(inp2.value) : ''),
+    pending: () => '',
     refresh() {
       const has = !!settings.name, lk = has && nameLocked();
-      if (!has) { editing = true; forced = true; } else if (forced) { editing = false; forced = false; inp2.value = ''; rolled = ''; }
-      q('.nname').textContent = settings.name || '';
-      view.classList.toggle('hide', editing); form.classList.toggle('hide', !editing);
-      no.classList.toggle('hide', !has); q('.nfl').classList.toggle('hide', has);
-      edit.disabled = lk; ok.textContent = 'OK';
-      sur.classList.toggle('hide', inp2.value !== '' && inp2.value !== rolled);   // type anything and Surprise me goes away; erase it and it comes back
-      note.textContent = lk ? 'You can change your name again in ' + hm(nameUnlockAt - Date.now()) + '.' : !has ? 'This is what other players see over your ball.' : editing ? 'You only get one name change a day. Nothing changes until you tap OK.' : 'You can change your name once a day.';
+      const nm = root.querySelector('.nname'); nm.textContent = has ? settings.name : 'Not set yet'; nm.classList.toggle('dim', !has);
+      edit.disabled = lk;
+      note.textContent = lk ? 'You can change your name again in ' + hm(nameUnlockAt - Date.now()) + '.' : has ? 'You can change your name once a day.' : 'Tap the pencil to pick one, or just press Play for a random one.';
     },
   };
-  const open = () => { if (settings.name && nameLocked()) return; editing = true; sure = false; inp2.value = settings.name; o.refresh(); try { inp2.focus(); inp2.select(); } catch (e) {} };
-  const close = () => { editing = !settings.name; inp2.value = ''; rolled = ''; o.refresh(); };
-  edit.onclick = () => { sfx('ui'); open(); };
-  inp2.addEventListener('input', () => { const v = inp2.value.replace(NAME_BAD, '').slice(0, 12); if (v !== inp2.value) inp2.value = v; o.refresh(); });
-  inp2.addEventListener('keydown', e => { if (e.key === 'Enter') ok.click(); });
-  const fill = () => { rolled = randomName(); inp2.value = rolled; o.refresh(); sfx('ui'); };
-  sur.onclick = () => {
-    if (settings.name && !sure) askConfirm('Pick a random name?', 'This replaces your name. You only get one name change a day, so tapping OK afterwards uses today\'s change.', 'Pick one', () => { sure = true; fill(); }, { no: 'Never mind', yesClass: 'go' });
-    else fill();
-  };
-  no.onclick = () => { sfx('ui'); close(); };
-  ok.onclick = () => { if (!cleanNm(inp2.value)) { try { inp2.focus(); } catch (e) {} return; } if (commitName(inp2.value)) { sfx('ui'); close(); nameUI(); } };
   NEDS.push(o); o.refresh(); return o;
 }
+function openNameModal() {
+  if (settings.name && nameLocked()) return;
+  const has = !!settings.name;
+  $('nmTitle').textContent = has ? 'Change your name' : 'Pick a name';
+  $('nmIn').value = settings.name;
+  $('nmNote').textContent = has ? 'You can only change your name once a day.' : 'This is what other players see over your ball.';
+  $('nameModal').classList.remove('hide'); setTimeout(() => { try { $('nmIn').focus(); $('nmIn').select(); } catch (e) {} }, 30);
+}
+function closeNameModal() { $('nameModal').classList.add('hide'); try { $('nmIn').blur(); } catch (e) {} nameUI(); }
+$('nmDice').onclick = () => { $('nmIn').value = randomName(); sfx('ui'); };   // no questions asked: it just fills in a random name
+$('nmNo').onclick = () => { sfx('ui'); closeNameModal(); };
+$('nmIn').addEventListener('input', () => { const v = $('nmIn').value.replace(NAME_BAD, '').slice(0, 12); if (v !== $('nmIn').value) $('nmIn').value = v; });
+$('nmIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('nmOk').click(); else if (e.key === 'Escape') closeNameModal(); });
+$('nameModal').addEventListener('pointerdown', e => { if (e.target === $('nameModal')) closeNameModal(); });
+$('nmOk').onclick = () => {
+  const v = cleanNm($('nmIn').value); if (!v) { try { $('nmIn').focus(); } catch (e) {} return; }
+  if (v === settings.name) { closeNameModal(); return; }
+  if (!settings.name) { commitName(v); sfx('ui'); closeNameModal(); return; }   // the very first name is free
+  askConfirm('Change your name to ' + v + '?', "You can only do this once per day. You won't be able to change your name again for 24 hours.", 'Change name', () => { commitName(v); sfx('ui'); closeNameModal(); }, { no: 'Go back', yesClass: 'go' });
+};
 makeNed($('ned1')); makeNed($('ned2'));
 function nameUI() { (NEDS || []).forEach(n => n.refresh()); }
 
 /* ----- the main screen: where you land, and where Pause > Main menu brings you back ----- */
-let homeMode = settings.mp, firstEntry = true, reenter = false;
+let homeMode = settings.mp, firstEntry = true, reenter = false, askedName = false;
 function homeBase() { return /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(location.hostname) || /onrender\.com$/.test(location.hostname) ? '' : 'https://ballpit-party.onrender.com'; }
 function homeStats() {
   const o = $('homeOnline'); o.textContent = '';
@@ -2512,7 +2577,8 @@ function homeStats() {
     const n = j.online | 0; o.textContent = n > 0 ? n + (n === 1 ? ' player' : ' players') + ' online right now' : 'Nobody here yet. Be the first!';
   }).catch(() => {});
 }
-try { window.__scene($('homeScene')); } catch (e) {}
+window.__sprite = () => sprite(settings.color, settings.color2, settings.pat);   // the loading screen and the main screen show your real ball
+try { window.__scene($('homeScene'), 'home'); } catch (e) {}
 function homeModeText() { $('homeModeNote').textContent = $('homeMp').checked ? 'Everyone online shares the same world.' : 'Your own private world. Nobody else can see you.'; }
 function showHome() {
   inHome = true; paused = false; $('pause').classList.add('hide'); document.body.classList.add('home'); $('home').classList.remove('hide');
@@ -2520,6 +2586,7 @@ function showHome() {
   clearTimeout(retryTimer); retryTimer = 0;
   homeMode = settings.mp; $('homeMp').checked = settings.mp; $('homeAuto').checked = !!settings.autoEnter; homeModeText();
   nameUI(); homeStats();
+  if (!settings.name && !askedName) { askedName = true; setTimeout(openNameModal, 350); }
   keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0;
 }
 function enterGame(auto) {
@@ -2549,6 +2616,7 @@ function resumeGame() { if (!paused) return; paused = false; $('pause').classLis
 const togglePause = () => { if (paused) resumeGame(); else openPause(); };
 function escMenu() {   // Escape: closes whatever is on top, then pauses / resumes
   if (chatOpen) { toggleChat(false); return; }
+  if (!$('nameModal').classList.contains('hide')) { closeNameModal(); return; }
   if (!$('settings').classList.contains('hide')) { closeSettingsNow(); return; }
   if (inHome) return;
   togglePause();
@@ -2567,7 +2635,7 @@ $('homeAuto').onchange = () => { settings.autoEnter = $('homeAuto').checked; sav
 $('homeLook').onclick = () => { showTab('you'); toggleSettings(); };
 $('homeSet').onclick = () => toggleSettings();
 $('homeHelp').onclick = () => showIntro();
-addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && !typing()) enterGame(false); });
+addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && $('nameModal').classList.contains('hide') && !typing()) enterGame(false); });
 
 /* ================= networking ================= */
 function setNet(state) {
@@ -3202,14 +3270,14 @@ function drawTrail(b) {
   }
   ctx.restore();
 }
-function drawSuper(b) {   // holding jump slowly winds a ring around the ball; when it is full, your next jump is a super jump
-  const q = b.jhold / P.SJ_T; if (!b.charging || q < 0.05) return;
-  const rdy = q >= 1, k = (q - 0.05) / 0.95;
+function drawSuper(b) {   // the jump meter: a ring that fills with quick back-to-back jumps. Full = your next jump is extra tall.
+  const q = b.jm || 0; if (q < 0.03) return;
+  const rdy = q >= 1, pul = Math.sin(S.t * 20);
   ctx.save(); ctx.lineCap = 'round';
-  ctx.globalAlpha = rdy ? 0.8 + 0.2 * Math.sin(S.t * 18) : 0.25 + 0.55 * k;
-  ctx.strokeStyle = rdy ? '#e8fbff' : '#9be7ff'; ctx.lineWidth = rdy ? 4 : 3;
-  ctx.beginPath(); ctx.arc(b.x, b.y, R + 8 + (rdy ? 2 + Math.sin(S.t * 18) * 1.5 : 0), -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(q, 1)); ctx.stroke();
-  if (rdy) { ctx.globalAlpha = 0.35; ctx.strokeStyle = '#c58bff'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(b.x, b.y, R + 8, 0, TAU); ctx.stroke(); }
+  ctx.globalAlpha = rdy ? 0.85 + 0.15 * pul : 0.3 + 0.5 * q;
+  ctx.strokeStyle = rdy ? '#ffe98a' : '#9be7ff'; ctx.lineWidth = rdy ? 4.5 : 3;
+  ctx.beginPath(); ctx.arc(b.x, b.y, R + 8 + (rdy ? 2 + pul * 1.5 : 0), -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(q, 1)); ctx.stroke();
+  if (rdy) { ctx.globalAlpha = 0.3; ctx.strokeStyle = '#ff9a3d'; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(b.x, b.y, R + 8, 0, TAU); ctx.stroke(); }
   ctx.restore();
 }
 function drawBoost(b) {   // the boost ring above your ball: fills while you roll one way, glows when it is ready, trails while you boost
@@ -3246,7 +3314,7 @@ function drawBeacon(camL, camT, vw, vh, sc) {   // every 30 minutes, for 15 seco
     ctx.beginPath(); ctx.moveTo(26, 0); ctx.lineTo(-14, -20); ctx.lineTo(-6, 0); ctx.lineTo(-14, 20); ctx.closePath();
     ctx.fillStyle = '#ffd23d'; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.fill(); ctx.stroke();
     ctx.rotate(-a); ctx.font = '16px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
-    const tt = ft(f[0] * TS + 30 - S.b.x, f[1] * TS - 100 - S.b.y) + ' ft', ty = Math.sin(a) > 0.2 ? -28 : 34; ctx.strokeText(tt, 0, ty); ctx.fillStyle = '#ffe98a'; ctx.fillText(tt, 0, ty);
+    const tt = ft(f[0] * TS + 30 - S.b.x, f[1] * TS - 100 - S.b.y) + 'b', ty = Math.sin(a) > 0.2 ? -28 : 34; ctx.strokeText(tt, 0, ty); ctx.fillStyle = '#ffe98a'; ctx.fillText(tt, 0, ty);
   }
   ctx.restore();
 }
@@ -3372,6 +3440,7 @@ function renderInner(dt, nowT) {
   const sc = Math.max(clamp(zoomBase() * settings.zoom, 0.2, 5), sw / VIEW_MAX_W, sh / VIEW_MAX_H);
   const vw = sw / sc, vh = sh / sc, b = S.b;
   updateFx(dt);
+  { const tj = $('tj'); const q = Math.round(clamp(b.jm || 0, 0, 1) * 100); if (q !== S.tjq) { S.tjq = q; tj.style.setProperty('--p', q); tj.classList.toggle('rdy', q >= 100); } }
   { const tb = $('tb'); if (!tb.classList.contains('hide') && !editMode) { const q = Math.round(clamp(b.bcharge || 0, 0, 1) * 100); if (q !== S.tbq) { S.tbq = q; tb.style.setProperty('--p', q); tb.classList.toggle('rdy', q >= 100 && !b.boost); } } }
   const k = 1 - Math.exp(-7 * dt);
   S.camx += (b.x - S.camx) * k;
@@ -3525,7 +3594,7 @@ function drawMinimap() {
       g.save(); g.translate(w / 2 + Math.cos(a) * k, h / 2 + Math.sin(a) * k); g.rotate(a); g.scale(1 + 0.15 * Math.sin(now / 160), 1 + 0.15 * Math.sin(now / 160));
       g.beginPath(); g.moveTo(9, 0); g.lineTo(-6, -7); g.lineTo(-2, 0); g.lineTo(-6, 7); g.closePath(); g.fillStyle = '#ffd23d'; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.fill(); g.stroke(); g.restore();
       g.font = '11px ' + FONT; g.textAlign = 'center'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.85)'; g.fillStyle = '#ffe98a';
-      const lt = Math.round(Math.hypot(f[0] - S.b.x / TS, f[1] - S.b.y / TS) / 2) + ' ft', lx = clamp(w / 2 + Math.cos(a) * (k - 18), 16, w - 16), ly = clamp(h / 2 + Math.sin(a) * (k - 18) + 4, 10, h - 3);
+      const lt = Math.round(Math.hypot(f[0] - S.b.x / TS, f[1] - S.b.y / TS) / 2) + 'b', lx = clamp(w / 2 + Math.cos(a) * (k - 18), 16, w - 16), ly = clamp(h / 2 + Math.sin(a) * (k - 18) + 4, 10, h - 3);
       g.strokeText(lt, lx, ly); g.fillText(lt, lx, ly);
     }
   }
@@ -3670,9 +3739,9 @@ function hudTick() {
   S.beaconOn = bon;
   $('beaconbar').classList.toggle('hide', !bon);
   if (bon && S.b) {
-    const f = S.map.flag, dx = f[0] * TS - S.b.x, dy = f[1] * TS - S.b.y, d = Math.round(Math.hypot(dx, dy) / TS);
+    const f = S.map.flag, dx = f[0] * TS - S.b.x, dy = f[1] * TS - S.b.y, d = ft(dx, dy);
     const hz = Math.abs(dx) > 4 * TS ? (dx > 0 ? 'right' : 'left') : '', vt = Math.abs(dy) > 4 * TS ? (dy > 0 ? 'down' : 'up') : '';
-    $('beaconText').textContent = 'Beacon! The finish is ' + d + ' tiles away' + (hz || vt ? ': ' + [vt, hz].filter(Boolean).join(' and ') : '') + ' · ' + Math.ceil((BEACON_LEN - ph) / 1000) + 's';
+    $('beaconText').textContent = 'Beacon! The finish is ' + d + 'b away' + (hz || vt ? ': ' + [vt, hz].filter(Boolean).join(' and ') : '') + ' · ' + Math.ceil((BEACON_LEN - ph) / 1000) + 's';
   }
   $('onl').textContent = worldText();
   if (S.coinN !== lastCoinShown) { lastCoinShown = S.coinN; $('coinN').textContent = S.coinN; }

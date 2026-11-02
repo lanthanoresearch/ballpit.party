@@ -43,7 +43,7 @@
   }
 
   function newBody(x, y) {
-    return { x, y, vx: 0, vy: 0, hold: 0, hdir: 0, bcharge: 0, jhold: 0, boost: false, bdir: 0, btime: 0, bReq: false, bAuto: false, fall: 0, rot: 0, ground: false, flat: false, gType: 0, coyote: 0, jbuf: 0, water: false, swimCool: 0, canCharge: false, charging: false, holdLeft: 0, noChg: 0 };
+    return { x, y, vx: 0, vy: 0, hold: 0, hdir: 0, bcharge: 0, jm: 0, jmt: 0, noJm: true, boost: false, bdir: 0, btime: 0, bReq: false, bAuto: false, fall: 0, rot: 0, ground: false, flat: false, gType: 0, coyote: 0, jbuf: 0, water: false, swimCool: 0, holdLeft: 0 };
   }
 
   // Circle vs. square tiles. Because the ball is round, standing on an edge with your
@@ -285,7 +285,7 @@
   }
 
   const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
-  const SJ_T = 3, SJ_MUL = 1.42;   // hold jump for 3 seconds and the next jump goes about twice as high (height grows with speed squared)
+  const SJ_MUL = 1.42, JM_ADD = 0.65, JM_DRAIN = 1.4, JM_HOLD = 0.5;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
   const BOOST_T = 1.6, BOOST_V = 450;   // seconds of steady rolling to fill the ring, and the boosted top speed
   const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false, boosted: false, superJump: false };
 
@@ -309,7 +309,7 @@
           else b.vy = approach(b.vy, -40, 1500 * dt);
         } else b.vy = approach(b.vy, -210, 2600 * dt);
       } else b.vy = approach(b.vy, 140, 1200 * dt);
-      b.coyote = 0; b.boost = false; b.hold = 0; b.bcharge = 0; b.bReq = false; b.jhold = 0; b.charging = false;
+      b.coyote = 0; b.boost = false; b.hold = 0; b.bcharge = 0; b.bReq = false;
     } else {
       const ice = b.flat && b.gType === 3;
       // Grip only when the ball's centre is over the tile. Ice: slippery, but pushing the
@@ -336,28 +336,23 @@
       }
       b.vx = approach(b.vx, target, (b.boost ? brate : rate) * dt);
       b.coyote = b.ground ? 0.1 : Math.max(0, b.coyote - dt);
-      // Standing still, the player's own ball charges while the jump button is held and jumps when it is let go (a quick tap is a hop,
-      // a longer hold a full jump, 3 seconds a super jump). Pressing a direction while charging jumps at once. Moving, jumps are instant.
-      b.noChg = Math.max(0, (b.noChg || 0) - dt); b.holdLeft = Math.max(0, (b.holdLeft || 0) - dt);
-      let fire = 0;
-      if (b.canCharge) {
-        const still = ax === 0 && Math.abs(b.vx) < 60 && !b.boost;
-        if (b.charging) {
-          if (!b.ground) { b.charging = false; b.jhold = 0; }
-          else if (!jheld) fire = b.jhold >= SJ_T ? 3 : 2;
-          else if (!still) fire = b.jhold >= SJ_T ? 3 : 1;
-          else b.jhold = Math.min(SJ_T, b.jhold + dt);
-        } else {
-          b.jhold = 0;
-          if (b.jbuf > 0 && jheld && b.ground && still && b.noChg <= 0) { b.charging = true; b.jbuf = 0; }
-        }
+      // The jump meter: every jump fills it a good way. Jump again quickly enough and it fills all the way, and after landing it waits a moment at full.
+      // Jump while it is full and you get an extra tall jump. Wait too long and it drains away. (Only your own ball has a meter.)
+      b.holdLeft = Math.max(0, (b.holdLeft || 0) - dt);
+      if (!b.noJm) {
+        if (b.ground) {
+          b.jmt += dt;
+          if (b.jm >= 1) { if (b.jmt > JM_HOLD) b.jm = Math.max(0, b.jm - 3 * dt); }
+          else if (b.jmt > 0.08) b.jm = Math.max(0, b.jm - JM_DRAIN * dt);
+        } else b.jmt = 0;   // frozen while you are in the air
       }
-      if (fire) {
-        const t = b.jhold;
-        b.vy = fire === 3 ? -JUMP * SJ_MUL : -JUMP; b.holdLeft = fire === 3 ? 2 : fire === 2 ? (t <= 0.15 ? Math.max(0.02, t * 0.6) : Math.min(0.5, 0.09 + (t - 0.15) * 1.17)) : 0;
-        b.coyote = 0; b.jbuf = 0; b.ground = false; b.boost = false; b.charging = false; b.jhold = 0; ev.jumped = true; ev.superJump = fire === 3;
+      if (b.jbuf > 0 && b.coyote > 0) {
+        const sup = !b.noJm && b.jm >= 1;
+        b.vy = sup ? -JUMP * SJ_MUL : -JUMP; b.coyote = 0; b.jbuf = 0; b.ground = false; b.boost = false; ev.jumped = true;   // jumping ends a boost, and gives no extra height
+        if (sup) { b.holdLeft = 2; b.jm = 0; ev.superJump = true; }   // the tall jump always gets its full height
+        else if (!b.noJm) b.jm = Math.min(1, b.jm + JM_ADD);
+        b.jmt = 0;
       }
-      else if (b.jbuf > 0 && b.coyote > 0) { b.vy = -JUMP; b.coyote = 0; b.jbuf = 0; b.ground = false; b.boost = false; ev.jumped = true; }   // jumping ends a boost, and gives no extra height
       if (b.vy >= 0 || b.ground) b.launched = false;
       const g = GRAV * ((b.vy < 0 && !jheld && !b.launched && !b.ground && !(b.holdLeft > 0)) ? 7 : 1);   // (only in the air: rolling up a slope or a corner also has a tiny upward speed, and must not be slammed down)
          // let go early = tiny hop, hold = full jump
@@ -377,7 +372,7 @@
     return ev;
   }
 
-  const api = { TS, R, MAXV, BOOST_T, BOOST_V, SJ_T, makeWorld, tile, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
+  const api = { TS, R, MAXV, BOOST_T, BOOST_V, makeWorld, tile, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
