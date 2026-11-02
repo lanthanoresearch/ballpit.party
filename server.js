@@ -1,4 +1,4 @@
-// Ball Run - multiplayer relay server.   Run with:  npm install && npm start
+// ballpit.party - multiplayer relay server.   Run with:  npm install && npm start
 // Optional environment variables:
 //   PORT              port to listen on (hosts like Render/Railway set this for you)
 //   MAP_OFFSET_HOURS  shift the 6-hour map schedule (default 0 => switches at 00/06/12/18 UTC,
@@ -27,7 +27,11 @@ for (const [url, name, type] of [
   ['/', 'index.html', 'text/html; charset=utf-8'],
   ['/index.html', 'index.html', 'text/html; charset=utf-8'],
   ['/maps.js', 'maps.js', 'application/javascript; charset=utf-8'],
-  ['/physics.js', 'physics.js', 'application/javascript; charset=utf-8']
+  ['/physics.js', 'physics.js', 'application/javascript; charset=utf-8'],
+  ['/icon.svg', 'icon.svg', 'image/svg+xml'],
+  ['/icon.png', 'icon.png', 'image/png'],
+  ['/apple-touch-icon.png', 'apple-touch-icon.png', 'image/png'],
+  ['/share.png', 'share.png', 'image/png']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 
 /* ---------- all-time record ---------- */
@@ -58,8 +62,15 @@ const server = http.createServer((req, res) => {
   }
   const f = FILES[url];
   if (!f) { res.writeHead(404); return res.end('Not found'); }
-  res.writeHead(200, { 'Content-Type': f.type, 'Cache-Control': 'no-cache' });
-  res.end(f.data);
+  let body = f.data;
+  if (f.type.indexOf('text/html') === 0) {
+    // the share image needs a full web address, so fill in this site's own address
+    const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
+    const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim().replace(/[^A-Za-z0-9.:\-]/g, '');
+    body = Buffer.from(f.data.toString('utf8').split('__ORIGIN__').join(proto.replace(/[^a-z]/g, '') + '://' + host));
+  }
+  res.writeHead(200, { 'Content-Type': f.type, 'Cache-Control': f.type.indexOf('image/') === 0 ? 'public, max-age=3600' : 'no-cache' });
+  res.end(body);
 });
 
 const wss = new WebSocketServer({ server, maxPayload: 1024, perMessageDeflate: false });
@@ -225,5 +236,5 @@ process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
 server.listen(PORT, () => {
-  console.log(`Ball Run running on http://localhost:${PORT}  (map: ${maps.names[curSlot % maps.count]}, record: ${peak})`);
+  console.log(`ballpit.party running on http://localhost:${PORT}  (map: ${maps.names[curSlot % maps.count]}, record: ${peak})`);
 });

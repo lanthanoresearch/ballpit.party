@@ -4,7 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#14111c">
-<title>Ball Run</title>
+<title>ballpit.party</title>
+<meta name="description" content="Race friends across huge hand-drawn worlds. A multiplayer ball platformer that runs right in your browser.">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="512x512" href="icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ballpit.party">
+<meta property="og:description" content="Race friends across huge hand-drawn worlds. A multiplayer ball platformer that runs right in your browser.">
+<meta property="og:image" content="__ORIGIN__/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ballpit.party">
+<meta name="twitter:image" content="__ORIGIN__/share.png">
 <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
 <style>
   :root{--ink:#f3ead6;--paper:rgba(26,22,38,.9);--line:#e8dcc0;--accent:#ffcc3d;--good:#58d68d;--bad:#ff5b4a;--font:"Patrick Hand","Segoe Print","Bradley Hand","Chalkboard SE","Comic Sans MS","Marker Felt",cursive,sans-serif;--wob:14px 10px 16px 9px/10px 15px 9px 16px}
@@ -254,7 +267,7 @@
 </div>
 
 <div id="intro" class="overlay hide"><div class="card">
-  <h1><span data-ic="ball"></span>BALL RUN</h1>
+  <h1><span data-ic="ball"></span>BALLPIT.PARTY</h1>
   <p>You're a ball. Everyone online shares one huge world and is racing to find the <b>checkered flag</b>. Nothing tells you where it is, or where anyone else is. Pick a direction and explore.</p>
   <div class="legend">
     <span><i class="lg" style="background:#8a6a46"></i>Ground: safe to stand on</span>
@@ -283,8 +296,9 @@
 
 <div id="unsupported">
   <h2>This game can't run here</h2>
-  <p>Ball Run needs a reasonably modern browser, and it looks like this device or browser can't run it.</p>
+  <p>ballpit.party needs a reasonably modern browser, and it looks like this device or browser can't run it.</p>
   <p>Please try a different device, or open this page in an up-to-date Chrome, Edge, Firefox or Safari.</p>
+  <p id="unsupDetail" style="font-size:14px;opacity:.75"></p>
 </div>
 <noscript><div style="position:fixed;left:0;top:0;right:0;bottom:0;background:#14111c;color:#fff;z-index:200;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px">This game needs JavaScript. Please enable it, or try a different browser or device.</div></noscript>
 
@@ -297,10 +311,17 @@
     if (!(c.getContext && c.getContext('2d'))) ok = false;
     if (!window.Uint8Array || !Math.imul || !window.requestAnimationFrame) ok = false;
   } catch (e) { ok = false; }
-  window.__ballFail = function () { var d = document.getElementById('unsupported'); if (d) d.style.display = 'flex'; };
-  if (!ok) window.__ballFail();
-  window.onerror = function () { if (!window.__ballOk) window.__ballFail(); };
-  setTimeout(function () { if (!window.__ballOk) window.__ballFail(); }, 5000);
+  var why = '';
+  window.__ballFail = function (m) {
+    if (m) why = m;
+    var d = document.getElementById('unsupported'); if (d) d.style.display = 'flex';
+    var t = document.getElementById('unsupDetail'); if (t && why) t.textContent = 'Details: ' + why;
+  };
+  if (!ok) window.__ballFail('browser is missing a basic feature (canvas / typed arrays)');
+  window.onerror = function (msg, src, line) {
+    if (!window.__ballOk) window.__ballFail(String(msg) + (src ? ' (' + String(src).split('/').pop() + ':' + line + ')' : '') + '. If this mentions maps.js or physics.js, those files are out of date: upload all five files together.');
+  };
+  setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
 <script src="maps.js"></script>
