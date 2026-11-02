@@ -33,6 +33,51 @@
   .paper{background:var(--paper);border:2px solid var(--line);border-radius:var(--wob);box-shadow:3px 4px 0 rgba(0,0,0,.35)}
   .pill{background:var(--paper);border:2px solid var(--line);border-radius:var(--wob);padding:3px 10px;font-size:14px}
   /* ---- HUD ---- */
+
+  #linkpill{display:inline-flex;align-items:center;gap:5px;margin:4px 0 0 4px;font-size:14px;padding:1px 9px;pointer-events:auto;color:var(--ink);font-family:inherit;animation:lkp 2.4s ease-in-out infinite}
+  @keyframes lkp{50%{border-color:#7dffa8}}
+  #chBadge{position:relative;left:-14px;top:-10px;width:16px;height:16px;border-radius:50%;background:var(--bad);color:#fff;font:700 11px/16px var(--font);text-align:center;font-style:normal;pointer-events:none;margin-right:-16px}
+  .lpbody{}
+  .lrow{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px dashed rgba(232,220,192,.25)}
+  .ldot{width:16px;height:16px;border-radius:50%;border:2px solid #000;flex:none;display:inline-block}
+  .lname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lsub{font-size:12px;opacity:.65;white-space:normal}
+  .btn.sm{padding:3px 9px;font-size:14px;flex:none}.btn:disabled{opacity:.5}
+  #lreqs{position:fixed;right:10px;top:100px;width:min(320px,calc(100vw - 20px));display:flex;flex-direction:column;gap:6px;z-index:6}
+  #lreqs.hide{display:none}.lreqcard{padding:4px 8px;animation:pop .25s ease-out}
+  #cpanel{position:fixed;right:10px;top:58px;top:calc(58px + env(safe-area-inset-top));width:min(290px,calc(100vw - 20px));z-index:7;overflow:hidden}
+  #chatLog{height:min(250px,calc(100vh - 260px));margin:0 10px;background:rgba(10,8,18,.55);border:2px solid var(--line);border-radius:var(--wob);padding:6px 8px;overflow-y:auto;touch-action:pan-y;font-size:15px}
+  .cl{display:flex;align-items:center;gap:6px;padding:2px 0}.cl .ldot{width:12px;height:12px}.cl b{font-weight:normal;opacity:.85;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cl svg.emo{width:26px;height:26px;flex:none}
+  .cl.me b{color:var(--accent)}.cnone{opacity:.55;font-size:14px;padding:6px 2px}
+  #emoGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px}
+  #emoGrid button{height:44px;display:flex;align-items:center;justify-content:center;padding:0;background:#2a2440;border:2px solid var(--line);border-radius:var(--wob)}
+  #emoGrid button:active,#emoGrid button:hover{background:#3a3355}#emoGrid button.cool{opacity:.45}#emoGrid svg{width:30px;height:30px}
+  .msg.friend{color:#ffe98a;border-color:#ffd23d}.msg svg.emo{width:18px;height:18px;vertical-align:-4px;margin-left:4px}
+  .frow{padding:8px 2px;border-bottom:1px dashed rgba(232,220,192,.25)}.frow .lrow{border:0;padding:0 0 6px}
+  .fopts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .chip{padding:2px 10px;font-size:13px;background:#241f36;border:2px solid var(--line);border-radius:var(--wob);opacity:.6}.chip.on{opacity:1;background:#3a3355;border-color:#7dffa8}
+  .fmute{display:flex;gap:4px;margin-top:6px;align-items:center;flex-wrap:wrap}.fmute .chip.on{border-color:var(--accent)}.fnote{font-size:12px;opacity:.6;width:100%}
+  #netstat i.s-ok{background:#4ddc7a}#netstat i.s-bad{background:#ff5b4a}#netstat i.s-wait{background:#ffb347}#netstat i.s-solo{background:#8fb8ff}
+
+  #boot{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 40%,#2a2240 0%,#14111c 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--ink);font-family:var(--font);transition:opacity .6s ease,visibility .6s;overflow:hidden;padding:20px;text-align:center}
+  #boot.gone{opacity:0;visibility:hidden;pointer-events:none}
+  #boot h1{margin:0;font-size:clamp(34px,9vw,64px);letter-spacing:3px;font-weight:400;text-shadow:3px 4px 0 rgba(0,0,0,.45);animation:bwob 3.2s ease-in-out infinite}
+  #boot h1 b{color:var(--accent);font-weight:400}
+  @keyframes bwob{0%,100%{transform:rotate(-1.2deg)}50%{transform:rotate(1.2deg) translateY(-3px)}}
+  #bootTrack{position:relative;width:min(420px,80vw);height:64px}
+  #bootTrack:before{content:'';position:absolute;left:0;right:0;bottom:6px;height:6px;border-radius:4px;background:repeating-linear-gradient(90deg,#8a6a46 0 14px,#6e5236 14px 18px);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+  #bootBall{position:absolute;left:0;bottom:12px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8f8f,#ff4d4d 60%,#c92a2a);border:3px solid #16100c;animation:broll 2.4s cubic-bezier(.45,0,.55,1) infinite alternate}
+  #bootBall:after{content:'';position:absolute;left:50%;top:50%;width:46%;height:3px;background:#16100c;border-radius:2px;transform:translate(-10%,-50%);opacity:.55}
+  @keyframes broll{0%{transform:translateX(0) rotate(0)}100%{transform:translateX(calc(min(420px,80vw) - 36px)) rotate(720deg)}}
+  #bootBall{--h:0}
+  #bootHop{position:absolute;inset:0;animation:bhop 1.2s ease-in-out infinite}
+  @keyframes bhop{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+  #bootBar{width:min(300px,70vw);height:12px;border:2px solid var(--line);border-radius:var(--wob);overflow:hidden;background:rgba(0,0,0,.35)}
+  #bootBar i{display:block;height:100%;width:8%;background:repeating-linear-gradient(135deg,var(--accent) 0 10px,#ffb347 10px 20px);transition:width .5s ease}
+  #bootMsg{font-size:19px;min-height:24px}
+  #bootTip{font-size:15px;opacity:.6;max-width:min(420px,86vw);min-height:40px}
+  .bb{position:absolute;top:-40px;border-radius:50%;border:3px solid #16100c;opacity:.85;animation:bfall linear infinite}
+  @keyframes bfall{to{transform:translateY(calc(100vh + 120px)) rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.bb,#bootBall,#bootHop,#boot h1{animation:none}}
   #hl{position:fixed;left:10px;top:10px;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));z-index:3;pointer-events:none}
   #mapname{display:block;font-size:15px;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000}
   #onl{display:block;font-size:12px;opacity:.85;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000}
@@ -258,6 +303,50 @@
 </style>
 </head>
 <body>
+<div id="boot"><div id="bootBalls"></div>
+  <h1>BALL<b>PIT</b>.PARTY</h1>
+  <div id="bootTrack"><div id="bootHop"><div id="bootBall"></div></div></div>
+  <div id="bootBar"><i id="bootFill"></i></div>
+  <div id="bootMsg">Checking for the newest version…</div>
+  <div id="bootTip"></div>
+</div>
+<script>
+/* Loading screen + "always the newest version". This runs first, before the game's own code. */
+(function () {
+  var BUILD = '__BUILD__', t0 = Date.now(), tips = ['Hold jump for 3 seconds for a super jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('bootFill'); if (f) f.style.width = p + '%'; }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
+  try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
+  try { var c = ['#ff4d4d', '#ffcc3d', '#58d68d', '#4da6ff', '#c58bff', '#ff8a1f'], box = $('bootBalls'); for (var i = 0; i < 16; i++) { var b = document.createElement('i'); b.className = 'bb'; var s = 14 + Math.random() * 26; b.style.cssText = 'left:' + Math.random() * 100 + '%;width:' + s + 'px;height:' + s + 'px;background:' + c[i % c.length] + ';animation-duration:' + (5 + Math.random() * 6) + 's;animation-delay:-' + Math.random() * 8 + 's'; box.appendChild(b); } } catch (e) {}
+  var steps = 8; window.__bootStep = function (m, p) { if (m) msg(m); fill(p); };
+  window.__bootHide = function () {   // the game calls this once its first frame is on screen
+    var left = Math.max(0, 1300 - (Date.now() - t0));
+    fill(100); msg('Ready!');
+    setTimeout(function () { var b = $('boot'); if (b) { b.classList.add('gone'); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 800); } }, left + 250);
+  };
+  fill(15);
+  /* 1) is this the newest version? If the page came out of an old cache, wipe the caches and reload once. 2) maybe the game has moved: redirect. */
+  if (!/^https?:$/.test(location.protocol)) return;
+  var done = false, give = setTimeout(function () { done = true; }, 4000);
+  try {
+    fetch('/version?x=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (v) {
+      clearTimeout(give); if (!v || !v.build) { fill(40); return; }
+      fill(35);
+      if (v.home && v.home.replace(/\/$/, '') !== location.origin && !/^(localhost|127\.)/.test(location.hostname)) { msg('Taking you to the newest address…'); fill(60); location.replace(v.home.replace(/\/$/, '') + location.pathname + location.search + location.hash); return; }
+      if (BUILD.charAt(0) !== '_' && v.build !== BUILD) {
+        var k = 'bp_refresh', last = 0; try { last = +sessionStorage.getItem(k) || 0; } catch (e) {}
+        if (Date.now() - last > 60000) {
+          try { sessionStorage.setItem(k, String(Date.now())); } catch (e) {}
+          msg('Updating to the newest version…'); fill(55);
+          var go = function () { location.replace(location.pathname + '?r=' + Date.now() + location.hash); };
+          try { Promise.all([navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0, window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (x) { return caches.delete(x); })); }) : 0]).then(go, go); } catch (e) { go(); }
+          return;
+        }
+      }
+      msg('Loading the game…'); fill(50);
+    }).catch(function () { fill(40); });
+  } catch (e) {}
+})();
+</script>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.6"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol>
 <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
@@ -298,17 +387,19 @@
 <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1.500A3.500 3.500 0 0 0 7.500 11M17 6h3v1.500A3.500 3.500 0 0 1 16.500 11M12 14v4M8 21h8M9 18h6"/></symbol>
 <symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7V5zM18 5v14"/></symbol>
 <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M2.500 20c0-3.600 3-5.500 6.500-5.500s6.500 1.900 6.500 5.500M16 5a3.300 3.300 0 0 1 0 6.200M18 14.800c2.200.6 3.700 2.200 3.700 5.200"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
 </defs></svg>
 <canvas id="cv"></canvas>
 <div id="gest" class="hide"></div>
 <div id="dflash"></div>
 
-<div id="top"><div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span></span><canvas id="mm" width="170" height="110"></canvas></div>
+<div id="top"><div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span></span><button id="linkpill" class="pill hide"><span data-ic="users"></span><span id="linkN"></span></button><canvas id="mm" width="170" height="110"></canvas></div>
 <div id="stack"><div id="netstat" class="pill hide"><i></i><span id="netText">Connecting</span></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div><div id="feed"></div></div>
 <div id="hr">
   <div id="topbar">
     <div id="timer" class="pill" title="Map info"><span data-ic="clock"></span><span id="nexttimer">--:--</span></div>
+    <button id="btnChat" class="ibtn hide" title="Chat" data-ic="chat"></button><i id="chBadge" class="hide"></i>
     <button id="btnRespawn" class="ibtn" title="Back to the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Settings (Esc)" data-ic="gear"></button>
   </div>
@@ -327,6 +418,12 @@
 <div id="joy" class="hide"><i class="jb"></i><i class="jk"></i></div>
 <div id="editbar" class="paper hide"><span>Drag the buttons where you want them</span><button class="btn" id="editReset">Reset</button><button class="btn prim" id="editDone">Done</button></div>
 
+<div id="lreqs" class="hide"></div>
+<div id="cpanel" class="paper hide">
+  <div class="shead"><span>Chat</span><button id="cpClose" class="xbtn" title="Close" data-ic="close"></button></div>
+  <div id="chatLog"></div>
+  <div id="emoGrid"></div>
+</div>
 <div id="sback"></div>
 <div id="settings" class="paper hide">
   <div class="shead"><span>Settings</span><button id="btnCloseSet" class="xbtn" title="Close" data-ic="close"></button></div>
@@ -336,6 +433,7 @@
     <button data-tab="display"><span data-ic="eye"></span><span>Display</span></button>
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Online</span></button>
+    <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
     <button data-tab="bots"><span data-ic="bot"></span><span>Bots</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
   </div>
@@ -405,6 +503,13 @@
         <button class="btn full" id="btnSoloNew"><span data-ic="reset"></span>Start a fresh world</button>
       </div></div>
     </section>
+    <section class="pane" data-pane="friends">
+      <p class="small dim" style="margin:0 0 4px">Track up to 5 friends. When they accept, you both see each other wherever you are. It is tied to your device, so it is still here when you come back.</p>
+      <h4><span data-ic="users"></span> Your friends <span id="lpCount"></span></h4><div id="lpList"></div>
+      <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Wants to track you</h4><div id="lpReqs"></div>
+      <h4><span data-ic="eye"></span> Find a player</h4>
+      <input type="text" id="lpQ" maxlength="6" placeholder="Type a name, or pick from the list" autocomplete="off" spellcheck="false"><div id="lpRes"></div>
+    </section>
     <section class="pane" data-pane="bots">
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Pretend players that only you can see</small></span></span><input type="checkbox" id="setBots"><i></i></label>
       <div class="dep" data-dep="bots"><div>
@@ -437,9 +542,10 @@
     <span><i class="lg" style="background:#2e7be6"></i>Water: hold jump to swim</span>
     <span><i class="lg" style="background:#ffc233"></i>Yellow: push it! (only you feel it)</span>
     <span><i class="lg" style="background:#ffd23d;border-radius:50%"></i>Coins: just for fun</span>
+    <span><i class="lg" style="background:#ff8a1f"></i>Checkpoint flag: your next fall brings you back</span>
   </div>
   <p>Move with <kbd>A</kbd><kbd>D</kbd> or the arrows, jump with <kbd>W</kbd> or <kbd>Space</kbd>: tap for a hop, hold for a big jump. On a phone, use the on-screen controls (you can pick swipe styles in settings). Get the <i>middle</i> of your ball onto a block or you'll roll off.</p>
-  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
+  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Hold jump for 3 seconds for a super jump. Touch a checkpoint flag and your next fall brings you back to it once. Tap the chat button to send emojis, and add friends in Settings to see where they are. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
   <label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
   <button class="ok" id="btnOk">OK</button>
 </div></div>
@@ -476,6 +582,7 @@
   window.__ballFail = function (m) {
     if (m) why = m;
     var d = document.getElementById('unsupported'); if (d) d.style.display = 'flex';
+    var bo = document.getElementById('boot'); if (bo) bo.style.display = 'none';
     var t = document.getElementById('unsupDetail'); if (t && why) t.textContent = 'Details: ' + why;
   };
   if (!ok) window.__ballFail('browser is missing a basic feature (canvas / typed arrays)');
@@ -485,8 +592,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=12"></script>
-<script src="physics.js?v=12"></script>
+<script src="maps.js?v=13"></script>
+<script src="physics.js?v=13"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -996,7 +1103,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.coinBest = getBest(m.idx); S.recordShown = false; S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.coinBest = getBest(m.idx); S.recordShown = false; S.fallWarn = false; S.wasWater = false;
   restoreWorld(slot);
   S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
   others.forEach(o => { o.crown = false; });
@@ -1010,9 +1117,13 @@ function loadMap(slot, next) {
   $('fade').classList.remove('on');
   initWarnings();
 }
-function respawn(quiet) {
-  const m = S.map;
-  S.b = P.newBody(m.start[0], m.start[1]);   // the one community spawn point, exactly the same for everyone
+function respawn(quiet, useCp) {
+  const m = S.map, cp = useCp && S.cpArmed >= 0 && m.checkpoints ? m.checkpoints[S.cpArmed] : null;
+  // the first fall after touching a flag brings you back to it; the flag is then used up until you touch one again
+  S.b = cp ? P.newBody((cp[0] + 0.5) * TS, cp[1] * TS - R - 1) : P.newBody(m.start[0], m.start[1]);   // the community spawn point is exactly the same for everyone
+  if (cp) { S.cpFlash = 1; notice('Back at your checkpoint', ''); }
+  S.cpUsed = cp ? S.cpArmed : -1;   // a flag you have just used is spent until you touch a different one
+  S.cpArmed = -1;
   S.dead = 0; S.spawnT = 0.6; S.finished = false; S.bLatch = 0; S.bReady = false;
   if (!quiet) { beam(S.b.x, S.b.y + R, settings.color); ring(S.b.x, S.b.y, '#fff', 4, 46, 0.6); burst(S.b.x, S.b.y, [settings.color, settings.color2, '#fff'], 12, 160, 100); }
 }
@@ -1101,7 +1212,7 @@ function update(dt) {
   botsTick(dt);
   P.stepDyn(w, dt);
   if (S.spawnT > 0) S.spawnT -= dt;
-  if (S.dead > 0) { S.dead -= dt; if (S.dead <= 0) respawn(); return; }
+  if (S.dead > 0) { S.dead -= dt; if (S.dead <= 0) respawn(false, true); return; }
   if (S.away) return;
   if (S.finished) { S.finT -= dt; if (S.finT <= 0) $('finishbanner').classList.add('hide'); }
   const b = S.b, bl = blocked();
@@ -1115,11 +1226,12 @@ function update(dt) {
   const ev = P.step(b, w, ax, jheld, dt);
   P.stepSwitches(w, b);
   if (w.ev.length) worldEvents();
-  collectCoins();
+  collectCoins(); touchFlags();
   if (ev.boosted) { sfx('boost'); S.bLatch = 0; ring(b.x, b.y, '#ffd23d', 8, 70, 0.4); burst(b.x - b.bdir * R, b.y, ['#ffd23d', '#fff', '#ff8a3d'], 14, 260, 0); S.shake = Math.max(S.shake || 0, 0.12); }
   if (b.boost && fxOn() && ((S.t * 60) | 0) % 2 === 0) burst(b.x - b.bdir * (R + 2), b.y + (Math.random() - 0.5) * 14, ['#ffd23d', '#fff', '#ff8a3d'], 1, 90, 0);
   { const rdy = settings.boost && b.bcharge >= 1 && !b.boost; if (rdy && !S.bReady) sfx('ready'); S.bReady = rdy; }
   if (ev.jumped) sfx('jump');
+  if (ev.superJump) { sfx('boost'); ring(b.x, b.y + R, '#9be7ff', 6, 120, 0.5); ring(b.x, b.y + R, '#fff', 4, 70, 0.4); burst(b.x, b.y + R, ['#9be7ff', '#fff', '#c58bff'], 22, 300, 80); S.shake = Math.max(S.shake || 0, 0.14); }
   if (ev.landed) sfx('land');
   if (ev.bounced) { sfx('bounce'); ring(b.x, b.y + R, '#9fe8ff', 6, 50, 0.4); burst(b.x, b.y + R, ['#fff', '#9fe8ff', '#ffd23d'], 10, 160, 60); }
   if (b.water !== S.wasWater) { S.wasWater = b.water; sfx('splash'); burst(b.x, b.y, ['#d6ecff', '#2e7be6', '#fff'], 12, 170, 300); }
@@ -1143,6 +1255,19 @@ const BESTKEY = 'ballrun4_coins', WKEY = 'ballrun4_world';
 function getBest(idx) { try { const o = JSON.parse(localStorage.getItem(BESTKEY) || '{}'); return +o[idx] || 0; } catch (e) { return 0; } }
 function setBest(idx, n) { try { const o = JSON.parse(localStorage.getItem(BESTKEY) || '{}'); o[idx] = n; localStorage.setItem(BESTKEY, JSON.stringify(o)); } catch (e) {} }
 let wDirty = false, lastWorldStr = '', lastSave = 0, bestDirty = false;
+function touchFlags() {   // checkpoint flags: touch one and your next fall brings you back to it
+  const cps = S.map.checkpoints, b = S.b; if (!cps || !cps.length) return;
+  for (let i = 0; i < cps.length; i++) {
+    const c = cps[i], dx = (c[0] + 0.5) * TS - b.x;
+    if (dx > 40 || dx < -40) continue;
+    const dy = c[1] * TS - b.y; if (dy < -2.8 * TS || dy > 0.9 * TS) continue;
+    if (S.cpArmed === i) return;
+    if (S.cpUsed === i) continue;
+    S.cpArmed = i; S.cpUsed = -1; S.cpFlash = 1; sfx('ready');
+    burst((c[0] + 0.5) * TS, c[1] * TS - 60, ['#46d17a', '#fff', '#b9ffd3'], 14, 200, 80);
+    notice('Checkpoint! Your next fall brings you back here', ''); return;
+  }
+}
 function collectCoins() {
   const cs = S.map.coins, b = S.b; if (!cs.length) return;
   let lo = 0, hi = cs.length; const x0 = b.x - 36;
@@ -1402,7 +1527,7 @@ const SCHEMES = {
 function pressJump() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0) S.b.jbuf = 0.12; }
 function pressBoost() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0 && settings.boost) S.bLatch = 0.25; }
 function pullReady() { return !!(settings.boost && settings.boostPull && S.b && S.mode === 'play' && S.dead <= 0 && S.b.bcharge >= 1 && !S.b.boost); }
-function backToStart() { if (S.mode !== 'play') return; S.started = false; $('finishbanner').classList.add('hide'); respawn(); }
+function backToStart() { if (S.mode !== 'play') return; S.started = false; S.cpArmed = -1; S.cpUsed = -1; $('finishbanner').classList.add('hide'); respawn(); }
 
 const keysDown = new Set();
 function actionOf(code) { const k = settings.keys; for (const a in k) if (k[a].indexOf(code) >= 0) return a; return null; }
@@ -1833,14 +1958,309 @@ const selSoloLen = makeSelect($('selSoloLen'), SOLO_LENS.map(a => ({ v: String(a
 $('btnSoloNew').onclick = () => askConfirm('Start a fresh world?', 'Everything goes back to how it was at the start: toys, gates and coins.', 'Start fresh', () => soloFresh(), { yesClass: 'go', no: 'Keep playing' });
 const _syncUI = syncUI;
 syncUI = function () { _syncUI(); selSoloMap.set(settings.soloMap); selSoloLen.set(String(settings.soloLen)); applyDeps(); };
+/* ================= tracking: two players who accept each other always see where the other one is =================
+   Each device has a private random code. The server only ever shares a scrambled version of it, so links belong to the device (not the name)
+   and come back by themselves when you return. */
+const DEVKEY = 'ballrun4_dev', LKKEY = 'ballrun4_links', MAXLINK = 5;
+let devId = '';
+try { devId = localStorage.getItem(DEVKEY) || ''; } catch (e) {}
+if (!/^[A-Za-z0-9_-]{16,64}$/.test(devId)) {
+  const a = new Uint8Array(24); try { crypto.getRandomValues(a); } catch (e) { for (let i = 0; i < 24; i++) a[i] = Math.random() * 256; }
+  devId = [...a].map(v => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[v % 62]).join('');
+  try { localStorage.setItem(DEVKEY, devId); } catch (e) {}
+}
+let lks = [];      // people I track (and who track me): { pub, name, color, ok (the server confirms it), on (online now), w (their world), x, y, sx, sy, dead, t }
+try { lks = (JSON.parse(localStorage.getItem(LKKEY) || '[]') || []).filter(l => l && /^[0-9a-f]{16}$/.test(l.pub)).slice(0, MAXLINK).map(l => ({ pub: l.pub, name: String(l.name || '').slice(0, 6), color: HEX.test(l.color) ? l.color : '#ccc', ok: false, on: 0, x: null, big: l.big !== false, arrow: l.arrow !== false, mute: (l.mute | 0) % 3 })); } catch (e) {}
+const saveLinks = () => { try { localStorage.setItem(LKKEY, JSON.stringify(lks.map(l => ({ pub: l.pub, name: l.name, color: l.color, big: l.big, arrow: l.arrow, mute: l.mute })))); } catch (e) {} };
+const linkClaims = () => lks.map(l => l.pub);
+const ft = (dx, dy) => Math.round(Math.hypot(dx, dy) / TS / 2);   // distances are in feet; one foot is two blocks
+const lkNum = pub => parseInt(pub.slice(0, 8), 16) >>> 0;
+let reqs = [], sentTo = new Set();
+const lkOf = pub => lks.find(l => l.pub === pub);
+const nameOf = pub => { const a = lkOf(pub) || reqs.find(r => r.pub === pub) || lpFound.find(f => f.pub === pub); return a ? a.name : ''; };
+function friendNote(e, nm, on) {   // a special heads-up when someone you track comes online or goes offline
+  if (e.mute >= 1 || !settings.mp) return;
+  const t = who(nm || e.name) + (on ? ' is online' : ' went offline');
+  notice('★ ' + t, ''); addFeed('★ ' + t, 'friend', true); sfx(on ? 'join' : 'leave');
+}
+const wsSend = o => { if (ws && ws.readyState === 1 && online) ws.send(JSON.stringify(o)); };
+
+function linkMsg(m) {
+  switch (m.t) {
+    case 'links': {
+      const all = new Set(m.all || []), on = new Map((m.on || []).map(o => [o.pub, o]));
+      for (const pub of all) if (!lkOf(pub) && lks.length < MAXLINK) lks.push({ pub, name: '', color: '#ccc', ok: true, on: 0, x: null, big: true, arrow: true, mute: 0 });
+      for (const e of lks) {
+        e.ok = all.has(e.pub); const o = on.get(e.pub);
+        if (o) { e.name = o.name; e.color = o.color; e.w = o.w; e.on = 1; } else { e.on = 0; e.x = null; }
+      }
+      saveLinks(); lpRender(); return true;
+    }
+    case 'treq':
+      if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, name: String(m.name || '').slice(0, 6), color: HEX.test(m.color) ? m.color : '#ccc' });
+      sfx('ready'); lpRender(); return true;
+    case 'tsent': sentTo.add(m.pub); notice('Request sent to ' + who(m.name), ''); lpRender(); return true;
+    case 'tno': {
+      sentTo.delete(m.pub);
+      const nm = who(m.name || (lkOf(m.pub) || {}).name || '');
+      notice(m.why === 'deny' ? nm + ' said not now' : m.why === 'off' ? 'That player has just left' : m.why === 'mine' ? 'You are already tracking ' + MAXLINK + ' people. Disconnect one first' : m.why === 'theirs' || m.why === 'full' ? nm + ' is already tracking ' + MAXLINK + ' people' : 'That request has run out. Ask again', '');
+      lpRender(); return true;
+    }
+    case 'tok': { sentTo.delete(m.pub); const nm = nameOf(m.pub); reqs = reqs.filter(r => r.pub !== m.pub); sfx('join'); notice('You and ' + who(nm) + ' are now tracking each other', ''); lpRender(); return true; }
+    case 'unl':
+      for (const pub of (m.gone || [])) { const e = lkOf(pub); if (e) { notice(who(e.name || m.name) + ' stopped tracking', ''); lks.splice(lks.indexOf(e), 1); } }
+      saveLinks(); lpRender(); return true;
+    case 'loff': { const e = lkOf(m.pub); if (e) { e.on = 0; e.x = null; friendNote(e, m.name, false); } lpRender(); return true; }
+    case 'lon': { const e = lkOf(m.pub); if (e) { if (m.name != null) e.name = m.name; friendNote(e, m.name, true); } return true; }
+    case 'emo': {
+      const o = others.get(m.id), e = lkOf(m.pub);
+      if (e && e.mute >= 2) return true;                // that friend is fully muted
+      if (o) o.emo = { i: m.i | 0, t: S.t };
+      chatAdd(m.name, o ? o.color : '#ccc', m.i | 0, false);
+      addFeedEmo(who(m.name), m.i | 0, e ? 'friend' : '');
+      return true;
+    }
+    case 'found': lpFound = m.list || []; lpRender(); return true;
+  }
+  return false;
+}
+function trackBin(dv, len, ty) {   // 2: everybody (far away too) for the maps.  3: the people I track, wherever they are
+  const sl = dv.getUint16(1, true), okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;
+  if (sl !== okSlot) return;
+  const t = performance.now();
+  if (ty === 2) {
+    for (let off = 3; off + 8 <= len; off += 8) {
+      const o = others.get(dv.getUint32(off, true)); if (!o) continue;
+      o.mx = dv.getUint16(off + 4, true) * 4; o.my = dv.getUint16(off + 6, true) * 2; o.mt = t;
+    }
+  } else {
+    for (let off = 3; off + 12 <= len; off += 12) {
+      const num = dv.getUint32(off, true), e = lks.find(l => lkNum(l.pub) === num); if (!e) continue;
+      const yr = dv.getUint16(off + 6, true);
+      e.dead = yr === 65535; e.x = dv.getUint16(off + 4, true) * 4; e.y = e.dead ? e.y : yr * 2; e.w = dv.getUint16(off + 8, true); e.t = t;
+      if (e.sx == null || e.dead) { e.sx = e.x; e.sy = e.y; }
+    }
+  }
+}
+function opos(o) {   // where a player is, for the maps: the live spot if they are near, otherwise the last overview
+  if (o.dead) return null;
+  if (o.seen) return { x: o.cx, y: o.cy };
+  if (o.mt && performance.now() - o.mt < 4500) return { x: o.mx, y: o.my };
+  return null;
+}
+const liveLinks = () => lks.filter(l => l.ok && l.on && l.x != null && !l.dead && performance.now() - l.t < 3500);
+
+/* ----- on the game screen: an arrow at the edge pointing to each person, a name tag above them when they are on screen ----- */
+function drawPerson(g, x, y, r, col) {   // a little round badge with a person in it
+  g.fillStyle = col; g.strokeStyle = '#fff'; g.lineWidth = r * 0.22; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.stroke();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(x, y - r * 0.28, r * 0.28, 0, TAU); g.fill();
+  g.beginPath(); g.arc(x, y + r * 0.62, r * 0.5, Math.PI * 1.1, Math.PI * 1.9); g.fill();
+}
+function drawTrack(camL, camT, vw, vh, sc) {
+  const L = liveLinks(); if (!L.length) return;
+  const vx = camL + vw / 2, vy = camT + vh / 2, z = 1 / Math.max(0.45, sc), bob = Math.sin(S.t * 3) * 3;
+  for (const e of L) {
+    if (!e.arrow) continue;
+    e.sx += (e.x - e.sx) * 0.2; e.sy += (e.y - e.sy) * 0.2;
+    const dx = e.sx - vx, dy = e.sy - vy, name = e.name || 'Friend';
+    ctx.save();
+    if (Math.abs(dx) < vw / 2 - 20 && Math.abs(dy) < vh / 2 - 20) {   // on screen: a pin over their head
+      ctx.translate(e.sx, e.sy - R - 30 + bob); ctx.scale(z, z);
+      ctx.fillStyle = e.color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(-6, 6); ctx.lineTo(6, 6); ctx.lineTo(0, 17); ctx.closePath(); ctx.fill(); ctx.stroke();
+      drawPerson(ctx, 0, -2, 11, e.color);
+      ctx.font = '16px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText(name, 0, -20); ctx.fillStyle = '#fff'; ctx.fillText(name, 0, -20);
+    } else {
+      const mg = 74 / Math.max(0.45, sc), k = Math.min((vw / 2 - mg) / (Math.abs(dx) || 1), (vh / 2 - mg * 0.8) / (Math.abs(dy) || 1)), a = Math.atan2(dy, dx), ax = vx + dx * k, ay = vy + dy * k;
+      ctx.translate(ax, ay); ctx.scale(z, z);
+      ctx.save(); ctx.rotate(a); ctx.fillStyle = e.color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(34, 0); ctx.lineTo(14, -13); ctx.lineTo(18, 0); ctx.lineTo(14, 13); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+      drawPerson(ctx, 0, 0, 14, e.color);
+      const d = ft(e.sx - S.b.x, e.sy - S.b.y), tx = 0, ty = Math.sin(a) > 0.2 ? -26 : 30;
+      ctx.font = '15px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
+      const txt = name + ' · ' + d + ' ft'; ctx.strokeText(txt, tx, ty); ctx.fillStyle = '#fff'; ctx.fillText(txt, tx, ty);
+    }
+    ctx.restore();
+  }
+}
+
+/* ----- the maps: people you track are bigger and glow ----- */
+function drawLinksOnMap(g, toX, toY, r, labels, inside) {   // toX/toY turn tile numbers into canvas pixels
+  const t = performance.now();
+  for (const e of liveLinks()) {
+    if (!e.big) continue;
+    let x = toX(e.x / TS), y = toY(e.y / TS); const w = g.canvas.width, h = g.canvas.height;
+    const out = x < 8 || y < 8 || x > w - 8 || y > h - 8;
+    if (out && inside) continue;
+    x = clamp(x, 10, w - 10); y = clamp(y, 10, h - 10);
+    const p = 0.5 + 0.5 * Math.sin(t / 260);
+    g.save();
+    const gr = g.createRadialGradient(x, y, r * 0.3, x, y, r * 3.2); gr.addColorStop(0, e.color); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.globalAlpha = 0.45 + 0.25 * p; g.fillStyle = gr; g.beginPath(); g.arc(x, y, r * 3.2, 0, TAU); g.fill();
+    g.globalAlpha = 1; g.fillStyle = e.color; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,' + (0.8 - 0.5 * p) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r + 3 + p * 3, 0, TAU); g.stroke();
+    if (labels && e.name) { g.font = '14px ' + FONT; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 3.5; g.strokeStyle = 'rgba(0,0,0,.85)'; g.strokeText(e.name, x, y - r - 8); g.fillStyle = '#fff'; g.fillText(e.name, x, y - r - 8); }
+    g.restore();
+  }
+}
+
+/* ----- the emoji set: drawn by the game itself, so they look the same on every device ----- */
+const dotP = (x, y, r) => 'M' + (x - r) + ' ' + y + 'a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0z';
+const EMO = [
+  { n: 'Happy', bg: '#ffd23d', op: [['f', dotP(11, 13, 1.9), '#16100c'], ['f', dotP(21, 13, 1.9), '#16100c'], ['s', 'M9 19Q16 27 23 19', '#16100c', 2.2]] },
+  { n: 'Laughing', bg: '#ffd23d', op: [['s', 'M8 13Q11 9 14 13M18 13Q21 9 24 13', '#16100c', 2.2], ['f', 'M8 18Q16 31 24 18Z', '#7a1f1f'], ['f', 'M6 18Q4 22 6.500 23Q8.500 21 6 18ZM26 18Q28 22 25.500 23Q23.500 21 26 18Z', '#5ab4ff']] },
+  { n: 'Angry', bg: '#ff6a4d', op: [['s', 'M8 9L14 12M24 9L18 12', '#16100c', 2.4], ['f', dotP(12, 15, 1.9), '#16100c'], ['f', dotP(20, 15, 1.9), '#16100c'], ['s', 'M10 24Q16 18 22 24', '#16100c', 2.2]] },
+  { n: 'Question', bg: '#6aa9ff', op: [['s', 'M12 12Q12 7 16 7Q21 7 21 11.500Q21 14.500 16 17L16 19', '#fff', 3], ['f', dotP(16, 23.500, 1.9), '#fff']] },
+  { n: 'Sick', bg: '#9be07a', op: [['s', 'M9 11L13 15M13 11L9 15M19 11L23 15M23 11L19 15', '#16100c', 2.2], ['s', 'M10 23Q13 19 16 23Q19 27 22 23', '#16100c', 2.2], ['f', 'M24 18Q27 22 24 24Q21.500 22 24 18Z', '#5a9a3a']] },
+  { n: 'Crying', bg: '#ffd23d', op: [['f', dotP(11, 13, 1.9), '#16100c'], ['f', dotP(21, 13, 1.9), '#16100c'], ['s', 'M10 24Q16 18 22 24', '#16100c', 2.2], ['f', 'M9 16Q6 21 9 23Q12 21 9 16ZM23 16Q20 21 23 23Q26 21 23 16Z', '#5ab4ff']] },
+  { n: 'Cool', bg: '#ffd23d', op: [['f', 'M5 10H27V14Q27 19 22 19Q17 19 16.500 14H15.500Q15 19 10 19Q5 19 5 14Z', '#16100c'], ['s', 'M10 24Q16 28 22 24', '#16100c', 2.2]] },
+  { n: 'Love', bg: '#ffd23d', op: [['f', 'M11 17Q5 12 8 9.500Q10.500 8 11 11Q11.500 8 14 9.500Q17 12 11 17ZM21 17Q15 12 18 9.500Q20.500 8 21 11Q21.500 8 24 9.500Q27 12 21 17Z', '#e8264a'], ['s', 'M10 21Q16 28 22 21', '#16100c', 2.2]] },
+  { n: 'Surprised', bg: '#ffd23d', op: [['f', dotP(11, 12, 2.4), '#16100c'], ['f', dotP(21, 12, 2.4), '#16100c'], ['f', 'M16 19a3 4.200 0 1 0 .01 0Z', '#16100c']] },
+  { n: 'Sleepy', bg: '#bfa8ff', op: [['s', 'M8 14Q11 17 14 14M18 14Q21 17 24 14', '#16100c', 2.2], ['f', dotP(16, 23, 2.2), '#16100c'], ['s', 'M22 4H27L22 10H27', '#fff', 2]] }
+];
+const emoSvg = i => '<svg class="emo" viewBox="0 0 32 32" aria-label="' + EMO[i].n + '"><circle cx="16" cy="16" r="14" fill="' + EMO[i].bg + '" stroke="#16100c" stroke-width="2"/>' +
+  EMO[i].op.map(o => o[0] === 'f' ? '<path d="' + o[1] + '" fill="' + o[2] + '"/>' : '<path d="' + o[1] + '" fill="none" stroke="' + o[2] + '" stroke-width="' + o[3] + '" stroke-linecap="round" stroke-linejoin="round"/>').join('') + '</svg>';
+const emoPaths = EMO.map(e => e.op.map(o => new Path2D(o[1])));
+function drawEmoBubble(em, x, y) {   // a speech bubble with the emoji, floating above a ball for a few seconds
+  const age = S.t - em.t; if (age > 3.2 || age < 0) return;
+  const a = Math.min(1, age * 6, (3.2 - age) * 2), rise = Math.min(1, age * 5) * 8, s = 34;
+  ctx.save(); ctx.translate(x, y - rise); ctx.globalAlpha = a;
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(-s / 2 + 6, -s); ctx.arcTo(s / 2, -s, s / 2, 0, 8); ctx.arcTo(s / 2, 0, 5, 0, 8); ctx.lineTo(0, 8); ctx.lineTo(-5, 0); ctx.arcTo(-s / 2, 0, -s / 2, -s, 8); ctx.arcTo(-s / 2, -s, s / 2, -s, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.translate(-13, -s + 4); ctx.scale(26 / 32, 26 / 32);
+  const e = EMO[em.i]; ctx.fillStyle = e.bg; ctx.strokeStyle = '#16100c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(16, 16, 14, 0, TAU); ctx.fill(); ctx.stroke();
+  e.op.forEach((o, k) => { const p = emoPaths[em.i][k]; if (o[0] === 'f') { ctx.fillStyle = o[2]; ctx.fill(p); } else { ctx.strokeStyle = o[2]; ctx.lineWidth = o[3]; ctx.lineCap = 'round'; ctx.stroke(p); } });
+  ctx.restore();
+}
+function addFeedEmo(name, i, cls) {   // "Name" + the emoji, in the same list as joined / left
+  const d = document.createElement('div'); d.className = 'msg ' + (cls || '');
+  d.appendChild(document.createTextNode(name)); const sp = document.createElement('span'); sp.innerHTML = emoSvg(i); d.appendChild(sp.firstChild);
+  const f = $('feed'); f.appendChild(d); while (f.children.length > 6) f.removeChild(f.firstChild);
+  setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 600); }, 7000);
+}
+
+/* ----- chat: emoji only, kept in a little square for good ----- */
+const CHATKEY = 'ballrun4_chat';
+let chatLog = []; try { chatLog = (JSON.parse(localStorage.getItem(CHATKEY) || '[]') || []).filter(c => c && c.i >= 0 && c.i < EMO.length).slice(-80); } catch (e) {}
+let chatOpen = false, chatUnread = 0, emoCool = 0;
+function chatAdd(name, color, i, me) {
+  chatLog.push({ n: String(name || '').slice(0, 6), c: color, i, me: me ? 1 : 0 }); if (chatLog.length > 80) chatLog.shift();
+  try { localStorage.setItem(CHATKEY, JSON.stringify(chatLog)); } catch (e) {}
+  if (!chatOpen && !me) chatUnread++;
+  chatRender();
+}
+function chatRender() {
+  const lg = $('chatLog'); if (!chatOpen) { trackVis(); return; }
+  const atEnd = lg.scrollTop + lg.clientHeight >= lg.scrollHeight - 30; lg.textContent = '';
+  if (!chatLog.length) lg.appendChild(el('div', 'cnone', 'Nothing yet. Tap an emoji below to say something.'));
+  for (const c of chatLog) {
+    const d = el('div', 'cl' + (c.me ? ' me' : '')); d.appendChild(dot(c.c)); d.appendChild(el('b', '', c.me ? 'You' : who(c.n)));
+    const sp = document.createElement('span'); sp.innerHTML = emoSvg(c.i); d.appendChild(sp.firstChild); lg.appendChild(d);
+  }
+  if (atEnd || true) lg.scrollTop = lg.scrollHeight;
+  trackVis();
+}
+function sendEmo(i) {
+  if (performance.now() < emoCool || !online) return;
+  emoCool = performance.now() + 1000; wsSend({ t: 'emo', i });
+  S.myEmo = { i, t: S.t }; chatAdd(settings.name, settings.color, i, true); addFeedEmo('You', i, ''); sfx('ui');
+  const g = $('emoGrid').children; for (const b of g) { b.classList.add('cool'); setTimeout(() => b.classList.remove('cool'), 1000); }
+}
+const eg = $('emoGrid');
+EMO.forEach((e, i) => { const b = document.createElement('button'); b.title = e.n; b.innerHTML = emoSvg(i); b.onclick = () => sendEmo(i); eg.appendChild(b); });
+function toggleChat(on) {
+  chatOpen = on; $('cpanel').classList.toggle('hide', !on);
+  if (on) { chatUnread = 0; if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); }
+  chatRender();
+}
+$('btnChat').onclick = () => toggleChat(!chatOpen);
+$('cpClose').onclick = () => toggleChat(false);
+addEventListener('keydown', e => { if (e.key === 'Escape' && chatOpen && !typing()) { toggleChat(false); e.preventDefault(); } });
+
+/* ----- the Friends tab in settings ----- */
+const MUTE_NOTE = ['You see when they come and go, and you see their emojis.', 'No "came online" alerts or join / leave lines for them. Their emojis still show.', 'Nothing from them: no alerts, no join / leave lines, no emojis.'];
+let lpVisible = false, lpFound = lpFound0(), lpQ = '', lpTimer = 0, lpDeb = 0;
+function lpFound0() { return []; }
+const friendsShown = () => !$('settings').classList.contains('hide') && document.querySelector('.pane[data-pane="friends"]').classList.contains('on');
+function trackVis() {
+  const solo = inSolo();
+  $('btnChat').classList.toggle('hide', solo);
+  const n = lks.filter(l => l.ok && l.on).length;
+  $('linkpill').classList.toggle('hide', solo || n === 0);
+  $('linkN').textContent = n === 1 ? '1 tracking you' : n + ' tracking you';
+  const b = $('chBadge'); b.classList.toggle('hide', solo || !chatUnread || chatOpen); b.textContent = chatUnread > 9 ? '9+' : chatUnread;
+  const fv = friendsShown();
+  $('lreqs').classList.toggle('hide', solo || fv || !reqs.length);
+  if (fv !== lpVisible) {
+    lpVisible = fv; clearInterval(lpTimer);
+    if (fv) { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 5000); lpRender(); }
+  }
+}
+setInterval(trackVis, 500);
+function dot(c) { const i = document.createElement('i'); i.className = 'ldot'; i.style.background = c; return i; }
+function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+function chip(label, on, fn, title) { const c = el('button', 'chip' + (on ? ' on' : ''), label); if (title) c.title = title; c.onclick = fn; return c; }
+function reqCard(r) {
+  const d = el('div', 'lrow'); d.appendChild(dot(r.color));
+  const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(r.name))); nm.appendChild(el('div', 'lsub', 'wants to track you. You would see each other.')); d.appendChild(nm);
+  const ok = el('button', 'btn prim sm', 'Accept'), no = el('button', 'btn sm', 'Not now');
+  ok.onclick = () => { wsSend({ t: 'tacc', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); };
+  no.onclick = () => { wsSend({ t: 'tden', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); };
+  d.appendChild(ok); d.appendChild(no); return d;
+}
+function lpRender() {
+  const rq = $('lreqs'); rq.textContent = '';
+  reqs.slice(0, 3).forEach(r => { const c = el('div', 'paper lreqcard'); c.appendChild(reqCard(r)); rq.appendChild(c); });
+  trackVis();
+  if (!lpVisible) return;
+  const list = $('lpList'); list.textContent = '';
+  $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
+  if (!lks.length) list.appendChild(el('div', 'small dim', 'Nobody yet. Find a player below.'));
+  for (const l of lks) {
+    const f = el('div', 'frow'), d = el('div', 'lrow'); d.appendChild(dot(l.color));
+    const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(l.name)));
+    nm.appendChild(el('div', 'lsub', !l.ok ? 'Waiting for them to come back' : l.on ? 'Online, in World ' + (l.w || '?') : 'Offline'));
+    d.appendChild(nm);
+    const x = el('button', 'btn sm', 'Disconnect'); x.onclick = () => disconnectLink(l.pub); d.appendChild(x); f.appendChild(d);
+    const o = el('div', 'fopts');
+    o.appendChild(chip('Big on the map', l.big, () => { l.big = !l.big; saveLinks(); lpRender(); }, 'Show them bigger and glowing on both maps'));
+    o.appendChild(chip('Arrow', l.arrow, () => { l.arrow = !l.arrow; saveLinks(); lpRender(); }, 'Point to them with an arrow and a name tag'));
+    f.appendChild(o);
+    const mu = el('div', 'fmute'); mu.appendChild(el('span', 'small dim', 'Alerts'));
+    ['On', 'Quiet', 'Silent'].forEach((t, k) => mu.appendChild(chip(t, l.mute === k, () => { l.mute = k; saveLinks(); lpRender(); })));
+    mu.appendChild(el('div', 'fnote', MUTE_NOTE[l.mute])); f.appendChild(mu);
+    list.appendChild(f);
+  }
+  const rl = $('lpReqs'); rl.textContent = '';
+  reqs.forEach(r => rl.appendChild(reqCard(r))); $('lpReqH').classList.toggle('hide', !reqs.length);
+  const res = $('lpRes'); res.textContent = '';
+  const shown = lpFound.filter(f => !reqs.some(r => r.pub === f.pub));
+  if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody online with that name.' : 'Nobody else is here right now.'));
+  for (const f of shown) {
+    const d = el('div', 'lrow'); d.appendChild(dot(f.color));
+    const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(f.name))); nm.appendChild(el('div', 'lsub', 'World ' + f.w)); d.appendChild(nm);
+    const linked = f.l || lkOf(f.pub), sent = sentTo.has(f.pub);
+    const b = el('button', 'btn sm' + (linked || sent ? '' : ' prim'), linked ? 'Tracking' : sent ? 'Sent' : 'Track');
+    if (linked || sent || lks.length >= MAXLINK) b.disabled = true;
+    b.onclick = () => { wsSend({ t: 'treq', to: f.pub }); b.disabled = true; b.textContent = 'Sent'; };
+    d.appendChild(b); res.appendChild(d);
+  }
+}
+function disconnectLink(pub) {
+  wsSend({ t: 'unl', to: pub });
+  const e = lkOf(pub); if (e) lks.splice(lks.indexOf(e), 1);
+  saveLinks(); sfx('ui'); lpRender();
+}
+function lpSearch() { wsSend({ t: 'find', q: lpQ }); }
+$('linkpill').onclick = () => { if (typeof toggleSettings === 'function') { if ($('settings').classList.contains('hide')) toggleSettings(); } if (typeof showTab === 'function') showTab('friends'); };
+$('lpQ').addEventListener('input', () => { clearTimeout(lpDeb); lpDeb = setTimeout(() => { lpQ = $('lpQ').value.trim(); lpSearch(); }, 250); });
 
 /* ================= networking ================= */
 function setNet(state) {
   netState = state;
-  const n = $('netstat');
-  if (state === 'online') { n.classList.add('hide'); return; }
-  n.classList.remove('hide');
-  $('netText').textContent = state === 'connecting' ? 'Connecting' : (state === 'solo' || location.protocol === 'file:') ? 'Solo play' : 'Checking';
+  const n = $('netstat'); n.classList.remove('hide');   // one little bubble says it all: Online (green), Checking (amber), Disconnected (red), Solo play (blue)
+  const solo = state === 'solo' || location.protocol === 'file:';
+  $('netText').textContent = state === 'online' ? 'Online' : solo ? 'Solo play' : state === 'connecting' ? 'Checking' : 'Disconnected';
+  n.querySelector('i').className = state === 'online' ? 's-ok' : solo ? 's-solo' : state === 'connecting' ? 's-wait' : 's-bad';
   if (state === 'offline' || state === 'solo') setTimeout(maybeAskBots, 700);
 }
 function dropConnection() {
@@ -1869,13 +2289,14 @@ function connect() {
   try { sock = home ? new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host) : new WebSocket('wss://ballpit-party.onrender.com'); }
   catch (e) { scheduleRetry(); return; }
   ws = sock; sock.binaryType = 'arraybuffer';
-  sock.onopen = () => { if (sock === ws) sock.send(JSON.stringify({ t: 'hello', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat })); };
+  if (netState !== 'online') setNet('connecting');
+  sock.onopen = () => { if (sock === ws) sock.send(JSON.stringify({ t: 'hello', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims() })); };
   sock.onmessage = e => { if (sock !== ws) return; if (typeof e.data !== 'string') { onBin(e.data); return; } let m; try { m = JSON.parse(e.data); } catch (x) { return; } onMsg(m); };
   sock.onclose = () => {
     if (sock !== ws) return;
     ws = null;
     if (online) addFeed('Disconnected, reconnecting…', 'bad', true);
-    online = false; others.clear();
+    online = false; others.clear(); lks.forEach(l => { l.on = 0; l.x = null; }); reqs = []; sentTo.clear(); lpRender();
     if (settings.mp) { setNet('offline'); scheduleRetry(); }
   };
   sock.onerror = () => {};
@@ -1884,7 +2305,7 @@ function scheduleRetry() {
   if (retryTimer || !settings.mp) return;
   retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(10000, 1500 + retry * 1500));
 }
-setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
+setTimeout(() => { if (netState === "connecting") setNet("offline"); }, 3500);
 function sendInfo() {
   if (!online || !ws || ws.readyState !== 1) return;
   const msg = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
@@ -1895,7 +2316,9 @@ const newOther = (name, color, color2, pat, crown) => ({ name: name || '', color
 function nearMe(x, y) { return S.b && Math.abs(x - S.b.x) < 2200 && Math.abs(y - S.b.y) < 1600; }
 function onBin(buf) {   // compact position update: [1][slot u16][ id u32, x/2 u16, y u16 ] ...
   const dv = new DataView(buf);
-  if (buf.byteLength < 3 || dv.getUint8(0) !== 1) return;
+  const ty = buf.byteLength >= 3 ? dv.getUint8(0) : 0;
+  if (ty === 2 || ty === 3) { trackBin(dv, buf.byteLength, ty); return; }
+  if (ty !== 1) return;
   const sl = dv.getUint16(1, true);
   const okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;
   if (sl !== okSlot) return;
@@ -1906,7 +2329,7 @@ function onBin(buf) {   // compact position update: [1][slot u16][ id u32, x/2 u
     const x = dv.getUint16(off + 4, true) * 4, yr = dv.getUint16(off + 6, true), y = yr >= 65534 ? yr : yr * 2;
     let o = others.get(id);
     if (!o) { o = newOther('', '#ccc', '#fff', 0); others.set(id, o); }
-    if (y === 65534) { o.seen = 0; o.dead = 0; o.t0 = 0; continue; }   // moved out of range: hide, no effects
+    if (y === 65534) { if (o.seen) { o.mx = o.cx; o.my = o.cy; o.mt = t; } o.seen = 0; o.dead = 0; o.t0 = 0; continue; }   // moved out of range: hide, no effects
     const wasDead = o.dead;
     if (y === 65535) {                       // they died (or left the screen)
       if (o.seen && !wasDead && nearMe(o.cx, o.cy)) { burst(o.cx, o.cy, [o.color, o.color2, '#222'], 20, 300); ring(o.cx, o.cy, '#ff5b4a', 5, 50, 0.45); }
@@ -1934,6 +2357,7 @@ function showWorldPop(id, full) {   // "You're in World 1" or "World 1 was too f
 }
 $('worldpop').onclick = () => $('worldpop').classList.add('hide');
 function onMsg(m) {
+  if (linkMsg(m)) return;
   switch (m.t) {
     case 'welcome':
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
@@ -1941,7 +2365,7 @@ function onMsg(m) {
       settings.name = m.name; $('setName').value = m.name; save();
       lastSent = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
       others.clear();
-      m.players.forEach(p => others.set(p.id, newOther(p.name, p.color, p.color2, p.pat, p.crown)));
+      m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); });
       setNet('online');
       addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
@@ -1950,8 +2374,8 @@ function onMsg(m) {
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
-    case 'join': others.set(m.id, newOther(m.name, m.color, m.color2, m.pat)); room.n = m.n; addFeed(who(m.name) + ' joined', 'join'); if (settings.joinMsg) sfx('join'); botNote(); break;
-    case 'leave': others.delete(m.id); room.n = m.n; addFeed(who(m.name) + ' left', 'leave'); if (settings.joinMsg) sfx('leave'); botNote(); break;
+    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat); o.pub = m.pub || ''; others.set(m.id, o); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
+    case 'leave': { others.delete(m.id); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' left', 'leave'); if (settings.joinMsg) sfx('leave'); } botNote(); break; }
     case 'info': {   // someone changed how they look: show a clear little transformation
       const o = others.get(m.id);
       if (o) {
@@ -2064,7 +2488,9 @@ function drawWarnSign(x, y, red) {
 }
 
 /* ---------- day and night: the sky follows the map timer (sunrise first, night near the end) ---------- */
-const SKY = [[0, 255, 170, 110, 0.18], [0.1, 255, 220, 170, 0.07], [0.2, 255, 255, 255, 0], [0.5, 255, 255, 255, 0], [0.62, 255, 140, 70, 0.2], [0.72, 80, 50, 120, 0.3], [0.84, 12, 18, 70, 0.46], [1, 8, 10, 50, 0.52]];
+/* A map's day: a hazy golden morning at the start, bright daylight for most of it, then a short sunset and night right at the end. */
+const DAY_END = 0.935, NIGHT_LEN = 0.045;   // night proper begins at DAY_END (about the last 10 minutes of a 3 hour map)
+const SKY = [[0, 255, 178, 120, 0.3], [0.06, 255, 198, 140, 0.24], [0.12, 255, 224, 176, 0.13], [0.2, 255, 245, 220, 0.04], [0.27, 255, 255, 255, 0], [0.86, 255, 255, 255, 0], [0.9, 255, 190, 120, 0.1], [0.92, 255, 140, 70, 0.2], [0.94, 80, 50, 120, 0.3], [0.97, 12, 18, 70, 0.46], [1, 8, 10, 50, 0.52]];
 function skyAt(p) {
   for (let i = 1; i < SKY.length; i++) if (p <= SKY[i][0]) { const a = SKY[i - 1], b = SKY[i], u = (p - a[0]) / (b[0] - a[0] || 1); return [a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u, a[3] + (b[3] - a[3]) * u, a[4] + (b[4] - a[4]) * u]; }
   const l = SKY[SKY.length - 1]; return [l[1], l[2], l[3], l[4]];
@@ -2129,7 +2555,7 @@ function skyLife(sw, sh, dt, fade, night, hN) {   // birds by day, fireflies by 
   ctx.globalAlpha = 1;
 }
 function drawSky(sw, sh, camL, camT, p, dt, fade) {   // far away, so the sun and moon barely move sideways; height changes where they sit
-  const m = S.map, night = clamp((p - 0.62) / 0.18, 0, 1);
+  const m = S.map, night = clamp((p - DAY_END) / NIGHT_LEN, 0, 1);
   const hN = clamp(1 - (S.b.y / TS) / m.H, 0, 1);                 // 0 = deep down, 1 = the very top of the level
   const lift = (0.42 - hN) * sh * 0.55;                              // fall and they climb the sky; climb and they sink
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -2142,9 +2568,9 @@ function drawSky(sw, sh, camL, camT, p, dt, fade) {   // far away, so the sun an
     }
     ctx.globalAlpha = 1;
   }
-  const ps = clamp(p / 0.76, 0, 1);
-  if (p < 0.78) {   // sun: rises on the left, sets on the right
-    const x = sw * (0.08 + 0.84 * ps), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * ps)) + lift, r = 26, warm = p < 0.14 || p > 0.55, fa = fade * clamp((0.78 - p) / 0.06, 0, 1) * clamp(p / 0.03, 0.4, 1);
+  const ps = clamp(p / 0.95, 0, 1);
+  if (p < 0.97) {   // sun: rises on the left, sets on the right
+    const x = sw * (0.08 + 0.84 * ps), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * ps)) + lift, r = 26, warm = p < 0.14 || p > 0.88, fa = fade * clamp((0.97 - p) / 0.03, 0, 1) * clamp(p / 0.03, 0.4, 1);
     const gr = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 4.2); gr.addColorStop(0, warm ? 'rgba(255,170,80,.55)' : 'rgba(255,240,150,.5)'); gr.addColorStop(1, 'rgba(255,230,140,0)');
     ctx.globalAlpha = fa; ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r * 4.2, 0, TAU); ctx.fill();
     ctx.globalAlpha = 0.95 * fa; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.fillStyle = warm ? '#ffa24a' : '#ffe566';
@@ -2154,8 +2580,8 @@ function drawSky(sw, sh, camL, camT, p, dt, fade) {   // far away, so the sun an
     ctx.strokeStyle = 'rgba(160,80,0,.55)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y + 3, 7, 0.25, Math.PI - 0.25); ctx.stroke();
     ctx.globalAlpha = 1;
   }
-  if (p > 0.6) {   // moon, with a phase that is different from one map to the next
-    const pm = clamp((p - 0.6) / 0.4, 0, 1), x = sw * (0.08 + 0.84 * pm), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * pm)) + lift, r = 22, fa = fade * clamp((p - 0.6) / 0.12, 0, 1) * 0.95;
+  if (p > 0.92) {   // moon, with a phase that is different from one map to the next
+    const pm = clamp((p - 0.92) / 0.08, 0.12, 1), x = sw * (0.08 + 0.84 * pm), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * pm)) + lift, r = 22, fa = fade * clamp((p - 0.92) / 0.03, 0, 1) * 0.95;
     const ph = ((S.idx * 3 + 1) % 8) / 8, lit = 0.5 - 0.5 * Math.cos(ph * TAU), off = (1 - lit) * r * 2.1 * ((ph < 0.5) ? 1 : -1);
     const gr = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 3.4); gr.addColorStop(0, 'rgba(210,220,255,.3)'); gr.addColorStop(1, 'rgba(210,220,255,0)');
     ctx.globalAlpha = fa; ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r * 3.4, 0, TAU); ctx.fill();
@@ -2437,13 +2863,43 @@ function drawCoins(camL, camT, vw, vh) {
     }
   }
 }
+/* The ball leaves a soft ribbon along the path it really took. It fades in and out smoothly: faint when you roll fast or fall, golden while boosting. */
+const trail = [];
+function drawTrail(b) {
+  const now = S.t, e = S.fx || (S.fx = { L: 0, G: 0, fly: 0 });
+  const sp = Math.hypot(b.vx, b.vy);
+  const want = clamp((sp - 330) / 900, 0, 1) * 0.8 * clamp((b.fall - 0.15) / 0.4, 0.35, 1), run = b.flat && Math.abs(b.vx) > 285 ? 0.25 : 0;
+  const tgt = Math.max(want, run), gold = b.boost ? 1 : 0, dt = Math.min(0.05, now - (e.t || now)); e.t = now;
+  e.L += (tgt - e.L) * Math.min(1, dt * (tgt > e.L ? 2.6 : 3.2));        // eases in and out, never pops
+  e.G += (gold - e.G) * Math.min(1, dt * (gold > e.G ? 6 : 3));
+  const last = trail[trail.length - 1];
+  if (last && Math.hypot(b.x - last.x, b.y - last.y) > 260) trail.length = 0;   // teleports and respawns start a fresh ribbon
+  if (!last || Math.hypot(b.x - last.x, b.y - last.y) > 3) trail.push({ x: b.x, y: b.y, t: now });
+  while (trail.length && now - trail[0].t > 0.55) trail.shift();
+  const L = Math.max(e.L, e.G * 0.9);
+  if (L < 0.02 || trail.length < 3) return;
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const n = trail.length, col = e.G > 0.3 ? '255,226,120' : '255,255,255';
+  for (let i = 1; i < n; i++) {   // a few tapered pieces from the tail (thin, faint) to the ball (wide)
+    const a = trail[i - 1], c = trail[i], u = i / n, age = 1 - u;
+    ctx.strokeStyle = 'rgba(' + col + ',' + (L * 0.30 * u * u).toFixed(3) + ')'; ctx.lineWidth = R * (0.25 + 1.15 * u) * (0.7 + 0.3 * L);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(c.x, c.y); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawSuper(b) {   // holding jump slowly winds a ring around the ball; when it is full, your next jump is a super jump
+  const q = b.jhold / P.SJ_T; if (q < 0.18) return;
+  const rdy = q >= 1, k = (q - 0.18) / 0.82;
+  ctx.save(); ctx.lineCap = 'round';
+  ctx.globalAlpha = rdy ? 0.8 + 0.2 * Math.sin(S.t * 18) : 0.25 + 0.55 * k;
+  ctx.strokeStyle = rdy ? '#e8fbff' : '#9be7ff'; ctx.lineWidth = rdy ? 4 : 3;
+  ctx.beginPath(); ctx.arc(b.x, b.y, R + 8 + (rdy ? 2 + Math.sin(S.t * 18) * 1.5 : 0), -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(q, 1)); ctx.stroke();
+  if (rdy) { ctx.globalAlpha = 0.35; ctx.strokeStyle = '#c58bff'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(b.x, b.y, R + 8, 0, TAU); ctx.stroke(); }
+  ctx.restore();
+}
 function drawBoost(b) {   // the boost ring above your ball: fills while you roll one way, glows when it is ready, trails while you boost
   const q = b.bcharge, rdy = q >= 1, x = b.x, y = b.y - R - 22, r = 9, t = S.t;
-  if (b.boost) {
-    ctx.save(); ctx.strokeStyle = 'rgba(255,230,120,.8)'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath();
-    for (let i = 0; i < 4; i++) { const yy = b.y - 10 + i * 7 + Math.sin(t * 30 + i) * 1.5, l = 22 + ((t * 90 + i * 17) % 22); ctx.moveTo(b.x - b.bdir * (R + 6), yy); ctx.lineTo(b.x - b.bdir * (R + 6 + l), yy); }
-    ctx.stroke(); ctx.restore(); return;
-  }
+  if (b.boost) return;   // (the golden ribbon behind you shows the boost)
   if (q < 0.04) return;
   ctx.save();
   if (q > 0.7) {   // a flickering aura: something is about to happen
@@ -2474,6 +2930,8 @@ function drawBeacon(camL, camT, vw, vh, sc) {   // every 30 minutes, for 15 seco
     ctx.translate(ax, ay); ctx.rotate(a); ctx.scale(z, z);
     ctx.beginPath(); ctx.moveTo(26, 0); ctx.lineTo(-14, -20); ctx.lineTo(-6, 0); ctx.lineTo(-14, 20); ctx.closePath();
     ctx.fillStyle = '#ffd23d'; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.fill(); ctx.stroke();
+    ctx.rotate(-a); ctx.font = '16px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
+    const tt = ft(f[0] * TS + 30 - S.b.x, f[1] * TS - 100 - S.b.y) + ' ft', ty = Math.sin(a) > 0.2 ? -28 : 34; ctx.strokeText(tt, 0, ty); ctx.fillStyle = '#ffe98a'; ctx.fillText(tt, 0, ty);
   }
   ctx.restore();
 }
@@ -2491,6 +2949,35 @@ function drawFinishFlag() {
   ctx.fillStyle = '#eee'; ctx.fillRect(fx0 - 4, by - ph, 8, ph); ctx.strokeRect(fx0 - 4, by - ph, 8, ph);
   for (let c = 0; c < 6; c++) for (let r = 0; r < 4; r++) { ctx.fillStyle = ((c + r) & 1) ? '#111' : '#fff'; ctx.fillRect(fx0 + 4 + c * cell, by - ph + r * cell + Math.sin(S.t * 3 + c) * 1.5, cell + 0.5, cell + 0.5); }
   ctx.strokeRect(fx0 + 4, by - ph, 6 * cell, 4 * cell);
+}
+function drawCheckpoints(camL, camT, vw, vh) {   // big bright pennants you can spot from far away; the one you have touched turns green and glows
+  const cps = S.map.checkpoints; if (!cps) return;
+  for (let i = 0; i < cps.length; i++) {
+    const c = cps[i], x = (c[0] + 0.5) * TS, y = c[1] * TS;
+    if (x < camL - 90 || x > camL + vw + 90 || y < camT - 20 || y > camT + vh + 200) continue;
+    const on = S.cpArmed === i, h = 104, p = 0.5 + 0.5 * Math.sin(S.t * 3 + i), wv = Math.sin(S.t * (on ? 5 : 3) + i) * 4;
+    const spent = S.cpUsed === i, col = on ? '#3fd37a' : spent ? '#8d8a96' : '#ff8a1f', lt = on ? '#b9ffd3' : spent ? '#cfcbd8' : '#ffe0a8';
+    // a soft column of light and a halo so it reads from far away
+    ctx.save();
+    const gr = ctx.createLinearGradient(0, y - h - 120, 0, y); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, on ? 'rgba(90,255,150,.30)' : 'rgba(255,170,60,.26)');
+    ctx.fillStyle = gr; ctx.fillRect(x - 20, y - h - 120, 40, h + 120);
+    ctx.globalAlpha = (on ? 0.5 : 0.3) + 0.2 * p; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x + 16, y - h + 18, 40 + p * 6, 0, TAU); ctx.fill();
+    if (S.cpFlash > 0 && on) { ctx.globalAlpha = Math.min(1, S.cpFlash); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, y - h / 2, 30 + (1 - S.cpFlash) * 120, 0, TAU); ctx.stroke(); }
+    ctx.restore();
+    ctx.lineWidth = 2.6; ctx.strokeStyle = INK; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.fillStyle = '#f2efe6'; ctx.fillRect(x - 4, y - h, 8, h); ctx.strokeRect(x - 4, y - h, 8, h);
+    ctx.fillStyle = '#6b5a4a'; ctx.beginPath(); ctx.ellipse(x, y - 1, 15, 5, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ffd23d'; ctx.beginPath(); ctx.arc(x, y - h - 4, 6, 0, TAU); ctx.fill(); ctx.stroke();
+    // the pennant, with a flag glyph on it so you know exactly what it is
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x + 4, y - h + 4); ctx.quadraticCurveTo(x + 30, y - h + 8 + wv, x + 56, y - h + 18 + wv * 1.5); ctx.quadraticCurveTo(x + 30, y - h + 36 + wv, x + 4, y - h + 46); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 14, y - h + 36); ctx.lineTo(x + 14, y - h + 14); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(x + 14, y - h + 14); ctx.lineTo(x + 32, y - h + 20 + wv * 0.6); ctx.lineTo(x + 14, y - h + 27); ctx.closePath(); ctx.fill();
+    if (Math.abs(x - (camL + vw / 2)) < 420 && Math.abs(y - (camT + vh / 2)) < 320) {
+      ctx.font = '15px ' + FONT; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
+      const t = on ? 'Checkpoint ready' : spent ? 'Used up' : 'Checkpoint'; ctx.strokeText(t, x + 4, y - h - 20); ctx.fillStyle = lt; ctx.fillText(t, x + 4, y - h - 20);
+    }
+  }
+  if (S.cpFlash > 0) S.cpFlash = Math.max(0, S.cpFlash - 0.016);
 }
 function drawSpawn() {   // the one clear respawn point
   const m = S.map, x = m.start[0], y = m.start[1] + R + 1, p = 0.5 + 0.5 * Math.sin(S.t * 3);
@@ -2582,7 +3069,7 @@ function renderInner(dt, nowT) {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = S.map.bg; ctx.fillRect(0, 0, sw, sh);
-  const dph = dayPhase(); S.night = clamp((dph - 0.62) / 0.2, 0, 1);
+  const dph = dayPhase(); S.night = clamp((dph - DAY_END) / NIGHT_LEN, 0, 1);
   ctx.setTransform(dpr * sc, 0, 0, dpr * sc, -camL * dpr * sc, -camT * dpr * sc);
   drawZones(camL, camT, vw, vh);
   { // the sky fades in and out (never pops) as you go in and out of caves
@@ -2606,8 +3093,9 @@ function renderInner(dt, nowT) {
   if (camL < -2 * TS) ctx.fillRect(camL - 10, camT - 10, -2 * TS - camL + 10, vh + 20);
   if (camL + vw > ww + 2 * TS) ctx.fillRect(ww + 2 * TS, camT - 10, camL + vw - ww - 2 * TS + 10, vh + 20);
   drawTiles(camL, camT, vw, vh);
-  drawSpawn(); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh);
+  drawSpawn(); drawCheckpoints(camL, camT, vw, vh); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh);
   if (S.beaconOn && settings.beacon) drawBeacon(camL, camT, vw, vh, sc);
+  drawTrack(camL, camT, vw, vh, sc);
   S.view = { l: camL, t: camT, w: vw, h: vh };
 
   if (S.mode === 'play') {
@@ -2621,6 +3109,7 @@ function renderInner(dt, nowT) {
       let sc2 = 1; if (o.morph > 0) { o.morph = Math.max(0, o.morph - dt * 1.6); sc2 = 1 + 0.35 * Math.sin(o.morph * 3.14); }
       drawBall(nx, ny, o.rot, o.color, o.color2, o.pat, 0.88, false, sc2);
       drawLabel(o.name, false, o.crown, nx, ny);
+      if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (settings.tags && o.name ? 38 : 22) - (o.crown ? 14 : 0));
     });
     for (let i = 0; i < bots.length; i++) {
       const bt = bots[i], bb = bt.b;
@@ -2630,9 +3119,12 @@ function renderInner(dt, nowT) {
     }
     if (S.dead <= 0 && !S.away) {    // you: always last = always on top
       let s = 1; if (S.spawnT > 0) { const p = 1 - S.spawnT / 0.6; s = 0.25 + 0.75 * Math.min(1, p * 1.25) + 0.12 * Math.sin(p * 3.14); }
+      drawTrail(b);
       drawBall(b.x, b.y, b.rot, settings.color, settings.color2, settings.pat, 1, true, s);
+      drawSuper(b);
       if (settings.boost) drawBoost(b);
       drawLabel(settings.name, false, S.crown, b.x, b.y);
+      if (S.myEmo) drawEmoBubble(S.myEmo, b.x, b.y - R - (settings.tags && settings.name ? 38 : 22) - (S.crown ? 14 : 0));
     }
   }
   drawFx();
@@ -2641,26 +3133,22 @@ function renderInner(dt, nowT) {
   { const sk = skyAt(dph); if (sk[3] > 0.005) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = 'rgba(' + (sk[0] | 0) + ',' + (sk[1] | 0) + ',' + (sk[2] | 0) + ',' + sk[3].toFixed(3) + ')'; ctx.fillRect(0, 0, sw, sh); } }
   if (!settings.low) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.5; ctx.fillStyle = paperGrain(); ctx.fillRect(0, 0, cv.width, cv.height); ctx.globalAlpha = 1; }
   if (S.mode === 'play' && S.dead <= 0 && !S.away) {   // air streaks: they only show when you have really been falling, start tiny, and grow with your speed
-    const fl = clamp((b.vy - 380) / 1400, 0, 1) * clamp((b.fall - 0.2) / 0.45, 0, 1);
-    if (!S.airP) { S.airP = []; for (let i = 0; i < 64; i++) S.airP.push({ x: Math.random(), y: Math.random(), z: 0.4 + Math.random() * 0.6 }); }
-    S.airLvl = S.airLvl === undefined ? 0 : S.airLvl; S.airLvl += (fl - S.airLvl) * Math.min(1, dt * (fl > S.airLvl ? 4 : 9));
+    const spd = Math.hypot(b.vx, b.vy), fl = clamp((spd - 560) / 1500, 0, 1) * clamp((b.fall - 0.25) / 0.6, 0, 1);
+    if (!S.airP) { S.airP = []; for (let i = 0; i < 48; i++) S.airP.push({ x: Math.random(), y: Math.random(), z: 0.4 + Math.random() * 0.6 }); }
+    S.airLvl = S.airLvl === undefined ? 0 : S.airLvl; S.airLvl += (fl - S.airLvl) * Math.min(1, dt * (fl > S.airLvl ? 2.2 : 3.5));
     const L = S.airLvl;
-    if (L > 0.01 && !b.water) {
+    if (L > 0.01 && !b.water) {   // thin wind lines that run opposite to your real direction of travel, so they follow your path
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineCap = 'round';
-      const n = Math.ceil(S.airP.length * (0.2 + 0.8 * L)), sp = Math.max(0, b.vy) * sc * 0.55 / sh, len = 4 + L * L * 120;
+      const ux = b.vx / (spd || 1), uy = b.vy / (spd || 1), n = Math.ceil(S.airP.length * (0.15 + 0.85 * L)), sp = spd * sc * 0.5, len = 6 + L * 54;
       for (let i = 0; i < S.airP.length; i++) {
-        const p = S.airP[i]; p.y -= sp * p.z * dt; if (p.y < -0.25) { p.y = 1.02 + Math.random() * 0.2; p.x = Math.random(); }
+        const p = S.airP[i]; p.x -= ux * sp * p.z * dt / sw; p.y -= uy * sp * p.z * dt / sh;
+        if (p.x < -0.15 || p.x > 1.15 || p.y < -0.15 || p.y > 1.15) { const edge = Math.random(); p.x = ux > 0 ? 1.05 : -0.05; p.y = edge; if (Math.abs(uy) > Math.abs(ux)) { p.y = uy > 0 ? 1.05 : -0.05; p.x = edge; } }
         if (i >= n) continue;
-        ctx.strokeStyle = 'rgba(255,255,255,' + ((0.08 + 0.5 * L) * p.z).toFixed(3) + ')'; ctx.lineWidth = (1 + 2 * L) * p.z;
-        const x = p.x * sw, y = p.y * sh; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + len * p.z); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,' + ((0.04 + 0.2 * L) * p.z).toFixed(3) + ')'; ctx.lineWidth = 1 + 1.4 * L * p.z;
+        const x = p.x * sw, y = p.y * sh; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + ux * len * p.z, y + uy * len * p.z); ctx.stroke();
       }
     }
     if (S.fallWarn) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); const gr = ctx.createRadialGradient(sw / 2, sh / 2, Math.min(sw, sh) * 0.3, sw / 2, sh / 2, Math.max(sw, sh) * 0.7); gr.addColorStop(0, 'rgba(255,0,0,0)'); gr.addColorStop(1, 'rgba(255,30,10,' + (0.15 + S.fallLvl * 0.4) + ')'); ctx.fillStyle = gr; ctx.fillRect(0, 0, sw, sh); }
-    if (b.boost) {   // sideways rush lines
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(255,240,170,.35)'; ctx.lineWidth = 2; ctx.beginPath();
-      for (let i = 0; i < 9; i++) { const y = Math.random() * sh, x = Math.random() * sw, l = 50 + Math.random() * 90; ctx.moveTo(x, y); ctx.lineTo(x - b.bdir * l, y); }
-      ctx.stroke();
-    }
   }
   // (the water is translucent and drawn last, so swimming balls look submerged)
 }
@@ -2696,21 +3184,22 @@ function drawMinimap() {
     g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; g.setLineDash([3, 3]);
     g.strokeRect((v.l / TS - left) * ppt, (v.t / TS - top) * ppt, v.w / TS * ppt, v.h / TS * ppt); g.setLineDash([]);
     // radar "ping": once in a while take a snapshot of who is on screen, then let the dots fade (very light on bandwidth)
-    if (now - mmPing > PING_MS) {
-      mmPing = now; mmDots.length = 0;
-      if (settings.mmPlayers) others.forEach(o => { if (!o.seen || o.dead) return; if (o.cx > v.l && o.cx < v.l + v.w && o.cy > v.t && o.cy < v.t + v.h) mmDots.push({ x: o.cx / TS, y: o.cy / TS, c: o.color }); });
-      if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; const q = bt.b; if (q.x > v.l && q.x < v.l + v.w && q.y > v.t && q.y < v.t + v.h) mmDots.push({ x: q.x / TS, y: q.y / TS, c: bt.color }); });
-    }
+    if (now - mmPing > PING_MS) mmPing = now;   // the ring still pulses; the dots themselves are always there
+    mmDots.length = 0;
+    if (settings.mmPlayers) others.forEach(o => { const q = opos(o); if (q) mmDots.push({ x: q.x / TS, y: q.y / TS, c: o.color }); });
+    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; const q = bt.b; mmDots.push({ x: q.x / TS, y: q.y / TS, c: bt.color }); });
     const age = (now - mmPing) / PING_MS;
     if (settings.mmPlayers || settings.mmBots) {
       g.strokeStyle = 'rgba(159,232,255,' + (0.5 * (1 - age)) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(w / 2, h / 2, age * Math.max(v.w, v.h) / TS * ppt * 0.6, 0, TAU); g.stroke();
       for (let i = 0; i < mmDots.length; i++) {
         const d = mmDots[i], x = (d.x - left) * ppt, y = (d.y - top) * ppt; if (x < 0 || y < 0 || x > w || y > h) continue;
-        g.globalAlpha = 1 - 0.75 * age; g.fillStyle = d.c; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(x, y, 3, 0, TAU); g.fill(); g.stroke();
+        g.globalAlpha = 1; g.fillStyle = d.c; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(x, y, 3, 0, TAU); g.fill(); g.stroke();
       }
       g.globalAlpha = 1;
     }
   }
+  if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = (c[0] + 0.5 - left) * ppt, y = (c[1] - top) * ppt; if (x < 3 || y < 7 || x > w - 3 || y > h) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.5, y - 7, 1.4, 7); g.beginPath(); g.moveTo(x + 1, y - 7); g.lineTo(x + 6, y - 5.2); g.lineTo(x + 1, y - 3.4); g.fill(); });
+  drawLinksOnMap(g, x => (x - left) * ppt, y => (y - top) * ppt, 5, false, false);
   if (S.beaconOn && settings.beacon) {   // while the beacon is on, the finish shows on the map: a flag if it is in view, otherwise an arrow on the edge pointing the way
     const f = m.flag, fx = (f[0] - left) * ppt, fy = (f[1] - top) * ppt, inView = fx > 6 && fx < w - 6 && fy > 6 && fy < h - 6;
     if (inView) drawFinishIcon(g, fx, fy, 1, now);
@@ -2718,6 +3207,9 @@ function drawMinimap() {
       const a = Math.atan2(fy - h / 2, fx - w / 2), k = Math.min((w / 2 - 12) / (Math.abs(Math.cos(a)) || 1e-4), (h / 2 - 12) / (Math.abs(Math.sin(a)) || 1e-4));
       g.save(); g.translate(w / 2 + Math.cos(a) * k, h / 2 + Math.sin(a) * k); g.rotate(a); g.scale(1 + 0.15 * Math.sin(now / 160), 1 + 0.15 * Math.sin(now / 160));
       g.beginPath(); g.moveTo(9, 0); g.lineTo(-6, -7); g.lineTo(-2, 0); g.lineTo(-6, 7); g.closePath(); g.fillStyle = '#ffd23d'; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.fill(); g.stroke(); g.restore();
+      g.font = '11px ' + FONT; g.textAlign = 'center'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.85)'; g.fillStyle = '#ffe98a';
+      const lt = Math.round(Math.hypot(f[0] - S.b.x / TS, f[1] - S.b.y / TS) / 2) + ' ft', lx = clamp(w / 2 + Math.cos(a) * (k - 18), 16, w - 16), ly = clamp(h / 2 + Math.sin(a) * (k - 18) + 4, 10, h - 3);
+      g.strokeText(lt, lx, ly); g.fillText(lt, lx, ly);
     }
   }
   g.fillStyle = settings.color; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(w / 2, h / 2, 4, 0, TAU); g.fill(); g.stroke();
@@ -2732,7 +3224,7 @@ function drawFinishIcon(g, x, y, sc, now) {   // a little flag on a gold pulse, 
   g.restore();
 }
 setInterval(drawMinimap, 160);
-setInterval(() => { if (mmBigOn && S.beaconOn && settings.beacon) drawMinimapBig(); }, 120);
+setInterval(() => { if (mmBigOn) drawMinimapBig(); }, 200);
 /* ----- the big map: drag to look around, scroll / pinch / buttons to zoom. It never shows where the finish is. ----- */
 let mmBigOn = false;
 const mb = { cx: 0, cy: 0, z: 4, ptr: new Map(), pd: 0 };
@@ -2779,8 +3271,10 @@ function drawMinimapBig() {
     g.fillRect(x0, y0, w, h);
   }
   if (z >= 6) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
+  if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = X(c[0] + 0.5), y = Y(c[1]); if (x < 0 || y < 0 || x > cw || y > ch) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.8, y - 12, 2, 12); g.beginPath(); g.moveTo(x + 1, y - 12); g.lineTo(x + 10, y - 9); g.lineTo(x + 1, y - 6); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 0.8; g.stroke(); });
   if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; g.fillStyle = bt.color; g.beginPath(); g.arc(X(bt.b.x / TS), Y(bt.b.y / TS), 3.5, 0, TAU); g.fill(); });
-  if (settings.mmPlayers) others.forEach(o => { if (!o.seen || o.dead) return; g.fillStyle = o.color; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(X(o.cx / TS), Y(o.cy / TS), 4, 0, TAU); g.fill(); g.stroke(); });
+  if (settings.mmPlayers) others.forEach(o => { const q = opos(o); if (!q) return; g.fillStyle = o.color; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(X(q.x / TS), Y(q.y / TS), 4, 0, TAU); g.fill(); g.stroke(); });
+  drawLinksOnMap(g, X, Y, 7, true, false);
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
   const bon = S.beaconOn && settings.beacon;
   if (bon) drawFinishIcon(g, X(m.flag[0]), Y(m.flag[1]), 1.5 + Math.min(1.5, z * 0.08), performance.now());
@@ -2833,7 +3327,7 @@ const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'n
 function worldText() {
   if (inSolo()) return '';
   if (online) return 'World ' + room.id + ' · ' + room.n + ' player' + (room.n === 1 ? '' : 's');
-  return settings.mp ? 'Connecting…' : '';
+  return '';
 }
 function hudTick() {
   const rem = S.nextAt - nowMs();
@@ -2906,6 +3400,8 @@ if (settings.mp) { setNet('connecting'); connect(); } else setNet('solo');
 newBotTarget();
 hudTick();
 requestAnimationFrame(frame);
+if (window.__bootStep) window.__bootStep('Rolling out the map…', 85);
+let bootSeen = 0; (function waitFirst() { if (S.map && S.b && ++bootSeen > 6) { if (window.__bootHide) window.__bootHide(); } else requestAnimationFrame(waitFirst); })();
 try { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !(params && params.get('test'))) navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
 window.__ballOk = true;
 })();
