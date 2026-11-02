@@ -285,7 +285,7 @@
   }
 
   const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
-  const SJ_MUL = 1.42, JM_ADD = 0.65, JM_DRAIN = 1.4, JM_HOLD = 0.5;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
+  const SJ_MUL = 1.42, JM_RISE = 200, JM_DRAIN = 1.6, JM_GRACE = 0.3, JM_HOLD = 0.5;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
   const BOOST_T = 1.6, BOOST_V = 450;   // seconds of steady rolling to fill the ring, and the boosted top speed
   const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false, boosted: false, superJump: false };
 
@@ -343,14 +343,14 @@
         if (b.ground) {
           b.jmt += dt;
           if (b.jm >= 1) { if (b.jmt > JM_HOLD) b.jm = Math.max(0, b.jm - 3 * dt); }
-          else if (b.jmt > 0.08) b.jm = Math.max(0, b.jm - JM_DRAIN * dt);
+          else if (b.jmt > JM_GRACE) b.jm = Math.max(0, b.jm - JM_DRAIN * dt);
         } else b.jmt = 0;   // frozen while you are in the air
       }
       if (b.jbuf > 0 && b.coyote > 0) {
         const sup = !b.noJm && b.jm >= 1;
         b.vy = sup ? -JUMP * SJ_MUL : -JUMP; b.coyote = 0; b.jbuf = 0; b.ground = false; b.boost = false; ev.jumped = true;   // jumping ends a boost, and gives no extra height
-        if (sup) { b.holdLeft = 2; b.jm = 0; ev.superJump = true; }   // the tall jump always gets its full height
-        else if (!b.noJm) b.jm = Math.min(1, b.jm + JM_ADD);
+        if (sup) { b.holdLeft = 2; b.jm = 0; b.jfill = false; ev.superJump = true; }   // the tall jump always gets its full height
+        else if (!b.noJm) { b.jfill = true; b.jm0 = b.jm; b.jy0 = b.y; }   // the meter now fills as the jump climbs
         b.jmt = 0;
       }
       if (b.vy >= 0 || b.ground) b.launched = false;
@@ -360,6 +360,7 @@
     }
 
     b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.jfill) { if (b.ground) b.jfill = false; else b.jm = Math.max(b.jm, Math.min(1, b.jm0 + 0.5 * clamp((b.jy0 - b.y) / JM_RISE, 0, 1))); }   // two full-height jumps fill the whole meter; a small hop fills a little
     b.rot += (b.vx * dt) / R;
     b.bnc = false; b.onSee = null;
     ev.lava = collide(b, w);
