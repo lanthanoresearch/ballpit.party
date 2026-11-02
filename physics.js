@@ -43,7 +43,7 @@
   }
 
   function newBody(x, y) {
-    return { x, y, vx: 0, vy: 0, fall: 0, rot: 0, ground: false, flat: false, gType: 0, coyote: 0, jbuf: 0, water: false, swimCool: 0 };
+    return { x, y, vx: 0, vy: 0, hold: 0, hdir: 0, bcharge: 0, boost: false, bdir: 0, btime: 0, bReq: false, bAuto: false, fall: 0, rot: 0, ground: false, flat: false, gType: 0, coyote: 0, jbuf: 0, water: false, swimCool: 0 };
   }
 
   // Circle vs. square tiles. Because the ball is round, standing on an edge with your
@@ -62,6 +62,10 @@
         const dx = b.x - cx, dy = b.y - cy, d2 = dx * dx + dy * dy;
         if (t === 2) { if (d2 < (R - 3) * (R - 3)) lava = true; continue; }
         if (d2 >= R * R) continue;
+        if (dx !== 0 && dy !== 0) {   // the ball is only touching this tile's corner: if a neighbour tile hides that corner, it is an inner seam (a ghost bump), so ignore it
+          const sx = dx > 0 ? 1 : -1, sy = dy > 0 ? 1 : -1;
+          if (isSol(tile(w, tx + sx, ty)) || isSol(tile(w, tx, ty + sy))) continue;
+        }
         if (d2 === 0) { b.y = top - R; if (b.vy > 0) b.vy = 0; b.ground = true; b.flat = true; b.gType = t; if (t === 6) b.bnc = true; continue; }
         const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, pen = R - d;
         b.x += nx * pen; b.y += ny * pen;
@@ -147,7 +151,7 @@
     const svx = -s.av * (qy - s.cy), svy = s.av * (qx - s.cx);   // the plank's own movement at that spot
     const vn = (o.vx - svx) * nx + (o.vy - svy) * ny;
     if (vn < 0) { o.vx -= vn * nx; o.vy -= vn * ny; }
-    s.tq += wt * u;
+    if (!o.ghost) s.tq += wt * u;
     return ny < -0.35;
   }
   function stepSee(w, dt) {
@@ -281,11 +285,12 @@
   }
 
   const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
-  const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false };
+  const BOOST_T = 1.6, BOOST_V = 450;   // seconds of steady rolling to fill the ring, and the boosted top speed
+  const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false, boosted: false };
 
   // ax: -1/0/1, jheld: jump button held. Set b.jbuf = 0.12 on a jump press.
   function step(b, w, ax, jheld, dt) {
-    ev.lava = false; ev.jumped = false; ev.landed = false; ev.bounced = false; ev.splat = false; ev.splat = false;
+    ev.lava = false; ev.jumped = false; ev.landed = false; ev.bounced = false; ev.splat = false; ev.boosted = false;
     const tx = Math.floor(b.x / TS), ty = Math.floor(b.y / TS);
     const water = tile(w, tx, ty) === 5;
     b.water = water;
@@ -303,7 +308,7 @@
           else b.vy = approach(b.vy, -40, 1500 * dt);
         } else b.vy = approach(b.vy, -210, 2600 * dt);
       } else b.vy = approach(b.vy, 140, 1200 * dt);
-      b.coyote = 0;
+      b.coyote = 0; b.boost = false; b.hold = 0; b.bcharge = 0; b.bReq = false;
     } else {
       const ice = b.flat && b.gType === 3;
       // Grip only when the ball's centre is over the tile. Ice: slippery, but pushing the
@@ -311,12 +316,29 @@
       // ax may be fractional (a gentle swipe = a slow roll). A short tap builds speed gradually, so it barely moves you.
       const turning = ax !== 0 && b.vx !== 0 && Math.sign(b.vx) !== Math.sign(ax);
       const rate = b.flat ? (ice ? (ax ? 520 : 90) : (ax ? (turning ? 2600 : ACC) : 1500)) : (ax ? 1100 : 140);
-      const target = (ax && Math.sign(b.vx) === Math.sign(ax) && Math.abs(b.vx) > MAXV) ? b.vx : ax * MAXV;
-      b.vx = approach(b.vx, target, rate * dt);
+      let target = (ax && Math.sign(b.vx) === Math.sign(ax) && Math.abs(b.vx) > MAXV) ? b.vx : ax * MAXV;
+      // boost: keep rolling the same way long enough and a ring fills; once it is full you can launch (button, pull, or automatically)
+      const dir = ax > 0 ? 1 : ax < 0 ? -1 : 0;
+      if (dir && dir !== b.hdir) { b.hdir = dir; b.hold = 0; }
+      if (!b.boost) {
+        if (dir && Math.sign(b.vx) === dir && Math.abs(b.vx) > MAXV * 0.8) b.hold = Math.min(BOOST_T, b.hold + dt);
+        else b.hold = Math.max(0, b.hold - dt * 2);
+      }
+      b.bcharge = b.hold / BOOST_T;
+      if (!b.boost && b.bcharge >= 1 && dir && (b.bReq || b.bAuto)) { b.boost = true; b.bdir = dir; b.btime = 0; b.hold = 0; b.bcharge = 0; ev.boosted = true; }
+      b.bReq = false;
+      let brate = rate;
+      if (b.boost) {
+        b.btime += dt;
+        if (!dir || dir !== b.bdir) b.boost = false;
+        else { target = dir * BOOST_V; brate = b.flat ? 2400 : 1500; if (b.btime > 0.25 && Math.abs(b.vx) < MAXV + 20) b.boost = false; }
+      }
+      b.vx = approach(b.vx, target, (b.boost ? brate : rate) * dt);
       b.coyote = b.ground ? 0.1 : Math.max(0, b.coyote - dt);
       if (b.jbuf > 0 && b.coyote > 0) { b.vy = -JUMP; b.coyote = 0; b.jbuf = 0; b.ground = false; ev.jumped = true; }
       if (b.vy >= 0 || b.ground) b.launched = false;
-      const g = GRAV * ((b.vy < 0 && !jheld && !b.launched) ? 7 : 1);   // let go early = tiny hop, hold = full jump
+      const g = GRAV * ((b.vy < 0 && !jheld && !b.launched && !b.ground) ? 7 : 1);   // (only in the air: rolling up a slope or a corner also has a tiny upward speed, and must not be slammed down)
+         // let go early = tiny hop, hold = full jump
       b.vy = Math.min(MAXFALL + clamp((b.fall - 1.2) * 420, 0, 950), b.vy + g * dt);   // fall for long enough and you keep getting faster
     }
 
@@ -333,7 +355,7 @@
     return ev;
   }
 
-  const api = { TS, R, MAXV, makeWorld, tile, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
+  const api = { TS, R, MAXV, BOOST_T, BOOST_V, makeWorld, tile, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

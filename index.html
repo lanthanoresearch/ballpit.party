@@ -123,6 +123,14 @@
   #gest{position:fixed;left:0;top:0;right:0;bottom:0;z-index:1;touch-action:none}
   #touch button{position:fixed;z-index:2;width:78px;height:78px;border-radius:50%;border:3px solid rgba(255,255,255,.55);background:rgba(255,255,255,.18);font-size:30px;touch-action:none;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;color:#fff;padding:0}
   #touch button.on{background:rgba(255,255,255,.5)}
+  #touch #tb{--p:0;border-color:rgba(255,210,61,.7);background:conic-gradient(rgba(255,210,61,.85) calc(var(--p)*1%),rgba(255,255,255,.18) 0);font-size:26px}
+  #touch #tb svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+  #touch #tb.rdy{border-color:#fff;box-shadow:0 0 0 4px rgba(255,210,61,.55),0 0 22px rgba(255,210,61,.9);animation:rdy .55s ease-in-out infinite alternate}
+  @keyframes rdy{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.09)}}
+  #joy{position:fixed;z-index:3;width:0;height:0;pointer-events:none}
+  #joy .jb{position:absolute;left:-54px;top:-54px;width:108px;height:108px;border-radius:50%;border:3px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12)}
+  #joy .jk{position:absolute;left:-24px;top:-24px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.55);border:3px solid rgba(255,255,255,.9)}
+  #joy.rdy .jb{border-color:#ffd23d;box-shadow:0 0 18px rgba(255,210,61,.8)}#joy.rdy .jk{background:rgba(255,210,61,.9)}
   #touch button.edit{border-style:dashed;border-color:var(--accent);background:rgba(255,204,61,.25);cursor:grab}
   #editbar{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:20;padding:8px 14px;display:flex;gap:10px;align-items:center;font-size:15px;flex-wrap:wrap;justify-content:center}
   /* ---- modals ---- */
@@ -154,7 +162,6 @@
   /* ---- v5 additions ---- */
   #onl{font-size:13px}
   #coinpill{display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:14px;padding:1px 9px;pointer-events:none}
-  #coinpill svg{color:#ffd23d;fill:#ffd23d}
   #timer{cursor:pointer;pointer-events:auto}
   #tpop{position:fixed;right:10px;top:50px;top:calc(50px + env(safe-area-inset-top));width:min(310px,calc(100vw - 20px));z-index:7;padding:10px 14px 12px;font-size:15px}
   #tpop h3{margin:0 0 6px;font-size:20px;font-weight:400;display:flex;align-items:center;gap:8px}
@@ -277,6 +284,7 @@
 <symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M12 12.500l5-2.500"/></symbol>
 <symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 18l-1-11 5.500 4L12 4l4.500 7L22 7l-1 11H3z"/></symbol>
 <symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-8 8c0 3 1.500 4.500 3 5.500V20h10v-3.500c1.500-1 3-2.500 3-5.500a8 8 0 0 0-8-8z"/><path d="M9 12h.01M15 12h.01M10 17v3M14 17v3"/></symbol>
+<symbol id="i-gcoin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500" fill="#ffd23d" stroke="#16100c" stroke-width="2.200"/><circle cx="12" cy="12" r="4.600" fill="none" stroke="#a06400" stroke-width="1.800" opacity=".75"/></symbol>
 <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M12 7.500v9M9.500 10c0-1 1-1.600 2.500-1.600s2.500.6 2.500 1.600-1 1.400-2.500 1.700-2.500.7-2.500 1.700 1 1.600 2.500 1.600 2.500-.6 2.500-1.600"/></symbol>
 <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="17.500" cy="16" r="2.500"/></symbol>
 <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.500v5h3.500L12 18.500v-13L7.500 9.500H4zM15.500 9a4 4 0 0 1 0 6M18 6.500a8 8 0 0 1 0 11"/></symbol>
@@ -296,8 +304,8 @@
 <div id="gest" class="hide"></div>
 <div id="dflash"></div>
 
-<div id="top"><div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="coin"></span><span id="coinN">0</span></span><canvas id="mm" width="170" height="110"></canvas></div>
-<div id="stack"><div id="netstat" class="pill hide"><i></i><span id="netText">Offline</span></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div><div id="feed"></div></div>
+<div id="top"><div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span></span><canvas id="mm" width="170" height="110"></canvas></div>
+<div id="stack"><div id="netstat" class="pill hide"><i></i><span id="netText">Connecting</span></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div><div id="feed"></div></div>
 <div id="hr">
   <div id="topbar">
     <div id="timer" class="pill" title="Map info"><span data-ic="clock"></span><span id="nexttimer">--:--</span></div>
@@ -308,14 +316,15 @@
 <div id="tpop" class="paper hide">
   <h3><span data-ic="map"></span><span id="tpName"></span></h3>
   <div class="tl"><span data-ic="clock"></span><span id="tpChange"></span></div>
-  <div class="tl"><span data-ic="coin"></span><span id="tpCoins"></span></div>
+  <div class="tl"><span data-ic="gcoin"></span><span id="tpCoins"></span></div>
   <div class="tl"><span data-ic="globe"></span><span id="tpWorld"></span></div>
   <div class="tl"><span data-ic="beacon"></span><span id="tpBeacon"></span><span id="tpArrow" class="hide"><svg class="ic" viewBox="0 0 24 24"><use href="#i-up"/></svg></span></div>
   <div class="nx"><span id="tpNext"></span></div>
 </div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 
-<div id="touch" class="hide"><button id="tl" data-ic="left"></button><button id="tr" data-ic="right"></button><button id="tj" data-ic="up"></button></div>
+<div id="touch" class="hide"><button id="tl" data-ic="left"></button><button id="tr" data-ic="right"></button><button id="tj" data-ic="up"></button><button id="tb" data-ic="bolt" class="hide"></button></div>
+<div id="joy" class="hide"><i class="jb"></i><i class="jk"></i></div>
 <div id="editbar" class="paper hide"><span>Drag the buttons where you want them</span><button class="btn" id="editReset">Reset</button><button class="btn prim" id="editDone">Done</button></div>
 
 <div id="sback"></div>
@@ -341,6 +350,13 @@
     </section>
     <section class="pane" data-pane="controls">
       <div class="row"><span class="lbl"><span data-ic="pad"></span> Controls</span><div id="selInput"></div><div class="small dim" id="inputDesc" style="margin-top:4px"></div></div>
+      <h4><span data-ic="bolt"></span> Boost</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Boost</b><small>Keep rolling one way and a ring fills above your ball. When it is full, launch!</small></span></span><input type="checkbox" id="setBoost"><i></i></label>
+      <div class="dep" data-dep="boost"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Launch by itself</b><small>Boost the moment the ring is full, no button needed</small></span></span><input type="checkbox" id="setBoostAuto"><i></i></label>
+        <div class="dep" data-dep="touchbtn"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Boost button</b><small>A button next to jump</small></span></span><input type="checkbox" id="setBoostBtn"><i></i></label></div></div>
+        <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="right"></span><span><b>Pull to boost</b><small>When the ring is full, pull farther the way you are rolling</small></span></span><input type="checkbox" id="setBoostPull"><i></i></label></div></div>
+      </div></div>
       <div class="dep" data-dep="kb"><div>
         <h4><span data-ic="key"></span> Keyboard</h4>
         <div id="keyrows"></div><div id="keymsg"></div>
@@ -350,6 +366,7 @@
       <div class="dep" data-dep="touch"><div>
         <h4><span data-ic="pad"></span> Touch screen</h4>
         <div class="row"><span class="lbl">Style</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
+        <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Show a joystick</b><small>A little stick appears where you touch, and goes away when you let go</small></span></span><input type="checkbox" id="setJoy"><i></i></label></div></div>
         <div class="dep" data-dep="touchbtn"><div>
           <div class="row" id="presetRow"><span class="lbl">Button layout</span><div id="selPreset"></div></div>
           <div class="row"><span class="lbl">Button size <span id="btnSizeVal" class="dim"></span></span><input type="range" id="setBtnSize" min="0.7" max="1.5" step="0.05"></div>
@@ -422,7 +439,7 @@
     <span><i class="lg" style="background:#ffd23d;border-radius:50%"></i>Coins: just for fun</span>
   </div>
   <p>Move with <kbd>A</kbd><kbd>D</kbd> or the arrows, jump with <kbd>W</kbd> or <kbd>Space</kbd>: tap for a hop, hold for a big jump. On a phone, use the on-screen controls (you can pick swipe styles in settings). Get the <i>middle</i> of your ball onto a block or you'll roll off.</p>
-  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
+  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
   <label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
   <button class="ok" id="btnOk">OK</button>
 </div></div>
@@ -468,8 +485,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=11"></script>
-<script src="physics.js?v=11"></script>
+<script src="maps.js?v=12"></script>
+<script src="physics.js?v=12"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -507,12 +524,13 @@ function fillIcons(root) {
 fillIcons();
 
 /* ================= settings (saved in this browser, restored exactly on return) ================= */
-function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], back: ['KeyR'] }; }
+function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], back: ['KeyR'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, bots: false, botMax: 8, botMark: false, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: 'rotate', soloLen: 180, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
+    boost: true, boostAuto: false, boostBtn: true, boostPull: true, joy: true,
     keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'spread', btnPos: null, btnPosP: null, perOrient: false };
 }
 let settings = defaults();
@@ -535,22 +553,25 @@ function normalize() {
   settings.btnSize = clamp(+settings.btnSize || 1, 0.7, 1.5);
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'perOrient'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'perOrient', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
     if (!bp || typeof bp !== 'object') settings[n] = null;
-    else ['l', 'r', 'j'].forEach(k => { const q = bp[k]; if (!q || ['l', 'r', 'c'].indexOf(q.a) < 0 || !isFinite(q.dx) || !isFinite(q.dy)) settings[n] = null; });
+    else {
+      ['l', 'r', 'j'].forEach(k => { const q = bp[k]; if (!q || ['l', 'r', 'c'].indexOf(q.a) < 0 || !isFinite(q.dx) || !isFinite(q.dy)) settings[n] = null; });
+      if (settings[n] && bp.b) { const q = bp.b; if (['l', 'r', 'c'].indexOf(q.a) < 0 || !isFinite(q.dx) || !isFinite(q.dy)) delete bp.b; }
+    }
   });
   if (settings.btnPos === null && settings.preset === 'custom') settings.preset = 'spread';
 }
 // keys: each key may do only one thing, and every action needs at least one key
 function cleanKeys(k) {
   const d = defKeys(), out = {}, used = {};
-  ['left', 'right', 'jump', 'back'].forEach(a => {
+  ['left', 'right', 'jump', 'boost', 'back'].forEach(a => {
     const list = (k && Array.isArray(k[a])) ? k[a] : d[a]; out[a] = [];
     list.forEach(c => { if (typeof c === 'string' && c.length < 24 && c !== 'Escape' && !used[c] && out[a].length < 4) { used[c] = a; out[a].push(c); } });
   });
-  ['left', 'right', 'jump', 'back'].forEach(a => { if (!out[a].length) { const c = d[a].find(x => !used[x]); if (c) { out[a].push(c); used[c] = a; } } });
+  ['left', 'right', 'jump', 'boost', 'back'].forEach(a => { if (!out[a].length) { const c = d[a].find(x => !used[x]); if (c) { out[a].push(c); used[c] = a; } } });
   return out;
 }
 normalize();
@@ -714,11 +735,13 @@ function noise(dur, vol, f1, f2, type, t0, dest) {
   s.connect(fl); fl.connect(g); g.connect(dest || AU.sfx); s.start(t0, Math.random()); s.stop(t0 + dur + 0.05);
 }
 const hz = m => 440 * Math.pow(2, (m - 69) / 12);
-const SFXGAP = { push: 140, thud: 80, land: 90, coin: 25, creak: 400, tick: 200, ui: 30 };
+const SFXGAP = { ready: 400, boost: 300, push: 140, thud: 80, land: 90, coin: 25, creak: 400, tick: 200, ui: 30 };
 const SFXLAST = {};
 const SFX = {
   jump: () => { tone(300, 0.14, 'square', 0.07, 620); },
   land: () => { noise(0.1, 0.22, 600, 120); tone(120, 0.1, 'sine', 0.22, 60); },
+  boost: () => { noise(0.5, 0.28, 500, 4200, 'bandpass'); tone(180, 0.4, 'sawtooth', 0.06, 760); },
+  ready: () => { const t = AU.ctx.currentTime; tone(740, 0.1, 'triangle', 0.09, 0, t); tone(1110, 0.18, 'triangle', 0.09, 0, t + 0.08); },
   bounce: () => { const t = AU.ctx.currentTime; tone(200, 0.4, 'sine', 0.3, 900); tone(420, 0.3, 'triangle', 0.13, 1500, t + 0.04); },
   coin: () => {
     const c = AU.ctx, t = c.currentTime, now = performance.now();
@@ -941,7 +964,7 @@ function drawLabel(name, isBot, crown, x, y) {
 /* ================= game state / maps ================= */
 const S = {
   mode: 'play', slot: -1, idx: 0, map: null, world: null, tg: null, b: null, t: 0, nextAt: 0, pending: -1, pendingNext: 0, fadeT0: 0,
-  dead: 0, spawnT: 0, shake: 0, away: false, crown: false, started: false, runStart: 0, finished: false, finT: 0, finMs: 0,
+  dead: 0, spawnT: 0, shake: 0, bLatch: 0, bReady: false, airP: null, away: false, crown: false, started: false, runStart: 0, finished: false, finT: 0, finMs: 0,
   camx: 0, camy: 0, water: [], deathPos: null, edgeWarn: false, mm: null,
   lavaWarn: false, coinN: 0, coinGot: null, coinBest: 0, recordShown: false, fallWarn: false, wasWater: false, beaconOn: false, fallLvl: 0
 };
@@ -990,7 +1013,7 @@ function loadMap(slot, next) {
 function respawn(quiet) {
   const m = S.map;
   S.b = P.newBody(m.start[0], m.start[1]);   // the one community spawn point, exactly the same for everyone
-  S.dead = 0; S.spawnT = 0.6; S.finished = false;
+  S.dead = 0; S.spawnT = 0.6; S.finished = false; S.bLatch = 0; S.bReady = false;
   if (!quiet) { beam(S.b.x, S.b.y + R, settings.color); ring(S.b.x, S.b.y, '#fff', 4, 46, 0.6); burst(S.b.x, S.b.y, [settings.color, settings.color2, '#fff'], 12, 160, 100); }
 }
 function die(why) {
@@ -1087,10 +1110,15 @@ function update(dt) {
   const jheld = !bl && (inp.jump || tin.jump || tin.btnJ || performance.now() < tin.jumpUntil);
   if (!S.started && !S.finished && (ax !== 0 || b.jbuf > 0)) { S.started = true; S.runStart = performance.now(); }
   S.pbx = b.x; S.pby = b.y;
+  b.bAuto = !bl && settings.boost && settings.boostAuto;
+  if (!settings.boost) { b.bReq = false; S.bLatch = 0; } else if (S.bLatch > 0 && !bl) { S.bLatch -= dt; b.bReq = true; }
   const ev = P.step(b, w, ax, jheld, dt);
   P.stepSwitches(w, b);
   if (w.ev.length) worldEvents();
   collectCoins();
+  if (ev.boosted) { sfx('boost'); S.bLatch = 0; ring(b.x, b.y, '#ffd23d', 8, 70, 0.4); burst(b.x - b.bdir * R, b.y, ['#ffd23d', '#fff', '#ff8a3d'], 14, 260, 0); S.shake = Math.max(S.shake || 0, 0.12); }
+  if (b.boost && fxOn() && ((S.t * 60) | 0) % 2 === 0) burst(b.x - b.bdir * (R + 2), b.y + (Math.random() - 0.5) * 14, ['#ffd23d', '#fff', '#ff8a3d'], 1, 90, 0);
+  { const rdy = settings.boost && b.bcharge >= 1 && !b.boost; if (rdy && !S.bReady) sfx('ready'); S.bReady = rdy; }
   if (ev.jumped) sfx('jump');
   if (ev.landed) sfx('land');
   if (ev.bounced) { sfx('bounce'); ring(b.x, b.y + R, '#9fe8ff', 6, 50, 0.4); burst(b.x, b.y + R, ['#fff', '#9fe8ff', '#ffd23d'], 10, 160, 60); }
@@ -1225,7 +1253,7 @@ function spawnBot() {
   const wander = Math.random() < 0.3, pro = !wander && Math.random() < 0.25;
   const bt = {
     name, color: pick(PALETTE.slice(0, 14)), color2: pick(PALETTE), pat: ri(0, PATTERNS.length - 1),
-    type: wander ? 'wander' : 'runner', pro, err: pro ? 0.01 : 0.08,
+    type: wander ? 'wander' : 'runner', pro, err: pro ? 0.004 : 0.035, airT: 0, airAx: null, gT: 0, danger: false,
     life: wander ? rnd(30, 120) : pro ? rnd(420, 900) : rnd(90, 360),
     age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0, finished: false, leaveT: 0,
     wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, rot: 0, lod: 0
@@ -1244,6 +1272,30 @@ function botLand(bt) {
     }
   }
   return false;
+}
+/* ----- bots look ahead: they try a few ideas in a quick pretend-run and pick one that does not end in lava ----- */
+let botBudget = 0;
+function botSim(bt, w, ax, T, holdFrom, holdTo) {
+  const c = Object.assign({}, bt.b), sw = Object.assign({}, w, { see: [] }), dt = 1 / 60, n = Math.round(T / dt);
+  let h = holdFrom;
+  for (let i = 0; i < n; i++) {
+    const jh = h < holdTo; h += dt;
+    const ev = P.step(c, sw, ax, jh, dt);
+    if (ev.lava || ev.splat || outOfBounds(c)) return { dead: true, t: i * dt, x: c.x, y: c.y };
+    if (c.ground && i > 1) return { dead: false, land: true, t: i * dt, x: c.x, y: c.y };
+  }
+  return { dead: false, land: false, t: T, x: c.x, y: c.y };
+}
+function botAirPick(bt, aa, thr) {
+  const w = S.world, nxt = S.map.path[bt.i + 1] || S.map.path[bt.i], ty = nxt ? nxt[1] * TS - R : bt.b.y;
+  const opts = aa === 0 ? [0] : [aa, 0, -aa];
+  let best = aa, bs = -1e9;
+  for (let k = 0; k < opts.length; k++) {
+    const r = botSim(bt, w, opts[k], 1.5, bt.hold, bt.tap ? 0.1 : 0.36);
+    const sc = r.dead ? -100000 + r.t * 1000 : (r.land ? 0 : -3000) - Math.abs(r.x - bt.tcx) - 0.4 * Math.abs(r.y - ty) - k * 6;
+    if (sc > bs) { bs = sc; best = opts[k]; }
+  }
+  return best;
 }
 function botStep(bt, dt) {
   const b = bt.b, w = S.world;
@@ -1277,10 +1329,13 @@ function botStep(bt, dt) {
       const below = P.tile(w, Math.floor((b.x + d * (R + 4)) / TS), Math.floor((b.y + R + 6) / TS));
       const ahead = P.tile(w, Math.floor((b.x + d * (R + 26)) / TS), Math.floor(b.y / TS));
       const onTarget = Math.abs(bt.tcx - b.x) < 6;
-      if (!onTarget && (below === 0 || below === 2 || below === 5 || ahead === 2 || isSolid(ahead))) {
+      bt.airAx = null;
+      bt.gT -= dt;
+      if (bt.gT <= 0 && !onTarget && botBudget > 0) { botBudget--; bt.gT = 0.08; bt.danger = botSim(bt, w, d, 0.5, 9, 0).dead; }   // would just walking on end badly?
+      if (!onTarget && (below === 0 || below === 2 || below === 5 || ahead === 2 || isSolid(ahead) || bt.danger)) {
         if (bt.jumpAt === 0) {
-          bt.jumpAt = bt.age + (Math.random() < bt.err ? rnd(0.1, 0.3) : 0.0001);   // sometimes mistime it, like a person
-          bt.tap = (below === 2) || (ahead === 2 && below !== 0 && below !== 5);    // short hops over lava, full jumps over gaps
+          bt.jumpAt = bt.age + (Math.random() < bt.err ? rnd(0.08, 0.2) : 0.0001);   // now and then a little late, like a person
+          bt.tap = false;
         }
         if (bt.age >= bt.jumpAt) { b.jbuf = 0.12; bt.hold = 0; bt.jumpAt = 0; jheld = true; }
       } else bt.jumpAt = 0;
@@ -1288,7 +1343,11 @@ function botStep(bt, dt) {
     } else {
       bt.hold += dt; jheld = bt.hold < (bt.tap ? 0.1 : 0.36);
       const dx = bt.tcx - b.x, stop = 0.5 * b.vx * b.vx / 1800 + 6;
-      if (Math.abs(dx) < stop && Math.sign(b.vx) === Math.sign(dx)) ax = -Math.sign(b.vx);
+      let aa = ax;
+      if (Math.abs(dx) < stop && Math.sign(b.vx) === Math.sign(dx)) aa = -Math.sign(b.vx);
+      bt.airT -= dt;
+      if (bt.airT <= 0 && botBudget > 0) { botBudget--; bt.airT = 0.1 + Math.random() * 0.06; bt.airAx = botAirPick(bt, aa, 0); }
+      ax = bt.airAx === null ? aa : bt.airAx;
     }
   }
   const ev = P.step(b, w, ax, jheld, dt);
@@ -1299,14 +1358,26 @@ function botStep(bt, dt) {
     if (settings.announce && bots.length < 12) addFeed(who(bt.name) + ' finished', 'fin', true);
   }
 }
+let botDrain = 0, botDrainAcc = 0;
+function botVanish() {
+  const i = Math.floor(Math.random() * bots.length), bt = bots[i], b = bt.b;
+  if (Math.random() < 0.5) burst(b.x, b.y, [bt.color, bt.color2, '#222'], 14, 240); else { ring(b.x, b.y, bt.color, 3, 34, 0.5); burst(b.x, b.y, [bt.color, '#fff'], 8, 120, 40); }
+  bots[i] = bots[bots.length - 1]; bots.pop();
+}
 function botsTick(dt) {
-  if (!settings.bots) { if (bots.length) bots.length = 0; return; }
+  if (!settings.bots && !bots.length) { botDrain = 0; return; }
   botNextRetarget -= dt;
   if (botNextRetarget <= 0) newBotTarget();
   botNextSpawn -= dt;
-  const cap = botCap();
+  const cap = settings.bots ? botCap() : 0;
+  botBudget = 14;
   if (bots.length < botTarget && bots.length < cap && botNextSpawn <= 0) { spawnBot(); botNextSpawn = botTarget > 30 ? rnd(0.1, 0.5) : rnd(1.5, 6); }
-  if (bots.length > cap) bots.pop();              // the world filled up with real people: bots make room
+  if (bots.length > cap) {                        // fewer allowed now (you lowered the number, or real people arrived): they drift away over about 10 seconds
+    const ex = bots.length - cap;
+    if (!botDrain || ex > botDrain * 11) botDrain = Math.max(1, ex / 10);
+    botDrainAcc += botDrain * dt;
+    while (botDrainAcc >= 1 && bots.length > cap) { botDrainAcc -= 1; botVanish(); }
+  } else { botDrain = 0; botDrainAcc = 0; }
   const px = S.b.x, py = S.b.y;
   for (let i = bots.length - 1; i >= 0; i--) {
     const bt = bots[i], far = Math.abs(bt.b.x - px) > 2600 || Math.abs(bt.b.y - py) > 1800;
@@ -1329,6 +1400,8 @@ const SCHEMES = {
   swipebtn: { name: 'Swipe + jump button', desc: 'Drag left or right to move. A jump button sits on the screen.' }
 };
 function pressJump() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0) S.b.jbuf = 0.12; }
+function pressBoost() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0 && settings.boost) S.bLatch = 0.25; }
+function pullReady() { return !!(settings.boost && settings.boostPull && S.b && S.mode === 'play' && S.dead <= 0 && S.b.bcharge >= 1 && !S.b.boost); }
 function backToStart() { if (S.mode !== 'play') return; S.started = false; $('finishbanner').classList.add('hide'); respawn(); }
 
 const keysDown = new Set();
@@ -1355,6 +1428,7 @@ addEventListener('keydown', e => {
   if (!$('settings').classList.contains('hide')) closeSettingsNow();
   e.preventDefault();
   if (a === 'back') { if (!e.repeat && !blocked()) backToStart(); return; }
+  if (a === 'boost') { if (!e.repeat) pressBoost(); return; }
   if (detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); applyDeps(); }
   keysDown.add(e.code); syncKeys();
 });
@@ -1369,32 +1443,37 @@ document.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', e 
 /* Positions are stored as "this many pixels from the left / right edge (or the middle), this many up from the bottom".
    Because they are real pixels, buttons keep the same spacing when you turn your phone. */
 const PRESETS = {
-  spread: { name: 'Spread out (jump in the middle)', pos: { l: { a: 'l', dx: 62, dy: 84 }, r: { a: 'r', dx: 62, dy: 84 }, j: { a: 'c', dx: 0, dy: 84 } } },
-  moveleft: { name: 'Move on the left, jump on the right', pos: { l: { a: 'l', dx: 58, dy: 84 }, r: { a: 'l', dx: 160, dy: 84 }, j: { a: 'r', dx: 66, dy: 84 } } },
-  moveright: { name: 'Move on the right, jump on the left', pos: { l: { a: 'r', dx: 160, dy: 84 }, r: { a: 'r', dx: 58, dy: 84 }, j: { a: 'l', dx: 66, dy: 84 } } },
+  spread: { name: 'Spread out (jump in the middle)', pos: { l: { a: 'l', dx: 62, dy: 84 }, r: { a: 'r', dx: 62, dy: 84 }, j: { a: 'c', dx: 0, dy: 84 }, b: { a: 'r', dx: 62, dy: 184 } } },
+  moveleft: { name: 'Move on the left, jump on the right', pos: { l: { a: 'l', dx: 58, dy: 84 }, r: { a: 'l', dx: 160, dy: 84 }, j: { a: 'r', dx: 66, dy: 84 }, b: { a: 'r', dx: 170, dy: 84 } } },
+  moveright: { name: 'Move on the right, jump on the left', pos: { l: { a: 'r', dx: 160, dy: 84 }, r: { a: 'r', dx: 58, dy: 84 }, j: { a: 'l', dx: 66, dy: 84 }, b: { a: 'l', dx: 170, dy: 84 } } },
   custom: { name: 'Custom (the way you moved them)', pos: null }
 };
 const isPortrait = () => window.innerHeight > window.innerWidth;
+function withB(p) { return Object.assign({}, p, { b: p.b || { a: p.j.a, dx: p.j.dx, dy: p.j.dy + 112 } }); }   // no saved spot for the boost button: put it just above jump
 function curLayout() {
   if (settings.preset === 'custom') {
     const L = (settings.perOrient && isPortrait() && settings.btnPosP) ? settings.btnPosP : settings.btnPos;
-    if (L) return L;
+    if (L) return withB(L);
   }
   let p = (PRESETS[settings.preset] && PRESETS[settings.preset].pos) || PRESETS.spread.pos;
   if (settings.scheme === 'swipebtn') p = { l: p.l, r: p.r, j: settings.preset === 'moveright' ? { a: 'l', dx: 66, dy: 84 } : { a: 'r', dx: 66, dy: 84 } };
-  return p;
+  return withB(p);
 }
-function btnSize(k) { return Math.round((k === 'j' ? 92 : 78) * settings.btnSize); }
+const boostBtnOn = () => !!(settings.boost && settings.boostBtn && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));
+function btnSize(k) { return Math.round((k === 'j' ? 92 : k === 'b' ? 68 : 78) * settings.btnSize); }
 function btnXY(q, W, H, sz) { const r = sz / 2; return [clamp(q.a === 'l' ? q.dx : q.a === 'r' ? W - q.dx : W / 2 + q.dx, r + 4, W - r - 4), clamp(H - q.dy, r + 8, H - r - 4)]; }
 function layoutTouch() {
-  const W = window.innerWidth, H = window.innerHeight, L = curLayout(), ks = settings.scheme === 'swipebtn' ? ['j'] : ['l', 'r', 'j'], pts = {};
+  const W = window.innerWidth, H = window.innerHeight, L = curLayout(), ks = (settings.scheme === 'swipebtn' ? ['j'] : ['l', 'r', 'j']).concat(boostBtnOn() || editMode ? ['b'] : []), pts = {};
   ks.forEach(k => { const sz = btnSize(k); pts[k] = btnXY(L[k], W, H, sz).concat(sz); });
   // never let two buttons sit on top of each other (a narrow screen can squeeze them)
-  for (let it = 0; it < 3; it++) for (let a = 0; a < ks.length; a++) for (let b = a + 1; b < ks.length; b++) {
+  for (let it = 0; it < 4; it++) for (let a = 0; a < ks.length; a++) for (let b = a + 1; b < ks.length; b++) {
     const p = pts[ks[a]], q = pts[ks[b]], need = (p[2] + q[2]) / 2 + 6, dx = q[0] - p[0], dy = q[1] - p[1];
-    if (Math.hypot(dx, dy) < need) { const push = (need - Math.abs(dx)) / 2 + 1, sg = dx >= 0 ? 1 : -1; p[0] = clamp(p[0] - sg * push, p[2] / 2 + 4, W - p[2] / 2 - 4); q[0] = clamp(q[0] + sg * push, q[2] / 2 + 4, W - q[2] / 2 - 4); }
+    if (Math.hypot(dx, dy) < need) {
+      if (Math.abs(dy) > Math.abs(dx)) { const push = (need - Math.abs(dy)) / 2 + 1, sg = dy >= 0 ? 1 : -1; p[1] = clamp(p[1] - sg * push, p[2] / 2 + 8, H - p[2] / 2 - 4); q[1] = clamp(q[1] + sg * push, q[2] / 2 + 8, H - q[2] / 2 - 4); }
+      else { const push = (need - Math.abs(dx)) / 2 + 1, sg = dx >= 0 ? 1 : -1; p[0] = clamp(p[0] - sg * push, p[2] / 2 + 4, W - p[2] / 2 - 4); q[0] = clamp(q[0] + sg * push, q[2] / 2 + 4, W - q[2] / 2 - 4); }
+    }
   }
-  [['tl', 'l'], ['tr', 'r'], ['tj', 'j']].forEach(p => {
+  [['tl', 'l'], ['tr', 'r'], ['tj', 'j'], ['tb', 'b']].forEach(p => {
     const el = $(p[0]), pt = pts[p[1]]; if (!pt) return;
     el.style.left = pt[0] + 'px'; el.style.top = pt[1] + 'px'; el.style.width = el.style.height = pt[2] + 'px';
   });
@@ -1405,7 +1484,8 @@ function applyTouchUI() {
   const showBtns = on && (sc === 'buttons' || sc === 'swipebtn');
   $('touch').classList.toggle('hide', !showBtns);
   $('tl').classList.toggle('hide', sc !== 'buttons'); $('tr').classList.toggle('hide', sc !== 'buttons');
-  ['tl', 'tr', 'tj'].forEach(id => $(id).classList.toggle('edit', editMode));
+  $('tb').classList.toggle('hide', !(boostBtnOn() || editMode));
+  ['tl', 'tr', 'tj', 'tb'].forEach(id => $(id).classList.toggle('edit', editMode));
   layoutTouch();
   $('btnEditLayout').disabled = !(sc === 'buttons' || sc === 'swipebtn');
   $('btnResetLayout').disabled = !(settings.btnPos || settings.btnPosP);
@@ -1419,23 +1499,33 @@ function recomputeTouch() {
   tin.ax = clamp(bAx + m, -1, 1);
   if (j && !tin.gjump) pressJump(); tin.gjump = j;
   tin.jump = j || tin.btnJ;
+  joyUpdate();
+}
+function joyUpdate() {   // the little joystick that appears where you touch (swipe styles only)
+  const el = $('joy'); let p = null; gp.forEach(q => { if (!p) p = q; });
+  if (!p || !settings.joy || settings.scheme === 'buttons' || !touchActive() || editMode) { el.classList.add('hide'); return; }
+  const rdy = pullReady(), lim = rdy ? 76 : 32, dx = clamp(p.x - p.ax, -lim, lim);
+  el.classList.remove('hide'); el.classList.toggle('rdy', !!rdy);
+  el.style.left = p.ax + 'px'; el.style.top = p.sy + 'px';
+  el.firstChild.style.transform = 'scaleX(' + (rdy ? 1.45 : 1) + ')';
+  el.lastChild.style.transform = 'translate(' + (dx * 1.35).toFixed(1) + 'px,' + clamp((p.y - p.sy) * 0.3, -14, 14).toFixed(1) + 'px)';
 }
 function bindBtn(id, key) {
   const b = $(id);
-  const down = e => { if (editMode) return; e.preventDefault(); b.classList.add('on'); if (key === 'J' && !tin.btnJ) pressJump(); tin['btn' + key] = true; recomputeTouch(); };
+  const down = e => { if (editMode) return; e.preventDefault(); b.classList.add('on'); if (key === 'J' && !tin.btnJ) pressJump(); if (key === 'B') pressBoost(); tin['btn' + key] = true; recomputeTouch(); };
   const up = e => { if (editMode) return; e.preventDefault(); b.classList.remove('on'); tin['btn' + key] = false; recomputeTouch(); };
   if (window.PointerEvent) { b.addEventListener('pointerdown', down); ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => b.addEventListener(n, up)); }
   else { b.addEventListener('touchstart', down, { passive: false }); b.addEventListener('touchend', up, { passive: false }); b.addEventListener('touchcancel', up, { passive: false }); }
 }
-bindBtn('tl', 'L'); bindBtn('tr', 'R'); bindBtn('tj', 'J');
+bindBtn('tl', 'L'); bindBtn('tr', 'R'); bindBtn('tj', 'J'); bindBtn('tb', 'B');
 // drag the buttons around (edit mode)
 function layoutKey() { return (settings.perOrient && isPortrait()) ? 'btnPosP' : 'btnPos'; }
-[['tl', 'l'], ['tr', 'r'], ['tj', 'j']].forEach(p => {
+[['tl', 'l'], ['tr', 'r'], ['tj', 'j'], ['tb', 'b']].forEach(p => {
   const el = $(p[0]);
   el.addEventListener('pointerdown', e => {
     if (!editMode) return; e.preventDefault(); el.setPointerCapture(e.pointerId);
     const key = layoutKey();
-    if (settings.preset !== 'custom' || !settings[key]) { const cur = curLayout(); settings[key] = { l: Object.assign({}, cur.l), r: Object.assign({}, cur.r), j: Object.assign({}, cur.j) }; settings.preset = 'custom'; selPreset.set('custom'); }
+    if (settings.preset !== 'custom' || !settings[key]) { const cur = curLayout(); settings[key] = { l: Object.assign({}, cur.l), r: Object.assign({}, cur.r), j: Object.assign({}, cur.j), b: Object.assign({}, cur.b) }; settings.preset = 'custom'; selPreset.set('custom'); }
     const mv = ev => {
       const W = window.innerWidth, H = window.innerHeight, x = clamp(ev.clientX, 20, W - 20), y = clamp(ev.clientY, 40, H - 20), a = x < W * 0.4 ? 'l' : x > W * 0.6 ? 'r' : 'c';
       settings[key][p[1]] = { a, dx: Math.round(a === 'l' ? x : a === 'r' ? W - x : x - W / 2), dy: Math.round(H - y) }; layoutTouch();
@@ -1459,11 +1549,14 @@ addEventListener('resize', layoutTouch); addEventListener('orientationchange', (
 /* ----- swipe gestures (floating anchor: the farther you drag from where you started, the faster you roll) ----- */
 const gp = new Map();
 function gDown(id, x, y) { gp.set(id, { ax: x, ay: y, x, y, sx: x, sy: y, t0: performance.now(), moved: false }); recomputeTouch(); }
+
 function gMove(id, x, y) {
   const p = gp.get(id); if (!p) return;
   p.x = x; p.y = y; if (Math.abs(x - p.sx) + Math.abs(y - p.sy) > 12) p.moved = true;
-  if (x - p.ax > 32) p.ax = x - 32; else if (p.ax - x > 32) p.ax = x + 32;     // the anchor trails behind, so turning around is quick
+  const rdy = pullReady(), cap = rdy ? 76 : 32;    // when the boost ring is full the anchor lets you pull farther, and that extra pull launches it
+  if (x - p.ax > cap) p.ax = x - cap; else if (p.ax - x > cap) p.ax = x + cap;     // the anchor trails behind, so turning around is quick
   if (y > p.ay) p.ay = y; else if (p.ay - y > 90) p.ay = y + 90;
+  if (rdy && Math.abs(x - p.ax) >= 66 && Math.sign(x - p.ax) === (S.b.hdir || 0)) { pressBoost(); p.ax = x - Math.sign(x - p.ax) * 32; }
   recomputeTouch();
 }
 function gUp(id) {
@@ -1613,7 +1706,7 @@ function syncUI() {
   $('setName').value = settings.name;
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
-    ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setPerOrient', 'perOrient']]
+    ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setPerOrient', 'perOrient'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setJoy', 'joy']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(settings.preset); selMusic.set(settings.music);
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
@@ -1630,7 +1723,8 @@ bindToggle('setBotMark', 'botMark'); bindToggle('setBotAsk', 'botAsk'); bindTogg
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
-bindToggle('setBots', 'bots', () => { bots.length = 0; if (settings.bots) { newBotTarget(); botNextSpawn = 0.8; } });
+bindToggle('setBots', 'bots', () => { if (settings.bots) { newBotTarget(); botNextSpawn = 0.8; } });
+bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto'); bindToggle('setBoostBtn', 'boostBtn', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull'); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); bindToggle('setPerOrient', 'perOrient', () => layoutTouch());
 $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
@@ -1652,7 +1746,7 @@ $('setFallWarn').onchange = () => {
   askConfirm('Turn off the warning sign?', 'The sign tells you when you are near lava, near the edge of the world, or falling so fast that the landing could be your last.', 'Turn it off', () => { settings.fallWarn = settings.edge = false; S.edgeWarn = S.fallWarn = S.lavaWarn = false; $('setFallWarn').checked = false; save(); sfx('off'); });
 };
 /* ----- keyboard: pick your own keys (a key can do only one thing) ----- */
-const KEYACT = [['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['back', 'flag', 'Back to start']];
+const KEYACT = [['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['boost', 'bolt', 'Boost'], ['back', 'flag', 'Back to start']];
 const KEYNAMES = { Space: 'Space', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Enter: 'Enter', ShiftLeft: 'L-Shift', ShiftRight: 'R-Shift', Tab: 'Tab', Backspace: 'Backspace', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`', CapsLock: 'Caps' };
 const keyLabel = c => KEYNAMES[c] || (c.indexOf('Key') === 0 ? c.slice(3) : c.indexOf('Digit') === 0 ? c.slice(5) : c.indexOf('Numpad') === 0 ? 'Num ' + c.slice(6) : c);
 const RESERVED = ['Escape', 'Minus', 'Equal', 'NumpadAdd', 'NumpadSubtract', 'MetaLeft', 'MetaRight', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ContextMenu'];
@@ -1720,6 +1814,7 @@ const showKb = () => settings.inputMode === 'keyboard' || (settings.inputMode ==
 const showTouch = () => settings.inputMode === 'touch' || (settings.inputMode === 'auto' && touchActive());
 const DEPS = {
   kb: showKb, touch: showTouch, touchbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'),
+  boost: () => settings.boost, touchgest: () => showTouch() && settings.scheme !== 'buttons',
   mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => settings.bots, '!bots': () => !settings.bots,
   minimap: () => settings.minimap, sfx: () => settings.sfx, music: () => settings.music !== 'none'
 };
@@ -1745,7 +1840,7 @@ function setNet(state) {
   const n = $('netstat');
   if (state === 'online') { n.classList.add('hide'); return; }
   n.classList.remove('hide');
-  $('netText').textContent = state === 'connecting' ? 'Connecting…' : state === 'solo' ? 'Solo world' : 'Offline';
+  $('netText').textContent = state === 'connecting' ? 'Connecting' : (state === 'solo' || location.protocol === 'file:') ? 'Solo play' : 'Checking';
   if (state === 'offline' || state === 'solo') setTimeout(maybeAskBots, 700);
 }
 function dropConnection() {
@@ -1769,7 +1864,9 @@ function connect() {
   if (!settings.mp || ws) return;
   if (location.protocol === 'file:' || !('WebSocket' in window)) { setNet('offline'); return; }
   let sock;
-  try { sock = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host); }
+  // the game server lives on Render. Any other address (like ballpit.party) still talks to it; only your own computer talks to itself.
+  const home = /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(location.hostname) || /onrender\.com$/.test(location.hostname);
+  try { sock = home ? new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host) : new WebSocket('wss://ballpit-party.onrender.com'); }
   catch (e) { scheduleRetry(); return; }
   ws = sock; sock.binaryType = 'arraybuffer';
   sock.onopen = () => { if (sock === ws) sock.send(JSON.stringify({ t: 'hello', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat })); };
@@ -1977,33 +2074,110 @@ function dayPhase() {
   if (len > 0) return clamp(1 - (S.nextAt - nowMs()) / len, 0, 1);
   return (Date.now() % SLOT_MS) / SLOT_MS;
 }
-function drawSky(sw, sh, camL, p) {   // sun, moon and stars: far away, so they barely move with the camera
-  const night = clamp((p - 0.62) / 0.18, 0, 1) * (p > 0.97 ? 1 : 1);
+/* ----- the sky: sun, moon, stars, clouds, birds and fireflies. All of it is drawn on your own device and is never shared. ----- */
+function cloudsFor(m) {   // the clouds of this map: more of them the higher up you go
+  if (m.cloudsMade) return m.cloudsMade;
+  let a = (m.idx * 2654435761 + 12345) >>> 0; const rr = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const out = [], H = m.H;
+  while (out.length < 520) {
+    const y = rr() * H, up = 1 - y / H;
+    if (rr() > 0.1 + 0.9 * up * up) continue;                       // thick near the top of the level, thin near the ground
+    const d = 0.1 + rr() * 0.22;
+    out.push({ x: rr() * (m.W + 200) - 100, y, d, s: 26 + rr() * 40 + d * 90, sp: 2 + rr() * 8, k: (rr() * 3) | 0, ph: rr() * 100 });
+  }
+  out.sort((p, q) => p.d - q.d);
+  return (m.cloudsMade = out);
+}
+function drawCloud(x, y, s, k, a) {
+  ctx.globalAlpha = a; ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(70,80,110,.35)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x - s * 1.1, y + s * 0.3);
+  const bumps = k === 0 ? [[-0.7, 0.05, 0.5], [-0.15, -0.3, 0.62], [0.45, -0.05, 0.5], [0.95, 0.2, 0.34]] : k === 1 ? [[-0.8, 0.15, 0.4], [-0.3, -0.2, 0.5], [0.2, -0.38, 0.55], [0.75, -0.05, 0.45], [1.1, 0.2, 0.3]] : [[-0.5, 0, 0.5], [0.15, -0.28, 0.6], [0.8, 0.05, 0.46]];
+  for (const b of bumps) ctx.arc(x + b[0] * s, y + b[1] * s, b[2] * s, Math.PI, 0);
+  ctx.lineTo(x + s * 1.2, y + s * 0.3); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(190,205,235,.35)'; ctx.fillRect(x - s * 1.05, y + s * 0.12, s * 2.2, s * 0.16);
+  ctx.globalAlpha = 1;
+}
+const birds = [];
+let birdNext = 4;
+function skyLife(sw, sh, dt, fade, night, hN) {   // birds by day, fireflies by night
+  if (fade < 0.05) { birds.length = 0; return; }
+  birdNext -= dt;
+  if (birdNext <= 0) {
+    birdNext = rnd(7, 20) * (settings.low ? 2 : 1);
+    if (night < 0.5 && hN < 0.85 && birds.length < 18) {
+      const dir = Math.random() < 0.5 ? 1 : -1, n = ri(2, 6), y0 = rnd(0.12, 0.5) * sh, sp = rnd(45, 85), size = rnd(7, 12);
+      for (let i = 0; i < n; i++) birds.push({ x: dir > 0 ? -30 - i * rnd(16, 30) : sw + 30 + i * rnd(16, 30), y: y0 + rnd(-24, 24) + i * 5 * (i & 1 ? 1 : -1), v: dir * sp * rnd(0.9, 1.1), sz: size * rnd(0.85, 1.15), ph: rnd(0, 6), by: rnd(0, 6) });
+    }
+  }
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(30,26,40,.75)';
+  for (let i = birds.length - 1; i >= 0; i--) {
+    const b = birds[i]; b.x += b.v * dt; b.by += dt;
+    if (b.x < -80 || b.x > sw + 80) { birds.splice(i, 1); continue; }
+    const y = b.y + Math.sin(b.by * 1.3) * 7, f = Math.sin(S.t * 9 + b.ph) , w = b.sz;
+    ctx.globalAlpha = 0.85 * fade; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(b.x - w, y - f * w * 0.55); ctx.quadraticCurveTo(b.x - w * 0.4, y - w * 0.35 - f * w * 0.2, b.x, y); ctx.quadraticCurveTo(b.x + w * 0.4, y - w * 0.35 - f * w * 0.2, b.x + w, y - f * w * 0.55); ctx.stroke();
+  }
+  if (night > 0.4 && hN < 0.7 && !settings.low) {   // fireflies drifting low over the ground
+    ctx.fillStyle = '#e8ff7a';
+    for (let i = 0; i < 16; i++) {
+      const t = S.t * 0.25 + i * 7.3, x = ((i * 137.5 + Math.sin(t * 1.3 + i) * 60 + S.t * 6) % (sw + 60) + sw + 60) % (sw + 60) - 30, y = sh * (0.62 + 0.3 * ((i * 0.37) % 1)) + Math.sin(t * 2 + i * 2) * 18;
+      const tw = 0.5 + 0.5 * Math.sin(S.t * 3 + i * 1.9); ctx.globalAlpha = (night - 0.3) * fade * (0.25 + 0.75 * tw);
+      ctx.beginPath(); ctx.arc(x, y, 2 + tw, 0, TAU); ctx.fill();
+      ctx.globalAlpha *= 0.3; ctx.beginPath(); ctx.arc(x, y, 6 + tw * 2, 0, TAU); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+function drawSky(sw, sh, camL, camT, p, dt, fade) {   // far away, so the sun and moon barely move sideways; height changes where they sit
+  const m = S.map, night = clamp((p - 0.62) / 0.18, 0, 1);
+  const hN = clamp(1 - (S.b.y / TS) / m.H, 0, 1);                 // 0 = deep down, 1 = the very top of the level
+  const lift = (0.42 - hN) * sh * 0.55;                              // fall and they climb the sky; climb and they sink
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   if (night > 0.02) {
-    ctx.fillStyle = '#fff6d6';
+    ctx.strokeStyle = '#fff6d6';
     for (let i = 0; i < 70; i++) {
       const x = ((hsh(i, 1, 41) * sw * 1.4 - camL * 0.03) % sw + sw) % sw, y = hsh(i, 2, 41) * sh * 0.8, tw = 0.5 + 0.5 * Math.sin(S.t * 2 + i * 1.7);
-      ctx.globalAlpha = night * (0.35 + 0.5 * tw); const r = 1 + hsh(i, 3, 41) * 1.6;
-      ctx.beginPath(); ctx.moveTo(x - r * 2, y); ctx.lineTo(x + r * 2, y); ctx.moveTo(x, y - r * 2); ctx.lineTo(x, y + r * 2); ctx.lineWidth = 1.4; ctx.strokeStyle = '#fff6d6'; ctx.stroke();
+      ctx.globalAlpha = night * fade * (0.35 + 0.5 * tw); const r = 1 + hsh(i, 3, 41) * 1.6;
+      ctx.beginPath(); ctx.moveTo(x - r * 2, y); ctx.lineTo(x + r * 2, y); ctx.moveTo(x, y - r * 2); ctx.lineTo(x, y + r * 2); ctx.lineWidth = 1.4; ctx.stroke();
     }
     ctx.globalAlpha = 1;
   }
   const ps = clamp(p / 0.76, 0, 1);
   if (p < 0.78) {   // sun: rises on the left, sets on the right
-    const x = sw * (0.08 + 0.84 * ps), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * ps)), r = 26, warm = p < 0.14 || p > 0.55;
-    ctx.globalAlpha = 0.9; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.fillStyle = warm ? '#ffa24a' : '#ffe566';
+    const x = sw * (0.08 + 0.84 * ps), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * ps)) + lift, r = 26, warm = p < 0.14 || p > 0.55, fa = fade * clamp((0.78 - p) / 0.06, 0, 1) * clamp(p / 0.03, 0.4, 1);
+    const gr = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 4.2); gr.addColorStop(0, warm ? 'rgba(255,170,80,.55)' : 'rgba(255,240,150,.5)'); gr.addColorStop(1, 'rgba(255,230,140,0)');
+    ctx.globalAlpha = fa; ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r * 4.2, 0, TAU); ctx.fill();
+    ctx.globalAlpha = 0.95 * fa; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.fillStyle = warm ? '#ffa24a' : '#ffe566';
     ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
-    ctx.lineWidth = 2.4; ctx.beginPath(); for (let k = 0; k < 10; k++) { const a = k * TAU / 10 + S.t * 0.1; ctx.moveTo(x + Math.cos(a) * (r + 6), y + Math.sin(a) * (r + 6)); ctx.lineTo(x + Math.cos(a) * (r + 15 + (k & 1) * 5), y + Math.sin(a) * (r + 15 + (k & 1) * 5)); } ctx.stroke();
+    ctx.lineWidth = 2.4; ctx.beginPath(); for (let k = 0; k < 12; k++) { const a = k * TAU / 12 + S.t * 0.1, l = r + 15 + (k & 1) * 6 + Math.sin(S.t * 2 + k) * 1.5; ctx.moveTo(x + Math.cos(a) * (r + 6), y + Math.sin(a) * (r + 6)); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); } ctx.stroke();
+    ctx.fillStyle = 'rgba(160,80,0,.5)'; ctx.beginPath(); ctx.arc(x - 8, y - 4, 2.6, 0, TAU); ctx.arc(x + 8, y - 4, 2.6, 0, TAU); ctx.fill();   // a sleepy little face
+    ctx.strokeStyle = 'rgba(160,80,0,.55)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y + 3, 7, 0.25, Math.PI - 0.25); ctx.stroke();
     ctx.globalAlpha = 1;
   }
-  if (p > 0.6) {   // moon
-    const pm = clamp((p - 0.6) / 0.4, 0, 1), x = sw * (0.08 + 0.84 * pm), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * pm)), r = 22;
-    ctx.globalAlpha = clamp((p - 0.6) / 0.12, 0, 1) * 0.95; ctx.fillStyle = '#f1efe0'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
+  if (p > 0.6) {   // moon, with a phase that is different from one map to the next
+    const pm = clamp((p - 0.6) / 0.4, 0, 1), x = sw * (0.08 + 0.84 * pm), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * pm)) + lift, r = 22, fa = fade * clamp((p - 0.6) / 0.12, 0, 1) * 0.95;
+    const ph = ((S.idx * 3 + 1) % 8) / 8, lit = 0.5 - 0.5 * Math.cos(ph * TAU), off = (1 - lit) * r * 2.1 * ((ph < 0.5) ? 1 : -1);
+    const gr = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 3.4); gr.addColorStop(0, 'rgba(210,220,255,.3)'); gr.addColorStop(1, 'rgba(210,220,255,0)');
+    ctx.globalAlpha = fa; ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r * 3.4, 0, TAU); ctx.fill();
+    ctx.globalAlpha = fa; ctx.fillStyle = '#f1efe0'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
     ctx.fillStyle = 'rgba(150,150,170,.45)'; [[-7, -5, 5], [6, 4, 4], [-2, 9, 3]].forEach(c => { ctx.beginPath(); ctx.arc(x + c[0], y + c[1], c[2], 0, TAU); ctx.fill(); });
+    if (lit < 0.98) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.clip(); ctx.fillStyle = 'rgba(19,14,46,.82)'; ctx.beginPath(); ctx.arc(x + off, y, r * 1.02, 0, TAU); ctx.fill(); ctx.restore(); }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke();
     ctx.globalAlpha = 1;
   }
+  // clouds: far-away layers that slide slowly past as you climb or fall. Higher up there are more of them.
+  const cl = cloudsFor(m), sc = S.viewSc || 1, cxw = camL + (sw / sc) / 2, cyw = camT + (sh / sc) / 2, dens = settings.low ? 0.45 : 1;
+  for (let i = 0; i < cl.length; i++) {
+    const c = cl[i]; if (dens < 1 && (i % 100) / 100 > dens) continue;
+    const k = c.d * sc, ext = c.s * (1.5 + c.d * 3), wrapW = (m.W + 260) * TS * k;
+    let x = sw / 2 + (c.x * TS - cxw) * k + S.t * c.sp * (0.5 + c.d * 2); x = ((x + ext) % wrapW + wrapW) % wrapW - ext;
+    const y = sh / 2 + (c.y * TS - cyw) * k;
+    if (x < -ext || x > sw + ext || y < -ext || y > sh * 0.92) continue;
+    const s = c.s * (0.55 + c.d * 1.6) * Math.min(1.4, sc);
+    drawCloud(x, y, s, c.k, (0.55 + c.d * 1.2) * 0.8 * fade);
+  }
+  skyLife(sw, sh, dt, fade, night, hN);
 }
 let paperPat = null;
 function paperGrain() {   // faint paper texture over everything, like a drawing in a sketchbook
@@ -2115,8 +2289,8 @@ function drawZones(camL, camT, vw, vh) {
 function drawTiles(camL, camT, vw, vh) {
   const w = S.world, W = w.W, g = w.grid, tg = S.tg, water = S.water; water.length = 0;
   const sketch = !settings.low;
-  const x0 = Math.max(0, Math.floor(camL / TS)), x1 = Math.min(W - 1, Math.floor((camL + vw) / TS));
-  const y0 = Math.max(0, Math.floor(camT / TS)), y1 = Math.min(w.H - 1, Math.floor((camT + vh) / TS));
+  const x0 = Math.max(0, Math.floor(camL / TS) - 3), x1 = Math.min(W - 1, Math.floor((camL + vw) / TS) + 3);   // (a few tiles extra: trees and signs lean over the edge, so they never pop in)
+  const y0 = Math.max(0, Math.floor(camT / TS) - 5), y1 = Math.min(w.H - 1, Math.floor((camT + vh) / TS) + 2);
   for (let ty = y0; ty <= y1; ty++) {
     for (let tx = x0; tx <= x1; tx++) {
       const i = ty * W + tx, t = g[i];
@@ -2263,6 +2437,31 @@ function drawCoins(camL, camT, vw, vh) {
     }
   }
 }
+function drawBoost(b) {   // the boost ring above your ball: fills while you roll one way, glows when it is ready, trails while you boost
+  const q = b.bcharge, rdy = q >= 1, x = b.x, y = b.y - R - 22, r = 9, t = S.t;
+  if (b.boost) {
+    ctx.save(); ctx.strokeStyle = 'rgba(255,230,120,.8)'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath();
+    for (let i = 0; i < 4; i++) { const yy = b.y - 10 + i * 7 + Math.sin(t * 30 + i) * 1.5, l = 22 + ((t * 90 + i * 17) % 22); ctx.moveTo(b.x - b.bdir * (R + 6), yy); ctx.lineTo(b.x - b.bdir * (R + 6 + l), yy); }
+    ctx.stroke(); ctx.restore(); return;
+  }
+  if (q < 0.04) return;
+  ctx.save();
+  if (q > 0.7) {   // a flickering aura: something is about to happen
+    ctx.globalAlpha = (q - 0.6) * (0.5 + 0.4 * Math.sin(t * (rdy ? 26 : 14)));
+    ctx.strokeStyle = '#ffd23d'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(b.x, b.y, R + 4 + (rdy ? Math.sin(t * 20) * 2 : 0), 0, TAU); ctx.stroke();
+  }
+  ctx.globalAlpha = rdy ? 1 : 0.6 + q * 0.4;
+  ctx.fillStyle = 'rgba(20,16,30,.6)'; ctx.beginPath(); ctx.arc(x, y, r + 2, 0, TAU); ctx.fill();
+  ctx.fillStyle = rdy ? '#ffe45c' : '#ffb347'; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(q, 0.9999)); ctx.closePath(); if (rdy) { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); } ctx.fill();
+  ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r + 2, 0, TAU); ctx.stroke();
+  if (rdy) {
+    const d = b.hdir || 1, pul = (t * 5) % 1;
+    ctx.strokeStyle = '#fff'; ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 16); ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x, y, r + 5, 0, TAU); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.strokeStyle = '#ffd23d'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (let i = 0; i < 2; i++) { const ox = d * (R + 10 + i * 9 + pul * 6); ctx.globalAlpha = 1 - pul * 0.6; ctx.beginPath(); ctx.moveTo(b.x + ox - d * 4, b.y - 8); ctx.lineTo(b.x + ox + d * 3, b.y); ctx.lineTo(b.x + ox - d * 4, b.y + 8); ctx.stroke(); }
+  }
+  ctx.restore();
+}
 function drawBeacon(camL, camT, vw, vh, sc) {   // every 30 minutes, for 15 seconds: shows where the finish is
   const f = S.map.flag, fx = f[0] * TS + 30, fy = f[1] * TS - 100, p = (S.t * 1.2) % 1;
   ctx.save();
@@ -2371,8 +2570,9 @@ function renderInner(dt, nowT) {
   const sc = Math.max(clamp(zoomBase() * settings.zoom, 0.2, 5), sw / VIEW_MAX_W, sh / VIEW_MAX_H);
   const vw = sw / sc, vh = sh / sc, b = S.b;
   updateFx(dt);
+  { const tb = $('tb'); if (!tb.classList.contains('hide') && !editMode) { const q = Math.round(clamp(b.bcharge || 0, 0, 1) * 100); if (q !== S.tbq) { S.tbq = q; tb.style.setProperty('--p', q); tb.classList.toggle('rdy', q >= 100 && !b.boost); } } }
   const k = 1 - Math.exp(-7 * dt);
-  S.camx += (b.x + b.vx * 0.25 - S.camx) * k;
+  S.camx += (b.x - S.camx) * k;
   S.camy += (b.y + clamp(b.vy * 0.12, -60, 90) - S.camy) * k;
   let shx = 0, shy = 0;
   if (S.shake > 0) { S.shake -= dt; const a = Math.min(1, S.shake * 4) * 7; shx = (Math.random() - 0.5) * a; shy = (Math.random() - 0.5) * a; }
@@ -2385,7 +2585,10 @@ function renderInner(dt, nowT) {
   const dph = dayPhase(); S.night = clamp((dph - 0.62) / 0.2, 0, 1);
   ctx.setTransform(dpr * sc, 0, 0, dpr * sc, -camL * dpr * sc, -camT * dpr * sc);
   drawZones(camL, camT, vw, vh);
-  if (!inCave(S.b.x / TS, S.b.y / TS)) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawSky(sw, sh, camL, dph); ctx.setTransform(dpr * sc, 0, 0, dpr * sc, -camL * dpr * sc, -camT * dpr * sc); }
+  { // the sky fades in and out (never pops) as you go in and out of caves
+    S.skyA = S.skyA === undefined ? 1 : S.skyA; const want = inCave(S.b.x / TS, S.b.y / TS) ? 0 : 1; S.skyA += (want - S.skyA) * Math.min(1, dt * 2.5); S.viewSc = sc;
+    if (S.skyA > 0.02) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawSky(sw, sh, camL, camT, dph, dt, S.skyA); ctx.setTransform(dpr * sc, 0, 0, dpr * sc, -camL * dpr * sc, -camT * dpr * sc); }
+  }
   // the lava sea at the very bottom, and the edge of the world on the sides
   { // the lava sea follows the land: it sits right under the level, wherever you are
     const fl = S.map.floorY, xa = Math.max(0, Math.floor(camL / TS) - 1), xb = Math.min(S.world.W - 1, Math.ceil((camL + vw) / TS) + 1);
@@ -2428,6 +2631,7 @@ function renderInner(dt, nowT) {
     if (S.dead <= 0 && !S.away) {    // you: always last = always on top
       let s = 1; if (S.spawnT > 0) { const p = 1 - S.spawnT / 0.6; s = 0.25 + 0.75 * Math.min(1, p * 1.25) + 0.12 * Math.sin(p * 3.14); }
       drawBall(b.x, b.y, b.rot, settings.color, settings.color2, settings.pat, 1, true, s);
+      if (settings.boost) drawBoost(b);
       drawLabel(settings.name, false, S.crown, b.x, b.y);
     }
   }
@@ -2436,12 +2640,29 @@ function renderInner(dt, nowT) {
   if (S.mode === 'play' && S.dead <= 0 && !S.away && settings.fallWarn && (S.fallWarn || S.lavaWarn || S.edgeWarn)) drawWarnSign(b.x, b.y - R - 52, !!(S.fallWarn || S.lavaWarn));
   { const sk = skyAt(dph); if (sk[3] > 0.005) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = 'rgba(' + (sk[0] | 0) + ',' + (sk[1] | 0) + ',' + (sk[2] | 0) + ',' + sk[3].toFixed(3) + ')'; ctx.fillRect(0, 0, sw, sh); } }
   if (!settings.low) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.5; ctx.fillStyle = paperGrain(); ctx.fillRect(0, 0, cv.width, cv.height); ctx.globalAlpha = 1; }
-  if (S.fallLvl > 0.05 && S.mode === 'play' && S.dead <= 0) {   // speed lines while you fall fast
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,' + (0.15 + S.fallLvl * 0.45) + ')'; ctx.beginPath();
-    for (let i = 0; i < 12; i++) { const x = Math.random() * sw, y = Math.random() * sh, l = 30 + S.fallLvl * 110; ctx.moveTo(x, y); ctx.lineTo(x, y - l); }
-    ctx.stroke();
-    if (S.fallWarn) { const gr = ctx.createRadialGradient(sw / 2, sh / 2, Math.min(sw, sh) * 0.3, sw / 2, sh / 2, Math.max(sw, sh) * 0.7); gr.addColorStop(0, 'rgba(255,0,0,0)'); gr.addColorStop(1, 'rgba(255,30,10,' + (0.15 + S.fallLvl * 0.4) + ')'); ctx.fillStyle = gr; ctx.fillRect(0, 0, sw, sh); }
-  }   // translucent, drawn last so swimming balls look submerged
+  if (S.mode === 'play' && S.dead <= 0 && !S.away) {   // air streaks: they only show when you have really been falling, start tiny, and grow with your speed
+    const fl = clamp((b.vy - 380) / 1400, 0, 1) * clamp((b.fall - 0.2) / 0.45, 0, 1);
+    if (!S.airP) { S.airP = []; for (let i = 0; i < 64; i++) S.airP.push({ x: Math.random(), y: Math.random(), z: 0.4 + Math.random() * 0.6 }); }
+    S.airLvl = S.airLvl === undefined ? 0 : S.airLvl; S.airLvl += (fl - S.airLvl) * Math.min(1, dt * (fl > S.airLvl ? 4 : 9));
+    const L = S.airLvl;
+    if (L > 0.01 && !b.water) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineCap = 'round';
+      const n = Math.ceil(S.airP.length * (0.2 + 0.8 * L)), sp = Math.max(0, b.vy) * sc * 0.55 / sh, len = 4 + L * L * 120;
+      for (let i = 0; i < S.airP.length; i++) {
+        const p = S.airP[i]; p.y -= sp * p.z * dt; if (p.y < -0.25) { p.y = 1.02 + Math.random() * 0.2; p.x = Math.random(); }
+        if (i >= n) continue;
+        ctx.strokeStyle = 'rgba(255,255,255,' + ((0.08 + 0.5 * L) * p.z).toFixed(3) + ')'; ctx.lineWidth = (1 + 2 * L) * p.z;
+        const x = p.x * sw, y = p.y * sh; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + len * p.z); ctx.stroke();
+      }
+    }
+    if (S.fallWarn) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); const gr = ctx.createRadialGradient(sw / 2, sh / 2, Math.min(sw, sh) * 0.3, sw / 2, sh / 2, Math.max(sw, sh) * 0.7); gr.addColorStop(0, 'rgba(255,0,0,0)'); gr.addColorStop(1, 'rgba(255,30,10,' + (0.15 + S.fallLvl * 0.4) + ')'); ctx.fillStyle = gr; ctx.fillRect(0, 0, sw, sh); }
+    if (b.boost) {   // sideways rush lines
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(255,240,170,.35)'; ctx.lineWidth = 2; ctx.beginPath();
+      for (let i = 0; i < 9; i++) { const y = Math.random() * sh, x = Math.random() * sw, l = 50 + Math.random() * 90; ctx.moveTo(x, y); ctx.lineTo(x - b.bdir * l, y); }
+      ctx.stroke();
+    }
+  }
+  // (the water is translucent and drawn last, so swimming balls look submerged)
 }
 
 /* ================= mini-map: a big chunk of the world around you; other players only if they are on your screen ================= */
@@ -2490,13 +2711,28 @@ function drawMinimap() {
       g.globalAlpha = 1;
     }
   }
-  if (S.beaconOn && settings.beacon) {   // while the beacon is on, the finish blinks on the map's edge
-    const f = m.flag, fx = (f[0] - left) * ppt, fy = (f[1] - top) * ppt, bx = clamp(fx, 6, w - 6), by = clamp(fy, 6, h - 6);
-    if (((now / 300) | 0) % 2) { g.fillStyle = '#ffd23d'; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.beginPath(); g.arc(bx, by, 5, 0, TAU); g.fill(); g.stroke(); }
+  if (S.beaconOn && settings.beacon) {   // while the beacon is on, the finish shows on the map: a flag if it is in view, otherwise an arrow on the edge pointing the way
+    const f = m.flag, fx = (f[0] - left) * ppt, fy = (f[1] - top) * ppt, inView = fx > 6 && fx < w - 6 && fy > 6 && fy < h - 6;
+    if (inView) drawFinishIcon(g, fx, fy, 1, now);
+    else {
+      const a = Math.atan2(fy - h / 2, fx - w / 2), k = Math.min((w / 2 - 12) / (Math.abs(Math.cos(a)) || 1e-4), (h / 2 - 12) / (Math.abs(Math.sin(a)) || 1e-4));
+      g.save(); g.translate(w / 2 + Math.cos(a) * k, h / 2 + Math.sin(a) * k); g.rotate(a); g.scale(1 + 0.15 * Math.sin(now / 160), 1 + 0.15 * Math.sin(now / 160));
+      g.beginPath(); g.moveTo(9, 0); g.lineTo(-6, -7); g.lineTo(-2, 0); g.lineTo(-6, 7); g.closePath(); g.fillStyle = '#ffd23d'; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.fill(); g.stroke(); g.restore();
+    }
   }
   g.fillStyle = settings.color; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(w / 2, h / 2, 4, 0, TAU); g.fill(); g.stroke();
 }
+function drawFinishIcon(g, x, y, sc, now) {   // a little flag on a gold pulse, the same on both maps
+  const p = (now / 700) % 1;
+  g.save(); g.translate(x, y); g.scale(sc, sc);
+  g.strokeStyle = 'rgba(255,210,61,' + (0.8 * (1 - p)).toFixed(2) + ')'; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, 5 + p * 12, 0, TAU); g.stroke();
+  g.fillStyle = '#ffd23d'; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.beginPath(); g.arc(0, 0, 5.5, 0, TAU); g.fill(); g.stroke();
+  g.strokeStyle = '#000'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(-2, 3); g.lineTo(-2, -4.5); g.stroke();
+  g.fillStyle = '#e8412c'; g.beginPath(); g.moveTo(-2, -4.5); g.lineTo(4, -2.5); g.lineTo(-2, -0.5); g.closePath(); g.fill();
+  g.restore();
+}
 setInterval(drawMinimap, 160);
+setInterval(() => { if (mmBigOn && S.beaconOn && settings.beacon) drawMinimapBig(); }, 120);
 /* ----- the big map: drag to look around, scroll / pinch / buttons to zoom. It never shows where the finish is. ----- */
 let mmBigOn = false;
 const mb = { cx: 0, cy: 0, z: 4, ptr: new Map(), pd: 0 };
@@ -2546,10 +2782,12 @@ function drawMinimapBig() {
   if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; g.fillStyle = bt.color; g.beginPath(); g.arc(X(bt.b.x / TS), Y(bt.b.y / TS), 3.5, 0, TAU); g.fill(); });
   if (settings.mmPlayers) others.forEach(o => { if (!o.seen || o.dead) return; g.fillStyle = o.color; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(X(o.cx / TS), Y(o.cy / TS), 4, 0, TAU); g.fill(); g.stroke(); });
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
+  const bon = S.beaconOn && settings.beacon;
+  if (bon) drawFinishIcon(g, X(m.flag[0]), Y(m.flag[1]), 1.5 + Math.min(1.5, z * 0.08), performance.now());
   const px = X(S.b.x / TS), py = Y(S.b.y / TS), pulse = 6 + Math.sin(performance.now() / 180) * 1.8;
   g.strokeStyle = '#fff'; g.lineWidth = 2.4; g.fillStyle = settings.color; g.beginPath(); g.arc(px, py, pulse, 0, TAU); g.fill(); g.stroke();
   $('mmbigName').textContent = m.name;
-  $('mmbigNote').textContent = 'Drag to look around. Scroll, pinch or use + and − to zoom.';
+  $('mmbigNote').textContent = bon ? 'The beacon is on: the gold flag is the finish.' : 'Drag to look around. Scroll, pinch or use + and − to zoom.';
 }
 function toggleMmBig(on) {
   mmBigOn = on; $('mmbig').classList.toggle('hide', !on);
