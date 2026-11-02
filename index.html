@@ -387,23 +387,87 @@
   #emoPop{z-index:11;background:rgba(10,8,16,.55)}
   #emoPop .cfoot{display:flex;flex-direction:column;gap:6px;align-items:center}
   @media (pointer:coarse){#tlab,.clab{display:none}}
+
+  /* ----- one look for the loading screen and the main screen: the game's own sunny, hand-drawn paper world ----- */
+  #boot,#home{background:#f7d39b;color:#2b1d12;overflow:hidden}
+  #boot{justify-content:flex-start;padding-top:max(7vh,28px);--p:0}
+  .scene{position:absolute;inset:0;overflow:hidden;--gh:24vh;background:linear-gradient(#fbe6b8 0%,#f7d39b 55%,#efbd82 100%)}
+  .scene:after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.32;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .1 0 0 0 .5 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+  .scene .sun{position:absolute;right:7%;top:6%;width:clamp(70px,13vw,120px);animation:sunwob 7s ease-in-out infinite}
+  @keyframes sunwob{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg) scale(1.03)}}
+  .scene .cl{position:absolute;left:0;display:block;animation:cdrift linear infinite}.scene .cl svg{width:100%;display:block}
+  @keyframes cdrift{from{transform:translateX(-30vw)}to{transform:translateX(105vw)}}
+  .scene .gnd{position:absolute;left:0;right:0;bottom:0;height:var(--gh)}.scene .gnd svg{width:100%;height:100%;display:block}
+  .scene .prop{position:absolute;bottom:calc(var(--gh) - 12px);height:clamp(56px,11vh,96px);width:auto}
+  .scene .palm{left:9%}.scene .cactus{left:32%;height:clamp(40px,8vh,70px)}.scene .flag{right:7%;height:clamp(64px,13vh,110px)}
+  .sball{position:absolute;bottom:calc(var(--gh) - 5px);width:clamp(40px,6vw,56px);aspect-ratio:1;margin-left:-28px;z-index:2;cursor:pointer}
+  .sball .sb{width:100%;height:100%;border-radius:50%;background:var(--bc,#6c7bff);border:3px solid #2b1d12;box-shadow:0 5px 0 rgba(43,29,18,.18);position:relative}
+  .sball .sb:after{content:'';position:absolute;left:50%;top:50%;width:46%;height:3px;background:#2b1d12;border-radius:2px;transform:translate(-10%,-50%);opacity:.5}
+  .sball.hop{animation:shop .7s cubic-bezier(.3,.8,.4,1)}@keyframes shop{0%,100%{transform:translateY(0)}45%{transform:translateY(-90px) scale(.96,1.05)}}
+  #boot .sball{left:calc(8% + 78% * var(--p,0));transition:left .7s cubic-bezier(.45,0,.2,1)}#boot .sball .sb{transform:rotate(calc(var(--p,0) * 1500deg));transition:transform .7s cubic-bezier(.45,0,.2,1)}
+  #home .sball{left:20%;animation:sidle 1.9s ease-in-out infinite}@keyframes sidle{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+  #home .sball.hop{animation:shop .7s cubic-bezier(.3,.8,.4,1)}
+  #boot .bwrap{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:10px}
+  #boot h1,#home h1{color:#2b1d12;text-shadow:3px 3px 0 rgba(255,250,235,.75);animation:bwob 3.2s ease-in-out infinite}
+  #boot h1 b,#home h1 b{color:#e0701a}
+  #bootMsg{font-size:21px;color:#2b1d12;min-height:26px}#bootTip{color:#2b1d12;opacity:.7;font-size:16px;max-width:min(440px,86vw);min-height:42px}
+  #bootHint{position:absolute;z-index:3;left:0;right:0;bottom:calc(var(--gh,24vh) * .45);text-align:center;font-size:15px;color:#2b1d12;opacity:.55;pointer-events:none}
+  #home .hsub{color:#2b1d12;opacity:.8}#home>.hbox>.small{color:#2b1d12;opacity:.7;text-shadow:0 1px 0 rgba(255,250,235,.7)}
+  #home .hbox{padding-bottom:calc(var(--gh,24vh) * .25)}
+  /* the name box: you see your name, and a little pencil. Nothing changes until you tap OK. */
+  .ned{display:flex;flex-direction:column;gap:6px}
+  .nview{display:flex;align-items:center;gap:8px}.nlbl{font-size:13px;opacity:.6;text-transform:uppercase;letter-spacing:1px}
+  .nname{flex:1;font-size:24px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nedit{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;flex:none;font-size:18px}.nedit:disabled{opacity:.35}
+  .nform .nin{font-size:20px}.nrow{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.nrow .btn{flex:1;white-space:nowrap}.nrow .prim{background:#2f9e61}
+  .nnote{min-height:18px}
+  .pcard{width:min(340px,100%);display:flex;flex-direction:column;gap:10px;text-align:center}.pcard h3{display:flex;gap:8px;align-items:center;justify-content:center;font-size:30px;margin:0}
+  .pbtn{display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;font-size:21px;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink);box-shadow:0 4px 0 rgba(0,0,0,.35)}
+  .pbtn.go{background:#2f9e61;font-size:25px}.pbtn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+  #pause{z-index:7;background:rgba(10,8,16,.5);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+  #home .card{color:var(--ink)}
+  #home .scene{position:fixed;z-index:0}#home .hbox{z-index:2}#home .sball{z-index:1}
+  @media (max-height:540px){
+    #home{padding:8px}#home h1{font-size:34px}#home .hsub,#homeModeNote{display:none}
+    #home .hbox{width:min(780px,100%);gap:8px}
+    #home .card{display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-template-columns:1fr 1fr;gap:6px 18px;padding:12px 16px}
+    #home .hplay{font-size:22px;padding:8px}#home .sw2 small{display:none}
+    .scene{--gh:18vh}
+  }
+  @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
 </style>
 </head>
 <body>
-<div id="boot"><div id="bootBalls"></div>
-  <h1>BALL<b>PIT</b>.PARTY</h1>
-  <div id="bootTrack"><div id="bootHop"><div id="bootBall"></div></div></div>
-  <div id="bootBar"><i id="bootFill"></i></div>
-  <div id="bootMsg">Checking for the newest version…</div>
-  <div id="bootTip"></div>
+<div id="boot"><div class="scene" id="bootScene"></div>
+  <div class="bwrap"><h1>BALL<b>PIT</b>.PARTY</h1><div id="bootMsg">Checking for the newest version…</div><div id="bootTip"></div></div>
+  <div id="bootHint">Tap the ball to make it hop</div>
 </div>
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
   var BUILD = '__BUILD__', t0 = Date.now(), tips = ['Stand still and hold jump: a ring fills. Let go to jump, and after 3 seconds it is a super jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
-  var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('bootFill'); if (f) f.style.width = p + '%'; }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
+  var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
-  try { var c = ['#ff4d4d', '#ffcc3d', '#58d68d', '#4da6ff', '#c58bff', '#ff8a1f'], box = $('bootBalls'); for (var i = 0; i < 16; i++) { var b = document.createElement('i'); b.className = 'bb'; var s = 14 + Math.random() * 26; b.style.cssText = 'left:' + Math.random() * 100 + '%;width:' + s + 'px;height:' + s + 'px;background:' + c[i % c.length] + ';animation-duration:' + (5 + Math.random() * 6) + 's;animation-delay:-' + Math.random() * 8 + 's'; box.appendChild(b); } } catch (e) {}
+  /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game */
+  window.__scene = function (box, ballLeft) {
+    var col = '#6c7bff'; try { var o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && /^#[0-9a-fA-F]{6}$/.test(o.color)) col = o.color; } catch (e) {}
+    var cl = '<svg viewBox="0 0 110 54"><path d="M14 46Q2 46 6 35Q10 24 26 28Q30 8 52 12Q66 0 82 14Q102 12 100 30Q110 38 98 46Z" fill="#fffaf0" stroke="#2b1d12" stroke-width="3" stroke-linejoin="round"/><path d="M26 38Q38 34 48 38M62 30Q72 27 82 32" fill="none" stroke="#2b1d12" stroke-width="2" stroke-linecap="round" opacity=".35"/></svg>';
+    var rays = ''; for (var i = 0; i < 12; i++) { var a = i * Math.PI / 6; rays += '<line x1="' + (50 + Math.cos(a) * 33).toFixed(1) + '" y1="' + (50 + Math.sin(a) * 33).toFixed(1) + '" x2="' + (50 + Math.cos(a) * 45).toFixed(1) + '" y2="' + (50 + Math.sin(a) * 45).toFixed(1) + '"/>'; }
+    var hatch = ''; for (var h = 0; h < 22; h++) { var hx = 12 + Math.random() * 376, hy = 34 + Math.random() * 56; hatch += '<path d="M' + hx.toFixed(0) + ' ' + hy.toFixed(0) + 'l7 -5"/>'; }
+    box.innerHTML =
+      '<svg class="sun" viewBox="0 0 100 100"><g stroke="#2b1d12" stroke-width="3" stroke-linecap="round">' + rays + '</g><circle cx="50" cy="50" r="27" fill="#ffe27a" stroke="#2b1d12" stroke-width="3"/><circle cx="41" cy="46" r="3" fill="#2b1d12"/><circle cx="59" cy="46" r="3" fill="#2b1d12"/><path d="M40 57Q50 66 60 57" fill="none" stroke="#2b1d12" stroke-width="3" stroke-linecap="round"/></svg>' +
+      '<i class="cl" style="top:14%;width:clamp(90px,15vw,170px);animation-duration:70s;animation-delay:-18s">' + cl + '</i>' +
+      '<i class="cl" style="top:30%;width:clamp(70px,11vw,120px);animation-duration:95s;animation-delay:-60s">' + cl + '</i>' +
+      '<i class="cl" style="top:6%;width:clamp(60px,9vw,100px);animation-duration:120s;animation-delay:-90s">' + cl + '</i>' +
+      '<svg class="prop palm" viewBox="0 0 80 110"><path d="M40 108Q36 70 42 30" fill="none" stroke="#2b1d12" stroke-width="5" stroke-linecap="round"/><path d="M42 32Q20 14 4 26M42 32Q30 8 12 8M42 32Q58 6 76 14M42 32Q64 18 78 34" fill="none" stroke="#2b1d12" stroke-width="9" stroke-linecap="round"/><path d="M42 32Q20 14 4 26M42 32Q30 8 12 8M42 32Q58 6 76 14M42 32Q64 18 78 34" fill="none" stroke="#58b36a" stroke-width="5" stroke-linecap="round"/></svg>' +
+      '<svg class="prop cactus" viewBox="0 0 40 70"><path d="M20 68V16Q20 6 26 12M20 44Q8 44 8 30M20 36Q32 36 32 24" fill="none" stroke="#2b1d12" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 68V16Q20 6 26 12M20 44Q8 44 8 30M20 36Q32 36 32 24" fill="none" stroke="#58b36a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      '<svg class="prop flag" viewBox="0 0 50 90"><path d="M10 88V6" stroke="#2b1d12" stroke-width="5" stroke-linecap="round"/><path d="M10 8H44V38H10Z" fill="#fffaf0" stroke="#2b1d12" stroke-width="3" stroke-linejoin="round"/><path d="M10 8H20V18H10ZM30 8H40V18H30ZM20 18H30V28H20ZM40 18H44V28H40ZM10 28H20V38H10ZM30 28H40V38H30Z" fill="#2b1d12"/></svg>' +
+      '<div class="gnd"><svg viewBox="0 0 400 100" preserveAspectRatio="none"><path d="M0 14C40 6 80 18 120 11S200 8 240 14S330 17 400 9L400 100L0 100Z" fill="#d8a25a" stroke="#2b1d12" stroke-width="3" vector-effect="non-scaling-stroke"/><path d="M0 30C60 24 120 36 200 28S340 30 400 26L400 100L0 100Z" fill="#c68f48" opacity=".55"/><g fill="none" stroke="#2b1d12" stroke-width="2" stroke-linecap="round" opacity=".4" vector-effect="non-scaling-stroke">' + hatch + '</g></svg></div>' +
+      '<div class="sball" style="--bc:' + col + (ballLeft ? ';left:' + ballLeft : '') + '"><div class="sb"></div></div>';
+    var ball = box.querySelector('.sball');
+    box.parentNode.addEventListener('pointerdown', function (e) { if (e.target.closest('button,input,label,.card')) return; ball.classList.remove('hop'); void ball.offsetWidth; ball.classList.add('hop'); });
+  };
+  try { window.__scene($('bootScene')); } catch (e) {}
   var steps = 8; window.__bootStep = function (m, p) { if (m) msg(m); fill(p); };
   window.__bootHide = function () {   // the game calls this once its first frame is on screen
     var left = Math.max(0, 1300 - (Date.now() - t0));
@@ -472,7 +536,7 @@
 <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></symbol>
 <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></symbol>
 <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1.500A3.500 3.500 0 0 0 7.500 11M17 6h3v1.500A3.500 3.500 0 0 1 16.500 11M12 14v4M8 21h8M9 18h6"/></symbol>
-<symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7V5zM18 5v14"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M8.5 5v14M15.5 5v14" stroke-width="3.2"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5l12.500 7.500L7 19.500z"/></symbol><symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20l1.200-4.400L16.400 4.400a1.800 1.800 0 0 1 2.600 0l.6.6a1.800 1.800 0 0 1 0 2.600L8.400 18.800z M14.500 6.300l3.200 3.200"/></symbol><symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7V5zM18 5v14"/></symbol>
 <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
 <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M2.500 20c0-3.600 3-5.500 6.500-5.500s6.500 1.900 6.500 5.500M16 5a3.300 3.300 0 0 1 0 6.200M18 14.800c2.200.6 3.700 2.200 3.700 5.200"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
@@ -504,7 +568,7 @@
 <div id="hr">
   <div id="topbar">
     <button id="btnRespawn" class="ibtn" title="Back to the start (R)" data-ic="reset"></button>
-    <button id="btnSettings" class="ibtn" title="Settings (Esc)" data-ic="gear"></button>
+    <button id="btnSettings" class="ibtn" title="Pause (Esc)" data-ic="pause"></button>
   </div>
   <div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Say it with an emoji" data-ic="chat"></button></div>
   <div id="lreqs" class="hide"></div>
@@ -537,7 +601,7 @@
   <div class="sbody">
     <section class="pane on" data-pane="you">
       <div class="you"><canvas id="preview" width="64" height="64"></canvas>
-        <div style="flex:1"><label class="lbl" for="setName">Name</label><input type="text" id="setName" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Your name"><div class="small dim" id="nameNote" style="margin-top:3px">You can change your name once a day.</div></div></div>
+        <div style="flex:1"><div class="ned" id="ned2"></div></div></div></div>
       <h4><span data-ic="ball"></span> Ball colour</h4><div class="sw" id="colors1"></div>
       <h4><span data-ic="spark"></span> Pattern</h4><div class="pats" id="pats"></div>
       <h4><span data-ic="spark"></span> Pattern colour</h4><div class="sw" id="colors2"></div>
@@ -586,7 +650,7 @@
       <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnSkip" title="Next song"><span data-ic="skip"></span></button></div></div></div>
     </section>
     <section class="pane" data-pane="online">
-      <label class="mpbig"><input type="checkbox" id="setMp"><span class="mptrack"><span class="mpL"><span data-ic="user"></span>Solo</span><span class="mpR"><span data-ic="globe"></span>Multiplayer</span><i></i></span></label>
+      <input type="checkbox" id="setMp" hidden>
       <div class="mpdesc" id="mpDesc"></div>
       <div class="small dim" id="mpstats"></div>
       <div class="dep" data-dep="mp"><div>
@@ -619,8 +683,7 @@
       </div></div>
     </section>
     <section class="pane" data-pane="more">
-      <button class="btn full" id="btnQuit"><span data-ic="left"></span>Quit to the main screen</button>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Skip the main screen</b><small>Open the game straight into play</small></span></span><input type="checkbox" id="setAuto"><i></i></label>
+            <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Skip the main screen</b><small>Open the game straight into play</small></span></span><input type="checkbox" id="setAuto"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small>The how-to-play card</small></span></span><input type="checkbox" id="setIntro"><i></i></label>
       <button class="btn full" id="btnRefresh"><span data-ic="reset"></span>Refresh the game</button>
       <button class="btn full" id="btnWelcome"><span data-ic="help"></span>How to play</button>
@@ -633,22 +696,28 @@
 </div>
 
 <div id="home" class="hide">
-  <div id="homeBalls"></div>
+  <div class="scene" id="homeScene"></div>
   <div class="hbox">
     <h1>BALL<b>PIT</b>.PARTY</h1>
     <div class="hsub">Roll through a huge world and find the hidden finish flag.</div>
     <div class="card">
-      <label class="lbl" for="homeName">Your name</label>
-      <div class="hrow"><input type="text" id="homeName" maxlength="12" placeholder="Type a name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="btn" id="homeDice" type="button"><span data-ic="spark"></span>Surprise me</button></div>
-      <div class="small dim" id="homeNote"></div>
+      <div class="ned" id="ned1"></div>
       <label class="mpbig"><input type="checkbox" id="homeMp"><span class="mptrack"><span class="mpL"><span data-ic="user"></span>Solo</span><span class="mpR"><span data-ic="globe"></span>Multiplayer</span><i></i></span></label>
+      <div class="small dim" id="homeModeNote"></div>
       <button id="homePlay" class="hplay" type="button">Play</button>
       <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Skip this screen next time</b><small>Go straight into the game. Settings has a button to come back here.</small></span></span><input type="checkbox" id="homeAuto"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Skip this screen next time</b><small>Go straight into the game. Pause, then Main menu, brings you back here.</small></span></span><input type="checkbox" id="homeAuto"><i></i></label>
     </div>
     <div class="small dim" id="homeOnline"></div>
   </div>
 </div>
+<div id="pause" class="overlay hide"><div class="card pcard">
+  <h3><span data-ic="pause"></span>Paused</h3>
+  <div class="small dim" id="pauseSub"></div>
+  <button id="pResume" class="pbtn go" type="button"><span data-ic="play"></span>Resume</button>
+  <button id="pSettings" class="pbtn" type="button"><span data-ic="gear"></span>Settings</button>
+  <button id="pHome" class="pbtn" type="button"><span data-ic="left"></span>Main menu</button>
+</div></div>
 <div id="intro" class="overlay hide"><div class="card">
   <h1><span data-ic="ball"></span>BALLPIT.PARTY</h1>
   <p>You're a ball. Everyone online shares one huge world and is racing to find the <b>checkered flag</b>. Nothing tells you where it is, or where anyone else is. Pick a direction and explore.</p>
@@ -709,8 +778,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=15"></script>
-<script src="physics.js?v=15"></script>
+<script src="maps.js?v=16"></script>
+<script src="physics.js?v=16"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1318,12 +1387,13 @@ function startTransition(slot, next) {
   others.forEach(o => { o.seen = 0; o.t0 = 0; o.crown = false; });
 }
 
-let inHome = true;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
+let inHome = true, paused = false;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text'; };
-const blocked = () => !$('intro').classList.contains('hide') || inHome || !$('emoPop').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
+const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 function update(dt) {
   S.t += dt;
+  if (paused) return;
   if (S.mode !== 'play') return;
   const w = S.world;
   w.focus.x = S.b.x; w.focus.y = S.b.y;
@@ -1662,7 +1732,7 @@ addEventListener('keydown', e => {
     if (closeSelectFn) { closeSelectFn(); return; }
     if (CP.open) { closePicker(); return; }
     if (typeof mmBigOn !== 'undefined' && mmBigOn) { toggleMmBig(false); e.preventDefault(); return; }
-    if (!$('confirm').classList.contains('hide')) $('cfNo').click(); else if (editMode) $('editDone').click(); else if ($('intro').classList.contains('hide')) toggleSettings();
+    if (!$('confirm').classList.contains('hide')) $('cfNo').click(); else if (editMode) $('editDone').click(); else if ($('intro').classList.contains('hide')) escMenu();
     e.preventDefault(); return;
   }
   if (e.key === '-' || e.key === '_') { setZoom(settings.zoom - 0.1); return; }
@@ -1878,7 +1948,7 @@ function toggleSettings() { if ($('settings').classList.contains('hide')) { $('s
 new MutationObserver(() => { $('sback').style.display = $('settings').classList.contains('hide') ? 'none' : 'block'; }).observe($('settings'), { attributes: true, attributeFilter: ['class'] });
 $('sback').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); closeSettingsNow(); });
 $('sback').addEventListener('touchstart', e => { e.preventDefault(); closeSettingsNow(); }, { passive: false });
-$('btnSettings').onclick = toggleSettings;
+$('btnSettings').onclick = () => togglePause();
 $('btnCloseSet').onclick = closeSettingsNow;
 $('btnWelcome').onclick = () => { $('settings').classList.add('hide'); showIntro(); };
 $('btnRefresh').onclick = () => {   // same as reloading the page: also checks for a newer version of the game
@@ -1950,7 +2020,7 @@ function buildLook() {
   });
 }
 function syncUI() {
-  $('setName').value = settings.name;
+  nameUI();
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setAuto', 'autoEnter'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
     ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setPerOrient', 'perOrient'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setJoy', 'joy']]
@@ -2041,24 +2111,10 @@ $('setZoom').oninput = () => setZoom(+$('setZoom').value);
 $('zOut').onclick = () => setZoom(settings.zoom - 0.1);
 $('zIn').onclick = () => setZoom(settings.zoom + 0.1);
 $('setBtnSize').oninput = () => { settings.btnSize = +$('setBtnSize').value; $('btnSizeVal').textContent = Math.round(settings.btnSize * 100) + '%'; save(); layoutTouch(); };
-$('setName').addEventListener('input', () => { const v = $('setName').value.replace(NAME_BAD, '').slice(0, 12); if (v !== $('setName').value) $('setName').value = v; });
-$('setName').addEventListener('change', () => {
-  const v = $('setName').value.replace(NAME_BAD, '').trim().slice(0, 12);
-  if (!v || nameLocked()) { $('setName').value = settings.name; return; }   // a name is always there; an empty box just puts yours back
-  if (v === settings.name) return;
-  settings.name = v; save(); sendInfo();
-});
-$('setName').addEventListener('keydown', e => { if (e.key === 'Enter') $('setName').blur(); });
-$('setMp').onchange = () => {
-  if ($('setMp').checked) { setMultiplayer(true); return; }
-  $('setMp').checked = true;
-  askConfirm('Leave multiplayer?', "You'll go to your own private world. Nobody else can see you and you won't see anyone. Your ball goes back to the start.", 'Play solo', () => { setMultiplayer(false); $('setMp').checked = false; }, { no: 'Stay online', yesClass: 'danger' });
-};
 $('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every setting back to its default: colours, controls, zoom, bots and the welcome popup. This cannot be undone.', 'Reset everything', () => {
   const wasMp = settings.mp, wasFs = settings.fs, keepName = settings.name;
-  settings = defaults(); settings.name = keepName; normalize(); save(); bots.length = 0; keysDown.clear(); syncKeys(); syncUI(); applyTouchUI(); auVol(); if (AU.ctx) musicStart();
+  settings = defaults(); settings.name = keepName; settings.mp = wasMp; normalize(); save(); bots.length = 0; keysDown.clear(); syncKeys(); syncUI(); applyTouchUI(); auVol(); if (AU.ctx) musicStart();
   if (wasFs && isFs()) exitFs();
-  if (!wasMp) setMultiplayer(true);
   lastSent = ''; sendInfo(); addFeed('Settings reset to default', 'bad', true);
 });
 
@@ -2075,7 +2131,7 @@ function applyDeps() {
   const list = document.querySelectorAll('.dep');
   for (let i = 0; i < list.length; i++) { const f = DEPS[list[i].getAttribute('data-dep')]; if (f) list[i].classList.toggle('off', !f()); }
   const d = $('inputDesc'); if (d) d.textContent = settings.inputMode === 'auto' ? (showTouch() ? 'Using touch right now. Press a key and it switches to the keyboard.' : 'Using the keyboard right now. Touch the screen and it switches.') : settings.inputMode === 'touch' ? 'Touch controls only.' : 'Keyboard only.';
-  const m = $('mpDesc'); if (m) m.textContent = settings.mp ? 'You are playing with everyone online, in the same world.' : 'You are playing in a private world of your own. Nobody else is here.';
+  const m = $('mpDesc'); if (m) m.textContent = settings.mp ? 'You are playing with everyone online, in the same world. Solo or multiplayer is chosen on the main menu.' : 'You are playing in a private world of your own. Nobody else is here. Solo or multiplayer is chosen on the main menu.';
   const sd = $('soloLenDesc'); if (sd) sd.textContent = settings.soloLen > 0 ? 'Then everything resets and the next map loads.' : 'The map never changes until you start a fresh world.';
 }
 const selSoloMap = makeSelect($('selSoloMap'), [{ v: 'rotate', label: 'Take turns' }].concat(BallMaps.names.map((n, i) => ({ v: String(i), label: n }))),
@@ -2295,8 +2351,7 @@ function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywher
 }
 $('btnChat').onclick = () => toggleChat(!chatOpen);
 $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop')) { e.preventDefault(); toggleChat(false); } });
-addEventListener('keydown', e => { if (e.key === 'Escape' && chatOpen) { toggleChat(false); e.preventDefault(); } });
-const openFriends = () => { if (chatOpen) toggleChat(false); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
+const openFriends = () => { if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
 $('linkpill').onclick = e => { e.stopPropagation(); openFriends(); };
 const friendsShown = () => !$('settings').classList.contains('hide') && $('settings').querySelector('.pane.on[data-pane="friends"]') !== null;
 
@@ -2388,13 +2443,6 @@ const NAMEKEY = 'ballrun4_nameat';
 let nameUnlockAt = 0; try { nameUnlockAt = +localStorage.getItem(NAMEKEY) || 0; } catch (e) {}
 const nameLocked = () => nameUnlockAt > Date.now();
 function hm(ms) { const m = Math.max(1, Math.ceil(ms / 60000)); return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'm' : m + ' min'; }
-function nameUI() {
-  const lk = nameLocked(), i = $('setName'), n = $('nameNote');
-  if (!i) return;
-  i.disabled = lk; if (document.activeElement !== i) i.value = settings.name;
-  n.textContent = lk ? 'You can change your name again in ' + hm(nameUnlockAt - Date.now()) + '.' : 'You can change your name once a day.';
-  const h = $('homeName'); if (h) { h.disabled = lk; if (document.activeElement !== h) h.value = settings.name; $('homeNote').textContent = n.textContent; $('homeDice').disabled = lk; }
-}
 function nameServer(name, left, denied) {   // the server has the last word on names
   if (name) { settings.name = name; save(); }
   nameUnlockAt = left > 0 ? Date.now() + left : 0; try { localStorage.setItem(NAMEKEY, String(nameUnlockAt)); } catch (e) {}
@@ -2406,7 +2454,55 @@ const ADJ = ['Happy', 'Sunny', 'Cozy', 'Bouncy', 'Mellow', 'Swift', 'Lucky', 'Fu
 const NOUN = ['Otter', 'Pebble', 'Comet', 'Waffle', 'Panda', 'Moss', 'Rocket', 'Beetle', 'Cloud', 'Pickle', 'Maple', 'Pixel', 'Koala', 'Biscuit', 'Fox', 'Turtle'];
 function randomName() { for (let k = 0; k < 20; k++) { const n = ADJ[Math.random() * ADJ.length | 0] + NOUN[Math.random() * NOUN.length | 0]; if (n.length <= 12) return n; } return 'Rolly' + (Math.random() * 90 + 10 | 0); }
 
-/* ----- the main screen: where you land, and where "Quit to the main screen" brings you back ----- */
+/* ----- the name box: your name and a little pencil. Nothing changes until you tap OK. ----- */
+var NEDS = [];
+const cleanNm = v => String(v || '').replace(NAME_BAD, '').trim().slice(0, 12);
+function commitName(v) {
+  v = cleanNm(v); if (!v) return false;
+  const had = !!settings.name;
+  if (v === settings.name) return true;
+  if (had && nameLocked()) return false;
+  settings.name = v; save();
+  if (had) { nameUnlockAt = Date.now() + 86400000; try { localStorage.setItem(NAMEKEY, String(nameUnlockAt)); } catch (e) {} }   // the first name is free; after that, once a day
+  sendInfo(); nameUI(); return true;
+}
+function makeNed(root) {
+  root.innerHTML = '<div class="nview"><span class="nlbl">Your name</span><b class="nname"></b><button type="button" class="nedit" title="Change your name">' + ic('edit') + '</button></div>' +
+    '<div class="nform hide"><label class="lbl nfl">Your name</label><input type="text" class="nin" maxlength="12" placeholder="Type a name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><div class="nrow"><button type="button" class="btn nsur">' + ic('spark') + 'Surprise me</button><button type="button" class="btn nno">Cancel</button><button type="button" class="btn nok">OK</button></div></div>' +
+    '<div class="small dim nnote"></div>';
+  const q = c => root.querySelector(c), view = q('.nview'), form = q('.nform'), inp2 = q('.nin'), sur = q('.nsur'), no = q('.nno'), ok = q('.nok'), note = q('.nnote'), edit = q('.nedit');
+  let editing = false, rolled = '', sure = false, forced = false;
+  const o = {
+    pending: () => (!settings.name ? cleanNm(inp2.value) : ''),
+    refresh() {
+      const has = !!settings.name, lk = has && nameLocked();
+      if (!has) { editing = true; forced = true; } else if (forced) { editing = false; forced = false; inp2.value = ''; rolled = ''; }
+      q('.nname').textContent = settings.name || '';
+      view.classList.toggle('hide', editing); form.classList.toggle('hide', !editing);
+      no.classList.toggle('hide', !has); q('.nfl').classList.toggle('hide', has);
+      edit.disabled = lk; ok.textContent = 'OK';
+      sur.classList.toggle('hide', inp2.value !== '' && inp2.value !== rolled);   // type anything and Surprise me goes away; erase it and it comes back
+      note.textContent = lk ? 'You can change your name again in ' + hm(nameUnlockAt - Date.now()) + '.' : !has ? 'This is what other players see over your ball.' : editing ? 'You only get one name change a day. Nothing changes until you tap OK.' : 'You can change your name once a day.';
+    },
+  };
+  const open = () => { if (settings.name && nameLocked()) return; editing = true; sure = false; inp2.value = settings.name; o.refresh(); try { inp2.focus(); inp2.select(); } catch (e) {} };
+  const close = () => { editing = !settings.name; inp2.value = ''; rolled = ''; o.refresh(); };
+  edit.onclick = () => { sfx('ui'); open(); };
+  inp2.addEventListener('input', () => { const v = inp2.value.replace(NAME_BAD, '').slice(0, 12); if (v !== inp2.value) inp2.value = v; o.refresh(); });
+  inp2.addEventListener('keydown', e => { if (e.key === 'Enter') ok.click(); });
+  const fill = () => { rolled = randomName(); inp2.value = rolled; o.refresh(); sfx('ui'); };
+  sur.onclick = () => {
+    if (settings.name && !sure) askConfirm('Pick a random name?', 'This replaces your name. You only get one name change a day, so tapping OK afterwards uses today\'s change.', 'Pick one', () => { sure = true; fill(); }, { no: 'Never mind', yesClass: 'go' });
+    else fill();
+  };
+  no.onclick = () => { sfx('ui'); close(); };
+  ok.onclick = () => { if (!cleanNm(inp2.value)) { try { inp2.focus(); } catch (e) {} return; } if (commitName(inp2.value)) { sfx('ui'); close(); nameUI(); } };
+  NEDS.push(o); o.refresh(); return o;
+}
+makeNed($('ned1')); makeNed($('ned2'));
+function nameUI() { (NEDS || []).forEach(n => n.refresh()); }
+
+/* ----- the main screen: where you land, and where Pause > Main menu brings you back ----- */
 let homeMode = settings.mp, firstEntry = true, reenter = false;
 function homeBase() { return /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(location.hostname) || /onrender\.com$/.test(location.hostname) ? '' : 'https://ballpit-party.onrender.com'; }
 function homeStats() {
@@ -2416,20 +2512,20 @@ function homeStats() {
     const n = j.online | 0; o.textContent = n > 0 ? n + (n === 1 ? ' player' : ' players') + ' online right now' : 'Nobody here yet. Be the first!';
   }).catch(() => {});
 }
-(function () { try { const c = ['#ff4d4d', '#ffcc3d', '#58d68d', '#4da6ff', '#c58bff', '#ff8a1f'], box = $('homeBalls'); for (let i = 0; i < 14; i++) { const b = document.createElement('i'); b.className = 'bb'; const s = 16 + Math.random() * 30; b.style.cssText = 'left:' + (Math.random() * 100) + '%;width:' + s + 'px;height:' + s + 'px;background:' + c[i % c.length] + ';animation-duration:' + (7 + Math.random() * 9) + 's;animation-delay:-' + (Math.random() * 12) + 's'; box.appendChild(b); } } catch (e) {} })();
+try { window.__scene($('homeScene')); } catch (e) {}
+function homeModeText() { $('homeModeNote').textContent = $('homeMp').checked ? 'Everyone online shares the same world.' : 'Your own private world. Nobody else can see you.'; }
 function showHome() {
-  inHome = true; document.body.classList.add('home'); $('home').classList.remove('hide');
+  inHome = true; paused = false; $('pause').classList.add('hide'); document.body.classList.add('home'); $('home').classList.remove('hide');
   if (typeof closeSettingsNow === 'function') closeSettingsNow(); toggleChat(false);
   clearTimeout(retryTimer); retryTimer = 0;
-  homeMode = settings.mp; $('homeMp').checked = settings.mp; $('homeAuto').checked = !!settings.autoEnter;
-  $('homeName').value = settings.name; nameUI(); homeStats();
+  homeMode = settings.mp; $('homeMp').checked = settings.mp; $('homeAuto').checked = !!settings.autoEnter; homeModeText();
+  nameUI(); homeStats();
   keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0;
 }
 function enterGame(auto) {
-  const typed = $('homeName').value.replace(NAME_BAD, '').trim().slice(0, 12);
-  const v = auto || nameLocked() ? (settings.name || randomName()) : (typed || settings.name || randomName());   // everyone has a name
-  if (v !== settings.name) { settings.name = v; save(); }
-  $('setName').value = settings.name; $('homeName').value = settings.name;
+  const typed = auto ? '' : NEDS[0].pending();
+  const v = settings.name || typed || randomName();   // everyone has a name
+  if (v !== settings.name) { settings.name = v; save(); }   // the very first name is free
   inHome = false; document.body.classList.remove('home'); $('home').classList.add('hide');
   try { auWake(); } catch (e) {}
   if (settings.mp !== homeMode) setMultiplayer(settings.mp);
@@ -2441,17 +2537,37 @@ function enterGame(auto) {
   nameUI(); trackVis();
 }
 function quitToHome() { dropConnection(); showHome(); setNet(settings.mp ? 'offline' : 'solo'); }
+/* pause: your ball waits, the menu has Resume, Settings and Main menu */
+function clearInput() { keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0; }
+function openPause() {
+  if (inHome || paused) return;
+  toggleChat(false); paused = true; clearInput();
+  $('pauseSub').textContent = settings.mp ? 'The world keeps going. Your ball waits for you.' : 'Everything is paused.';
+  $('pause').classList.remove('hide'); sfx('ui');
+}
+function resumeGame() { if (!paused) return; paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); sfx('ui'); }
+const togglePause = () => { if (paused) resumeGame(); else openPause(); };
+function escMenu() {   // Escape: closes whatever is on top, then pauses / resumes
+  if (chatOpen) { toggleChat(false); return; }
+  if (!$('settings').classList.contains('hide')) { closeSettingsNow(); return; }
+  if (inHome) return;
+  togglePause();
+}
+$('pResume').onclick = resumeGame;
+$('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
+$('pHome').onclick = () => { sfx('ui'); quitToHome(); };
+$('pause').addEventListener('pointerdown', e => { if (e.target === $('pause') && $('settings').classList.contains('hide')) { e.preventDefault(); resumeGame(); } });
 $('homePlay').onclick = () => enterGame(false);
-$('homeName').addEventListener('input', () => { const v = $('homeName').value.replace(NAME_BAD, '').slice(0, 12); if (v !== $('homeName').value) $('homeName').value = v; });
-$('homeName').addEventListener('keydown', e => { if (e.key === 'Enter') enterGame(false); });
-$('homeDice').onclick = () => { if (nameLocked()) return; $('homeName').value = randomName(); sfx('ui'); };
-$('homeMp').onchange = () => { settings.mp = $('homeMp').checked; save(); $('setMp').checked = settings.mp; applyDeps(); syncUI(); };
+$('homeMp').onchange = () => {
+  if ($('homeMp').checked) { settings.mp = true; save(); $('setMp').checked = true; applyDeps(); syncUI(); homeModeText(); return; }
+  $('homeMp').checked = true;
+  askConfirm('Play solo?', "You'll be in a private world of your own. Nobody else can see you and you won't see anyone, but you can still turn on bots. Want to play with everyone instead? Stay on Multiplayer.", 'Play solo', () => { $('homeMp').checked = false; settings.mp = false; save(); $('setMp').checked = false; applyDeps(); syncUI(); homeModeText(); }, { no: 'Stay online', yesClass: 'go' });
+};
 $('homeAuto').onchange = () => { settings.autoEnter = $('homeAuto').checked; save(); $('setAuto').checked = settings.autoEnter; };
 $('homeLook').onclick = () => { showTab('you'); toggleSettings(); };
 $('homeSet').onclick = () => toggleSettings();
 $('homeHelp').onclick = () => showIntro();
-$('btnQuit').onclick = quitToHome;
-addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && document.activeElement !== $('homeName')) enterGame(false); });
+addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && !typing()) enterGame(false); });
 
 /* ================= networking ================= */
 function setNet(state) {
