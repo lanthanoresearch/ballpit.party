@@ -155,7 +155,7 @@ wss.on('connection', (ws, req) => {
     if (m.t === 'p') {
       if (m.m !== curSlot || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
       const d = m.d ? 1 : 0;
-      const x = Math.max(0, Math.min(131068, Math.round(m.x))), y = Math.max(0, Math.min(65533, Math.round(m.y)));
+      const x = Math.max(0, Math.min(262000, Math.round(m.x))), y = Math.max(0, Math.min(131000, Math.round(m.y)));
       if (p.x !== x || p.y !== y || p.dead !== d || !p.has) p.moved = true;
       p.x = x; p.y = y; p.dead = d; p.has = true;
     } else if (m.t === 'info') {
@@ -205,7 +205,7 @@ setInterval(() => {
       if (!hits.length) continue;
       const buf = Buffer.allocUnsafe(3 + hits.length * 8);
       buf[0] = 1; buf.writeUInt16LE(curSlot & 0xFFFF, 1);
-      for (const h of hits) { const p = h[0]; buf.writeUInt32LE(p.id, 3 + k * 8); buf.writeUInt16LE(p.x >> 1, 7 + k * 8); buf.writeUInt16LE(h[1] ? 65534 : p.dead ? 65535 : p.y, 9 + k * 8); k++; }   // y: 65535 = just died, 65534 = out of range
+      for (const h of hits) { const p = h[0]; buf.writeUInt32LE(p.id, 3 + k * 8); buf.writeUInt16LE(p.x >> 2, 7 + k * 8); buf.writeUInt16LE(h[1] ? 65534 : p.dead ? 65535 : (p.y >> 1), 9 + k * 8); k++; }   // y: 65535 = just died, 65534 = out of range
       r.ws.send(buf, { binary: true });
     }
     for (const p of list) p.moved = false;

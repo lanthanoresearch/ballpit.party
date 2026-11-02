@@ -194,6 +194,22 @@
     .card{padding:14px 16px}.card h1{font-size:28px}.card p{font-size:15px}
   }
   @media (max-width:600px){#netstat{left:auto;right:10px;transform:none;top:96px;top:calc(96px + env(safe-area-inset-top))}#edgewarn,#fallwarn,#beaconbar{top:94px;top:calc(94px + env(safe-area-inset-top))}}
+  .dep{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows .28s ease,opacity .22s ease}
+  .dep>div{overflow:hidden;min-height:0}
+  .dep.off{grid-template-rows:0fr;opacity:0;pointer-events:none}
+  .mpbig{display:block;margin:4px 0 8px;cursor:pointer;position:relative}
+  .mpbig input{position:absolute;opacity:0;pointer-events:none}
+  .mptrack{position:relative;display:grid;grid-template-columns:1fr 1fr;height:60px;border:3px solid var(--line);border-radius:20px;overflow:hidden;background:#2a2442;font-size:19px}
+  .mptrack>span{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s}
+  .mptrack i{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 6px);border-radius:15px;background:#d98a2f;transition:left .25s,background .25s}
+  .mpbig input:checked+.mptrack i{left:calc(50% + 3px);background:#2f9e61}
+  .mpbig input:not(:checked)+.mptrack .mpR,.mpbig input:checked+.mptrack .mpL{opacity:.55}
+  .mpdesc{font-size:14px;opacity:.85;margin:0 2px 8px;line-height:1.35}
+  #mm{pointer-events:auto;cursor:zoom-in}
+  #mmbig .card{width:min(96vw,1240px);max-width:min(96vw,1240px);padding:10px 12px}
+  #mmbigc{display:block;width:100%;height:auto;border:2px solid var(--line);border-radius:var(--wob);background:#14111c}
+  .mmtitle{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:18px}.mmtitle .dim{margin-left:auto;font-size:13px}
+  #tpArrow{margin-left:auto;display:inline-flex;transition:transform .2s}#tpArrow svg{width:26px;height:26px;color:#ffd23d}
 </style>
 </head>
 <body>
@@ -241,8 +257,6 @@
 
 <div id="hl"><span id="onl"></span><span id="coinpill" class="pill"><span data-ic="coin"></span><span id="coinN">0</span></span><canvas id="mm" width="170" height="110"></canvas></div>
 <div id="netstat" class="pill hide"><i></i><span id="netText">Offline</span></div>
-<div id="edgewarn" class="hide"><span data-ic="warn"></span><span>You're getting really close to the edge of the world. Turn back now!</span></div>
-<div id="fallwarn" class="hide"><span data-ic="down"></span><span>You're falling way too fast! Slow down or land soon!</span></div>
 <div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div>
 <div id="hr">
   <div id="topbar">
@@ -257,9 +271,11 @@
   <div class="tl"><span data-ic="clock"></span><span id="tpChange"></span></div>
   <div class="tl"><span data-ic="coin"></span><span id="tpCoins"></span></div>
   <div class="tl"><span data-ic="globe"></span><span id="tpWorld"></span></div>
+  <div class="tl"><span data-ic="beacon"></span><span id="tpBeacon"></span><span id="tpArrow" class="hide"><svg class="ic" viewBox="0 0 24 24"><use href="#i-up"/></svg></span></div>
   <div class="nx"><span id="tpNext"></span></div>
 </div>
 <div id="worldpop" class="paper hide"></div>
+<div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="dim">tap anywhere to close</span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 <div id="notice"></div>
 <div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div>
 
@@ -287,45 +303,66 @@
       <p class="small dim">Other players see your changes with a little sparkle.</p>
     </section>
     <section class="pane" data-pane="controls">
-      <div class="row"><span class="lbl">Input</span><div id="selInput"></div></div>
-      <h4><span data-ic="key"></span> Keyboard</h4>
-      <div id="keyrows"></div><div id="keymsg"></div>
-      <button class="btn" id="keyReset"><span data-ic="reset"></span>Reset keys</button>
-      <p class="small dim">A key can only do one thing. Esc, <kbd>-</kbd> and <kbd>+</kbd> are always settings and zoom.</p>
-      <h4><span data-ic="pad"></span> Touch screen</h4>
-      <div class="row"><span class="lbl">Style</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
-      <div class="row" id="presetRow"><span class="lbl">Button layout</span><div id="selPreset"></div></div>
-      <div class="row"><span class="lbl">Button size <span id="btnSizeVal" class="dim"></span></span><input type="range" id="setBtnSize" min="0.7" max="1.5" step="0.05"></div>
-      <div style="display:flex;gap:8px"><button class="btn" id="btnEditLayout" style="flex:1"><span data-ic="pad"></span>Move buttons</button><button class="btn" id="btnResetLayout" title="Back to the preset"><span data-ic="reset"></span></button></div>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Separate portrait / landscape layouts</b><small>Off: your buttons keep the same spacing when you turn your phone.</small></span></span><input type="checkbox" id="setPerOrient"><i></i></label>
+      <div class="row"><span class="lbl"><span data-ic="pad"></span> Controls</span><div id="selInput"></div><div class="small dim" id="inputDesc" style="margin-top:4px"></div></div>
+      <div class="dep" data-dep="kb"><div>
+        <h4><span data-ic="key"></span> Keyboard</h4>
+        <div id="keyrows"></div><div id="keymsg"></div>
+        <button class="btn" id="keyReset"><span data-ic="reset"></span>Reset keys</button>
+        <p class="small dim">A key can only do one thing. Esc, <kbd>-</kbd> and <kbd>+</kbd> are always settings and zoom.</p>
+      </div></div>
+      <div class="dep" data-dep="touch"><div>
+        <h4><span data-ic="pad"></span> Touch screen</h4>
+        <div class="row"><span class="lbl">Style</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
+        <div class="dep" data-dep="touchbtn"><div>
+          <div class="row" id="presetRow"><span class="lbl">Button layout</span><div id="selPreset"></div></div>
+          <div class="row"><span class="lbl">Button size <span id="btnSizeVal" class="dim"></span></span><input type="range" id="setBtnSize" min="0.7" max="1.5" step="0.05"></div>
+          <div style="display:flex;gap:8px"><button class="btn" id="btnEditLayout" style="flex:1"><span data-ic="pad"></span>Move buttons</button><button class="btn" id="btnResetLayout" title="Back to the preset"><span data-ic="reset"></span></button></div>
+          <label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Separate portrait / landscape layouts</b><small>Off: your buttons keep the same spacing when you turn your phone.</small></span></span><input type="checkbox" id="setPerOrient"><i></i></label>
+        </div></div>
+      </div></div>
     </section>
     <section class="pane" data-pane="display">
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
-        <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.35" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
+        <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>Only people on your screen</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Edge-of-world warning</b><small>Warns you near the edges</small></span></span><input type="checkbox" id="setEdge"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Falling warning</b><small>Warns you when you fall too fast</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
       <div class="small dim" id="fsNote"></div>
     </section>
     <section class="pane" data-pane="sound">
       <label class="sw2 ic2"><span class="ti"><span data-ic="sound"></span><span><b>Sound effects</b><small>Jumps, coins, doors, splashes and more</small></span></span><input type="checkbox" id="setSfx"><i></i></label>
-      <div class="row slrow"><span data-ic="sound"></span><input type="range" id="setSfxVol" min="0" max="1" step="0.05"></div>
+      <div class="dep" data-dep="sfx"><div><div class="row slrow"><span data-ic="sound"></span><input type="range" id="setSfxVol" min="0" max="1" step="0.05"></div></div></div>
       <h4><span data-ic="music"></span> Music</h4>
       <div class="row"><div id="selMusic"></div><div class="small dim" id="musicDesc" style="margin-top:4px"></div></div>
-      <div class="row slrow"><span data-ic="music"></span><input type="range" id="setMusicVol" min="0" max="1" step="0.05"></div>
-      <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnSkip" title="Next song"><span data-ic="skip"></span></button></div>
+      <div class="dep" data-dep="music"><div><div class="row slrow"><span data-ic="music"></span><input type="range" id="setMusicVol" min="0" max="1" step="0.05"></div>
+      <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnSkip" title="Next song"><span data-ic="skip"></span></button></div></div></div>
     </section>
     <section class="pane" data-pane="online">
-      <label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Multiplayer</b><small>Play with other people. Turning it off hides you and everyone else.</small></span></span><input type="checkbox" id="setMp"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="trophy"></span><span><b>Announce winners</b><small>"Someone won the level!" messages</small></span></span><input type="checkbox" id="setAnnounce"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Join / leave messages</b><small>When people come and go</small></span></span><input type="checkbox" id="setJoinMsg"><i></i></label>
-      <div class="small dim" id="mpstats" style="margin-top:6px"></div>
+      <label class="mpbig"><input type="checkbox" id="setMp"><span class="mptrack"><span class="mpL"><span data-ic="user"></span>Solo</span><span class="mpR"><span data-ic="globe"></span>Multiplayer</span><i></i></span></label>
+      <div class="mpdesc" id="mpDesc"></div>
+      <div class="small dim" id="mpstats"></div>
+      <div class="dep" data-dep="mp"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="trophy"></span><span><b>Announce winners</b><small>"Someone won the level!" messages</small></span></span><input type="checkbox" id="setAnnounce"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Join / leave messages</b><small>When people come and go</small></span></span><input type="checkbox" id="setJoinMsg"><i></i></label>
+      </div></div>
+      <div class="dep" data-dep="!mp"><div>
+        <h4><span data-ic="map"></span> Your own world</h4>
+        <div class="row"><span class="lbl">Map</span><div id="selSoloMap"></div></div>
+        <div class="row"><span class="lbl"><span data-ic="clock"></span> Each map lasts</span><div id="selSoloLen"></div><div class="small dim" id="soloLenDesc" style="margin-top:4px"></div></div>
+        <button class="btn full" id="btnSoloNew"><span data-ic="reset"></span>Start a fresh world</button>
+      </div></div>
     </section>
     <section class="pane" data-pane="bots">
-      <p class="small dim" style="margin-top:0">Bots are filler players that only exist in your own browser. Nobody else ever sees them.</p>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Fill the world with pretend players</small></span></span><input type="checkbox" id="setBots"><i></i></label>
-      <div class="row"><span class="lbl"><span data-ic="bot"></span> At most <b id="botMaxVal"></b> bots <span class="dim">(a cap, not a promise)</span></span><input type="range" id="setBotMax" min="0" max="200" step="1"><div class="small dim" id="botNote"></div></div>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Mark bots with a robot icon</b><small>So you can tell them apart</small></span></span><input type="checkbox" id="setBotMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Ask when the world is empty</b><small>A popup offering bots</small></span></span><input type="checkbox" id="setBotAsk"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Pretend players that only you can see</small></span></span><input type="checkbox" id="setBots"><i></i></label>
+      <div class="dep" data-dep="bots"><div>
+        <div class="row"><span class="lbl"><span data-ic="bot"></span> Up to <b id="botMaxVal"></b> bots</span><input type="range" id="setBotMax" min="0" max="200" step="1"></div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Mark bots with a robot icon</b><small>So you can tell them apart</small></span></span><input type="checkbox" id="setBotMark"><i></i></label>
+      </div></div>
+      <div class="dep" data-dep="!bots"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Offer bots when it's quiet</b><small>A popup when nobody else is around</small></span></span><input type="checkbox" id="setBotAsk"><i></i></label>
+      </div></div>
     </section>
     <section class="pane" data-pane="more">
-      <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small></small></span></span><input type="checkbox" id="setIntro"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small>The how-to-play card</small></span></span><input type="checkbox" id="setIntro"><i></i></label>
       <button class="btn full" id="btnWelcome"><span data-ic="help"></span>How to play</button>
       <button class="btn full hide" id="btnInstall"><span data-ic="install"></span>Install as an app</button>
       <div class="danger"><h4><span data-ic="warn"></span>Reset zone</h4>
@@ -393,8 +430,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=6"></script>
-<script src="physics.js?v=6"></script>
+<script src="maps.js?v=8"></script>
+<script src="physics.js?v=8"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -436,7 +473,7 @@ function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight',
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, bots: false, botMax: 8, botMark: false, botAsk: true,
-    minimap: true, mmPlayers: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
+    minimap: true, mmPlayers: true, mmBots: true, soloMap: 'rotate', soloLen: 180, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'spread', btnPos: null, btnPosP: null, perOrient: false };
 }
@@ -448,17 +485,19 @@ function normalize() {
   if (!HEX.test(settings.color)) settings.color = d.color;
   if (!HEX.test(settings.color2)) settings.color2 = d.color2;
   settings.pat = clamp(settings.pat | 0, 0, PATTERNS.length - 1);
-  settings.zoom = clamp(+settings.zoom || 1, 0.35, 2);
+  settings.zoom = clamp(+settings.zoom || 1, 0.25, 2);
   settings.botMax = clamp(Math.round(+settings.botMax), 0, 200); if (!isFinite(settings.botMax)) settings.botMax = 8;
   settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
   settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
   if (['none', 'peaceful', 'upbeat', 'exciting'].indexOf(settings.music) < 0) settings.music = 'peaceful';
   if (['spread', 'moveleft', 'moveright', 'custom'].indexOf(settings.preset) < 0) settings.preset = 'spread';
   settings.keys = cleanKeys(settings.keys);
+  if (['rotate', '0', '1', '2'].indexOf(String(settings.soloMap)) < 0) settings.soloMap = 'rotate'; settings.soloMap = String(settings.soloMap);
+  if ([0, 15, 30, 60, 180, 360, 720].indexOf(+settings.soloLen) < 0) settings.soloLen = 180; settings.soloLen = +settings.soloLen;
   settings.btnSize = clamp(+settings.btnSize || 1, 0.7, 1.5);
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'perOrient'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'perOrient'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
     if (!bp || typeof bp !== 'object') settings[n] = null;
@@ -478,7 +517,7 @@ function cleanKeys(k) {
 }
 normalize();
 settings.keys = cleanKeys(settings.keys);
-const save = () => { try { localStorage.setItem('ballrun4', JSON.stringify(settings)); } catch (e) {} };
+const save = () => { try { localStorage.setItem('ballrun4', JSON.stringify(settings)); } catch (e) {} try { applyDeps(); } catch (e) {} };
 
 /* ================= small helpers ================= */
 const fmtT = ms => { ms = Math.max(0, ms); const m = Math.floor(ms / 60000), s = (ms % 60000) / 1000; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
@@ -602,7 +641,7 @@ function auInit() {
     const c = AU.ctx = new C();
     const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(c.destination);
     AU.master = c.createGain(); AU.master.gain.value = 0.9; AU.master.connect(comp);
-    AU.sfx = c.createGain(); AU.mus = c.createGain(); AU.sfx.connect(AU.master); AU.mus.connect(AU.master);
+    AU.sfx = c.createGain(); AU.musOut = c.createGain(); AU.mus = c.createGain(); AU.sfx.connect(AU.master); AU.musOut.connect(AU.master); AU.mus.connect(AU.musOut);
     const nb = c.createBuffer(1, c.sampleRate, c.sampleRate), d = nb.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     AU.noiseBuf = nb;
@@ -616,7 +655,7 @@ function auInit() {
 function auVol() {
   if (!AU.ctx) return;
   AU.sfx.gain.value = settings.sfx ? settings.sfxVol * 0.8 : 0;
-  AU.mus.gain.value = settings.music === 'none' ? 0 : settings.musicVol * 0.5;
+  AU.musOut.gain.value = settings.music === 'none' ? 0 : settings.musicVol * 1.1;
 }
 function auWake() { auInit(); if (AU.ctx && AU.ctx.state === 'suspended') AU.ctx.resume(); musicStart(); }
 ['pointerdown', 'keydown', 'touchend'].forEach(ev => addEventListener(ev, auWake, true));   // the first tap or key unlocks sound (a browser rule)
@@ -774,16 +813,23 @@ function musicTick() {
     if (AU.bar >= 32) { musicPick(AU.song); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.1); }
   }
 }
+function musicSwap() {   // stop whatever is playing right away (notes already queued fade out) and start a clean channel
+  if (!AU.ctx) return;
+  const old = AU.mus, t = AU.ctx.currentTime;
+  try { old.gain.cancelScheduledValues(t); old.gain.setValueAtTime(old.gain.value, t); old.gain.linearRampToValueAtTime(0, t + 0.2); } catch (e) {}
+  setTimeout(() => { try { old.disconnect(); } catch (e) {} }, 400);
+  AU.mus = AU.ctx.createGain(); AU.mus.gain.value = 1; AU.mus.connect(AU.musOut);
+}
 function musicStart() {
   if (!AU.ctx) return;
   auVol();
   const np = $('nowPlaying');
-  if (settings.music === 'none') { AU.style = ''; AU.song = null; if (np) np.textContent = 'Music is off'; return; }
+  if (settings.music === 'none') { if (AU.style) musicSwap(); AU.style = ''; AU.song = null; if (np) np.textContent = 'Music is off'; return; }
   if (AU.style === settings.music && AU.song) return;
-  AU.style = settings.music; musicPick(null); AU.nextT = AU.ctx.currentTime + 0.15;
+  if (AU.style) musicSwap(); AU.style = settings.music; musicPick(null); AU.nextT = AU.ctx.currentTime + 0.25;
   if (!AU.timer) AU.timer = setInterval(musicTick, 150);
 }
-function musicSkip() { if (!AU.song || settings.music === 'none') return; musicPick(AU.song); AU.nextT = AU.ctx.currentTime + 0.1; }
+function musicSkip() { if (!AU.song || settings.music === 'none') return; musicSwap(); musicPick(AU.song); AU.nextT = AU.ctx.currentTime + 0.25; }
 
 /* ================= ball sprites (hand-drawn look, cached so lots of balls stay cheap) ================= */
 const SPN = 96, SPK = (SPN / 2 - 5) / R, SPW = SPN / SPK;
@@ -859,7 +905,7 @@ const S = {
   mode: 'play', slot: -1, idx: 0, map: null, world: null, tg: null, b: null, t: 0, nextAt: 0, pending: -1, pendingNext: 0, fadeT0: 0,
   dead: 0, spawnT: 0, shake: 0, away: false, crown: false, started: false, runStart: 0, finished: false, finT: 0, finMs: 0,
   camx: 0, camy: 0, water: [], deathPos: null, edgeWarn: false, mm: null,
-  coinN: 0, coinGot: null, coinBest: 0, recordShown: false, fallWarn: false, wasWater: false, beaconOn: false, fallLvl: 0
+  lavaWarn: false, coinN: 0, coinGot: null, coinBest: 0, recordShown: false, fallWarn: false, wasWater: false, beaconOn: false, fallLvl: 0
 };
 const inp = { left: false, right: false, jump: false };               // keyboard
 const tin = { ax: 0, jump: false, btnL: false, btnR: false, btnJ: false, jumpUntil: 0 };   // touch
@@ -943,13 +989,31 @@ function finishRun() {
 }
 
 /* ----- session countdown & warnings ----- */
+/* ----- your own world (multiplayer off): you choose the map and how long each one lasts ----- */
+const SOLOKEY = 'ballrun4_solo', SOLO_BASE = 3000000;
+let solo = { k: 0, t0: Date.now() };
+const inSolo = () => !settings.mp;
+function loadSolo() { try { const o = JSON.parse(localStorage.getItem(SOLOKEY) || 'null'); if (o && isFinite(o.k) && isFinite(o.t0)) solo = { k: o.k | 0, t0: +o.t0 }; } catch (e) {} }
+function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo)); } catch (e) {} }
+function soloRoll() {   // skip over any periods that ended while you were away
+  const len = settings.soloLen * 60000;
+  if (len > 0) { const n = Math.floor((Date.now() - solo.t0) / len); if (n > 0) { solo.k += n; solo.t0 += n * len; } }
+  saveSolo();
+}
+function soloSlot() { return SOLO_BASE + solo.k * 3 + (settings.soloMap === 'rotate' ? solo.k % 3 : +settings.soloMap); }
+function soloNext() { return settings.soloLen > 0 ? solo.t0 + settings.soloLen * 60000 : Date.now() + 3e11; }
+function soloGo(fade) {   // load (or fade into) your own world
+  soloRoll(); clockOff = 0;
+  if (fade) startTransition(soloSlot(), soloNext()); else loadMap(soloSlot(), soloNext());
+}
+function soloFresh() { solo.k++; solo.t0 = Date.now(); saveSolo(); soloGo(true); }
 const TH = [60, 30, 10, 5, 1];   // minutes-before-the-end warnings
 let warned = {};
 function initWarnings() {
   const rem = S.nextAt - nowMs();
   warned = {};
   TH.forEach(t => { if (rem <= t * 60000) warned[t] = true; });   // thresholds already passed when you arrived are skipped
-  if (rem <= 3600000 && rem > 5000) {
+  if (!inSolo() && rem <= 3600000 && rem > 5000) {
     const mins = Math.round(rem / 60000);
     notice(mins < 1 ? 'This session ends in less than a minute.' : 'This session ends in ' + mins + ' minute' + (mins === 1 ? '' : 's') + '.', rem < 600000 ? 'urgent' : '');
   }
@@ -966,7 +1030,7 @@ function startTransition(slot, next) {
 }
 
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text'; };
-const blocked = () => !$('intro').classList.contains('hide') || !$('confirm').classList.contains('hide') || typing() || editMode;
+const blocked = () => !$('intro').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 function update(dt) {
   S.t += dt;
@@ -999,6 +1063,10 @@ function update(dt) {
   const fw = settings.fallWarn && b.fall > P.FALL_WARN;
   if (fw && !S.fallWarn) sfx('warn');
   S.fallWarn = fw; S.fallLvl = clamp((b.vy - 600) / 1300, 0, 1); windSet(S.fallLvl);
+  let lw = false;   // lava just below while you are dropping: show the warning sign
+  if (settings.fallWarn && !b.ground && b.vy > 320) { const tx = Math.floor(b.x / TS), ty = Math.floor(b.y / TS); for (let dy = 2; dy <= 10 && !lw; dy++) for (let dx = -1; dx <= 1; dx++) if (P.tile(w, tx + dx, ty + dy) === 2) { lw = true; break; } }
+  if (lw && !S.lavaWarn) sfx('warn');
+  S.lavaWarn = lw;
   const f = S.map.finish;
   if (!S.finished && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) finishRun();
 }
@@ -1075,7 +1143,7 @@ const WEIRD = ['xX_', 'n0pe', 'qwerty', 'zzz', 'a', '...', 'lol', 'asdf', 'TEST'
 let botTarget = 3, botNextSpawn = 1, botNextRetarget = 30;
 const isSolid = t => t === 1 || t === 3 || t === 4 || t === 6;
 // the bot setting is a CAP: you might get fewer. Real players come first, and the world never goes over its limit.
-function botCap() { const left = Math.max(0, (room.max || 200) - (online ? room.n : 1)); return Math.max(0, Math.min(settings.botMax, left, settings.low ? 30 : 200)); }
+function botCap() { const others = online ? Math.max(0, room.n - 1) : 0, left = Math.max(0, (room.max || 200) - others); return Math.max(0, Math.min(settings.botMax, left, settings.low ? 30 : 200)); }
 function newBotTarget() { const cap = botCap(); botTarget = cap <= 10 ? ri(Math.floor(cap / 3), cap) : ri(Math.round(cap * 0.7), cap); botNextRetarget = rnd(25, 70); }
 function botName() {
   const r = Math.random();
@@ -1228,7 +1296,7 @@ const keysDown = new Set();
 function actionOf(code) { const k = settings.keys; for (const a in k) if (k[a].indexOf(code) >= 0) return a; return null; }
 function syncKeys() { const k = settings.keys; inp.left = k.left.some(c => keysDown.has(c)); inp.right = k.right.some(c => keysDown.has(c)); const j = k.jump.some(c => keysDown.has(c)); if (j && !inp.jump) pressJump(); inp.jump = j; }
 let keyCapture = null;   // set while you are choosing a new key in settings
-function setZoom(z) { settings.zoom = clamp(Math.round(z * 100) / 100, 0.35, 2); $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%'; save(); }
+function setZoom(z) { settings.zoom = clamp(Math.round(z * 100) / 100, 0.25, 2); $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%'; save(); }
 addEventListener('keydown', e => {
   if (keyCapture) return;
   if (typing()) { if (e.key === 'Enter' || e.key === 'Escape') document.activeElement.blur(); return; }
@@ -1245,7 +1313,7 @@ addEventListener('keydown', e => {
   if (!a) return;
   e.preventDefault();
   if (a === 'back') { if (!e.repeat && !blocked()) backToStart(); return; }
-  if (detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); }
+  if (detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); applyDeps(); }
   keysDown.add(e.code); syncKeys();
 });
 addEventListener('keyup', e => { if (e.code && keysDown.delete(e.code)) syncKeys(); });
@@ -1253,7 +1321,7 @@ addEventListener('blur', () => { keysDown.clear(); inp.left = inp.right = inp.ju
 cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
 document.addEventListener('touchmove', e => { if (!e.target.closest || !e.target.closest('#settings, .card, .csel-list')) e.preventDefault(); }, { passive: false });
 document.addEventListener('contextmenu', e => { if (!typing()) e.preventDefault(); });
-document.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', e => { if (!window.PointerEvent || e.pointerType === 'touch') { if (detected !== 'touch') { detected = 'touch'; applyTouchUI(); } } }, true);
+document.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', e => { if (!window.PointerEvent || e.pointerType === 'touch') { if (detected !== 'touch') { detected = 'touch'; applyTouchUI(); applyDeps(); } } }, true);
 
 /* ----- on-screen buttons ----- */
 /* Positions are stored as "this many pixels from the left / right edge (or the middle), this many up from the bottom".
@@ -1485,43 +1553,45 @@ function buildLook() {
 function syncUI() {
   $('setName').value = settings.name;
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
-    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setEdge', 'edge'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
+    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
     ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setPerOrient', 'perOrient']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(settings.preset); selMusic.set(settings.music);
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
-  $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMax; $('botMaxVal').textContent = settings.botMax; botNote();
+  $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMax; $('botMaxVal').textContent = settings.botMax;
   buildKeys();
   $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%';
   $('setBtnSize').value = settings.btnSize; $('btnSizeVal').textContent = Math.round(settings.btnSize * 100) + '%';
   $('setFs').disabled = !fsSupported(); $('fsNote').textContent = fsSupported() ? '' : 'Full screen is not available on this device or browser.';
-  $('setMmPlayers').disabled = !settings.minimap;
   buildLook(); refreshLook(); applyMmVisibility();
 }
 function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); sfx($(id).checked ? 'on' : 'off'); if (fn) fn(); }; }
 bindToggle('setTags', 'tags'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
-bindToggle('setBotMark', 'botMark'); bindToggle('setBotAsk', 'botAsk'); bindToggle('setMmPlayers', 'mmPlayers');
+bindToggle('setBotMark', 'botMark'); bindToggle('setBotAsk', 'botAsk'); bindToggle('setMmPlayers', 'mmPlayers'); bindToggle('setMmBots', 'mmBots');
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
-bindToggle('setMinimap', 'minimap', () => { $('setMmPlayers').disabled = !settings.minimap; applyMmVisibility(); });
+bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
 bindToggle('setBots', 'bots', () => { bots.length = 0; if (settings.bots) { newBotTarget(); botNextSpawn = 0.8; } });
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); bindToggle('setPerOrient', 'perOrient', () => layoutTouch());
 $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
 $('btnSkip').onclick = () => { auWake(); musicSkip(); };
-function botNote() { const cap = botCap(); $('botNote').textContent = 'Right now: up to ' + cap + (cap < settings.botMax ? (online && room.n > 1 ? ' (real players always come first, and you count too)' : ' (you count as one of the players)') : '') + '. Bots only fill free space, up to ' + (room.max || 200) + ' per world.'; }
-$('setBotMax').oninput = () => { settings.botMax = +$('setBotMax').value; $('botMaxVal').textContent = settings.botMax; save(); newBotTarget(); botNote(); };
+function botNote() {}
+$('setBotMax').oninput = () => { settings.botMax = +$('setBotMax').value; $('botMaxVal').textContent = settings.botMax; save(); newBotTarget(); };
 // the important switches ask first when you turn them OFF; the small ones just switch
 function guard(id, key, title, text, yes) {
   $(id).onchange = () => {
     if ($(id).checked) { settings[key] = true; save(); sfx('on'); return; }
     $(id).checked = true;
-    askConfirm(title, text, yes || 'Turn it off', () => { settings[key] = false; $(id).checked = false; save(); sfx('off'); if (key === 'edge') S.edgeWarn = false; if (key === 'fallWarn') S.fallWarn = false; });
+    askConfirm(title, text, yes || 'Turn it off', () => { settings[key] = false; $(id).checked = false; save(); sfx('off');  });
   };
 }
 guard('setBeacon', 'beacon', 'Turn off the finish beacon?', 'For 15 seconds every 30 minutes, the beacon points toward the finish line. It may be the only thing that helps you find it, because nothing else on the map says where it is.');
-guard('setEdge', 'edge', 'Turn off the edge warning?', 'Without it you get no warning when you wander toward the edge of the world, so you could be thrown out of the map with no notice.');
-guard('setFallWarn', 'fallWarn', 'Turn off the falling warning?', 'Without it you will not be warned before a very long fall ends with a splat.');
+$('setFallWarn').onchange = () => {
+  if ($('setFallWarn').checked) { settings.fallWarn = settings.edge = true; save(); sfx('on'); return; }
+  $('setFallWarn').checked = true;
+  askConfirm('Turn off the warning sign?', 'The sign tells you when you are near lava, near the edge of the world, or falling so fast that the landing could be your last.', 'Turn it off', () => { settings.fallWarn = settings.edge = false; S.edgeWarn = S.fallWarn = S.lavaWarn = false; $('setFallWarn').checked = false; save(); sfx('off'); });
+};
 /* ----- keyboard: pick your own keys (a key can do only one thing) ----- */
 const KEYACT = [['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['back', 'flag', 'Back to start']];
 const KEYNAMES = { Space: 'Space', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Enter: 'Enter', ShiftLeft: 'L-Shift', ShiftRight: 'R-Shift', Tab: 'Tab', Backspace: 'Backspace', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`', CapsLock: 'Caps' };
@@ -1576,15 +1646,39 @@ $('setName').addEventListener('change', sendInfo);
 $('setMp').onchange = () => {
   if ($('setMp').checked) { setMultiplayer(true); return; }
   $('setMp').checked = true;
-  askConfirm('Turn off multiplayer?', "Multiplayer is the main point of this game. If you turn it off, you'll be hidden from everyone, you won't see anyone else, and you'll play completely alone. You can turn it back on any time.", 'Turn off', () => { setMultiplayer(false); $('setMp').checked = false; });
+  askConfirm('Leave multiplayer?', "You'll go to your own private world. Nobody else can see you and you won't see anyone. Your ball goes back to the start.", 'Play solo', () => { setMultiplayer(false); $('setMp').checked = false; }, { no: 'Stay online', yesClass: 'danger' });
 };
 $('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every setting back to its default: your name, colours, controls, zoom, bots and the welcome popup. This cannot be undone.', 'Reset everything', () => {
   const wasMp = settings.mp, wasFs = settings.fs;
   settings = defaults(); normalize(); save(); bots.length = 0; keysDown.clear(); syncKeys(); syncUI(); applyTouchUI(); auVol(); if (AU.ctx) musicStart();
   if (wasFs && isFs()) exitFs();
-  if (!wasMp) { retry = 0; setNet('connecting'); connect(); }
+  if (!wasMp) setMultiplayer(true);
   lastSent = ''; sendInfo(); addFeed('Settings reset to default', 'bad', true);
 });
+
+/* ----- settings that only matter when something else is on (they slide away when they would do nothing) ----- */
+const showKb = () => settings.inputMode === 'keyboard' || (settings.inputMode === 'auto' && !touchActive());
+const showTouch = () => settings.inputMode === 'touch' || (settings.inputMode === 'auto' && touchActive());
+const DEPS = {
+  kb: showKb, touch: showTouch, touchbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'),
+  mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => settings.bots, '!bots': () => !settings.bots,
+  minimap: () => settings.minimap, sfx: () => settings.sfx, music: () => settings.music !== 'none'
+};
+function applyDeps() {
+  const list = document.querySelectorAll('.dep');
+  for (let i = 0; i < list.length; i++) { const f = DEPS[list[i].getAttribute('data-dep')]; if (f) list[i].classList.toggle('off', !f()); }
+  const d = $('inputDesc'); if (d) d.textContent = settings.inputMode === 'auto' ? (showTouch() ? 'Using touch right now. Press a key and it switches to the keyboard.' : 'Using the keyboard right now. Touch the screen and it switches.') : settings.inputMode === 'touch' ? 'Touch controls only.' : 'Keyboard only.';
+  const m = $('mpDesc'); if (m) m.textContent = settings.mp ? 'You are playing with everyone online, in the same world.' : 'You are playing in a private world of your own. Nobody else is here.';
+  const sd = $('soloLenDesc'); if (sd) sd.textContent = settings.soloLen > 0 ? 'Then everything resets and the next map loads.' : 'The map never changes until you start a fresh world.';
+}
+const selSoloMap = makeSelect($('selSoloMap'), [{ v: 'rotate', label: 'Take turns' }].concat(BallMaps.names.map((n, i) => ({ v: String(i), label: n }))),
+  v => { settings.soloMap = v; save(); if (!settings.mp) soloGo(true); });
+const SOLO_LENS = [[15, '15 minutes'], [30, '30 minutes'], [60, '1 hour'], [180, '3 hours'], [360, '6 hours'], [720, '12 hours'], [0, 'Never (until I say)']];
+const selSoloLen = makeSelect($('selSoloLen'), SOLO_LENS.map(a => ({ v: String(a[0]), label: a[1] })),
+  v => { settings.soloLen = +v; save(); if (!settings.mp) { soloRoll(); S.nextAt = soloNext(); initWarnings(); } });
+$('btnSoloNew').onclick = () => askConfirm('Start a fresh world?', 'Everything goes back to how it was at the start: toys, gates and coins.', 'Start fresh', () => soloFresh(), { yesClass: 'go', no: 'Keep playing' });
+const _syncUI = syncUI;
+syncUI = function () { _syncUI(); selSoloMap.set(settings.soloMap); selSoloLen.set(String(settings.soloLen)); applyDeps(); };
 
 /* ================= networking ================= */
 function setNet(state) {
@@ -1592,7 +1686,7 @@ function setNet(state) {
   const n = $('netstat');
   if (state === 'online') { n.classList.add('hide'); return; }
   n.classList.remove('hide');
-  $('netText').textContent = state === 'connecting' ? 'Connecting…' : state === 'solo' ? 'Solo (multiplayer off)' : 'Offline';
+  $('netText').textContent = state === 'connecting' ? 'Connecting…' : state === 'solo' ? 'Solo world' : 'Offline';
   if (state === 'offline' || state === 'solo') setTimeout(maybeAskBots, 700);
 }
 function dropConnection() {
@@ -1600,9 +1694,17 @@ function dropConnection() {
   online = false; others.clear(); lastSent = '';
 }
 function setMultiplayer(on) {
-  settings.mp = on; save();
-  if (on) { retry = 0; setNet('connecting'); connect(); addFeed('Multiplayer on', 'join', true); }
-  else { dropConnection(); setNet('solo'); addFeed('Multiplayer off: you are playing solo', 'bad', true); }
+  settings.mp = on; save(); $('setMp').checked = on;
+  bots.length = 0;
+  if (on) {
+    retry = 0; setNet('connecting'); connect();
+    const ls = Math.floor(Date.now() / SLOT_MS); startTransition(ls, (ls + 1) * SLOT_MS);   // back to the shared map: your ball restarts there
+    addFeed('You are back in multiplayer', 'join', true);
+  } else {
+    dropConnection(); setNet('solo'); soloGo(true);
+    addFeed('You are in your own world now', 'bad', true);
+  }
+  applyDeps(); syncUI(); newBotTarget();
 }
 function connect() {
   if (!settings.mp || ws) return;
@@ -1645,7 +1747,7 @@ function onBin(buf) {   // compact position update: [1][slot u16][ id u32, x/2 u
   for (let off = 3; off + 8 <= buf.byteLength; off += 8) {
     const id = dv.getUint32(off, true);
     if (id === myId) continue;
-    const x = dv.getUint16(off + 4, true) * 2, y = dv.getUint16(off + 6, true);
+    const x = dv.getUint16(off + 4, true) * 4, yr = dv.getUint16(off + 6, true), y = yr >= 65534 ? yr : yr * 2;
     let o = others.get(id);
     if (!o) { o = newOther('', '#ccc', '#fff', 0); others.set(id, o); }
     if (y === 65534) { o.seen = 0; o.dead = 0; o.t0 = 0; continue; }   // moved out of range: hide, no effects
@@ -1687,7 +1789,7 @@ function onMsg(m) {
       setNet('online');
       addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
-      if (m.slot !== S.slot && forced === null) loadMap(m.slot, m.next);
+      if (m.slot !== S.slot && forced === null) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
       if (lastWorldShown !== m.room) { lastWorldShown = m.room; showWorldPop(m.room, m.full || []); }
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
@@ -1763,6 +1865,109 @@ function decoDown(th, px, py, r) {   // hanging things under ceilings
   if (th.deco === 'cloud') { circ(x - 6, y + 3, 6, '#fff'); circ(x + 4, y + 5, 7, '#fff'); }
   else if (th.cave) tri(x, y + 12 + r * 14, x - 6, y, x + 6, y, th.top);
 }
+
+/* ---------- warning sign (a hand-drawn triangle with an exclamation mark, above your ball) ---------- */
+function drawWarnSign(x, y, red) {
+  const t = S.t, bob = Math.sin(t * 7) * 3, sc = 1 + Math.sin(t * 9) * 0.07;
+  ctx.save(); ctx.translate(x, y + bob); ctx.scale(sc * 1.7, sc * 1.7); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0.5, -22); ctx.lineTo(21, 13); ctx.lineTo(-20, 14); ctx.closePath();
+  ctx.fillStyle = red ? '#ff6a3d' : '#ffd23d'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = INK; ctx.stroke();
+  ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(22,15,12,.45)'; ctx.beginPath(); ctx.moveTo(-1.5, -17); ctx.lineTo(17, 11); ctx.lineTo(-17, 12.5); ctx.closePath(); ctx.stroke();
+  ctx.strokeStyle = INK; ctx.lineWidth = 4.2; ctx.beginPath(); ctx.moveTo(0.5, -9); ctx.quadraticCurveTo(-1, -2, 0.5, 3); ctx.stroke();
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(0.5, 8.5, 2.6, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- day and night: the sky follows the map timer (sunrise first, night near the end) ---------- */
+const SKY = [[0, 255, 170, 110, 0.18], [0.1, 255, 220, 170, 0.07], [0.2, 255, 255, 255, 0], [0.5, 255, 255, 255, 0], [0.62, 255, 140, 70, 0.2], [0.72, 80, 50, 120, 0.3], [0.84, 12, 18, 70, 0.46], [1, 8, 10, 50, 0.52]];
+function skyAt(p) {
+  for (let i = 1; i < SKY.length; i++) if (p <= SKY[i][0]) { const a = SKY[i - 1], b = SKY[i], u = (p - a[0]) / (b[0] - a[0] || 1); return [a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u, a[3] + (b[3] - a[3]) * u, a[4] + (b[4] - a[4]) * u]; }
+  const l = SKY[SKY.length - 1]; return [l[1], l[2], l[3], l[4]];
+}
+function dayPhase() {
+  const len = inSolo() ? settings.soloLen * 60000 : SLOT_MS;
+  if (len > 0) return clamp(1 - (S.nextAt - nowMs()) / len, 0, 1);
+  return (Date.now() % SLOT_MS) / SLOT_MS;
+}
+function drawSky(sw, sh, camL, p) {   // sun, moon and stars: far away, so they barely move with the camera
+  const night = clamp((p - 0.62) / 0.18, 0, 1) * (p > 0.97 ? 1 : 1);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (night > 0.02) {
+    ctx.fillStyle = '#fff6d6';
+    for (let i = 0; i < 70; i++) {
+      const x = ((hsh(i, 1, 41) * sw * 1.4 - camL * 0.03) % sw + sw) % sw, y = hsh(i, 2, 41) * sh * 0.8, tw = 0.5 + 0.5 * Math.sin(S.t * 2 + i * 1.7);
+      ctx.globalAlpha = night * (0.35 + 0.5 * tw); const r = 1 + hsh(i, 3, 41) * 1.6;
+      ctx.beginPath(); ctx.moveTo(x - r * 2, y); ctx.lineTo(x + r * 2, y); ctx.moveTo(x, y - r * 2); ctx.lineTo(x, y + r * 2); ctx.lineWidth = 1.4; ctx.strokeStyle = '#fff6d6'; ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  const ps = clamp(p / 0.76, 0, 1);
+  if (p < 0.78) {   // sun: rises on the left, sets on the right
+    const x = sw * (0.08 + 0.84 * ps), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * ps)), r = 26, warm = p < 0.14 || p > 0.55;
+    ctx.globalAlpha = 0.9; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.fillStyle = warm ? '#ffa24a' : '#ffe566';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 2.4; ctx.beginPath(); for (let k = 0; k < 10; k++) { const a = k * TAU / 10 + S.t * 0.1; ctx.moveTo(x + Math.cos(a) * (r + 6), y + Math.sin(a) * (r + 6)); ctx.lineTo(x + Math.cos(a) * (r + 15 + (k & 1) * 5), y + Math.sin(a) * (r + 15 + (k & 1) * 5)); } ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  if (p > 0.6) {   // moon
+    const pm = clamp((p - 0.6) / 0.4, 0, 1), x = sw * (0.08 + 0.84 * pm), y = sh * (0.8 - 0.66 * Math.sin(Math.PI * pm)), r = 22;
+    ctx.globalAlpha = clamp((p - 0.6) / 0.12, 0, 1) * 0.95; ctx.fillStyle = '#f1efe0'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,150,170,.45)'; [[-7, -5, 5], [6, 4, 4], [-2, 9, 3]].forEach(c => { ctx.beginPath(); ctx.arc(x + c[0], y + c[1], c[2], 0, TAU); ctx.fill(); });
+    ctx.globalAlpha = 1;
+  }
+}
+let paperPat = null;
+function paperGrain() {   // faint paper texture over everything, like a drawing in a sketchbook
+  if (!paperPat) {
+    const c = document.createElement('canvas'); c.width = c.height = 160; const g = c.getContext('2d');
+    for (let i = 0; i < 700; i++) { g.fillStyle = 'rgba(40,25,10,' + (0.04 + Math.random() * 0.09) + ')'; g.fillRect(Math.random() * 160, Math.random() * 160, 1 + Math.random() * 1.6, 1 + Math.random() * 1.6); }
+    for (let i = 0; i < 26; i++) { g.strokeStyle = 'rgba(40,25,10,.05)'; g.lineWidth = 1; g.beginPath(); const x = Math.random() * 160, y = Math.random() * 160; g.moveTo(x, y); g.lineTo(x + 6 + Math.random() * 14, y + (Math.random() - 0.5) * 6); g.stroke(); }
+    paperPat = ctx.createPattern(c, 'repeat');
+  }
+  return paperPat;
+}
+function wob(x, y, w, h, j, seed) {   // a hand-drawn rectangle path: corners and sides wander a little (the same every frame)
+  const a = (k) => (hsh(seed, k, 71) - 0.5) * 2 * j;
+  ctx.beginPath(); ctx.moveTo(x + a(1), y + a(2));
+  ctx.quadraticCurveTo(x + w / 2 + a(3), y + a(4), x + w + a(5), y + a(6));
+  ctx.quadraticCurveTo(x + w + a(7), y + h / 2 + a(8), x + w + a(9), y + h + a(10));
+  ctx.quadraticCurveTo(x + w / 2 + a(11), y + h + a(12), x + a(13), y + h + a(14));
+  ctx.quadraticCurveTo(x + a(15), y + h / 2 + a(16), x + a(1), y + a(2)); ctx.closePath();
+}
+const FLOWER = ['#ff6fb5', '#ffd23d', '#ffffff', '#ff8a3d', '#b58bff'];
+function decoExtra(tx, ty, th, g, i) {   // extra little things on top of solid ground: flowers, tufts, bushes, lamps, fences, signs
+  const h = hsh(tx, ty, 31), x = tx * TS + 6 + hsh(tx, ty, 32) * 28, y = ty * TS;
+  if (th.cave) { if (h < 0.1) { circ(x, y - 4, 4, '#c9c0e0'); circ(x + 7, y - 3, 3, '#b0a8d0'); } return; }
+  if (h < 0.09) {   // flowers
+    ctx.lineWidth = 1.6; const n = 2 + ((hsh(tx, ty, 33) * 3) | 0);
+    for (let k = 0; k < n; k++) { const fx = x - 8 + k * 7, fh = 7 + hsh(tx, k, 34) * 8; ctx.beginPath(); ctx.moveTo(fx, y); ctx.quadraticCurveTo(fx + 2, y - fh / 2, fx, y - fh); ctx.strokeStyle = '#2f7a35'; ctx.stroke(); ctx.strokeStyle = INK; circ(fx, y - fh - 2, 3.4, FLOWER[(tx * 3 + k + ty) % FLOWER.length]); }
+  } else if (h < 0.2) {   // grass tufts
+    ctx.strokeStyle = th.top; ctx.lineWidth = 2.4; ctx.beginPath();
+    for (let k = -2; k <= 2; k++) { ctx.moveTo(x + k * 3, y); ctx.lineTo(x + k * 4.5, y - 8 - (k & 1) * 4); }
+    ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 1.7;
+  } else if (h < 0.25) {   // bush
+    circ(x - 6, y - 6, 7, '#2f8a3a'); circ(x + 4, y - 8, 9, '#3a9a46'); circ(x + 13, y - 5, 6, '#2f8a3a');
+  } else if (h < 0.275) {   // lamp post (glows at night)
+    rct(x - 1.5, y - 34, 3, 34, '#4a3a30'); rct(x - 6, y - 44, 12, 10, '#ffe9a0');
+    if (S.night > 0.15) { ctx.save(); ctx.globalAlpha = S.night * 0.35; ctx.fillStyle = '#ffd877'; ctx.beginPath(); ctx.arc(x, y - 39, 38, 0, TAU); ctx.fill(); ctx.restore(); }
+  } else if (h < 0.31) {   // fence
+    for (let k = 0; k < 3; k++) rct(x - 12 + k * 11, y - 14, 4, 14, '#c79a5a');
+    ctx.beginPath(); ctx.moveTo(x - 12, y - 10); ctx.lineTo(x + 16, y - 10); ctx.moveTo(x - 12, y - 5); ctx.lineTo(x + 16, y - 5); ctx.stroke();
+  } else if (h < 0.33) {   // little sign
+    rct(x - 1.5, y - 22, 3, 22, '#6b4526'); rct(x - 10, y - 30, 20, 11, '#d9a864');
+    ctx.beginPath(); ctx.moveTo(x - 5, y - 24.5); ctx.lineTo(x + 5, y - 24.5); ctx.stroke();
+  } else if (h < 0.35) {   // pennant on a stick
+    rct(x - 1, y - 30, 2.5, 30, '#6b4526'); tri(x + 1, y - 30, x + 17, y - 25, x + 1, y - 19, FLOWER[(tx + ty) % FLOWER.length]);
+  } else if (h < 0.37) {   // stacked stones
+    circ(x, y - 4, 6, '#8a8296'); circ(x + 1, y - 11, 4.5, '#9a92a6'); circ(x + 1, y - 16, 3, '#aaa2b6');
+  }
+}
+function inCave(tx, ty) {
+  const zs = S.map.zones; let c = false;
+  for (let i = 0; i < zs.length; i++) { const z = zs[i]; if (tx >= z[0] && tx < z[2] && ty >= z[1] && ty < z[3]) c = !!THEMES[z[4]].cave; }
+  return c;
+}
 function drawZones(camL, camT, vw, vh) {
   const zs = S.map.zones;
   for (let i = 0; i < zs.length; i++) {
@@ -1811,6 +2016,7 @@ function drawTiles(camL, camT, vw, vh) {
     }
   }
   ctx.lineWidth = 2.6; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.stroke();
+  if (sketch) { ctx.save(); ctx.translate(1.6, 1.3); ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(22,15,12,.28)'; ctx.stroke(); ctx.restore(); }
   if (!sketch) return;
   // pencil hatching inside the ground, and scenery on top of / under it
   ctx.beginPath();
@@ -1825,6 +2031,7 @@ function drawTiles(camL, camT, vw, vh) {
       const i = ty * W + tx; if (g[i] !== 1) continue;
       const th = THEMES[tg[i]] || THEMES[0], up = ty > 0 ? g[i - W] : 0, dn = g[i + W];
       if (up === 0 && hsh(tx, ty, 11) < 0.17) decoUp(th, tx * TS, ty * TS, hsh(tx, ty, 13));
+      if (up === 0) decoExtra(tx, ty, th, g, i);
       if (dn === 0 && hsh(tx, ty, 12) < 0.2) decoDown(th, tx * TS, ty * TS, hsh(tx, ty, 14));
     }
   }
@@ -1983,7 +2190,7 @@ function drawDyn(camL, camT, vw, vh) {
       d._pv = d.vy;
     }
     if (d.k === 'b') {
-      ctx.fillStyle = d.hw > 20 ? '#ffb020' : '#ffc233'; ctx.fillRect(d.x - d.hw, d.y - d.hh, d.hw * 2, d.hh * 2); ctx.strokeRect(d.x - d.hw, d.y - d.hh, d.hw * 2, d.hh * 2);
+      ctx.fillStyle = d.hw > 20 ? '#ffb020' : '#ffc233'; wob(d.x - d.hw, d.y - d.hh, d.hw * 2, d.hh * 2, 1.7, i); ctx.fill(); ctx.stroke();
       ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(d.x - d.hw + 4, d.y - d.hh + 4); ctx.lineTo(d.x + d.hw - 4, d.y + d.hh - 4); ctx.moveTo(d.x + d.hw - 4, d.y - d.hh + 4); ctx.lineTo(d.x - d.hw + 4, d.y + d.hh - 4); ctx.stroke(); ctx.lineWidth = 2.4;
     } else {
       ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, TAU); ctx.fillStyle = d.kind === 4 ? PIT[i % PIT.length] : d.kind === 3 ? '#ffa31a' : '#ffc233'; ctx.fill(); ctx.stroke();
@@ -1992,7 +2199,7 @@ function drawDyn(camL, camT, vw, vh) {
   }
 }
 
-const VIEW_MAX_W = 1700, VIEW_MAX_H = 1050;
+const VIEW_MAX_W = 3200, VIEW_MAX_H = 2000;
 let lastFrame = performance.now(), lastDraw = lastFrame, acc = 0, errCount = 0, frameN = 0;
 function frame(nowT) {
   requestAnimationFrame(frame);
@@ -2029,8 +2236,10 @@ function render(dt, nowT) {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = S.map.bg; ctx.fillRect(0, 0, sw, sh);
+  const dph = dayPhase(); S.night = clamp((dph - 0.62) / 0.2, 0, 1);
   ctx.setTransform(dpr * sc, 0, 0, dpr * sc, -camL * dpr * sc, -camT * dpr * sc);
   drawZones(camL, camT, vw, vh);
+  if (!inCave(S.b.x / TS, S.b.y / TS)) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawSky(sw, sh, camL, dph); ctx.setTransform(dpr * sc, 0, 0, dpr * sc, -camL * dpr * sc, -camT * dpr * sc); }
   // the lava sea at the very bottom, and the edge of the world on the sides
   { // the lava sea follows the land: it sits right under the level, wherever you are
     const fl = S.map.floorY, xa = Math.max(0, Math.floor(camL / TS) - 1), xb = Math.min(S.world.W - 1, Math.ceil((camL + vw) / TS) + 1);
@@ -2078,6 +2287,9 @@ function render(dt, nowT) {
   }
   drawFx();
   drawWater();
+  if (S.mode === 'play' && S.dead <= 0 && !S.away && settings.fallWarn && (S.fallWarn || S.lavaWarn || S.edgeWarn)) drawWarnSign(b.x, b.y - R - 52, !!(S.fallWarn || S.lavaWarn));
+  { const sk = skyAt(dph); if (sk[3] > 0.005) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = 'rgba(' + (sk[0] | 0) + ',' + (sk[1] | 0) + ',' + (sk[2] | 0) + ',' + sk[3].toFixed(3) + ')'; ctx.fillRect(0, 0, sw, sh); } }
+  if (!settings.low) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.5; ctx.fillStyle = paperGrain(); ctx.fillRect(0, 0, cv.width, cv.height); ctx.globalAlpha = 1; }
   if (S.fallLvl > 0.05 && S.mode === 'play' && S.dead <= 0) {   // speed lines while you fall fast
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,' + (0.15 + S.fallLvl * 0.45) + ')'; ctx.beginPath();
     for (let i = 0; i < 12; i++) { const x = Math.random() * sw, y = Math.random() * sh, l = 30 + S.fallLvl * 110; ctx.moveTo(x, y); ctx.lineTo(x, y - l); }
@@ -2120,9 +2332,10 @@ function drawMinimap() {
     if (now - mmPing > PING_MS) {
       mmPing = now; mmDots.length = 0;
       if (settings.mmPlayers) others.forEach(o => { if (!o.seen || o.dead) return; if (o.cx > v.l && o.cx < v.l + v.w && o.cy > v.t && o.cy < v.t + v.h) mmDots.push({ x: o.cx / TS, y: o.cy / TS, c: o.color }); });
+      if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; const q = bt.b; if (q.x > v.l && q.x < v.l + v.w && q.y > v.t && q.y < v.t + v.h) mmDots.push({ x: q.x / TS, y: q.y / TS, c: bt.color }); });
     }
     const age = (now - mmPing) / PING_MS;
-    if (settings.mmPlayers) {
+    if (settings.mmPlayers || settings.mmBots) {
       g.strokeStyle = 'rgba(159,232,255,' + (0.5 * (1 - age)) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(w / 2, h / 2, age * Math.max(v.w, v.h) / TS * ppt * 0.6, 0, TAU); g.stroke();
       for (let i = 0; i < mmDots.length; i++) {
         const d = mmDots[i], x = (d.x - left) * ppt, y = (d.y - top) * ppt; if (x < 0 || y < 0 || x > w || y > h) continue;
@@ -2138,30 +2351,65 @@ function drawMinimap() {
   g.fillStyle = settings.color; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(w / 2, h / 2, 4, 0, TAU); g.fill(); g.stroke();
 }
 setInterval(drawMinimap, 160);
+let mmBigOn = false;
+function mmBigImage(mm, cw, ch) {   // terrain squeezed to the canvas size; any solid cell in a block wins, so thin platforms never vanish
+  if (mm.big && mm.big.width === cw && mm.big.height === ch) return mm.big;
+  const c = document.createElement('canvas'); c.width = cw; c.height = ch; const g = c.getContext('2d'), id = g.createImageData(cw, ch), d = id.data, pal = {};
+  const col = code => { if (pal[code]) return pal[code]; const h = code === 201 ? LAVA : code === 202 ? ICE : code === 203 ? '#2e7be6' : THEMES[code - 1].top, n = parseInt(h.slice(1), 16); return (pal[code] = [n >> 16 & 255, n >> 8 & 255, n & 255]); };
+  const kx = cw / mm.cw, ky = ch / mm.ch;
+  for (let y = 0; y < mm.ch; y++) { const ty = Math.min(ch - 1, (y * ky) | 0); for (let x = 0; x < mm.cw; x++) { const code = mm.cell[y * mm.cw + x]; if (!code) continue; const o = (ty * cw + Math.min(cw - 1, (x * kx) | 0)) * 4, q = col(code); d[o] = q[0]; d[o + 1] = q[1]; d[o + 2] = q[2]; d[o + 3] = 255; } }
+  g.putImageData(id, 0, 0); return (mm.big = c);
+}
+function drawMinimapBig() {
+  if (!mmBigOn || !S.mm || !S.b) return;
+  const c = $('mmbigc'), mm = S.mm, m = S.map, tw = mm.cw * 2, th = mm.ch * 2;
+  const cw = 1200, ch = clamp(Math.round(cw * th / tw), 200, 760);
+  if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
+  const g = c.getContext('2d'), k = Math.min(cw / tw, ch / th), iw = Math.round(tw * k), ih = Math.round(th * k), ox = (cw - iw) / 2, oy = (ch - ih) / 2;
+  g.clearRect(0, 0, cw, ch); g.fillStyle = '#14111c'; g.fillRect(0, 0, cw, ch);
+  g.drawImage(mmBigImage(mm, iw, ih), ox, oy);
+  g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1; g.strokeRect(ox, oy, iw, ih);
+  const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 1.5; g.strokeRect(ox + v.l / TS * k, oy + v.t / TS * k, Math.max(6, v.w / TS * k), Math.max(6, v.h / TS * k)); }
+  if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; g.fillStyle = bt.color; g.beginPath(); g.arc(ox + bt.b.x / TS * k, oy + bt.b.y / TS * k, 3, 0, TAU); g.fill(); });
+  if (settings.mmPlayers) others.forEach(o => { if (!o.seen || o.dead) return; g.fillStyle = o.color; g.beginPath(); g.arc(ox + o.cx / TS * k, oy + o.cy / TS * k, 3.4, 0, TAU); g.fill(); });
+  const px = ox + S.b.x / TS * k, py = oy + S.b.y / TS * k, pulse = 6 + Math.sin(performance.now() / 180) * 1.8;
+  g.strokeStyle = '#fff'; g.lineWidth = 2.4; g.fillStyle = settings.color; g.beginPath(); g.arc(px, py, pulse, 0, TAU); g.fill(); g.stroke();
+  $('mmbigName').textContent = m.name;
+  $('mmbigNote').textContent = 'You are the big dot. The map goes on in every direction.';
+}
+function toggleMmBig(on) {
+  mmBigOn = on; $('mmbig').classList.toggle('hide', !on);
+  if (on) { sfx('ui'); drawMinimapBig(); }
+}
+$('mm').addEventListener('click', e => { e.stopPropagation(); toggleMmBig(true); });
+$('mmbig').addEventListener('pointerdown', e => { e.stopPropagation(); toggleMmBig(false); });
+setInterval(drawMinimapBig, 120);
 
 /* ================= HUD + session warnings ================= */
 const BEACON_EVERY = 30 * 60000, BEACON_LEN = 15000;
 let lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
 const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 function worldText() {
+  if (inSolo()) return 'Solo world';
   if (online) return 'World ' + room.id + ' · ' + room.n + ' player' + (room.n === 1 ? '' : 's');
   return settings.mp ? 'Connecting…' : '';
 }
 function hudTick() {
   const rem = S.nextAt - nowMs();
   const tm = $('timer');
-  $('nexttimer').textContent = fmtClock(rem);
-  tm.className = 'pill' + (rem <= 30000 && rem > 0 ? ' final' : rem <= 60000 ? ' low' : '');
+  const endless = inSolo() && settings.soloLen === 0;
+  $('nexttimer').textContent = endless ? '∞' : fmtClock(rem);
+  tm.className = 'pill' + (endless ? '' : rem <= 30000 && rem > 0 ? ' final' : rem <= 60000 ? ' low' : '');
   if (S.mode === 'play') {
     TH.forEach(t => {
-      if (!warned[t] && rem <= t * 60000) {
+      if (!inSolo() && !warned[t] && rem <= t * 60000) {
         warned[t] = true;
         notice('Session ends in ' + (t === 60 ? '1 hour' : t + ' minute' + (t > 1 ? 's' : '')) + '. Everyone moves to a new map.', t <= 5 ? 'urgent' : '');
       }
     });
     const sec = Math.ceil(rem / 1000);
-    if (sec <= 10 && sec > 0 && sec !== lastTickSec) { lastTickSec = sec; sfx('tick'); }
-    if (rem <= 0) startTransition(S.slot + 1, S.nextAt + SLOT_MS);
+    if (!endless && sec <= 10 && sec > 0 && sec !== lastTickSec) { lastTickSec = sec; sfx('tick'); }
+    if (rem <= 0 && !endless) { if (inSolo()) { soloRoll(); startTransition(soloSlot(), soloNext()); } else startTransition(S.slot + 1, S.nextAt + SLOT_MS); }
   }
   // beacon: every 30 minutes (on the clock) for 15 seconds
   const ph = nowMs() % BEACON_EVERY, bon = !!(settings.beacon && S.mode === 'play' && !S.finished && S.dead <= 0 && ph < BEACON_LEN);
@@ -2173,22 +2421,29 @@ function hudTick() {
     const hz = Math.abs(dx) > 4 * TS ? (dx > 0 ? 'right' : 'left') : '', vt = Math.abs(dy) > 4 * TS ? (dy > 0 ? 'down' : 'up') : '';
     $('beaconText').textContent = 'Beacon! The finish is ' + d + ' tiles away' + (hz || vt ? ': ' + [vt, hz].filter(Boolean).join(' and ') : '') + ' · ' + Math.ceil((BEACON_LEN - ph) / 1000) + 's';
   }
-  $('edgewarn').classList.toggle('hide', !(S.edgeWarn && S.mode === 'play' && S.dead <= 0));
-  $('fallwarn').classList.toggle('hide', !(S.fallWarn && settings.fallWarn && S.mode === 'play' && S.dead <= 0));
   $('onl').textContent = worldText();
   if (S.coinN !== lastCoinShown) { lastCoinShown = S.coinN; $('coinN').textContent = S.coinN; }
   $('coinpill').title = 'Coins on this map. Your best: ' + S.coinBest;
-  $('mpstats').textContent = online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : 'Multiplayer is off.');
+  $('mpstats').textContent = online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : '');
   if (!$('tpop').classList.contains('hide')) fillTimerPop(rem);
 }
 setInterval(hudTick, 250);
 
+function soloNextName() {
+  const k1 = solo.k + 1, idx = settings.soloMap === 'rotate' ? k1 % 3 : +settings.soloMap;
+  return BallMaps.names[(SOLO_BASE + k1 * 3 + idx) % BallMaps.count];
+}
 function fillTimerPop(rem) {
+  const sl = inSolo(), endless = sl && settings.soloLen === 0;
   $('tpName').textContent = S.map.name;
-  $('tpChange').textContent = 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
+  $('tpChange').textContent = endless ? 'This map stays until you change it' : 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
   $('tpCoins').textContent = 'Coins: ' + S.coinN + ' · Your best here: ' + S.coinBest;
-  $('tpWorld').textContent = online ? 'World ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
-  $('tpNext').textContent = 'Up next: ' + BallMaps.names[(S.slot + 1) % BallMaps.count];
+  $('tpWorld').textContent = sl ? 'Solo world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'World ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
+  $('tpNext').textContent = endless ? '' : 'Up next: ' + (sl ? soloNextName() : BallMaps.names[(S.slot + 1) % BallMaps.count]);
+  const ph = nowMs() % BEACON_EVERY, on = !!(settings.beacon && S.mode === 'play' && !S.finished && ph < BEACON_LEN), ar = $('tpArrow');
+  $('tpBeacon').textContent = !settings.beacon ? 'Finish beacon is off' : on ? 'Beacon is on! Follow the arrow' : 'Finish beacon in ' + fmtClock(BEACON_EVERY - ph);
+  ar.classList.toggle('hide', !on);
+  if (on && S.b) { const f = S.map.flag, a = Math.atan2(f[1] * TS - S.b.y, f[0] * TS - S.b.x) * 180 / Math.PI + 90; ar.style.transform = 'rotate(' + a.toFixed(0) + 'deg)'; }
 }
 $('timer').onclick = e => { e.stopPropagation(); const el = $('tpop'); const open = el.classList.contains('hide'); el.classList.toggle('hide', !open); if (open) { fillTimerPop(S.nextAt - nowMs()); sfx('ui'); } };
 document.addEventListener('pointerdown', e => { const el = $('tpop'); if (!el.classList.contains('hide') && !el.contains(e.target) && !$('timer').contains(e.target)) el.classList.add('hide'); });
@@ -2198,11 +2453,14 @@ syncUI(); applyTouchUI();
 try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } catch (e) {}
 if (settings.intro) showIntro();
 {
-  const ls = forced !== null ? (+forced || 0) : Math.floor(Date.now() / SLOT_MS);
-  S.nextAt = forcedLeft !== null ? Date.now() + (+forcedLeft || 60) * 1000 : forced !== null ? Date.now() + 4 * 3600000 : (ls + 1) * SLOT_MS;
-  loadMap(ls, S.nextAt);
+  if (!settings.mp && forced === null) { loadSolo(); soloGo(false); }
+  else {
+    const ls = forced !== null ? (+forced || 0) : Math.floor(Date.now() / SLOT_MS);
+    S.nextAt = forcedLeft !== null ? Date.now() + (+forcedLeft || 60) * 1000 : forced !== null ? Date.now() + 4 * 3600000 : (ls + 1) * SLOT_MS;
+    loadMap(ls, S.nextAt);
+  }
 }
-if (params && params.get('test')) window.__d = { S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap };
+if (params && params.get('test')) window.__d = { S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
 if (settings.mp) { setNet('connecting'); connect(); } else setNet('solo');
 newBotTarget();
 hudTick();

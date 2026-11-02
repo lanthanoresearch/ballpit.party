@@ -282,6 +282,7 @@
     }
   }
 
+  const ACC = 560;
   const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false };
 
   // ax: -1/0/1, jheld: jump button held. Set b.jbuf = 0.12 on a jump press.
@@ -296,7 +297,7 @@
 
     if (water) {
       // swimming: slow, floaty. Hold jump to swim up; at the surface it hops you out.
-      b.vx = approach(b.vx, ax * 190, (ax ? 1500 : 500) * dt);
+      b.vx = approach(b.vx, ax * 190, (ax ? 650 : 400) * dt);
       const surface = tile(w, tx, ty - 1) !== 5;
       if (jheld || b.jbuf > 0) {
         if (surface) {
@@ -311,7 +312,7 @@
       // other way brakes you fairly quickly.
       // ax may be fractional (a gentle swipe = a slow roll). A short tap builds speed gradually, so it barely moves you.
       const turning = ax !== 0 && b.vx !== 0 && Math.sign(b.vx) !== Math.sign(ax);
-      const rate = b.flat ? (ice ? (ax ? 900 : 110) : (ax ? (turning ? 3600 : 2200) : 3400)) : (ax ? 1800 : 120);
+      const rate = b.flat ? (ice ? (ax ? 420 : 90) : (ax ? (turning ? 1500 : ACC) : 1100)) : (ax ? 900 : 140);   // a smooth build-up: about half a second to top speed
       const target = (ax && Math.sign(b.vx) === Math.sign(ax) && Math.abs(b.vx) > MAXV) ? b.vx : ax * MAXV;
       b.vx = approach(b.vx, target, rate * dt);
       b.coyote = b.ground ? 0.1 : Math.max(0, b.coyote - dt);

@@ -45,7 +45,8 @@
     };
   }
 
-  const S = (m, n, th, o) => Object.assign({ m, n, th }, o || {});
+  const BIG = 1.6;   // every map is this much bigger than its base outline
+const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)), th }, o || {});
 
   // Real route: segs. Every vertical segment must be followed by a 'right' one.
   const DEFS = [
@@ -80,6 +81,16 @@
       add(x0, y0, x1, y1) {
         const b = [x0, y0, x1, y1]; boxes.push(b);
         cells(x0, y0, x1, y1, k => { let l = g.get(k); if (!l) { l = []; g.set(k, l); } l.push(b); });
+        return b;
+      },
+      freeEx(x0, y0, x1, y1, ex) {   // like free(), but one known box (the start platform's own) is ignored
+        let ok = true;
+        cells(x0, y0, x1, y1, k => {
+          if (!ok) return;
+          const l = g.get(k); if (!l) return;
+          for (let i = 0; i < l.length; i++) { const b = l[i]; if (b !== ex && b[0] < x1 && b[2] > x0 && b[1] < y1 && b[3] > y0) { ok = false; return; } }
+        });
+        return ok;
       },
       free(x0, y0, x1, y1) {
         let ok = true;
@@ -104,7 +115,7 @@
     let px = 0, py = 0, pl = o.startW || 9;
     let si = 0, seg = segs[0], mode = seg.m, sleft = seg.n;
     let hdir = 1, lo = -1, hi = pl + (mode === 'up' ? 30 : 34);
-    let baseY = 0, lock = 0, lockSign = 0, prevMode = mode;
+    let baseY = 0, lock = 0, lockSign = 0, prevMode = mode, ext = 0;
     const sp = k => (seg[k] !== undefined ? seg[k] : o.p[k]);
     let total = 0; segs.forEach(s => { total += s.n; });
     if (o.withFinish) total += 1;
@@ -122,15 +133,16 @@
 
     for (let i = 1; i <= total; i++) {
       const last = o.withFinish && i === total;
+      if (!last && sleft <= 0 && mode !== 'right' && segs[si + 1] && ext < 18 && px + pl < hi - 10) { sleft = 1; ext++; total++; }   // finish the zig-zag on the open side, so the route that follows never runs back over it
       if (!last && sleft <= 0) {
-        si++; seg = segs[si]; sleft = seg.n; gid = ng++;
+        si++; seg = segs[si]; sleft = seg.n; gid = ng++; ext = 0;
         enter(seg.m);
       }
       sleft--;
 
       const rest = (!last && i % 18 === 0 && mode === 'right');                                   // safe breather platform
       const narrow = (!last && !rest && Rn() < sp('narrow'));
-      const water = (!last && !rest && !narrow && mode === 'right' && Rn() < sp('water'));
+      const water = (!last && !rest && !narrow && mode === 'right' && lock <= 0 && Rn() < sp('water'));
       const L = last ? 16 : rest ? 12 : water ? ri(8, 11) : narrow ? ri(2, 3) : (mode === 'up' ? ri(4, 7) : ri(5, 10));
 
       let dy, gap;
@@ -140,15 +152,17 @@
         if (off > 12) oo = [-3, -2, -1, 0]; else if (off < -12) oo = [0, 1, 2, 3, 4];
         if (lock > 0) { oo = oo.filter(v => v * lockSign >= 0); if (!oo.length) oo = [0]; lock--; }
         dy = pick(oo);
-        gap = dy <= -3 ? 2 : dy < 0 ? ri(2, 4) : dy >= 2 ? ri(2, 5) : ri(2, 5);
+        gap = dy <= -3 ? 2 : dy < 0 ? ri(2, 4) : dy >= 2 ? ri(2, 4) : ri(2, 4);
       } else if (mode === 'down') {
         dy = ri(3, 5);   // big drops keep 3+ tiles of head-room between zig-zag layers
-        gap = ri(2, 5);
+        gap = ri(2, 4);
       } else {
-        dy = -2;         // always a full 2-tile step so zig-zag layers keep head-room
+        dy = -3;         // always a full 3-tile step so zig-zag layers keep head-room
         gap = 2;
       }
 
+      if (narrow || pl <= 3) gap = Math.min(gap, 3);
+      if (dy >= 3) gap = Math.min(gap, 3);
       let nx;
       if (mode === 'right') {
         nx = px + pl + gap;
@@ -211,7 +225,7 @@
     const occ = Occ(), occB = Occ();   // occ: platforms + their jump room; occB: just the solid bodies (for floating districts)
     let ABS = null;
     const rects = [], gz = {};
-    let gidN = 0, branchCount = 0;
+    let gidN = 0, branchCount = 0; const chains = [];
     const MAXB = 520;
     const coins = [], gad = { doors: [], plates: [], btns: [], see: [] }, decor = [];
     const coin = (x, y, k) => coins.push([x, y, k || 0]);
@@ -251,13 +265,13 @@
         if (!e[6] || e[4] !== 0) continue;
         let m = 1e9;
         for (let j = Math.max(0, i - 3); j <= Math.min(pw.length - 1, i + 3); j++) m = Math.min(m, pw[j][1]);
-        const cy = m - 7, a = e[0], b = e[0] + e[2];
+        const cy = m - 10, a = e[0], b = e[0] + e[2];
         let x0 = a, x1 = b;
         if (i > 0) { const p = pw[i - 1], pa = p[0], pb = p[0] + p[2]; if (pb <= a) x0 = pb; else if (b <= pa) x1 = pa; }
         if (!occ.free(x0, cy - 5, x1, cy)) continue;
         occ.add(x0, cy - 5, x1, cy);
         addRect([x0, cy - 5, x1 - x0, 5, 1, e[3], e[5]]);
-        for (let x = x0 + 1; x < x1 - 1; x += 3) if (BR() < 0.4) addRect([x, cy, 1, bri(1, 2), 1, e[3], e[5]]);   // hanging rock
+        for (let x = x0 + 1; x < x1 - 1; x += 3) if (BR() < 0.4) addRect([x, cy, 1, 1, 1, e[3], e[5]]);   // hanging rock
       }
     }
     // little things to climb on
@@ -356,13 +370,14 @@
     }
 
     // grow a side chain out of world platform e; tries both directions, keeps the longer one
-    function grow(e, segs, seed) {
+    function grow(e, segs, seed, lite) {
       const X = e[0], Y = e[1], PL = e[2];
       let best = null;
       for (const dir of ((seed & 1) ? [1, -1] : [-1, 1])) {
         const ok = (nx, ny, L, h) => {
           const x0 = dir > 0 ? X + nx - 1 : X + PL - nx - L - 1, x1 = dir > 0 ? X + nx + L + 1 : X + PL - nx + 1;
-          return occ.free(x0, Y + ny - 6, x1, Y + ny + h + 2);
+          if (lite) return occB.free(x0, Y + ny - 1, x1, Y + ny + h + 1);
+          const okk = occ.free(x0, Y + ny - 6, x1, Y + ny + h + 2); return okk;
         };
         const res = chain({ seed: seed + (dir > 0 ? 0 : 99), segs, p: BP, withFinish: false, startW: PL, ok });
         if (!best || res.path.length > best.res.path.length) best = { res, dir };
@@ -377,7 +392,7 @@
       const A = ABS;
       for (const dir of (A ? [A.side] : BR() < 0.5 ? [1, -1] : [-1, 1])) {
         const nx = A ? (dir > 0 ? A.edge : A.edge - W) : dir > 0 ? e[0] + e[2] + 3 : e[0] - 3 - W, ny = A ? A.ny : e[1];
-        if (!(A ? occB : occ).free(nx - 1, ny - up, nx + W + 1, ny + down)) continue;
+        if (!occ.free(nx - 1, ny - up, nx + W + 1, ny + down)) continue;   // never hang over a route: you must always have room to jump
         occ.add(nx - 1, ny - up, nx + W + 1, ny + down); occB.add(nx - 1, ny - up, nx + W + 1, ny + down);
         fn({ nx, ny, W, dir, th: e[3], gid: e[5], X: (o, w) => (dir > 0 ? nx + o : nx + W - o - (w || 1)) });
         return true;
@@ -479,9 +494,9 @@
       const k = BR() * 100;
       let ok;
       if (k < 7) { grow(e, [S('up', bri(6, 12), THEMES[e[3]].id)], bri(1, 99999)); return; }
-      else if (k < 15) ok = roomLake(e); else if (k < 22) ok = roomLavaLake(e); else if (k < 28) ok = roomPyramid(e); else if (k < 34) ok = roomArch(e);
-      else if (k < 46) ok = roomPlay(e); else if (k < 57) ok = roomPit(e); else if (k < 69) ok = roomVault(e, pw); else if (k < 80) ok = roomGauntlet(e);
-      else if (k < 91) ok = roomTramp(e); else ok = roomIsle(e);
+      else if (k < 12) ok = roomLake(e); else if (k < 18) ok = roomLavaLake(e); else if (k < 23) ok = roomPyramid(e); else if (k < 28) ok = roomArch(e);
+      else if (k < 42) ok = roomPlay(e); else if (k < 52) ok = roomPit(e); else if (k < 66) ok = roomVault(e, pw); else if (k < 78) ok = roomGauntlet(e);
+      else if (k < 88) ok = roomTramp(e); else ok = roomIsle(e);
       if (!ok) roomLake(e) || roomArch(e);
     }
 
@@ -507,7 +522,7 @@
             }
           }
         }
-        i += bri(2, 4);
+        i += bri(1, 3);
       }
     }
     function branches(pw, depth) {
@@ -535,7 +550,7 @@
         pw = grow(e, segs, bri(1, 99999));
       }
       if (!pw) return;
-      branchCount++;
+      branchCount++; chains.push([e].concat(pw));
       addStructures(pw);
       addProps(pw, 0.6);
       addCeilings(pw);
@@ -547,8 +562,8 @@
 
     /* --- the start platform, the real route, the decoy route --- */
     const startGid = gidN++;
-    addRect([0, 0, 9, 2, 1, TH[d.segs[0].th], startGid]);
-    occ.add(-1, -6, 10, 4);
+    addRect([0, 0, 3, 2, 1, TH[d.segs[0].th], startGid]); addRect([6, 0, 3, 2, 1, TH[d.segs[0].th], startGid]);   // (a hole in the middle: the way down)
+    const startBox = occ.add(-1, -6, 10, 4);
 
     const mainDir = d.mirror ? -1 : 1;
     const real = chain({ seed: d.seed, segs: d.segs, p: d, withFinish: true });
@@ -560,6 +575,31 @@
     const decPath = placeChain(dec, 0, 0, 9, -mainDir, gb);
     const fin = mainDir > 0 ? [real.fin[0], real.fin[1], real.fin[2]] : [9 - real.fin[0] - real.fin[2], real.fin[1], real.fin[2]];
 
+    /* --- the start is a hub: fall through the hole to a shaft that leads down (a pad brings you back up),
+           or take the bounce pad to a sky route above --- */
+    const hubTh = TH[d.segs[0].th], hubArms = [];
+    (function () {
+      // down: a floor right under the hole, with a return pad right below it
+      addRect([0, 6, 9, 2, 1, hubTh, startGid]); addRect([4, 6, 1, 1, 6, hubTh, startGid]);
+      occ.add(-1, 5, 10, 10); occB.add(-1, 5, 10, 10);
+      coinRow(0.5, 4.4, 3, 1, 0); coinRow(6.5, 4.4, 3, 1, 0); coinRow(4, 2.2, 1, 1, 1);
+      let pw = null;
+      for (const f of [1, 0.7, 0.5, 0.35]) { pw = grow([0, 6, 9, hubTh, 0, startGid, 0, 2, 0, 0, 0], [S('down', Math.round(22 * f), 'cave'), S('right', Math.round(14 * f), 'crystal', { cave: 1 }), S('down', Math.round(18 * f), 'cave')], d.seed + 31, true); if (pw && pw.length >= 4) break; }
+      if (pw) { hubArms.push(pw); chains.push([[0, 6, 9]].concat(pw)); }
+      // up: a pad on the start platform and an island above, to one side
+      for (const [padX, ux, uy] of [[6, 10, -7], [0, -9, -7], [6, 11, -7], [0, -10, -7], [6, 9, -6], [0, -8, -6]]) {
+        if (!occB.free(ux - 1, uy - 1, ux + 9, uy + 4)) continue;
+        addRect([padX, 0, 3, 1, 6, hubTh, startGid]);
+        addRect([ux, uy, 8, 2, 1, hubTh, startGid]); addRect([ux + 1, uy + 2, 6, 1, 1, hubTh, startGid]);
+        occ.add(ux - 1, uy - 7, ux + 9, uy + 4); occB.add(ux - 1, uy - 1, ux + 9, uy + 4);
+        coinRow(ux + 1.5, uy - 1.2, 5, 1, 0);
+        let up = null;
+        for (const f of [1, 0.7, 0.5, 0.35]) { up = grow([ux, uy, 8, hubTh, 0, startGid, 0, 2, 0, 0, 0], [S('up', Math.round(22 * f), 'sky'), S('right', Math.round(14 * f), 'forest'), S('up', Math.round(18 * f), 'sky')], d.seed + 21, true); if (up && up.length >= 4) break; }
+        if (up) { hubArms.push(up); chains.push([[ux, uy, 8]].concat(up)); }
+        break;
+      }
+    })();
+    hubArms.forEach(pw => { addStructures(pw); addProps(pw, 0.5); addCoins(pw, 0.7); addCeilings(pw); });
     addStructures(decPath);   // (the real route stays plain so it is always fair)
     // crate gates on the real route: a tall door that only opens while something heavy sits on the plate. Three crates are provided; waste them and you are stuck.
     let gn = 0;
@@ -592,6 +632,7 @@
     const ox = 3 - minX, oy = 14 - minY;
     for (const r of rects) { r[0] += ox; r[1] += oy; }
     for (const q of path) { q[0] += ox; q[1] += oy; }
+    const chainsOut = chains.map(c => c.map(e => [e[0] + ox, e[1] + oy, e[2]]));
     fin[0] += ox; fin[1] += oy;
     for (const q of props) { q[1] += ox; q[2] += oy; }
     for (const q of coins) { q[0] += ox; q[1] += oy; }
@@ -630,10 +671,10 @@
     const map = {
       idx, name: d.name, bg: '#0c0c16',
       TS, W, H, rects, path, zones, props, coins: coinsOut, gadgets: gad, decor, floorY,
-      start: [(ox + 4.5) * TS, oy * TS - R - 1],   // the one community spawn point
+      start: [(ox + 1.5) * TS, oy * TS - R - 1],   // the one community spawn point
       finish: fin,
       flag: [fin[0] + fin[2] / 2, fin[1]],
-      killY: (maxBottom + 14) * TS
+      killY: (maxBottom + 14) * TS, chains: chainsOut
     };
     cache[idx] = map;
     return map;
