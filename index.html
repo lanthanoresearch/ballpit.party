@@ -873,8 +873,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=30"></script>
-<script src="physics.js?v=30"></script>
+<script src="maps.js?v=31"></script>
+<script src="physics.js?v=31"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2584,7 +2584,7 @@ function disconnectLink(pub) {
 }
 function lpAfterTab() { lpRefresh(); lpRender(); }
 function lpSearch() { wsSend({ t: 'find', q: lpQ }); }
-function lpRefresh() { clearInterval(lpTimer); lpTimer = 0; if (friendsShown()) { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 8000); } }
+function lpRefresh() { clearInterval(lpTimer); lpTimer = 0; if (friendsShown()) { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 3000); } }
 $('lpQ').addEventListener('input', () => { clearTimeout(lpDeb); lpDeb = setTimeout(() => { lpQ = $('lpQ').value.trim(); lpSearch(); }, 250); });
 
 /* ----- everybody plays the same version. If yours is out of date, you drop out of the run, the page updates, and you land back in the game ----- */
@@ -2838,6 +2838,7 @@ function connect() {
   try { sock = home ? new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host) : new WebSocket('wss://ballpit-party.onrender.com'); }
   catch (e) { scheduleRetry(); return; }
   ws = sock; sock.binaryType = 'arraybuffer';
+  setTimeout(() => { if (sock === ws && sock.readyState === 0) { try { sock.close(); } catch (e) {} } }, 6000);   // a connection that is stuck gets dropped and tried again
   if (!lobby && netState !== 'online') setNet('connecting');
   sock.onopen = () => { if (sock === ws) sock.send(helloMsg(inHome)); };
   sock.onmessage = e => { if (sock !== ws) return; if (typeof e.data !== 'string') { onBin(e.data); return; } let m; try { m = JSON.parse(e.data); } catch (x) { return; } onMsg(m); };
@@ -2853,8 +2854,15 @@ function connect() {
 }
 function scheduleRetry() {
   if (retryTimer || (!settings.mp && !inHome)) return;
-  retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(10000, 1500 + retry * 1500));
+  retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(5000, Math.round(200 * Math.pow(1.45, retry - 1))));   // tries again almost at once, then eases off to every few seconds if the server stays away
 }
+function retryNow() {   // the tab came back, or the network did: don't wait for the next timer
+  if (ws || (!settings.mp && !inHome)) return;
+  clearTimeout(retryTimer); retryTimer = 0; retry = 0; connect();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) retryNow(); });
+window.addEventListener('online', retryNow);
+window.addEventListener('focus', retryNow);
 setTimeout(() => { if (netState === "connecting" && settings.name) setNet("offline"); }, 3500);
 function sendInfo() {
   if (!online || !ws || ws.readyState !== 1) return;
@@ -2864,7 +2872,17 @@ function sendInfo() {
 }
 const newOther = (name, color, color2, pat, crown) => ({ name: name || '', color: HEX.test(color) ? color : '#ccc', color2: HEX.test(color2) ? color2 : '#fff', pat: pat | 0, x: 0, y: 0, cx: 0, cy: 0, px: 0, py: 0, t0: 0, dur: 200, rot: 0, seen: 0, dead: 0, crown: !!crown, morph: 0 });
 function nearMe(x, y) { return S.b && Math.abs(x - S.b.x) < 2200 && Math.abs(y - S.b.y) < 1600; }
-function onBin(buf) {   // compact position update: [1][slot u16][ id u32, x/2 u16, y u16 ] ...
+const solidT = t => t === 1 || t === 3 || t === 4 || t === 6 || t === 9;
+const pp = { x: 0, y: 0 };
+function otherPred(o, d) {   // where somebody else is d seconds after their last update: their speed carries them on, gravity pulls them down in the air, and the floor stops them
+  const x = o.sx + o.svx * d;
+  let y = o.sy + o.svy * d + (o.sg ? 0 : 0.5 * P.GRAV * d * d);
+  if (y > o.sy + 2 && S.world) {            // falling: don't let the picture sink into the ground before their next update says they landed
+    for (let yy = o.sy; yy < y; yy += 10) { if (solidT(P.tile(S.world, Math.floor(x / TS), Math.floor((yy + R + 2) / TS)))) { y = Math.max(o.sy, Math.floor((yy + R + 2) / TS) * TS - R); break; } }
+  }
+  pp.x = x; pp.y = y; return pp;
+}
+function onBin(buf) {   // compact position update: [1][slot u16] then per player [ id u32, x/2 u16, y u16, vx/5 i8, vy/20 i8, time+grounded u16 ]
   const dv = new DataView(buf);
   const ty = buf.byteLength >= 3 ? dv.getUint8(0) : 0;
   if (ty === 2 || ty === 3) { trackBin(dv, buf.byteLength, ty); return; }
@@ -2873,10 +2891,10 @@ function onBin(buf) {   // compact position update: [1][slot u16][ id u32, x/2 u
   const okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;
   if (sl !== okSlot) return;
   const t = performance.now();
-  for (let off = 3; off + 8 <= buf.byteLength; off += 8) {
+  for (let off = 3; off + 12 <= buf.byteLength; off += 12) {
     const id = dv.getUint32(off, true);
     if (id === myId) continue;
-    const x = dv.getUint16(off + 4, true) * 4, yr = dv.getUint16(off + 6, true), y = yr >= 65534 ? yr : yr * 2;
+    const x = dv.getUint16(off + 4, true) * 2, y = dv.getUint16(off + 6, true), vx = dv.getInt8(off + 8) * 5, vy = dv.getInt8(off + 9) * 20, st = dv.getUint16(off + 10, true);
     let o = others.get(id);
     if (!o) { o = newOther('', '#ccc', '#fff', 0); others.set(id, o); }
     if (y === 65534) { if (o.seen) { o.mx = o.cx; o.my = o.cy; o.mt = t; } o.seen = 0; o.dead = 0; o.t0 = 0; continue; }   // moved out of range: hide, no effects
@@ -2885,13 +2903,28 @@ function onBin(buf) {   // compact position update: [1][slot u16][ id u32, x/2 u
       if (o.seen && !wasDead && nearMe(o.cx, o.cy)) { burst(o.cx, o.cy, [o.color, o.color2, '#222'], 20, 300); ring(o.cx, o.cy, '#ff5b4a', 5, 50, 0.45); }
       o.dead = 1; o.seen = o.seen || t; continue;
     }
-    if (!o.seen || wasDead) {                // first sighting or respawn: pop in, no gliding
-      o.cx = o.px = x; o.cy = o.py = y; o.t0 = 0;
+    const fresh = !o.seen || wasDead;
+    if (fresh) {                             // first sighting or respawn: pop in, no gliding
+      o.cx = x; o.cy = y; o.ex = o.ey = 0; o.t0 = 1; o.ts15 = -1; o.off = null;
       if (wasDead && nearMe(x, y)) { beam(x, y + R, o.color); ring(x, y, '#fff', 4, 40, 0.5); }
     }
     o.dead = 0;
-    o.dur = o.t0 ? clamp(t - o.t0, 120, 450) : 200;
-    o.px = o.cx; o.py = o.cy; o.x = x; o.y = y; o.t0 = t; o.seen = t;
+    // when was this sample taken (their clock), and what is that on mine? Their clock only moves forward in whole steps, and the quickest delivery seen so far is the baseline.
+    const ts = st & 0x7FFF;
+    o.tsU = o.ts15 < 0 ? ts : o.tsU + ((ts - o.ts15) & 0x7FFF); o.ts15 = ts;
+    const lat = t - o.tsU;
+    if (o.off == null || lat < o.off) o.off = lat; else o.off += (lat - o.off) * 0.03;
+    const sT = Math.min(t, o.tsU + o.off);
+    // the path they are on from here: carried on by their speed (and gravity while they are in the air). Whatever the old guess got wrong is blended away, not jumped.
+    let curX = 0, curY = 0;
+    if (!fresh) { const q = otherPred(o, clamp((t - o.sT) / 1000, 0, 0.7)); curX = q.x + o.ex; curY = q.y + o.ey; }   // where they are drawn this very moment
+    o.sx = x; o.sy = y; o.svx = vx; o.svy = vy; o.sg = (st & 0x8000) ? 1 : 0; o.sT = sT;
+    if (!fresh) {
+      const q = otherPred(o, Math.min(0.7, (t - sT) / 1000));
+      o.ex = curX - q.x; o.ey = curY - q.y;
+      if (Math.abs(o.ex) > 260 || Math.abs(o.ey) > 260) { o.ex = o.ey = 0; }
+    }
+    o.seen = t;
   }
 }
 let lastWorldShown = 0, worldPopT = 0;
@@ -2958,15 +2991,32 @@ function onMsg(m) {
     }
   }
 }
-let lastSend = { x: 0, y: 0, d: 0, t: 0 };
-function sendPos(force) {   // share my position only when it changed, a few times a second
+let lastSend = { x: 0, y: 0, vx: 0, vy: 0, g: 0, d: -1, t: 0 };
+function sendPos(force) {   // share my position as a tiny packet, and only when the others could not already guess where I am from my last one
   if (!online || !ws || ws.readyState !== 1 || !S.b || S.mode !== 'play') return;
-  const x = Math.round(S.b.x), y = Math.round(S.b.y), d = (S.dead > 0 || S.away) ? 1 : 0, t = performance.now();
-  if (!force && x === lastSend.x && y === lastSend.y && d === lastSend.d && t - lastSend.t < 8000) return;
-  lastSend = { x: x, y: y, d: d, t: t };
-  ws.send('{"t":"p","m":' + S.slot + ',"x":' + x + ',"y":' + y + ',"d":' + d + '}');
+  const b = S.b, d = (S.dead > 0 || S.away) ? 1 : 0, t = performance.now(), L = lastSend;
+  const x = Math.round(b.x), y = Math.round(b.y), g = b.ground ? 1 : 0;
+  const qx = d ? 0 : clamp(Math.round(b.vx / 5), -127, 127) * 5, qy = d ? 0 : clamp(Math.round(b.vy / 20), -127, 127) * 20;
+  if (!force && d === L.d) {
+    const dt = (t - L.t) / 1000;
+    if (d) { if (dt < 8) return; }
+    else {
+      if (dt < 0.08) return;
+      const still = x === L.x && y === L.y && !qx && !qy && !L.vx && !L.vy;
+      if (still) { if (dt < 8) return; }
+      else {
+        const e = Math.min(0.7, dt), px = L.x + L.vx * e, py = L.y + L.vy * e + (L.g ? 0 : 0.5 * P.GRAV * e * e);
+        if (Math.abs(px - x) < 4 && Math.abs(py - y) < 4 && g === L.g && dt < 0.7) return;   // they would draw me about right already
+      }
+    }
+  }
+  lastSend = { x: x, y: y, vx: qx, vy: qy, g: g, d: d, t: t };
+  const buf = new ArrayBuffer(11), dv = new DataView(buf);
+  dv.setUint8(0, 0x70); dv.setUint16(1, S.slot & 0xFFFF, true); dv.setUint16(3, clamp(x >> 1, 0, 65534), true); dv.setUint16(5, d ? 65535 : clamp(y, 0, 65533), true);
+  dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true);
+  ws.send(buf);
 }
-setInterval(() => sendPos(false), 200);
+setInterval(() => sendPos(false), 50);
 
 /* ================= drawing (hand-drawn look, flat colours) ================= */
 const ICE = '#7fdcff', LAVA = '#ff4a1c', INK = 'rgba(22,15,12,.85)';
@@ -3676,8 +3726,9 @@ function renderInner(dt, nowT) {
     const m = 60;
     others.forEach(o => {            // other players (drawn first, so everyone goes behind you)
       if (!o.seen || o.dead) return;
-      const u = clamp((nowT - o.t0) / (o.dur || 200), 0, 1);
-      const nx = o.px + (o.x - o.px) * u, ny = o.py + (o.y - o.py) * u;
+      const ds = clamp((nowT - (o.sT || nowT)) / 1000, 0, 0.7), ek = Math.exp(-dt / 0.07);   // their last known speed carries them on; the small error from the last guess melts away
+      o.ex *= ek; o.ey *= ek;
+      const q = otherPred(o, ds), nx = q.x + (o.ex || 0), ny = q.y + (o.ey || 0);
       o.rot += (nx - o.cx) / R; o.cx = nx; o.cy = ny;
       if (nx < camL - m || nx > camL + vw + m || ny < camT - m * 2 || ny > camT + vh + m) return;
       let sc2 = 1; if (o.morph > 0) { o.morph = Math.max(0, o.morph - dt * 1.6); sc2 = 1 + 0.35 * Math.sin(o.morph * 3.14); }

@@ -503,7 +503,7 @@
     return ev;
   }
 
-  const api = { TS, R, MAXV, BOOST_T, BOOST_V, makeWorld, tile, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
+  const api = { TS, R, GRAV, MAXV, BOOST_T, BOOST_V, makeWorld, tile, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 200);   // players per world
 const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
-const TICK_MS = 200;                                      // 5 position updates per second (the client smooths between them)
+const TICK_MS = 100;                                      // up to 10 position updates per second, and only for players who actually sent something new (the client fills in the motion between them)
 const RANGE = 3000;                                       // you only receive players within this many pixels of you (more than a screen)
 const MAX_PER_IP = parseInt(process.env.MAX_PER_IP, 10) || 10;
 const STATS_FILE = process.env.STATS_FILE || path.join(__dirname, 'stats.json');
@@ -204,13 +204,21 @@ wss.on('connection', (ws, req) => {
   if (c > MAX_PER_IP) { ws.close(1013, 'busy'); return; }
   ipCount.set(ip, c);
 
-  const p = { id: nextId++, ws, name: '', color: '#ff4d4d', color2: '#ffffff', pat: 0, x: 0, y: 0, dead: 0, has: false, moved: false, vis: new Set(), room: null, fin: -1, msgs: 0, pub: '', lastReq: 0, lastFind: 0, lastEmo: 0 };
+  const p = { id: nextId++, ws, name: '', color: '#ff4d4d', color2: '#ffffff', pat: 0, x: 0, y: 0, vx: 0, vy: 0, st: 0, dead: 0, has: false, moved: false, vis: new Set(), room: null, fin: -1, msgs: 0, pub: '', lastReq: 0, lastFind: 0, lastEmo: 0 };
   ws.isAlive = true;
   ws.on('pong', () => { ws.isAlive = true; });
   const rate = setInterval(() => { p.msgs = 0; }, 1000);
 
-  ws.on('message', (raw) => {
+  ws.on('message', (raw, isBinary) => {
     if (++p.msgs > 60) return;                       // simple flood protection
+    if (isBinary) {                                   // a position update: [0x70][slot u16][x/2 u16][y u16 (65535 = dead)][vx/5 i8][vy/20 i8][time u15 | grounded<<15]
+      if (!p.room || raw.length !== 11 || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (curSlot & 0xFFFF)) return;
+      const x = Math.min(262000, raw.readUInt16LE(3) * 2), yr = raw.readUInt16LE(5), d = yr === 65535 ? 1 : 0;
+      const y = d ? p.y : Math.min(131000, yr), vx = raw.readInt8(7) * 5, vy = raw.readInt8(8) * 20, st = raw.readUInt16LE(9);
+      if (p.x !== x || p.y !== y || p.dead !== d || p.vx !== vx || p.vy !== vy || p.st !== st || !p.has) p.moved = true;
+      p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true;
+      return;
+    }
     let m;
     try { m = JSON.parse(raw); } catch (e) { return; }
     if (!m || typeof m.t !== 'string') return;
@@ -276,7 +284,7 @@ wss.on('connection', (ws, req) => {
       const d = m.d ? 1 : 0;
       const x = Math.max(0, Math.min(262000, Math.round(m.x))), y = Math.max(0, Math.min(131000, Math.round(m.y)));
       if (p.x !== x || p.y !== y || p.dead !== d || !p.has) p.moved = true;
-      p.x = x; p.y = y; p.dead = d; p.has = true;
+      p.x = x; p.y = y; p.dead = d; p.vx = 0; p.vy = 0; p.st = 0x8000; p.has = true;
     } else if (m.t === 'emo') {
       if (!p.room) return;
       const i = m.i | 0, now = Date.now();
@@ -371,7 +379,7 @@ let tickN = 0;
 setInterval(() => {
   tickN++;
   // (c) a tiny overview every 2 seconds, so everyone shows up on the map even when they are far away
-  if (tickN % 10 === 0) {
+  if (tickN % 20 === 0) {
     for (const room of rooms.values()) {
       const list = [...room.players.values()];
       if (list.length < 2) continue;
@@ -413,9 +421,13 @@ setInterval(() => {
         if (p.moved || !r.vis.has(p.id)) { hits.push([p, 0]); r.vis.add(p.id); }
       }
       if (!hits.length) continue;
-      const buf = Buffer.allocUnsafe(3 + hits.length * 8);
+      const buf = Buffer.allocUnsafe(3 + hits.length * 12);
       buf[0] = 1; buf.writeUInt16LE(curSlot & 0xFFFF, 1);
-      for (const h of hits) { const p = h[0]; buf.writeUInt32LE(p.id, 3 + k * 8); buf.writeUInt16LE(p.x >> 2, 7 + k * 8); buf.writeUInt16LE(h[1] ? 65534 : p.dead ? 65535 : (p.y >> 1), 9 + k * 8); k++; }   // y: 65535 = just died, 65534 = out of range
+      for (const h of hits) {   // per player: id u32, x/2 u16, y u16 (65535 = just died, 65534 = out of range), vx/5 i8, vy/20 i8, time+grounded u16
+        const p = h[0], o = 3 + k * 12, gone = h[1] || p.dead; k++;
+        buf.writeUInt32LE(p.id, o); buf.writeUInt16LE(p.x >> 1, o + 4); buf.writeUInt16LE(h[1] ? 65534 : p.dead ? 65535 : Math.min(65533, p.y), o + 6);
+        buf.writeInt8(gone ? 0 : Math.max(-127, Math.min(127, Math.round(p.vx / 5))), o + 8); buf.writeInt8(gone ? 0 : Math.max(-127, Math.min(127, Math.round(p.vy / 20))), o + 9); buf.writeUInt16LE(p.st & 0xFFFF, o + 10);
+      }
       r.ws.send(buf, { binary: true });
     }
     for (const p of list) p.moved = false;
