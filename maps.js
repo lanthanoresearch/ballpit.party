@@ -1577,7 +1577,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       const got = [];
       for (const c of cand) {
         let ok = true;
-        for (const g of got) { const dx = (c.x - g.x) / 64, dy = (c.y - g.y) / 34; if (dx * dx + dy * dy < 1) { ok = false; break; } }
+        for (const g of got) { const dx = (c.x - g.x) / 140, dy = (c.y - g.y) / 76; if (dx * dx + dy * dy < 1) { ok = false; break; } }
         if (!ok) continue;
         got.push(c); cps.push([c.x, c.y]); if (c.e) c.e[9] = 0;
       }

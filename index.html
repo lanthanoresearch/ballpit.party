@@ -338,7 +338,11 @@
   #tpop{position:absolute;left:0;right:auto;top:calc(100% + 6px);width:min(300px,calc(100vw - 20px));z-index:8}
   #hr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;width:min(300px,60vw);justify-self:end}
   #topbar{display:flex;gap:6px;pointer-events:auto}
+  #subbar{display:flex;gap:6px;align-items:flex-start;justify-content:flex-end;pointer-events:none}
+  #subbar .ibtn{pointer-events:auto}
   #chatBtnWrap{position:relative;pointer-events:auto}
+  .gemw{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+  .gemw .ic{width:16px;height:16px}
   #chatBtnWrap .ibtn{width:34px}
   #chBadge{position:absolute;left:auto;right:-5px;top:-6px;width:17px;height:17px;border-radius:50%;background:var(--bad);color:#fff;font:700 11px/17px var(--font);text-align:center;font-style:normal;pointer-events:none;margin:0}
   #feed{display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:100%;pointer-events:none}
@@ -400,10 +404,22 @@
   #emoGrid button:active{transform:scale(.92)}#emoGrid button.cool{opacity:.45}
   #emoGrid svg{width:100%;height:100%}
   .epcard{max-height:92vh;overflow:auto}
+  .shopcard{width:min(420px,100%);max-height:92vh;overflow:auto;text-align:center}
+  #shopWallet{display:flex;gap:16px;justify-content:center;align-items:center;font-size:18px;margin:2px 0 10px}
+  #shopWallet span{display:inline-flex;align-items:center;gap:6px}#shopWallet .ic{width:22px;height:22px}
+  .shopcard .cfoot{justify-content:center}
+  #shopList{display:flex;flex-direction:column;gap:7px;margin:0 0 10px}
+  .shopitem{display:flex;align-items:center;gap:10px;padding:7px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;text-align:left}
+  .shopitem .sico{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}
+  .shopitem .sico svg{width:100%;height:100%}
+  .shopitem .sinfo{flex:1;min-width:0;line-height:1.15}.shopitem .sinfo b{display:block;font-weight:normal;font-size:16px}.shopitem .sinfo small{opacity:.7;font-size:12.5px}
+  .shopitem button{flex:none;min-width:84px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 8px;line-height:1.1}
+  .shopitem button .pr{display:inline-flex;align-items:center;gap:3px;font-size:14px}.shopitem button .pr .ic{width:14px;height:14px}
+  .shopitem button:disabled{opacity:.45}
   #phraseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
   #phraseGrid button{padding:9px 4px;font-size:14px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
   #phraseGrid button:active,#phraseGrid button:hover{background:#3a3355}#phraseGrid button:active{transform:scale(.95)}
-  #emoPop{z-index:11;background:rgba(10,8,16,.55)}
+  #emoPop,#shopPop{z-index:11;background:rgba(10,8,16,.55)}
   #emoPop .cfoot{display:flex;flex-direction:column;gap:6px;align-items:center}
   @media (pointer:coarse){#tlab,.clab{display:none}}
 
@@ -588,6 +604,7 @@
 <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
 <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.500 3 3.500 15 0 18M12 3c-3.500 3-3.500 15 0 18"/></symbol>
 <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4.500" y="8" width="15" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.500 16.500h5"/><circle cx="12" cy="3.500" r="1"/></symbol>
+<symbol id="i-gem" viewBox="0 0 24 24"><path d="M7 4h10l4 5-9 11L3 9z" fill="#7af0ff" stroke="#16100c" stroke-width="2" stroke-linejoin="round"/><path d="M3 9h18M9 4l-2 5 5 11 5-11-2-5" fill="none" stroke="#16100c" stroke-width="1.500" stroke-linejoin="round" opacity=".6"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
 <symbol id="i-pin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.500v4M12 17.500v4M2.500 12h4M17.500 12h4"/></symbol>
@@ -634,12 +651,12 @@
       <div id="infoTop"><div id="netstat"><i></i><span id="netText">Checking</span></div></div>
       <span id="onl"></span>
       <div id="timer"><span data-ic="clock"></span><span id="nexttimer">--:--</span><span id="tlab">next map</span></div>
-      <div id="infoRow"><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span><span class="clab">coins</span></span><button id="linkpill" class="pill hide"><span data-ic="users"></span><span id="linkN"></span></button></div>
+      <div id="infoRow"><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span><span class="clab">coins</span><span class="gemw"><span data-ic="gem"></span><span id="gemN">0</span></span></span><button id="linkpill" class="pill hide"><span data-ic="users"></span><span id="linkN"></span></button></div>
     </div>
     <div id="tpop" class="paper hide">
       <h3><span data-ic="map"></span><span id="tpName"></span></h3>
       <div class="tl"><span data-ic="clock"></span><span id="tpChange"></span></div>
-      <div class="tl"><span data-ic="gcoin"></span><span id="tpCoins"></span></div>
+      <div class="tl"><span data-ic="crown"></span><span id="tpCoins"></span></div>
       <div class="tl"><span data-ic="globe"></span><span id="tpWorld"></span></div>
       <div class="tl"><span data-ic="beacon"></span><span id="tpBeacon"></span><span id="tpArrow" class="hide"><svg class="ic" viewBox="0 0 24 24"><use href="#i-up"/></svg></span></div>
       <div class="nx"><span id="tpNext"></span></div>
@@ -653,7 +670,7 @@
     <button id="btnRespawn" class="ibtn" title="Reset: back to your checkpoint, or the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Pause (Esc)" data-ic="pause"></button>
   </div>
-  <div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Say something" data-ic="chat"></button></div>
+  <div id="subbar"><button id="btnShop" class="ibtn" title="Shop: spend your coins" data-ic="plus"></button><div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Say something" data-ic="chat"></button></div></div>
   <div id="lreqs" class="hide"></div>
   <div id="feed"></div>
 </div></div>
@@ -662,6 +679,13 @@
   <div id="emoGrid"></div>
   <div id="phraseGrid"></div>
   <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim">Everyone in your world sees it.</span></div>
+</div></div>
+<div id="shopPop" class="overlay hide"><div class="card shopcard">
+  <h3>Shop</h3>
+  <div id="shopWallet"></div>
+  <div id="shopList"></div>
+  <div class="small dim">Things you buy appear next to you and are only yours.</div>
+  <div class="cfoot"><button id="shopClose" class="btn" type="button">Close</button></div>
 </div></div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 
@@ -878,8 +902,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=34"></script>
-<script src="physics.js?v=34"></script>
+<script src="maps.js?v=35"></script>
+<script src="physics.js?v=35"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1374,7 +1398,7 @@ const nowMs = () => Date.now() + clockOff;
 
 const TH_COUNT = THEMES.length;
 function loadMap(slot, next) {
-  const m = BallMaps.generate(slot % BallMaps.count);
+  const m0 = BallMaps.generate(slot % BallMaps.count), m = Object.assign({}, m0, { checkpoints: (m0.checkpoints || []).slice() });   // (your own copy of the flag list: flags you buy are yours alone)
   S.slot = slot; S.idx = m.idx; S.map = m; S.world = P.makeWorld(m);
   if (next) S.nextAt = next;
   const W = m.W, H = m.H, tg = new Uint8Array(W * H);
@@ -1389,7 +1413,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.coinBest = getBest(m.idx); S.recordShown = false; S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; S.fallWarn = false; S.wasWater = false;
   restoreWorld(slot);
   S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
   others.forEach(o => { o.crown = false; });
@@ -1399,7 +1423,6 @@ function loadMap(slot, next) {
   respawn(true);
   S.camx = S.b.x; S.camy = S.b.y;
   $('finishbanner').classList.add('hide');
-  if (S.coinBest > 0) setTimeout(() => notice('Your coin record on this map: ' + S.coinBest, ''), 900);
   $('fade').classList.remove('on');
   initWarnings();
 }
@@ -1434,7 +1457,7 @@ function nearEdge(b) {
   return b.x < 9 * TS || b.x > (m.W - 9) * TS || b.y < 4 * TS || b.y > P.killYAt(S.world, b.x) - 9 * TS;
 }
 function finishRun() {
-  S.finished = true; S.finT = 5; S.crown = true; sfx('finish');
+  S.finished = true; S.finT = 5; S.crown = true; sfx('finish'); setBeaten(S.idx);
   S.finMs = S.started ? performance.now() - S.runStart : 0;
   $('fbText').textContent = 'Time ' + fmtT(S.finMs);
   $('finishbanner').classList.remove('hide');
@@ -1488,7 +1511,7 @@ function startTransition(slot, next) {
 
 let inHome = true, paused = false;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text' && !a.readOnly; };
-const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
+const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 function update(dt) {
   S.t += dt;
@@ -1541,10 +1564,13 @@ function update(dt) {
 }
 
 /* ----- coins (just for fun: they count up, and your browser remembers your best per map) ----- */
-const BESTKEY = 'ballrun4_coins', WKEY = 'ballrun4_world';
-function getBest(idx) { try { const o = JSON.parse(localStorage.getItem(BESTKEY) || '{}'); return +o[idx] || 0; } catch (e) { return 0; } }
-function setBest(idx, n) { try { const o = JSON.parse(localStorage.getItem(BESTKEY) || '{}'); o[idx] = n; localStorage.setItem(BESTKEY, JSON.stringify(o)); } catch (e) {} }
-let wDirty = false, lastWorldStr = '', lastSave = 0, bestDirty = false;
+const WKEY = 'ballrun4_world', WALKEY = 'ballrun4_wallet', BEATKEY = 'ballrun4_beaten';
+let wallet = { c: 0, g: 0 }, walletFresh = true;   // what you can spend: coins, and diamonds (the gems)
+try { const o = JSON.parse(localStorage.getItem(WALKEY) || 'null'); if (o) { wallet.c = Math.max(0, o.c | 0); wallet.g = Math.max(0, o.g | 0); walletFresh = false; } } catch (e) {}
+const saveWallet = () => { try { localStorage.setItem(WALKEY, JSON.stringify(wallet)); } catch (e) {} };
+const isBeaten = idx => { try { return !!JSON.parse(localStorage.getItem(BEATKEY) || '{}')[idx]; } catch (e) { return false; } };
+function setBeaten(idx) { try { const o = JSON.parse(localStorage.getItem(BEATKEY) || '{}'); if (!o[idx]) { o[idx] = 1; localStorage.setItem(BEATKEY, JSON.stringify(o)); } } catch (e) {} }
+let wDirty = false, lastWorldStr = '', lastSave = 0;
 function touchFlags() {   // checkpoint flags: touch one and your next fall brings you back to it
   const cps = S.map.checkpoints, b = S.b; if (!cps || !cps.length) return;
   for (let i = 0; i < cps.length; i++) {
@@ -1568,12 +1594,9 @@ function collectCoins() {
     if (dx * dx + dy * dy > 32 * 32) continue;
     S.coinGot[i] = 1; wDirty = true;
     const v = c[2] === 2 ? 25 : c[2] === 1 ? 5 : 1; S.coinN += v;
+    wallet.c += v; if (c[2] === 2) wallet.g++; saveWallet();   // coins and diamonds you can spend in the shop
     sfx(c[2] === 2 ? 'gem' : c[2] === 1 ? 'big' : 'coin');
     burst(c[0], c[1], c[2] === 2 ? ['#7af0ff', '#fff', '#c58bff'] : ['#ffd23d', '#fff3a0'], c[2] ? 14 : 6, c[2] ? 220 : 120, 40);
-    if (S.coinN > S.coinBest) {
-      if (S.coinBest > 0 && !S.recordShown) { S.recordShown = true; notice('New coin record on this map!', 'win'); sfx('win'); }
-      S.coinBest = S.coinN; bestDirty = true;
-    }
   }
 }
 function worldEvents() {
@@ -1591,9 +1614,8 @@ function saveWorld(force) {
   const w = S.world, dyn = [];
   for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) dyn.push([i, 0, 0, 1]); else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2) dyn.push([i, Math.round(d.x), Math.round(d.y), 0]); }
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
-  const str = JSON.stringify({ slot: S.slot, dyn, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN });
+  const str = JSON.stringify({ slot: S.slot, buys: S.bought, cps: S.boughtCps, dyn, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN });
   if (str !== lastWorldStr) { lastWorldStr = str; try { localStorage.setItem(WKEY, str); } catch (e) {} }
-  if (bestDirty) { bestDirty = false; setBest(S.idx, S.coinBest); }
 }
 function restoreWorld(slot) {
   lastWorldStr = '';
@@ -1601,11 +1623,13 @@ function restoreWorld(slot) {
     const o = JSON.parse(localStorage.getItem(WKEY) || 'null');
     if (!o || o.slot !== slot) return;           // a new session: everything starts fresh
     const w = S.world;
+    (o.buys || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { P.addProp(w, q[0], q[1], q[2]); S.bought.push([q[0], q[1], q[2]]); } });   // the things you bought here come back first, in the same order
+    (o.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
     (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.vx = d.vy = 0; } });
     (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
     (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
     (o.got || []).forEach(i => { if (i < S.coinGot.length) S.coinGot[i] = 1; });
-    S.coinN = o.n | 0; if (S.coinN > S.coinBest) { S.coinBest = S.coinN; bestDirty = true; }
+    S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; wallet.c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
   } catch (e) {}
 }
 setInterval(() => { if (S.mode === 'play' && !S.away) saveWorld(); }, 4000);
@@ -2507,11 +2531,86 @@ $('chatMute').onclick = () => setChatMute(!chatMuted); setChatMute(chatMuted);
 let chatOpen = false;
 function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it
   if (on && (inHome || inSolo())) return;
-  chatOpen = on; $('emoPop').classList.toggle('hide', !on);
+  chatOpen = on; $('emoPop').classList.toggle('hide', !on); if (on && shopOpen) toggleShop(false);
   if (on) { if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); }
 }
 $('btnChat').onclick = () => toggleChat(!chatOpen);
 $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop')) { e.preventDefault(); toggleChat(false); } });
+
+/* ----- the shop: spend coins (and diamonds) on things that appear right next to you. They are only yours: nobody else sees them. ----- */
+const SHOP = [
+  { id: 'spring', name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
+  { id: 'flag', name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot.', c: 400, g: 5 },
+  { id: 'box0', name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
+  { id: 'box1', name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
+  { id: 'ball0', name: 'Tiny ball', info: 'A very small ball.', c: 50, g: 0, kind: 7 },
+  { id: 'ball1', name: 'Small ball', info: 'A small rolling ball.', c: 75, g: 0, kind: 2 },
+  { id: 'ball2', name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 }
+];
+const shopIcon = id => {
+  const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
+  if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
+  if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
+  if (id === 'box0') return '<svg viewBox="0 0 40 40"><rect x="9" y="9" width="22" height="22" rx="2" fill="#ffc233" ' + st + '/><path d="M13 13L27 27M27 13L13 27" fill="none" ' + st + ' stroke-width="1.800"/></svg>';
+  if (id === 'box1') return '<svg viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="2.500" fill="#ffb020" ' + st + '/><path d="M9 9L31 31M31 9L9 31" fill="none" ' + st + ' stroke-width="1.800"/></svg>';
+  const r = id === 'ball0' ? 6 : id === 'ball1' ? 11 : 17;
+  return '<svg viewBox="0 0 40 40"><circle cx="20" cy="' + (36 - r) + '" r="' + r + '" fill="' + (id === 'ball0' ? '#ffe2a0' : id === 'ball2' ? '#ffa31a' : '#ffc233') + '" ' + st + '/></svg>';
+};
+const ico = n => '<svg class="ic" viewBox="0 0 24 24"><use href="#i-' + n + '"/></svg>';
+const canShop = () => !inHome && !paused && S.mode === 'play' && !!S.b && !S.away && S.dead <= 0;
+let shopOpen = false;
+function shopRender() {
+  $('shopWallet').innerHTML = '<span>' + ico('gcoin') + wallet.c + '</span><span>' + ico('gem') + wallet.g + '</span>';
+  const L = $('shopList'); L.innerHTML = '';
+  SHOP.forEach(it => {
+    const row = document.createElement('div'); row.className = 'shopitem';
+    const ok = wallet.c >= it.c && wallet.g >= it.g;
+    row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + '</b><small>' + it.info + '</small></div>';
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.disabled = !ok;
+    b.innerHTML = '<span class="pr">' + ico('gcoin') + it.c + '</span>' + (it.g ? '<span class="pr">' + ico('gem') + it.g + '</span>' : '');
+    b.onclick = () => buyItem(it); row.appendChild(b); L.appendChild(row);
+  });
+}
+function toggleShop(on) {
+  if (on && !canShop()) return;
+  shopOpen = on; $('shopPop').classList.toggle('hide', !on);
+  if (on) { if (chatOpen) toggleChat(false); if (typeof closeSettingsNow === 'function') closeSettingsNow(); shopRender(); sfx('ui'); }
+}
+$('btnShop').onclick = () => toggleShop(!shopOpen);
+$('shopClose').onclick = () => toggleShop(false);
+function dropProp(kind) {   // next to you on the right; if there is no room, the left, then a bit higher up, then above you. Never inside a wall.
+  const w = S.world, b = S.b, q = P.propDims(kind), half = q.half, hw = q.hw || q.r, hh = q.hw || q.r, cands = [];
+  for (const lift of [0, 36, 72, 120, 180]) for (const side of [1, -1]) cands.push([b.x + side * (R + half + 3 + (lift ? 8 : 0)), b.y + R - half - lift]);
+  for (const up of [0, 40, 90]) cands.push([b.x, b.y - R - half - 6 - up]);
+  const clear = (x, y) => { if (!P.spotFree(w, x, y, hw, hh)) return false; for (let k = 1; k < 6; k++) if (!P.spotFree(w, b.x + (x - b.x) * k / 6, b.y + (y - b.y) * k / 6, 4, 4)) return false; return true; };   // (and no wall between you and the spot)
+  const free = (x, y) => { for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const oh = o.r || o.hw; if (Math.abs(o.x - x) < oh + half - 2 && Math.abs(o.y - y) < oh + half - 2) return false; } return true; };
+  let at = null;
+  for (const c of cands) if (clear(c[0], c[1]) && free(c[0], c[1])) { at = c; break; }
+  if (!at) for (const c of cands) if (clear(c[0], c[1])) { at = c; break; }
+  if (!at) { notice('No room here. Move to a more open spot', 'urgent'); return false; }
+  const d = P.addProp(w, kind, at[0], at[1]); d.sleep = false;
+  S.bought.push([kind, Math.round(at[0]), Math.round(at[1])]); wDirty = true;
+  burst(at[0], at[1], ['#fff', '#ffd23d'], 10, 140, 60); ring(at[0], at[1], '#fff', 4, 34, 0.4);
+  return true;
+}
+function dropFlag() {   // right where you are: it lands on the ground under you and is your checkpoint at once
+  const w = S.world, b = S.b, tx = Math.floor(b.x / TS), row = Math.floor((b.y + R + 2) / TS);
+  let found = -1;
+  for (let k = 0; k < 8; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (t === 1 || t === 3 || t === 4 || t === 6) { found = row + k; break; } }
+  if (found < 0) { notice('Stand on solid ground to put down a flag', 'urgent'); return false; }
+  const cp = [tx, found], m = S.map; m.checkpoints.push(cp); S.boughtCps.push(cp);
+  S.cpArmed = m.checkpoints.length - 1; S.cpUsed = -1; S.cpFlash = 1; wDirty = true;
+  const fx0 = (tx + 0.5) * TS, fy0 = found * TS - 60;
+  burst(fx0, fy0, ['#46d17a', '#fff', '#b9ffd3'], 16, 220, 80); ring(fx0, found * TS - 6, '#46d17a', 5, 50, 0.5); sfx('ready');
+  notice('Checkpoint placed. Your next fall or reset brings you back here', '');
+  return true;
+}
+function buyItem(it) {
+  if (!canShop()) return;
+  if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); shopRender(); return; }
+  if (!(it.id === 'flag' ? dropFlag() : dropProp(it.kind))) return;   // (nothing is spent if it could not be placed)
+  wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); toggleShop(false); saveWorld(true);
+}
 const openFriends = () => { if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
 $('linkpill').onclick = e => { e.stopPropagation(); openFriends(); };
 const friendsShown = () => !$('settings').classList.contains('hide') && $('settings').querySelector('.pane.on[data-pane="friends"]') !== null;
@@ -2759,7 +2858,7 @@ function quitToHome() {
 function clearInput() { keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0; }
 function openPause() {
   if (inHome || paused) return;
-  toggleChat(false); paused = true; clearInput();
+  toggleChat(false); toggleShop(false); paused = true; clearInput();
   $('pauseSub').textContent = settings.mp ? 'The world keeps going. Your ball waits for you.' : 'Everything is paused.';
   $('pause').classList.remove('hide'); sfx('ui');
 }
@@ -2768,6 +2867,7 @@ const togglePause = () => { if (paused) resumeGame(); else openPause(); };
 function escMenu() {   // Escape: closes whatever is on top, then pauses / resumes
   if (!$('shareModal').classList.contains('hide')) { closeShareModal(); return; }
   if (chatOpen) { toggleChat(false); return; }
+  if (shopOpen) { toggleShop(false); return; }
   if (!$('nameModal').classList.contains('hide')) { closeNameModal(); return; }
   if (!$('settings').classList.contains('hide')) { closeSettingsNow(); return; }
   if (inHome) return;
@@ -3647,21 +3747,21 @@ function drawDyn(camL, camT, vw, vh) {
       if (d._pv > 280 && d.vy < d._pv - 220) sfx('thud');
       d._pv = d.vy;
     }
-    if (d.k === 'b' && d.kind === 5) {   // a spring: a base, a coil and a springy top that squashes when you land on it
+    if (d.k === 'b' && (d.kind === 5 || d.kind === 6)) {   // a spring (the shop's super spring is purple with a gold top): a base, a coil and a springy top that squashes when you land on it
       const sq = d.sq > 0 ? Math.sin(Math.min(1, d.sq / 0.25) * Math.PI) * 0.45 : 0, bh = 8, topH = 7, coil = (d.hh * 2 - bh - topH) * (1 - sq), x0 = d.x - d.hw, yb = d.y + d.hh;
       ctx.save(); if (d.rot) { ctx.translate(d.x, d.y); ctx.rotate(d.rot); ctx.translate(-d.x, -d.y); }
-      ctx.fillStyle = '#3fa66b'; wob(x0, yb - bh, d.hw * 2, bh, 1.4, i); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = d.kind === 6 ? '#7a3dd6' : '#3fa66b'; wob(x0, yb - bh, d.hw * 2, bh, 1.4, i); ctx.fill(); ctx.stroke();
       ctx.lineWidth = 3.2; ctx.beginPath(); const cy0 = yb - bh, n = 4;
       ctx.moveTo(d.x - d.hw + 7, cy0); for (let k = 0; k < n; k++) { const ya = cy0 - coil * (k + 0.5) / n, yc = cy0 - coil * (k + 1) / n; ctx.lineTo(d.x + (k % 2 ? -1 : 1) * (d.hw - 7), ya); ctx.lineTo(d.x + (k % 2 ? 1 : -1) * (d.hw - 7), yc); }
       ctx.stroke(); ctx.lineWidth = 2.4;
-      ctx.fillStyle = '#ff6a8a'; wob(x0 - 2, cy0 - coil - topH, d.hw * 2 + 4, topH, 1.4, i + 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = d.kind === 6 ? '#ffd23d' : '#ff6a8a'; wob(x0 - 2, cy0 - coil - topH, d.hw * 2 + 4, topH, 1.4, i + 3); ctx.fill(); ctx.stroke();
       ctx.restore();
     } else if (d.k === 'b') {
       ctx.save(); if (d.rot) { ctx.translate(d.x, d.y); ctx.rotate(d.rot); ctx.translate(-d.x, -d.y); }   // a tipping crate really turns
       ctx.fillStyle = d.hw > 20 ? '#ffb020' : '#ffc233'; wob(d.x - d.hw, d.y - d.hh, d.hw * 2, d.hh * 2, 1.7, i); ctx.fill(); ctx.stroke();
       ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(d.x - d.hw + 4, d.y - d.hh + 4); ctx.lineTo(d.x + d.hw - 4, d.y + d.hh - 4); ctx.moveTo(d.x + d.hw - 4, d.y - d.hh + 4); ctx.lineTo(d.x - d.hw + 4, d.y + d.hh - 4); ctx.stroke(); ctx.lineWidth = 2.4; ctx.restore();
     } else {
-      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, TAU); ctx.fillStyle = d.kind === 4 ? PIT[i % PIT.length] : d.kind === 3 ? '#ffa31a' : '#ffc233'; ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, TAU); ctx.fillStyle = d.kind === 4 ? PIT[i % PIT.length] : d.kind === 3 ? '#ffa31a' : d.kind === 7 ? '#ffe2a0' : '#ffc233'; ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + Math.cos(d.rot) * d.r * 0.8, d.y + Math.sin(d.rot) * d.r * 0.8); ctx.lineWidth = 1.8; ctx.stroke(); ctx.lineWidth = 2.4;
     }
   }
@@ -3977,7 +4077,7 @@ function beaconInfo(t) {   // same answer for everyone, because it only depends 
   if (t >= s0 && t < s0 + BEACON_LEN) return { on: true, ph: t - s0, next: 0 };
   return { on: false, ph: 0, next: (t < s0 ? s0 : beaconStart(w + 1)) - t };
 }
-let lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
+let lastGemShown = -1, lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
 const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 function worldText() {
   if (inSolo()) return '';
@@ -4013,8 +4113,9 @@ function hudTick() {
     $('beaconText').textContent = 'Beacon! The finish is ' + d + 'b away' + (hz || vt ? ': ' + [vt, hz].filter(Boolean).join(' and ') : '') + ' · ' + Math.ceil((BEACON_LEN - ph) / 1000) + 's';
   }
   $('onl').textContent = worldText();
-  if (S.coinN !== lastCoinShown) { lastCoinShown = S.coinN; $('coinN').textContent = S.coinN; }
-  $('coinpill').title = 'Coins on this map. Your best: ' + S.coinBest;
+  if (wallet.c !== lastCoinShown) { lastCoinShown = wallet.c; $('coinN').textContent = wallet.c; }
+  if (wallet.g !== lastGemShown) { lastGemShown = wallet.g; $('gemN').textContent = wallet.g; }
+  $('coinpill').title = 'Your coins and diamonds. Spend them in the shop (the + button).';
   $('mpstats').textContent = online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : '');
   if (!$('tpop').classList.contains('hide')) fillTimerPop(rem);
 }
@@ -4028,7 +4129,7 @@ function fillTimerPop(rem) {
   const sl = inSolo(), endless = sl && settings.soloLen === 0;
   $('tpName').textContent = S.map.name;
   $('tpChange').textContent = endless ? 'This map stays until you change it' : 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
-  $('tpCoins').textContent = 'Coins: ' + S.coinN + ' · Your best here: ' + S.coinBest;
+  $('tpCoins').textContent = isBeaten(S.idx) ? 'You have beaten this map' : 'Not beaten yet';
   $('tpWorld').textContent = sl ? 'Solo world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'World ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
   $('tpNext').textContent = endless ? '' : 'Up next: ' + (sl ? soloNextName() : BallMaps.names[(S.slot + 1) % BallMaps.count]);
   const bi = beaconInfo(nowMs()), on = !!(settings.beacon && S.mode === 'play' && !S.finished && bi.on), ar = $('tpArrow');
@@ -4050,7 +4151,7 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
+if (params && params.get('test')) window.__d = { wallet, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((settings.autoEnter || resumeAfterUpdate()) && settings.name) enterGame(true); else showHome();

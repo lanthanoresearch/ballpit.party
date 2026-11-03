@@ -20,13 +20,7 @@
     (G.plates || []).forEach(p => w.plates.push({ x: p[0], y: p[1], w: p[2], to: p[3], on: false }));
     (G.btns || []).forEach(p => w.btns.push({ x: p[0], y: p[1], to: p[2], on: false }));
     (G.see || []).forEach(p => w.see.push({ cx: p[0] * TS, cy: p[1] * TS, hl: p[2] * TS, tilt: p[3], ang: p[3], av: 0, tq: 0 }));
-    for (const p of (map.props || [])) {   // pushable yellow things; each player has their own copy (never shared)
-      const kind = p[0], cx = (p[1] + 0.5) * TS, sy = p[2] * TS;
-      const hw = kind === 0 || kind === 5 ? 18 : kind === 1 ? 36 : 0, r = kind === 2 ? 16 : kind === 3 ? 34 : kind === 4 ? 14 : 0;
-      const d = { k: r ? 'o' : 'b', x: cx, y: sy - (r || hw) - 0.5, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, av: 0, tip: null, spin: false, gr: false, touch: false, burn: 0,
-        m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind };
-      d.hx = d.x; d.hy = d.y; w.dyn.push(d);
-    }
+    for (const p of (map.props || [])) addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5);   // pushable yellow things; each player has their own copy (never shared)
     return w;
   }
 
@@ -83,6 +77,22 @@
 
 
   /* ---------- pushable objects (yellow crates and balls) ---------- */
+  /* ---------- pushable things: kinds 0 small crate, 1 big crate, 2 / 3 / 4 / 7 balls, 5 spring, 6 super spring (bought in the shop) ---------- */
+  function propDims(kind) {
+    const hw = kind === 0 || kind === 5 || kind === 6 ? 18 : kind === 1 ? 36 : 0, r = kind === 2 ? 16 : kind === 3 ? 34 : kind === 4 ? 14 : kind === 7 ? 9 : 0;
+    return { hw, r, half: r || hw };
+  }
+  function addProp(w, kind, x, y) {   // x, y: the centre
+    const q = propDims(kind), hw = q.hw, r = q.r;
+    const d = { k: r ? 'o' : 'b', x, y, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, av: 0, tip: null, spin: false, gr: false, touch: false, burn: 0,
+      m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind };
+    d.hx = d.x; d.hy = d.y; w.dyn.push(d); return d;
+  }
+  function spotFree(w, x, y, hw, hh) {   // room for a thing this size: no walls, doors or lava
+    const tx0 = Math.floor((x - hw) / TS), tx1 = Math.floor((x + hw - 0.01) / TS), ty0 = Math.floor((y - hh) / TS), ty1 = Math.floor((y + hh - 0.01) / TS);
+    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) { const t = tile(w, tx, ty); if (isSol(t) || t === 2) return false; }
+    return true;
+  }
   const isSol = t => t === 1 || t === 3 || t === 4 || t === 6 || t === 9;
   function boxHits(w, x, y, hw, hh) {
     const tx0 = Math.floor((x - hw) / TS), tx1 = Math.floor((x + hw - 0.01) / TS), ty0 = Math.floor((y - hh) / TS), ty1 = Math.floor((y + hh - 0.01) / TS);
@@ -353,7 +363,7 @@
         if (tl === 2) burn = true;
         const onPlank = d.sr !== undefined;
         boxSettle(w, d, L, dt); d.pc = false;
-        if (!onPlank && !d.spin && d.kind !== 5 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
+        if (!onPlank && !d.spin && d.kind !== 5 && d.kind !== 6 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
       }
       d.touch = false;
       if (burn || d.y > killYAt(w, d.x) || d.x < -200 || d.x > w.W * TS + 200) { d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
@@ -389,7 +399,7 @@
         if (ny < -0.6) {                   // standing on top
           b.y += ny * pen; if (b.vy > 0) b.vy = 0; b.ground = true; if (Math.abs(b.x - d.x) <= d.hw) { b.flat = true; b.gType = 1; }
           d.touch = true;
-          if (d.kind === 5 && b.vy >= 0) { b.bnc = true; d.sq = 0.25; }   // a spring: land on it (or roll onto it) and it throws you up
+          if ((d.kind === 5 || d.kind === 6) && b.vy >= 0) { b.bnc = true; if (d.kind === 6) b.bncV = SUPER_BOUNCE; d.sq = 0.25; }   // a spring: land on it (or roll onto it) and it throws you up (a super spring: very high)
         } else if (ny > 0.6) {             // the crate is above you: it gets lifted (so one sitting on your head can never pin you down or stop you jumping); only a ceiling stops you
           if (!boxHits(w, d.x, d.y - pen, d.hw, d.hh)) { d.y -= pen; if (d.vy > b.vy) d.vy = b.vy; if (d.hw > 20 && b.vy < 0) b.vy *= 0.6; d.touch = true; }
           else { b.y += ny * pen; if (b.vy < 0) b.vy = 0; }
@@ -413,6 +423,7 @@
     }
   }
 
+  const SUPER_BOUNCE = 1900;   // a super spring throws you about 900px up (more than 20 tiles)
   const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
   const SJ_MUL = 1.42, JM_FILL = 0.345, JM_DRAIN = 7, JM_GRACE = 0.13, JM_HOLD = 0.2;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
   const BOOST_T = 1.6, BOOST_V = MAXV * 2;   // seconds of steady rolling to fill the ring, and the boosted top speed (double)
@@ -491,19 +502,19 @@
     b.x += b.vx * dt; b.y += b.vy * dt;
     if (b.jfill) { if (b.ground) b.jfill = false; else b.jm = Math.max(b.jm, Math.min(1, b.jm0 + JM_FILL * clamp((b.jy0 - b.y - 130) / 70, 0, 1))); }   // only a full-height jump fills the meter (a third of it), and only if you jump again within a split second of landing: three perfect jumps in a row make the tall one   // two full-height jumps fill the whole meter; a small hop fills a little
     b.rot += (b.vx * dt) / R;
-    b.bnc = false; b.onSee = null;
+    b.bnc = false; b.bncV = 0; b.onSee = null;
     ev.lava = collide(b, w);
     if (!b.ghost && w.dyn.length) collideDyn(b, w);
     if (w.see.length) seeBody(b, w, 60);
     const wet = water || tile(w, Math.floor(b.x / TS), Math.floor(b.y / TS)) === 5 || tile(w, Math.floor(b.x / TS), Math.floor((b.y + R * 0.8) / TS)) === 5;   // (checked again after moving: you can land in a shallow pool in the very same step)
     if (b.ground || wet) { if (!wasGround && !wet && !b.bnc && b.fall >= FALL_DIE) ev.splat = true; b.fall = 0; }
     else if (b.vy > 300) b.fall += dt; else if (b.vy < 0) b.fall = 0;
-    if (b.bnc && !water) { b.bnc = false; b.vy = -(jheld ? BOUNCE_HELD : BOUNCE); b.launched = true; b.ground = false; b.coyote = 0; ev.bounced = true; }
+    if (b.bnc && !water) { b.bnc = false; b.vy = -(b.bncV || (jheld ? BOUNCE_HELD : BOUNCE)); b.launched = true; b.ground = false; b.coyote = 0; ev.bounced = true; }
     if (!wasGround && b.ground && preVy > 380 && !wet) ev.landed = true;
     return ev;
   }
 
-  const api = { TS, R, GRAV, MAXV, BOOST_T, BOOST_V, makeWorld, tile, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
+  const api = { TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
