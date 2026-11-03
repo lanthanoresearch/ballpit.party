@@ -1053,8 +1053,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=48"></script>
-<script src="physics.js?v=48"></script>
+<script src="maps.js?v=49"></script>
+<script src="physics.js?v=49"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3519,7 +3519,7 @@ function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
-  if (v === 'maker') { wallet.c += 1000; wallet.g += 500; saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice('+1,000 coins and +500 diamonds', ''); return; }
+  if (v === 'maker') { wallet.c = 10000; wallet.g = 50; saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice('Your money is now 10,000 coins and 50 diamonds', ''); return; }
   $('cdIn').classList.remove('bad'); void $('cdIn').offsetWidth; $('cdIn').classList.add('bad'); $('cdNote').textContent = v ? "That code doesn't work" : 'Type a code first'; sfx('warn');
 }
 $('cdOk').onclick = submitCode; $('cdNo').onclick = closeCode;
