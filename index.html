@@ -448,6 +448,10 @@
   #tpl{position:fixed;z-index:3;width:68px;height:68px;border-radius:50%;border:3px solid #fff;background:rgba(47,158,97,.92);color:#fff;font-size:30px;padding:0;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;touch-action:none;box-shadow:0 0 0 4px rgba(120,255,170,.4),0 0 20px rgba(80,230,140,.8);animation:rdy .55s ease-in-out infinite alternate}
   #tpl svg{stroke-width:3}#tpl.no{opacity:.45;background:rgba(150,60,50,.9);animation:none;box-shadow:none}
   @media (max-height:520px){#placeBar{padding:3px 4px 3px 10px;gap:6px}#placeBar .pi small{display:none}#placeBar .btn{padding:4px 10px;min-height:32px}}
+  #homeWallet{position:fixed;right:12px;top:12px;top:calc(12px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:4;display:none;align-items:center;gap:12px;padding:6px 12px;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);color:#2b1d12;font-size:16px;box-shadow:2px 3px 0 rgba(43,29,18,.3);touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
+  body.home #homeWallet{display:inline-flex}#homeWallet span{display:inline-flex;align-items:center;gap:5px}#homeWallet .ic{width:19px;height:19px}
+  #coinpill{pointer-events:auto!important;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+  #cdIn.bad{border-color:#ff7a6a;animation:shake .3s}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   #phraseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
   #phraseGrid button{padding:9px 4px;font-size:14px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
   #phraseGrid button:active,#phraseGrid button:hover{background:#3a3355}#phraseGrid button:active{transform:scale(.95)}
@@ -501,7 +505,7 @@
   #home .scene{position:fixed;z-index:0}#home .hbox{z-index:2}#home .sball{z-index:1}
   @media (max-height:540px){
     #home{padding:8px}#home h1{font-size:34px}#home .hsub,#homeModeNote{display:none}
-    #home .hbox{width:min(780px,100%);gap:8px}
+    #home .hbox{width:min(660px,100%);gap:8px}
     #home .card{display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-template-columns:1fr 1fr;gap:6px 18px;padding:12px 16px}
     #home .hplay{font-size:22px;padding:8px}#home .sw2 small{display:none}
     .scene{--gh:18vh}
@@ -509,7 +513,7 @@
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
-  #nameModal,#shareModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:13}
+  #nameModal,#shareModal,#codeModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:13}
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
   .nname.dim{opacity:.55}
@@ -842,6 +846,7 @@
 <div id="home" class="hide">
   <div class="scene" id="homeScene"></div>
   <button id="homeShare" class="ibtn" type="button" title="Share ballpit.party" aria-label="Share the game" data-ic="share"></button><span id="shareTip" class="hide">Link copied</span>
+  <button id="homeWallet" type="button" aria-label="Your coins and diamonds"></button>
   <div class="hbox">
     <h1>BALL<b>PIT</b>.PARTY</h1>
     <div class="hsub">Roll through a huge world and find the hidden finish flag.</div>
@@ -881,6 +886,13 @@
   </div>
   <div class="ifoot"><label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
   <button class="ok" id="btnOk">OK</button></div>
+</div></div>
+
+<div id="codeModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="cdTitle"><div class="card nmcard">
+  <h3 id="cdTitle">Enter a code</h3>
+  <input type="text" id="cdIn" maxlength="24" placeholder="Code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <div class="small dim" id="cdNote"></div>
+  <div class="btns"><button id="cdNo" type="button">Cancel</button><button id="cdOk" type="button" class="go">OK</button></div>
 </div></div>
 
 <div id="nameModal" class="overlay hide"><div class="card nmcard">
@@ -938,8 +950,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=39"></script>
-<script src="physics.js?v=39"></script>
+<script src="maps.js?v=40"></script>
+<script src="physics.js?v=40"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1548,7 +1560,7 @@ function startTransition(slot, next) {
 let placing = null;   // the item you are building right now (a ghost that follows you until you tap Place)
 let inHome = true, paused = false;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text' && !a.readOnly; };
-const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
+const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 function update(dt) {
   S.t += dt;
@@ -3054,6 +3066,23 @@ addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('setting
 setTimeout(() => { if (inHome) { retry = 0; connect(); } }, 500);   // the main menu connects to the server too, so friends and invites work before you press Play
 
 $('placeOk').onclick = () => finishPlacing(); $('placeCancel').onclick = () => cancelPlacing(); $('tpl').onclick = () => finishPlacing();
+
+/* ----- a secret code: double-tap the coins and diamonds (in the game or on the main screen) ----- */
+function homeWalletRender() { const k = wallet.c + ':' + wallet.g; if (homeWalletRender.k === k) return; homeWalletRender.k = k; $('homeWallet').innerHTML = '<span>' + ico('gcoin') + wallet.c + '</span><span>' + ico('gem') + wallet.g + '</span>'; }
+setInterval(() => { if (inHome) homeWalletRender(); }, 400);
+let codeBack = null;
+function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $('cdNote').textContent = ''; $('codeModal').classList.remove('hide'); setTimeout(() => { try { $('cdIn').focus(); } catch (e) {} }, 30); }
+function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
+function submitCode() {
+  const v = $('cdIn').value.trim().toLowerCase();
+  if (v === 'maker') { wallet.c += 1000; wallet.g += 500; saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice('+1,000 coins and +500 diamonds', ''); return; }
+  $('cdIn').classList.remove('bad'); void $('cdIn').offsetWidth; $('cdIn').classList.add('bad'); $('cdNote').textContent = v ? "That code doesn't work" : 'Type a code first'; sfx('warn');
+}
+$('cdOk').onclick = submitCode; $('cdNo').onclick = closeCode;
+$('cdIn').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); else if (e.key === 'Escape') closeCode(); e.stopPropagation(); });
+$('codeModal').addEventListener('pointerdown', e => { if (e.target === $('codeModal')) closeCode(); });
+function onDoubleTap(el, fn) { let t = 0, x = 0, y = 0; el.addEventListener('click', e => { const n = performance.now(); if (n - t < 450 && Math.hypot(e.clientX - x, e.clientY - y) < 40) { t = 0; fn(); } else { t = n; x = e.clientX; y = e.clientY; } }); }
+onDoubleTap($('homeWallet'), openCode); onDoubleTap($('coinpill'), openCode);
 
 /* ================= networking ================= */
 function setNet(state) {
