@@ -416,6 +416,13 @@
   .shopitem button{flex:none;min-width:84px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 8px;line-height:1.1}
   .shopitem button .pr{display:inline-flex;align-items:center;gap:3px;font-size:14px}.shopitem button .pr .ic{width:14px;height:14px}
   .shopitem button:disabled{opacity:.45}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){
+    #hl{--hlw:122px}#infoRow .pill{font-size:12px}.gemw{margin-left:3px}#coinpill{padding:1px 6px;gap:3px}
+    .shopcard{width:min(720px,100%);padding:10px 14px}.shopcard h3{margin:0 0 2px;font-size:19px}#shopWallet{margin:0 0 6px;font-size:16px}
+    #shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.shopitem{padding:5px 8px}.shopitem .sico{width:32px;height:32px}.shopitem .sinfo b{font-size:15px}.shopitem .sinfo small{display:none}.shopitem button{min-width:70px;padding:4px 6px}.shopcard .small{margin:0 0 4px;font-size:12px}.shopcard .cfoot{margin-top:2px}.shopcard .cfoot button{padding:5px 18px}
+    .epcard{width:min(680px,100%);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start;padding:10px 14px}.epcard h3,.epcard .cfoot{grid-column:1/-1;margin:0 0 4px}
+    #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:5px;margin:4px 0}#phraseGrid button{padding:6px 2px;font-size:13px}
+  }
   #phraseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
   #phraseGrid button{padding:9px 4px;font-size:14px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
   #phraseGrid button:active,#phraseGrid button:hover{background:#3a3355}#phraseGrid button:active{transform:scale(.95)}
@@ -680,11 +687,11 @@
   <div id="phraseGrid"></div>
   <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim">Everyone in your world sees it.</span></div>
 </div></div>
-<div id="shopPop" class="overlay hide"><div class="card shopcard">
-  <h3>Shop</h3>
+<div id="shopPop" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="shopTitle"><div class="card shopcard">
+  <h3 id="shopTitle">Shop</h3>
   <div id="shopWallet"></div>
   <div id="shopList"></div>
-  <div class="small dim">Things you buy appear next to you and are only yours.</div>
+  <div class="small dim">What you buy appears next to you and is only yours. It stays until the map changes.</div>
   <div class="cfoot"><button id="shopClose" class="btn" type="button">Close</button></div>
 </div></div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
@@ -902,8 +909,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=35"></script>
-<script src="physics.js?v=35"></script>
+<script src="maps.js?v=37"></script>
+<script src="physics.js?v=37"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1413,7 +1420,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; S.fallWarn = false; S.wasWater = false;
   restoreWorld(slot);
   S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
   others.forEach(o => { o.crown = false; });
@@ -1905,7 +1912,7 @@ function curLayout() {
   return withB(p);
 }
 const boostBtnOn = () => !!(settings.boost && settings.boostBtn && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));
-function btnSize(k) { return Math.round((k === 'j' ? 92 : k === 'b' ? 68 : 78) * settings.btnSize); }
+function btnSize(k) { return Math.round((k === 'j' ? 92 : k === 'b' ? 68 : 78) * settings.btnSize * (window.innerHeight < 460 ? 0.84 : 1)); }   // (a bit smaller when the phone is on its side, so they don't cover the view)
 function btnXY(q, W, H, sz) { const r = sz / 2; return [clamp(q.a === 'l' ? q.dx : q.a === 'r' ? W - q.dx : W / 2 + q.dx, r + 4, W - r - 4), clamp(H - q.dy, r + 8, H - r - 4)]; }
 function layoutTouch() {
   const W = window.innerWidth, H = window.innerHeight, L = curLayout(), ks = (settings.scheme === 'swipebtn' ? ['j'] : ['l', 'r', 'j']).concat(boostBtnOn() || editMode ? ['b'] : []), pts = {};
@@ -2539,6 +2546,7 @@ $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop'))
 
 /* ----- the shop: spend coins (and diamonds) on things that appear right next to you. They are only yours: nobody else sees them. ----- */
 const SHOP = [
+  { id: 'coins', name: '250 coins', info: 'Trade one diamond for coins.', c: 0, g: 1, give: 250 },
   { id: 'spring', name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
   { id: 'flag', name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot.', c: 400, g: 5 },
   { id: 'box0', name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
@@ -2549,6 +2557,7 @@ const SHOP = [
 ];
 const shopIcon = id => {
   const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
+  if (id === 'coins') return '<svg viewBox="0 0 40 40"><circle cx="15" cy="26" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="4.500" fill="none" stroke="#a06400" stroke-width="1.800"/></svg>';
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
   if (id === 'box0') return '<svg viewBox="0 0 40 40"><rect x="9" y="9" width="22" height="22" rx="2" fill="#ffc233" ' + st + '/><path d="M13 13L27 27M27 13L13 27" fill="none" ' + st + ' stroke-width="1.800"/></svg>';
@@ -2567,7 +2576,7 @@ function shopRender() {
     const ok = wallet.c >= it.c && wallet.g >= it.g;
     row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + '</b><small>' + it.info + '</small></div>';
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.disabled = !ok;
-    b.innerHTML = '<span class="pr">' + ico('gcoin') + it.c + '</span>' + (it.g ? '<span class="pr">' + ico('gem') + it.g + '</span>' : '');
+    b.innerHTML = (it.c ? '<span class="pr">' + ico('gcoin') + it.c + '</span>' : '') + (it.g ? '<span class="pr">' + ico('gem') + it.g + '</span>' : '');
     b.onclick = () => buyItem(it); row.appendChild(b); L.appendChild(row);
   });
 }
@@ -2578,39 +2587,64 @@ function toggleShop(on) {
 }
 $('btnShop').onclick = () => toggleShop(!shopOpen);
 $('shopClose').onclick = () => toggleShop(false);
-function dropProp(kind) {   // next to you on the right; if there is no room, the left, then a bit higher up, then above you. Never inside a wall.
-  const w = S.world, b = S.b, q = P.propDims(kind), half = q.half, hw = q.hw || q.r, hh = q.hw || q.r, cands = [];
+const MAX_BOUGHT = 40;   // per map: plenty to play with, and the physics stays quick
+function findSpot(kind) {   // right next to you: the right side first, then the left. It prefers a spot with something under it (so it does not just fall away), and never a spot inside a wall.
+  const w = S.world, b = S.b, q = P.propDims(kind), half = q.half, hw = q.hw || q.r, hh = hw, cands = [];
   for (const lift of [0, 36, 72, 120, 180]) for (const side of [1, -1]) cands.push([b.x + side * (R + half + 3 + (lift ? 8 : 0)), b.y + R - half - lift]);
-  for (const up of [0, 40, 90]) cands.push([b.x, b.y - R - half - 6 - up]);
+  for (const up of [0, 40, 90]) cands.push([b.x, b.y - R - half - 6 - up]);   // last resort: right above you
   const clear = (x, y) => { if (!P.spotFree(w, x, y, hw, hh)) return false; for (let k = 1; k < 6; k++) if (!P.spotFree(w, b.x + (x - b.x) * k / 6, b.y + (y - b.y) * k / 6, 4, 4)) return false; return true; };   // (and no wall between you and the spot)
   const free = (x, y) => { for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const oh = o.r || o.hw; if (Math.abs(o.x - x) < oh + half - 2 && Math.abs(o.y - y) < oh + half - 2) return false; } return true; };
-  let at = null;
-  for (const c of cands) if (clear(c[0], c[1]) && free(c[0], c[1])) { at = c; break; }
-  if (!at) for (const c of cands) if (clear(c[0], c[1])) { at = c; break; }
-  if (!at) { notice('No room here. Move to a more open spot', 'urgent'); return false; }
-  const d = P.addProp(w, kind, at[0], at[1]); d.sleep = false;
+  const held = (x, y) => { const row = Math.floor((y + half + 2) / TS); for (const dx of [0, -half * 0.5, half * 0.5]) { const t = P.tile(w, Math.floor((x + dx) / TS), row); if (t === 1 || t === 3 || t === 4 || t === 6 || t === 9) return true; } return false; };
+  for (const c of cands) if (clear(c[0], c[1]) && held(c[0], c[1]) && free(c[0], c[1])) return c;
+  for (const c of cands) if (clear(c[0], c[1]) && held(c[0], c[1])) return c;
+  for (const c of cands) if (clear(c[0], c[1]) && free(c[0], c[1])) return c;
+  for (const c of cands) if (clear(c[0], c[1])) return c;
+  return null;
+}
+function placeProp(kind, at) {
+  const d = P.addProp(S.world, kind, at[0], at[1]); d.sleep = false;
   S.bought.push([kind, Math.round(at[0]), Math.round(at[1])]); wDirty = true;
   burst(at[0], at[1], ['#fff', '#ffd23d'], 10, 140, 60); ring(at[0], at[1], '#fff', 4, 34, 0.4);
-  return true;
 }
-function dropFlag() {   // right where you are: it lands on the ground under you and is your checkpoint at once
+function placeFlag() {   // right where you are: it lands on the ground under you and is your checkpoint at once
   const w = S.world, b = S.b, tx = Math.floor(b.x / TS), row = Math.floor((b.y + R + 2) / TS);
   let found = -1;
   for (let k = 0; k < 8; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (t === 1 || t === 3 || t === 4 || t === 6) { found = row + k; break; } }
-  if (found < 0) { notice('Stand on solid ground to put down a flag', 'urgent'); return false; }
+  if (found < 0) return false;
   const cp = [tx, found], m = S.map; m.checkpoints.push(cp); S.boughtCps.push(cp);
   S.cpArmed = m.checkpoints.length - 1; S.cpUsed = -1; S.cpFlash = 1; wDirty = true;
-  const fx0 = (tx + 0.5) * TS, fy0 = found * TS - 60;
-  burst(fx0, fy0, ['#46d17a', '#fff', '#b9ffd3'], 16, 220, 80); ring(fx0, found * TS - 6, '#46d17a', 5, 50, 0.5); sfx('ready');
+  const fx0 = (tx + 0.5) * TS;
+  burst(fx0, found * TS - 60, ['#46d17a', '#fff', '#b9ffd3'], 16, 220, 80); ring(fx0, found * TS - 6, '#46d17a', 5, 50, 0.5); sfx('ready');
   notice('Checkpoint placed. Your next fall or reset brings you back here', '');
   return true;
 }
-function buyItem(it) {
-  if (!canShop()) return;
-  if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); shopRender(); return; }
-  if (!(it.id === 'flag' ? dropFlag() : dropProp(it.kind))) return;   // (nothing is spent if it could not be placed)
-  wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); toggleShop(false); saveWorld(true);
+let pendingBuy = null;   // something you paid for in your mind but that had no room yet: it waits until you move somewhere with space
+function attemptBuy(it) {   // true = placed and paid for
+  if (wallet.c < it.c || wallet.g < it.g) return false;
+  if (it.id === 'flag') { if (!placeFlag()) return false; }
+  else { const at = findSpot(it.kind); if (!at) return false; placeProp(it.kind, at); }
+  wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
+  return true;
 }
+function buyItem(it) {
+  if (!canShop() || !it) return;
+  if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); shopRender(); return; }
+  if (it.give) { wallet.g -= it.g; wallet.c += it.give; saveWallet(); sfx('gem'); shopRender(); return; }   // a trade, not a thing: the shop stays open
+  if (it.id !== 'flag' && S.bought.length >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); return; }
+  toggleShop(false);
+  if (attemptBuy(it)) { pendingBuy = null; return; }
+  // no room (or no ground): nothing is spent yet. It is placed the moment you move to a spot where it fits.
+  pendingBuy = { it, x: S.b.x, y: S.b.y };
+  notice(it.id === 'flag' ? 'No solid ground under you. The flag drops when you land' : 'No room next to you. It drops as soon as you move', 'urgent');
+}
+setInterval(() => {
+  if (!pendingBuy) return;
+  if (S.mode !== 'play' || !S.b || S.away || S.dead > 0) { if (S.mode !== 'play' || S.away) pendingBuy = null; return; }
+  if (paused || wallet.c < pendingBuy.it.c || wallet.g < pendingBuy.it.g) { if (!paused) pendingBuy = null; return; }
+  if (pendingBuy.it.id !== 'flag' && Math.hypot(S.b.x - pendingBuy.x, S.b.y - pendingBuy.y) < 24) return;   // wait until you have moved
+  if (attemptBuy(pendingBuy.it)) pendingBuy = null; else { pendingBuy.x = S.b.x; pendingBuy.y = S.b.y; }
+}, 250);
+addEventListener('storage', e => { if (e.key === WALKEY) { try { const o = JSON.parse(e.newValue || 'null'); if (o) { wallet.c = Math.max(0, o.c | 0); wallet.g = Math.max(0, o.g | 0); if (shopOpen) shopRender(); } } catch (x) {} } });   // (another tab of the game spent or earned something)
 const openFriends = () => { if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
 $('linkpill').onclick = e => { e.stopPropagation(); openFriends(); };
 const friendsShown = () => !$('settings').classList.contains('hide') && $('settings').querySelector('.pane.on[data-pane="friends"]') !== null;
