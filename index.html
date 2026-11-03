@@ -459,8 +459,10 @@
   #touch2 button.bad,#touch button.bad{border-color:#ff5a4a;background:rgba(255,90,74,.35)}
   #editbar{flex-direction:column;align-items:stretch;gap:6px;padding:6px 12px;width:min(560px,calc(100vw - 16px));box-sizing:border-box}
   #editbar .eb1,#editbar .eb2{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}#editbar .eb1 b{font-weight:normal;font-size:14px}#editbar .ebb{display:flex;gap:6px}
-  #ebPresets{display:flex;gap:4px}#ebPresets button{padding:4px 9px;font-size:13px;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink)}#ebPresets button.on{background:#2f9e61}
-  .ebs{display:flex;align-items:center;gap:8px;font-size:13px;flex:1;min-width:190px;justify-content:flex-end}.ebs b{font-weight:normal}.ebs input{flex:1;min-width:80px;max-width:180px}.ebs .dim{min-width:38px}
+  #ebPresets{display:flex;gap:4px;overflow-x:auto;max-width:100%;touch-action:pan-x;scrollbar-width:none}#ebPresets button{flex:none;white-space:nowrap}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){#editbar{flex-direction:row;align-items:center;flex-wrap:nowrap;width:min(660px,calc(100vw - 16px));padding:4px 10px}#editbar .eb1{order:3;flex:none}#editbar .eb1 b{display:none}#editbar .eb2{flex:1;min-width:0;flex-wrap:nowrap;gap:8px}#editbar .ebs{min-width:0!important;flex:0 1 230px;justify-content:flex-end}#editbar .ebs input{min-width:50px}#ebPresets{overflow-x:auto;overflow-y:hidden}#ebPresets button{padding:3px 8px;font-size:12px}#editbar .ebs span:first-child{white-space:nowrap}#ebPresets{flex:1 1 auto;min-width:0}}
+  #ebPresets button{padding:4px 9px;font-size:13px;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink)}#ebPresets button.on{background:#2f9e61}
+  .ebs{display:flex;align-items:center;gap:8px;font-size:13px;flex:1 1 100%;min-width:0;justify-content:flex-end}.ebs b{font-weight:normal}.ebs input{flex:1;min-width:80px;max-width:180px}.ebs .dim{min-width:38px}
   #placeBar.tch .btn{display:none}
   @media (max-height:520px){#placeBar{padding:3px 4px 3px 10px;gap:6px}#placeBar .pi small{display:none}#placeBar .btn{padding:4px 10px;min-height:32px}}
   #homeWallet{position:fixed;right:12px;top:12px;top:calc(12px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:4;display:none;align-items:center;gap:12px;padding:6px 12px;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);color:#2b1d12;font-size:16px;box-shadow:2px 3px 0 rgba(43,29,18,.3);touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
@@ -479,6 +481,8 @@
   @media (max-height:520px) and (min-aspect-ratio:1/1){.profcard{width:min(600px,100%);display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;padding:10px 16px}.profcard .phead,.profcard .pbeat{grid-column:1}.profcard .pacts{grid-column:2;grid-row:1/3;justify-content:center}.profcard .cfoot{grid-column:1/-1}.profcard .pball{width:42px;height:42px}.profcard h3{font-size:22px}}
   #settings.only .tabs{display:none}
   @media (max-height:520px) and (min-aspect-ratio:1/1){#settings.only{grid-template-columns:minmax(0,1fr)!important;width:min(560px,calc(100vw - 20px))!important}#settings.only .sbody{grid-column:1!important;grid-row:2!important}}
+.btnrow{display:flex;gap:8px;margin:8px 0}.btnrow .btn{flex:1}.btnrow .btn+.btn{flex:none}
+  #editbar{touch-action:none}#editbar input[type=range]{touch-action:none;height:28px}
   #phraseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
   #phraseGrid button{padding:9px 4px;font-size:14px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
   #phraseGrid button:active,#phraseGrid button:hover{background:#3a3355}#phraseGrid button:active{transform:scale(.95)}
@@ -543,7 +547,7 @@
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
-  #nameModal,#shareModal,#codeModal,#profModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:13}
+  #nameModal,#shareModal,#codeModal,#profModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
   .nname.dim{opacity:.55}
@@ -759,7 +763,7 @@
 <div id="touch" class="hide"><button id="tl" data-ic="left"></button><button id="tr" data-ic="right"></button><button id="tj" data-ic="up"></button><button id="tb" data-ic="bolt" class="hide"></button></div>
 <div id="joy" class="hide"><i class="jb"></i><i class="jk"></i></div>
 <div id="editbar" class="paper hide" role="group" aria-label="Edit your buttons"><div class="eb1"><b>Drag a button to move it, tap it to resize.</b><span class="ebb"><button class="btn sm" id="editReset" type="button">Reset</button><button class="btn prim sm" id="editDone" type="button">Done</button></span></div>
-  <div class="eb2"><div id="ebPresets" role="group" aria-label="Layouts"><button type="button" data-p="spread">Spread out</button><button type="button" data-p="moveleft">Move left</button><button type="button" data-p="moveright">Move right</button></div>
+  <div class="eb2"><div id="ebPresets" role="group" aria-label="Layouts"><button type="button" data-p="spread">Spread</button><button type="button" data-p="moveleft">Left hand</button><button type="button" data-p="moveright">Right hand</button><button type="button" data-p="compact">Compact</button><button type="button" data-p="raised">Raised</button></div>
   <label class="ebs"><span>Size: <b id="ebSelName">Jump</b></span><input type="range" id="ebSize" min="0.5" max="1.8" step="0.05"><span id="ebSizeVal" class="dim"></span></label></div></div>
 <div id="touch2"><button id="ts" class="hide" type="button" aria-label="Power jump" data-ic="spark"></button><button id="tpl" class="hide" type="button" aria-label="Place" data-ic="check"></button><button id="tpc" class="hide" type="button" aria-label="Cancel" data-ic="close"></button></div>
 
@@ -787,32 +791,37 @@
       <p class="small dim">Other players see your changes with a little sparkle.</p>
     </section>
     <section class="pane" data-pane="controls">
-      <div class="row"><span class="lbl"><span data-ic="pad"></span> Controls</span><div id="selInput"></div><div class="small dim" id="inputDesc" style="margin-top:4px"></div></div>
-      <h4><span data-ic="spark"></span> Power jump</h4>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Power jump button</b><small>The extra tall jump gets its own button. It fills as you land perfect jumps; tap it when it is full. The normal jump stays a normal jump.</small></span></span><input type="checkbox" id="setSuperBtn"><i></i></label>
-      <h4><span data-ic="bolt"></span> Boost</h4>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Boost</b><small>Keep rolling one way and a ring fills above your ball. When it is full, launch!</small></span></span><input type="checkbox" id="setBoost"><i></i></label>
-      <div class="dep" data-dep="boost"><div>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Launch by itself</b><small>Boost the moment the ring is full, no button needed</small></span></span><input type="checkbox" id="setBoostAuto"><i></i></label>
-        <div class="dep" data-dep="boostbtn"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Boost button</b><small>A button next to jump</small></span></span><input type="checkbox" id="setBoostBtn"><i></i></label></div></div>
-        <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="right"></span><span><b>Pull to boost</b><small>When the ring is full, pull farther the way you are rolling</small></span></span><input type="checkbox" id="setBoostPull"><i></i></label></div></div>
+      <div class="row"><span class="lbl"><span data-ic="pad"></span> Play with</span><div id="selInput"></div><div class="small dim" id="inputDesc" style="margin-top:4px"></div></div>
+
+      <div class="dep" data-dep="touch"><div>
+        <h4><span data-ic="pad"></span> Touch screen</h4>
+        <div class="row"><span class="lbl">Style</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
+        <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Show a joystick</b><small>A little stick shows where you touch</small></span></span><input type="checkbox" id="setJoy"><i></i></label></div></div>
+        <div class="dep" data-dep="touchbtn"><div>
+          <div class="small dim" id="orientNote"></div>
+          <div class="row" id="presetRow"><span class="lbl">Where the buttons go</span><div id="selPreset"></div></div>
+          <div class="row"><span class="lbl">Size of all buttons <span id="btnSizeVal" class="dim"></span></span><input type="range" id="setBtnSize" min="0.7" max="1.5" step="0.05"></div>
+          <div class="btnrow"><button class="btn" id="btnEditLayout" type="button"><span data-ic="pad"></span>Move and resize buttons</button><button class="btn" id="btnResetLayout" type="button" title="Put the buttons back"><span data-ic="reset"></span>Reset</button></div>
+          <div class="small dim hide" id="editHint">Start playing first, then come back here to move your buttons.</div>
+        </div></div>
       </div></div>
+
+      <h4><span data-ic="up"></span> Jumping</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Power jump button</b><small>Off: when the ring around your ball is full, your next jump is extra tall. On: the extra tall jump gets its own button and the jump button stays a normal jump.</small></span></span><input type="checkbox" id="setSuperBtn"><i></i></label>
+
+      <h4><span data-ic="bolt"></span> Boost</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Boost</b><small>Keep rolling one way and a ring fills. When it is full you launch forward.</small></span></span><input type="checkbox" id="setBoost"><i></i></label>
+      <div class="dep" data-dep="boost"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Launch by itself</b><small>Boost as soon as the ring is full. No button needed.</small></span></span><input type="checkbox" id="setBoostAuto"><i></i></label>
+        <div class="dep" data-dep="boostbtn"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Boost button</b><small>Tap it when the ring is full</small></span></span><input type="checkbox" id="setBoostBtn"><i></i></label></div></div>
+        <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="right"></span><span><b>Pull to boost</b><small>Pull farther the way you are rolling</small></span></span><input type="checkbox" id="setBoostPull"><i></i></label></div></div>
+      </div></div>
+
       <div class="dep" data-dep="kb"><div>
         <h4><span data-ic="key"></span> Keyboard</h4>
         <div id="keyrows"></div><div id="keymsg"></div>
         <button class="btn" id="keyReset"><span data-ic="reset"></span>Reset keys</button>
         <p class="small dim">A key can only do one thing. Esc, <kbd>-</kbd> and <kbd>+</kbd> are always settings and zoom.</p>
-      </div></div>
-      <div class="dep" data-dep="touch"><div>
-        <h4><span data-ic="pad"></span> Touch screen</h4>
-        <div class="row"><span class="lbl">Style</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
-        <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Show a joystick</b><small>A little stick appears where you touch, and goes away when you let go</small></span></span><input type="checkbox" id="setJoy"><i></i></label></div></div>
-        <div class="dep" data-dep="touchbtn"><div>
-          <div class="row" id="presetRow"><span class="lbl">Button layout</span><div id="selPreset"></div></div>
-          <div class="row"><span class="lbl">Button size <span id="btnSizeVal" class="dim"></span></span><input type="range" id="setBtnSize" min="0.7" max="1.5" step="0.05"></div>
-          <div style="display:flex;gap:8px"><button class="btn" id="btnEditLayout" style="flex:1"><span data-ic="pad"></span>Move buttons</button><button class="btn" id="btnResetLayout" title="Back to the preset"><span data-ic="reset"></span></button></div>
-          <label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Separate portrait / landscape layouts</b><small>Off: your buttons keep the same spacing when you turn your phone.</small></span></span><input type="checkbox" id="setPerOrient"><i></i></label>
-        </div></div>
       </div></div>
     </section>
     <section class="pane" data-pane="display">
@@ -991,8 +1000,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=41"></script>
-<script src="physics.js?v=41"></script>
+<script src="maps.js?v=43"></script>
+<script src="physics.js?v=43"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1037,7 +1046,7 @@ function defaults() {
     minimap: true, mmPlayers: true, mmBots: true, soloMap: 'rotate', soloLen: 180, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
-    keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'spread', btnPos: null, btnPosP: null, perOrient: false };
+    keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'spread', presetP: 'spread', btnPos: null, btnPosP: null, btnMulP: {} };
 }
 let settings = defaults();
 try { const o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
@@ -1052,15 +1061,15 @@ function normalize() {
   settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
   settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
   if (['none', 'peaceful', 'upbeat', 'exciting'].indexOf(settings.music) < 0) settings.music = 'peaceful';
-  if (['spread', 'moveleft', 'moveright', 'custom'].indexOf(settings.preset) < 0) settings.preset = 'spread';
+  ['preset', 'presetP'].forEach(n => { if (['spread', 'moveleft', 'moveright', 'compact', 'raised', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'spread'; });
   settings.keys = cleanKeys(settings.keys);
   if (String(settings.soloMap) !== 'rotate' && !(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = 'rotate'; settings.soloMap = String(settings.soloMap);
   if ([0, 15, 30, 60, 180, 360, 720].indexOf(+settings.soloLen) < 0) settings.soloLen = 180; settings.soloLen = +settings.soloLen;
   settings.btnSize = clamp(+settings.btnSize || 1, 0.7, 1.5);
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'perOrient', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn'].forEach(k => { settings[k] = !!settings[k]; });
-  { const bm = settings.btnMul && typeof settings.btnMul === 'object' ? settings.btnMul : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings.btnMul = o; }
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn'].forEach(k => { settings[k] = !!settings[k]; });
+  ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
     if (!bp || typeof bp !== 'object') settings[n] = null;
@@ -1069,7 +1078,7 @@ function normalize() {
       if (settings[n]) ['b', 's', 'p', 'c'].forEach(k => { const q = bp[k]; if (q && (['l', 'r', 'c'].indexOf(q.a) < 0 || !isFinite(q.dx) || !isFinite(q.dy))) delete bp[k]; });
     }
   });
-  if (settings.btnPos === null && settings.preset === 'custom') settings.preset = 'spread';
+  if (settings.btnPos === null && settings.preset === 'custom') settings.preset = 'spread'; if (settings.btnPosP === null && settings.presetP === 'custom') settings.presetP = 'spread';
 }
 // keys: each key may do only one thing, and every action needs at least one key
 function cleanKeys(k) {
@@ -1976,7 +1985,7 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { if (e.code && keysDown.delete(e.code)) syncKeys(); });
 addEventListener('blur', () => { keysDown.clear(); inp.left = inp.right = inp.jump = false; });
 cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
-document.addEventListener('touchmove', e => { if (!e.target.closest || !e.target.closest('#settings, .card, .csel-list')) e.preventDefault(); }, { passive: false });
+document.addEventListener('touchmove', e => { if (!e.target.closest || !e.target.closest('#settings, .card, .csel-list, #editbar')) e.preventDefault(); }, { passive: false });
 document.addEventListener('contextmenu', e => { if (!typing()) e.preventDefault(); });
 document.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', e => { if (!window.PointerEvent || e.pointerType === 'touch') { if (detected !== 'touch') { detected = 'touch'; applyTouchUI(); applyDeps(); } } }, true);
 
@@ -1984,12 +1993,19 @@ document.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', e 
 /* Positions are stored as "this many pixels from the left / right edge (or the middle), this many up from the bottom".
    Because they are real pixels, buttons keep the same spacing when you turn your phone. */
 const PRESETS = {
-  spread: { name: 'Spread out (jump in the middle)', pos: { l: { a: 'l', dx: 62, dy: 84 }, r: { a: 'r', dx: 62, dy: 84 }, j: { a: 'c', dx: 0, dy: 84 }, b: { a: 'r', dx: 62, dy: 184 } } },
-  moveleft: { name: 'Move on the left, jump on the right', pos: { l: { a: 'l', dx: 58, dy: 84 }, r: { a: 'l', dx: 160, dy: 84 }, j: { a: 'r', dx: 66, dy: 84 }, b: { a: 'r', dx: 170, dy: 84 } } },
-  moveright: { name: 'Move on the right, jump on the left', pos: { l: { a: 'r', dx: 160, dy: 84 }, r: { a: 'r', dx: 58, dy: 84 }, j: { a: 'l', dx: 66, dy: 84 }, b: { a: 'l', dx: 170, dy: 84 } } },
-  custom: { name: 'Custom (the way you moved them)', pos: null }
+  spread: { name: 'Spread out (arrows at the edges, jump in the middle)', short: 'Spread', pos: { l: { a: 'l', dx: 62, dy: 84 }, r: { a: 'r', dx: 62, dy: 84 }, j: { a: 'c', dx: 0, dy: 84 }, b: { a: 'r', dx: 62, dy: 184 }, s: { a: 'r', dx: 148, dy: 184 } } },
+  moveleft: { name: 'Left thumb moves, right thumb jumps', short: 'Left hand', pos: { l: { a: 'l', dx: 58, dy: 84 }, r: { a: 'l', dx: 160, dy: 84 }, j: { a: 'r', dx: 66, dy: 84 }, b: { a: 'r', dx: 170, dy: 84 } } },
+  moveright: { name: 'Right thumb moves, left thumb jumps', short: 'Right hand', pos: { l: { a: 'r', dx: 160, dy: 84 }, r: { a: 'r', dx: 58, dy: 84 }, j: { a: 'l', dx: 66, dy: 84 }, b: { a: 'l', dx: 170, dy: 84 } } },
+  compact: { name: 'Compact (small and low, in the corners)', short: 'Compact', pos: { l: { a: 'l', dx: 50, dy: 56 }, r: { a: 'l', dx: 134, dy: 56 }, j: { a: 'r', dx: 50, dy: 56 }, b: { a: 'r', dx: 50, dy: 146 }, s: { a: 'r', dx: 142, dy: 56 } } },
+  raised: { name: 'Raised (higher up, for a better grip)', short: 'Raised', pos: { l: { a: 'l', dx: 58, dy: 124 }, r: { a: 'l', dx: 160, dy: 124 }, j: { a: 'r', dx: 66, dy: 124 }, b: { a: 'r', dx: 170, dy: 124 } } },
+  custom: { name: 'Custom (the way you moved them)', short: 'Custom', pos: null }
 };
 const isPortrait = () => window.innerHeight > window.innerWidth;
+// sideways and upright are two separate layouts, always: each has its own preset, moved buttons and button sizes
+const oSuf = () => isPortrait() ? 'P' : '';
+const presetK = () => 'preset' + oSuf(), posK = () => 'btnPos' + oSuf(), mulK = () => 'btnMul' + oSuf();
+const curPreset = () => settings[presetK()];
+const curMul = () => settings[mulK()] || (settings[mulK()] = {});
 const BK = ['l', 'r', 'j', 'b', 's', 'p', 'c'];   // left, right, jump, boost, power jump, place, cancel
 const BNAME = { l: 'Move left', r: 'Move right', j: 'Jump', b: 'Boost', s: 'Power jump', p: 'Place', c: 'Cancel' };
 const BEL = { l: 'tl', r: 'tr', j: 'tj', b: 'tb', s: 'ts', p: 'tpl', c: 'tpc' };
@@ -2017,17 +2033,17 @@ function autoSpot(k, pts, rs, W, H) {   // the closest place to where a thumb wo
 }
 const toAnchor = (x, y) => { const W = window.innerWidth, H = window.innerHeight, a = x < W * 0.4 ? 'l' : x > W * 0.6 ? 'r' : 'c'; return { a, dx: Math.round(a === 'l' ? x : a === 'r' ? W - x : x - W / 2), dy: Math.round(H - y) }; };
 function curLayout() {
-  if (settings.preset === 'custom') {
-    const L = (settings.perOrient && isPortrait() && settings.btnPosP) ? settings.btnPosP : settings.btnPos;
-    if (L) return withB(L);
-  }
-  let p = (PRESETS[settings.preset] && PRESETS[settings.preset].pos) || PRESETS.spread.pos;
-  if (settings.scheme === 'swipebtn') p = { l: p.l, r: p.r, j: settings.preset === 'moveright' ? { a: 'l', dx: 66, dy: 84 } : { a: 'r', dx: 66, dy: 84 } };
+  const pr = curPreset();
+  if (pr === 'custom') { const L = settings[posK()]; if (L) return withB(L); }
+  let p = (PRESETS[pr] && PRESETS[pr].pos) || PRESETS.spread.pos;
+  if (settings.scheme === 'swipebtn') p = { l: p.l, r: p.r, j: pr === 'moveright' ? { a: 'l', dx: 66, dy: 84 } : { a: 'r', dx: 66, dy: 84 } };
   return withB(p);
 }
 const boostBtnOn = () => !!(settings.boost && !settings.boostAuto && settings.boostBtn && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));
 const BASE_SZ = { j: 92, b: 68, s: 68, p: 68, c: 56 };
-function btnSize(k) { return Math.round(clamp((BASE_SZ[k] || 78) * settings.btnSize * ((settings.btnMul && settings.btnMul[k]) || 1) * (window.innerHeight < 460 ? 0.84 : 1), 34, 190)); }   // (a bit smaller when the phone is on its side, so they don't cover the view)
+let fitK = 1;   // shrinks every button a little when a screen is too small for the layout
+const screenK = () => clamp(Math.min(window.innerHeight / 400, window.innerWidth / 400), 0.6, 1.1);   // small screens get smaller buttons by themselves
+function btnSize(k) { return Math.round(clamp((BASE_SZ[k] || 78) * settings.btnSize * (curMul()[k] || 1) * screenK() * fitK, 30, 190)); }
 function btnXY(q, W, H, sz) { const r = sz / 2; return [clamp(q.a === 'l' ? q.dx : q.a === 'r' ? W - q.dx : W / 2 + q.dx, r + 4, W - r - 4), clamp(H - q.dy, r + 8, H - r - 4)]; }
 // which buttons are on screen right now (while you are editing, every one of them is)
 function visK(k) {
@@ -2057,8 +2073,8 @@ function validAt(k, x, y, sz) {   // may button k (this size) sit here? Not off 
   for (const kk in curPts) { if (kk === k) continue; const q = curPts[kk]; if (Math.hypot(q[0] - x, q[1] - y) < (q[2] + sz) / 2 + 6) return false; }
   return true;
 }
-function layoutTouch() {
-  const W = window.innerWidth, H = window.innerHeight, L = curLayout(), ks = BK.filter(visK), pts = {}, rs = uiRects();
+function solveLayout(W, H, L, ks, rs) {
+  const pts = {};
   ks.forEach(k => { if (L[k].auto) return; const sz = btnSize(k); pts[k] = btnXY(L[k], W, H, sz).concat(sz); });
   ['s', 'p', 'c'].forEach(k => { if (ks.indexOf(k) < 0 || !L[k].auto) return; pts[k] = autoSpot(k, pts, rs, W, H) || [W / 2, H / 2, btnSize(k)]; });
   // never let two buttons sit on top of each other, or on the interface (a narrow screen can squeeze them)
@@ -2078,6 +2094,15 @@ function layoutTouch() {
       p[0] = clamp(p[0], r + 4, W - r - 4); p[1] = clamp(p[1], r + 8, H - r - 4);
     }); });
   }
+  let bad = false;
+  for (let a = 0; a < ks.length && !bad; a++) { const p = pts[ks[a]]; for (let b = a + 1; b < ks.length; b++) { const q = pts[ks[b]]; if (Math.hypot(q[0] - p[0], q[1] - p[1]) < (p[2] + q[2]) / 2 + 2) { bad = true; break; } } rs.forEach(q => { if (hitRect(p[0], p[1], p[2] / 2 - 1, q)) bad = true; }); }
+  return { pts, bad };
+}
+function layoutTouch() {
+  const W = window.innerWidth, H = window.innerHeight, L = curLayout(), ks = BK.filter(visK), rs = uiRects();
+  let res; fitK = 1;
+  for (let n = 0; n < 7; n++) { res = solveLayout(W, H, L, ks, rs); if (!res.bad) break; fitK = Math.max(0.5, fitK * 0.9); }   // (too tight? every button gets a bit smaller until it fits)
+  const pts = res.pts;
   curPts = pts;
   BK.forEach(k => {
     const el = $(BEL[k]), pt = pts[k]; if (!pt) return;
@@ -2095,7 +2120,9 @@ function applyTouchUI() {
   BK.forEach(k => $(BEL[k]).classList.toggle('edit', editMode));
   layoutTouch();
   $('btnEditLayout').disabled = !(sc === 'buttons' || sc === 'swipebtn');
-  $('btnResetLayout').disabled = !(settings.btnPos || settings.btnPosP || Object.keys(settings.btnMul || {}).length);
+  $('btnResetLayout').disabled = !(settings[posK()] || Object.keys(curMul()).length);
+  if (typeof selPreset !== 'undefined') selPreset.set(curPreset());
+  const onote = $('orientNote'); if (onote) onote.textContent = isPortrait() ? 'You are holding your phone upright. This layout is only for upright. Turn it sideways to set that one.' : 'You are holding your phone sideways. This layout is only for sideways. Turn it upright to set that one.';
   $('presetRow').classList.toggle('hide', !(sc === 'buttons' || sc === 'swipebtn'));
   if (!on) { tin.ax = 0; tin.jump = false; }
 }
@@ -2133,18 +2160,18 @@ function pressSuper() { if (!blocked() && S.mode === 'play' && S.b && !S.away &&
 });
 // ----- editing the buttons: drag one to move it, tap it to pick it and change its size. They can never be put on the interface or on each other. -----
 let editSel = 'j';
-function layoutKey() { return (settings.perOrient && isPortrait()) ? 'btnPosP' : 'btnPos'; }
+function layoutKey() { return posK(); }
 function selectBtn(k) {
   editSel = k; BK.forEach(q => $(BEL[q]).classList.toggle('sel', q === k && editMode));
-  $('ebSelName').textContent = BNAME[k]; const v = (settings.btnMul && settings.btnMul[k]) || 1; $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%';
+  $('ebSelName').textContent = BNAME[k]; const v = curMul()[k] || 1; $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%';
 }
-function editChips() { document.querySelectorAll('#ebPresets button').forEach(b => { const on = b.getAttribute('data-p') === settings.preset; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }); }
+function editChips() { document.querySelectorAll('#ebPresets button').forEach(b => { const on = b.getAttribute('data-p') === curPreset(); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }); }
 BK.forEach(k => {
   const el = $(BEL[k]);
   el.addEventListener('pointerdown', e => {
     if (!editMode) return; e.preventDefault(); el.setPointerCapture(e.pointerId); selectBtn(k);
     const key = layoutKey();
-    if (settings.preset !== 'custom' || !settings[key]) { const cur = curLayout(), o = {}; BK.forEach(q => { o[q] = cur[q].auto ? (curPts[q] ? toAnchor(curPts[q][0], curPts[q][1]) : { a: 'c', dx: 0, dy: 100 }) : Object.assign({}, cur[q]); }); settings[key] = o; settings.preset = 'custom'; selPreset.set('custom'); editChips(); }
+    if (curPreset() !== 'custom' || !settings[key]) { const cur = curLayout(), o = {}; BK.forEach(q => { o[q] = cur[q].auto ? (curPts[q] ? toAnchor(curPts[q][0], curPts[q][1]) : { a: 'c', dx: 0, dy: 100 }) : Object.assign({}, cur[q]); }); settings[key] = o; settings[presetK()] = 'custom'; selPreset.set('custom'); editChips(); }
     let last = (curPts[k] || [0, 0]).slice(0, 2), moved = false;
     const mv = ev => {
       const W = window.innerWidth, H = window.innerHeight; let x = clamp(ev.clientX, 20, W - 20), y = clamp(ev.clientY, 20, H - 12);
@@ -2158,24 +2185,29 @@ BK.forEach(k => {
   });
 });
 $('ebSize').addEventListener('input', () => {
-  const k = editSel, want = +$('ebSize').value, old = (settings.btnMul && settings.btnMul[k]) || 1, p = curPts[k];
-  let v = want; const setMul = m => { if (Math.abs(m - 1) < 0.001) delete settings.btnMul[k]; else settings.btnMul[k] = m; };
+  const k = editSel, want = +$('ebSize').value, old = curMul()[k] || 1, p = curPts[k];
+  let v = want; const setMul = m => { if (Math.abs(m - 1) < 0.001) delete curMul()[k]; else curMul()[k] = m; };
   if (p && v > old) { setMul(v); while (v > old && !validAt(k, p[0], p[1])) { v = Math.round((v - 0.05) * 100) / 100; setMul(v); } }   // bigger is only allowed while it still fits
   else setMul(v);
   $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%'; save(); layoutTouch(); $('btnResetLayout').disabled = false;
 });
-document.querySelectorAll('#ebPresets button').forEach(b => b.addEventListener('click', () => { const p = b.getAttribute('data-p'); settings.preset = p; selPreset.set(p); save(); applyTouchUI(); editChips(); selectBtn(editSel); }));
+document.querySelectorAll('#ebPresets button').forEach(b => b.addEventListener('click', () => { const p = b.getAttribute('data-p'); settings[presetK()] = p; selPreset.set(p); save(); applyTouchUI(); editChips(); selectBtn(editSel); }));
 function startEdit() {
   if ($('btnEditLayout').disabled) return;
-  editMode = true; $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); applyTouchUI(); editChips(); selectBtn(editSel); layoutTouch();
+  if (inHome) { const h = $('editHint'); h.classList.remove('hide'); clearTimeout(startEdit.t); startEdit.t = setTimeout(() => h.classList.add('hide'), 5000); return; }   // (the buttons only show while you are in the game)
+  editMode = true; $('pause').classList.add('hide'); $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); applyTouchUI(); editChips(); selectBtn(editSel); layoutTouch();
 }
-function endEdit() { editMode = false; $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
+function endEdit() { editMode = false; if (paused) $('pause').classList.remove('hide'); $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
 $('editDone').onclick = endEdit;
-function resetLayout() { settings.btnPos = null; settings.btnPosP = null; settings.btnMul = {}; if (settings.preset === 'custom') settings.preset = 'spread'; selPreset.set(settings.preset); save(); applyTouchUI(); if (editMode) { editChips(); selectBtn(editSel); } }
-$('editReset').onclick = resetLayout;
+function resetLayout() { settings[posK()] = null; settings[mulK()] = {}; if (curPreset() === 'custom') settings[presetK()] = 'spread'; selPreset.set(curPreset()); save(); applyTouchUI(); if (editMode) { editChips(); selectBtn(editSel); } }
+const askReset = () => { if (!(settings[posK()] || Object.keys(curMul()).length)) { return; } askConfirm('Reset your buttons?', 'Your moved buttons and sizes go back to the layout you picked. This only changes the layout for how you hold your phone right now.', 'Reset', resetLayout, { no: 'Keep them' }); };
+$('editReset').onclick = askReset;
 $('btnEditLayout').onclick = startEdit;
-$('btnResetLayout').onclick = resetLayout;
-addEventListener('resize', layoutTouch); addEventListener('orientationchange', () => setTimeout(layoutTouch, 120));
+$('btnResetLayout').onclick = askReset;
+let lastPort = isPortrait();
+// turning the phone: switch to that orientation's own layout, and let go of any held buttons so nothing sticks
+function onTurn() { if (isPortrait() === lastPort) { layoutTouch(); return; } lastPort = isPortrait(); releaseInputs(); applyTouchUI(); if (editMode) { editChips(); selectBtn(editSel); } }
+addEventListener('resize', onTurn); addEventListener('orientationchange', () => setTimeout(onTurn, 120));
 
 /* ----- swipe gestures (floating anchor: the farther you drag from where you started, the faster you roll) ----- */
 const gp = new Map();
@@ -2292,7 +2324,7 @@ const selInput = makeSelect($('selInput'), [{ v: 'auto', label: 'Auto-detect' },
 const selScheme = makeSelect($('selScheme'), Object.keys(SCHEMES).map(k => ({ v: k, label: SCHEMES[k].name })),
   v => { settings.scheme = v; save(); $('schemeDesc').textContent = SCHEMES[v].desc; applyTouchUI(); });
 const selPreset = makeSelect($('selPreset'), Object.keys(PRESETS).map(k => ({ v: k, label: PRESETS[k].name })),
-  v => { settings.preset = v; if (v !== 'custom') { settings.btnPos = null; settings.btnPosP = null; } else if (!settings.btnPos) { const c = curLayout(); settings.btnPos = { l: Object.assign({}, c.l), r: Object.assign({}, c.r), j: Object.assign({}, c.j) }; } save(); applyTouchUI(); });
+  v => { settings[presetK()] = v; if (v !== 'custom') { settings[posK()] = null; } else if (!settings[posK()]) { const c = curLayout(), o = {}; BK.forEach(q => { o[q] = c[q].auto ? (curPts[q] ? toAnchor(curPts[q][0], curPts[q][1]) : { a: 'c', dx: 0, dy: 100 }) : Object.assign({}, c[q]); }); settings[posK()] = o; } save(); applyTouchUI(); });
 const selMusic = makeSelect($('selMusic'), [{ v: 'none', label: 'No music' }, { v: 'peaceful', label: 'Peaceful' }, { v: 'upbeat', label: 'Upbeat' }, { v: 'exciting', label: 'Exciting' }],
   v => { settings.music = v; save(); $('musicDesc').textContent = MUSIC_INFO[v]; if (!AU.ctx) auInit(); musicStart(); auVol(); });
 
@@ -2340,9 +2372,9 @@ function syncUI() {
   nameUI();
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setAuto', 'autoEnter'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
-    ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setPerOrient', 'perOrient'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy']]
+    ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
-  selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(settings.preset); selMusic.set(settings.music);
+  selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music);
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
   $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMax; $('botMaxVal').textContent = settings.botMax;
   buildKeys();
@@ -2359,8 +2391,7 @@ bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
 bindToggle('setBots', 'bots', () => { if (settings.bots) { newBotTarget(); botNextSpawn = 0.8; } });
 bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull'); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
-bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); bindToggle('setPerOrient', 'perOrient', () => layoutTouch());
-$('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
+bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
 $('btnSkip').onclick = () => { auWake(); musicSkip(); };
 function botNote() {}
