@@ -105,7 +105,7 @@ function addLink(a, b) { linkSet(a).add(b); linkSet(b).add(a); linksDirty = true
 function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; }
 const WEEK_MS = 7 * 86400000, STALE_MS = 60 * 86400000;   // the player list shows the last week; anybody gone for two months is deleted
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
-const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), on: live(q) ? 1 : 0, w: q && q.room ? q.room.id : 0, last: q ? Date.now() : (k.last || 0), b: k.beat | 0 }; };
+const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), on: live(q) ? 1 : 0, w: q && q.room ? (q.room.priv ? -1 : q.room.id) : 0, last: q ? Date.now() : (k.last || 0), b: k.beat | 0 }; };
 function sendLinks(p) {   // everyone this player is linked to, with their short code, whether they are online, and when they were last here
   send(p, { t: 'links', list: [...(links.get(p.pub) || [])].map(peerInfo) });
 }
@@ -129,6 +129,9 @@ const rooms = new Map();
 const slotNow = () => Math.floor((Date.now() - OFFSET_MS) / SLOT_MS);
 const nextAt = s => (s + 1) * SLOT_MS + OFFSET_MS;
 let curSlot = slotNow();
+const PRIV_BASE = 3000000, PRIV_MAX = 12;   // a friend's own world (their solo level, with the things they built) is a private room; its slot is the same number the solo game uses
+const rslot = r => (r && r.priv ? r.priv.slot : curSlot);
+const privKey = pub => 'p' + pub;
 
 const server = http.createServer((req, res) => {
   const url = req.url.split('?')[0];
@@ -136,7 +139,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({
       online, peak, slot: curSlot, map: maps.names[curSlot % maps.count],
-      rooms: [...rooms.values()].map(r => ({ id: r.id, players: r.players.size }))
+      rooms: [...rooms.values()].filter(r => !r.priv).map(r => ({ id: r.id, players: r.players.size }))
     }));
   }
   if (url === '/version') {
@@ -179,6 +182,9 @@ function broadcast(room, obj, except) {
 function leave(p, toLobby) {
   const room = p.room;
   if (!room && !p.lobby) return;
+  if (room && room.priv && room.priv.owner === p.id) {   // the host left: the world closes and everyone in it goes back to their own
+    for (const o of [...room.players.values()]) if (o !== p) { send(o, { t: 'pclose', name: p.name }); leave(o, true); }
+  }
   if (room) {
     p.room = null;
     online--; statsDirty = true;
@@ -212,7 +218,7 @@ wss.on('connection', (ws, req) => {
   ws.on('message', (raw, isBinary) => {
     if (++p.msgs > 60) return;                       // simple flood protection
     if (isBinary) {                                   // a position update: [0x70][slot u16][x/2 u16][y u16 (65535 = dead)][vx/5 i8][vy/20 i8][time u15 | grounded<<15]
-      if (!p.room || raw.length !== 11 || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (curSlot & 0xFFFF)) return;
+      if (!p.room || raw.length !== 11 || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (rslot(p.room) & 0xFFFF)) return;
       const x = Math.min(262000, raw.readUInt16LE(3) * 2), yr = raw.readUInt16LE(5), d = yr === 65535 ? 1 : 0;
       const y = d ? p.y : Math.min(131000, yr), vx = raw.readInt8(7) * 5, vy = raw.readInt8(8) * 20, st = raw.readUInt16LE(9);
       if (p.x !== x || p.y !== y || p.dead !== d || p.vx !== vx || p.vy !== vy || p.st !== st || !p.has) p.moved = true;
@@ -231,8 +237,23 @@ wss.on('connection', (ws, req) => {
       const lobby = m.lobby ? 1 : 0, wasOn = p.lobby;   // lobby: the player is only on the main menu. Connected for friends, but not in any world and nobody sees them
       p.color = cleanColor(m.color, '#ff4d4d'); p.color2 = cleanColor(m.color2, '#ffffff'); p.pat = cleanPat(m.pat);
       if (typeof m.dev === 'string' && DEV.test(m.dev)) p.pub = pubOf(m.dev);
-      let fr = null, room = null;
-      if (!lobby) { fr = findRoom(); room = fr.room; p.room = room; }
+      let fr = null, room = null, priv = null;
+      if (!lobby && m.host && typeof m.host === 'object') {   // open a world of your own for friends: your solo level and what you built on it
+        if (!p.pub) { send(p, { t: 'jno', why: 'nodev' }); return; }
+        const key = privKey(p.pub), lv = m.host.m | 0;
+        if (rooms.has(key)) { send(p, { t: 'jno', why: 'busy' }); return; }
+        const clean = (a, n, f) => (Array.isArray(a) ? a.slice(0, n).map(f).filter(Boolean) : []);
+        const props = clean(m.host.props, 400, q => (Array.isArray(q) && q.length === 3 && (q[0] | 0) >= 0 && (q[0] | 0) <= 7 && Number.isFinite(q[1]) && Number.isFinite(q[2]) ? [q[0] | 0, Math.round(q[1]), Math.round(q[2])] : null));
+        const cps = clean(m.host.cps, 60, q => (Array.isArray(q) && q.length === 2 && Number.isFinite(q[0]) && Number.isFinite(q[1]) ? [Math.round(q[0]), Math.round(q[1])] : null));
+        room = { id: key, players: new Map(), finishers: [], priv: { owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, invited: new Set() } };
+        rooms.set(key, room); p.room = room; fr = { full: [] };
+      } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
+        const hr = rooms.get(privKey(m.join));
+        if (!hr || !hr.priv) { send(p, { t: 'jno', why: 'gone' }); return; }
+        if (!p.pub || !(hr.priv.invited.has(p.pub) || linkSet(p.pub).has(m.join))) { send(p, { t: 'jno', why: 'nope' }); return; }
+        if (hr.players.size >= PRIV_MAX) { send(p, { t: 'jno', why: 'full' }); return; }
+        room = hr; p.room = room; fr = { full: [] };
+      } else if (!lobby) { fr = findRoom(); room = fr.room; p.room = room; }
       p.lobby = lobby;
       let nm = cleanName(m.name);
       if (!nm && !lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || randomName();   // everybody has a name once they play
@@ -245,8 +266,9 @@ wss.on('connection', (ws, req) => {
         if (online > peak) { peak = online; peakDirty = true; }
         send(p, {
           t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full,
-          name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak,
-          players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === curSlot ? 1 : 0 }))
+          name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
+          priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
+          players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? 1 : 0 }))
         });
         broadcast(room, { t: 'join', id: p.id, pub: p.pub, name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
       } else {
@@ -265,6 +287,7 @@ wss.on('connection', (ws, req) => {
         }
         if (removed.length) send(p, { t: 'unl', gone: removed });
         sendLinks(p);
+        rooms.forEach(r => { if (r.priv && r.priv.invited.has(p.pub) && r !== p.room) send(p, { t: 'inv', pub: r.priv.hostPub, name: (byPub.get(r.priv.hostPub) || {}).name || '', idx: r.priv.idx }); });   // an invite that came while you were away
         for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (live(q)) { sendLinks(q); if (!wasOn) send(q, { t: 'lon', pub: p.pub, name: p.name }); } }
         pend.forEach((v, k) => {   // friend requests that arrived while you were away
           if (k.slice(17) !== p.pub) return;
@@ -280,7 +303,7 @@ wss.on('connection', (ws, req) => {
 
     if (m.t === 'p') {
       if (!p.room) return;
-      if (m.m !== curSlot || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
+      if (m.m !== rslot(p.room) || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
       const d = m.d ? 1 : 0;
       const x = Math.max(0, Math.min(262000, Math.round(m.x))), y = Math.max(0, Math.min(131000, Math.round(m.y)));
       if (p.x !== x || p.y !== y || p.dead !== d || !p.has) p.moved = true;
@@ -291,6 +314,23 @@ wss.on('connection', (ws, req) => {
       if (i < 0 || i >= EMOJIS || now - p.lastEmo < 900) return;
       p.lastEmo = now;
       broadcast(p.room, { t: 'emo', id: p.id, pub: p.pub, name: p.name, i }, p);
+    } else if (m.t === 'inv') {   // the host asks a friend to come to their world
+      const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to)) return;
+      const now = Date.now(); if (now - (p.lastInv || 0) < 700) return; p.lastInv = now;
+      r.priv.invited.add(m.to);
+      const q = byPub.get(m.to);
+      if (live(q)) send(q, { t: 'inv', pub: p.pub, name: p.name, idx: r.priv.idx });
+      send(p, { t: 'invsent', pub: m.to, on: live(q) ? 1 : 0 });
+    } else if (m.t === 'padd' || m.t === 'pcp') {   // somebody built something in a friend's world: everyone there gets it
+      const r = p.room; if (!r || !r.priv) return;
+      const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
+      if (m.t === 'padd') {
+        const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y) || r.priv.props.length >= 400) return;
+        const e = [k, Math.round(m.x), Math.round(m.y)]; r.priv.props.push(e); broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2] }, p);
+      } else {
+        if (!Number.isFinite(m.x) || !Number.isFinite(m.y) || r.priv.cps.length >= 60) return;
+        const e = [Math.round(m.x), Math.round(m.y)]; r.priv.cps.push(e); broadcast(r, { t: 'pcp', x: e[0], y: e[1] }, p);
+      }
     } else if (m.t === 'find') {
       const now = Date.now(); if (now - p.lastFind < 250) return; p.lastFind = now;
       const raw = String(m.q == null ? '' : m.q).trim().slice(0, 12), q = raw.toLowerCase(), qc = raw.toUpperCase().replace(/^#/, ''), mine = links.get(p.pub), out = [];
@@ -351,11 +391,12 @@ wss.on('connection', (ws, req) => {
       if (p.room) broadcast(p.room, { t: 'info', id: p.id, name: p.name, color: p.color, color2: p.color2, pat: p.pat }, p);
     } else if (m.t === 'finish') {
       if (!p.room) return;
-      if (m.m !== curSlot || !p.has || p.fin === curSlot) return;
-      const flag = maps.generate(curSlot % maps.count).flag;
+      const sl = rslot(p.room);
+      if (m.m !== sl || !p.has || p.fin === sl) return;
+      const flag = maps.generate(sl % maps.count).flag;
       const dx = p.x - flag[0] * maps.TS, dy = p.y - flag[1] * maps.TS;
       if (Math.abs(dx) > 14 * maps.TS || dy > 120 || dy < -400) return;   // must really be at the flag
-      p.fin = curSlot;
+      p.fin = sl;
       const room = p.room;
       room.finishers.push(p.id);
       broadcast(room, { t: 'fin', id: p.id, name: p.name, rank: room.finishers.length, ms: Math.max(0, Math.min(1e9, +m.ms || 0)) });
@@ -389,7 +430,7 @@ setInterval(() => {
         for (const p of list) if (p !== r && p.has && !p.dead && (Math.abs(p.x - r.x) > RANGE || Math.abs(p.y - r.y) > RANGE)) far.push(p);
         if (!far.length) continue;
         const cap = Math.min(far.length, 120), buf = Buffer.allocUnsafe(3 + cap * 8);
-        buf[0] = 2; buf.writeUInt16LE(curSlot & 0xFFFF, 1);
+        buf[0] = 2; buf.writeUInt16LE(rslot(room) & 0xFFFF, 1);
         for (let k = 0; k < cap; k++) { const p = far[k]; buf.writeUInt32LE(p.id, 3 + k * 8); buf.writeUInt16LE(p.x >> 2, 7 + k * 8); buf.writeUInt16LE(p.y >> 1, 9 + k * 8); }
         r.ws.send(buf, { binary: true });
       }
@@ -399,10 +440,10 @@ setInterval(() => {
   for (const r of byPub.values()) {
     if (!r.room || r.ws.readyState !== 1) continue;
     const ls = links.get(r.pub); if (!ls || !ls.size) continue;
-    const arr = []; let fresh = tickN % 10 === 0; for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has) { arr.push(q); if (q.moved) fresh = true; } }
+    const arr = []; let fresh = tickN % 10 === 0; for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has && rslot(q.room) === rslot(r.room)) { arr.push(q); if (q.moved) fresh = true; } }
     if (!arr.length || !fresh) continue;   // (only when somebody moved, plus a heartbeat every second)
     const buf = Buffer.allocUnsafe(3 + arr.length * 12);
-    buf[0] = 3; buf.writeUInt16LE(curSlot & 0xFFFF, 1);
+    buf[0] = 3; buf.writeUInt16LE(rslot(r.room) & 0xFFFF, 1);
     arr.forEach((q, k) => { const o = 3 + k * 12; buf.writeUInt32LE(parseInt(q.pub.slice(0, 8), 16) >>> 0, o); buf.writeUInt16LE(q.x >> 2, o + 4); buf.writeUInt16LE(q.dead ? 65535 : (q.y >> 1), o + 6); buf.writeUInt16LE(q.room.id & 0xFFFF, o + 8); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round(q.vx / 5))), o + 10); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round(q.vy / 20))), o + 11); });
     r.ws.send(buf, { binary: true });
   }
@@ -422,7 +463,7 @@ setInterval(() => {
       }
       if (!hits.length) continue;
       const buf = Buffer.allocUnsafe(3 + hits.length * 12);
-      buf[0] = 1; buf.writeUInt16LE(curSlot & 0xFFFF, 1);
+      buf[0] = 1; buf.writeUInt16LE(rslot(room) & 0xFFFF, 1);
       for (const h of hits) {   // per player: id u32, x/2 u16, y u16 (65535 = just died, 65534 = out of range), vx/5 i8, vy/20 i8, time+grounded u16
         const p = h[0], o = 3 + k * 12, gone = h[1] || p.dead; k++;
         buf.writeUInt32LE(p.id, o); buf.writeUInt16LE(p.x >> 1, o + 4); buf.writeUInt16LE(h[1] ? 65534 : p.dead ? 65535 : Math.min(65533, p.y), o + 6);
@@ -451,6 +492,7 @@ setInterval(() => {
   curSlot = s;
   console.log('New session / map:', maps.names[curSlot % maps.count]);
   for (const room of rooms.values()) {
+    if (room.priv) continue;
     room.finishers = [];
     for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); }
     broadcast(room, { t: 'newmap', slot: curSlot, next: nextAt(curSlot), now: Date.now() });

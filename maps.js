@@ -362,6 +362,29 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     const coinRow = (x, y, n, st, k) => { for (let i = 0; i < n; i++) coin(x + i * st, y, k); };
     const BR = rng(d.seed + 4242);
     const bri = (a, b) => a + Math.floor(BR() * (b - a + 1));
+    /* every map has its own "taste" (made from its own seed, so everybody gets the same one): which extra shapes it likes to put on its platforms,
+       how often it swaps a plain structure for one, and how many high-up ledges (a power jump reaches them) it has. This never touches the route itself. */
+    const VR = rng(d.seed * 7 + 12345), VK = ['mesa', 'pyr', 'pillars', 'ridge', 'ruin', 'cairn', 'ledge', 'steps', 'notch', 'bumps'];
+    const VW = VK.map(() => { const u = VR(); return u < 0.3 ? 0 : 0.6 + VR() * 3; }); if (!VW.some(w => w > 0)) VW[Math.floor(VR() * VK.length)] = 2;
+    const VP = 0.35 + VR() * 0.5, VFP = 0.1 + VR() * 0.5, VFW = [3 + Math.floor(VR() * 2), 5 + Math.floor(VR() * 3)];
+    const vri = (a, b) => a + Math.floor(VR() * (b - a + 1));
+    function vpick() { let t = 0; for (const w of VW) t += w; let u = VR() * t; for (let i = 0; i < VK.length; i++) { u -= VW[i]; if (u < 0) return VK[i]; } return VK[0]; }
+    const vfree = (x0, y0, x1, y1) => { for (let y = Math.floor(y0); y < y1; y++) for (let x = Math.floor(x0); x < x1; x++) if (typeAt(x, y)) return false; return true; };
+    function stampVar(kind, e) {   // one of this map's own shapes, standing on platform e (3 tiles clear of both ends, so the way across is never blocked)
+      const L = e[2], y = e[1], th = e[3], g = e[5], lo = e[0] + 3, room = L - 6;
+      if (room < 4) return;
+      const add = (x, yy, w, h) => { if (vfree(x, yy, x + w, yy + h)) addRect([x, yy, w, h, 1, th, g]); };
+      if (kind === 'mesa') { const w = Math.min(room, vri(4, 8)), h = vri(2, 3); add(lo + vri(0, room - w), y - h, w, h); }
+      else if (kind === 'pyr') { const w = Math.min(room, 6); const x = lo + vri(0, room - w); add(x, y - 1, 6, 1); add(x + 1, y - 2, 4, 1); add(x + 2, y - 3, 2, 1); }
+      else if (kind === 'pillars') { const n = Math.min(vri(2, 3), Math.floor((room + 2) / 4)); const x = lo + vri(0, room - (n * 4 - 3)); for (let i = 0; i < n; i++) { const h = vri(2, 4); add(x + i * 4, y - h, 1, h); } }
+      else if (kind === 'ridge') { const n = vri(3, 5), x = lo + vri(0, Math.max(0, room - (n * 2 - 1))); for (let i = 0; i < n; i++) add(x + i * 2, y - 1, 1, 1); }
+      else if (kind === 'ruin') { const w = Math.min(room, vri(4, 6)), x = lo + vri(0, room - w); let h = vri(1, 3); for (let i = 0; i < w; i++) { add(x + i, y - h, 1, h); h = Math.max(1, Math.min(3, h + vri(-1, 1))); } }
+      else if (kind === 'cairn') { const x = lo + vri(0, room - 3); add(x, y - 1, 3, 1); add(x + 1, y - 2, 1, 1); }
+      else if (kind === 'ledge') { const w = Math.min(room, vri(4, 6)), x = lo + vri(0, room - w); if (vfree(x, y - 6, x + w, y - 3)) { addRect([x, y - 4, w, 1, 1, th, g]); for (let i = 0; i < w - 1; i += 2) coin(x + 0.5 + i, y - 5.0, 0); } }
+      else if (kind === 'steps') { const n = Math.min(3, Math.floor(room / 2)), x = lo + vri(0, Math.max(0, room - n * 2)); for (let i = 0; i < n; i++) add(x + i * 2, y - (i + 1), 2, i + 1); }
+      else if (kind === 'notch') { const w = Math.min(room, vri(5, 8)), x = lo + vri(0, room - w); add(x, y - 2, 2, 2); add(x + w - 2, y - 2, 2, 2); add(x + 2, y - 1, w - 4, 1); }
+      else if (kind === 'bumps') { const w = Math.min(room, vri(6, 10)), x = lo + vri(0, room - w); for (let i = 0; i < w; i += 3) add(x + i, y - 1, vri(1, 2), 1); }
+    }
     const LS = d.ls, xl = d.xl, xr = d.xr, UPN = d.up, DNN = d.dn;
     const GY = LS * (DNN + 1) + (d.gOff || 0), YB = GY + 62, YT = -LS * (UPN - 1) - 40;
     const BP = { ice: 0.08, lava: 0.1, pillar: 0.06, narrow: 0.05, water: 0.1, wd: d.wd, gp: d.gp, oo: d.oo, un: d.un };
@@ -416,22 +439,39 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         if (!e[9] || e[4] !== 0 || BR() > (chance === undefined ? 0.5 : chance)) continue;
         const L = e[2], y = e[1], th = e[3], g = e[5], k = BR();
         e[9] = 0;   // something stands here now
+        const vv = (L >= 10 && VR() < VP) ? vpick() : null;   // (a separate random stream: the plain draws below stay exactly as before)
+        const ar = vv ? (() => {}) : addRect;
         if (k < 0.4) {            // little hill: steps up and down, one tile each
           const w = bri(5, L - 4), x = e[0] + bri(2, L - w - 2);
-          addRect([x, y - 1, w, 1, 1, th, g]); addRect([x + 1, y - 2, w - 2, 1, 1, th, g]);
-          if (w >= 7) addRect([x + 2, y - 3, w - 4, 1, 1, th, g]);
+          ar([x, y - 1, w, 1, 1, th, g]); ar([x + 1, y - 2, w - 2, 1, 1, th, g]);
+          if (w >= 7) ar([x + 2, y - 3, w - 4, 1, 1, th, g]);
         } else if (k < 0.65) {    // two stumps to hop between
           const x = e[0] + bri(2, L - 7);
-          addRect([x, y - 2, 1, 2, 1, th, g]); addRect([x + 4, y - 2, 1, 2, 1, th, g]);
+          ar([x, y - 2, 1, 2, 1, th, g]); ar([x + 4, y - 2, 1, 2, 1, th, g]);
         } else if (k < 0.85) {    // a single block
-          addRect([e[0] + bri(2, L - 5), y - 1, 2, 1, 1, th, g]);
+          ar([e[0] + bri(2, L - 5), y - 1, 2, 1, 1, th, g]);
         } else if (k < 0.93 && L >= 7) {   // a Jenga tower or a crate pyramid to knock down
           const x = e[0] + bri(2, L - 5);
           if (BR() < 0.55) jenga(x, y, bri(4, 7)); else cratePyramid(x, y, bri(3, 4));
+          continue;
         } else if (L >= 12 && !e[6]) {   // an arch to walk through
           const x = e[0] + bri(2, L - 9);
-          addRect([x, y - 4, 1, 4, 1, th, g]); addRect([x + 5, y - 4, 1, 4, 1, th, g]); addRect([x - 1, y - 5, 8, 1, 1, th, g]);
+          ar([x, y - 4, 1, 4, 1, th, g]); ar([x + 5, y - 4, 1, 4, 1, th, g]); ar([x - 1, y - 5, 8, 1, 1, th, g]);
         }
+        if (vv) stampVar(vv, e);
+      }
+    }
+    // high-up ledges with coins (and now and then a gem): only a power jump gets you there
+    function floaters(pw, prob) {
+      for (let i = 0; i < pw.length; i++) {
+        const e = pw[i];
+        if (e[2] < 9 || e[4] !== 0 || VR() > prob) continue;
+        const w = vri(VFW[0], VFW[1]), x = e[0] + vri(2, e[2] - w - 2), ty = e[1] - vri(8, 9);
+        if (!occ.free(x - 1, ty - 3, x + w + 1, ty + 3) || !vfree(x - 1, ty - 4, x + w + 1, ty + 3)) continue;
+        occ.add(x - 1, ty - 3, x + w + 1, ty + 3);
+        addRect([x, ty, w, 1, 1, e[3], e[5]]);
+        for (let c = 0; c < w - 1; c += 1) coin(x + 0.5 + c, ty - 1.0, 0);
+        if (VR() < 0.18) coin(x + w / 2, ty - 2.2, 2);
       }
     }
     // pushable yellow crates and balls (each player gets their own copy; they are optional toys and shortcuts)
@@ -1651,6 +1691,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     function towers(pw, prob) { for (const e of pw) if (e[2] >= 9 && e[4] === 0 && BR() < prob && branchCount < MAXB) towerUp(e); }
     branches(mainPath, 0); branches(decPath, 0); branches(gruns, 1);
     towers(mainPath, 0.95); towers(decPath, 0.95); towers(gruns, 0.5);
+    floaters(decPath, VFP); floaters(gruns, VFP * 0.7); floaters(mainPath, VFP * 0.4);
 
     const path = [mainPath.length && mainPath[0][0] + mainPath[0][2] / 2 < SW / 2 ? [0, 0, 9] : [SW - 9, 0, 9]].concat(mainPath.map(e => [e[0], e[1], e[2], e[12] || 0]));
 

@@ -190,7 +190,7 @@
   #joy .jb{position:absolute;left:-54px;top:-54px;width:108px;height:108px;border-radius:50%;border:3px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12)}
   #joy .jk{position:absolute;left:-24px;top:-24px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.55);border:3px solid rgba(255,255,255,.9)}
   #touch button.edit{border-style:dashed;border-color:var(--accent);background:rgba(255,204,61,.25);cursor:grab}
-  #editbar{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:20;padding:8px 14px;display:flex;gap:10px;align-items:center;font-size:15px;flex-wrap:wrap;justify-content:center}
+  #editbar{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);z-index:20;box-sizing:border-box;width:min(520px,calc(100vw - 16px));padding:8px 10px;display:flex;flex-direction:column;gap:8px;font-size:14px;overflow:hidden}
   /* ---- modals ---- */
   .overlay{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:14px}
   #intro{background:rgba(8,6,16,.75);z-index:10}
@@ -262,6 +262,8 @@
   .dep{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows .28s ease,opacity .22s ease}
   .dep>div{overflow:hidden;overflow:clip;min-height:0}
   .dep.off{grid-template-rows:0fr;opacity:0;pointer-events:none}
+  .dep.sub>div{margin:0 0 6px 14px;padding-left:12px;border-left:3px solid var(--line)}
+  .msg .nic,#notice .nic{display:inline-block;margin-right:5px;vertical-align:-2px}.msg .nic .ic,#notice .nic .ic{width:14px;height:14px}.msg .nic.bot,#notice .nic.bot{color:#22d3ee}.msg .nic.human,#notice .nic.human{color:#ffb347}
   .mpbig{display:block;margin:4px 0 8px;cursor:pointer;position:relative}
   .mpbig input{position:absolute;opacity:0;pointer-events:none}
   .mptrack{position:relative;display:grid;grid-template-columns:1fr 1fr;height:60px;border:3px solid var(--line);border-radius:20px;overflow:hidden;background:#2a2442;font-size:19px}
@@ -457,12 +459,15 @@
   #touch2 #tpl.edit,#touch2 #tpc.edit,#touch2 #ts.edit{animation:none;box-shadow:none;border-style:dashed;border-color:var(--accent);background:rgba(255,204,61,.25)}
   #touch2 button.sel,#touch button.sel{border-style:solid;border-color:#fff;box-shadow:0 0 0 4px rgba(255,204,61,.9),0 0 18px rgba(255,204,61,.8)}
   #touch2 button.bad,#touch button.bad{border-color:#ff5a4a;background:rgba(255,90,74,.35)}
-  #editbar{flex-direction:column;align-items:stretch;gap:6px;padding:6px 12px;width:min(560px,calc(100vw - 16px));box-sizing:border-box}
-  #editbar .eb1,#editbar .eb2{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}#editbar .eb1 b{font-weight:normal;font-size:14px}#editbar .ebb{display:flex;gap:6px}
-  #ebPresets{display:flex;gap:4px;overflow-x:auto;max-width:100%;touch-action:pan-x;scrollbar-width:none}#ebPresets button{flex:none;white-space:nowrap}
-  @media (max-height:520px) and (min-aspect-ratio:1/1){#editbar{flex-direction:row;align-items:center;flex-wrap:nowrap;width:min(660px,calc(100vw - 16px));padding:4px 10px}#editbar .eb1{order:3;flex:none}#editbar .eb1 b{display:none}#editbar .eb2{flex:1;min-width:0;flex-wrap:nowrap;gap:8px}#editbar .ebs{min-width:0!important;flex:0 1 230px;justify-content:flex-end}#editbar .ebs input{min-width:50px}#ebPresets{overflow-x:auto;overflow-y:hidden}#ebPresets button{padding:3px 8px;font-size:12px}#editbar .ebs span:first-child{white-space:nowrap}#ebPresets{flex:1 1 auto;min-width:0}}
-  #ebPresets button{padding:4px 9px;font-size:13px;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink)}#ebPresets button.on{background:#2f9e61}
-  .ebs{display:flex;align-items:center;gap:8px;font-size:13px;flex:1 1 100%;min-width:0;justify-content:flex-end}.ebs b{font-weight:normal}.ebs input{flex:1;min-width:80px;max-width:180px}.ebs .dim{min-width:38px}
+  #editbar .eb1,#editbar .eb2{display:flex;gap:8px;align-items:center;min-width:0}
+  #editbar .eb1{justify-content:space-between}#editbar .eb1 b{font-weight:normal;font-size:14px;line-height:1.25;min-width:0}#editbar .ebb{display:flex;gap:6px;flex:none}
+  #editbar .eb2{flex-wrap:wrap}
+  #ebPresets{display:flex;gap:4px;flex:none}
+  #ebPresets button{padding:5px 10px;font-size:13px;white-space:nowrap;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink)}#ebPresets button.on{background:#2f9e61}
+  #ebFlip{flex:none;margin-left:auto;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}#ebFlip .ic{width:16px;height:16px}
+  #ebMsg{font-size:13px;line-height:1.3;color:var(--accent)}
+  .ebs{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0}.ebs>span:first-child{white-space:nowrap}.ebs b{font-weight:normal}.ebs input{flex:1 1 auto;min-width:60px;width:100%}.ebs .dim{min-width:38px;text-align:right}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){#editbar{flex-direction:row;flex-wrap:wrap;align-items:center;width:min(720px,calc(100vw - 16px));padding:5px 10px;gap:6px 10px}#editbar .eb1{order:3;margin-left:auto}#editbar .eb1 b{display:none}#editbar .eb2{flex:0 1 auto}#editbar .ebs{flex:1 1 200px;order:2}#ebPresets button{padding:3px 8px;font-size:12px}#ebMsg{order:4;flex:1 1 100%}}
   #placeBar.tch .btn{display:none}
   @media (max-height:520px){#placeBar{padding:3px 4px 3px 10px;gap:6px}#placeBar .pi small{display:none}#placeBar .btn{padding:4px 10px;min-height:32px}}
   #homeWallet{position:fixed;right:12px;top:12px;top:calc(12px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:4;display:none;align-items:center;gap:12px;padding:6px 12px;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);color:#2b1d12;font-size:16px;box-shadow:2px 3px 0 rgba(43,29,18,.3);touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
@@ -470,6 +475,16 @@
   #coinpill{pointer-events:auto!important;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
   #cdIn.bad{border-color:#ff7a6a;animation:shake .3s}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .lbtn{cursor:pointer;border-radius:6px}.lbtn:hover b,.lbtn:focus-visible b{text-decoration:underline}.lbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .lvcard{width:min(520px,100%);display:flex;flex-direction:column;gap:8px;text-align:left}.lvcard h3{margin:0;font-size:26px}.lvcard .btns{margin-top:4px}
+  #lvGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:6px;max-height:min(46vh,360px);overflow-y:auto;padding:3px;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+  #ivList{display:flex;flex-direction:column;gap:6px;max-height:min(46vh,340px);overflow-y:auto;touch-action:pan-y}
+  .ivrow{display:flex;align-items:center;gap:10px;padding:6px 8px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644}.ivrow .ldot{flex:none}.ivrow .ivn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}.ivrow .ivs{font-size:13px;opacity:.65;flex:none}.ivrow .btn{flex:none}
+  .lvb{position:relative;padding:9px 0;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink);font-size:17px}.lvb b{font-weight:normal}
+  .lvb.cur{border-color:var(--accent)}.lvb.sel{background:#2f9e61;border-color:#fff}
+  .lvb .lvk{position:absolute;right:2px;top:1px;width:13px;height:13px;color:#7ff0a8}.lvb .lvk .ic{width:13px;height:13px}.lvb .lvs{position:absolute;left:4px;bottom:3px;width:7px;height:7px;border-radius:50%;background:#ffd23d;border:1px solid #000}
+  .lvsel{display:flex;flex-direction:column;gap:1px;min-height:44px}.lvsel b{font-weight:normal;font-size:19px}
+  .lvrow{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:4px 0 6px;padding:8px 12px;font-size:17px}.lvrow .lvt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.lvrow .ic{flex:none}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){.lvcard{width:min(720px,100%);padding:8px 14px;gap:4px}.lvcard h3{font-size:20px}#lvGrid{max-height:calc(100vh - 150px);grid-template-columns:repeat(auto-fill,minmax(44px,1fr))}.lvb{padding:5px 0;font-size:15px}.lvsel{min-height:0;flex-direction:row;gap:10px;align-items:baseline}.lvcard .btns{margin-top:0}.lvcard .btns button{padding:5px}}
   .profcard{width:min(400px,100%);display:flex;flex-direction:column;gap:12px;text-align:left}
   .profcard .phead{display:flex;align-items:center;gap:14px}.profcard .pball{width:54px;height:54px;border-radius:50%;border:3px solid #000;flex:none;box-shadow:inset -6px -8px 0 rgba(0,0,0,.18)}
   .profcard h3{margin:0;font-size:26px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pwho{min-width:0}.psub{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px;opacity:.9}
@@ -537,17 +552,17 @@
   @media (max-height:540px){
     #home{padding:8px}#home h1{font-size:34px}#home .hsub,#homeModeNote{display:none}
     #home .hbox{width:min(660px,100%);gap:8px}
-    #home .card{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto;gap:8px 18px;padding:12px 16px;align-items:center}
-    #home .card>#ned1{grid-column:1;grid-row:1}#home .card>.mpbig{grid-column:1;grid-row:2;margin:0}#home .card>.hplay{grid-column:1;grid-row:3}
+    #home .card{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;gap:6px 18px;padding:10px 16px;align-items:center}
+    #home .card>#ned1{grid-column:1;grid-row:1}#home .card>.mpbig{grid-column:1;grid-row:2;margin:0}#home .card>.hplay{grid-column:1;grid-row:3/5}#home .card>.lvrow{grid-column:2;grid-row:3;margin:0;padding:5px 10px;font-size:15px}
     #home .card>.hbtns{grid-column:2;grid-row:1/3;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;align-self:stretch}#home .card>.hbtns .btn{margin:0;width:100%;height:100%}#home .card>.hbtns #homeHelp{grid-column:1/-1}
-    #home .card>.sw2{grid-column:2;grid-row:3;margin:0}
+    #home .card>.sw2{grid-column:2;grid-row:4;margin:0}
     #home .hplay{font-size:22px;padding:8px}#home .sw2 small{display:none}
     .scene{--gh:18vh}
   }
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
-  #nameModal,#shareModal,#codeModal,#profModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}
+  #nameModal,#shareModal,#codeModal,#profModal,#lvlModal,#invModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
   .nname.dim{opacity:.55}
@@ -762,9 +777,10 @@
 
 <div id="touch" class="hide"><button id="tl" data-ic="left"></button><button id="tr" data-ic="right"></button><button id="tj" data-ic="up"></button><button id="tb" data-ic="bolt" class="hide"></button></div>
 <div id="joy" class="hide"><i class="jb"></i><i class="jk"></i></div>
-<div id="editbar" class="paper hide" role="group" aria-label="Edit your buttons"><div class="eb1"><b>Drag a button to move it, tap it to resize.</b><span class="ebb"><button class="btn sm" id="editReset" type="button">Reset</button><button class="btn prim sm" id="editDone" type="button">Done</button></span></div>
-  <div class="eb2"><div id="ebPresets" role="group" aria-label="Layouts"><button type="button" data-p="spread">Spread</button><button type="button" data-p="moveleft">Left hand</button><button type="button" data-p="moveright">Right hand</button><button type="button" data-p="compact">Compact</button><button type="button" data-p="raised">Raised</button></div>
-  <label class="ebs"><span>Size: <b id="ebSelName">Jump</b></span><input type="range" id="ebSize" min="0.5" max="1.8" step="0.05"><span id="ebSizeVal" class="dim"></span></label></div></div>
+<div id="editbar" class="paper hide" role="group" aria-label="Edit your buttons"><div class="eb1"><b id="ebTitle">Drag a button to move it, tap it to resize.</b><span class="ebb"><button class="btn sm" id="editReset" type="button">Reset</button><button class="btn prim sm" id="editDone" type="button">Done</button></span></div>
+  <div class="eb2"><div id="ebPresets" role="group" aria-label="Layouts"><button type="button" data-p="moveleft">Left hand</button><button type="button" data-p="moveright">Right hand</button></div><button class="btn sm hide" id="ebFlip" type="button"><span data-ic="reset"></span><span class="t">Edit sideways</span></button></div>
+  <label class="ebs"><span>Size: <b id="ebSelName">Jump</b></span><input type="range" id="ebSize" min="0.5" max="1.8" step="0.05"><span id="ebSizeVal" class="dim"></span></label>
+  <div id="ebMsg" class="hide"></div></div>
 <div id="touch2"><button id="ts" class="hide" type="button" aria-label="Power jump" data-ic="spark"></button><button id="tpl" class="hide" type="button" aria-label="Place" data-ic="check"></button><button id="tpc" class="hide" type="button" aria-label="Cancel" data-ic="close"></button></div>
 
 <div id="sback"></div>
@@ -800,20 +816,22 @@
         <div class="dep" data-dep="touchbtn"><div>
           <div class="small dim" id="orientNote"></div>
           <div class="row" id="presetRow"><span class="lbl">Where the buttons go</span><div id="selPreset"></div></div>
-          <div class="row"><span class="lbl">Size of all buttons <span id="btnSizeVal" class="dim"></span></span><input type="range" id="setBtnSize" min="0.7" max="1.5" step="0.05"></div>
           <div class="btnrow"><button class="btn" id="btnEditLayout" type="button"><span data-ic="pad"></span>Move and resize buttons</button><button class="btn" id="btnResetLayout" type="button" title="Put the buttons back"><span data-ic="reset"></span>Reset</button></div>
           <div class="small dim hide" id="editHint">Start playing first, then come back here to move your buttons.</div>
         </div></div>
       </div></div>
 
       <h4><span data-ic="up"></span> Jumping</h4>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Power jump button</b><small>Off: when the ring around your ball is full, your next jump is extra tall. On: the extra tall jump gets its own button and the jump button stays a normal jump.</small></span></span><input type="checkbox" id="setSuperBtn"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Power jump</b><small>Jump three times in a row, each right as you land, and a ring fills around your ball. Then your next jump is extra tall.</small></span></span><input type="checkbox" id="setPower"><i></i></label>
+      <div class="dep sub" data-dep="power"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Its own button</b><small>Off: the jump button does the extra tall jump when the ring is full. On: a separate power jump button does it, and the jump button stays a normal jump.</small></span></span><input type="checkbox" id="setSuperBtn"><i></i></label>
+      </div></div>
 
       <h4><span data-ic="bolt"></span> Boost</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Boost</b><small>Keep rolling one way and a ring fills. When it is full you launch forward.</small></span></span><input type="checkbox" id="setBoost"><i></i></label>
-      <div class="dep" data-dep="boost"><div>
+      <div class="dep sub" data-dep="boost"><div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Launch by itself</b><small>Boost as soon as the ring is full. No button needed.</small></span></span><input type="checkbox" id="setBoostAuto"><i></i></label>
-        <div class="dep" data-dep="boostbtn"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Boost button</b><small>Tap it when the ring is full</small></span></span><input type="checkbox" id="setBoostBtn"><i></i></label></div></div>
+        <div class="dep sub" data-dep="boostbtn"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Boost button</b><small>Tap it when the ring is full</small></span></span><input type="checkbox" id="setBoostBtn"><i></i></label></div></div>
         <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="right"></span><span><b>Pull to boost</b><small>Pull farther the way you are rolling</small></span></span><input type="checkbox" id="setBoostPull"><i></i></label></div></div>
       </div></div>
 
@@ -829,11 +847,16 @@
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div>
       <label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
+      <h4><span data-ic="tag"></span> Name icons</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Robot icon on bots</b><small>Over a bot's ball in the game</small></span></span><input type="checkbox" id="setBotMark"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Person icon on players</b><small>Over every real player's ball in the game</small></span></span><input type="checkbox" id="setPeopleMark"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Robot icon in messages</b><small>Next to a bot's name in the messages that pop up</small></span></span><input type="checkbox" id="setBotMsg"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Person icon in messages</b><small>Next to a player's name in the messages that pop up</small></span></span><input type="checkbox" id="setPeopleMsg"><i></i></label>
       <div class="small dim" id="fsNote"></div>
     </section>
     <section class="pane" data-pane="sound">
       <label class="sw2 ic2"><span class="ti"><span data-ic="sound"></span><span><b>Sound effects</b><small>Jumps, coins, doors, splashes and more</small></span></span><input type="checkbox" id="setSfx"><i></i></label>
-      <div class="dep" data-dep="sfx"><div><div class="row slrow"><span data-ic="sound"></span><input type="range" id="setSfxVol" min="0" max="1" step="0.05"></div></div></div>
+      <div class="dep sub" data-dep="sfx"><div><div class="row slrow"><span data-ic="sound"></span><input type="range" id="setSfxVol" min="0" max="1" step="0.05"></div></div></div>
       <h4><span data-ic="music"></span> Music</h4>
       <div class="row"><div id="selMusic"></div><div class="small dim" id="musicDesc" style="margin-top:4px"></div></div>
       <div class="dep" data-dep="music"><div><div class="row slrow"><span data-ic="music"></span><input type="range" id="setMusicVol" min="0" max="1" step="0.05"></div>
@@ -849,9 +872,9 @@
       </div></div>
       <div class="dep" data-dep="!mp"><div>
         <h4><span data-ic="map"></span> Your own world</h4>
-        <div class="row"><span class="lbl">Map</span><div id="selSoloMap"></div></div>
-        <div class="row"><span class="lbl"><span data-ic="clock"></span> Each map lasts</span><div id="selSoloLen"></div><div class="small dim" id="soloLenDesc" style="margin-top:4px"></div></div>
-        <button class="btn full" id="btnSoloNew"><span data-ic="reset"></span>Start a fresh world</button>
+        <div class="small dim">Pick any level you like. What you build, move, open and collect on a level is saved until you reset that level.</div>
+        <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
+        <button class="btn full" id="btnInvite" type="button"><span data-ic="users"></span>Invite friends to this level</button>
       </div></div>
     </section>
     <section class="pane" data-pane="friends">
@@ -865,9 +888,8 @@
     </section>
     <section class="pane" data-pane="bots">
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Pretend players that only you can see</small></span></span><input type="checkbox" id="setBots"><i></i></label>
-      <div class="dep" data-dep="bots"><div>
+      <div class="dep sub" data-dep="bots"><div>
         <div class="row"><span class="lbl"><span data-ic="bot"></span> Up to <b id="botMaxVal"></b> bots</span><input type="range" id="setBotMax" min="1" max="200" step="1"><div class="small dim">Want none? Turn bots off above.</div></div>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Mark bots with a robot icon</b><small>So you can tell them apart</small></span></span><input type="checkbox" id="setBotMark"><i></i></label>
       </div></div>
       <div class="dep" data-dep="!bots"><div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Offer bots when it's quiet</b><small>A popup when nobody else is around</small></span></span><input type="checkbox" id="setBotAsk"><i></i></label>
@@ -897,6 +919,7 @@
       <div class="ned" id="ned1"></div>
       <label class="mpbig"><input type="checkbox" id="homeMp"><span class="mptrack"><span class="mpL"><span data-ic="user"></span>Solo</span><span class="mpR"><span data-ic="globe"></span>Multiplayer</span><i></i></span></label>
       <div class="small dim" id="homeModeNote"></div>
+      <button id="homeLvl" class="btn lvrow hide" type="button"></button>
       <button id="homePlay" class="hplay" type="button">Play</button>
       <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
       <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Skip this screen next time</b><small>Go straight into the game. Pause, then Main menu, brings you back here.</small></span></span><input type="checkbox" id="homeAuto"><i></i></label>
@@ -908,6 +931,9 @@
   <h3><span data-ic="pause"></span>Paused</h3>
   <div class="small dim" id="pauseSub"></div>
   <button id="pResume" class="pbtn go" type="button"><span data-ic="play"></span>Resume</button>
+  <button id="pInvite" class="pbtn hide" type="button"><span data-ic="users"></span>Invite friends</button>
+  <button id="pLevel" class="pbtn hide" type="button"><span data-ic="map"></span>Change level</button>
+  <button id="pReset" class="pbtn hide" type="button"><span data-ic="reset"></span>Reset this level</button>
   <button id="pSettings" class="pbtn" type="button"><span data-ic="gear"></span>Settings</button>
   <button id="pHome" class="pbtn" type="button"><span data-ic="back"></span>Main menu</button>
 </div></div>
@@ -936,6 +962,20 @@
   <div class="pbeat"><div class="pbl"><b id="profBeat"></b><span id="profBeatOf"></span></div><div class="pbar"><i id="profBar"></i></div></div>
   <div id="profActs" class="pacts"></div>
   <div class="cfoot"><button id="profClose" class="btn" type="button">Close</button></div>
+</div></div>
+
+<div id="invModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="ivTitle"><div class="card lvcard">
+  <h3 id="ivTitle">Invite friends</h3>
+  <div class="small dim" id="ivSub">Friends you invite get a message and can join you on this level. They see what you built, and can build too. They get it when they are on the main menu or in multiplayer (not in their own solo world), for as long as your world is open.</div>
+  <div id="ivList"></div>
+  <div class="btns"><button id="ivStop" type="button" class="danger hide">Close my world</button><button id="ivNo" type="button" class="go">Done</button></div>
+</div></div>
+
+<div id="lvlModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="lvTitle"><div class="card lvcard">
+  <h3 id="lvTitle">Pick a level</h3>
+  <div id="lvGrid" role="listbox" aria-label="Levels"></div>
+  <div class="lvsel"><b id="lvName"></b><span class="small dim" id="lvNote"></span></div>
+  <div class="btns"><button id="lvReset" type="button" class="danger">Reset level</button><button id="lvNo" type="button">Close</button><button id="lvOk" type="button" class="go">Play</button></div>
 </div></div>
 
 <div id="codeModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="cdTitle"><div class="card nmcard">
@@ -1000,8 +1040,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=43"></script>
-<script src="physics.js?v=43"></script>
+<script src="maps.js?v=45"></script>
+<script src="physics.js?v=45"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1042,11 +1082,11 @@ fillIcons();
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, autoEnter: false, mp: true, bots: false, botMax: 8, botMark: false, botAsk: true,
-    minimap: true, mmPlayers: true, mmBots: true, soloMap: 'rotate', soloLen: 180, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
+    tags: true, low: false, fx: true, intro: true, autoEnter: false, mp: true, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
+    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
-    keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'spread', presetP: 'spread', btnPos: null, btnPosP: null, btnMulP: {} };
+    keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
 }
 let settings = defaults();
 try { const o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
@@ -1061,14 +1101,14 @@ function normalize() {
   settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
   settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
   if (['none', 'peaceful', 'upbeat', 'exciting'].indexOf(settings.music) < 0) settings.music = 'peaceful';
-  ['preset', 'presetP'].forEach(n => { if (['spread', 'moveleft', 'moveright', 'compact', 'raised', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'spread'; });
+  ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
   settings.keys = cleanKeys(settings.keys);
-  if (String(settings.soloMap) !== 'rotate' && !(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = 'rotate'; settings.soloMap = String(settings.soloMap);
-  if ([0, 15, 30, 60, 180, 360, 720].indexOf(+settings.soloLen) < 0) settings.soloLen = 180; settings.soloLen = +settings.soloLen;
-  settings.btnSize = clamp(+settings.btnSize || 1, 0.7, 1.5);
+  if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);
+  settings.soloLen = 0;   // your own world never runs out: it stays until you reset that level
+  settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -1078,7 +1118,7 @@ function normalize() {
       if (settings[n]) ['b', 's', 'p', 'c'].forEach(k => { const q = bp[k]; if (q && (['l', 'r', 'c'].indexOf(q.a) < 0 || !isFinite(q.dx) || !isFinite(q.dy))) delete bp[k]; });
     }
   });
-  if (settings.btnPos === null && settings.preset === 'custom') settings.preset = 'spread'; if (settings.btnPosP === null && settings.presetP === 'custom') settings.presetP = 'spread';
+  if (settings.btnPos === null && settings.preset === 'custom') settings.preset = 'moveleft'; if (settings.btnPosP === null && settings.presetP === 'custom') settings.presetP = 'moveleft';
 }
 // keys: each key may do only one thing, and every action needs at least one key
 function cleanKeys(k) {
@@ -1098,16 +1138,21 @@ const save = () => { try { localStorage.setItem('ballrun4', JSON.stringify(setti
 const fmtT = ms => { ms = Math.max(0, ms); const m = Math.floor(ms / 60000), s = (ms % 60000) / 1000; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
 function fmtClock(ms) { const s = Math.max(0, Math.ceil(ms / 1000)), p = n => (n < 10 ? '0' : '') + n; return s >= 3600 ? Math.floor(s / 3600) + ':' + p(Math.floor(s / 60) % 60) + ':' + p(s % 60) : p(Math.floor(s / 60)) + ':' + p(s % 60); }
 const who = n => n || 'Someone';
-function addFeed(text, cls, force) {
+const NIC = { bot: 'bot', human: 'user' };
+function nameIcon(kind) {   // a little robot (bots) or person (players) icon in front of a name in a message, if the player turned that on
+  if (!((kind === 'bot' && settings.botMsg) || (kind === 'human' && settings.peopleMsg))) return null;
+  const s = document.createElement('span'); s.className = 'nic ' + kind; s.innerHTML = '<svg class="ic" viewBox="0 0 24 24"><use href="#i-' + NIC[kind] + '"/></svg>'; return s;
+}
+function addFeed(text, cls, force, kind) {
   if (!force && (cls === 'join' || cls === 'leave') && !settings.joinMsg) return;
-  const d = document.createElement('div'); d.className = 'msg ' + (cls || ''); d.textContent = text;
+  const d = document.createElement('div'); d.className = 'msg ' + (cls || ''); d.textContent = text; { const ic = nameIcon(kind); if (ic) d.insertBefore(ic, d.firstChild); }
   const f = $('feed'); f.appendChild(d);
   while (f.children.length > 5) f.removeChild(f.firstChild);
   setTimeout(() => { if (d.parentNode) d.parentNode.removeChild(d); }, 7000);
 }
 let noticeT = 0;
-function notice(text, kind) {
-  const n = $('notice'); n.textContent = text; n.className = 'show' + (kind ? ' ' + kind : '');
+function notice(text, kind, nk) {
+  const n = $('notice'); n.textContent = text; n.className = 'show' + (kind ? ' ' + kind : ''); { const ic = nameIcon(nk); if (ic) n.insertBefore(ic, n.firstChild); }
   clearTimeout(noticeT); noticeT = setTimeout(() => { n.className = ''; }, 6500);
 }
 function hexToRgb(h) { return [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)]; }
@@ -1470,11 +1515,18 @@ function drawBotMark(x, y) {   // a robot-head icon: players can't get this, so 
   ctx.fillStyle = '#06323b'; ctx.fillRect(-4, -2.5, 2.6, 2.6); ctx.fillRect(1.4, -2.5, 2.6, 2.6);
   ctx.restore();
 }
-function drawLabel(name, isBot, crown, x, y) {
+function drawPersonMark(x, y) {   // a little person icon (head and shoulders): this one is a real player
+  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = '#3a1d00'; ctx.lineWidth = 2; ctx.fillStyle = '#ffb347';
+  ctx.beginPath(); ctx.arc(0, -8, 3.6, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-6.5, 3); ctx.quadraticCurveTo(-6.5, -3, 0, -3); ctx.quadraticCurveTo(6.5, -3, 6.5, 3); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function drawLabel(name, isBot, crown, x, y, isPerson) {
   let top = y - R - 6;
   if (crown) { drawCrown(x, top + 2); top -= 14; }
   if (settings.tags && name) { drawTag(name, x, top); top -= 16; }
   if (isBot && settings.botMark) drawBotMark(x, top - 3);
+  else if (isPerson && settings.peopleMark) drawPersonMark(x, top - 2);
 }
 
 /* ================= game state / maps ================= */
@@ -1497,6 +1549,7 @@ const nowMs = () => Date.now() + clockOff;
 
 const TH_COUNT = THEMES.length;
 function loadMap(slot, next) {
+  S.guest = !!(party && party.role === 'guest');   // visiting a friend's world: nothing here is saved to your own
   const m0 = BallMaps.generate(slot % BallMaps.count), m = Object.assign({}, m0, { checkpoints: (m0.checkpoints || []).slice() });   // (your own copy of the flag list: flags you buy are yours alone)
   S.slot = slot; S.idx = m.idx; S.map = m; S.world = P.makeWorld(m);
   if (next) S.nextAt = next;
@@ -1514,6 +1567,7 @@ function loadMap(slot, next) {
   S.world.focus = { x: m.start[0], y: m.start[1] };
   S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
   restoreWorld(slot);
+  if (S.guest && party.priv) applyPartyProps(party.priv);
   S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
   others.forEach(o => { o.crown = false; });
   bots.length = 0; botNextSpawn = rnd(1, 4); fx.length = 0;
@@ -1569,23 +1623,25 @@ function finishRun() {
 
 /* ----- session countdown & warnings ----- */
 /* ----- your own world (multiplayer off): you choose the map and how long each one lasts ----- */
-const SOLOKEY = 'ballrun4_solo', SOLO_BASE = 3000000;
-let solo = { k: 0, t0: Date.now() };
-const inSolo = () => !settings.mp;
-function loadSolo() { try { const o = JSON.parse(localStorage.getItem(SOLOKEY) || 'null'); if (o && isFinite(o.k) && isFinite(o.t0)) solo = { k: o.k | 0, t0: +o.t0 }; } catch (e) {} }
-function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo)); } catch (e) {} }
-function soloRoll() {   // skip over any periods that ended while you were away
-  const len = settings.soloLen * 60000;
-  if (len > 0) { const n = Math.floor((Date.now() - solo.t0) / len); if (n > 0) { solo.k += n; solo.t0 += n * len; } }
-  saveSolo();
-}
-function soloSlot() { const N = BallMaps.count; return SOLO_BASE + solo.k * N + (settings.soloMap === 'rotate' ? solo.k % N : +settings.soloMap); }
-function soloNext() { return settings.soloLen > 0 ? solo.t0 + settings.soloLen * 60000 : Date.now() + 3e11; }
-function soloGo(fade) {   // load (or fade into) your own world
-  soloRoll(); clockOff = 0;
+const SOLOKEY = 'ballrun4_solo2', SOLO_BASE = 3000000;
+let solo2 = {};   // one saved world per level, until you reset that level: { levelNumber: what you built, moved, opened and collected }
+let party = null;   // a friend's world: { role: 'host' | 'guest', host: their id, name, priv }
+const inSolo = () => !settings.mp && !party;
+function loadSolo() { try { const o = JSON.parse(localStorage.getItem(SOLOKEY) || 'null'); if (o && typeof o === 'object') solo2 = o; } catch (e) {} }
+function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo2)); } catch (e) {} }
+const soloLevel = () => Math.max(0, Math.min(BallMaps.count - 1, +settings.soloMap || 0));
+const hasSoloSave = i => !!solo2[i];
+function soloRoll() {}   // (a level of your own never ends by itself)
+function soloSlot() { return SOLO_BASE + soloLevel(); }
+function soloNext() { return Date.now() + 3e11; }
+function soloGo(fade) {   // load (or fade into) your own world: the level you picked, just as you left it
+  clockOff = 0; loadSolo();
   if (fade) startTransition(soloSlot(), soloNext()); else loadMap(soloSlot(), soloNext());
 }
-function soloFresh() { solo.k++; solo.t0 = Date.now(); saveSolo(); soloGo(true); }
+function soloReset(idx) {   // start this level over: everything goes back to how it was at the start
+  delete solo2[idx]; saveSolo();
+  if (S.slot >= SOLO_BASE && S.idx === idx) { const s = S.slot; S.slot = -1; lastWorldStr = ''; loadMap(s, soloNext()); }
+}
 const TH = [60, 30, 10, 5, 1];   // minutes-before-the-end warnings
 let warned = {};
 function initWarnings() {
@@ -1603,7 +1659,7 @@ function startTransition(slot, next) {
   saveWorld(true); sfx('swoosh');
   S.mode = 'fade'; S.fadeT0 = performance.now(); bots.length = 0;
   $('finishbanner').classList.add('hide');
-  $('fadeText').textContent = 'Next map: ' + BallMaps.names[slot % BallMaps.count];
+  $('fadeText').textContent = (slot >= SOLO_BASE ? 'Level ' + (slot % BallMaps.count + 1) + ': ' : 'Next map: ') + BallMaps.names[slot % BallMaps.count];
   $('fade').classList.add('on');
   others.forEach(o => { o.seen = 0; o.t0 = 0; o.crown = false; });
 }
@@ -1611,7 +1667,7 @@ function startTransition(slot, next) {
 let placing = null;   // the item you are building right now (a ghost that follows you until you tap Place)
 let inHome = true, paused = false;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text' && !a.readOnly; };
-const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('profModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
+const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('profModal').classList.contains('hide') || !$('lvlModal').classList.contains('hide') || !$('invModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 function update(dt) {
   S.t += dt;
@@ -1633,7 +1689,7 @@ function update(dt) {
   S.pbx = b.x; S.pby = b.y;
   b.bAuto = !bl && settings.boost && settings.boostAuto;
   if (!settings.boost) { b.bReq = false; S.bLatch = 0; } else if (S.bLatch > 0 && !bl) { S.bLatch -= dt; b.bReq = true; }
-  b.noJm = false;   // only you have the jump meter
+  b.noJm = !settings.powerJump;   // only you have the jump meter (and only if power jump is switched on)
   b.sjSep = !!settings.superBtn;   // a separate power-jump button: the normal jump never uses the full meter
   const ev = P.step(b, w, ax, jheld, dt);
   P.stepSwitches(w, b);
@@ -1712,19 +1768,28 @@ function worldEvents() {
   }
   L.length = 0;
 }
+function applyPartyProps(pv) {   // what the host built is there when you arrive
+  (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) P.addProp(S.world, q[0], q[1], q[2]); });
+  (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2) S.map.checkpoints.push([q[0], q[1]]); });
+}
 function saveWorld(force) {
-  if (!S.world || S.slot < 0 || !S.map) return;
+  if (!S.world || S.slot < 0 || !S.map || S.guest) return;
   const w = S.world, dyn = [];
   for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) dyn.push([i, 0, 0, 1]); else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2) dyn.push([i, Math.round(d.x), Math.round(d.y), 0]); }
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
   const str = JSON.stringify({ slot: S.slot, buys: S.bought, cps: S.boughtCps, dyn, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN });
-  if (str !== lastWorldStr) { lastWorldStr = str; try { localStorage.setItem(WKEY, str); } catch (e) {} }
+  if (str !== lastWorldStr) {
+    lastWorldStr = str;
+    if (S.slot >= SOLO_BASE) { solo2[S.idx] = JSON.parse(str); delete solo2[S.idx].slot; saveSolo(); }   // your own world: one save for every level
+    else { try { localStorage.setItem(WKEY, str); } catch (e) {} }
+  }
 }
 function restoreWorld(slot) {
   lastWorldStr = '';
+  if (S.guest) return;
   try {
-    const o = JSON.parse(localStorage.getItem(WKEY) || 'null');
-    if (!o || o.slot !== slot) return;           // a new session: everything starts fresh
+    const o = slot >= SOLO_BASE ? solo2[S.idx] : JSON.parse(localStorage.getItem(WKEY) || 'null');
+    if (!o || (slot < SOLO_BASE && o.slot !== slot)) return;           // a new session (or a level you reset): everything starts fresh
     const w = S.world;
     (o.buys || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { P.addProp(w, q[0], q[1], q[2]); S.bought.push([q[0], q[1], q[2]]); } });   // the things you bought here come back first, in the same order
     (o.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
@@ -1800,7 +1865,7 @@ function spawnBot() {
     wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, rot: 0, lod: 0
   };
   botSpawnAt(bt); bots.push(bt);
-  if (botTarget <= 12) addFeed(who(bt.name) + ' joined', 'join');
+  if (botTarget <= 12) addFeed(who(bt.name) + ' joined', 'join', false, 'bot');
 }
 function botSay(bt, i) { bt.emo = { i, t: S.t }; bt.emoCool = rnd(120, 240); }   // bots hardly ever emote: only when stuck, or when they are really getting somewhere
 function botCheer(bt) { if ((bt.emoCool || 0) > 0 || bt.i - (bt.emoI || 0) < 22 || Math.random() > 0.3) return; bt.emoI = bt.i; botSay(bt, pick([0, 1, 6])); }
@@ -1898,7 +1963,7 @@ function botStep(bt, dt) {
   const f = S.map.finish;
   if (!bt.finished && bt.type === 'runner' && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) {
     bt.finished = true; bt.leaveT = rnd(4, 12); bt.crown = true;
-    if (settings.announce && bots.length < 12) addFeed(who(bt.name) + ' finished', 'fin', true);
+    if (settings.announce && bots.length < 12) addFeed(who(bt.name) + ' finished', 'fin', true, 'bot');
   }
 }
 let botDrain = 0, botDrainAcc = 0;
@@ -1927,7 +1992,7 @@ function botsTick(dt) {
     if (far) { bt.lod = (bt.lod + 1) & 1; if (!bt.lod) botStep(bt, dt * 2); else bt.age += dt; } else botStep(bt, dt);
     if (bt.finished) bt.leaveT -= dt;
     const leave = (bt.finished && bt.leaveT <= 0) || (!bt.finished && bt.age > bt.life) || (bots.length > botTarget && Math.random() < dt * 0.05);
-    if (leave) { bots.splice(i, 1); if (botTarget <= 12) addFeed(who(bt.name) + ' left', 'leave'); }
+    if (leave) { bots.splice(i, 1); if (botTarget <= 12) addFeed(who(bt.name) + ' left', 'leave', false, 'bot'); }
   }
 }
 
@@ -1993,11 +2058,8 @@ document.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', e 
 /* Positions are stored as "this many pixels from the left / right edge (or the middle), this many up from the bottom".
    Because they are real pixels, buttons keep the same spacing when you turn your phone. */
 const PRESETS = {
-  spread: { name: 'Spread out (arrows at the edges, jump in the middle)', short: 'Spread', pos: { l: { a: 'l', dx: 62, dy: 84 }, r: { a: 'r', dx: 62, dy: 84 }, j: { a: 'c', dx: 0, dy: 84 }, b: { a: 'r', dx: 62, dy: 184 }, s: { a: 'r', dx: 148, dy: 184 } } },
-  moveleft: { name: 'Left thumb moves, right thumb jumps', short: 'Left hand', pos: { l: { a: 'l', dx: 58, dy: 84 }, r: { a: 'l', dx: 160, dy: 84 }, j: { a: 'r', dx: 66, dy: 84 }, b: { a: 'r', dx: 170, dy: 84 } } },
-  moveright: { name: 'Right thumb moves, left thumb jumps', short: 'Right hand', pos: { l: { a: 'r', dx: 160, dy: 84 }, r: { a: 'r', dx: 58, dy: 84 }, j: { a: 'l', dx: 66, dy: 84 }, b: { a: 'l', dx: 170, dy: 84 } } },
-  compact: { name: 'Compact (small and low, in the corners)', short: 'Compact', pos: { l: { a: 'l', dx: 50, dy: 56 }, r: { a: 'l', dx: 134, dy: 56 }, j: { a: 'r', dx: 50, dy: 56 }, b: { a: 'r', dx: 50, dy: 146 }, s: { a: 'r', dx: 142, dy: 56 } } },
-  raised: { name: 'Raised (higher up, for a better grip)', short: 'Raised', pos: { l: { a: 'l', dx: 58, dy: 124 }, r: { a: 'l', dx: 160, dy: 124 }, j: { a: 'r', dx: 66, dy: 124 }, b: { a: 'r', dx: 170, dy: 124 } } },
+  moveleft: { name: 'Left hand (left thumb moves, right thumb jumps)', short: 'Left hand', pos: { l: { a: 'l', dx: 58, dy: 84 }, r: { a: 'l', dx: 160, dy: 84 }, j: { a: 'r', dx: 66, dy: 84 }, b: { a: 'r', dx: 170, dy: 84 } } },
+  moveright: { name: 'Right hand (right thumb moves, left thumb jumps)', short: 'Right hand', pos: { l: { a: 'r', dx: 160, dy: 84 }, r: { a: 'r', dx: 58, dy: 84 }, j: { a: 'l', dx: 66, dy: 84 }, b: { a: 'l', dx: 170, dy: 84 } } },
   custom: { name: 'Custom (the way you moved them)', short: 'Custom', pos: null }
 };
 const isPortrait = () => window.innerHeight > window.innerWidth;
@@ -2035,7 +2097,7 @@ const toAnchor = (x, y) => { const W = window.innerWidth, H = window.innerHeight
 function curLayout() {
   const pr = curPreset();
   if (pr === 'custom') { const L = settings[posK()]; if (L) return withB(L); }
-  let p = (PRESETS[pr] && PRESETS[pr].pos) || PRESETS.spread.pos;
+  let p = (PRESETS[pr] && PRESETS[pr].pos) || PRESETS.moveleft.pos;
   if (settings.scheme === 'swipebtn') p = { l: p.l, r: p.r, j: pr === 'moveright' ? { a: 'l', dx: 66, dy: 84 } : { a: 'r', dx: 66, dy: 84 } };
   return withB(p);
 }
@@ -2043,7 +2105,7 @@ const boostBtnOn = () => !!(settings.boost && !settings.boostAuto && settings.bo
 const BASE_SZ = { j: 92, b: 68, s: 68, p: 68, c: 56 };
 let fitK = 1;   // shrinks every button a little when a screen is too small for the layout
 const screenK = () => clamp(Math.min(window.innerHeight / 400, window.innerWidth / 400), 0.6, 1.1);   // small screens get smaller buttons by themselves
-function btnSize(k) { return Math.round(clamp((BASE_SZ[k] || 78) * settings.btnSize * (curMul()[k] || 1) * screenK() * fitK, 30, 190)); }
+function btnSize(k) { return Math.round(clamp((BASE_SZ[k] || 78) * (curMul()[k] || 1) * screenK() * fitK, 30, 190)); }
 function btnXY(q, W, H, sz) { const r = sz / 2; return [clamp(q.a === 'l' ? q.dx : q.a === 'r' ? W - q.dx : W / 2 + q.dx, r + 4, W - r - 4), clamp(H - q.dy, r + 8, H - r - 4)]; }
 // which buttons are on screen right now (while you are editing, every one of them is)
 function visK(k) {
@@ -2053,7 +2115,7 @@ function visK(k) {
     case 'l': case 'r': return settings.scheme === 'buttons';
     case 'j': return settings.scheme === 'buttons' || settings.scheme === 'swipebtn';
     case 'b': return boostBtnOn();
-    case 's': return !!settings.superBtn;
+    case 's': return !!(settings.powerJump && settings.superBtn);
     default: return !!(typeof placing !== 'undefined' && placing);   // place and cancel only while you are building
   }
 }
@@ -2192,21 +2254,38 @@ $('ebSize').addEventListener('input', () => {
   $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%'; save(); layoutTouch(); $('btnResetLayout').disabled = false;
 });
 document.querySelectorAll('#ebPresets button').forEach(b => b.addEventListener('click', () => { const p = b.getAttribute('data-p'); settings[presetK()] = p; selPreset.set(p); save(); applyTouchUI(); editChips(); selectBtn(editSel); }));
+// the sideways and the upright layouts are edited one at a time: whichever way the phone is held is the one on screen
+const coarse = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
+let flipFs = false, ebMsgT = 0;
+function ebMsg(t) { const m = $('ebMsg'); m.textContent = t; m.classList.remove('hide'); clearTimeout(ebMsgT); ebMsgT = setTimeout(() => m.classList.add('hide'), 5000); }
+function editRefresh() {
+  $('ebTitle').textContent = (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize.';
+  const f = $('ebFlip'); f.classList.toggle('hide', !coarse()); f.querySelector('.t').textContent = isPortrait() ? 'Edit sideways' : 'Edit upright';
+  editChips(); selectBtn(editSel);
+}
+async function flipEdit() {   // turn the phone for them if the browser lets us (it needs full screen on most Android phones); otherwise ask them to turn it
+  const want = isPortrait() ? 'landscape' : 'portrait', so = window.screen && screen.orientation, can = !!(so && so.lock);
+  const tryLock = async () => { try { await so.lock(want); return true; } catch (e) { return false; } };
+  let ok = can && await tryLock();
+  if (!ok && can && fsSupported() && !isFs()) { flipFs = true; reqFs(); await new Promise(r => setTimeout(r, 350)); ok = await tryLock(); if (!ok) { flipFs = false; exitFs(); } }
+  if (!ok) ebMsg(want === 'landscape' ? 'Turn your phone sideways to edit that layout.' : 'Turn your phone upright to edit that layout.');
+}
+$('ebFlip').onclick = flipEdit;
 function startEdit() {
   if ($('btnEditLayout').disabled) return;
   if (inHome) { const h = $('editHint'); h.classList.remove('hide'); clearTimeout(startEdit.t); startEdit.t = setTimeout(() => h.classList.add('hide'), 5000); return; }   // (the buttons only show while you are in the game)
-  editMode = true; $('pause').classList.add('hide'); $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); applyTouchUI(); editChips(); selectBtn(editSel); layoutTouch();
+  editMode = true; $('pause').classList.add('hide'); $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); $('ebMsg').classList.add('hide'); applyTouchUI(); editRefresh(); layoutTouch();
 }
-function endEdit() { editMode = false; if (paused) $('pause').classList.remove('hide'); $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
+function endEdit() { editMode = false; try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} if (flipFs) { flipFs = false; exitFs(); } $('ebMsg').classList.add('hide'); if (paused) $('pause').classList.remove('hide'); $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
 $('editDone').onclick = endEdit;
-function resetLayout() { settings[posK()] = null; settings[mulK()] = {}; if (curPreset() === 'custom') settings[presetK()] = 'spread'; selPreset.set(curPreset()); save(); applyTouchUI(); if (editMode) { editChips(); selectBtn(editSel); } }
+function resetLayout() { settings[posK()] = null; settings[mulK()] = {}; if (curPreset() === 'custom') settings[presetK()] = 'moveleft'; selPreset.set(curPreset()); save(); applyTouchUI(); if (editMode) { editChips(); selectBtn(editSel); } }
 const askReset = () => { if (!(settings[posK()] || Object.keys(curMul()).length)) { return; } askConfirm('Reset your buttons?', 'Your moved buttons and sizes go back to the layout you picked. This only changes the layout for how you hold your phone right now.', 'Reset', resetLayout, { no: 'Keep them' }); };
 $('editReset').onclick = askReset;
 $('btnEditLayout').onclick = startEdit;
 $('btnResetLayout').onclick = askReset;
 let lastPort = isPortrait();
 // turning the phone: switch to that orientation's own layout, and let go of any held buttons so nothing sticks
-function onTurn() { if (isPortrait() === lastPort) { layoutTouch(); return; } lastPort = isPortrait(); releaseInputs(); applyTouchUI(); if (editMode) { editChips(); selectBtn(editSel); } }
+function onTurn() { if (isPortrait() === lastPort) { layoutTouch(); return; } lastPort = isPortrait(); releaseInputs(); applyTouchUI(); if (editMode) editRefresh(); }
 addEventListener('resize', onTurn); addEventListener('orientationchange', () => setTimeout(onTurn, 120));
 
 /* ----- swipe gestures (floating anchor: the farther you drag from where you started, the faster you roll) ----- */
@@ -2372,20 +2451,19 @@ function syncUI() {
   nameUI();
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setAuto', 'autoEnter'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
-    ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy']]
+    ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music);
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
   $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMax; $('botMaxVal').textContent = settings.botMax;
   buildKeys();
   $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%';
-  $('setBtnSize').value = settings.btnSize; $('btnSizeVal').textContent = Math.round(settings.btnSize * 100) + '%';
   $('setFs').disabled = !fsSupported(); $('fsNote').textContent = fsSupported() ? '' : 'Full screen is not available on this device or browser.';
   buildLook(); refreshLook(); applyMmVisibility();
 }
 function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); sfx($(id).checked ? 'on' : 'off'); if (fn) fn(); }; }
 bindToggle('setTags', 'tags'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro'); bindToggle('setAuto', 'autoEnter');
-bindToggle('setBotMark', 'botMark'); bindToggle('setBotAsk', 'botAsk'); bindToggle('setMmPlayers', 'mmPlayers'); bindToggle('setMmBots', 'mmBots');
+bindToggle('setBotMark', 'botMark'); bindToggle('setPeopleMark', 'peopleMark'); bindToggle('setBotMsg', 'botMsg'); bindToggle('setPeopleMsg', 'peopleMsg'); bindToggle('setPower', 'powerJump', () => { if (S.b && !settings.powerJump) { S.b.jm = 0; S.b.jfill = false; } applyTouchUI(); applyDeps(); }); bindToggle('setBotAsk', 'botAsk'); bindToggle('setMmPlayers', 'mmPlayers'); bindToggle('setMmBots', 'mmBots');
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
@@ -2458,7 +2536,6 @@ $('setFs').onchange = () => setFullscreen($('setFs').checked);
 $('setZoom').oninput = () => setZoom(+$('setZoom').value);
 $('zOut').onclick = () => setZoom(settings.zoom - 0.1);
 $('zIn').onclick = () => setZoom(settings.zoom + 0.1);
-$('setBtnSize').oninput = () => { settings.btnSize = +$('setBtnSize').value; $('btnSizeVal').textContent = Math.round(settings.btnSize * 100) + '%'; save(); layoutTouch(); };
 $('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every setting back to its default: colours, controls, zoom, bots and the welcome popup. This cannot be undone.', 'Reset everything', () => {
   const wasMp = settings.mp, wasFs = settings.fs, keepName = settings.name;
   settings = defaults(); settings.name = keepName; settings.mp = wasMp; normalize(); save(); bots.length = 0; keysDown.clear(); syncKeys(); syncUI(); applyTouchUI(); auVol(); if (AU.ctx) musicStart();
@@ -2472,7 +2549,7 @@ const showTouch = () => settings.inputMode === 'touch' || (settings.inputMode ==
 const DEPS = {
   kb: showKb, touch: showTouch, touchbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'),
   boostbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn') && !settings.boostAuto,
-  boost: () => settings.boost, touchgest: () => showTouch() && settings.scheme !== 'buttons',
+  boost: () => settings.boost, power: () => settings.powerJump, touchgest: () => showTouch() && settings.scheme !== 'buttons',
   mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => settings.bots, '!bots': () => !settings.bots,
   minimap: () => settings.minimap, sfx: () => settings.sfx, music: () => settings.music !== 'none'
 };
@@ -2481,16 +2558,9 @@ function applyDeps() {
   for (let i = 0; i < list.length; i++) { const f = DEPS[list[i].getAttribute('data-dep')]; if (f) list[i].classList.toggle('off', !f()); }
   const d = $('inputDesc'); if (d) d.textContent = settings.inputMode === 'auto' ? (showTouch() ? 'Using touch right now. Press a key and it switches to the keyboard.' : 'Using the keyboard right now. Touch the screen and it switches.') : settings.inputMode === 'touch' ? 'Touch controls only.' : 'Keyboard only.';
   const m = $('mpDesc'); if (m) m.textContent = settings.mp ? 'You are playing with everyone online, in the same world. Solo or multiplayer is chosen on the main menu.' : 'You are playing in a private world of your own. Nobody else is here. Solo or multiplayer is chosen on the main menu.';
-  const sd = $('soloLenDesc'); if (sd) sd.textContent = settings.soloLen > 0 ? 'Then everything resets and the next map loads.' : 'The map never changes until you start a fresh world.';
 }
-const selSoloMap = makeSelect($('selSoloMap'), [{ v: 'rotate', label: 'Take turns' }].concat(BallMaps.names.map((n, i) => ({ v: String(i), label: n }))),
-  v => { settings.soloMap = v; save(); if (!settings.mp) soloGo(true); });
-const SOLO_LENS = [[15, '15 minutes'], [30, '30 minutes'], [60, '1 hour'], [180, '3 hours'], [360, '6 hours'], [720, '12 hours'], [0, 'Never (until I say)']];
-const selSoloLen = makeSelect($('selSoloLen'), SOLO_LENS.map(a => ({ v: String(a[0]), label: a[1] })),
-  v => { settings.soloLen = +v; save(); if (!settings.mp) { soloRoll(); S.nextAt = soloNext(); initWarnings(); } });
-$('btnSoloNew').onclick = () => askConfirm('Start a fresh world?', 'Everything goes back to how it was at the start: toys, gates and coins.', 'Start fresh', () => soloFresh(), { yesClass: 'go', no: 'Keep playing' });
 const _syncUI = syncUI;
-syncUI = function () { _syncUI(); selSoloMap.set(settings.soloMap); selSoloLen.set(String(settings.soloLen)); applyDeps(); };
+syncUI = function () { _syncUI(); if (typeof lvlRender === 'function') lvlRender(); applyDeps(); };
 /* ================= tracking: two players who accept each other always see where the other one is =================
    Each device has a private random code. The server only ever shares a scrambled version of it, so links belong to the device (not the name)
    and come back by themselves when you return. */
@@ -2548,7 +2618,7 @@ const codeTag = c => { const s = document.createElement('span'); s.className = '
 function friendNote(e, nm, on) {   // a special heads-up when someone you track comes online or goes offline
   if (e.mute >= 1 || !settings.mp) return;
   const t = who(nm || e.name) + (on ? ' is online' : ' went offline');
-  notice('★ ' + t, ''); addFeed('★ ' + t, 'friend', true); sfx(on ? 'join' : 'leave');
+  notice('★ ' + t, '', 'human'); addFeed('★ ' + t, 'friend', true, 'human'); sfx(on ? 'join' : 'leave');
 }
 const wsSend = o => { if (ws && ws.readyState === 1 && (online || lobbyOn)) ws.send(JSON.stringify(o)); };
 
@@ -2727,7 +2797,7 @@ function drawEmoBubble(em, x, y) {   // a speech bubble with the emoji, floating
   ctx.restore();
 }
 function addFeedEmo(name, i, cls) {   // "Name" + the emoji, in the same list as joined / left
-  const d = document.createElement('div'); d.className = 'msg ' + (cls || '');
+  const d = document.createElement('div'); d.className = 'msg ' + (cls || ''); { const ic = nameIcon('human'); if (ic) d.appendChild(ic); }
   if (isPhrase(i)) d.appendChild(document.createTextNode(name + ': ' + (PHRASES[i - EMO.length] || '')));
   else { d.appendChild(document.createTextNode(name)); const sp = document.createElement('span'); sp.innerHTML = emoSvg(i); d.appendChild(sp.firstChild); }
   const f = $('feed'); f.appendChild(d); while (f.children.length > 6) f.removeChild(f.firstChild);
@@ -2876,8 +2946,9 @@ function finishPlacing() {
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   placing = null; placeUIKey = null; refreshPlaceUI();
 }
+function partyBuild(msg) { if (party && online && ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }
 function placeProp(kind, at) {
-  const d = P.addProp(S.world, kind, at[0], at[1]); d.sleep = false;
+  const d = P.addProp(S.world, kind, at[0], at[1]); d.sleep = false; partyBuild({ t: 'padd', k: kind, x: Math.round(at[0]), y: Math.round(at[1]) });
   S.bought.push([kind, Math.round(at[0]), Math.round(at[1])]); wDirty = true;
   burst(at[0], at[1], ['#fff', '#ffd23d'], 10, 140, 60); ring(at[0], at[1], '#fff', 4, 34, 0.4);
 }
@@ -2886,7 +2957,7 @@ function placeFlag() {   // right where you are: it lands on the ground under yo
   let found = -1;
   for (let k = 0; k < 8; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (t === 1 || t === 3 || t === 4 || t === 6) { found = row + k; break; } }
   if (found < 0) return false;
-  const cp = [tx, found], m = S.map; m.checkpoints.push(cp); S.boughtCps.push(cp);
+  const cp = [tx, found], m = S.map; m.checkpoints.push(cp); S.boughtCps.push(cp); partyBuild({ t: 'pcp', x: tx, y: found });
   S.cpArmed = m.checkpoints.length - 1; S.cpUsed = -1; S.cpFlash = 1; wDirty = true;
   const fx0 = (tx + 0.5) * TS;
   burst(fx0, found * TS - 60, ['#46d17a', '#fff', '#b9ffd3'], 16, 220, 80); ring(fx0, found * TS - 6, '#46d17a', 5, 50, 0.5); sfx('ready');
@@ -2961,7 +3032,7 @@ function friendCard(l) {   // one friend, one card: who they are at the top, the
   const nm = who(l.name), c = el('div', 'fcard' + (l.ok && l.on ? '' : ' off'));
   const h = el('div', 'fhead'); h.appendChild(dot(l.color));
   const n = el('div', 'lname lbtn'); n.tabIndex = 0; n.setAttribute('role', 'button'); n.setAttribute('aria-label', 'See ' + nm + "'s profile"); n.onclick = () => openProfile(l); n.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProfile(l); } }; n.appendChild(el('b', '', nm));
-  const sb = el('div', 'lsub'); sb.appendChild(codeTag(l.code)); sb.appendChild(document.createTextNode(' · ' + (!l.ok ? 'Waiting for them to come back' : l.on ? 'World ' + (l.w || '?') : lastOn(l.last)))); n.appendChild(sb); h.appendChild(n);
+  const sb = el('div', 'lsub'); sb.appendChild(codeTag(l.code)); sb.appendChild(document.createTextNode(' · ' + (!l.ok ? 'Waiting for them to come back' : l.on ? (l.w < 0 ? 'In a private world' : 'World ' + (l.w || '?')) : lastOn(l.last)))); n.appendChild(sb); h.appendChild(n);
   if (l.ok) h.appendChild(el('span', 'fstat' + (l.on ? ' on' : ''), l.on ? 'Online' : 'Offline'));
   c.appendChild(h);
   const m = el('div', 'fline'); const ml = el('div', 'flab'); ml.textContent = 'On your map'; m.appendChild(ml);
@@ -3021,7 +3092,7 @@ function lpRender() {
   if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody found. You can also type someone\'s code.' : 'Nobody has played in the last 7 days yet.'));
   for (const f of shown) {
     const linked = f.l || lkOf(f.pub), sent = sentTo.has(f.pub), muted = !!mutes[f.pub];
-    const d = nameRow(f.name, f.code, f.color, f.on ? 'Online now · World ' + f.w : lastOn(f.last), f);
+    const d = nameRow(f.name, f.code, f.color, f.on ? 'Online now · ' + (f.w < 0 ? 'in a private world' : 'World ' + f.w) : lastOn(f.last), f);
     if (!linked) {   // someone who is not a friend: their alerts are simply on or off
       d.appendChild(iconBtn('btn sm belli' + (muted ? ' mu' : ''), muted ? 'bell-off' : 'bell', muted ? 'Alerts from ' + who(f.name) + ' are off. Tap to turn on.' : 'Alerts from ' + who(f.name) + ' are on. Tap to turn off.', () => {
         if (muted) delete mutes[f.pub]; else mutes[f.pub] = { n: f.name, c: f.code }; saveMutes(); lpRender();
@@ -3160,7 +3231,7 @@ function homeStats() {
 }
 window.__sprite = () => sprite(settings.color, settings.color2, settings.pat);   // the loading screen and the main screen show your real ball
 try { window.__scene($('homeScene'), 'home'); } catch (e) {}
-function homeModeText() { $('homeModeNote').textContent = $('homeMp').checked ? 'Everyone online shares the same world.' : 'Your own private world. Nobody else can see you.'; }
+function homeModeText() { $('homeModeNote').textContent = $('homeMp').checked ? 'Everyone online shares the same world.' : 'Your own private world. Nobody else can see you.'; $('homeLvl').classList.toggle('hide', $('homeMp').checked); lvlRender(); }
 function showHome() {
   inHome = true; paused = false; $('pause').classList.add('hide'); document.body.classList.add('home'); $('home').classList.remove('hide');
   if (typeof closeSettingsNow === 'function') closeSettingsNow(); toggleChat(false);
@@ -3179,7 +3250,7 @@ function enterGame(auto) {
   try { auWake(); } catch (e) {}
   if (settings.mp !== homeMode) setMultiplayer(settings.mp);
   else if (settings.mp) joinWorld();
-  else setNet('solo');
+  else { setNet('solo'); if (S.slot !== soloSlot()) soloGo(false); }
   setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
   if (reenter) backToStart(); reenter = true;
   if (firstEntry && settings.intro && !auto) showIntro(); firstEntry = false;
@@ -3188,6 +3259,7 @@ function enterGame(auto) {
 function quitToHome() {
   if (ws && ws.readyState === 1 && online) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; others.clear(); lastSent = ''; }   // leave the world, stay connected for friends
   else dropConnection();
+  if (party) { if (party.role === 'guest') S.slot = -1; party = null; }   // (a host leaving closes the world for everyone in it)
   showHome(); setNet(settings.mp ? 'offline' : 'solo');
 }
 /* pause: your ball waits, the menu has Resume, Settings and Main menu */
@@ -3195,7 +3267,7 @@ function clearInput() { keysDown.clear(); inp.left = inp.right = inp.jump = fals
 function openPause() {
   if (inHome || paused) return;
   toggleChat(false); toggleShop(false); paused = true; clearInput();
-  $('pauseSub').textContent = settings.mp ? 'The world keeps going. Your ball waits for you.' : 'Everything is paused.';
+  $('pauseSub').textContent = settings.mp ? 'The world keeps going. Your ball waits for you.' : party ? (party.role === 'host' ? 'Your world is open for friends. It keeps going.' : 'You are in ' + who(party.name) + "'s world. It keeps going.") : lvlLabel() + '. Everything is paused.'; lvlRender();
   $('pause').classList.remove('hide'); sfx('ui');
 }
 function resumeGame() { if (!paused) return; paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); sfx('ui'); }
@@ -3204,12 +3276,16 @@ function escMenu() {   // Escape: closes whatever is on top, then pauses / resum
   if (!$('shareModal').classList.contains('hide')) { closeShareModal(); return; }
   if (chatOpen) { toggleChat(false); return; }
   if (shopOpen) { toggleShop(false); return; }
+  if (!$('invModal').classList.contains('hide')) { closeInvites(); return; }
+  if (!$('lvlModal').classList.contains('hide')) { closeLevels(); return; }
   if (!$('nameModal').classList.contains('hide')) { closeNameModal(); return; }
   if (!$('settings').classList.contains('hide')) { closeSettingsNow(); return; }
   if (inHome) return;
   togglePause();
 }
 $('pResume').onclick = resumeGame;
+$('pLevel').onclick = () => { sfx('ui'); openLevels(); };
+$('pReset').onclick = () => askResetLevel(soloLevel(), () => resumeGame());
 $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
 $('pHome').onclick = () => { sfx('ui'); quitToHome(); };
 $('pause').addEventListener('pointerdown', e => { if (e.target === $('pause') && $('settings').classList.contains('hide')) { e.preventDefault(); resumeGame(); } });
@@ -3260,6 +3336,120 @@ setTimeout(() => { if (inHome) { retry = 0; connect(); } }, 500);   // the main 
 
 $('placeOk').onclick = () => finishPlacing(); $('placeCancel').onclick = () => cancelPlacing();
 
+/* ----- a friend's world: open your own level to friends, or go to theirs ----- */
+function partyOver(note) {   // the shared world ended (closed, full, or the connection dropped): everybody goes back to their own world
+  const was = party; if (!was) return;
+  party = null; others.clear(); online = false; lastSent = '';
+  if (note) notice(note, '');
+  if (!$('invModal').classList.contains('hide')) closeInvites();
+  if (inHome) { setNet(settings.mp ? 'offline' : 'solo'); return; }
+  if (was.role === 'host') { dropConnection(); setNet('solo'); lvlRender(); return; }   // you are still in your own world
+  S.slot = -1;
+  if (settings.mp) { lobbyOn = !!ws; joinWorld(); } else { dropConnection(); setNet('solo'); soloGo(true); }
+  lvlRender();
+}
+function startHosting() {
+  if (party || settings.mp || inHome) return !!party;
+  if (!settings.name) { notice('Pick a name first (Customize on the main menu)', 'urgent'); return false; }
+  party = { role: 'host', invited: new Set() }; saveWorld(true);
+  retry = 0; setNet('connecting'); joinWorld(); lvlRender(); return true;
+}
+function stopHosting() {
+  if (!party || party.role !== 'host') return;
+  if (ws && ws.readyState === 1) { try { ws.send('{"t":"lobby"}'); } catch (e) {} }
+  party = null; online = false; others.clear(); dropConnection(); setNet('solo'); lvlRender(); notice('Your world is closed to friends', '');
+}
+function joinParty(hp, name) {
+  if (ws && ws.readyState === 1 && (online || party)) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; others.clear(); lastSent = ''; }
+  if (party && party.role === 'guest') S.slot = -1;
+  party = { role: 'guest', host: hp, name };
+  if (inHome) { inHome = false; document.body.classList.remove('home'); $('home').classList.add('hide'); try { auWake(); } catch (e) {} reenter = true; firstEntry = false; nameUI(); }
+  if (paused) { paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); }
+  closeLevels(); closeInvites(); toggleChat(false); toggleShop(false);
+  retry = 0; setNet('connecting'); joinWorld(); lvlRender();
+}
+function partyInvited(m) {
+  if (typeof m.pub !== 'string' || (mutes[m.pub] || 0) >= 2) return;
+  if (!$('confirm').classList.contains('hide')) { notice(who(m.name) + ' invited you to their world', ''); return; }
+  sfx('notice');
+  askConfirm(who(m.name) + ' invited you', 'Join their world on ' + lvLabelOf(Math.max(0, Math.min(BallMaps.count - 1, m.idx | 0))) + '. You will see each other, can chat, and can build together.', 'Join', () => joinParty(m.pub, m.name), { yesClass: 'go', no: 'Not now' });
+}
+function ivRender() {
+  if ($('invModal').classList.contains('hide')) return;
+  const box = $('ivList'), fl = lks.filter(l => l.ok).sort((a, b) => (b.on | 0) - (a.on | 0));
+  box.innerHTML = '';
+  if (!fl.length) box.appendChild(el('div', 'small dim', 'You have no friends yet. Add friends from the main menu (the friends button) or in multiplayer, then come back and invite them.'));
+  const ready = !!(party && online);
+  fl.forEach(l => {
+    const r = el('div', 'ivrow'); r.appendChild(dot(l.color)); r.appendChild(el('span', 'ivn', who(l.name))); r.appendChild(el('span', 'ivs', l.on ? (l.w < 0 ? 'In a private world' : 'Online') : 'Offline'));
+    const sent = !!(party && party.invited && party.invited.has(l.pub));
+    const b = el('button', 'btn sm' + (ready && !sent ? ' prim' : ''), sent ? 'Invited' : !ready ? 'Connecting…' : 'Invite'); b.type = 'button'; b.disabled = !ready || sent;
+    b.onclick = () => { try { ws.send(JSON.stringify({ t: 'inv', to: l.pub })); } catch (e) {} if (party.invited) party.invited.add(l.pub); sfx('ui'); ivRender(); };
+    r.appendChild(b); box.appendChild(r);
+  });
+  $('ivStop').classList.toggle('hide', !party);
+}
+function openInvites() {
+  if (settings.mp || inHome || (party && party.role === 'guest')) return;
+  if (!startHosting() && !party) return;
+  if (!$('settings').classList.contains('hide')) closeSettingsNow();
+  $('invModal').classList.remove('hide'); ivRender();
+  clearInterval(openInvites.t); openInvites.t = setInterval(() => { if ($('invModal').classList.contains('hide')) clearInterval(openInvites.t); else ivRender(); }, 700);
+}
+function closeInvites() { $('invModal').classList.add('hide'); clearInterval(openInvites.t); }
+$('ivNo').onclick = closeInvites;
+$('ivStop').onclick = () => { stopHosting(); closeInvites(); };
+$('invModal').addEventListener('pointerdown', e => { if (e.target === $('invModal')) closeInvites(); });
+$('pInvite').onclick = () => { sfx('ui'); openInvites(); };
+$('btnInvite').onclick = () => { if (inHome) { notice('Start playing first, then invite friends from the pause menu', ''); return; } sfx('ui'); openInvites(); };
+
+/* ----- your own world: pick any of the levels. Each one keeps what you did on it until you reset it ----- */
+let lvSel = 0;
+const lvLabelOf = i => 'Level ' + (i + 1) + ': ' + BallMaps.names[i];
+function lvlLabel() { return lvLabelOf(soloLevel()); }
+function lvlRender() {
+  const t = lvlLabel(), h = $('homeLvl'); if (h) h.innerHTML = ico('map') + '<span class="lvt">' + t + '</span>' + ico('chev');
+  const pt = $('pickLvlText'); if (pt) pt.textContent = t;
+  const sl = !settings.mp && !party; $('pLevel').classList.toggle('hide', !sl); $('pReset').classList.toggle('hide', !sl);
+  $('pInvite').classList.toggle('hide', settings.mp || !!(party && party.role === 'guest')); $('pInvite').lastChild.textContent = party ? 'Invite friends (world is open)' : 'Invite friends';
+}
+function lvBuild() {
+  const g = $('lvGrid'); g.innerHTML = '';
+  for (let i = 0; i < BallMaps.count; i++) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lvb' + (i === soloLevel() ? ' cur' : ''); b.setAttribute('data-i', i); b.setAttribute('role', 'option');
+    b.innerHTML = '<b>' + (i + 1) + '</b>' + (isBeaten(i) ? '<i class="lvk">' + ico('check') + '</i>' : '') + (hasSoloSave(i) ? '<i class="lvs"></i>' : ''); g.appendChild(b);
+  }
+}
+function lvSelect(i) {
+  lvSel = i;
+  document.querySelectorAll('#lvGrid .lvb').forEach(b => { const on = +b.getAttribute('data-i') === i; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+  $('lvName').textContent = lvLabelOf(i);
+  $('lvNote').textContent = (isBeaten(i) ? 'You have beaten this level. ' : 'Not beaten yet. ') + (hasSoloSave(i) ? 'Your changes here are saved.' : 'Nothing saved yet.');
+  $('lvReset').classList.toggle('hide', !hasSoloSave(i));
+  $('lvOk').textContent = inHome ? 'Choose' : (i === soloLevel() ? 'Keep playing' : 'Play');
+}
+function openLevels() {
+  loadSolo(); lvBuild(); lvSelect(soloLevel()); $('lvlModal').classList.remove('hide');
+  setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }, 30);
+}
+function closeLevels() { $('lvlModal').classList.add('hide'); }
+function askResetLevel(i, after) {
+  askConfirm('Reset ' + lvLabelOf(i) + '?', 'Everything you built, moved, opened or collected on this level goes back to the start. Your coins and diamonds stay yours.', 'Reset level', () => {
+    soloReset(i); notice('Level reset', ''); if (!$('lvlModal').classList.contains('hide')) { lvBuild(); lvSelect(lvSel); } if (after) after();
+  }, { no: 'Keep it' });
+}
+$('lvGrid').addEventListener('click', e => { const b = e.target.closest('.lvb'); if (b) { sfx('ui'); lvSelect(+b.getAttribute('data-i')); } });
+$('lvNo').onclick = closeLevels;
+$('lvReset').onclick = () => askResetLevel(lvSel);
+$('lvOk').onclick = () => {
+  const changed = lvSel !== soloLevel(); settings.soloMap = String(lvSel); save(); lvlRender(); closeLevels(); sfx('ui');
+  if (!inHome) { if (paused) resumeGame(); if (changed) soloGo(true); }
+};
+$('lvlModal').addEventListener('pointerdown', e => { if (e.target === $('lvlModal')) closeLevels(); });
+$('homeLvl').onclick = () => { sfx('ui'); openLevels(); };
+$('btnPickLvl').onclick = () => { sfx('ui'); openLevels(); };
+lvlRender();
+
 /* ----- a secret code: double-tap the coins and diamonds (in the game or on the main screen) ----- */
 function homeWalletRender() { const k = wallet.c + ':' + wallet.g; if (homeWalletRender.k === k) return; homeWalletRender.k = k; $('homeWallet').innerHTML = '<span>' + ico('gcoin') + wallet.c + '</span><span>' + ico('gem') + wallet.g + '</span>'; }
 setInterval(() => { if (inHome) homeWalletRender(); }, 400);
@@ -3305,7 +3495,11 @@ function setMultiplayer(on) {
 }
 /* The game server is reached from the main menu too ("lobby"): friends, invites and requests all work there, but you are not in any world and nobody sees you.
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
-const helloMsg = lobby => JSON.stringify({ t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' });
+const helloMsg = lobby => {
+  const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
+  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), props: S.bought, cps: S.boughtCps }; else o.join = party.host; }   // a friend's world: open mine, or go to theirs
+  return JSON.stringify(o);
+};
 function joinWorld() {
   if (ws && ws.readyState === 1 && lobbyOn) { lobbyOn = false; retry = 0; setNet('connecting'); ws.send(helloMsg(false)); }
   else if (!ws) { retry = 0; setNet('connecting'); connect(); }
@@ -3313,7 +3507,7 @@ function joinWorld() {
 function connect() {
   const lobby = inHome;
   if (ws) return;
-  if (!lobby && (!settings.mp || !settings.name)) return;
+  if (!lobby && (!(settings.mp || party) || !settings.name)) return;
   if (location.protocol === 'file:' || !('WebSocket' in window)) { if (!lobby) setNet('offline'); return; }
   let sock;
   // the game server lives on Render. Any other address (like ballpit.party) still talks to it; only your own computer talks to itself.
@@ -3331,12 +3525,13 @@ function connect() {
     if (online) addFeed('Disconnected, reconnecting…', 'bad', true);
     online = false; lobbyOn = false; others.clear(); lks.forEach(l => { l.on = 0; l.x = null; }); reqs = []; sentTo.clear(); lpRender();
     if (inHome) scheduleRetry();
+    else if (party) partyOver('You were disconnected');
     else if (settings.mp) { setNet('offline'); scheduleRetry(); }
   };
   sock.onerror = () => {};
 }
 function scheduleRetry() {
-  if (retryTimer || (!settings.mp && !inHome)) return;
+  if (retryTimer || (!settings.mp && !inHome)) return;   // (a friend's world does not reconnect by itself: it ends)
   retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(5000, Math.round(200 * Math.pow(1.45, retry - 1))));   // tries again almost at once, then eases off to every few seconds if the server stays away
 }
 function retryNow() {   // the tab came back, or the network did: don't wait for the next timer
@@ -3435,21 +3630,25 @@ function onMsg(m) {
         break;
       }
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
+      if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
+      if (party && !m.priv) { partyOver(''); return; }
+      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; }
       net.online = m.online; net.peak = m.peak;
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = infoMsg();
       others.clear();
       m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); });
       setNet('online');
-      addFeed('You joined World ' + m.room, 'join', true);
+      if (m.priv) addFeed(party.role === 'host' ? 'Your world is open: invite your friends' : 'You joined ' + who(party.name) + "'s world", 'join', true); else addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
-      if (m.slot !== S.slot && forced === null) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
-      if (lastWorldShown !== m.room) { lastWorldShown = m.room; showWorldPop(m.room, m.full || []); }
+      if (party && party.role === 'guest') { loadMap(m.slot, m.next); }
+      else if (m.slot !== S.slot && forced === null) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
+      if (!m.priv && lastWorldShown !== m.room) { lastWorldShown = m.room; showWorldPop(m.room, m.full || []); }
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
-    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat); o.pub = m.pub || ''; others.set(m.id, o); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
-    case 'leave': { others.delete(m.id); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' left', 'leave'); if (settings.joinMsg) sfx('leave'); } botNote(); break; }
+    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat); o.pub = m.pub || ''; others.set(m.id, o); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
+    case 'leave': { others.delete(m.id); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' left', 'leave', false, 'human'); if (settings.joinMsg) sfx('leave'); } botNote(); break; }
     case 'info': {   // someone changed how they look: show a clear little transformation
       const o = others.get(m.id);
       if (o) {
@@ -3460,6 +3659,12 @@ function onMsg(m) {
       break;
     }
     case 'stats': net.online = m.online; net.peak = m.peak; break;
+    case 'jno': partyOver(m.why === 'full' ? "That world is full" : m.why === 'busy' ? 'Your world is still closing. Try again in a moment' : "You can't join that world any more"); break;
+    case 'pclose': partyOver(who(m.name) + ' closed their world'); break;
+    case 'inv': partyInvited(m); break;
+    case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
+    case 'padd': { if (!S.world || !party || !P.propDims(m.k | 0).half) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) d.sleep = false; if (party.role === 'host') { S.bought.push([m.k | 0, m.x | 0, m.y | 0]); wDirty = true; } burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); break; }
+    case 'pcp': { if (!S.map || !party) break; S.map.checkpoints.push([m.x, m.y]); if (party.role === 'host') { S.boughtCps.push([m.x, m.y]); wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'newmap': clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; startTransition(m.slot, m.next); break;
     case 'fin': {
       const mine = m.id === myId, o = others.get(m.id);
@@ -3468,7 +3673,7 @@ function onMsg(m) {
       if (settings.announce) {
         const nm = mine ? 'You' : who(m.name);
         const text = m.rank === 1 ? (mine ? 'You won the level!' : nm + ' won the level!') : (mine ? 'You finished #' + m.rank + '!' : nm + ' finished the level (#' + m.rank + ')');
-        notice(text, 'win'); addFeed(text, 'fin', true);
+        notice(text, 'win', mine ? null : 'human'); addFeed(text, 'fin', true, mine ? null : 'human');
       }
       break;
     }
@@ -3587,7 +3792,7 @@ function skyAt(p) {
   const l = SKY[SKY.length - 1]; return [l[1], l[2], l[3], l[4]];
 }
 function dayPhase() {
-  const len = inSolo() ? settings.soloLen * 60000 : SLOT_MS;
+  const len = inSolo() ? settings.soloLen * 60000 : party ? 0 : SLOT_MS;
   if (len > 0) return clamp(1 - (S.nextAt - nowMs()) / len, 0, 1);
   return (Date.now() % SLOT_MS) / SLOT_MS;
 }
@@ -4161,7 +4366,7 @@ function renderInner(dt, nowT) {
   const sc = Math.max(clamp(zoomBase() * settings.zoom, 0.2, 5), sw / VIEW_MAX_W, sh / VIEW_MAX_H);
   const vw = sw / sc, vh = sh / sc, b = S.b;
   updateFx(dt);
-  { const sep = !!settings.superBtn, tg = clamp(b.jm || 0, 0, 1); S.jmv = (S.jmv || 0) + (tg - (S.jmv || 0)) * Math.min(1, dt * 14); if (Math.abs(tg - S.jmv) < 0.004) S.jmv = tg;   // the meter glides instead of jumping
+  { const sep = !!settings.superBtn, tg = settings.powerJump ? clamp(b.jm || 0, 0, 1) : 0; S.jmv = (S.jmv || 0) + (tg - (S.jmv || 0)) * Math.min(1, dt * 14); if (Math.abs(tg - S.jmv) < 0.004) S.jmv = tg;   // the meter glides instead of jumping
     const q = Math.round(S.jmv * 100);
     if (q !== S.tjq || sep !== S.tjsep) { S.tjq = q; S.tjsep = sep; const el = sep ? $('ts') : $('tj'), other = sep ? $('tj') : $('ts'); el.style.setProperty('--p', q); el.classList.toggle('rdy', q >= 99 && !editMode); other.style.setProperty('--p', 0); other.classList.remove('rdy'); } }   // (with the separate power-jump button the ring lives on that button)
   { const tb = $('tb'); if (!tb.classList.contains('hide') && !editMode) { const q = Math.round(clamp(b.bcharge || 0, 0, 1) * 100); if (q !== S.tbq) { S.tbq = q; tb.style.setProperty('--p', q); tb.classList.toggle('rdy', q >= 100 && !b.boost); } } }
@@ -4218,7 +4423,7 @@ function renderInner(dt, nowT) {
       let sc2 = 1; if (o.morph > 0) { o.morph = Math.max(0, o.morph - dt * 1.6); sc2 = 1 + 0.35 * Math.sin(o.morph * 3.14); }
       drawBall(nx, ny, o.rot, o.color, o.color2, o.pat, 0.88, false, sc2);
       const pinned = pinShown(o.pub);
-      if (!pinned) drawLabel(o.name, false, o.crown, nx, ny);
+      if (!pinned) drawLabel(o.name, false, o.crown, nx, ny, true);
       if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 : settings.tags && o.name ? 38 : 22) - (o.crown ? 14 : 0));
     });
     for (let i = 0; i < bots.length; i++) {
@@ -4436,6 +4641,7 @@ function beaconInfo(t) {   // same answer for everyone, because it only depends 
 let lastGemShown = -1, lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
 const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 function worldText() {
+  if (party && online) return party.role === 'host' ? 'Your world · ' + room.n + ' here' : who(party.name) + "'s world · " + room.n + ' here';
   if (inSolo()) return '';
   if (online) return 'World ' + room.id + ' · ' + room.n + ' player' + (room.n === 1 ? '' : 's');
   return '';
@@ -4443,13 +4649,13 @@ function worldText() {
 function hudTick() {
   const rem = S.nextAt - nowMs();
   const tm = $('timer');
-  const endless = inSolo() && settings.soloLen === 0;
+  const endless = (inSolo() && settings.soloLen === 0) || !!party;
   $('nexttimer').textContent = endless ? '∞' : fmtClock(rem);
   $('tlab').textContent = endless ? 'no limit' : 'next map';
   tm.className = endless ? '' : rem <= 30000 && rem > 0 ? 'final' : rem <= 60000 ? 'low' : '';
   if (S.mode === 'play') {
     TH.forEach(t => {
-      if (!inSolo() && !warned[t] && rem <= t * 60000) {
+      if (!inSolo() && !party && !warned[t] && rem <= t * 60000) {
         warned[t] = true;
         notice('Session ends in ' + (t === 60 ? '1 hour' : t + ' minute' + (t > 1 ? 's' : '')) + '. Everyone moves to a new map.', t <= 5 ? 'urgent' : '');
       }
@@ -4472,22 +4678,18 @@ function hudTick() {
   if (wallet.c !== lastCoinShown) { lastCoinShown = wallet.c; $('coinN').textContent = wallet.c; }
   if (wallet.g !== lastGemShown) { lastGemShown = wallet.g; $('gemN').textContent = wallet.g; }
   $('coinpill').title = 'Your coins and diamonds. Spend them in the shop (the + button).';
-  $('mpstats').textContent = online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : '');
+  $('mpstats').textContent = online && party ? worldText() + '.' : online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : '');
   if (!$('tpop').classList.contains('hide')) fillTimerPop(rem);
 }
 setInterval(hudTick, 250);
 
-function soloNextName() {
-  const N = BallMaps.count, k1 = solo.k + 1, idx = settings.soloMap === 'rotate' ? k1 % N : +settings.soloMap;
-  return BallMaps.names[(SOLO_BASE + k1 * N + idx) % N];
-}
 function fillTimerPop(rem) {
-  const sl = inSolo(), endless = sl && settings.soloLen === 0;
+  const sl = inSolo(), endless = (sl && settings.soloLen === 0) || !!party;
   $('tpName').textContent = S.map.name;
-  $('tpChange').textContent = endless ? 'This map stays until you change it' : 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
+  $('tpChange').textContent = endless ? 'This level stays until you pick another' : 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
   $('tpCoins').textContent = isBeaten(S.idx) ? 'You have beaten this map' : 'Not beaten yet';
-  $('tpWorld').textContent = sl ? 'Solo world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'World ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
-  $('tpNext').textContent = endless ? '' : 'Up next: ' + (sl ? soloNextName() : BallMaps.names[(S.slot + 1) % BallMaps.count]);
+  $('tpWorld').textContent = party ? worldText() : sl ? 'Solo world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'World ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
+  $('tpNext').textContent = endless ? '' : 'Up next: ' + BallMaps.names[(S.slot + 1) % BallMaps.count];
   const bi = beaconInfo(nowMs()), on = !!(settings.beacon && S.mode === 'play' && !S.finished && bi.on), ar = $('tpArrow');
   $('tpBeacon').textContent = !settings.beacon ? 'Finish beacon is off' : on ? 'Beacon is on! Follow the arrow' : 'Finish beacon in ' + fmtClock(bi.next);
   ar.classList.toggle('hide', !on);
@@ -4507,7 +4709,7 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { placing: () => placing, finishPlacing, cancelPlacing, wallet, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
+if (params && params.get('test')) window.__d = { placing: () => placing, finishPlacing, cancelPlacing, wallet, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((settings.autoEnter || resumeAfterUpdate()) && settings.name) enterGame(true); else showHome();
