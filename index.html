@@ -555,17 +555,20 @@
   #shareTip{position:fixed;left:62px;top:18px;top:calc(18px + env(safe-area-inset-top));z-index:4;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);padding:4px 12px;font-size:15px;color:#2b1d12}
   #shareTip.hide{display:none}
   #home .scene{position:fixed;z-index:0}#home .hbox{z-index:2}#home .sball{z-index:1}
+  #home #ned1{display:none}
+  .lvrow.static{opacity:1;cursor:default;pointer-events:none;background:#2c2644}.lvrow .lvtime{margin-left:auto;flex:none;font-variant-numeric:tabular-nums;opacity:.85;padding-left:8px}
   @media (max-height:540px){
-    #home{padding:8px}#home h1{font-size:34px;margin:0}#home .hsub{font-size:13px;margin:0 0 2px}#homeModeNote{font-size:12px;line-height:1.2}
-    #home .hbox{width:min(660px,100%);gap:8px}
-    #home .card{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;gap:5px 18px;padding:9px 16px;align-items:center}
-    #home .card>#ned1{grid-column:1;grid-row:1}#home .card>.mpbig{grid-column:1;grid-row:2;margin:0}#home .card>#homeModeNote{grid-column:1;grid-row:3;margin:0}#home .card>.hplay{grid-column:1;grid-row:4}#home .card>.lvrow{grid-column:2;grid-row:3;margin:0;padding:5px 10px;font-size:15px}
-    #home .card>.hbtns{grid-column:2;grid-row:1/3;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;align-self:stretch}#home .card>.hbtns .btn{margin:0;width:100%;height:100%}#home .card>.hbtns #homeHelp{grid-column:1/-1}
-    #home .card>.sw2{grid-column:2;grid-row:4;margin:0}
-    #home .hplay{font-size:24px;padding:8px}#home .sw2 small{font-size:11px;line-height:1.15}
+    #home{padding:6px}#home h1{font-size:30px;margin:0}#home .hsub,#homeModeNote{display:none}
+    #home .hbox{width:min(440px,100%);gap:6px}
+    #home .card{padding:8px 12px;gap:5px}
+    #home .mpbig{margin:0}#home .mptrack{height:40px;font-size:15px}
+    #home .lvrow{margin:0;padding:5px 10px;font-size:15px}
+    #home .hplay{font-size:22px;padding:6px;margin:0}
+    #home .hbtns{gap:5px}#home .hbtns .btn{padding:5px 8px;min-width:0;font-size:15px}#home .hbtns #homeHelp{flex-basis:100%}
+    #home .sw2{margin:0;padding:2px 4px}#home .sw2 small{display:none}
     .scene{--gh:18vh}
   }
-  @media (max-height:330px){#home .hsub{display:none}#home .sw2 small{display:none}}
+  @media (min-height:380px) and (max-height:540px){#home h1{font-size:34px}#home .hsub{display:block;font-size:14px}#homeModeNote{display:block;font-size:13px}#home .sw2 small{display:block;font-size:11px;line-height:1.15}#home .hbox{gap:8px}#home .card{gap:6px}}
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
@@ -798,7 +801,7 @@
     <button data-tab="controls"><span data-ic="pad"></span><span>Controls</span></button>
     <button data-tab="display"><span data-ic="eye"></span><span>Display</span></button>
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
-    <button data-tab="online"><span data-ic="globe"></span><span>Online</span></button>
+    <button data-tab="online"><span data-ic="globe"></span><span>Mode</span></button>
     <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
     <button data-tab="bots"><span data-ic="bot"></span><span>Bots</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
@@ -878,7 +881,7 @@
         <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Join / leave messages</b><small>When people come and go</small></span></span><input type="checkbox" id="setJoinMsg"><i></i></label>
       </div></div>
       <div class="dep" data-dep="!mp"><div>
-        <h4><span data-ic="map"></span> Your own world</h4>
+        <h4><span data-ic="map"></span> Your private world</h4>
         <div class="small dim">Pick any level you like. What you build, move, open and collect on a level is saved until you reset that level.</div>
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
         <button class="btn full" id="btnInvite" type="button"><span data-ic="users"></span>Invite friends to this level</button>
@@ -924,9 +927,9 @@
     <div class="hsub">Roll through a huge world and find the hidden finish flag.</div>
     <div class="card">
       <div class="ned" id="ned1"></div>
-      <label class="mpbig"><input type="checkbox" id="homeMp"><span class="mptrack"><span class="mpL"><span data-ic="user"></span>Solo</span><span class="mpR"><span data-ic="globe"></span>Multiplayer</span><i></i></span></label>
+      <label class="mpbig"><input type="checkbox" id="homeMp"><span class="mptrack"><span class="mpL"><span data-ic="user"></span>Private</span><span class="mpR"><span data-ic="globe"></span>Public</span><i></i></span></label>
       <div class="small dim" id="homeModeNote"></div>
-      <button id="homeLvl" class="btn lvrow hide" type="button"></button>
+      <button id="homeLvl" class="btn lvrow" type="button"></button>
       <button id="homePlay" class="hplay" type="button">Play</button>
       <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
       <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Skip this screen next time</b><small>Go straight into the game. Pause, then Main menu, brings you back here.</small></span></span><input type="checkbox" id="homeAuto"><i></i></label>
@@ -947,7 +950,7 @@
 <div id="intro" class="overlay hide"><div class="card">
   <h1><span data-ic="ball"></span>BALLPIT.PARTY</h1>
   <div class="ibody">
-  <p>You're a ball. Everyone online shares one huge world and is racing to find the <b>checkered flag</b>. Nothing tells you where it is, or where anyone else is. Pick a direction and explore.</p>
+  <p>You're a ball. In a public world, everyone online shares one huge world and is racing to find the <b>checkered flag</b>. Nothing tells you where it is, or where anyone else is. Pick a direction and explore.</p>
   <div class="legend">
     <span><i class="lg" style="background:#8a6a46"></i>Ground: safe to stand on</span>
     <span><i class="lg" style="background:#7fdcff"></i>Ice: slippery</span>
@@ -974,7 +977,7 @@
 
 <div id="invModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="ivTitle"><div class="card lvcard">
   <h3 id="ivTitle">Invite friends</h3>
-  <div class="small dim" id="ivSub">Friends you invite get a message and can join you on this level. They see what you built, and can build too. They get it when they are on the main menu or in multiplayer (not in their own solo world), for as long as your world is open.</div>
+  <div class="small dim" id="ivSub">Friends you invite get a message and can join you on this level. They see what you built, and can build too. They get it when they are on the main menu or in a public world (not in their own private world), for as long as your world is open.</div>
   <div id="ivList"></div>
   <div class="btns"><button id="ivStop" type="button" class="danger hide">Close my world</button><button id="ivNo" type="button" class="go">Done</button></div>
 </div></div>
@@ -1048,8 +1051,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=46"></script>
-<script src="physics.js?v=46"></script>
+<script src="maps.js?v=47"></script>
+<script src="physics.js?v=47"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2565,7 +2568,7 @@ function applyDeps() {
   const list = document.querySelectorAll('.dep');
   for (let i = 0; i < list.length; i++) { const f = DEPS[list[i].getAttribute('data-dep')]; if (f) list[i].classList.toggle('off', !f()); }
   const d = $('inputDesc'); if (d) d.textContent = settings.inputMode === 'auto' ? (showTouch() ? 'Using touch right now. Press a key and it switches to the keyboard.' : 'Using the keyboard right now. Touch the screen and it switches.') : settings.inputMode === 'touch' ? 'Touch controls only.' : 'Keyboard only.';
-  const m = $('mpDesc'); if (m) m.textContent = settings.mp ? 'You are playing with everyone online, in the same world. Solo or multiplayer is chosen on the main menu.' : 'You are playing in a private world of your own. Nobody else is here. Solo or multiplayer is chosen on the main menu.';
+  const m = $('mpDesc'); if (m) m.textContent = settings.mp ? 'You are in a public world with everyone online. Private or public is chosen on the main menu.' : 'You are in your private world. Nobody else is here. Private or public is chosen on the main menu.';
 }
 const _syncUI = syncUI;
 syncUI = function () { _syncUI(); if (typeof lvlRender === 'function') lvlRender(); applyDeps(); };
@@ -2838,7 +2841,7 @@ function addFeedEmo(name, i, cls) {   // "Name" + the emoji, in the same list as
 /* ----- the chat window: Chat (public, emoji only) and Friends, in one panel under the chat button ----- */
 let emoCool = 0; try { localStorage.removeItem('ballrun4_chat'); } catch (e) {}   // there is no chat history: an emoji is shown and gone
 function sendEmo(i) {
-  if (performance.now() < emoCool || !online) return;
+  if (performance.now() < emoCool || (!online && !inSolo())) return;   // in your private world it works like an empty room: only you see it
   emoCool = performance.now() + 1000; wsSend({ t: 'emo', i });
   S.myEmo = { i, t: S.t }; addFeedEmo('You', i, ''); sfx('ui'); toggleChat(false);
 }
@@ -2850,7 +2853,7 @@ function setChatMute(on) { chatMuted = on; try { localStorage.setItem(CMKEY, on 
 $('chatMute').onclick = () => setChatMute(!chatMuted); setChatMute(chatMuted);
 let chatOpen = false;
 function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it
-  if (on && (inHome || inSolo())) return;
+  if (on && inHome) return;
   chatOpen = on; $('emoPop').classList.toggle('hide', !on); if (on && shopOpen) toggleShop(false);
   if (on) { if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); }
 }
@@ -3031,12 +3034,12 @@ const MUTE_NOTE = ['You see when they come and go, and you see their emojis.', '
 let lpQ = '', lpTimer = 0, lpDeb = 0;
 function trackVis() {
   const solo = inSolo() || inHome;
-  $('btnChat').classList.toggle('hide', solo);
+  $('btnChat').classList.toggle('hide', inHome);
   const n = lks.filter(l => l.ok && l.on).length;
   $('linkpill').classList.toggle('hide', solo || n === 0);
   $('linkN').textContent = n === 1 ? '1 friend online' : n + ' friends online';
   $('lreqs').classList.toggle('hide', solo || !reqs.length || friendsShown());
-  if (solo && chatOpen) toggleChat(false);
+  if (inHome && chatOpen) toggleChat(false);
 }
 setInterval(trackVis, 500);
 function dot(c) { const i = document.createElement('i'); i.className = 'ldot'; i.style.background = c; return i; }
@@ -3124,7 +3127,7 @@ function lpRender() {
   const rl = $('lpReqs'); rl.textContent = '';
   reqs.forEach(r => rl.appendChild(reqCard(r))); $('lpReqH').classList.toggle('hide', !reqs.length);
   $('lpResH').textContent = (lpQ ? 'Search results' : 'Players from the last 7 days') + '. Tap a name to see their profile.';
-  $('lpConn').textContent = (online || lobbyOn) ? '' : (inSolo() && !inHome) ? "You are in your own world, so friends are off here. They work on the main menu and in multiplayer." : 'Connecting to the server…';
+  $('lpConn').textContent = (online || lobbyOn) ? '' : (inSolo() && !inHome) ? "You are in your own world, so friends are off here. They work on the main menu and in public worlds." : 'Connecting to the server…';
   $('lpConn').classList.toggle('hide', !$('lpConn').textContent);
   const res = $('lpRes'); res.textContent = '';
   const shown = foundList().filter(f => !reqs.some(r => r.pub === f.pub));
@@ -3264,7 +3267,7 @@ function homeStats() {
 }
 window.__sprite = () => sprite(settings.color, settings.color2, settings.pat);   // the loading screen and the main screen show your real ball
 try { window.__scene($('homeScene'), 'home'); } catch (e) {}
-function homeModeText() { $('homeModeNote').textContent = $('homeMp').checked ? 'Everyone online shares the same world.' : 'Your own private world. Nobody else can see you.'; $('homeLvl').classList.toggle('hide', $('homeMp').checked); lvlRender(); }
+function homeModeText() { $('homeModeNote').textContent = $('homeMp').checked ? 'A public world. Everyone online shares it.' : 'Your private world. Nobody else can see you.'; lvlRender(); }
 function showHome() {
   inHome = true; paused = false; $('pause').classList.add('hide'); document.body.classList.add('home'); $('home').classList.remove('hide');
   if (typeof closeSettingsNow === 'function') closeSettingsNow(); toggleChat(false);
@@ -3322,6 +3325,21 @@ $('pReset').onclick = () => askResetLevel(soloLevel(), () => resumeGame());
 $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
 $('pHome').onclick = () => { sfx('ui'); quitToHome(); };
 $('pause').addEventListener('pointerdown', e => { if (e.target === $('pause') && $('settings').classList.contains('hide')) { e.preventDefault(); resumeGame(); } });
+/* ----- the Back button (phone or browser) never just throws you out: in a game it asks about the main menu, on the main menu it asks about leaving ----- */
+let leavingPage = false;
+try { history.replaceState({ bp: 0 }, ''); history.pushState({ bp: 1 }, ''); } catch (e) {}
+addEventListener('popstate', () => {
+  if (leavingPage) return;
+  try { history.pushState({ bp: 1 }, ''); } catch (e) {}   // keep something to go back to, so the next Back is caught too
+  if (!$('confirm').classList.contains('hide')) { $('cfNo').click(); return; }
+  if (!$('settings').classList.contains('hide')) { closeSettingsNow(); return; }
+  if (chatOpen) { toggleChat(false); return; }
+  for (const id of ['profModal', 'invModal', 'lvlModal', 'codeModal', 'nameModal', 'shareModal', 'shopPop', 'mmbig', 'intro']) {
+    const m = $(id); if (m && !m.classList.contains('hide')) { try { m.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); } catch (e) {} if (!m.classList.contains('hide') && id === 'intro') { const ok = m.querySelector('.ok'); if (ok) ok.click(); } return; }
+  }
+  if (inHome) askConfirm('Leave ballpit.party?', 'Going back will take you out of the game.', 'Leave', () => { leavingPage = true; try { history.go(-2); } catch (e) {} setTimeout(() => { leavingPage = false; try { window.close(); } catch (e) {} }, 600); }, { no: 'Stay', yesClass: 'danger' });
+  else askConfirm('Back to the main menu?', 'Your ball leaves this world and you go to the main menu.', 'Main menu', () => quitToHome(), { no: 'Keep playing', yesClass: 'go' });
+});
 $('homePlay').onclick = () => enterGame(false);
 $('homeMp').onchange = () => { settings.mp = $('homeMp').checked; save(); $('setMp').checked = settings.mp; applyDeps(); syncUI(); homeModeText(); };   // two different games: switching is just a switch
 $('homeAuto').onchange = () => { settings.autoEnter = $('homeAuto').checked; save(); $('setAuto').checked = settings.autoEnter; };
@@ -3436,8 +3454,15 @@ $('btnInvite').onclick = () => { if (inHome) { notice('Start playing first, then
 let lvSel = 0;
 const lvLabelOf = i => 'Level ' + (i + 1) + ': ' + BallMaps.names[i];
 function lvlLabel() { return lvLabelOf(soloLevel()); }
+const pubIdx = () => { const s = Math.floor(nowMs() / SLOT_MS); return { i: ((s % BallMaps.count) + BallMaps.count) % BallMaps.count, next: (s + 1) * SLOT_MS }; };
 function lvlRender() {
-  const t = lvlLabel(), h = $('homeLvl'); if (h) h.innerHTML = ico('map') + '<span class="lvt">' + t + '</span>' + ico('chev');
+  const pub = $('homeMp').checked, h = $('homeLvl');
+  let t = lvlLabel();
+  if (h) {   // private: your level, tap to change. Public: the map everyone is on right now, and how long until the next one.
+    h.classList.toggle('static', pub); h.disabled = pub; h.setAttribute('aria-label', pub ? 'The public map right now' : 'Pick your level');
+    if (pub) { const p = pubIdx(); h.innerHTML = ico('map') + '<span class="lvt">' + lvLabelOf(p.i) + '</span><span class="lvtime">' + fmtClock(p.next - nowMs()) + '</span>'; }
+    else h.innerHTML = ico('map') + '<span class="lvt">' + t + '</span>' + ico('chev');
+  }
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
   const sl = !settings.mp && !party; $('pLevel').classList.toggle('hide', !sl); $('pReset').classList.toggle('hide', !sl);
   $('pInvite').classList.toggle('hide', settings.mp || !!(party && party.role === 'guest')); $('pInvite').lastChild.textContent = party ? 'Invite friends (world is open)' : 'Invite friends';
@@ -3482,6 +3507,7 @@ lvlRender();
 /* ----- a secret code: double-tap the coins and diamonds (in the game or on the main screen) ----- */
 function homeWalletRender() { const k = wallet.c + ':' + wallet.g; if (homeWalletRender.k === k) return; homeWalletRender.k = k; $('homeWallet').innerHTML = '<span>' + ico('gcoin') + wallet.c + '</span><span>' + ico('gem') + wallet.g + '</span>'; }
 setInterval(() => { if (inHome) homeWalletRender(); }, 400);
+setInterval(() => { if (inHome && $('homeMp').checked) lvlRender(); }, 1000);
 let codeBack = null;
 function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $('cdNote').textContent = ''; $('codeModal').classList.remove('hide'); setTimeout(() => { try { $('cdIn').focus(); } catch (e) {} }, 30); }
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
@@ -3499,9 +3525,9 @@ onDoubleTap($('homeWallet'), openCode); onDoubleTap($('coinpill'), openCode);
 /* ================= networking ================= */
 function setNet(state) {
   netState = state;
-  const n = $('netstat'); n.classList.remove('hide');   // one little bubble says it all: Online (green), Checking (amber), Disconnected (red), Solo play (blue)
+  const n = $('netstat'); n.classList.remove('hide');   // one little bubble says it all: Online (green), Checking (amber), Disconnected (red), Private (blue)
   const solo = state === 'solo' || location.protocol === 'file:';
-  $('netText').textContent = state === 'online' ? 'Online' : solo ? 'Solo play' : state === 'connecting' ? 'Checking' : 'Disconnected';
+  $('netText').textContent = state === 'online' ? 'Public' : solo ? 'Private' : state === 'connecting' ? 'Checking' : 'Disconnected';
   n.querySelector('i').className = state === 'online' ? 's-ok' : solo ? 's-solo' : state === 'connecting' ? 's-wait' : 's-bad';
   if (state === 'offline' || state === 'solo') setTimeout(maybeAskBots, 700);
 }
@@ -3515,10 +3541,10 @@ function setMultiplayer(on) {
   if (on) {
     joinWorld();
     const ls = Math.floor(Date.now() / SLOT_MS); startTransition(ls, (ls + 1) * SLOT_MS);   // back to the shared map: your ball restarts there
-    addFeed('You are back in multiplayer', 'join', true);
+    addFeed('You are back in a public world', 'join', true);
   } else {
     dropConnection(); setNet('solo'); soloGo(true);
-    addFeed('You are in your own world now', 'bad', true);
+    addFeed('You are in your private world now', 'bad', true);
   }
   applyDeps(); syncUI(); newBotTarget();
 }
@@ -3641,7 +3667,7 @@ function showWorldPop(id, full) {   // "You're in World 1" or "World 1 was too f
   if (list.length) {
     const was = list.length === 1 ? 'World ' + list[0] + ' was' : 'Worlds ' + list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1] + ' were';
     h = '<b>' + was + ' too full</b>You\'ve been pushed to World ' + id + '. Each world holds up to ' + room.max + ' players, so a new one opens when the others fill up.';
-  } else h = '<b>You\'re in World ' + id + '</b>Everyone in World ' + id + ' plays the same map and can see each other. Each world holds up to ' + room.max + ' players.';
+  } else h = '<b>You\'re in Public World ' + id + '</b>Everyone in World ' + id + ' plays the same map and can see each other. Each world holds up to ' + room.max + ' players.';
   el.innerHTML = h; el.classList.remove('hide'); sfx('notice');
   clearTimeout(worldPopT); worldPopT = setTimeout(() => el.classList.add('hide'), list.length ? 10000 : 6000);
 }
@@ -4717,7 +4743,7 @@ function fillTimerPop(rem) {
   $('tpName').textContent = S.map.name;
   $('tpChange').textContent = endless ? 'This level stays until you pick another' : 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
   $('tpCoins').textContent = isBeaten(S.idx) ? 'You have beaten this map' : 'Not beaten yet';
-  $('tpWorld').textContent = party ? worldText() : sl ? 'Solo world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'World ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
+  $('tpWorld').textContent = party ? worldText() : sl ? 'Private world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'Public world ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
   $('tpNext').textContent = endless ? '' : 'Up next: ' + BallMaps.names[(S.slot + 1) % BallMaps.count];
   const bi = beaconInfo(nowMs()), on = !!(settings.beacon && S.mode === 'play' && !S.finished && bi.on), ar = $('tpArrow');
   $('tpBeacon').textContent = !settings.beacon ? 'Finish beacon is off' : on ? 'Beacon is on! Follow the arrow' : 'Finish beacon in ' + fmtClock(bi.next);

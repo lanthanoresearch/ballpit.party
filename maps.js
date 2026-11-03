@@ -123,8 +123,8 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     const r = rng(7001 + k * 7919), ri = (a, b) => a + Math.floor(r() * (b - a + 1)), rf = (a, b) => a + r() * (b - a), pk = a => a[Math.floor(r() * a.length)];
     let half = ri(380, 900), up = ri(5, 12), dn = ri(2, 5), nb = ri(3, 6), flip = r() < 0.5;
     const LR = rng(31000 + k * 17), LK = ['full', 'taper', 'flare', 'diamond', 'hourglass', 'stair', 'ragged'], lk = LK[(k * 5 + (k >> 3)) % LK.length];
-    const lay = { k: lk, lo: 0.3 + LR() * 0.3, w: 0.4 + LR() * 0.2, sgn: LR() < 0.5 ? -1 : 1, j: LR() < 0.5 ? 0.1 + LR() * 0.2 : 0 };
-    if (lk === 'taper' || lk === 'flare') up = Math.max(up, 8);   // towers want height
+    const lay = { k: lk, lo: 0.88 + LR() * 0.12, w: 0.9, sgn: LR() < 0.5 ? -1 : 1, j: LR() < 0.5 ? 0.04 + LR() * 0.06 : 0 };
+    
     const style = pk(['mix', 'alt', 'mix']);
     // the journey: a few kinds of ground in a row, never the same twice in a row
     const seq = []; while (seq.length < nb) { const t = pk(GKEYS); if (t !== seq[seq.length - 1]) seq.push(t); }
@@ -144,7 +144,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     });
     const unders = ['round', 'ragged', 'legs', 'flat', 'stem', 'stalac'].filter(() => r() < 0.7); if (!unders.length) unders.push('round');
     const rw = {}; ['vines', 'tramp', 'isle', 'columns', 'bridge', 'play', 'pit', 'vault', 'gauntlet', 'arch', 'oasis'].forEach(n => { if (r() < 0.55) rw[n] = ri(3, 12); });
-    return { name: N_ADJ[(k * 7 + ri(0, 3)) % N_ADJ.length] + ' ' + N_NOUN[(k * 11 + ri(0, 5)) % N_NOUN.length], seed: 9000 + k * 131, mirror: flip, xl: -half, xr: half, ls: ri(21, 25), up, dn, gOff: 0, cu: 9, cd: 8, ladder: 60, br: [2, 4],
+    return { name: N_ADJ[(k * 7 + ri(0, 3)) % N_ADJ.length] + ' ' + N_NOUN[(k * 11 + ri(0, 5)) % N_NOUN.length], seed: 9000 + k * 131, mirror: flip, xl: -half, xr: half, ls: ri(19, 27), up, dn, gOff: 0, cu: 9, cd: 8, ladder: 60, br: [2, 4],
       lo: { wd: pk([[5, 10], [3, 7], [4, 9], [6, 12]]), un: unders, drift: ri(3, 5), see: rf(0.035, 0.08), oo: r() < 0.4 ? [-3, -2, -2, -1, 0, 0, 1, 2, 3, 3] : undefined },
       hz: { lava: rf(1.6, 3), water: rf(0.8, 2), pillar: rf(1, 2.2), narrow: rf(0.8, 1.8) },
       rw, mainStruct: rf(0.15, 0.4), bands, lay };
@@ -1289,7 +1289,17 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       wild2: { wd: [3, 12], gp: [2, 4], oo: [-3, -2, 0, 2, 3, 4, -4], narrow: 0.12, lava: 0.35, ice: 0.3, water: 0.2, pillar: 0.3, drift: 5 },
       plaza: { wd: [15, 21], gp: [2, 3], oo: [0, 0, 1, -1], narrow: 0, lava: 0, ice: 0, water: 0, pillar: 0, see: 0, drift: 3 }   // a broad flat square: room for a crowd, a shortcut, or a pile of toys
     };
-    const FW = {}; for (const k in FLAV) FW[k] = 0.4 + BR() * 2.2;   // every map has its own favourite kinds of stretch
+    /* every map is built around its own idea: islands in the sky, rivers of lava, ice and water, stairs and zigzags, plazas and toys, or a bit of everything.
+       The idea decides which kinds of stretch the map uses a lot and which it hardly uses, so two maps are different builds and not just a different amount of the same thing. */
+    const ARCH = [
+      { islets: 1, wisp: 1, perch: 1, cloud: 1, drops: 1, stones: 1 },
+      { lavarun: 1, stones: 1, wild: 1, wild2: 1, arena: 1, seesaws: 1 },
+      { iceslide: 1, waterhop: 1, seesaws: 1, drops: 1, plain: 1 },
+      { stairs: 1, zigzag: 1, drops: 1, plain: 1, plaza: 1, wild: 1 },
+      { plaza: 1, arena: 1, seesaws: 1, plain: 1, stairs: 1, iceslide: 1 },
+      null];
+    const arch = ARCH[(idx * 3 + Math.floor(idx / 5)) % ARCH.length];
+    const FW = {}; for (const k in FLAV) FW[k] = idx < 2 ? 0.4 + BR() * 2.2 : (0.3 + BR() * 1.1) * (arch ? (arch[k] ? 2.6 : 0.3) : 1 + BR() * 1.2);
     const FKEYS = Object.keys(FLAV);
     const sm = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
     const heightT = r => Math.max(0, Math.min(1, (r + DNN) / Math.max(1, UPN - 1 + DNN)));   // 0 at the bottom of the sky, 1 at the very top
