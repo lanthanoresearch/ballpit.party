@@ -873,8 +873,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=29"></script>
-<script src="physics.js?v=29"></script>
+<script src="maps.js?v=30"></script>
+<script src="physics.js?v=30"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2535,7 +2535,7 @@ function friendCard(l) {   // one friend, one card: who they are at the top, the
   const a = el('div', 'fline'), al = el('div', 'flab'); al.appendChild(document.createTextNode('Alerts from ')); al.appendChild(el('b', '', nm)); a.appendChild(al);
   const k = l.mute | 0, bt = iconBtn('bell b' + k, BELL[k].i, 'Alerts from ' + nm + ': ' + BELL[k].t + '. Tap to change.', () => { l.mute = (k + 1) % 3; saveLinks(); lpRender(); }, BELL[k].t);
   a.appendChild(bt); a.appendChild(el('div', 'fnote', MUTE_NOTE[k])); c.appendChild(a);
-  const f = el('div', 'ffoot'), x = el('button', 'btn sm quiet', 'Stop tracking ' + nm); x.onclick = () => disconnectLink(l.pub); f.appendChild(x); c.appendChild(f);
+  const f = el('div', 'ffoot'), x = el('button', 'btn sm quiet', 'Stop tracking ' + nm); x.onclick = () => askConfirm('Stop tracking ' + nm + '?', 'You will stop seeing each other on the map. To track each other again, you both need to send and accept a new request.', 'Stop tracking', () => disconnectLink(l.pub), { no: 'Keep ' + nm }); f.appendChild(x); c.appendChild(f);
   return c;
 }
 function lpRender() {
