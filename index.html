@@ -441,6 +441,13 @@
     #settings .tabs button svg{font-size:17px}
     #settings .sbody{grid-column:2;grid-row:2;padding:6px 12px 12px}
   }
+  #placeBar{pointer-events:auto;display:flex;align-items:center;gap:8px;background:rgba(28,24,48,.96);border:2px solid var(--line);border-radius:var(--wob);padding:5px 6px 5px 12px;box-shadow:3px 4px 0 rgba(0,0,0,.4);animation:pop .25s ease-out;max-width:100%}
+  #placeBar.bad{border-color:#ff7a6a}
+  #placeBar .pi{display:flex;flex-direction:column;line-height:1.15;min-width:0;flex:1 1 auto;overflow:hidden}#placeBar .pi b{font-weight:normal;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#placeBar.tch #placeOk{display:none}#placeBar .pi small{font-size:11.5px;opacity:.75}
+  #placeBar .btn{padding:7px 14px;min-height:38px}
+  #tpl{position:fixed;z-index:3;width:68px;height:68px;border-radius:50%;border:3px solid #fff;background:rgba(47,158,97,.92);color:#fff;font-size:30px;padding:0;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;touch-action:none;box-shadow:0 0 0 4px rgba(120,255,170,.4),0 0 20px rgba(80,230,140,.8);animation:rdy .55s ease-in-out infinite alternate}
+  #tpl svg{stroke-width:3}#tpl.no{opacity:.45;background:rgba(150,60,50,.9);animation:none;box-shadow:none}
+  @media (max-height:520px){#placeBar{padding:3px 4px 3px 10px;gap:6px}#placeBar .pi small{display:none}#placeBar .btn{padding:4px 10px;min-height:32px}}
   #phraseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
   #phraseGrid button{padding:9px 4px;font-size:14px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
   #phraseGrid button:active,#phraseGrid button:hover{background:#3a3355}#phraseGrid button:active{transform:scale(.95)}
@@ -619,6 +626,7 @@
 </script>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-gear" viewBox="0 0 24 24"><path d="M10.08 4.85 L10.26 2.15 L13.74 2.15 L13.92 4.85 L15.70 5.59 L17.74 3.81 L20.19 6.26 L18.41 8.30 L19.15 10.08 L21.85 10.26 L21.85 13.74 L19.15 13.92 L18.41 15.70 L20.19 17.74 L17.74 20.19 L15.70 18.41 L13.92 19.15 L13.74 21.85 L10.26 21.85 L10.08 19.15 L8.30 18.41 L6.26 20.19 L3.81 17.74 L5.59 15.70 L4.85 13.92 L2.15 13.74 L2.15 10.26 L4.85 10.08 L5.59 8.30 L3.81 6.26 L6.26 3.81 L8.30 5.59Z"/><circle cx="12" cy="12" r="3.2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
 <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
 <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
 <symbol id="i-pad" viewBox="0 0 24 24"><path d="M6.5 7h11a4.5 4.5 0 0 1 4.4 4l.6 4.5a2.8 2.8 0 0 1-4.8 2.2L15.5 16h-7l-2.2 1.7A2.8 2.8 0 0 1 1.5 15.5L2.100 11A4.500 4.500 0 0 1 6.500 7z"/><path d="M8 10v4M6 12h4M16 11h.01M18 13h.01"/></symbol>
@@ -689,7 +697,7 @@
   </div>
   <canvas id="mm" width="170" height="110"></canvas>
 </div>
-<div id="stack"><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
+<div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
 <div id="hr">
   <div id="topbar">
     <button id="btnRespawn" class="ibtn" title="Reset: back to your checkpoint, or the start (R)" data-ic="reset"></button>
@@ -709,11 +717,12 @@
   <h3 id="shopTitle">Shop</h3>
   <div id="shopWallet"></div>
   <div id="shopList"></div>
-  <div class="small dim">What you buy appears next to you and is only yours. It stays until the map changes.</div>
+  <div class="small dim">Crates, balls and springs appear as a ghost next to you: slide it where you want and tap Place. They are only yours and stay until the map changes.</div>
   <div class="cfoot"><button id="shopClose" class="btn" type="button">Close</button></div>
 </div></div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 
+<button id="tpl" class="hide" type="button" aria-label="Place" data-ic="check"></button>
 <div id="touch" class="hide"><button id="tl" data-ic="left"></button><button id="tr" data-ic="right"></button><button id="tj" data-ic="up"></button><button id="tb" data-ic="bolt" class="hide"></button></div>
 <div id="joy" class="hide"><i class="jb"></i><i class="jk"></i></div>
 <div id="editbar" class="paper hide"><span>Drag the buttons where you want them</span><button class="btn" id="editReset">Reset</button><button class="btn prim" id="editDone">Done</button></div>
@@ -929,8 +938,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=38"></script>
-<script src="physics.js?v=38"></script>
+<script src="maps.js?v=39"></script>
+<script src="physics.js?v=39"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1440,7 +1449,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
   restoreWorld(slot);
   S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
   others.forEach(o => { o.crown = false; });
@@ -1536,6 +1545,7 @@ function startTransition(slot, next) {
   others.forEach(o => { o.seen = 0; o.t0 = 0; o.crown = false; });
 }
 
+let placing = null;   // the item you are building right now (a ghost that follows you until you tap Place)
 let inHome = true, paused = false;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text' && !a.readOnly; };
 const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
@@ -1896,6 +1906,7 @@ addEventListener('keydown', e => {
   if (e.key === '=' || e.key === '+') { setZoom(settings.zoom + 0.1); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const a = e.code ? actionOf(e.code) : null;
+  if (!a && typeof placing !== 'undefined' && placing && !blocked() && !e.repeat) { if (e.code === 'KeyE' || e.code === 'Enter') { finishPlacing(); e.preventDefault(); return; } if (e.code === 'KeyQ' || e.code === 'Backspace') { cancelPlacing(); e.preventDefault(); return; } }
   if (!a) return;
   if (!$('settings').classList.contains('hide')) closeSettingsNow();
   e.preventDefault();
@@ -1932,10 +1943,11 @@ function curLayout() {
   return withB(p);
 }
 const boostBtnOn = () => !!(settings.boost && settings.boostBtn && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));
-function btnSize(k) { return Math.round((k === 'j' ? 92 : k === 'b' ? 68 : 78) * settings.btnSize * (window.innerHeight < 460 ? 0.84 : 1)); }   // (a bit smaller when the phone is on its side, so they don't cover the view)
+function btnSize(k) { return Math.round((k === 'j' ? 92 : k === 'b' || k === 'p' ? 68 : 78) * settings.btnSize * (window.innerHeight < 460 ? 0.84 : 1)); }   // (a bit smaller when the phone is on its side, so they don't cover the view)
 function btnXY(q, W, H, sz) { const r = sz / 2; return [clamp(q.a === 'l' ? q.dx : q.a === 'r' ? W - q.dx : W / 2 + q.dx, r + 4, W - r - 4), clamp(H - q.dy, r + 8, H - r - 4)]; }
 function layoutTouch() {
-  const W = window.innerWidth, H = window.innerHeight, L = curLayout(), ks = (settings.scheme === 'swipebtn' ? ['j'] : ['l', 'r', 'j']).concat(boostBtnOn() || editMode ? ['b'] : []), pts = {};
+  const W = window.innerWidth, H = window.innerHeight, L = curLayout(), showP = !!(typeof placing !== 'undefined' && placing && touchActive() && !editMode), showB = touchActive() || editMode, ks = (showB ? (settings.scheme === 'swipebtn' ? ['j'] : ['l', 'r', 'j']).concat(boostBtnOn() || editMode ? ['b'] : []) : []).concat(showP ? ['p'] : []), pts = {};
+  if (showP) { const bq = L.b; L.p = { a: bq.a, dx: bq.dx + (boostBtnOn() ? 86 : 0), dy: bq.dy }; }
   ks.forEach(k => { const sz = btnSize(k); pts[k] = btnXY(L[k], W, H, sz).concat(sz); });
   // never let two buttons sit on top of each other (a narrow screen can squeeze them)
   for (let it = 0; it < 4; it++) for (let a = 0; a < ks.length; a++) for (let b = a + 1; b < ks.length; b++) {
@@ -1945,7 +1957,7 @@ function layoutTouch() {
       else { const push = (need - Math.abs(dx)) / 2 + 1, sg = dx >= 0 ? 1 : -1; p[0] = clamp(p[0] - sg * push, p[2] / 2 + 4, W - p[2] / 2 - 4); q[0] = clamp(q[0] + sg * push, q[2] / 2 + 4, W - q[2] / 2 - 4); }
     }
   }
-  [['tl', 'l'], ['tr', 'r'], ['tj', 'j'], ['tb', 'b']].forEach(p => {
+  [['tl', 'l'], ['tr', 'r'], ['tj', 'j'], ['tb', 'b'], ['tpl', 'p']].forEach(p => {
     const el = $(p[0]), pt = pts[p[1]]; if (!pt) return;
     el.style.left = pt[0] + 'px'; el.style.top = pt[1] + 'px'; el.style.width = el.style.height = pt[2] + 'px';
   });
@@ -2572,8 +2584,8 @@ const SHOP = [
   { id: 'flag', name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot.', c: 400, g: 5 },
   { id: 'box0', name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
   { id: 'box1', name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
-  { id: 'ball0', name: 'Tiny ball', info: 'A very small ball.', c: 50, g: 0, kind: 7 },
-  { id: 'ball1', name: 'Small ball', info: 'A small rolling ball.', c: 75, g: 0, kind: 2 },
+  { id: 'ball0', name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
+  { id: 'ball1', name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
   { id: 'ball2', name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 }
 ];
 const shopIcon = id => {
@@ -2609,18 +2621,82 @@ function toggleShop(on) {
 $('btnShop').onclick = () => toggleShop(!shopOpen);
 $('shopClose').onclick = () => toggleShop(false);
 const MAX_BOUGHT = 40;   // per map: plenty to play with, and the physics stays quick
-function findSpot(kind) {   // right next to you: the right side first, then the left. It prefers a spot with something under it (so it does not just fall away), and never a spot inside a wall.
-  const w = S.world, b = S.b, q = P.propDims(kind), half = q.half, hw = q.hw || q.r, hh = hw, cands = [];
-  for (const lift of [0, 36, 72, 120, 180]) for (const side of [1, -1]) cands.push([b.x + side * (R + half + 3 + (lift ? 8 : 0)), b.y + R - half - lift]);
-  for (const up of [0, 40, 90]) cands.push([b.x, b.y - R - half - 6 - up]);   // last resort: right above you
-  const clear = (x, y) => { if (!P.spotFree(w, x, y, hw, hh)) return false; for (let k = 1; k < 6; k++) if (!P.spotFree(w, b.x + (x - b.x) * k / 6, b.y + (y - b.y) * k / 6, 4, 4)) return false; return true; };   // (and no wall between you and the spot)
-  const free = (x, y) => { for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const oh = o.r || o.hw; if (Math.abs(o.x - x) < oh + half - 2 && Math.abs(o.y - y) < oh + half - 2) return false; } return true; };
-  const held = (x, y) => { const row = Math.floor((y + half + 2) / TS); for (const dx of [0, -half * 0.5, half * 0.5]) { const t = P.tile(w, Math.floor((x + dx) / TS), row); if (t === 1 || t === 3 || t === 4 || t === 6 || t === 9) return true; } return false; };
-  for (const c of cands) if (clear(c[0], c[1]) && held(c[0], c[1]) && free(c[0], c[1])) return c;
-  for (const c of cands) if (clear(c[0], c[1]) && held(c[0], c[1])) return c;
-  for (const c of cands) if (clear(c[0], c[1]) && free(c[0], c[1])) return c;
-  for (const c of cands) if (clear(c[0], c[1])) return c;
-  return null;
+/* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
+// 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
+function ghostSpot(kind, side) {   // always the same rules: a set distance beside you; if something is in the way, climb it (up to 5 blocks); if that fails try the other side; then on top of you; else there is no room
+  const w = S.world, b = S.b, q = P.propDims(kind), half = q.half, hw = q.hw || q.r, MAXUP = 5 * TS;
+  const climb = (x, y0) => {   // lift from y0 until the spot is clear of walls and of other things (a crate or ball in the way: sit on top of it)
+    let y = y0;
+    for (let n = 0; n < 160 && y0 - y <= MAXUP; n++) {
+      if (!P.spotFree(w, x, y, hw, half)) { y -= 2; continue; }
+      let top = null;
+      for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const oh = o.r || o.hw; if (Math.abs(o.x - x) < oh + hw - 3 && Math.abs(o.y - y) < oh + half - 3) { const t = o.y - oh; if (top === null || t < top) top = t; } }
+      if (top === null) return y;
+      y = top - half - 0.5;
+    }
+    return null;
+  };
+  for (let pass = 0; pass < 2; pass++) {
+    const s = pass ? -side : side, x = b.x + s * (R + half + 3), y = climb(x, b.y + R - half);
+    if (y !== null) return [x, y, s];
+  }
+  const y = climb(b.x, b.y - R - half - 2);   // last try: right on top of you
+  return y !== null ? [b.x, y, 0] : null;
+}
+function computeGhost() {
+  const g = placing, b = S.b; if (!g || !b) return;
+  const ax = (inp.right ? 1 : 0) - (inp.left ? 1 : 0) || (Math.abs(tin.ax) > 0.15 ? Math.sign(tin.ax) : 0) || (Math.abs(b.vx) > 25 ? Math.sign(b.vx) : 0);
+  if (ax) g.side = ax;
+  const spot = ghostSpot(g.it.kind, g.side), q = P.propDims(g.it.kind);
+  if (spot) { g.tx = spot[0]; g.ty = spot[1]; g.ok = true; } else { g.tx = b.x + g.side * (R + q.half + 3); g.ty = b.y + R - q.half; g.ok = false; }
+  if (g.dx === undefined || Math.hypot(g.dx - g.tx, g.dy - g.ty) > 200) { g.dx = g.tx; g.dy = g.ty; }
+}
+function drawGhost(dt, nowT) {
+  const g = placing; if (!g || !S.b) return;
+  computeGhost();
+  const a = Math.min(1, dt * 20); g.dx += (g.tx - g.dx) * a; g.dy += (g.ty - g.dy) * a;
+  refreshPlaceUI();
+  const k = g.it.kind, q = P.propDims(k), x = g.dx, y = g.dy, bad = !g.ok, INKc = '#16100c';
+  ctx.save(); ctx.globalAlpha = 0.55 + 0.15 * Math.sin(nowT / 170); ctx.lineWidth = 2.4; ctx.lineJoin = 'round';
+  if (k === 5 || k === 6) {
+    const hw = q.hw, bh = 8, topH = 7, coil = hw * 2 - bh - topH, yb = y + hw;
+    ctx.fillStyle = bad ? '#ff7a6a' : '#7a3dd6'; ctx.fillRect(x - hw, yb - bh, hw * 2, bh); ctx.strokeStyle = INKc; ctx.strokeRect(x - hw, yb - bh, hw * 2, bh);
+    ctx.beginPath(); ctx.moveTo(x - hw + 7, yb - bh); for (let i = 0; i < 4; i++) { ctx.lineTo(x + (i % 2 ? -1 : 1) * (hw - 7), yb - bh - coil * (i + 0.5) / 4); ctx.lineTo(x + (i % 2 ? 1 : -1) * (hw - 7), yb - bh - coil * (i + 1) / 4); } ctx.lineWidth = 3; ctx.stroke(); ctx.lineWidth = 2.4;
+    ctx.fillStyle = bad ? '#ff7a6a' : '#ffd23d'; ctx.fillRect(x - hw - 2, yb - bh - coil - topH, hw * 2 + 4, topH); ctx.strokeRect(x - hw - 2, yb - bh - coil - topH, hw * 2 + 4, topH);
+  } else if (q.r) {
+    ctx.beginPath(); ctx.arc(x, y, q.r, 0, TAU); ctx.fillStyle = bad ? '#ff7a6a' : k === 3 ? '#ffa31a' : k === 7 ? '#ffe2a0' : '#ffc233'; ctx.fill(); ctx.strokeStyle = INKc; ctx.stroke();
+  } else {
+    ctx.fillStyle = bad ? '#ff7a6a' : q.hw > 20 ? '#ffb020' : '#ffc233'; ctx.fillRect(x - q.hw, y - q.hw, q.hw * 2, q.hw * 2); ctx.strokeStyle = INKc; ctx.strokeRect(x - q.hw, y - q.hw, q.hw * 2, q.hw * 2);
+    ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(x - q.hw + 4, y - q.hw + 4); ctx.lineTo(x + q.hw - 4, y + q.hw - 4); ctx.moveTo(x + q.hw - 4, y - q.hw + 4); ctx.lineTo(x - q.hw + 4, y + q.hw - 4); ctx.stroke();
+  }
+  ctx.globalAlpha = 0.95; ctx.setLineDash([6, 5]); ctx.lineWidth = 2.2; ctx.strokeStyle = bad ? '#ff5a4a' : '#fff'; ctx.lineDashOffset = -nowT / 60;
+  const r0 = q.half + 4; ctx.beginPath(); if (q.r) ctx.arc(x, y, q.r + 4, 0, TAU); else ctx.rect(x - r0, y - r0, r0 * 2, r0 * 2); ctx.stroke();
+  ctx.restore();
+}
+let placeUIKey = null;
+function refreshPlaceUI() {   // the little bar (and, on a phone, the round button) that finish the build
+  const g = placing, on = !!g, key = on ? g.it.id + (g.ok ? 1 : 0) + (touchActive() ? 1 : 0) : '';
+  if (key === placeUIKey) return; placeUIKey = key;
+  $('placeBar').classList.toggle('hide', !on); $('tpl').classList.toggle('hide', !(on && touchActive()));
+  if (!on) return;
+  $('placeName').textContent = g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
+  $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok);
+  $('placeHint').textContent = g.ok ? (touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : 'No room here. Move somewhere with space';
+  layoutTouch();
+}
+function startPlacing(it) {
+  placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
+}
+function cancelPlacing(quiet) { if (!placing) return; placing = null; placeUIKey = null; refreshPlaceUI(); if (!quiet) notice('Nothing was bought', ''); }
+function finishPlacing() {
+  const g = placing; if (!g || !canShop()) return;
+  const it = g.it; computeGhost();
+  if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); cancelPlacing(true); return; }
+  if (S.bought.length >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); cancelPlacing(true); return; }
+  if (!g.ok) { notice('No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
+  placeProp(it.kind, [g.tx, g.ty]);
+  wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
+  placing = null; placeUIKey = null; refreshPlaceUI();
 }
 function placeProp(kind, at) {
   const d = P.addProp(S.world, kind, at[0], at[1]); d.sleep = false;
@@ -2640,10 +2716,9 @@ function placeFlag() {   // right where you are: it lands on the ground under yo
   return true;
 }
 let pendingBuy = null;   // something you paid for in your mind but that had no room yet: it waits until you move somewhere with space
-function attemptBuy(it) {   // true = placed and paid for
+function attemptBuy(it) {   // the flag: true = placed and paid for
   if (wallet.c < it.c || wallet.g < it.g) return false;
-  if (it.id === 'flag') { if (!placeFlag()) return false; }
-  else { const at = findSpot(it.kind); if (!at) return false; placeProp(it.kind, at); }
+  if (!placeFlag()) return false;
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   return true;
 }
@@ -2653,12 +2728,13 @@ function buyItem(it) {
   if (it.give) { wallet.g -= it.g; wallet.c += it.give; saveWallet(); sfx('gem'); shopRender(); return; }   // a trade, not a thing: the shop stays open
   if (it.id !== 'flag' && S.bought.length >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); return; }
   toggleShop(false);
+  if (it.id !== 'flag') { startPlacing(it); return; }   // things you build: the shop closes and a ghost follows you until you place it
   if (attemptBuy(it)) { pendingBuy = null; return; }
-  // no room (or no ground): nothing is spent yet. It is placed the moment you move to a spot where it fits.
-  pendingBuy = { it, x: S.b.x, y: S.b.y };
-  notice(it.id === 'flag' ? 'No solid ground under you. The flag drops when you land' : 'No room next to you. It drops as soon as you move', 'urgent');
+  pendingBuy = { it, x: S.b.x, y: S.b.y };   // the flag needs ground under you: it drops the moment you land
+  notice('No solid ground under you. The flag drops when you land', 'urgent');
 }
 setInterval(() => {
+  if (placing && (S.mode !== 'play' || !S.b || S.away || inHome)) cancelPlacing(true);
   if (!pendingBuy) return;
   if (S.mode !== 'play' || !S.b || S.away || S.dead > 0) { if (S.mode !== 'play' || S.away) pendingBuy = null; return; }
   if (paused || wallet.c < pendingBuy.it.c || wallet.g < pendingBuy.it.g) { if (!paused) pendingBuy = null; return; }
@@ -2976,6 +3052,8 @@ $('homeShare').onclick = async () => {
 };
 addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && $('nameModal').classList.contains('hide') && $('shareModal').classList.contains('hide') && !typing()) enterGame(false); });
 setTimeout(() => { if (inHome) { retry = 0; connect(); } }, 500);   // the main menu connects to the server too, so friends and invites work before you press Play
+
+$('placeOk').onclick = () => finishPlacing(); $('placeCancel').onclick = () => cancelPlacing(); $('tpl').onclick = () => finishPlacing();
 
 /* ================= networking ================= */
 function setNet(state) {
@@ -3900,7 +3978,7 @@ function renderInner(dt, nowT) {
   if (camL < -2 * TS) ctx.fillRect(camL - 10, camT - 10, -2 * TS - camL + 10, vh + 20);
   if (camL + vw > ww + 2 * TS) ctx.fillRect(ww + 2 * TS, camT - 10, camL + vw - ww - 2 * TS + 10, vh + 20);
   drawTiles(camL, camT, vw, vh);
-  drawSpawn(); drawCheckpoints(camL, camT, vw, vh); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh);
+  drawSpawn(); drawCheckpoints(camL, camT, vw, vh); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh); drawGhost(dt, nowT);
   if (S.beaconOn && settings.beacon) drawBeacon(camL, camT, vw, vh, sc);
   drawTrack(camL, camT, vw, vh, sc);
   S.view = { l: camL, t: camT, w: vw, h: vh };
@@ -4206,7 +4284,7 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { wallet, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
+if (params && params.get('test')) window.__d = { placing: () => placing, finishPlacing, cancelPlacing, wallet, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((settings.autoEnter || resumeAfterUpdate()) && settings.name) enterGame(true); else showHome();
