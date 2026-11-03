@@ -873,8 +873,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=32"></script>
-<script src="physics.js?v=32"></script>
+<script src="maps.js?v=33"></script>
+<script src="physics.js?v=33"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2442,7 +2442,7 @@ function drawLinksOnMap(g, toX, toY, r, labels, inside) {   // toX/toY turn tile
 const dotP = (x, y, r) => 'M' + (x - r) + ' ' + y + 'a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0z';
 const EMO = [
   { n: 'Happy', bg: '#ffd23d', op: [['f', dotP(11, 13, 1.9), '#16100c'], ['f', dotP(21, 13, 1.9), '#16100c'], ['s', 'M9 19Q16 27 23 19', '#16100c', 2.2]] },
-  { n: 'Laughing', bg: '#ffd23d', op: [['s', 'M8 13Q11 9 14 13M18 13Q21 9 24 13', '#16100c', 2.2], ['f', 'M8 18Q16 31 24 18Z', '#7a1f1f'], ['f', 'M6 18Q4 22 6.500 23Q8.500 21 6 18ZM26 18Q28 22 25.500 23Q23.500 21 26 18Z', '#5ab4ff']] },
+  { n: 'Laughing', bg: '#ffd23d', op: [['s', 'M7 12Q10.500 6.500 14 12M18 12Q21.500 6.500 25 12', '#16100c', 2.4], ['f', 'M8 16.500Q16 15 24 16.500Q23.500 26 16 26Q8.500 26 8 16.500Z', '#7a1f1f'], ['f', 'M9.300 17Q16 15.900 22.700 17Q22.400 19.300 21.800 19.800Q16 18.700 10.200 19.800Q9.600 19.300 9.300 17Z', '#ffffff'], ['f', 'M12 24.600Q16 20.600 20 24.600Q16 26.600 12 24.600Z', '#ff7b8a'], ['s', 'M8 16.500Q16 15 24 16.500Q23.500 26 16 26Q8.500 26 8 16.500Z', '#16100c', 2], ['f', dotP(5.200, 17.500, 1.500), '#ff9a6a'], ['f', dotP(26.800, 17.500, 1.500), '#ff9a6a']] },
   { n: 'Angry', bg: '#ff6a4d', op: [['s', 'M8 9L14 12M24 9L18 12', '#16100c', 2.4], ['f', dotP(12, 15, 1.9), '#16100c'], ['f', dotP(20, 15, 1.9), '#16100c'], ['s', 'M10 24Q16 18 22 24', '#16100c', 2.2]] },
   { n: 'Question', bg: '#6aa9ff', op: [['s', 'M12 12Q12 7 16 7Q21 7 21 11.500Q21 14.500 16 17L16 19', '#fff', 3], ['f', dotP(16, 23.500, 1.9), '#fff']] },
   { n: 'Sick', bg: '#9be07a', op: [['s', 'M9 11L13 15M13 11L9 15M19 11L23 15M23 11L19 15', '#16100c', 2.2], ['s', 'M10 23Q13 19 16 23Q19 27 22 23', '#16100c', 2.2], ['f', 'M24 18Q27 22 24 24Q21.500 22 24 18Z', '#5a9a3a']] },
