@@ -399,6 +399,10 @@
   #emoGrid button{height:auto;aspect-ratio:1;padding:6px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;display:flex;align-items:center;justify-content:center}
   #emoGrid button:active{transform:scale(.92)}#emoGrid button.cool{opacity:.45}
   #emoGrid svg{width:100%;height:100%}
+  .epcard{max-height:92vh;overflow:auto}
+  #phraseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
+  #phraseGrid button{padding:9px 4px;font-size:14px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
+  #phraseGrid button:active,#phraseGrid button:hover{background:#3a3355}#phraseGrid button:active{transform:scale(.95)}
   #emoPop{z-index:11;background:rgba(10,8,16,.55)}
   #emoPop .cfoot{display:flex;flex-direction:column;gap:6px;align-items:center}
   @media (pointer:coarse){#tlab,.clab{display:none}}
@@ -471,7 +475,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var t0 = Date.now(), tips = ['Jump twice in a row, fast, and a ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -649,14 +653,15 @@
     <button id="btnRespawn" class="ibtn" title="Reset: back to your checkpoint, or the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Pause (Esc)" data-ic="pause"></button>
   </div>
-  <div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Say it with an emoji" data-ic="chat"></button></div>
+  <div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Say something" data-ic="chat"></button></div>
   <div id="lreqs" class="hide"></div>
   <div id="feed"></div>
 </div></div>
 <div id="emoPop" class="overlay hide"><div class="card epcard">
-  <h3>Say it with an emoji</h3>
+  <h3>Say something</h3>
   <div id="emoGrid"></div>
-  <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute emojis</button><span class="small dim">Everyone in your world sees it.</span></div>
+  <div id="phraseGrid"></div>
+  <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim">Everyone in your world sees it.</span></div>
 </div></div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 
@@ -813,7 +818,7 @@
     <span><i class="lg" style="background:#ff8a1f"></i>Checkpoint flag: your next fall brings you back</span>
   </div>
   <p>Move with <kbd>A</kbd><kbd>D</kbd> or the arrows, jump with <kbd>W</kbd> or <kbd>Space</kbd>: tap for a hop, hold for a big jump. On a phone, use the on-screen controls (you can pick swipe styles in settings). Get the <i>middle</i> of your ball onto a block or you'll roll off.</p>
-  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Jump twice in a row, fast, and a ring fills. Then jump again for an extra tall jump. Touch a checkpoint flag and your next fall brings you back to it once. Tap the chat button to send emojis, and add friends in Settings to see where they are. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
+  <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump. Touch a checkpoint flag and your next fall brings you back to it once. Tap the chat button to send an emoji or a quick message, and add friends in Settings to see where they are. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
   <label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
   <button class="ok" id="btnOk">OK</button>
 </div></div>
@@ -873,8 +878,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=33"></script>
-<script src="physics.js?v=33"></script>
+<script src="maps.js?v=34"></script>
+<script src="physics.js?v=34"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2336,6 +2341,7 @@ function linkMsg(m) {
     case 'emo': {
       const o = others.get(m.id), e = lkOf(m.pub);
       if (chatMuted || muteOf(m.pub) >= 2) return true;   // public chat muted, or that player is
+      if ((m.i | 0) < 0 || (m.i | 0) >= CHATN) return true;
       if (o) o.emo = { i: m.i | 0, t: S.t };
       addFeedEmo(who(m.name), m.i | 0, e ? 'friend' : '');
       return true;
@@ -2455,9 +2461,20 @@ const EMO = [
 const emoSvg = i => '<svg class="emo" viewBox="0 0 32 32" aria-label="' + EMO[i].n + '"><circle cx="16" cy="16" r="14" fill="' + EMO[i].bg + '" stroke="#16100c" stroke-width="2"/>' +
   EMO[i].op.map(o => o[0] === 'f' ? '<path d="' + o[1] + '" fill="' + o[2] + '"/>' : '<path d="' + o[1] + '" fill="none" stroke="' + o[2] + '" stroke-width="' + o[3] + '" stroke-linecap="round" stroke-linejoin="round"/>').join('') + '</svg>';
 const emoPaths = EMO.map(e => e.op.map(o => new Path2D(o[1])));
+const PHRASES = ['Follow me', 'This way', 'Here', 'Okay', 'Yes', 'No', 'Thanks', 'Wait for me', 'Nice one!', 'Help!', 'Careful!', 'Good luck'];   // ready-made messages: sent by number (after the emojis), so nothing else can ever be typed into the game
+const CHATN = EMO.length + PHRASES.length, isPhrase = i => i >= EMO.length;
 function drawEmoBubble(em, x, y) {   // a speech bubble with the emoji, floating above a ball for a few seconds
   const age = S.t - em.t; if (age > 3.2 || age < 0) return;
   const a = Math.min(1, age * 6, (3.2 - age) * 2), rise = Math.min(1, age * 5) * 8, s = 34;
+  if (isPhrase(em.i)) {   // a ready-made phrase: the same bubble, stretched to fit the words
+    const txt = PHRASES[em.i - EMO.length]; if (txt === undefined) return;
+    ctx.save(); ctx.translate(x, y - rise); ctx.globalAlpha = a;
+    ctx.font = '600 15px ' + FONT; const w = Math.ceil(ctx.measureText(txt).width) + 22, h = 28;
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(-w / 2 + 8, -h - 8); ctx.arcTo(w / 2, -h - 8, w / 2, -8, 9); ctx.arcTo(w / 2, -8, 5, -8, 9); ctx.lineTo(0, 0); ctx.lineTo(-5, -8); ctx.arcTo(-w / 2, -8, -w / 2, -h - 8, 9); ctx.arcTo(-w / 2, -h - 8, w / 2, -h - 8, 9); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, 0, -h / 2 - 8 + 1); ctx.textBaseline = 'alphabetic';
+    ctx.restore(); return;
+  }
   ctx.save(); ctx.translate(x, y - rise); ctx.globalAlpha = a;
   ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(-s / 2 + 6, -s); ctx.arcTo(s / 2, -s, s / 2, 0, 8); ctx.arcTo(s / 2, 0, 5, 0, 8); ctx.lineTo(0, 8); ctx.lineTo(-5, 0); ctx.arcTo(-s / 2, 0, -s / 2, -s, 8); ctx.arcTo(-s / 2, -s, s / 2, -s, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -2468,7 +2485,8 @@ function drawEmoBubble(em, x, y) {   // a speech bubble with the emoji, floating
 }
 function addFeedEmo(name, i, cls) {   // "Name" + the emoji, in the same list as joined / left
   const d = document.createElement('div'); d.className = 'msg ' + (cls || '');
-  d.appendChild(document.createTextNode(name)); const sp = document.createElement('span'); sp.innerHTML = emoSvg(i); d.appendChild(sp.firstChild);
+  if (isPhrase(i)) d.appendChild(document.createTextNode(name + ': ' + (PHRASES[i - EMO.length] || '')));
+  else { d.appendChild(document.createTextNode(name)); const sp = document.createElement('span'); sp.innerHTML = emoSvg(i); d.appendChild(sp.firstChild); }
   const f = $('feed'); f.appendChild(d); while (f.children.length > 6) f.removeChild(f.firstChild);
   setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 600); }, 7000);
 }
@@ -2482,7 +2500,9 @@ function sendEmo(i) {
 }
 const eg = $('emoGrid');
 EMO.forEach((e, i) => { const b = document.createElement('button'); b.title = e.n; b.innerHTML = emoSvg(i); b.onclick = () => sendEmo(i); eg.appendChild(b); });
-function setChatMute(on) { chatMuted = on; try { localStorage.setItem(CMKEY, on ? '1' : '0'); } catch (e) {} const c = $('chatMute'); c.classList.toggle('on', on); c.textContent = on ? 'Emojis are muted' : 'Mute emojis'; }
+const pg = $('phraseGrid');
+PHRASES.forEach((t, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.onclick = () => sendEmo(EMO.length + k); pg.appendChild(b); });
+function setChatMute(on) { chatMuted = on; try { localStorage.setItem(CMKEY, on ? '1' : '0'); } catch (e) {} const c = $('chatMute'); c.classList.toggle('on', on); c.textContent = on ? 'Chat is muted' : 'Mute chat'; }
 $('chatMute').onclick = () => setChatMute(!chatMuted); setChatMute(chatMuted);
 let chatOpen = false;
 function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it

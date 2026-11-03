@@ -24,7 +24,7 @@ const RANGE = 3000;                                       // you only receive pl
 const MAX_PER_IP = parseInt(process.env.MAX_PER_IP, 10) || 10;
 const STATS_FILE = process.env.STATS_FILE || path.join(__dirname, 'stats.json');
 const PATTERNS = 6;
-const EMOJIS = 10;                                       // the built-in emoji chat: players can only send one of these (by number)
+const EMOJIS = 22;                                       // the built-in chat: 10 emojis and 12 ready-made phrases. Players can only send one of these (by number)
 const MAX_LINKS = 5;                                      // how many people one player can track
 const LINKS_FILE = process.env.LINKS_FILE || path.join(__dirname, 'links.json');
 
