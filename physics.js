@@ -110,7 +110,7 @@
     return burn;
   }
   // generic separation of two pushables (or one pushable and the player: pass player as {x,y,r,vx,vy,m})
-  function pairSep(a, b, e) {
+  function pairSep(a, b, e, w) {
     let nx = 0, ny = 0, pen = 0;
     if (a.r && b.r) {
       const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 0.001;
@@ -132,10 +132,22 @@
     }
     let tm = a.m + b.m, sa = b.m / tm, sb = a.m / tm;
     if (!a.r && !b.r && ny !== 0) { if (ny > 0) { sa = 1; sb = 0; } else { sa = 0; sb = 1; } }   // crate on crate: only the upper one is pushed out, so a stack never squeezes its bottom crate into the floor
-    a.x -= nx * pen * sa; a.y -= ny * pen * sa; b.x += nx * pen * sb; b.y += ny * pen * sb;
+    // a crate that is sitting on the ground never gets pushed down into it: whatever it touches is moved instead
+    const free = (o, dx, dy) => o.r || !w || !boxHits(w, o.x + dx, o.y + dy, o.hw, o.hh);
+    const ax = -nx * pen * sa, ay = -ny * pen * sa, bx = nx * pen * sb, by = ny * pen * sb;
+    const fa = free(a, ax, ay), fb = free(b, bx, by);
+    if (fa && fb) { a.x += ax; a.y += ay; b.x += bx; b.y += by; }
+    else if (fa) { a.x -= nx * pen; a.y -= ny * pen; }          // b is pinned against something: a takes all of it
+    else if (fb) { b.x += nx * pen; b.y += ny * pen; }
     const vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-    if (vn < 0) { const j = -(1 + e) * vn / (1 / a.m + 1 / b.m); a.vx -= j / a.m * nx; a.vy -= j / a.m * ny; b.vx += j / b.m * nx; b.vy += j / b.m * ny; }
-    if (Math.abs(ny) > 0.7) { a.touch = true; b.touch = true; }
+    const ee = vn < -160 ? e : 0;                                // only a real knock bounces; resting contact is dead still
+    if (vn < 0) {
+      const ia = fa ? 1 / a.m : 0, ib = fb ? 1 / b.m : 0, im = ia + ib;
+      if (im > 0) { const j = -(1 + ee) * vn / im; a.vx -= j * ia * nx; a.vy -= j * ia * ny; b.vx += j * ib * nx; b.vy += j * ib * ny; }
+      else { const j = -vn * 0.5; a.vx -= j * nx; a.vy -= j * ny; b.vx += j * nx; b.vy += j * ny; }
+    }
+    if (Math.abs(ny) > 0.7) { a.touch = true; b.touch = true; if (!a.r && ny > 0) a.pc = true; if (!b.r && ny < 0) b.pc = true; }   // pc: this crate is sitting on something that is not the ground (a ball, another crate)
+    if (Math.abs(nx) > 0.7) { a.touch = true; b.touch = true; }
     a._nx = nx; a._ny = ny; b._nx = -nx; b._ny = -ny;
     return true;
   }
@@ -297,7 +309,7 @@
   function boxSettle(w, d, L, dt) {   // after tumbling: spin while in the air, then lie flat again when it lands
     if (d.sr !== undefined) { d.rot += (d.sr - d.rot) * Math.min(1, 14 * dt); d.sr = undefined; d.spin = false; return; }   // on a plank it tilts with it
     if (!d.spin && !d.rot) return;
-    const sup = boxSupports(w, d, L).length > 0 && d.vy > -20 && Math.abs(d.vy) < 140;
+    const sup = (boxSupports(w, d, L).length > 0 || d.pc) && d.vy > -20 && Math.abs(d.vy) < 140;   // (resting on a ball counts too)
     if (!sup && d.spin) { d.rot += d.av * dt; d.av *= (1 - 0.4 * dt); return; }
     d.spin = false; d.av = 0;
     const tgt = Math.round(d.rot / HALF_PI) * HALF_PI;
@@ -319,7 +331,10 @@
       if (d.k === 'o') {
         d.x += d.vx * dt; d.y += d.vy * dt; burn = ballTiles(d, w); d.rot += d.vx * dt / d.r;
         if (w.see.length) seeBody(d, w, d.m * 60);
-        if (d.gr || d.touch) d.vx *= Math.max(0, 1 - 0.5 * dt);
+        if (d.gr || d.touch) {   // rolling friction: a ball coasts, slows down and comes to rest (on ice it keeps sliding)
+          if (tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.r + 2) / TS)) !== 3) { d.vx *= Math.max(0, 1 - 0.9 * dt); d.vx = approach(d.vx, 0, 55 * dt); }
+          else d.vx *= Math.max(0, 1 - 0.2 * dt);
+        }
       } else if (d.tip) {
         boxTipStep(w, d, dt);
       } else {
@@ -337,17 +352,20 @@
         const tl = tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh - 4) / TS));
         if (tl === 2) burn = true;
         const onPlank = d.sr !== undefined;
-        boxSettle(w, d, L, dt);
+        boxSettle(w, d, L, dt); d.pc = false;
         if (!onPlank && !d.spin && d.kind !== 5 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
       }
       d.touch = false;
       if (burn || d.y > killYAt(w, d.x) || d.x < -200 || d.x > w.W * TS + 200) { d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
     }
-    for (let i = 0; i < L.length; i++) {
-      const a = L[i]; if (a.burn > 0 || a.sleep) continue;
-      for (let j = i + 1; j < L.length; j++) {
-        const b = L[j]; if (b.burn > 0 || b.sleep || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
-        pairSep(a, b, 0.15);
+    for (let pass = 0, hit = true; pass < 3 && hit; pass++) {   // (a few rounds while things overlap, so a pile settles instead of sinking into itself)
+      hit = false;
+      for (let i = 0; i < L.length; i++) {
+        const a = L[i]; if (a.burn > 0 || a.sleep) continue;
+        for (let j = i + 1; j < L.length; j++) {
+          const b = L[j]; if (b.burn > 0 || b.sleep || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
+          if (pairSep(a, b, 0.15, w)) hit = true;
+        }
       }
     }
     for (let i = 0; i < L.length; i++) {   // nothing is ever left inside the ground: lift a crate that has been pushed into it
@@ -372,8 +390,9 @@
           b.y += ny * pen; if (b.vy > 0) b.vy = 0; b.ground = true; if (Math.abs(b.x - d.x) <= d.hw) { b.flat = true; b.gType = 1; }
           d.touch = true;
           if (d.kind === 5 && b.vy >= 0) { b.bnc = true; d.sq = 0.25; }   // a spring: land on it (or roll onto it) and it throws you up
-        } else if (ny > 0.6) {             // bonked the underside
-          b.y += ny * pen; if (b.vy < 0) b.vy = 0;
+        } else if (ny > 0.6) {             // the crate is above you: it gets lifted (so one sitting on your head can never pin you down or stop you jumping); only a ceiling stops you
+          if (!boxHits(w, d.x, d.y - pen, d.hw, d.hh)) { d.y -= pen; if (d.vy > b.vy) d.vy = b.vy; if (d.hw > 20 && b.vy < 0) b.vy *= 0.6; d.touch = true; }
+          else { b.y += ny * pen; if (b.vy < 0) b.vy = 0; }
         } else {                           // pushing from the side: the crate is simply carried along; heavier ones slow you a little
           const mv = nx * pen;               // push the crate completely out of the ball's way
           d.x -= mv;

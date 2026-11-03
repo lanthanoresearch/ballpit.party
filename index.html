@@ -873,8 +873,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=28"></script>
-<script src="physics.js?v=28"></script>
+<script src="maps.js?v=29"></script>
+<script src="physics.js?v=29"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1400,10 +1400,10 @@ function loadMap(slot, next) {
 }
 function respawn(quiet, useCp) {
   const m = S.map, cp = useCp && S.cpArmed >= 0 && m.checkpoints ? m.checkpoints[S.cpArmed] : null;
-  // a flag you have touched stays yours: every fall (and every manual reset) brings you back to it until you touch another one
+  // a flag works for one fall or reset: it brings you back once, then goes grey until you touch a different flag
   S.b = cp ? P.newBody((cp[0] + 0.5) * TS, cp[1] * TS - R - 1) : P.newBody(m.start[0], m.start[1]);   // the community spawn point is exactly the same for everyone
   if (cp) { S.cpFlash = 1; notice('Back at your checkpoint', ''); }
-  S.cpUsed = -1;
+  if (cp) { S.cpUsed = S.cpArmed; S.cpArmed = -1; }   // a flag works once: after you come back to it, it goes grey until you touch a different one
   S.dead = 0; S.spawnT = 0.6; S.finished = false; S.bLatch = 0; S.bReady = false;
   if (!quiet) { beam(S.b.x, S.b.y + R, settings.color); ring(S.b.x, S.b.y, '#fff', 4, 46, 0.6); burst(S.b.x, S.b.y, [settings.color, settings.color2, '#fff'], 12, 160, 100); }
 }
@@ -1550,7 +1550,7 @@ function touchFlags() {   // checkpoint flags: touch one and your next fall brin
     if (S.cpUsed === i) continue;
     S.cpArmed = i; S.cpUsed = -1; S.cpFlash = 1; sfx('ready');
     burst((c[0] + 0.5) * TS, c[1] * TS - 60, ['#46d17a', '#fff', '#b9ffd3'], 14, 200, 80);
-    notice('Checkpoint! Falls and resets bring you back here', ''); return;
+    notice('Checkpoint! Your next fall or reset brings you back here', ''); return;
   }
 }
 function collectCoins() {
@@ -1814,12 +1814,10 @@ function pressJump() { if (!blocked() && S.mode === 'play' && S.b && !S.away && 
 function pressBoost() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0 && settings.boost) S.bLatch = 0.25; }
 function pullReady() { return !!(settings.boost && settings.boostPull && S.b && S.mode === 'play' && S.dead <= 0 && S.b.bcharge >= 1 && !S.b.boost); }
 function backToStart() { if (S.mode !== 'play') return; S.started = false; S.cpArmed = -1; S.cpUsed = -1; $('finishbanner').classList.add('hide'); respawn(); }
-function resetPress() {   // the reset button / key: with a checkpoint it counts as a fall and brings you back to it; pressed again on the flag it starts you over
+function resetPress() {   // the reset button / key: with a live checkpoint it counts as a fall and brings you back to it (once); otherwise you go to the start
   if (S.mode !== 'play' || !S.b || S.away || S.dead > 0) return;
-  const cp = S.cpArmed >= 0 && S.map.checkpoints ? S.map.checkpoints[S.cpArmed] : null;
-  if (!cp) { backToStart(); return; }
-  if (Math.abs(S.b.x - (cp[0] + 0.5) * TS) < 50 && Math.abs(S.b.y - (cp[1] * TS - R)) < 40) { backToStart(); notice('Checkpoint cleared. Back at the start', ''); return; }
-  die('reset');
+  if (S.cpArmed >= 0 && S.map.checkpoints) { die('reset'); return; }
+  S.started = false; $('finishbanner').classList.add('hide'); respawn();
 }
 
 const keysDown = new Set();
@@ -3116,7 +3114,10 @@ function skyLife(sw, sh, dt, fade, night, hN) {   // birds by day, fireflies by 
 }
 function drawSky(sw, sh, camL, camT, p, dt, fade) {   // far away, so the sun and moon barely move sideways; height changes where they sit
   const m = S.map, night = clamp((p - DAY_END) / NIGHT_LEN, 0, 1);
-  const hN = clamp(1 - (S.b.y / TS) / m.H, 0, 1);                 // 0 = deep down, 1 = the very top of the level
+  // the sky follows your height only slowly: a jump or a short fall barely shifts it, climbing or falling a long way does
+  const sc0 = S.viewSc || 1, cy0 = camT + (sh / sc0) / 2;
+  if (S.skyCy == null || S.skyMap !== S.idx) { S.skyCy = cy0; S.skyMap = S.idx; } else S.skyCy += (cy0 - S.skyCy) * (1 - Math.exp(-Math.min(0.1, dt || 0.016) * 0.7));
+  const hN = clamp(1 - (S.skyCy / TS) / m.H, 0, 1);                // 0 = deep down, 1 = the very top of the level
   const lift = (0.42 - hN) * sh * 0.55;                              // fall and they climb the sky; climb and they sink
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   if (night > 0.02) {
@@ -3153,7 +3154,7 @@ function drawSky(sw, sh, camL, camT, p, dt, fade) {   // far away, so the sun an
     ctx.globalAlpha = 1;
   }
   // clouds: far-away layers that slide slowly past as you climb or fall. Higher up there are more of them.
-  const cl = cloudsFor(m), sc = S.viewSc || 1, cxw = camL + (sw / sc) / 2, cyw = camT + (sh / sc) / 2, dens = settings.low ? 0.45 : 1;
+  const cl = cloudsFor(m), sc = S.viewSc || 1, cxw = camL + (sw / sc) / 2, cyw = S.skyCy, dens = settings.low ? 0.45 : 1;
   for (let i = 0; i < cl.length; i++) {
     const c = cl[i]; if (dens < 1 && (i % 100) / 100 > dens) continue;
     const k = c.d * sc, ext = c.s * (1.5 + c.d * 3), wrapW = (m.W + 260) * TS * k;
