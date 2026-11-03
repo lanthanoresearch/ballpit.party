@@ -210,7 +210,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     let hdir = 1, lo = (seg.lo0 !== undefined ? seg.lo0 : -1), hi = pl + (seg.zw || (mode === 'up' ? 30 : 34));
     let baseY = 0, lock = 0, lockSign = 0, prevMode = mode, ext = 0;
     const sp = k => (seg[k] !== undefined ? seg[k] : o.p[k]);
-    let nextSee = 0;
+    let nextSee = 0, prevWater = false;
     let total = 0; segs.forEach(s => { total += s.n + (s.ext ? 1 : 0); });
     if (o.withFinish) total += 1;
 
@@ -266,8 +266,11 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       }
 
       if (seeG) { dy = 0; gap = seeG; }
-      if (narrow || pl <= 3) gap = Math.min(gap, 3);
+      if (narrow || pl <= 3 || water || prevWater) gap = Math.min(gap, 3);
+      prevWater = water;
       if (dy >= 3) gap = Math.min(gap, 3);
+      if (gap >= 5 && dy > 0) dy = 0;
+      if (gap >= 6) dy = 0;
       let nx;
       if (mode === 'right') {
         nx = px + pl + gap;
@@ -328,7 +331,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         hz = 1;
       }
       path.push([nx, ny, L, thI, mode === 'right' ? 0 : mode === 'down' ? 1 : 2, gid, seg.cave ? 1 : 0, h, seg.lavasea ? 1 : 0,
-        (!hz && !last && !water && !narrow && !seeG && !nextSee && t === 1 && L >= 8) ? 1 : 0, rest ? 1 : 0, 0, seeG]);
+        (!hz && !last && !water && !narrow && !seeG && !nextSee && t === 1 && L >= 7) ? 1 : 0, rest ? 1 : 0, 0, seeG]);
       placedP.push({ x0: nx, x1: nx + L, top: ny }); px = nx; py = ny; pl = L;
     }
     return { rects, fin, path, ng, see };
@@ -1212,19 +1215,58 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       }
       return null;
     }
+    // each lane is cut into short chunks of very different character, so no stretch looks like the one before it
+    const FLAV = {
+      plain: {},
+      islets: { wd: [3, 5], gp: [3, 4], narrow: 0.22, oo: [-4, -3, -2, 2, 3, 4, -1, 1], drift: 5, lava: 0.05 },
+      lavarun: { wd: [8, 14], lava: 0.85, pillar: 0.45, ice: 0, oo: [0, 0, 1, -1], gp: [2, 3] },
+      iceslide: { wd: [8, 13], ice: 0.9, lava: 0.25, oo: [0, 0, -1, 1, -2], gp: [2, 3] },
+      waterhop: { wd: [8, 11], water: 0.55, oo: [0, 0, -1, 1], gp: [2, 3] },
+      seesaws: { wd: [8, 12], see: 0.6, lava: 0.2, oo: [0, 0, 0, 1], gp: [2, 3] },
+      stones: { wd: [2, 4], gp: [2, 3], narrow: 0.5, oo: [-3, -2, -1, 1, 2, 3], drift: 5, ice: 0.1 },
+      arena: { wd: [11, 17], gp: [2, 3], oo: [0, 0, 1, -1], pillar: 0.5, lava: 0.4 },
+      stairs: { wd: [4, 7], gp: [2, 3], oo: [-3, -3, -2, -3, -1, 1], drift: 5 },
+      drops: { wd: [4, 8], gp: [2, 4], oo: [3, 3, 2, 3, 3, -1, 1], drift: 5 },
+      wisp: { wd: [2, 4], gp: [4, 6], oo: [0, 0, -1, -1, -2, 1], narrow: 0.35, lava: 0, pillar: 0, ice: 0.12, water: 0, rest: 99, drift: 5 },
+      perch: { wd: [3, 4], gp: [5, 6], oo: [0, 0, 0, -1, -2], narrow: 0.5, lava: 0, pillar: 0, ice: 0, water: 0, rest: 99, drift: 5 },
+      cloud: { wd: [4, 7], gp: [3, 5], oo: [0, -1, -2, -3, 1], narrow: 0.15, lava: 0.08, pillar: 0.05, ice: 0.3, rest: 99, drift: 5 },
+      zigzag: { wd: [4, 8], gp: [2, 4], oo: [3, -3, 3, -3, 2, -2, 4, -4], drift: 5 },
+      wild: { wd: [2, 15], gp: [2, 4], oo: [-4, -3, -2, -1, 0, 1, 2, 3, 4], narrow: 0.2, lava: 0.3, ice: 0.25, water: 0.15, see: 0.15, pillar: 0.25, drift: 5 },
+      wild2: { wd: [3, 12], gp: [2, 4], oo: [-3, -2, 0, 2, 3, 4, -4], narrow: 0.12, lava: 0.35, ice: 0.3, water: 0.2, pillar: 0.3, drift: 5 }
+    };
+    const FW = {}; for (const k in FLAV) FW[k] = 0.4 + BR() * 2.2;   // every map has its own favourite kinds of stretch
+    const FKEYS = Object.keys(FLAV);
+    const sm = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
+    const heightT = r => Math.max(0, Math.min(1, (r + DNN) / Math.max(1, UPN - 1 + DNN)));   // 0 at the bottom of the sky, 1 at the very top
+    const WISPY = { wisp: 1, perch: 1, cloud: 1, islets: 0.7, stones: 0.6, drops: 0.4 };
+    function pickFlav(r) {
+      const t = heightT(r), thick = 1 - sm(0.22, 0.78, t), thin = sm(0.28, 0.9, t);
+      const w = { plain: 0.9, islets: 2, lavarun: 3, iceslide: 2, waterhop: 2, seesaws: 3, stones: 2, arena: 3, stairs: 2, drops: 2, zigzag: 3, wild: 5, wild2: 4, wisp: 4, perch: 2.5, cloud: 3 };
+      for (const k in w) w[k] *= FW[k] * (WISPY[k] ? 0.04 + thin * 2.6 * WISPY[k] : 0.12 + thick * 1.2);
+      let tot = 0; for (const k of FKEYS) tot += w[k]; let q = BR() * tot;
+      for (const k of FKEYS) { q -= w[k]; if (q <= 0) return k; }
+      return 'plain';
+    }
     function lane(e, dir, r, main, dips) {
-      const out = []; let guard = 0, lastBi = -1;
-      while (guard++ < 40) {
+      const out = []; let guard = 0, lastBi = -1, lastF = '', shorts = 0;
+      while (guard++ < 120) {
         const nxt = e[0] + (dir > 0 ? e[2] + 10 : -10);
         if (nxt < xl + LM + 8 || nxt > xr - LM - 8) break;
         const bi = bandAt(nxt), lt = laneOf(bi, r);
         if (dips && lastBi >= 0 && bi !== lastBi) { const dp = dip(e, dir, r); if (dp) { out.push(...dp); e = dp[dp.length - 1]; continue; } }
         lastBi = bi;
-        const segs = [SEG('right', 110, lt.th, Object.assign({}, lt, { home: -LS * r - e[1], rest: 9 }))];
-        const pw = growDir(e, segs, d.seed + r * 101 + guard * 7 + (dir > 0 ? 3 : 0), dir, [Math.max(bx0(bi) - 8, xl + 4 + LM), Math.min(bx1(bi) + 8, xr - 4 - LM)], { main, kind: 'lane' });
+        let fl = pickFlav(r); if (fl === lastF && fl !== 'plain') fl = 'plain'; lastF = fl;
+        if (r === -DNN || shorts) fl = 'plain';   // (the lowest lane keeps to the ground)
+        let pw = null;
+        for (let att = 0; att < 5 && !pw; att++) {   // if a chunk will not fit, try another flavour, then the plain one
+          const f2 = att < 2 ? fl : att < 4 ? pickFlav(r) : 'plain', ff = FLAV[f2];
+          const segs = [SEG('right', att < 3 ? bri(3, 16) : bri(3, 8), lt.th, Object.assign({}, lt, ff, { home: -LS * r - e[1], rest: ff.rest || 7, drift: ff.drift || lt.drift }))];
+          pw = growDir(e, segs, d.seed + r * 101 + guard * 7 + att * 977 + (dir > 0 ? 3 : 0), dir, [Math.max(bx0(bi) - 8, xl + 4 + LM), Math.min(bx1(bi) + 8, xr - 4 - LM)], { main, kind: 'lane' });
+          if (pw) pw.forEach(q => { q[13] = f2; });
+        }
         if (!pw) break;
         out.push(...pw); e = pw[pw.length - 1];
-        if (pw.length < 2) break;
+        if (pw.length < 2) { if (++shorts >= 3) break; } else shorts = 0;
       }
       return { pw: out, end: e };
     }
@@ -1238,6 +1280,120 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         if (pw) return pw;
       }
       return null;
+    }
+
+    /* ---- chaos: a pile of set-pieces dropped onto the platforms of the middle and the sky, so every stretch has something going on ---- */
+    const CH = {
+      pits(e, x, y, L, th, g) {        // two lava pits with a solid island between them
+        if (L < 14) return 0; const a = e[0] + 3, b = e[0] + L - 5;
+        addRect([a, y, 2, 2, 2, th, g]); addRect([b, y, 2, 2, 2, th, g]); addRect([a + 4, y - 1, L - 14 > 3 ? 3 : 2, 1, 1, th, g]);
+        coinRow(a + 0.5, y - 3.4, 3, 1, 0); coin(b + 1, y - 3.4, 1); return 1;
+      },
+      moat(e, x, y, L, th, g) {        // a stepped hill ringed by lava
+        if (L < 16) return 0; const a = e[0] + 3;
+        addRect([a, y, 2, 2, 2, th, g]); addRect([a + 2, y - 1, 8, 1, 1, th, g]); addRect([a + 3, y - 2, 6, 1, 1, th, g]); addRect([a + 4, y - 3, 4, 1, 1, th, g]);
+        addRect([a + 10, y, 2, 2, 2, th, g]); coinRow(a + 4.5, y - 4.4, 3, 1, 0); coin(a + 6, y - 5.8, 1); return 1;
+      },
+      padisle(e, x, y, L, th, g) {     // lava between two edges with a bounce pad floating in the middle
+        if (L < 18) return 0; const a = e[0] + 3, w = 11;
+        addRect([a, y, w, 2, 2, th, g]); addRect([a + 4, y, 3, 1, 6, th, g]);
+        coin(a + 5.5, y - 3.4, 0); coin(a + 5.5, y - 5.4, 0); coin(a + 5.5, y - 7.8, 1); return 1;
+      },
+      stones(e, x, y, L, th, g) {      // a long lava pool crossed on floating stones
+        if (L < 16) return 0; const a = e[0] + 3, w = 10;
+        addRect([a, y, w, 2, 2, th, g]); addRect([a + 2, y - 1, 2, 1, 1, th, g]); addRect([a + 6, y - 1, 2, 1, 1, th, g]); coinRow(a + 2.5, y - 3, 2, 4, 0); return 1;
+      },
+      crates(e, x, y, L, th, g) {      // two walls of crates to shove through, coins between
+        if (L < 11) return 0; const a = e[0] + 3;
+        crateColumn(a, y, bri(3, 4)); crateColumn(a + 4.6, y, bri(3, 4)); coinRow(a + 1.8, y - 1.2, 3, 1, 0); if (L >= 17) { crateColumn(a + 9.3, y, 3); } return 1;
+      },
+      dominoes(e, x, y, L, th, g) {    // a row of crates, set up to topple
+        if (L < 10) return 0; const a = e[0] + 2; for (let k = 0; k < Math.min(9, L - 4); k++) props.push([0, a + k * 1.15, y]); coinRow(a + 1, y - 2.6, 4, 1.4, 0); return 1;
+      },
+      ballpit(e, x, y, L, th, g) {     // a little ball pit with low walls
+        if (L < 12) return 0; const a = e[0] + 3, w = 8;
+        addRect([a - 1, y - 1, 1, 1, 1, th, g]); addRect([a + w, y - 1, 1, 1, 1, th, g]);
+        for (let k = 0; k < w; k++) props.push([4, a + 0.4 + k * 0.95, y]); for (let k = 0; k < w - 1; k++) props.push([4, a + 0.9 + k * 0.95, y - 0.78]);
+        coin(a + w / 2, y - 3, 1); return 1;
+      },
+      ice(e, x, y, L, th, g) {         // a slick ice slab to run across
+        if (L < 10) return 0; const a = e[0] + 2, w = Math.min(L - 5, 9);
+        addRect([a, y - 1, w, 1, 3, th, g]); coinRow(a + 1, y - 2.4, w - 2, 1, 0); return 1;
+      },
+      stilts(e, x, y, L, th, g) {      // pillars of growing height to hop up and down
+        if (L < 12) return 0; const a = e[0] + 2;
+        addRect([a, y - 2, 1, 2, 1, th, g]); addRect([a + 3, y - 3, 1, 3, 1, th, g]); addRect([a + 6, y - 4, 1, 4, 1, th, g]);
+        if (L >= 16) { addRect([a + 9, y - 3, 1, 3, 1, th, g]); addRect([a + 12, y - 2, 1, 2, 1, th, g]); }
+        coin(a + 0.5, y - 3.4, 0); coin(a + 3.5, y - 4.4, 0); coin(a + 6.5, y - 5.4, 1); return 1;
+      },
+      teeth(e, x, y, L, th, g) {       // a low ceiling with lava teeth hanging from it: don't jump too high
+        if (L < 14) return 0; const a = e[0] + 4, w = L - 8;
+        if (!occ.free2(a, y - 9, a + w, y - 6, e.box, null)) return 0;
+        occ.add(a, y - 9, a + w, y - 6);
+        addRect([a, y - 8, w, 2, 1, th, g]); for (let k = 1; k < w - 1; k += 3) addRect([k + a, y - 6, 1, 1, 2, th, g]);
+        coinRow(a + 1.5, y - 1.2, Math.min(5, w >> 1), 1.5, 0); return 1;
+      },
+      lavabars(e, x, y, L, th, g) {    // lava blocks standing on the floor at different heights: weave between them
+        if (L < 12) return 0; const a = e[0] + 3;
+        for (let k = 0; k < 3 + (L > 15 ? 1 : 0); k++) { addRect([a + k * 3, y - 1, 1, 1, 2, th, g]); if (k % 2) addRect([a + k * 3, y - 2, 1, 1, 2, th, g]); }
+        coinRow(a + 1.5, y - 3.6, 3, 3, 0); return 1;
+      },
+      jenga(e, x, y, L, th, g) { if (L < 9) return 0; jenga(e[0] + bri(2, L - 5), y, bri(5, 8)); cratePyramid(e[0] + L - 6, y, 3); return 1; }
+    };
+    const CHF = {   // what each kind of stretch likes
+      lavarun: ['pits', 'moat', 'padisle', 'stones', 'lavabars', 'teeth'],
+      iceslide: ['ice', 'stilts', 'pits', 'lavabars'],
+      arena: ['crates', 'dominoes', 'ballpit', 'teeth', 'moat', 'jenga', 'stilts'],
+      plain: ['crates', 'dominoes', 'ice', 'stilts', 'pits', 'jenga', 'ballpit', 'lavabars'],
+      zigzag: ['stilts', 'ice'], wild: ['pits', 'moat', 'padisle', 'stones', 'lavabars', 'teeth', 'crates', 'dominoes', 'ballpit', 'ice', 'stilts', 'jenga'], wild2: ['pits', 'moat', 'padisle', 'stones', 'lavabars', 'teeth', 'crates', 'ballpit', 'ice', 'stilts'],
+      waterhop: ['stilts', 'dominoes', 'crates'], seesaws: ['dominoes', 'crates'],
+      islets: [], stones: [], stairs: ['ice'], drops: ['ice'], wisp: [], perch: [], cloud: []
+    };
+    function chaos(pw, p) {
+      for (let i = 1; i < pw.length - 1; i++) {
+        const e = pw[i];
+        if (!e[9] || e[4] !== 0 || e[6] || e[10] || e[12] || e[2] < 8 || BR() > p) continue;
+        const kinds = CHF[e[13]] || CHF.plain; if (!kinds.length) continue;
+        const k = kinds[Math.floor(BR() * kinds.length)];
+        if (CH[k](e, e[0], e[1], e[2], e[3], e[5])) e[9] = 0;
+      }
+    }
+    // a bounce pad throws you up to something floating above the platform
+    function satellite(e) {
+      const L = e[2], y = e[1], th = e[3], g = e[5], kind = BR();
+      const px = e[0] + 1;   // the pad sits at the far end of the platform; everything it throws you to hangs over the platform
+      const reserve = (x0, y0, x1, y1) => { if (!occ.free2(x0, y0, x1, y1, e.box, null)) return false; occ.add(x0, y0, x1, y1); return true; };
+      if (kind < 0.35 && L >= 12) {   // a shelf with a pile of toys
+        if (!reserve(px - 2, y - 13, px + 12, y - 6)) return false;
+        addRect([px, y, 3, 1, 6, th, g]); const sx = px + 3, sy = y - 7;
+        addRect([sx, sy, 8, 1, 1, th, g]);
+        jenga(sx + 1, sy, bri(3, 5)); props.push([3, sx + 6, sy]); coinRow(sx + 0.5, sy - 3.4, 7, 1, 0); coin(sx + 4, sy - 4.6, 1);
+      } else if (kind < 0.62 && L >= 14) {   // two shelves, one above the other, a pad on each
+        if (!reserve(px - 2, y - 24, px + 15, y - 6)) return false;
+        addRect([px, y, 3, 1, 6, th, g]); const sx = px + 3, sy = y - 7;
+        addRect([sx, sy, 6, 1, 1, th, g]); addRect([sx + 1, sy, 3, 1, 6, th, g]);
+        const s2x = sx + 4, s2y = sy - 8; addRect([s2x, s2y, 7, 1, 1, th, g]);
+        coinRow(s2x + 0.5, s2y - 1.1, 6, 1, 0); coin(s2x + 3.5, s2y - 3, 2); coin(sx + 2.5, sy - 4, 0); coin(sx + 2.5, sy - 5.4, 0);
+      } else if (kind < 0.85 && L >= 10) {   // a diagonal trail of stones up and away
+        if (!reserve(px - 2, y - 14, px + 22, y - 6)) return false;
+        addRect([px, y, 3, 1, 6, th, g]); let sx = px + 3, sy = y - 7;
+        for (let k = 0; k < 3; k++) { addRect([sx, sy, 3, 1, 1, th, g]); coin(sx + 1.5, sy - 1.4, 0); sx += 4; sy -= 1; }
+        addRect([sx, sy, 5, 1, 1, th, g]); coinRow(sx + 0.5, sy - 1.2, 4, 1, 0); coin(sx + 2.5, sy - 2.6, 1);
+      } else if (L >= 12) {   // a hanging shelf with lava on it
+        if (!reserve(px - 2, y - 13, px + 14, y - 6)) return false;
+        addRect([px, y, 3, 1, 6, th, g]); const sx = px + 4, sy = y - 8;
+        addRect([sx, sy, 8, 1, 1, th, g]); addRect([sx + 2, sy - 1, 1, 1, 2, th, g]); addRect([sx + 5, sy - 1, 1, 1, 2, th, g]);
+        coin(sx + 1, sy - 1.5, 0); coin(sx + 3.5, sy - 3, 0); coin(sx + 6.5, sy - 1.5, 1);
+      } else return false;
+      coin(px + 1.5, y - 3.2, 0); coin(px + 1.5, y - 5.2, 0);
+      return true;
+    }
+    function satellites(pw, p) {
+      for (let i = 1; i < pw.length - 1; i++) {
+        const e = pw[i];
+        if (!e[9] || e[4] !== 0 || e[6] || e[10] || e[12] || e[2] < 9 || BR() > p) continue;
+        if (satellite(e)) e[9] = 0;
+      }
     }
     const lanePw = {};
     function snake(dir0, rSign, nLanes, main) {
@@ -1269,6 +1425,8 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     }
     if (!fin) { const e = mainPath[mainPath.length - 1]; fin = [e[0], e[1], e[2]]; addRect([e[0], e[1], e[2], 1, 4, e[3], e[5]]); }
 
+    satellites(decPath, 0.4); satellites(mainPath, 0.35); satellites(gruns, 0.3);
+    chaos(decPath, 1); chaos(mainPath, 0.95); chaos(gruns, 0.6);
     addStructures(decPath);   // (the real route stays plain so it is always fair)
     // crate gates on the real route: a tall door that only opens while something heavy sits on the plate. Three crates are provided; waste them and you are stuck.
     function gates(pw, p, any) {
@@ -1293,6 +1451,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       }
     }
     gates(mainPath, 0.9); gates(decPath, 0.8);
+    gates(mainPath, 0.55, true); gates(decPath, 0.75, true);
     addStructures(mainPath, d.mainStruct === undefined ? 0.28 : d.mainStruct);
     // bounce pads on the side route and the ground: a hop up to a little trail of coins
     function padFun(pw, p) {
@@ -1320,7 +1479,8 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     pickCps(mainPath, 20); pickCps(decPath, 24); pickCps(gruns, 5);
     ugCps.forEach(q => cps.push(q));
     skyDistricts(mainPath); skyDistricts(decPath);
-    addProps(mainPath, 0.65); addProps(decPath, 0.8);
+    satellites(mainPath, 0.5); satellites(decPath, 0.55); satellites(gruns, 0.3);
+    addProps(mainPath, 0.9); addProps(decPath, 0.95);
     addCoins(mainPath, 0.62); addCoins(decPath, 0.55);
     for (let i = 0; i < 9; i++) coin(fin[0] + 2 + i * (fin[2] - 4) / 8, fin[1] - 1.5 - Math.sin(i / 8 * Math.PI) * 1.5, i === 4 ? 2 : 1);
     addCeilings(mainPath); addCeilings(decPath);
@@ -1383,6 +1543,77 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     // keep coins out of solid ground, and out of the doors' way
     const gridT = new Uint8Array(W * H);
     for (const r of rects) for (let yy = r[1]; yy < r[1] + r[3]; yy++) { if (yy < 0 || yy >= H) continue; for (let xx = r[0]; xx < r[0] + r[2]; xx++) if (xx >= 0 && xx < W) gridT[yy * W + xx] = r[4]; }
+    let map_cleaned = 0;
+
+    /* ---- final clean-up: nothing may be buried in the ground, hang in mid-air, or be impossible to use ---- */
+    const SOLT = t => t === 1 || t === 3 || t === 4 || t === 6;
+    const gt = (x, y) => (x < 0 || x >= W || y < 0 || y >= H) ? 0 : gridT[y * W + x];
+    const gtn = (x, y) => (x < 0 || x >= W || y < 0 || y >= H) ? 1 : gridT[y * W + x];
+    let cleaned = 0;
+    {
+      // crates, boxes and balls: not inside solid or lava, and not hanging with nothing under them (a stack counts as support)
+      const dims = k => (k === 0 ? [0.45, 0.9] : k === 1 ? [0.9, 1.8] : k === 2 ? [0.4, 0.8] : k === 3 ? [0.85, 1.7] : [0.35, 0.7]);
+      const order = props.slice().sort((a, b) => b[2] - a[2]), good = [];
+      for (const q of order) {
+        const [k, x, y0] = q, [hw, hh] = dims(k), cx = x + 0.5;
+        let y = y0, bad = false;
+        for (let tx = Math.floor(cx - hw + 0.08); tx <= Math.floor(cx + hw - 0.08) && !bad; tx++) for (let ty = Math.floor(y - hh + 0.1); ty <= Math.floor(y - 0.1); ty++) { const t = gt(tx, ty); if (SOLT(t) || t === 2) { bad = true; break; } }
+        if (!bad) {
+          // find what it comes to rest on: floor under its centre, or the top of a crate beneath it. Then sit exactly on it, so nothing drops or tips at the start.
+          let best = null;
+          for (let dy = 0; dy < 6; dy++) { const row = Math.floor(y + 0.12) + dy; if (SOLT(gt(Math.floor(cx), row))) { best = row; break; } if (gt(Math.floor(cx), row) === 2) break; }
+          for (const o of good) { const [hw2, hh2] = dims(o[0]), top = o[2] - hh2; if (Math.abs(o[1] - x) < hw2 + 0.02 && top >= y - 0.45 && top <= y + 6 && (best === null || top < best)) best = top; }
+          if (best === null) bad = true;
+          else if (gad.doors.some(dd => x + 0.5 + hw > dd[0] + 0.02 && x + 0.5 - hw < dd[0] + dd[2] - 0.02 && best > dd[1] && best - hh < dd[1] + dd[3]) ||
+                   gad.btns.some(bb => x + 0.5 + hw > bb[0] && x + 0.5 - hw < bb[0] + 1 && Math.abs(best - bb[1]) < 0.3)) bad = true;   // not inside a gate, and not hiding a button
+          else {
+            q[2] = best;
+            for (const o of good) { const [hw2, hh2] = dims(o[0]); if (Math.abs(o[1] - x) < hw + hw2 - 0.06 && Math.abs((o[2] - hh2 / 2) - (best - hh / 2)) < (hh + hh2) / 2 - 0.06) { bad = true; break; } }   // two things never share the same space
+          }
+        }
+        if (bad) cleaned++; else good.push(q);
+      }
+      const gs = new Set(good), kept = props.filter(q => gs.has(q));
+      props.length = 0; for (const q of kept) props.push(q);
+    }
+    {
+      // doors must stand on something and be free of solid; each needs at least one working button or plate
+      const okCtl = (x, y, w) => { for (let tx = x; tx < x + w; tx++) { if (!SOLT(gt(tx, y))) return false; if (SOLT(gt(tx, y - 1)) || SOLT(gt(tx, y - 2))) return false; } return true; };
+      const doors = gad.doors, plates = gad.plates.filter(q => okCtl(q[0], q[1], q[2])), btns = gad.btns.filter(q => okCtl(q[0], q[1], 1));
+      cleaned += (gad.plates.length - plates.length) + (gad.btns.length - btns.length);
+      const has = new Set(); plates.forEach(q => q[3].forEach(i => has.add(i))); btns.forEach(q => q[2].forEach(i => has.add(i)));
+      const map2 = new Map(), nd = [];
+      doors.forEach((d, i) => {
+        let buried = false, floor = true;
+        for (let tx = d[0]; tx < d[0] + d[2]; tx++) { for (let ty = d[1]; ty < d[1] + d[3]; ty++) if (SOLT(gt(tx, ty))) buried = true; if (!SOLT(gt(tx, d[1] + d[3]))) floor = false; }
+        if (buried || !floor || !has.has(i)) { cleaned++; return; }
+        map2.set(i, nd.length); nd.push(d);
+      });
+      const remap = a => a.map(i => map2.get(i)).filter(i => i !== undefined);
+      gad.doors.length = 0; nd.forEach(d => gad.doors.push(d));
+      gad.plates.length = 0; plates.forEach(q => { const r = remap(q[3]); if (r.length) { q[3] = r; gad.plates.push(q); } else cleaned++; });
+      gad.btns.length = 0; btns.forEach(q => { const r = remap(q[2]); if (r.length) { q[2] = r; gad.btns.push(q); } else cleaned++; });
+      // door frames and button pictures follow what is left
+      const dk = new Set(gad.doors.map(d => d[0] + ',' + (d[1] + d[3]))), bk = new Set(gad.btns.map(q => q[0] + ',' + q[1]));
+      const dc = decor.filter(q => q[0] === 2 ? dk.has(q[1] + ',' + q[2]) : q[0] === 1 ? bk.has(q[1] + ',' + q[2]) : true);
+      decor.length = 0; dc.forEach(q => decor.push(q));
+    }
+    {
+      // checkpoint flags: on something solid with open air above. Slide one sideways if it is not; drop it if nothing fits.
+      const okCp = (x, y) => SOLT(gt(x, y)) && !SOLT(gt(x, y - 1)) && !SOLT(gt(x, y - 2)) && !SOLT(gt(x, y - 3)) && gt(x, y) !== 2 && gt(x, y - 1) !== 2;
+      for (let i = cps.length - 1; i >= 0; i--) {
+        const q = cps[i]; if (okCp(q[0], q[1])) continue;
+        let fx = null; for (let d = 1; d <= 10 && fx === null; d++) for (const sx of [q[0] + d, q[0] - d]) if (okCp(sx, q[1])) { fx = sx; break; }
+        if (fx === null) { cps.splice(i, 1); cleaned++; } else q[0] = fx;
+      }
+    }
+    for (const r of rects) {   // a bounce pad needs clear air above it
+      if (r[4] !== 6) continue; let cov = 0;
+      for (let tx = r[0]; tx < r[0] + r[2]; tx++) for (let k = 1; k <= 2; k++) if (SOLT(gt(tx, r[1] - k))) cov++;
+      if (cov) { r[4] = 1; cleaned++; }
+    }
+    map_cleaned = cleaned;
+
     const coinsOut = [], seen = new Set();
     for (const q of coins) {
       const tx = Math.floor(q[0]), ty = Math.floor(q[1]); if (tx < 0 || tx >= W || ty < 0 || ty >= H) continue;
@@ -1397,7 +1628,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     const map = {
       idx, name: d.name, bg: '#0c0c16',
       TS, W, H, rects, path, zones, props, coins: coinsOut, gadgets: gad, decor, floorY,
-      checkpoints: cps, ug: ugStats,
+      checkpoints: cps, ug: ugStats, cleaned: map_cleaned,
       start: [(ox + 1.5) * TS, oy * TS - R - 1],   // the one community spawn point
       finish: fin,
       flag: [fin[0] + fin[2] / 2, fin[1]],

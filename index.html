@@ -856,8 +856,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=23"></script>
-<script src="physics.js?v=23"></script>
+<script src="maps.js?v=25"></script>
+<script src="physics.js?v=25"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3466,8 +3466,9 @@ function drawDyn(camL, camT, vw, vh) {
       d._pv = d.vy;
     }
     if (d.k === 'b') {
+      ctx.save(); if (d.rot) { ctx.translate(d.x, d.y); ctx.rotate(d.rot); ctx.translate(-d.x, -d.y); }   // a tipping crate really turns
       ctx.fillStyle = d.hw > 20 ? '#ffb020' : '#ffc233'; wob(d.x - d.hw, d.y - d.hh, d.hw * 2, d.hh * 2, 1.7, i); ctx.fill(); ctx.stroke();
-      ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(d.x - d.hw + 4, d.y - d.hh + 4); ctx.lineTo(d.x + d.hw - 4, d.y + d.hh - 4); ctx.moveTo(d.x + d.hw - 4, d.y - d.hh + 4); ctx.lineTo(d.x - d.hw + 4, d.y + d.hh - 4); ctx.stroke(); ctx.lineWidth = 2.4;
+      ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(d.x - d.hw + 4, d.y - d.hh + 4); ctx.lineTo(d.x + d.hw - 4, d.y + d.hh - 4); ctx.moveTo(d.x + d.hw - 4, d.y - d.hh + 4); ctx.lineTo(d.x - d.hw + 4, d.y + d.hh - 4); ctx.stroke(); ctx.lineWidth = 2.4; ctx.restore();
     } else {
       ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, TAU); ctx.fillStyle = d.kind === 4 ? PIT[i % PIT.length] : d.kind === 3 ? '#ffa31a' : '#ffc233'; ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + Math.cos(d.rot) * d.r * 0.8, d.y + Math.sin(d.rot) * d.r * 0.8); ctx.lineWidth = 1.8; ctx.stroke(); ctx.lineWidth = 2.4;

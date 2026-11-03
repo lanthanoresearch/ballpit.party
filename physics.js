@@ -23,7 +23,7 @@
     for (const p of (map.props || [])) {   // pushable yellow things; each player has their own copy (never shared)
       const kind = p[0], cx = (p[1] + 0.5) * TS, sy = p[2] * TS;
       const hw = kind === 0 ? 18 : kind === 1 ? 36 : 0, r = kind === 2 ? 16 : kind === 3 ? 34 : kind === 4 ? 14 : 0;
-      const d = { k: r ? 'o' : 'b', x: cx, y: sy - (r || hw) - 0.5, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, gr: false, touch: false, burn: 0,
+      const d = { k: r ? 'o' : 'b', x: cx, y: sy - (r || hw) - 0.5, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, av: 0, tip: null, spin: false, gr: false, touch: false, burn: 0,
         m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind };
       d.hx = d.x; d.hy = d.y; w.dyn.push(d);
     }
@@ -129,7 +129,8 @@
       if (a.r) { nx = -cnx; ny = -cny; } else { nx = cnx; ny = cny; }
       pen = cp;
     }
-    const tm = a.m + b.m, sa = b.m / tm, sb = a.m / tm;
+    let tm = a.m + b.m, sa = b.m / tm, sb = a.m / tm;
+    if (!a.r && !b.r && ny !== 0) { if (ny > 0) { sa = 1; sb = 0; } else { sa = 0; sb = 1; } }   // crate on crate: only the upper one is pushed out, so a stack never squeezes its bottom crate into the floor
     a.x -= nx * pen * sa; a.y -= ny * pen * sa; b.x += nx * pen * sb; b.y += ny * pen * sb;
     const vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
     if (vn < 0) { const j = -(1 + e) * vn / (1 / a.m + 1 / b.m); a.vx -= j / a.m * nx; a.vy -= j / a.m * ny; b.vx += j / b.m * nx; b.vy += j / b.m * ny; }
@@ -211,6 +212,69 @@
     }
   }
 
+
+  /* ---------- crates that tip over ----------
+     A crate stays put while its centre of mass is over something solid. Once the centre passes the edge it pivots on that corner,
+     swings over, lets go, and tumbles down; it then settles flat again. Everything here depends only on the crate's own state, so it plays out the same on every device. */
+  const HALF_PI = Math.PI / 2;
+  function boxSupports(w, d, L) {   // the stretches of x the crate is resting on (floor tiles and crates underneath), merged
+    const bottom = d.y + d.hh, row = Math.floor((bottom + 1.5) / TS), iv = [];
+    if (Math.abs(row * TS - bottom) < 2.6) {
+      const tx0 = Math.floor((d.x - d.hw) / TS), tx1 = Math.floor((d.x + d.hw - 0.01) / TS);
+      for (let tx = tx0; tx <= tx1; tx++) if (isSol(tile(w, tx, row))) {
+        let a = tx * TS, b = (tx + 1) * TS;
+        if (tx === tx0) a = -1e9; if (tx === tx1) b = 1e9;   // solid ground that carries on past the crate's own edge: that side can never tip
+        iv.push([a, b]);
+      }
+    }
+    for (let i = 0; i < L.length; i++) {
+      const o = L[i]; if (o === d || o.k !== 'b' || o.burn > 0 || o.tip || Math.abs(o.rot) > 0.25) continue;
+      if (Math.abs(o.y - o.hh - bottom) < 3 && Math.abs(o.x - d.x) < o.hw + d.hw - 0.5) iv.push([o.x - o.hw, o.x + o.hw]);
+    }
+    if (!iv.length) return iv;
+    iv.sort((a, b) => a[0] - b[0]);
+    const out = [iv[0].slice()];
+    for (let i = 1; i < iv.length; i++) { const t = out[out.length - 1]; if (iv[i][0] <= t[1] + 5) t[1] = Math.max(t[1], iv[i][1]); else out.push(iv[i].slice()); }
+    return out;
+  }
+  function boxTipCheck(w, d, L) {   // is the centre of mass hanging past the edge of what it rests on? then start tipping
+    const iv = boxSupports(w, d, L); if (!iv.length) return;
+    for (const q of iv) if (d.x >= q[0] - 0.5 && d.x <= q[1] + 0.5) return;   // stable: the centre is over something
+    let best = null, bd = 1e9;
+    for (const q of iv) { const dd = d.x < q[0] ? q[0] - d.x : d.x - q[1]; if (dd < bd) { bd = dd; best = q; } }
+    const s = d.x > best[1] ? 1 : -1, px = clamp(s > 0 ? best[1] : best[0], d.x - d.hw, d.x + d.hw), py = d.y + d.hh;
+    d.tip = { s, px, py, rx: s * (d.x - px), a: 0, av: clamp(s * d.vx / (d.hh * 3), 0, 3) };
+    d.vx = 0; d.vy = 0; d.rot = 0; d.av = 0;
+  }
+  function boxTipStep(w, d, dt) {
+    const t = d.tip, h = d.hh;
+    const rx = t.rx, ry = -h;
+    const ca = Math.cos(t.a), sa = Math.sin(t.a);
+    const xr = rx * ca - ry * sa;                              // the centre's sideways offset from the pivot, in the tipping frame
+    const r2 = rx * rx + ry * ry, I = (d.hw * d.hw + d.hh * d.hh) / 3 + r2;
+    const alpha = GRAV * xr / I;
+    t.av += (alpha - t.av * 0.35) * dt; t.a += t.av * dt;
+    const c = Math.cos(t.a), sn = Math.sin(t.a);
+    const nx = rx * c - ry * sn, ny = rx * sn + ry * c;        // new centre relative to the pivot (screen coordinates, y down)
+    const px = t.px + t.s * nx, py = t.py + ny;
+    if (boxHits(w, px, py, d.hw * 0.55, d.hh * 0.55)) { d.tip = null; d.rot = 0; return; }   // something is in the way: it just settles back
+    d.x = px; d.y = py; d.rot = t.s * t.a;
+    if (t.a >= 0.85 || xr < -1) {   // it is over the edge: let go, carrying the swing as speed and spin
+      const w0 = t.av;
+      const vtx = -w0 * ny, vty = w0 * nx;                     // velocity of a point swinging about the pivot
+      d.vx = t.s * vtx; d.vy = Math.max(0, vty); d.av = t.s * w0; d.tip = null; d.spin = true;
+      for (let k = 0; k < 48 && boxHits(w, d.x, d.y, d.hw, d.hh); k++) d.x += t.s;   // step clear of the corner it pivoted on
+    }
+  }
+  function boxSettle(w, d, L, dt) {   // after tumbling: spin while in the air, then lie flat again when it lands
+    if (!d.spin && !d.rot) return;
+    const sup = boxSupports(w, d, L).length > 0 && d.vy > -20 && Math.abs(d.vy) < 140;
+    if (!sup && d.spin) { d.rot += d.av * dt; d.av *= (1 - 0.4 * dt); return; }
+    d.spin = false; d.av = 0;
+    const tgt = Math.round(d.rot / HALF_PI) * HALF_PI;
+    d.rot += (tgt - d.rot) * Math.min(1, 16 * dt);
+    if (Math.abs(tgt - d.rot) < 0.02) d.rot = 0;
+  }
   function stepDyn(w, dt) {
     stepSee(w, dt);
     const L = w.dyn; if (!L.length) return;
@@ -226,6 +290,8 @@
         d.x += d.vx * dt; d.y += d.vy * dt; burn = ballTiles(d, w); d.rot += d.vx * dt / d.r;
         if (w.see.length) seeBody(d, w, d.m * 60);
         if (d.gr || d.touch) d.vx *= Math.max(0, 1 - 0.5 * dt);
+      } else if (d.tip) {
+        boxTipStep(w, d, dt);
       } else {
         d.x += d.vx * dt; if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x -= d.vx * dt; d.vx = 0; }
         d.y += d.vy * dt; if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.y -= d.vy * dt; d.vy = 0; }
@@ -234,6 +300,8 @@
         if (d.gr || d.touch) d.vx = approach(d.vx, 0, (under === 3 ? 40 : 900) * dt);
         const tl = tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh - 4) / TS));
         if (tl === 2) burn = true;
+        boxSettle(w, d, L, dt);
+        if (!d.spin && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
       }
       d.touch = false;
       if (burn || d.y > killYAt(w, d.x) || d.x < -200 || d.x > w.W * TS + 200) { d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
@@ -244,6 +312,10 @@
         const b = L[j]; if (b.burn > 0 || b.sleep || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
         pairSep(a, b, 0.15);
       }
+    }
+    for (let i = 0; i < L.length; i++) {   // nothing is ever left inside the ground: lift a crate that has been pushed into it
+      const d = L[i]; if (d.k !== 'b' || d.burn > 0 || d.sleep || d.tip) continue;
+      if (boxHits(w, d.x, d.y, d.hw, d.hh)) { for (let k = 0; k < 24 && boxHits(w, d.x, d.y, d.hw, d.hh); k++) { d.y -= 1; } if (d.vy > 0) d.vy = 0; }
     }
   }
   // the player (a circle) against the pushables
