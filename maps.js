@@ -121,7 +121,10 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
   const N_NOUN = ['Crossing', 'Highlands', 'Run', 'Reach', 'Passage', 'Frontier', 'Ascent', 'Ridge', 'Trail', 'Basin', 'Terraces', 'Spires', 'Meander', 'Gauntlet', 'Journey', 'Expanse', 'Stairway', 'Valleys', 'Horizon', 'Circuit', 'Labyrinth', 'Overlook', 'Wilds', 'Cascade', 'Traverse', 'Rise', 'Vista', 'Sprawl', 'Heights', 'Roam'];
   function procDef(k) {
     const r = rng(7001 + k * 7919), ri = (a, b) => a + Math.floor(r() * (b - a + 1)), rf = (a, b) => a + r() * (b - a), pk = a => a[Math.floor(r() * a.length)];
-    const half = ri(500, 860), up = ri(6, 11), dn = ri(3, 5), nb = ri(3, 6), flip = r() < 0.5;
+    let half = ri(380, 900), up = ri(5, 12), dn = ri(2, 5), nb = ri(3, 6), flip = r() < 0.5;
+    const LR = rng(31000 + k * 17), LK = ['full', 'taper', 'flare', 'diamond', 'hourglass', 'stair', 'ragged'], lk = LK[(k * 5 + (k >> 3)) % LK.length];
+    const lay = { k: lk, lo: 0.3 + LR() * 0.3, w: 0.4 + LR() * 0.2, sgn: LR() < 0.5 ? -1 : 1, j: LR() < 0.5 ? 0.1 + LR() * 0.2 : 0 };
+    if (lk === 'taper' || lk === 'flare') up = Math.max(up, 8);   // towers want height
     const style = pk(['mix', 'alt', 'mix']);
     // the journey: a few kinds of ground in a row, never the same twice in a row
     const seq = []; while (seq.length < nb) { const t = pk(GKEYS); if (t !== seq[seq.length - 1]) seq.push(t); }
@@ -144,7 +147,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     return { name: N_ADJ[(k * 7 + ri(0, 3)) % N_ADJ.length] + ' ' + N_NOUN[(k * 11 + ri(0, 5)) % N_NOUN.length], seed: 9000 + k * 131, mirror: flip, xl: -half, xr: half, ls: ri(21, 25), up, dn, gOff: 0, cu: 9, cd: 8, ladder: 60, br: [2, 4],
       lo: { wd: pk([[5, 10], [3, 7], [4, 9], [6, 12]]), un: unders, drift: ri(3, 5), see: rf(0.035, 0.08), oo: r() < 0.4 ? [-3, -2, -2, -1, 0, 0, 1, 2, 3, 3] : undefined },
       hz: { lava: rf(1.6, 3), water: rf(0.8, 2), pillar: rf(1, 2.2), narrow: rf(0.8, 1.8) },
-      rw, mainStruct: rf(0.15, 0.4), bands };
+      rw, mainStruct: rf(0.15, 0.4), bands, lay };
   }
   for (let k = 2; k < 50; k++) DEFS.push(procDef(k));
   { const used = {}; DEFS.forEach((d, i) => { let n = d.name; while (used[n]) n += ' II'; used[n] = 1; d.name = n; }); }
@@ -1300,11 +1303,29 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       for (const k of FKEYS) { q -= w[k]; if (q <= 0) return k; }
       return 'plain';
     }
+    /* the overall shape of the whole level: how far each lane reaches. Full width, a pyramid, a tower that flares out, an hourglass, a diamond,
+       a staircase that slides across, or ragged. Only the far end of each lane is cut short, so every lane still starts where the one before it ended. */
+    function layExt(r) {
+      const T = (xr - LM - 8) - (xl + LM + 8), L = d.lay, full = [xl + LM + 8, xr - LM - 8];
+      if (!L || L.k === 'full') return full;
+      const t = Math.max(0, Math.min(1, (r + DNN) / Math.max(1, UPN + DNN - 1)));
+      let h = T / 2, c = 0; const lo = L.lo;
+      if (L.k === 'taper') h = T / 2 * (1 - (1 - lo) * t);
+      else if (L.k === 'flare') h = T / 2 * (lo + (1 - lo) * t);
+      else if (L.k === 'diamond') h = T / 2 * (lo + (1 - lo) * (1 - Math.abs(2 * t - 1)));
+      else if (L.k === 'hourglass') h = T / 2 * (lo + (1 - lo) * Math.abs(2 * t - 1));
+      else if (L.k === 'stair') { h = T / 2 * L.w; const u = r >= 0 ? r / Math.max(1, UPN - 1) : r / Math.max(1, DNN); c = L.sgn * (T / 2 - h) * u; }
+      else if (L.k === 'ragged') { const q = rng(d.seed + 313 + r * 29); h = T / 2 * (lo + (1 - lo) * q()); c = (q() - 0.5) * (T / 2 - h); }
+      if (L.j) { const q = rng(d.seed + 911 + r * 37); h *= 1 - L.j * q(); }
+      h = Math.max(h, 130);
+      return [Math.max(full[0], c - h), Math.min(full[1], c + h)];
+    }
     function lane(e, dir, r, main, dips) {
       const out = []; let guard = 0, lastBi = -1, lastF = '', shorts = 0;
       while (guard++ < 120) {
         const nxt = e[0] + (dir > 0 ? e[2] + 10 : -10);
-        if (nxt < xl + LM + 8 || nxt > xr - LM - 8) break;
+        const EX = layExt(r), eL = dir > 0 ? xl + LM + 8 : EX[0], eR = dir > 0 ? EX[1] : xr - LM - 8;   // this lane's own far edge (levels differ in the overall shape of their lanes)
+        if (nxt < eL || nxt > eR) break;
         const bi = bandAt(nxt), lt = laneOf(bi, r);
         if (dips && lastBi >= 0 && bi !== lastBi) { const dp = dip(e, dir, r); if (dp) { out.push(...dp); e = dp[dp.length - 1]; continue; } }
         lastBi = bi;
@@ -1314,7 +1335,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         for (let att = 0; att < 5 && !pw; att++) {   // if a chunk will not fit, try another flavour, then the plain one
           const f2 = att < 2 ? fl : att < 4 ? pickFlav(r) : 'plain', ff = FLAV[f2];
           const segs = [SEG('right', att < 3 ? bri(3, 16) : bri(3, 8), lt.th, Object.assign({}, lt, ff, { home: -LS * r - e[1], rest: ff.rest || 7, drift: ff.drift || lt.drift }))];
-          pw = growDir(e, segs, d.seed + r * 101 + guard * 7 + att * 977 + (dir > 0 ? 3 : 0), dir, [Math.max(bx0(bi) - 8, xl + 4 + LM), Math.min(bx1(bi) + 8, xr - 4 - LM)], { main, kind: 'lane' });
+          pw = growDir(e, segs, d.seed + r * 101 + guard * 7 + att * 977 + (dir > 0 ? 3 : 0), dir, [Math.max(bx0(bi) - 8, eL - 4), Math.min(bx1(bi) + 8, eR + 4)], { main, kind: 'lane' });
           if (pw) pw.forEach(q => { q[13] = f2; });
         }
         if (!pw) break;

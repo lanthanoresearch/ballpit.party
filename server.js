@@ -25,7 +25,7 @@ const MAX_PER_IP = parseInt(process.env.MAX_PER_IP, 10) || 10;
 const STATS_FILE = process.env.STATS_FILE || path.join(__dirname, 'stats.json');
 const PATTERNS = 6;
 const EMOJIS = 22;                                       // the built-in chat: 10 emojis and 12 ready-made phrases. Players can only send one of these (by number)
-const MAX_LINKS = 5;                                      // how many people one player can track
+const MAX_LINKS = 12;                                     // how many people one player can track
 const LINKS_FILE = process.env.LINKS_FILE || path.join(__dirname, 'links.json');
 
 /* ---------- static files (loaded once, kept in memory) ---------- */
@@ -268,9 +268,9 @@ wss.on('connection', (ws, req) => {
           t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
           priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
-          players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? 1 : 0 }))
+          players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? 1 : 0 }))
         });
-        broadcast(room, { t: 'join', id: p.id, pub: p.pub, name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
+        broadcast(room, { t: 'join', id: p.id, pub: p.pub, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
       } else {
         send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
       }
@@ -340,7 +340,7 @@ wss.on('connection', (ws, req) => {
         const code = codeOf(pub), q2 = byPub.get(pub), on = live(q2) ? (q2.room || true) : null, nm = q2 ? q2.name : k.name, last = on ? now : k.last;
         if (!nm) return;   // has never picked a name, so has never really played
         const linked = !!(mine && mine.has(pub));
-        if (!on && !linked && now - last > (browse ? WEEK_MS : STALE_MS)) return;
+        if (!on && !linked && now - last > (WEEK_MS)) return;
         if (!browse && !(nm.toLowerCase().indexOf(q) >= 0 || code === qc || code.indexOf(qc) === 0 && qc.length >= 3)) return;
         out.push({ pub, code, name: nm, color: q2 ? q2.color : k.color, b: k.beat | 0, on: on ? 1 : 0, w: on && on !== true ? on.id : 0, last, here: on && on !== true && on === p.room ? 1 : 0, l: linked ? 1 : 0 });
       });
@@ -351,8 +351,8 @@ wss.on('connection', (ws, req) => {
       const q = byPub.get(m.to), now = Date.now();
       if (m.t === 'treq') {
         if (now - p.lastReq < 1500) return; p.lastReq = now;
-        if (!known.has(m.to)) return send(p, { t: 'tno', pub: m.to, why: 'old' });
-        const tn = q ? q.name : known.get(m.to).name;
+        const kn = known.get(m.to);   // a server that was restarted may have forgotten them; the request still waits for them
+        const tn = q ? q.name : kn ? kn.name : String(m.nm || '').replace(/[^\w .\-]/g, '').slice(0, 12);
         if (linkSet(p.pub).has(m.to)) return;
         if (linkSet(p.pub).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, name: tn, why: 'mine' });
         if (linkSet(m.to).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, name: tn, why: 'theirs' });

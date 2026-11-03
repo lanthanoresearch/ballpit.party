@@ -247,7 +247,7 @@
   #keymsg{min-height:18px;font-size:13px;color:#ff9a8f}
   .slrow{display:flex;align-items:center;gap:8px}.slrow svg{font-size:19px;flex:none;opacity:.85}
   .np{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:8px;background:#120f1c;border:2px solid var(--line);border-radius:var(--wob);padding:6px 10px}
-  .np span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .np span{flex:none}.np #nowPlaying{flex:1;min-width:0;white-space:normal;line-height:1.2;overflow-wrap:anywhere}
   #coinbig{pointer-events:none}
   .tabs button span:last-child{font-size:11px}
   @media (max-width:640px),(max-height:520px){
@@ -491,9 +491,15 @@
   .pstat{font-size:13px;opacity:.7}.pstat.on{color:#7be0a0;opacity:1}
   .pbeat{background:#2c2644;border:2px solid var(--line);border-radius:var(--wob);padding:8px 12px}.pbl{display:flex;align-items:baseline;gap:8px}.pbl b{font-weight:normal;font-size:20px}.pbl span{opacity:.6;font-size:14px}
   .pbar{height:10px;border-radius:6px;background:#15111f;margin-top:6px;overflow:hidden;border:1px solid rgba(232,220,192,.3)}.pbar i{display:block;height:100%;background:linear-gradient(90deg,#2f9e61,#7be0a0);width:0;transition:width .4s}
+  .frow{display:flex;align-items:center;gap:10px;margin:0 0 6px;padding:7px 10px;background:rgba(36,31,54,.7);border:2px solid var(--line);border-radius:var(--wob);box-shadow:2px 3px 0 rgba(0,0,0,.3)}
+  .frow.off{opacity:.78}.frow .ldot{width:22px;height:22px;flex:none}.frow .lname{flex:1;min-width:0;white-space:normal}.frow .lname b{display:block;font-size:17px;font-weight:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .psets{display:flex;flex-direction:column;gap:6px}.prow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;background:#2c2644;border:2px solid var(--line);border-radius:var(--wob)}
+  .ptxt{flex:1 1 130px;min-width:0}.ptxt b{display:block;font-weight:normal;font-size:16px}.ptxt small{display:block;font-size:12px;opacity:.65}
+  .pacts .btn.danger{border-color:#e0566b;color:#ff9aa8}
+  .profcard{max-height:100%;overflow-y:auto}
   .pacts{display:flex;flex-direction:column;gap:7px}.pacts .btn{width:100%;padding:9px 12px;font-size:16px}
   .profcard .cfoot{justify-content:center}
-  @media (max-height:520px) and (min-aspect-ratio:1/1){.profcard{width:min(600px,100%);display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;padding:10px 16px}.profcard .phead,.profcard .pbeat{grid-column:1}.profcard .pacts{grid-column:2;grid-row:1/3;justify-content:center}.profcard .cfoot{grid-column:1/-1}.profcard .pball{width:42px;height:42px}.profcard h3{font-size:22px}}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){.profcard{width:min(600px,100%);display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;padding:10px 16px}.profcard .phead,.profcard .pbeat{grid-column:1}.profcard .psets{grid-column:2;grid-row:1}.profcard .pacts{grid-column:2;grid-row:2;justify-content:center}.profcard .cfoot{grid-column:1/-1}.profcard .ptxt small{display:none}.profcard .prow{padding:5px 8px}.profcard .psets{gap:5px}.profcard .pacts{flex-direction:row;flex-wrap:wrap}.profcard .pacts .btn{width:auto;flex:1 1 40%;padding:6px 8px;font-size:15px}.profcard .pball{width:42px;height:42px}.profcard h3{font-size:22px}}
   #settings.only .tabs{display:none}
   @media (max-height:520px) and (min-aspect-ratio:1/1){#settings.only{grid-template-columns:minmax(0,1fr)!important;width:min(560px,calc(100vw - 20px))!important}#settings.only .sbody{grid-column:1!important;grid-row:2!important}}
 .btnrow{display:flex;gap:8px;margin:8px 0}.btnrow .btn{flex:1}.btnrow .btn+.btn{flex:none}
@@ -550,15 +556,16 @@
   #shareTip.hide{display:none}
   #home .scene{position:fixed;z-index:0}#home .hbox{z-index:2}#home .sball{z-index:1}
   @media (max-height:540px){
-    #home{padding:8px}#home h1{font-size:34px}#home .hsub,#homeModeNote{display:none}
+    #home{padding:8px}#home h1{font-size:34px;margin:0}#home .hsub{font-size:13px;margin:0 0 2px}#homeModeNote{font-size:12px;line-height:1.2}
     #home .hbox{width:min(660px,100%);gap:8px}
-    #home .card{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;gap:6px 18px;padding:10px 16px;align-items:center}
-    #home .card>#ned1{grid-column:1;grid-row:1}#home .card>.mpbig{grid-column:1;grid-row:2;margin:0}#home .card>.hplay{grid-column:1;grid-row:3/5}#home .card>.lvrow{grid-column:2;grid-row:3;margin:0;padding:5px 10px;font-size:15px}
+    #home .card{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;gap:5px 18px;padding:9px 16px;align-items:center}
+    #home .card>#ned1{grid-column:1;grid-row:1}#home .card>.mpbig{grid-column:1;grid-row:2;margin:0}#home .card>#homeModeNote{grid-column:1;grid-row:3;margin:0}#home .card>.hplay{grid-column:1;grid-row:4}#home .card>.lvrow{grid-column:2;grid-row:3;margin:0;padding:5px 10px;font-size:15px}
     #home .card>.hbtns{grid-column:2;grid-row:1/3;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;align-self:stretch}#home .card>.hbtns .btn{margin:0;width:100%;height:100%}#home .card>.hbtns #homeHelp{grid-column:1/-1}
     #home .card>.sw2{grid-column:2;grid-row:4;margin:0}
-    #home .hplay{font-size:22px;padding:8px}#home .sw2 small{display:none}
+    #home .hplay{font-size:24px;padding:8px}#home .sw2 small{font-size:11px;line-height:1.15}
     .scene{--gh:18vh}
   }
+  @media (max-height:330px){#home .hsub{display:none}#home .sw2 small{display:none}}
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
@@ -879,8 +886,8 @@
     </section>
     <section class="pane" data-pane="friends">
       <div id="myCode" class="mycode"><span>Your code</span><b id="myCodeV">······</b><span class="small dim">Friends can check it matches</span></div>
-      <h4><span data-ic="users"></span> Your friends <span id="lpCount" class="dim"></span></h4><div class="small dim fhint">Friends show on each other's maps. Each card has that friend's own settings.</div><div id="lpList"></div>
-      <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Wants to track you</h4><div id="lpReqs"></div>
+      <h4><span data-ic="users"></span> Your friends <span id="lpCount" class="dim"></span></h4><div class="small dim fhint">Friends show on each other's maps. Tap a friend to open their profile, where their settings are.</div><div id="lpList"></div>
+      <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Friend requests</h4><div id="lpReqs"></div>
       <h4><span data-ic="search"></span> Find players</h4>
       <div id="lpConn" class="small dim"></div>
       <input type="text" id="lpQ" maxlength="12" placeholder="Search by name or code (optional)" autocomplete="off" spellcheck="false"><div class="small dim fhint" id="lpResH">Players from the last 7 days</div><div id="lpRes"></div>
@@ -960,6 +967,7 @@
 <div id="profModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="profName"><div class="card profcard">
   <div class="phead"><i id="profDot" class="pball"></i><div class="pwho"><h3 id="profName"></h3><div class="psub"><span id="profCode" class="code"></span><span id="profStatus" class="pstat"></span></div></div></div>
   <div class="pbeat"><div class="pbl"><b id="profBeat"></b><span id="profBeatOf"></span></div><div class="pbar"><i id="profBar"></i></div></div>
+  <div id="profSet" class="psets hide"></div>
   <div id="profActs" class="pacts"></div>
   <div class="cfoot"><button id="profClose" class="btn" type="button">Close</button></div>
 </div></div>
@@ -1040,8 +1048,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=45"></script>
-<script src="physics.js?v=45"></script>
+<script src="maps.js?v=46"></script>
+<script src="physics.js?v=46"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2564,7 +2572,7 @@ syncUI = function () { _syncUI(); if (typeof lvlRender === 'function') lvlRender
 /* ================= tracking: two players who accept each other always see where the other one is =================
    Each device has a private random code. The server only ever shares a scrambled version of it, so links belong to the device (not the name)
    and come back by themselves when you return. */
-const DEVKEY = 'ballrun4_dev', LKKEY = 'ballrun4_links', MAXLINK = 5;
+const DEVKEY = 'ballrun4_dev', LKKEY = 'ballrun4_links', MAXLINK = 12;
 let devId = '';
 try { devId = localStorage.getItem(DEVKEY) || ''; } catch (e) {}
 if (!/^[A-Za-z0-9_-]{16,64}$/.test(devId)) {
@@ -2613,7 +2621,7 @@ const saveMutes = () => { try { localStorage.setItem(MUTEKEY, JSON.stringify(mut
 const muteOf = pub => { if (!pub) return 0; const e = lks.find(l => l.pub === pub); return e ? e.mute : mutes[pub] ? 2 : 0; };   // 0 on, 1 no come-and-go, 2 silent
 function ago(ms) { if (!ms) return 'a while ago'; const s = Math.max(0, (Date.now() - ms) / 1000); return s < 90 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; }
 const lkOf = pub => lks.find(l => l.pub === pub);
-const nameOf = pub => { const a = lkOf(pub) || reqs.find(r => r.pub === pub) || lpFound.find(f => f.pub === pub); return a ? a.name : ''; };
+const nameOf = pub => { const a = lkOf(pub) || reqs.find(r => r.pub === pub) || lpFound.find(f => f.pub === pub) || seenEntry(pub); return a ? a.name : ''; };
 const codeTag = c => { const s = document.createElement('span'); s.className = 'code'; s.textContent = '#' + c; return s; };
 function friendNote(e, nm, on) {   // a special heads-up when someone you track comes online or goes offline
   if (e.mute >= 1 || !settings.mp) return;
@@ -2622,13 +2630,36 @@ function friendNote(e, nm, on) {   // a special heads-up when someone you track 
 }
 const wsSend = o => { if (ws && ws.readyState === 1 && (online || lobbyOn)) ws.send(JSON.stringify(o)); };
 
+/* ----- players you have run into in the last 7 days stay on this device, so the list is there even if the server forgot them. Friends are kept for good. ----- */
+const SEENKEY = 'ballrun4_seen', WEEK = 7 * 86400000;
+let seen = {}; try { seen = JSON.parse(localStorage.getItem(SEENKEY) || '{}') || {}; } catch (e) { seen = {}; }
+function pruneSeen() { const now = Date.now(); for (const k in seen) { const e = seen[k]; if (!e || !/^[0-9a-f]{16}$/.test(k) || !e.n || (now - (+e.t || 0) > WEEK && !lkOf(k))) delete seen[k]; } }
+function saveSeen() { pruneSeen(); try { localStorage.setItem(SEENKEY, JSON.stringify(seen)); } catch (e) {} }
+function noteSeen(pub, name, color, code, last, b) {
+  if (!/^[0-9a-f]{16}$/.test(pub || '') || !name) return;
+  const e = seen[pub] || (seen[pub] = {}); e.n = String(name).slice(0, 12); if (code) e.c = String(code).slice(0, 6); if (HEX.test(color)) e.col = color; e.t = Math.max(+e.t || 0, last || Date.now()); if (b !== undefined) e.b = b | 0;
+}
+const seenEntry = pub => { const e = seen[pub]; return e ? { pub, code: e.c || '', name: e.n, color: e.col || '#ccc', b: e.b, on: 0, w: 0, last: +e.t || 0, l: 0 } : null; };
+function foundList() {   // what the server says, plus anybody this device remembers from the last week
+  const out = lpFound.slice(), have = new Set(out.map(f => f.pub)), now = Date.now(), q = lpQ.toLowerCase(), qc = lpQ.toUpperCase().replace(/^#/, '');
+  const extra = [];
+  for (const pub in seen) {
+    if (have.has(pub) || now - (+seen[pub].t || 0) > WEEK) continue;
+    const f = seenEntry(pub); if (!f) continue;
+    if (lpQ && !(f.name.toLowerCase().indexOf(q) >= 0 || (f.code && (f.code === qc || (qc.length >= 3 && f.code.indexOf(qc) === 0))))) continue;
+    extra.push(f);
+  }
+  extra.sort((a, b) => b.last - a.last);
+  return out.concat(extra);
+}
+
 function linkMsg(m) {
   switch (m.t) {
     case 'links': {
       const list = m.list || [], seen = new Set();
       for (const o of list) {
         seen.add(o.pub); let e = lkOf(o.pub);
-        if (!e) { if (lks.length >= MAXLINK) continue; e = { pub: o.pub, code: '', name: '', color: '#ccc', last: 0, ok: false, on: 0, x: null, big: true, arrow: true, mute: 0 }; lks.push(e); if (linksReady) notice(who(o.name) + ' is now tracking you too', ''); }
+        if (!e) { if (lks.length >= MAXLINK) continue; e = { pub: o.pub, code: '', name: '', color: '#ccc', last: 0, ok: false, on: 0, x: null, big: true, arrow: true, mute: 0 }; lks.push(e); if (linksReady) notice(who(o.name) + ' added you back. You are friends now', ''); }
         e.ok = true; e.code = o.code; e.name = o.name; e.color = o.color; e.last = o.last; e.w = o.w; e.b = o.b | 0;
         if (o.on) e.on = 1; else { e.on = 0; e.x = null; }
       }
@@ -2637,17 +2668,17 @@ function linkMsg(m) {
     }
     case 'treq':
       if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, code: m.code || '', name: String(m.name || '').slice(0, 12), color: HEX.test(m.color) ? m.color : '#ccc' });
-      sfx('ready'); notice('★ ' + who(m.name) + ' wants to track you', ''); lpRender(); return true;
+      sfx('ready'); notice('★ ' + who(m.name) + ' wants to be your friend', ''); lpRender(); return true;
     case 'tsent': sentTo.add(m.pub); notice(m.off ? who(m.name) + ' is offline. They will see your request when they are back' : 'Request sent to ' + who(m.name), ''); lpRender(); return true;
     case 'tno': {
       sentTo.delete(m.pub);
       const nm = who(m.name || (lkOf(m.pub) || {}).name || '');
-      notice(m.why === 'deny' ? nm + ' said not now' : m.why === 'off' ? 'That player is not available' : m.why === 'mine' ? 'You are already tracking ' + MAXLINK + ' people. Disconnect one first' : m.why === 'theirs' || m.why === 'full' ? nm + ' is already tracking ' + MAXLINK + ' people' : 'That request has run out. Ask again', '');
+      notice(m.why === 'deny' ? nm + ' said not now' : m.why === 'off' ? 'That player is not available' : m.why === 'mine' ? 'You already have ' + MAXLINK + ' friends. Unfriend someone first' : m.why === 'theirs' || m.why === 'full' ? nm + ' already has ' + MAXLINK + ' friends' : 'That request has run out. Ask again', '');
       lpRender(); return true;
     }
-    case 'tok': { sentTo.delete(m.pub); const nm = nameOf(m.pub); reqs = reqs.filter(r => r.pub !== m.pub); sfx('join'); notice('You and ' + who(nm) + ' are now tracking each other', ''); lpRender(); return true; }
+    case 'tok': { sentTo.delete(m.pub); const nm = nameOf(m.pub); reqs = reqs.filter(r => r.pub !== m.pub); sfx('join'); notice('You and ' + who(nm) + ' are now friends', ''); lpRender(); return true; }
     case 'unl':
-      for (const pub of (m.gone || [])) { const e = lkOf(pub); if (e) { notice(who(e.name || m.name) + ' stopped tracking', ''); lks.splice(lks.indexOf(e), 1); } }
+      for (const pub of (m.gone || [])) { const e = lkOf(pub); if (e) { notice(who(e.name || m.name) + ' unfriended you', ''); lks.splice(lks.indexOf(e), 1); } }
       saveLinks(); lpRender(); return true;
     case 'loff': { const e = lkOf(m.pub); if (e) { e.on = 0; e.x = null; friendNote(e, m.name, false); } lpRender(); return true; }
     case 'lon': { const e = lkOf(m.pub); if (e) { if (m.name != null) e.name = m.name; friendNote(e, m.name, true); } return true; }
@@ -2659,7 +2690,7 @@ function linkMsg(m) {
       addFeedEmo(who(m.name), m.i | 0, e ? 'friend' : '');
       return true;
     }
-    case 'found': lpFound = m.list || []; lpRender(); return true;
+    case 'found': lpFound = m.list || []; if (!m.q) { for (const f of lpFound) noteSeen(f.pub, f.name, f.color, f.code, f.last, f.b); saveSeen(); } lpRender(); return true;
     case 'name': nameServer(m.name, m.left | 0, !!m.denied); return true;
   }
   return false;
@@ -3003,7 +3034,7 @@ function trackVis() {
   $('btnChat').classList.toggle('hide', solo);
   const n = lks.filter(l => l.ok && l.on).length;
   $('linkpill').classList.toggle('hide', solo || n === 0);
-  $('linkN').textContent = n === 1 ? '1 tracking you' : n + ' tracking you';
+  $('linkN').textContent = n === 1 ? '1 friend online' : n + ' friends online';
   $('lreqs').classList.toggle('hide', solo || !reqs.length || friendsShown());
   if (solo && chatOpen) toggleChat(false);
 }
@@ -3017,7 +3048,7 @@ function nameRow(name, code, color, sub, prof) {   // dot, the name with its sho
   d.appendChild(nm); return d;
 }
 function reqCard(r) {
-  const d = nameRow(r.name, r.code, r.color, 'wants to track you. Check that their code is right before you accept.', r);
+  const d = nameRow(r.name, r.code, r.color, 'wants to be your friend. Check that their code is right before you accept.', r);
   const ok = el('button', 'btn prim sm', 'Accept'), no = el('button', 'btn sm', 'Not now');
   ok.onclick = () => { wsSend({ t: 'tacc', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); };
   no.onclick = () => { wsSend({ t: 'tden', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); };
@@ -3028,29 +3059,23 @@ const BELL = [{ i: 'bell', t: 'All alerts' }, { i: 'bell-half', t: 'Quiet' }, { 
 function iconBtn(cls, name, label, fn, text) {   // a button holding an icon (and optional words); label is for screen readers and hover
   const b = el('button', cls); b.innerHTML = ic(name) + (text ? '<span>' + text + '</span>' : ''); b.title = label; b.setAttribute('aria-label', label); b.onclick = fn; return b;
 }
-function friendCard(l) {   // one friend, one card: who they are at the top, then only that friend's own settings
-  const nm = who(l.name), c = el('div', 'fcard' + (l.ok && l.on ? '' : ' off'));
-  const h = el('div', 'fhead'); h.appendChild(dot(l.color));
-  const n = el('div', 'lname lbtn'); n.tabIndex = 0; n.setAttribute('role', 'button'); n.setAttribute('aria-label', 'See ' + nm + "'s profile"); n.onclick = () => openProfile(l); n.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProfile(l); } }; n.appendChild(el('b', '', nm));
-  const sb = el('div', 'lsub'); sb.appendChild(codeTag(l.code)); sb.appendChild(document.createTextNode(' · ' + (!l.ok ? 'Waiting for them to come back' : l.on ? (l.w < 0 ? 'In a private world' : 'World ' + (l.w || '?')) : lastOn(l.last)))); n.appendChild(sb); h.appendChild(n);
-  if (l.ok) h.appendChild(el('span', 'fstat' + (l.on ? ' on' : ''), l.on ? 'Online' : 'Offline'));
-  c.appendChild(h);
-  const m = el('div', 'fline'); const ml = el('div', 'flab'); ml.textContent = 'On your map'; m.appendChild(ml);
-  const o = el('div', 'fopts');
-  o.appendChild(chip('Big and glowing', l.big, () => { l.big = !l.big; saveLinks(); lpRender(); }, 'Show ' + nm + ' bigger and glowing on both maps'));
-  o.appendChild(chip('Arrow', l.arrow, () => { l.arrow = !l.arrow; saveLinks(); lpRender(); }, 'Point to ' + nm + ' with an arrow and a name tag'));
-  m.appendChild(o); c.appendChild(m);
-  const a = el('div', 'fline'), al = el('div', 'flab'); al.appendChild(document.createTextNode('Alerts from ')); al.appendChild(el('b', '', nm)); a.appendChild(al);
-  const k = l.mute | 0, bt = iconBtn('bell b' + k, BELL[k].i, 'Alerts from ' + nm + ': ' + BELL[k].t + '. Tap to change.', () => { l.mute = (k + 1) % 3; saveLinks(); lpRender(); }, BELL[k].t);
-  a.appendChild(bt); a.appendChild(el('div', 'fnote', MUTE_NOTE[k])); c.appendChild(a);
-  const f = el('div', 'ffoot'), x = el('button', 'btn sm quiet', 'Stop tracking ' + nm); x.onclick = () => askConfirm('Stop tracking ' + nm + '?', 'You will stop seeing each other on the map. To track each other again, you both need to send and accept a new request.', 'Stop tracking', () => disconnectLink(l.pub), { no: 'Keep ' + nm }); f.appendChild(x); c.appendChild(f);
+function friendCard(l) {   // one friend, one row. Tap it for their profile, where all of that friend's settings live.
+  const live = l.ok && l.on, nm = who(l.name), c = el('div', 'frow' + (live ? '' : ' off'));
+  c.appendChild(dot(l.color));
+  const n = el('div', 'lname lbtn'); n.tabIndex = 0; n.setAttribute('role', 'button'); n.setAttribute('aria-label', nm + "'s profile and settings");
+  n.onclick = () => openProfile(l); n.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProfile(l); } };
+  n.appendChild(el('b', '', nm));
+  const sb = el('div', 'lsub'); sb.appendChild(codeTag(l.code)); sb.appendChild(document.createTextNode(' · ' + (!l.ok && (online || lobbyOn) ? 'Waiting for them to come back' : l.ok && l.on ? (l.w < 0 ? 'In a private world' : 'World ' + (l.w || '?')) : lastOn(l.last)))); n.appendChild(sb);
+  c.appendChild(n);
+  c.appendChild(el('span', 'fstat' + (live ? ' on' : ''), live ? 'Online' : 'Offline'));
+  const go = iconBtn('btn sm belli', 'gear', 'Open ' + nm + "'s profile and settings", () => openProfile(l)); c.appendChild(go);
   return c;
 }
 
 /* ----- a player's profile: who they are, how many levels they have beaten, their friend number, and what you can do ----- */
 const LEVELS = 50;
 let profPub = '', profSnap = null;
-function profData(pub) { return (lks.filter(l => l.pub === pub)[0]) || (lpFound.filter(f => f.pub === pub)[0]) || reqs.filter(r => r.pub === pub)[0] || (profSnap && profSnap.pub === pub ? profSnap : null); }
+function profData(pub) { return (lks.filter(l => l.pub === pub)[0]) || (lpFound.filter(f => f.pub === pub)[0]) || reqs.filter(r => r.pub === pub)[0] || seenEntry(pub) || (profSnap && profSnap.pub === pub ? profSnap : null); }
 function openProfile(p) { if (!p) return; profPub = p.pub; profSnap = Object.assign({}, p); profRender(); $('profModal').classList.remove('hide'); setTimeout(() => { try { $('profClose').focus(); } catch (e) {} }, 30); }
 function closeProfile() { profPub = ''; $('profModal').classList.add('hide'); }
 function profRender() {
@@ -3063,11 +3088,25 @@ function profRender() {
   $('profBeat').parentNode.parentNode.classList.toggle('hide', p.b === undefined); $('profBeat').textContent = n + (n === 1 ? ' level beaten' : ' levels beaten'); $('profBeatOf').textContent = 'of ' + LEVELS; $('profBar').style.width = Math.min(100, n / LEVELS * 100) + '%';
   const act = $('profActs'); act.textContent = '';
   const add = (cls, txt, fn, dis) => { const b = el('button', cls, txt); b.type = 'button'; if (dis) b.disabled = true; b.onclick = fn; act.appendChild(b); return b; };
+  const ps = $('profSet'); ps.textContent = '';
+  const row = (label, note) => { const r = el('div', 'prow'); const t = el('div', 'ptxt'); t.appendChild(el('b', '', label)); if (note) t.appendChild(el('small', '', note)); r.appendChild(t); ps.appendChild(r); return r; };
+  if (linked) {   // everything about this one friend
+    const l = lkOf(p.pub);
+    const m1 = row('On your map', 'How ' + nm + ' looks while you play'), o = el('div', 'fopts');
+    o.appendChild(chip('Big and glowing', l.big, () => { l.big = !l.big; saveLinks(); lpRender(); }, 'Show ' + nm + ' bigger and glowing on both maps'));
+    o.appendChild(chip('Arrow and name', l.arrow, () => { l.arrow = !l.arrow; saveLinks(); lpRender(); }, 'Point to ' + nm + ' with an arrow and a name tag'));
+    m1.appendChild(o);
+    const k = l.mute | 0, m2 = row('Alerts', MUTE_NOTE[k]);
+    m2.appendChild(iconBtn('bell b' + k, BELL[k].i, 'Alerts from ' + nm + ': ' + BELL[k].t + '. Tap to change.', () => { l.mute = (k + 1) % 3; saveLinks(); lpRender(); }, BELL[k].t));
+  } else {
+    const muted = !!mutes[p.pub], m2 = row('Alerts', muted ? 'No emojis and no join / leave lines from ' + nm + '.' : 'You see ' + nm + "'s emojis and join / leave lines.");
+    m2.appendChild(iconBtn('bell ' + (muted ? 'b2' : 'b0'), muted ? 'bell-off' : 'bell', muted ? 'Alerts from ' + nm + ' are off. Tap to turn on.' : 'Alerts from ' + nm + ' are on. Tap to turn off.', () => { if (muted) delete mutes[p.pub]; else mutes[p.pub] = { n: p.name, c: p.code }; saveMutes(); lpRender(); profRender(); }, muted ? 'Muted' : 'On'));
+  }
+  ps.classList.toggle('hide', !ps.childNodes.length);
   if (isReq) { add('btn prim', 'Accept friend request', () => { wsSend({ t: 'tacc', to: p.pub }); reqs = reqs.filter(q => q.pub !== p.pub); lpRender(); profRender(); }); }
-  else if (linked) add('btn', 'Friends. Tap to stop tracking', () => { const l = lkOf(p.pub); closeProfile(); askConfirm('Stop tracking ' + nm + '?', 'You will stop seeing each other on the map. To track each other again, you both need to send and accept a new request.', 'Stop tracking', () => disconnectLink(p.pub)); });
-  else add('btn prim', sent ? 'Request sent' : lks.length >= MAXLINK ? 'You are tracking ' + MAXLINK + ' people already' : 'Track as a friend', () => { wsSend({ t: 'treq', to: p.pub }); sentTo.add(p.pub); profRender(); }, sent || lks.length >= MAXLINK);
-  if (!linked) { const muted = !!mutes[p.pub]; add('btn', muted ? 'Turn alerts back on' : 'Mute alerts from ' + nm, () => { if (muted) delete mutes[p.pub]; else mutes[p.pub] = { n: p.name, c: p.code }; saveMutes(); lpRender(); profRender(); }); }
+  else if (!linked) add('btn prim', sent ? 'Request sent' : lks.length >= MAXLINK ? 'You have ' + MAXLINK + ' friends already' : 'Add friend', () => { wsSend({ t: 'treq', to: p.pub, nm: p.name }); sentTo.add(p.pub); profRender(); }, sent || lks.length >= MAXLINK);
   add('btn quiet', 'Copy their friend number', () => { const t = '#' + p.code; try { navigator.clipboard.writeText(t).then(() => notice('Copied ' + t, ''), () => notice(t, '')); } catch (e) { notice(t, ''); } });
+  if (linked) add('btn danger', 'Unfriend', () => { closeProfile(); askConfirm('Unfriend ' + nm + '?', 'You will stop seeing each other on the map. To be friends again, you both need to send and accept a new request.', 'Unfriend', () => disconnectLink(p.pub), { no: 'Keep ' + nm }); });
 }
 $('profClose').onclick = closeProfile; $('profModal').addEventListener('pointerdown', e => { if (e.target === $('profModal')) closeProfile(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('profModal').classList.contains('hide')) { closeProfile(); e.stopPropagation(); e.preventDefault(); } }, true);
@@ -3080,34 +3119,28 @@ function lpRender() {
   showMyCode();
   const list = $('lpList'); list.textContent = '';
   $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
-  if (!lks.length) list.appendChild(el('div', 'small dim', 'No friends yet. Find a player below and tap Track.'));
+  if (!lks.length) list.appendChild(el('div', 'small dim', 'No friends yet. Find a player below and tap Add friend.'));
   for (const l of lks) list.appendChild(friendCard(l));
   const rl = $('lpReqs'); rl.textContent = '';
   reqs.forEach(r => rl.appendChild(reqCard(r))); $('lpReqH').classList.toggle('hide', !reqs.length);
-  $('lpResH').textContent = (lpQ ? 'Search results' : 'Players from the last 7 days') + '. Tap a bell to mute or unmute someone.';
+  $('lpResH').textContent = (lpQ ? 'Search results' : 'Players from the last 7 days') + '. Tap a name to see their profile.';
   $('lpConn').textContent = (online || lobbyOn) ? '' : (inSolo() && !inHome) ? "You are in your own world, so friends are off here. They work on the main menu and in multiplayer." : 'Connecting to the server…';
   $('lpConn').classList.toggle('hide', !$('lpConn').textContent);
   const res = $('lpRes'); res.textContent = '';
-  const shown = lpFound.filter(f => !reqs.some(r => r.pub === f.pub));
+  const shown = foundList().filter(f => !reqs.some(r => r.pub === f.pub));
   if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody found. You can also type someone\'s code.' : 'Nobody has played in the last 7 days yet.'));
   for (const f of shown) {
     const linked = f.l || lkOf(f.pub), sent = sentTo.has(f.pub), muted = !!mutes[f.pub];
-    const d = nameRow(f.name, f.code, f.color, f.on ? 'Online now · ' + (f.w < 0 ? 'in a private world' : 'World ' + f.w) : lastOn(f.last), f);
-    if (!linked) {   // someone who is not a friend: their alerts are simply on or off
-      d.appendChild(iconBtn('btn sm belli' + (muted ? ' mu' : ''), muted ? 'bell-off' : 'bell', muted ? 'Alerts from ' + who(f.name) + ' are off. Tap to turn on.' : 'Alerts from ' + who(f.name) + ' are on. Tap to turn off.', () => {
-        if (muted) delete mutes[f.pub]; else mutes[f.pub] = { n: f.name, c: f.code }; saveMutes(); lpRender();
-      }));
-    }
-    const b = el('button', 'btn sm' + (linked || sent ? '' : ' prim'), linked ? 'Friend' : sent ? 'Sent' : 'Track');
+    const d = nameRow(f.name, f.code, f.color, (f.on ? 'Online now · ' + (f.w < 0 ? 'in a private world' : 'World ' + f.w) : lastOn(f.last)) + (muted ? ' · Muted' : ''), f);
+    const b = el('button', 'btn sm' + (linked || sent ? '' : ' prim'), linked ? 'Friend' : sent ? 'Sent' : 'Add friend');
     if (linked || sent || lks.length >= MAXLINK) b.disabled = true;
-    b.onclick = () => { wsSend({ t: 'treq', to: f.pub }); b.disabled = true; b.textContent = 'Sent'; };
+    b.onclick = () => { wsSend({ t: 'treq', to: f.pub, nm: f.name }); b.disabled = true; b.textContent = 'Sent'; };
     d.appendChild(b); res.appendChild(d);
   }
   const ml = $('mutedList'); ml.textContent = ''; const mk = Object.keys(mutes);
   $('mutedH').classList.toggle('hide', !mk.length);
   for (const pub of mk) {
-    const d = nameRow(mutes[pub].n, mutes[pub].c, '#888', 'No emojis, no join / leave lines');
-    d.appendChild(iconBtn('btn sm belli', 'bell', 'Turn alerts from ' + who(mutes[pub].n) + ' back on', () => { delete mutes[pub]; saveMutes(); lpRender(); }, 'Unmute'));
+    const d = nameRow(mutes[pub].n, mutes[pub].c, '#888', 'Muted. Tap to change', { pub, name: mutes[pub].n, code: mutes[pub].c, color: '#888' });
     ml.appendChild(d);
   }
 }
@@ -3290,11 +3323,7 @@ $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
 $('pHome').onclick = () => { sfx('ui'); quitToHome(); };
 $('pause').addEventListener('pointerdown', e => { if (e.target === $('pause') && $('settings').classList.contains('hide')) { e.preventDefault(); resumeGame(); } });
 $('homePlay').onclick = () => enterGame(false);
-$('homeMp').onchange = () => {
-  if ($('homeMp').checked) { settings.mp = true; save(); $('setMp').checked = true; applyDeps(); syncUI(); homeModeText(); return; }
-  $('homeMp').checked = true;
-  askConfirm('Play solo?', "You'll be in a private world of your own. Nobody else can see you and you won't see anyone, but you can still turn on bots. Want to play with everyone instead? Stay on Multiplayer.", 'Play solo', () => { $('homeMp').checked = false; settings.mp = false; save(); $('setMp').checked = false; applyDeps(); syncUI(); homeModeText(); }, { no: 'Stay online', yesClass: 'go' });
-};
+$('homeMp').onchange = () => { settings.mp = $('homeMp').checked; save(); $('setMp').checked = settings.mp; applyDeps(); syncUI(); homeModeText(); };   // two different games: switching is just a switch
 $('homeAuto').onchange = () => { settings.autoEnter = $('homeAuto').checked; save(); $('setAuto').checked = settings.autoEnter; };
 $('homeLook').onclick = () => { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; } showTab('you'); toggleSettings(); };
 $('homeSet').onclick = () => toggleSettings();
@@ -3376,12 +3405,12 @@ function partyInvited(m) {
 }
 function ivRender() {
   if ($('invModal').classList.contains('hide')) return;
-  const box = $('ivList'), fl = lks.filter(l => l.ok).sort((a, b) => (b.on | 0) - (a.on | 0));
+  const box = $('ivList'), fl = lks.slice().sort((a, b) => ((b.ok && b.on) | 0) - ((a.ok && a.on) | 0));
   box.innerHTML = '';
-  if (!fl.length) box.appendChild(el('div', 'small dim', 'You have no friends yet. Add friends from the main menu (the friends button) or in multiplayer, then come back and invite them.'));
+  if (!fl.length) box.appendChild(el('div', 'small dim', 'You have no friends yet. Add friends in Settings > Friends, then come back and invite them.'));
   const ready = !!(party && online);
   fl.forEach(l => {
-    const r = el('div', 'ivrow'); r.appendChild(dot(l.color)); r.appendChild(el('span', 'ivn', who(l.name))); r.appendChild(el('span', 'ivs', l.on ? (l.w < 0 ? 'In a private world' : 'Online') : 'Offline'));
+    const r = el('div', 'ivrow'); r.appendChild(dot(l.color)); r.appendChild(el('span', 'ivn', who(l.name))); r.appendChild(el('span', 'ivs', l.ok && l.on ? (l.w < 0 ? 'In a private world' : 'Online') : 'Offline'));
     const sent = !!(party && party.invited && party.invited.has(l.pub));
     const b = el('button', 'btn sm' + (ready && !sent ? ' prim' : ''), sent ? 'Invited' : !ready ? 'Connecting…' : 'Invite'); b.type = 'button'; b.disabled = !ready || sent;
     b.onclick = () => { try { ws.send(JSON.stringify({ t: 'inv', to: l.pub })); } catch (e) {} if (party.invited) party.invited.add(l.pub); sfx('ui'); ivRender(); };
@@ -3637,7 +3666,7 @@ function onMsg(m) {
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = infoMsg();
       others.clear();
-      m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); });
+      m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); noteSeen(o.pub, p.name, p.color, p.code); }); saveSeen();
       setNet('online');
       if (m.priv) addFeed(party.role === 'host' ? 'Your world is open: invite your friends' : 'You joined ' + who(party.name) + "'s world", 'join', true); else addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
@@ -3647,7 +3676,7 @@ function onMsg(m) {
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
-    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat); o.pub = m.pub || ''; others.set(m.id, o); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
+    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat); o.pub = m.pub || ''; others.set(m.id, o); noteSeen(o.pub, m.name, m.color, m.code); saveSeen(); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
     case 'leave': { others.delete(m.id); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' left', 'leave', false, 'human'); if (settings.joinMsg) sfx('leave'); } botNote(); break; }
     case 'info': {   // someone changed how they look: show a clear little transformation
       const o = others.get(m.id);
