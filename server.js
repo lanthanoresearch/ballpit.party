@@ -46,6 +46,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
+const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
 
@@ -90,8 +91,8 @@ try {
 } catch (e) {}
 function saveLinks(sync) {
   if (!linksDirty) return; linksDirty = false;
-  // keep only what is needed: people not seen for a month (and not tied to a friend link or a waiting request) are forgotten
-  { const old = Date.now() - 30 * 86400000, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); });
+  // keep only what is needed: people not seen for two months (and not tied to a friend link or a waiting request) are forgotten
+  { const old = Date.now() - STALE_MS, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); });
     known.forEach((v, k) => { if (v.last < old && !need.has(k) && !byPub.has(k)) known.delete(k); }); }
   if (known.size > 5000) [...known.entries()].sort((a, b) => a[1].last - b[1].last).slice(0, known.size - 5000).forEach(e => known.delete(e[0]));
   const o = { links: {}, gone: {}, known: {}, pend: [...pend.entries()].map(e => [e[0], e[1].t]) };
@@ -102,7 +103,9 @@ function saveLinks(sync) {
 const linkSet = pub => { let s = links.get(pub); if (!s) links.set(pub, s = new Set()); return s; };
 function addLink(a, b) { linkSet(a).add(b); linkSet(b).add(a); linksDirty = true; }
 function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; }
-const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), on: q && q.room ? 1 : 0, w: q && q.room ? q.room.id : 0, last: q ? Date.now() : (k.last || 0) }; };
+const WEEK_MS = 7 * 86400000, STALE_MS = 60 * 86400000;   // the player list shows the last week; anybody gone for two months is deleted
+const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
+const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), on: live(q) ? 1 : 0, w: q && q.room ? q.room.id : 0, last: q ? Date.now() : (k.last || 0) }; };
 function sendLinks(p) {   // everyone this player is linked to, with their short code, whether they are online, and when they were last here
   send(p, { t: 'links', list: [...(links.get(p.pub) || [])].map(peerInfo) });
 }
@@ -173,17 +176,25 @@ function broadcast(room, obj, except) {
   const s = JSON.stringify(obj);
   for (const p of room.players.values()) if (p !== except && p.ws.readyState === 1) p.ws.send(s);
 }
-function leave(p) {
+function leave(p, toLobby) {
   const room = p.room;
-  if (!room) return;
-  p.room = null;
+  if (!room && !p.lobby) return;
+  if (room) {
+    p.room = null;
+    online--; statsDirty = true;
+    room.players.delete(p.id);
+    for (const o of room.players.values()) o.vis.delete(p.id);
+    if (room.players.size === 0) rooms.delete(room.id);
+    else broadcast(room, { t: 'leave', id: p.id, name: p.name, pub: p.pub, n: room.players.size });
+  }
   if (p.pub && known.has(p.pub)) { known.get(p.pub).last = Date.now(); linksDirty = true; }
+  if (toLobby) {   // back to the main menu: still connected, just not in any world
+    p.lobby = true; p.has = false; p.moved = false; p.vis = new Set();
+    if (p.pub) for (const b of (links.get(p.pub) || [])) { const q = byPub.get(b); if (q) sendLinks(q); }
+    return;
+  }
+  p.lobby = false;
   if (p.pub && byPub.get(p.pub) === p) { byPub.delete(p.pub); for (const b of (links.get(p.pub) || [])) { const q = byPub.get(b); if (q) send(q, { t: 'loff', pub: p.pub, name: p.name }); } }
-  online--; statsDirty = true;
-  room.players.delete(p.id);
-  for (const o of room.players.values()) o.vis.delete(p.id);
-  if (room.players.size === 0) rooms.delete(room.id);
-  else broadcast(room, { t: 'leave', id: p.id, name: p.name, pub: p.pub, n: room.players.size });
 }
 
 const ipCount = new Map();
@@ -206,23 +217,33 @@ wss.on('connection', (ws, req) => {
 
     if (m.t === 'hello') {
       if (p.room) return;
+      // everybody must run exactly the same game (same physics): an out-of-date page is told to update and is not let in
+      const cb = typeof m.b === 'string' ? m.b.slice(0, 20) : '';
+      if (BUILD_CHECK && cb !== BUILD && cb.charAt(0) !== '_') { send(p, { t: 'update', build: BUILD }); setTimeout(() => { try { ws.close(4001, 'update'); } catch (e) {} }, 400); return; }
+      const lobby = m.lobby ? 1 : 0, wasOn = p.lobby;   // lobby: the player is only on the main menu. Connected for friends, but not in any world and nobody sees them
       p.color = cleanColor(m.color, '#ff4d4d'); p.color2 = cleanColor(m.color2, '#ffffff'); p.pat = cleanPat(m.pat);
-      const fr = findRoom(), room = fr.room;
-      p.room = room;
       if (typeof m.dev === 'string' && DEV.test(m.dev)) p.pub = pubOf(m.dev);
+      let fr = null, room = null;
+      if (!lobby) { fr = findRoom(); room = fr.room; p.room = room; }
+      p.lobby = lobby;
       let nm = cleanName(m.name);
-      if (!nm) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || randomName();   // everybody has a name
+      if (!nm && !lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || randomName();   // everybody has a name once they play
+      if (!nm && lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || '';          // (a brand-new visitor on the menu has not picked one yet: that first pick stays free)
       const nameLeft = setName(p, nm);
       if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.last = Date.now(); linksDirty = true; }
-      room.players.set(p.id, p);
-      online++; statsDirty = true;
-      if (online > peak) { peak = online; peakDirty = true; }
-      send(p, {
-        t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full,
-        name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak,
-        players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === curSlot ? 1 : 0 }))
-      });
-      broadcast(room, { t: 'join', id: p.id, pub: p.pub, name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
+      if (room) {
+        room.players.set(p.id, p);
+        online++; statsDirty = true;
+        if (online > peak) { peak = online; peakDirty = true; }
+        send(p, {
+          t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full,
+          name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak,
+          players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === curSlot ? 1 : 0 }))
+        });
+        broadcast(room, { t: 'join', id: p.id, pub: p.pub, name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
+      } else {
+        send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
+      }
       if (p.pub) {
         byPub.set(p.pub, p);
         const mine = new Set(Array.isArray(m.claims) ? m.claims.filter(v => typeof v === 'string' && PUB.test(v) && v !== p.pub).slice(0, MAX_LINKS) : []);
@@ -236,7 +257,7 @@ wss.on('connection', (ws, req) => {
         }
         if (removed.length) send(p, { t: 'unl', gone: removed });
         sendLinks(p);
-        for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (q && q.room) { sendLinks(q); send(q, { t: 'lon', pub: p.pub, name: p.name }); } }
+        for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (live(q)) { sendLinks(q); if (!wasOn) send(q, { t: 'lon', pub: p.pub, name: p.name }); } }
         pend.forEach((v, k) => {   // friend requests that arrived while you were away
           if (k.slice(17) !== p.pub) return;
           if (Date.now() - v.t > REQ_TTL) { pend.delete(k); return; }
@@ -246,15 +267,18 @@ wss.on('connection', (ws, req) => {
       }
       return;
     }
-    if (!p.room) return;
+    if (!p.room && !p.lobby) return;
+    if (m.t === 'lobby') { if (p.room) leave(p, true); return; }   // back to the main menu: leave the world, stay connected
 
     if (m.t === 'p') {
+      if (!p.room) return;
       if (m.m !== curSlot || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
       const d = m.d ? 1 : 0;
       const x = Math.max(0, Math.min(262000, Math.round(m.x))), y = Math.max(0, Math.min(131000, Math.round(m.y)));
       if (p.x !== x || p.y !== y || p.dead !== d || !p.has) p.moved = true;
       p.x = x; p.y = y; p.dead = d; p.has = true;
     } else if (m.t === 'emo') {
+      if (!p.room) return;
       const i = m.i | 0, now = Date.now();
       if (i < 0 || i >= EMOJIS || now - p.lastEmo < 900) return;
       p.lastEmo = now;
@@ -262,14 +286,18 @@ wss.on('connection', (ws, req) => {
     } else if (m.t === 'find') {
       const now = Date.now(); if (now - p.lastFind < 250) return; p.lastFind = now;
       const raw = String(m.q == null ? '' : m.q).trim().slice(0, 12), q = raw.toLowerCase(), qc = raw.toUpperCase().replace(/^#/, ''), mine = links.get(p.pub), out = [];
+      const browse = !raw;   // nothing typed: the whole list of players from the last week. Typing searches everybody still on record.
       known.forEach((k, pub) => {
         if (pub === p.pub) return;
-        const code = codeOf(pub), on = byPub.has(pub) && byPub.get(pub).room;
-        if (q && !(k.name.toLowerCase().indexOf(q) >= 0 || code === qc || code.indexOf(qc) === 0 && qc.length >= 3)) return;
-        out.push({ pub, code, name: byPub.get(pub) ? byPub.get(pub).name : k.name, color: byPub.get(pub) ? byPub.get(pub).color : k.color, on: on ? 1 : 0, w: on ? on.id : 0, last: on ? now : k.last, here: on && on === p.room ? 1 : 0, l: mine && mine.has(pub) ? 1 : 0 });
+        const code = codeOf(pub), q2 = byPub.get(pub), on = live(q2) ? (q2.room || true) : null, nm = q2 ? q2.name : k.name, last = on ? now : k.last;
+        if (!nm) return;   // has never picked a name, so has never really played
+        const linked = !!(mine && mine.has(pub));
+        if (!on && !linked && now - last > (browse ? WEEK_MS : STALE_MS)) return;
+        if (!browse && !(nm.toLowerCase().indexOf(q) >= 0 || code === qc || code.indexOf(qc) === 0 && qc.length >= 3)) return;
+        out.push({ pub, code, name: nm, color: q2 ? q2.color : k.color, on: on ? 1 : 0, w: on && on !== true ? on.id : 0, last, here: on && on !== true && on === p.room ? 1 : 0, l: linked ? 1 : 0 });
       });
       out.sort((a, b) => (b.here - a.here) || (b.on - a.on) || (b.last - a.last));
-      send(p, { t: 'found', q: raw, list: out.slice(0, 14) });
+      send(p, { t: 'found', q: raw, list: out.slice(0, browse ? 80 : 30), n: out.length });
     } else if (m.t === 'treq' || m.t === 'tacc' || m.t === 'tden') {
       if (!p.pub || typeof m.to !== 'string' || !PUB.test(m.to) || m.to === p.pub) return;
       const q = byPub.get(m.to), now = Date.now();
@@ -282,18 +310,18 @@ wss.on('connection', (ws, req) => {
         if (linkSet(m.to).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, name: tn, why: 'theirs' });
         let n = 0; pend.forEach((v, k) => { if (k.indexOf(p.pub + '>') === 0) n++; }); if (n >= 8) return;
         pend.set(p.pub + '>' + m.to, { t: now }); linksDirty = true;
-        if (q && q.room) send(q, { t: 'treq', pub: p.pub, code: codeOf(p.pub), name: p.name, color: p.color });
-        send(p, { t: 'tsent', pub: m.to, name: tn, off: q && q.room ? 0 : 1 });
+        if (live(q)) send(q, { t: 'treq', pub: p.pub, code: codeOf(p.pub), name: p.name, color: p.color });
+        send(p, { t: 'tsent', pub: m.to, name: tn, off: live(q) ? 0 : 1 });
       } else {
         const k = m.to + '>' + p.pub, pr = pend.get(k);
         if (!pr || Date.now() - pr.t > REQ_TTL) { pend.delete(k); return send(p, { t: 'tno', pub: m.to, why: 'old' }); }
         pend.delete(k); linksDirty = true;
-        if (m.t === 'tden') { if (q && q.room) send(q, { t: 'tno', pub: p.pub, name: p.name, why: 'deny' }); return; }
+        if (m.t === 'tden') { if (live(q)) send(q, { t: 'tno', pub: p.pub, name: p.name, why: 'deny' }); return; }
         if (linkSet(p.pub).size >= MAX_LINKS || linkSet(m.to).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, why: 'full' });
         addLink(p.pub, m.to);
         const gp = gone.get(p.pub), gq = gone.get(m.to); if (gp) gp.delete(m.to); if (gq) gq.delete(p.pub);
         send(p, { t: 'tok', pub: m.to }); sendLinks(p);
-        if (q && q.room) { send(q, { t: 'tok', pub: p.pub }); sendLinks(q); }
+        if (live(q)) { send(q, { t: 'tok', pub: p.pub }); sendLinks(q); }
       }
     } else if (m.t === 'unl') {
       if (!p.pub || typeof m.to !== 'string' || !PUB.test(m.to)) return;
@@ -312,8 +340,9 @@ wss.on('connection', (ws, req) => {
       p.color = cleanColor(m.color, p.color); p.color2 = cleanColor(m.color2, p.color2); p.pat = cleanPat(m.pat);
       if (p.pub && known.get(p.pub)) { known.get(p.pub).color = p.color; linksDirty = true; }
       if (p.pub) for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (q) sendLinks(q); }
-      broadcast(p.room, { t: 'info', id: p.id, name: p.name, color: p.color, color2: p.color2, pat: p.pat }, p);
+      if (p.room) broadcast(p.room, { t: 'info', id: p.id, name: p.name, color: p.color, color2: p.color2, pat: p.pat }, p);
     } else if (m.t === 'finish') {
+      if (!p.room) return;
       if (m.m !== curSlot || !p.has || p.fin === curSlot) return;
       const flag = maps.generate(curSlot % maps.count).flag;
       const dx = p.x - flag[0] * maps.TS, dy = p.y - flag[1] * maps.TS;
@@ -400,6 +429,7 @@ setInterval(() => {
   const s = JSON.stringify({ t: 'stats', online, peak });
   for (const room of rooms.values()) for (const p of room.players.values()) if (p.ws.readyState === 1) p.ws.send(s);
 }, 5000);
+setInterval(() => { linksDirty = true; }, 6 * 3600000);   // (re-checks who has been gone for two months)
 setInterval(() => { savePeak(false); saveLinks(false); const t = Date.now(); pend.forEach((v, k) => { if (t - v.t > REQ_TTL) pend.delete(k); }); }, 15000);
 
 // Map rotation (every 6 hours)

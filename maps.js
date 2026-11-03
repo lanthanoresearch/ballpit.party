@@ -185,6 +185,15 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         });
         return ok;
       },
+      freeX(x0, y0, x1, y1, exs) {   // like free(), ignoring any number of known boxes
+        let ok = true;
+        cells(x0, y0, x1, y1, k => {
+          if (!ok) return;
+          const l = g.get(k); if (!l) return;
+          for (let i = 0; i < l.length; i++) { const b = l[i]; if (b[0] < x1 && b[2] > x0 && b[1] < y1 && b[3] > y0 && exs.indexOf(b) < 0) { ok = false; return; } }
+        });
+        return ok;
+      },
       free(x0, y0, x1, y1) {
         let ok = true;
         cells(x0, y0, x1, y1, k => {
@@ -357,8 +366,10 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     const GY = LS * (DNN + 1) + (d.gOff || 0), YB = GY + 62, YT = -LS * (UPN - 1) - 40;
     const BP = { ice: 0.08, lava: 0.1, pillar: 0.06, narrow: 0.05, water: 0.1, wd: d.wd, gp: d.gp, oo: d.oo, un: d.un };
 
+    const rIdx = new Map();   // rectangles by 16x16 tile cell, so "what is at this tile?" is quick
     function addRect(r) {
       rects.push(r);
+      for (let cx = Math.floor(r[0] / 16); cx <= Math.floor((r[0] + r[2] - 1) / 16); cx++) for (let cy = Math.floor(r[1] / 16); cy <= Math.floor((r[1] + r[3] - 1) / 16); cy++) { const k = cx * 100003 + cy; let l = rIdx.get(k); if (!l) rIdx.set(k, l = []); l.push(r); }
       let z = gz[r[6]];
       if (!z) z = gz[r[6]] = [1e9, 1e9, -1e9, -1e9, r[5]];
       if (r[0] < z[0]) z[0] = r[0]; if (r[1] < z[1]) z[1] = r[1];
@@ -1232,7 +1243,8 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       cloud: { wd: [4, 7], gp: [3, 5], oo: [0, -1, -2, -3, 1], narrow: 0.15, lava: 0.08, pillar: 0.05, ice: 0.3, rest: 99, drift: 5 },
       zigzag: { wd: [4, 8], gp: [2, 4], oo: [3, -3, 3, -3, 2, -2, 4, -4], drift: 5 },
       wild: { wd: [2, 15], gp: [2, 4], oo: [-4, -3, -2, -1, 0, 1, 2, 3, 4], narrow: 0.2, lava: 0.3, ice: 0.25, water: 0.15, see: 0.15, pillar: 0.25, drift: 5 },
-      wild2: { wd: [3, 12], gp: [2, 4], oo: [-3, -2, 0, 2, 3, 4, -4], narrow: 0.12, lava: 0.35, ice: 0.3, water: 0.2, pillar: 0.3, drift: 5 }
+      wild2: { wd: [3, 12], gp: [2, 4], oo: [-3, -2, 0, 2, 3, 4, -4], narrow: 0.12, lava: 0.35, ice: 0.3, water: 0.2, pillar: 0.3, drift: 5 },
+      plaza: { wd: [15, 21], gp: [2, 3], oo: [0, 0, 1, -1], narrow: 0, lava: 0, ice: 0, water: 0, pillar: 0, see: 0, drift: 3 }   // a broad flat square: room for a crowd, a shortcut, or a pile of toys
     };
     const FW = {}; for (const k in FLAV) FW[k] = 0.4 + BR() * 2.2;   // every map has its own favourite kinds of stretch
     const FKEYS = Object.keys(FLAV);
@@ -1243,6 +1255,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       const t = heightT(r), thick = 1 - sm(0.22, 0.78, t), thin = sm(0.28, 0.9, t);
       const w = { plain: 0.9, islets: 2, lavarun: 3, iceslide: 2, waterhop: 2, seesaws: 3, stones: 2, arena: 3, stairs: 2, drops: 2, zigzag: 3, wild: 5, wild2: 4, wisp: 4, perch: 2.5, cloud: 3 };
       for (const k in w) w[k] *= FW[k] * (WISPY[k] ? 0.04 + thin * 2.6 * WISPY[k] : 0.12 + thick * 1.2);
+      w.plaza = 1.9 * (0.55 + 0.45 * FW.plaza / 2.6);   // (broad squares appear on every level, high or low)
       let tot = 0; for (const k of FKEYS) tot += w[k]; let q = BR() * tot;
       for (const k of FKEYS) { q -= w[k]; if (q <= 0) return k; }
       return 'plain';
@@ -1363,7 +1376,12 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       const L = e[2], y = e[1], th = e[3], g = e[5], kind = BR();
       const px = e[0] + 1;   // the pad sits at the far end of the platform; everything it throws you to hangs over the platform
       const reserve = (x0, y0, x1, y1) => { if (!occ.free2(x0, y0, x1, y1, e.box, null)) return false; occ.add(x0, y0, x1, y1); return true; };
-      if (kind < 0.35 && L >= 12) {   // a shelf with a pile of toys
+      if (kind < 0.2 && L >= 11) {   // a spring you can push around, and a shelf out of normal jumping reach: bounce on the spring to get up there
+        if (!reserve(px - 2, y - 13, px + 13, y - 5)) return false;
+        const sx = px + 4, sy = y - 6;
+        addRect([sx, sy, 8, 1, 1, th, g]); props.push([5, px + 1, y]);
+        jenga(sx + 1, sy, bri(2, 4)); coinRow(sx + 0.5, sy - 1.2, 7, 1, 0); coin(sx + 4, sy - 2.8, 1);
+      } else if (kind < 0.35 && L >= 12) {   // a shelf with a pile of toys
         if (!reserve(px - 2, y - 13, px + 12, y - 6)) return false;
         addRect([px, y, 3, 1, 6, th, g]); const sx = px + 3, sy = y - 7;
         addRect([sx, sy, 8, 1, 1, th, g]);
@@ -1425,6 +1443,145 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     }
     if (!fin) { const e = mainPath[mainPath.length - 1]; fin = [e[0], e[1], e[2]]; addRect([e[0], e[1], e[2], 1, 4, e[3], e[5]]); }
 
+    /* ---- shortcuts: ways up that skip most of a lane, so the climb is not one endless zig-zag.
+       Each is a tall zig-zag of little shelves with a bounce pad on every one: a pad throws you up to the next shelf, left, right, left..., and the last one
+       throws you up through a gap in a higher lane. Some begin in a nook where you push a spring under a hole in the roof first.
+       (Nothing on the real route depends on them.) ---- */
+    const shortcutList = []; const DBG = { try: 0, D: 0, noC: 0, free: 0 };
+    function typeAt(x, y) {   // what is at this tile right now (0 = air)? later rectangles are painted on top of earlier ones
+      const l = rIdx.get(Math.floor(x / 16) * 100003 + Math.floor(y / 16)); if (!l) return 0;
+      for (let i = l.length - 1; i >= 0; i--) { const r = l[i]; if (x >= r[0] && x < r[0] + r[2] && y >= r[1] && y < r[1] + r[3]) return r[4]; }
+      return 0;
+    }
+    const solidTop = e => typeAt(Math.floor(e[0] + e[2] / 2), e[1]) === 1;
+    const airBox = (x0, y0, x1, y1) => { for (let y = Math.floor(y0); y < y1; y++) for (let x = Math.floor(x0); x < x1; x++) if (typeAt(x, y)) return false; return true; };   // nothing at all in this block of tiles
+    const floorRun = (x0, x1, y) => { for (let x = Math.floor(x0); x < x1; x++) { const t = typeAt(x, y); if (t !== 1 && t !== 3) return false; } return true; };   // solid ground along here
+    function express() {
+      // where the real route jumps: a shelf must never hang in the way of a jump (the run-up and the arc, around every gap of the route)
+      const occJ = Occ();
+      for (let i = 0; i + 1 < mainPath.length; i++) {
+        const Q = mainPath[i], Q2 = mainPath[i + 1], gl = Math.min(Q[0] + Q[2], Q2[0] + Q2[2]), gr = Math.max(Q[0], Q2[0]);
+        const x0 = gr > gl ? gl - 2.6 : Math.min(Q[0], Q2[0]) - 1, x1 = gr > gl ? gr + 2.6 : Math.max(Q[0] + Q[2], Q2[0] + Q2[2]) + 1;
+        occJ.add(x0, Math.min(Q[1], Q2[1]) - 6.8, x1, Math.max(Q[1], Q2[1]) + 1.5);
+      }
+      function tryLadder(A, B, N, dd, kind) {
+        const fx = (x, w) => dd > 0 ? x : -(x + w);   // build as if climbing towards +x; this turns it back into real tiles
+        const gl = Math.min(B[0] + B[2], N[0] + N[2]), gr = Math.max(B[0], N[0]);   // the gap between the two platforms, in real tiles
+        const T = B[1] <= N[1] ? B : N, Ay = A[1], Ty = T[1], D = Ay - Ty, sp = kind === 'spring';
+        const A0 = dd > 0 ? A[0] : -(A[0] + A[2]), A1 = A0 + A[2], G0 = dd > 0 ? gl : -gr, G1 = dd > 0 ? gr : -gl;
+        DBG.try++;
+        if (D < 13 || D > 52 || G1 - G0 < 3) { DBG.D++; return false; }
+        const n = Math.ceil(D / 6), m = n - 1;
+        const rises = []; let rem = D;
+        if (sp) { rises.push(6); rem -= 6; }
+        for (let k = rises.length; k < n; k++) { const r = Math.ceil(rem / (n - k)); rises.push(r); rem -= r; }
+        if (rises.some(r => r < 3 || r > 6)) return false;
+        const lead = sp ? 4 : 3, need = sp ? 12 : 9;            // the pad (or the nook) on A, then the first shelf above A
+        const opts = [];
+        for (let a = A0 + 1; a + (sp ? need : 3) <= A1; a++) {
+          for (let off = 0; off <= G1 - G0 - 3; off++) {
+            const px = G0 + off, tot = (px - 3) - (a + lead);   // the shelves between the first one and the top one
+            const minW = sp ? 8 + 6 * (m - 2) : 6 * (m - 1), maxW = sp ? 8 + 10 * (m - 2) : 10 * (m - 1);
+            if (m === 1 ? tot === 0 : (tot >= minW && tot <= maxW)) opts.push([a, px, tot]);
+          }
+        }
+        if (!opts.length) { DBG.noC++; return false; }
+        for (let tries = 0; tries < 4 && opts.length; tries++) {
+          const oi = Math.floor(BR() * opts.length), [a, px, tot] = opts.splice(oi, 1)[0];
+          const ws = []; for (let k = 0; k < m - 1; k++) ws.push(sp && k === 0 ? 8 : 6);
+          let extra = tot - ws.reduce((x, y) => x + y, 0);
+          for (let guard = 0; extra > 0 && guard < 300; guard++) { const k = Math.floor(BR() * ws.length); if (ws[k] < 10 && !(sp && k === 0)) { ws[k]++; extra--; } }
+          if (extra !== 0) continue;
+          const shelves = []; let sx = a + lead, y = Ay;
+          for (let k = 0; k < m - 1; k++) { y -= rises[k]; shelves.push({ x: sx, w: ws[k], y }); sx += ws[k]; }
+          y -= rises[m - 1]; shelves.push({ x: px - 3, w: 6, y });       // the top shelf sits right under the gap
+          const exs = [A.box, B.box, N.box];
+          const free = (x0, y0, x1, y1) => { const r0 = fx(x0, x1 - x0); return occ.freeX(r0, y0, r0 + (x1 - x0), y1, exs); };
+          let ok = true;
+          if (sp && !free(a - 1, Ay - 9, a + 13, Ay + 1)) ok = false;
+          if (ok && !sp && !free(a - 1, Ay - rises[0], a + 3, Ay)) ok = false;
+          for (let k = 0; k < m && ok; k++) {
+            const P = shelves[k]; if (!free(P.x - 1, P.y - 8, P.x + P.w + 1, P.y + 2)) ok = false;
+            else { const q = fx(P.x, P.w); if (!occJ.free(q, P.y, q + P.w, P.y + 2)) ok = false; }
+            if (ok && k > 0 && k < m - 1) { const P0 = shelves[k - 1]; if (!free(P.x - 4, P.y, P.x + 1, P0.y)) ok = false; }   // (the climb of each bounce)
+          }
+          if (ok && sp) { const q = fx(a, 12); if (!occJ.free(q, Ay - 6, q + 12, Ay)) ok = false; }
+          if (ok && !free(px, Ty - 8, px + 3, shelves[m - 1].y)) ok = false;
+          if (!ok) { DBG.free++; continue; }
+          // the ground must really be plain ground and the air really empty (a lava pit or a stray block would spoil it)
+          const real = (x0, x1) => { const q = fx(x0, x1 - x0); return [q, q + (x1 - x0)]; };
+          let okT = solidTop(B) && solidTop(N);
+          if (okT) { const [a0, a1] = sp ? real(a, a + 12) : real(a, a + 3); okT = floorRun(a0, a1, Ay) && airBox(a0, Ay - (sp ? 6 : 3), a1, Ay); }
+          for (let k = 0; k < m && okT; k++) {
+            const P = shelves[k], [q0, q1] = real(P.x - 1, P.x + P.w + 1), low = k === m - 1 ? Math.max(B[1] + B[7], N[1] + N[7]) + 1 : P.y - 8;
+            if (P.y - 1 < low) okT = false; else okT = airBox(q0, low, q1, P.y + 3);
+          }
+          if (!okT) { DBG.typ = (DBG.typ || 0) + 1; continue; }
+          // build it
+          const thA = A[3], gA = A[5], thB = T[3], gB = T[5];
+          const Rc = (x, yy, w, h, t, k) => addRect([fx(x, w), yy, w, h, t, k < m / 2 ? thA : thB, k < m / 2 ? gA : gB]);
+          const hops = [];
+          if (sp) {
+            Rc(a, Ay - 6, 1, 6, 1, 0); Rc(a + 11, Ay - 1, 1, 1, 1, 0);   // the back wall of the nook, and a low lip so the spring cannot roll away
+            props.push([5, fx(a + 7, 1), Ay]);
+            const bx = fx(a - 1, 14); occ.add(bx, Ay - 9, bx + 14, Ay + 1);
+          } else {
+            Rc(a, Ay, 3, 1, 6, 0);
+            coin(fx(a + 1.5, 0), Ay - 3.4, 0); coin(fx(a + 1.5, 0), Ay - 5.2, 0);
+            hops.push({ px: fx(a + 1.5, 0), py: Ay, ty: shelves[0].y });
+          }
+          shelves.forEach((P, k) => {
+            Rc(P.x, P.y, P.w, 2, 1, k);
+            const padx = P.x + P.w - 3; Rc(padx, P.y, 3, 1, 6, k);
+            const bx = fx(P.x, P.w); occ.add(bx - 1, P.y - 8, bx + P.w + 1, P.y + 3); occB.add(bx - 1, P.y - 1, bx + P.w + 1, P.y + 3);
+            const pc = fx(padx + 1.5, 0);
+            coin(pc, P.y - 3.4, 0); coin(pc, P.y - 5.2, k === m - 1 ? 1 : 0); coin(fx(P.x + 1.5, 0), P.y - 1.2, 0);
+            hops.push({ px: pc, py: P.y, ty: k + 1 < m ? shelves[k + 1].y : Ty });
+          });
+          const roof = sp ? shelves[0] : null;
+          shortcutList.push({ kind, hops: m + 1, ax: A[0], ay: Ay, tx: T[0], tw: T[2], ty: Ty, c: fx(a, 0), dd, pads: hops, spring: sp ? [fx(a + 7, 1), Ay] : null,
+            shelves: shelves.map(P => [fx(P.x, P.w), P.y, P.w, 0]), gap: [gl, gr] });
+          A[9] = 0; B[9] = 0; N[9] = 0;
+          return true;
+        }
+        return false;
+      }
+      for (let r = 0; r < UPN - 1; r++) {
+        const LA = (lanePw[r] || []).filter(e => e[4] === 0 && !e[12] && e[2] >= 14 && e[9] === 1);
+        for (let i = LA.length - 1; i > 0; i--) { const j = Math.floor(BR() * (i + 1)); const t = LA[i]; LA[i] = LA[j]; LA[j] = t; }
+        const done = []; let made = 0;
+        for (let t = 0; t < LA.length && made < 16; t++) {
+          const A = LA[t]; let near = false;
+          for (const x of done) if (Math.abs(x - A[0]) < 22) { near = true; break; }
+          if (near) continue;
+          const skip2 = r + 2 < UPN && BR() < 0.3, LB = lanePw[skip2 ? r + 2 : r + 1] || [], cand = [];
+          for (let i = 0; i + 1 < LB.length; i++) { const B = LB[i], N = LB[i + 1]; if (B[4] !== 0 || N[4] !== 0 || B[12] || N[12] || B[8] || N[8]) continue; if (Math.abs(B[0] - A[0]) < 40) cand.push([B, N]); }
+          for (let i = cand.length - 1; i > 0; i--) { const j = Math.floor(BR() * (i + 1)); const t2 = cand[i]; cand[i] = cand[j]; cand[j] = t2; }
+          let ok = false;
+          for (let bi = 0; bi < cand.length && !ok; bi++) {
+            const [B, N] = cand[bi], kind = BR() < 0.4 ? 'spring' : 'ladder', other = kind === 'spring' ? 'ladder' : 'spring';
+            ok = tryLadder(A, B, N, 1, kind) || tryLadder(A, B, N, -1, kind) || tryLadder(A, B, N, 1, other) || tryLadder(A, B, N, -1, other);
+          }
+          if (ok) { made++; done.push(A[0]); }
+        }
+      }
+    }
+    express(); if (typeof process !== 'undefined' && process.env.MAPDBG) console.log('express', JSON.stringify(DBG), shortcutList.length);
+    const cps = [];
+    // flags are spread evenly over the whole map (ground, middle and sky alike): pick calm platforms at random, but never two close together
+    {
+      const cand = [];
+      for (const pw of [mainPath, decPath, gruns]) for (const e of pw) if (e[2] >= 7 && e[9] === 1 && e[4] === 0 && !e[6] && !e[12]) cand.push({ x: Math.floor(e[0] + e[2] / 2), y: e[1], e });
+      for (const q of ugCps) cand.push({ x: q[0], y: q[1], ug: q });
+      for (let i = cand.length - 1; i > 0; i--) { const j = Math.floor(BR() * (i + 1)); const t = cand[i]; cand[i] = cand[j]; cand[j] = t; }
+      const got = [];
+      for (const c of cand) {
+        let ok = true;
+        for (const g of got) { const dx = (c.x - g.x) / 64, dy = (c.y - g.y) / 34; if (dx * dx + dy * dy < 1) { ok = false; break; } }
+        if (!ok) continue;
+        got.push(c); cps.push([c.x, c.y]); if (c.e) c.e[9] = 0;
+      }
+    }
     satellites(decPath, 0.4); satellites(mainPath, 0.35); satellites(gruns, 0.3);
     chaos(decPath, 1); chaos(mainPath, 0.95); chaos(gruns, 0.6);
     addStructures(decPath);   // (the real route stays plain so it is always fair)
@@ -1465,19 +1622,6 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     }
     padFun(decPath, 0.3); padFun(gruns, 0.22);
     // checkpoint flags: one on a calm platform every so often. Touch one and your next fall brings you back to it (once).
-    const cps = [];
-    function pickCps(pw, every) {
-      let i = bri(3, every);
-      while (i < pw.length - 2) {
-        for (let k = 0; k < 8 && i + k < pw.length - 1; k++) {
-          const e = pw[i + k];
-          if (e[2] >= 9 && e[9] === 1 && e[4] === 0 && !e[6] && !e[12]) { cps.push([Math.floor(e[0] + e[2] / 2), e[1]]); e[9] = 0; i += k; break; }
-        }
-        i += every + bri(-4, 4);
-      }
-    }
-    pickCps(mainPath, 20); pickCps(decPath, 24); pickCps(gruns, 5);
-    ugCps.forEach(q => cps.push(q));
     skyDistricts(mainPath); skyDistricts(decPath);
     satellites(mainPath, 0.5); satellites(decPath, 0.55); satellites(gruns, 0.3);
     addProps(mainPath, 0.9); addProps(decPath, 0.95);
@@ -1528,6 +1672,10 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     for (const q of gad.btns) { q[0] += ox; q[1] += oy; }
     for (const q of gad.see) { q[0] += ox; q[1] += oy; }
     for (const q of cps) { q[0] += ox; q[1] += oy; }
+    for (const sc of shortcutList) {   // (for the tests: where each bounce pad is and where it should land)
+      sc.ax += ox; sc.ay += oy; sc.tx += ox; sc.ty += oy; sc.c += ox; sc.gap = [sc.gap[0] + ox, sc.gap[1] + ox];
+      sc.pads = sc.pads.map(h => ({ px: h.px + ox, py: h.py + oy, ty: h.ty + oy })); sc.shelves = sc.shelves.map(q => [q[0] + ox, q[1] + oy, q[2], q[3]]); if (sc.spring) sc.spring = [sc.spring[0] + ox, sc.spring[1] + oy];
+    }
     for (const q of ugStats.list) { q[0] += ox; q[1] += oy; q[2] += oy; q[3] += oy; for (const l of q[4]) { l[0] += ox; l[1] += oy; } }
 
     // background regions (drawn in order, so later ones sit on top)
@@ -1552,7 +1700,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     let cleaned = 0;
     {
       // crates, boxes and balls: not inside solid or lava, and not hanging with nothing under them (a stack counts as support)
-      const dims = k => (k === 0 ? [0.45, 0.9] : k === 1 ? [0.9, 1.8] : k === 2 ? [0.4, 0.8] : k === 3 ? [0.85, 1.7] : [0.35, 0.7]);
+      const dims = k => (k === 0 || k === 5 ? [0.45, 0.9] : k === 1 ? [0.9, 1.8] : k === 2 ? [0.4, 0.8] : k === 3 ? [0.85, 1.7] : [0.35, 0.7]);
       const order = props.slice().sort((a, b) => b[2] - a[2]), good = [];
       for (const q of order) {
         const [k, x, y0] = q, [hw, hh] = dims(k), cx = x + 0.5;
@@ -1628,7 +1776,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     const map = {
       idx, name: d.name, bg: '#0c0c16',
       TS, W, H, rects, path, zones, props, coins: coinsOut, gadgets: gad, decor, floorY,
-      checkpoints: cps, ug: ugStats, cleaned: map_cleaned,
+      checkpoints: cps, shortcuts: shortcutList, ug: ugStats, cleaned: map_cleaned,
       start: [(ox + 1.5) * TS, oy * TS - R - 1],   // the one community spawn point
       finish: fin,
       flag: [fin[0] + fin[2] / 2, fin[1]],

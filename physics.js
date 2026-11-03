@@ -22,7 +22,7 @@
     (G.see || []).forEach(p => w.see.push({ cx: p[0] * TS, cy: p[1] * TS, hl: p[2] * TS, tilt: p[3], ang: p[3], av: 0, tq: 0 }));
     for (const p of (map.props || [])) {   // pushable yellow things; each player has their own copy (never shared)
       const kind = p[0], cx = (p[1] + 0.5) * TS, sy = p[2] * TS;
-      const hw = kind === 0 ? 18 : kind === 1 ? 36 : 0, r = kind === 2 ? 16 : kind === 3 ? 34 : kind === 4 ? 14 : 0;
+      const hw = kind === 0 || kind === 5 ? 18 : kind === 1 ? 36 : 0, r = kind === 2 ? 16 : kind === 3 ? 34 : kind === 4 ? 14 : 0;
       const d = { k: r ? 'o' : 'b', x: cx, y: sy - (r || hw) - 0.5, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, av: 0, tip: null, spin: false, gr: false, touch: false, burn: 0,
         m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind };
       d.hx = d.x; d.hy = d.y; w.dyn.push(d);
@@ -104,6 +104,7 @@
       d.x += nx * (r - dd); d.y += ny * (r - dd);
       const vn = d.vx * nx + d.vy * ny;
       if (vn < 0) { const e = vn < -250 ? 0.3 : 0; d.vx -= (1 + e) * vn * nx; d.vy -= (1 + e) * vn * ny; }
+      if (t === 6 && ny < -0.5 && vn < -130) { d.vy = -BOUNCE * 0.85; d.gr = false; continue; }   // a bounce pad throws a toy up
       if (ny < -0.5) d.gr = true;
     }
     return burn;
@@ -174,6 +175,33 @@
         if (b.r === undefined) b.flat = Math.abs(sl) <= 0.06;   // on a tilted plank you slide; on a level one you grip
         if (b.r === undefined) { b.ground = true; b.gType = 1; }
       }
+    }
+    return on;
+  }
+  function seeBox(w, d, dt) {   // a crate against every nearby plank: it rides it, and its weight tips it
+    let on = null;
+    for (let i = 0; i < w.see.length; i++) {
+      const s = w.see[i]; if (Math.abs(s.cx - d.x) > s.hl + d.hw + 12 || Math.abs(s.cy - d.y) > s.hl + d.hh + 60) continue;
+      const c = Math.cos(s.ang), sn = Math.sin(s.ang), nx = sn, ny = -c, bottom = d.y + d.hh;
+      let pen = -99;
+      for (const px of [d.x - d.hw + 3, d.x, d.x + d.hw - 3]) {
+        const rx = px - s.cx, ry = bottom - s.cy, along = rx * c + ry * sn;
+        if (along < -s.hl - 2 || along > s.hl + 2) continue;
+        const gap = SEE_TH - (rx * nx + ry * ny);           // how far the corner has sunk below the plank's top face
+        if (gap > -4 && gap < SEE_TH + 18 && d.vy > -80 && gap > pen) pen = gap;   // within a few px counts as resting on it, so the weight doesn't flicker on and off
+      }
+      if (pen === -99) continue;
+      if (pen < 0) pen = 0;
+      const ox = d.x, oy = d.y;
+      d.x += nx * pen; d.y += ny * pen;
+      if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x = ox; d.y = oy; continue; }   // pinned against the ground: leave it
+      const svx = -s.av * (d.y + d.hh - s.cy), svy = s.av * (d.x - s.cx);   // how fast the plank itself is moving there
+      const vn = (d.vx - svx) * nx + (d.vy - svy) * ny;
+      if (vn < 0) { d.vx -= vn * nx; d.vy -= vn * ny; }
+      const vt = (d.vx - svx) * c + (d.vy - svy) * sn, gripK = Math.abs(vt) < 140 ? vt : vt * Math.min(1, 5 * dt);   // wood grips a crate: it stays put on the plank (so a crate can hold one end down), but a firm push still slides it
+      d.vx -= gripK * c; d.vy -= gripK * sn;
+      s.tq += d.m * 60 * clamp((d.x - s.cx) * c + (d.y - s.cy) * sn, -s.hl, s.hl);   // the heavier the crate, the harder it presses
+      on = s;
     }
     return on;
   }
@@ -267,6 +295,7 @@
     }
   }
   function boxSettle(w, d, L, dt) {   // after tumbling: spin while in the air, then lie flat again when it lands
+    if (d.sr !== undefined) { d.rot += (d.sr - d.rot) * Math.min(1, 14 * dt); d.sr = undefined; d.spin = false; return; }   // on a plank it tilts with it
     if (!d.spin && !d.rot) return;
     const sup = boxSupports(w, d, L).length > 0 && d.vy > -20 && Math.abs(d.vy) < 140;
     if (!sup && d.spin) { d.rot += d.av * dt; d.av *= (1 - 0.4 * dt); return; }
@@ -284,6 +313,7 @@
       if (d.burn > 0) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; } continue; }
       if (f && (Math.abs(d.x - f.x) > FR || Math.abs(d.y - f.y) > FR)) { d.sleep = true; continue; }   // far from you: frozen (saves work)
       d.sleep = false;
+      if (d.sq > 0) d.sq = Math.max(0, d.sq - dt);
       d.vy = Math.min(900, d.vy + GRAV * dt);
       let burn = false;
       if (d.k === 'o') {
@@ -294,14 +324,21 @@
         boxTipStep(w, d, dt);
       } else {
         d.x += d.vx * dt; if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x -= d.vx * dt; d.vx = 0; }
-        d.y += d.vy * dt; if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.y -= d.vy * dt; d.vy = 0; }
+        d.y += d.vy * dt;
+        if (boxHits(w, d.x, d.y, d.hw, d.hh)) {
+          const hit = d.vy; d.y -= d.vy * dt; d.vy = 0;
+          if (hit > 130 && tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh + 2) / TS)) === 6) { d.vy = -BOUNCE * (d.hw > 20 ? 0.55 : 0.75); d.tip = null; }   // a bounce pad throws a crate up too (heavier ones less)
+        }
         d.gr = boxHits(w, d.x, d.y + 1, d.hw, d.hh);
+        const sp = w.see.length ? seeBox(w, d, dt) : null;
+        if (sp) { d.sr = sp.ang; if (Math.abs(Math.sin(sp.ang)) <= 0.06) d.gr = true; }
         const under = tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh + 2) / TS));
         if (d.gr || d.touch) d.vx = approach(d.vx, 0, (under === 3 ? 40 : 900) * dt);
         const tl = tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh - 4) / TS));
         if (tl === 2) burn = true;
+        const onPlank = d.sr !== undefined;
         boxSettle(w, d, L, dt);
-        if (!d.spin && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
+        if (!onPlank && !d.spin && d.kind !== 5 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
       }
       d.touch = false;
       if (burn || d.y > killYAt(w, d.x) || d.x < -200 || d.x > w.W * TS + 200) { d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
@@ -334,6 +371,7 @@
         if (ny < -0.6) {                   // standing on top
           b.y += ny * pen; if (b.vy > 0) b.vy = 0; b.ground = true; if (Math.abs(b.x - d.x) <= d.hw) { b.flat = true; b.gType = 1; }
           d.touch = true;
+          if (d.kind === 5 && b.vy >= 0) { b.bnc = true; d.sq = 0.25; }   // a spring: land on it (or roll onto it) and it throws you up
         } else if (ny > 0.6) {             // bonked the underside
           b.y += ny * pen; if (b.vy < 0) b.vy = 0;
         } else {                           // pushing from the side: the crate is simply carried along; heavier ones slow you a little
@@ -357,7 +395,7 @@
   }
 
   const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
-  const SJ_MUL = 1.42, JM_RISE = 200, JM_DRAIN = 1.6, JM_GRACE = 0.3, JM_HOLD = 0.5;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
+  const SJ_MUL = 1.42, JM_FILL = 0.345, JM_DRAIN = 7, JM_GRACE = 0.13, JM_HOLD = 0.2;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
   const BOOST_T = 1.6, BOOST_V = MAXV * 2;   // seconds of steady rolling to fill the ring, and the boosted top speed (double)
   const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false, boosted: false, superJump: false };
 
@@ -408,7 +446,7 @@
       }
       b.vx = approach(b.vx, target, (b.boost ? brate : rate) * dt);
       b.coyote = b.ground ? 0.1 : Math.max(0, b.coyote - dt);
-      // The jump meter: every jump fills it a good way. Jump again quickly enough and it fills all the way, and after landing it waits a moment at full.
+      // The jump meter: three perfect jumps in a row (full height, each started within a split second of landing) fill it. Jump again straight away while it is full and you get the extra tall jump.
       // Jump while it is full and you get an extra tall jump. Wait too long and it drains away. (Only your own ball has a meter.)
       b.holdLeft = Math.max(0, (b.holdLeft || 0) - dt);
       if (!b.noJm) {
@@ -420,7 +458,7 @@
       }
       if (b.jbuf > 0 && b.coyote > 0) {
         const sup = !b.noJm && b.jm >= 1;
-        b.vy = sup ? -JUMP * SJ_MUL : -JUMP; b.coyote = 0; b.jbuf = 0; b.ground = false; b.boost = false; ev.jumped = true;   // jumping ends a boost, and gives no extra height
+        b.vy = sup ? -JUMP * SJ_MUL : -JUMP; b.coyote = 0; b.jbuf = 0; b.ground = false; ev.jumped = true;   // (a boost carries on through a jump)
         if (sup) { b.holdLeft = 2; b.jm = 0; b.jfill = false; ev.superJump = true; }   // the tall jump always gets its full height
         else if (!b.noJm) { b.jfill = true; b.jm0 = b.jm; b.jy0 = b.y; }   // the meter now fills as the jump climbs
         b.jmt = 0;
@@ -432,16 +470,17 @@
     }
 
     b.x += b.vx * dt; b.y += b.vy * dt;
-    if (b.jfill) { if (b.ground) b.jfill = false; else b.jm = Math.max(b.jm, Math.min(1, b.jm0 + 0.5 * clamp((b.jy0 - b.y) / JM_RISE, 0, 1))); }   // two full-height jumps fill the whole meter; a small hop fills a little
+    if (b.jfill) { if (b.ground) b.jfill = false; else b.jm = Math.max(b.jm, Math.min(1, b.jm0 + JM_FILL * clamp((b.jy0 - b.y - 130) / 70, 0, 1))); }   // only a full-height jump fills the meter (a third of it), and only if you jump again within a split second of landing: three perfect jumps in a row make the tall one   // two full-height jumps fill the whole meter; a small hop fills a little
     b.rot += (b.vx * dt) / R;
     b.bnc = false; b.onSee = null;
     ev.lava = collide(b, w);
     if (!b.ghost && w.dyn.length) collideDyn(b, w);
     if (w.see.length) seeBody(b, w, 60);
-    if (b.ground || water) { if (!wasGround && !water && !b.bnc && b.fall >= FALL_DIE) ev.splat = true; b.fall = 0; }
+    const wet = water || tile(w, Math.floor(b.x / TS), Math.floor(b.y / TS)) === 5 || tile(w, Math.floor(b.x / TS), Math.floor((b.y + R * 0.8) / TS)) === 5;   // (checked again after moving: you can land in a shallow pool in the very same step)
+    if (b.ground || wet) { if (!wasGround && !wet && !b.bnc && b.fall >= FALL_DIE) ev.splat = true; b.fall = 0; }
     else if (b.vy > 300) b.fall += dt; else if (b.vy < 0) b.fall = 0;
     if (b.bnc && !water) { b.bnc = false; b.vy = -(jheld ? BOUNCE_HELD : BOUNCE); b.launched = true; b.ground = false; b.coyote = 0; ev.bounced = true; }
-    if (!wasGround && b.ground && preVy > 380 && !water) ev.landed = true;
+    if (!wasGround && b.ground && preVy > 380 && !wet) ev.landed = true;
     return ev;
   }
 

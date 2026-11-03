@@ -50,10 +50,22 @@
   #emoGrid button{height:44px;display:flex;align-items:center;justify-content:center;padding:0;background:#2a2440;border:2px solid var(--line);border-radius:var(--wob)}
   #emoGrid button:active,#emoGrid button:hover{background:#3a3355}#emoGrid button.cool{opacity:.45}#emoGrid svg{width:30px;height:30px}
   .msg.friend{color:#ffe98a;border-color:#ffd23d}.msg svg.emo{width:18px;height:18px;vertical-align:-4px;margin-left:4px}
-  .frow{padding:8px 2px;border-bottom:1px dashed rgba(232,220,192,.25)}.frow .lrow{border:0;padding:0 0 6px}
+  .fcard{margin:0 0 10px;padding:0;overflow:hidden;background:rgba(36,31,54,.7);border:2px solid var(--line);border-radius:var(--wob);box-shadow:2px 3px 0 rgba(0,0,0,.3)}
+  .fcard.off{opacity:.75}
+  .fhead{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.06);border-bottom:2px dashed rgba(232,220,192,.3)}
+  .fhead .ldot{width:22px;height:22px}.fhead .lname{flex:1;min-width:0}.fhead .lname b{display:block;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fstat{font-size:12px;padding:1px 8px;border-radius:99px;border:2px solid var(--line);flex:none;white-space:nowrap;opacity:.8}.fstat.on{border-color:var(--good);color:var(--good);opacity:1}
+  .fline{display:flex;align-items:center;gap:8px;padding:8px 12px;flex-wrap:wrap}.fline+.fline{border-top:1px dashed rgba(232,220,192,.2)}
+  .flab{font-size:13px;opacity:.7;flex:1 1 90px;min-width:0}.flab b{font-weight:normal;color:var(--accent);opacity:1}
   .fopts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-  .chip{padding:2px 10px;font-size:13px;background:#241f36;border:2px solid var(--line);border-radius:var(--wob);opacity:.6}.chip.on{opacity:1;background:#3a3355;border-color:#7dffa8}
-  .fmute{display:flex;gap:4px;margin-top:6px;align-items:center;flex-wrap:wrap}.fmute .chip.on{border-color:var(--accent)}.fnote{font-size:12px;opacity:.6;width:100%}
+  .bell{display:inline-flex;align-items:center;gap:6px;padding:4px 12px 4px 8px;background:#241f36;border:2px solid var(--line);border-radius:var(--wob);font-size:14px;min-width:96px}.bell svg.ic{width:22px;height:22px}
+  .bell.b0{border-color:var(--good)}.bell.b1{border-color:var(--accent)}.bell.b2{opacity:.65;border-style:dashed}
+  .belli{padding:4px 8px}.belli svg.ic{width:20px;height:20px}.belli.mu{opacity:.65;border-style:dashed}
+  .ffoot{padding:6px 12px 9px;display:flex;justify-content:flex-end}
+  .btn.quiet{background:transparent;border-color:rgba(232,220,192,.45);font-size:13px;opacity:.85}.btn.quiet:hover{opacity:1;border-color:var(--bad);color:var(--bad)}
+  .fhint{margin:-2px 0 8px}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;font-size:13px;background:#241f36;border:2px solid var(--line);border-radius:var(--wob);opacity:.6}.chip.on{opacity:1;background:#3a3355;border-color:#7dffa8}
+  .fnote{font-size:12px;opacity:.6;width:100%}
   #netstat i.s-ok{background:#4ddc7a}#netstat i.s-bad{background:#ff5b4a}#netstat i.s-wait{background:#ffb347}#netstat i.s-solo{background:#8fb8ff}
 
   #boot{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 40%,#2a2240 0%,#14111c 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--ink);font-family:var(--font);transition:opacity .6s ease,visibility .6s;overflow:hidden;padding:20px;text-align:center}
@@ -350,7 +362,7 @@
   .mycode b{font:700 20px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:3px;color:var(--accent)}
   .cpane h4{margin:12px 0 4px;font-size:13px;letter-spacing:1px;text-transform:uppercase;opacity:.65;font-weight:400}
   .code{font:12px ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px;color:var(--accent);background:rgba(255,204,61,.12);border-radius:5px;padding:0 5px;margin-left:5px}
-  #lpQ{margin-bottom:4px}
+  #lpQ{margin-bottom:4px}#lpConn{margin:-2px 0 6px}#lpRes{max-height:320px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   @media (max-aspect-ratio:1/1) and (max-width:700px),(max-width:480px){
     #hl{--hlw:138px}
     #top{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"hl hr" "mid mid"}
@@ -364,7 +376,7 @@
   }
   .lsub .code{margin-left:0}
   .lreqcard .lrow,#lpReqs .lrow{flex-wrap:wrap}.lreqcard .lname,#lpReqs .lname{flex-basis:calc(100% - 24px);white-space:normal}.lreqcard .lrow .btn,#lpReqs .lrow .btn{margin-left:auto}
-  #lpRes .lrow,#mutedList .lrow,.frow>.lrow{flex-wrap:wrap}#lpRes .lname,#mutedList .lname,.frow>.lrow .lname{flex-basis:calc(100% - 24px);white-space:normal}#lpRes .lname b,#mutedList .lname b,.frow>.lrow .lname b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#lpRes .lrow .btn:first-of-type,#mutedList .lrow .btn,.frow>.lrow .btn{margin-left:auto}
+  #lpRes .lrow,#mutedList .lrow,.fhead{flex-wrap:nowrap}#lpRes .lname,#mutedList .lname{white-space:normal}#lpRes .lname b,#mutedList .lname b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#lpRes .lrow .btn,#mutedList .lrow .btn{flex:none}
   #tlab,.clab{font-size:11px;opacity:.65;margin-left:1px;white-space:nowrap}#timer.final #tlab{opacity:.85}
   #home{position:fixed;inset:0;z-index:7;display:flex;padding:14px;overflow:auto;background:radial-gradient(ellipse at 50% 35%,#2a2240 0%,#14111c 70%);font-family:var(--font);color:var(--ink)}
   #home.hide{display:none}
@@ -459,7 +471,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__', t0 = Date.now(), tips = ['Jump twice in a row, fast, and a ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var t0 = Date.now(), tips = ['Jump twice in a row, fast, and a ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -565,6 +577,10 @@
 <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
 <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
 <symbol id="i-pad" viewBox="0 0 24 24"><path d="M6.5 7h11a4.5 4.5 0 0 1 4.4 4l.6 4.5a2.8 2.8 0 0 1-4.8 2.2L15.5 16h-7l-2.2 1.7A2.8 2.8 0 0 1 1.5 15.5L2.100 11A4.500 4.500 0 0 1 6.500 7z"/><path d="M8 10v4M6 12h4M16 11h.01M18 13h.01"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.500" cy="10.500" r="6.500"/><path d="M15.500 15.500L21 21"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M7 17v-6a5 5 0 0 1 10 0v6l1.500 2h-13zM10.200 21.500a2 2 0 0 0 3.600 0M3.500 10a9 9 0 0 1 2-5M20.500 10a9 9 0 0 0-2-5"/></symbol>
+<symbol id="i-bell-half" viewBox="0 0 24 24"><path d="M7 17v-6a5 5 0 0 1 10 0v6l1.500 2h-13zM10.200 21.500a2 2 0 0 0 3.600 0M20.500 10a9 9 0 0 0-2-5"/></symbol>
+<symbol id="i-bell-off" viewBox="0 0 24 24"><path d="M7 17v-6a5 5 0 0 1 10 0v6l1.500 2h-13zM10.200 21.500a2 2 0 0 0 3.600 0M3.500 3.500l17 17"/></symbol>
 <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
 <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.500 3 3.500 15 0 18M12 3c-3.500 3-3.500 15 0 18"/></symbol>
 <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4.500" y="8" width="15" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.500 16.500h5"/><circle cx="12" cy="3.500" r="1"/></symbol>
@@ -630,7 +646,7 @@
 <div id="stack"><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
 <div id="hr">
   <div id="topbar">
-    <button id="btnRespawn" class="ibtn" title="Back to the start (R)" data-ic="reset"></button>
+    <button id="btnRespawn" class="ibtn" title="Reset: back to your checkpoint, or the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Pause (Esc)" data-ic="pause"></button>
   </div>
   <div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Say it with an emoji" data-ic="chat"></button></div>
@@ -730,11 +746,12 @@
     </section>
     <section class="pane" data-pane="friends">
       <div id="myCode" class="mycode"><span>Your code</span><b id="myCodeV">······</b><span class="small dim">Friends can check it matches</span></div>
-      <h4><span data-ic="users"></span> Friends <span id="lpCount" class="dim"></span></h4><div id="lpList"></div>
+      <h4><span data-ic="users"></span> Your friends <span id="lpCount" class="dim"></span></h4><div class="small dim fhint">Friends show on each other's maps. Each card has that friend's own settings.</div><div id="lpList"></div>
       <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Wants to track you</h4><div id="lpReqs"></div>
-      <h4><span data-ic="eye"></span> Find a player</h4>
-      <input type="text" id="lpQ" maxlength="12" placeholder="Name or code" autocomplete="off" spellcheck="false"><div id="lpRes"></div>
-      <h4 id="mutedH" class="hide"><span data-ic="sound"></span> Muted</h4><div id="mutedList"></div>
+      <h4><span data-ic="search"></span> Find players</h4>
+      <div id="lpConn" class="small dim"></div>
+      <input type="text" id="lpQ" maxlength="12" placeholder="Search by name or code (optional)" autocomplete="off" spellcheck="false"><div class="small dim fhint" id="lpResH">Players from the last 7 days</div><div id="lpRes"></div>
+      <h4 id="mutedH" class="hide"><span data-ic="bell-off"></span> Muted players</h4><div id="mutedList"></div>
     </section>
     <section class="pane" data-pane="bots">
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Pretend players that only you can see</small></span></span><input type="checkbox" id="setBots"><i></i></label>
@@ -856,8 +873,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=25"></script>
-<script src="physics.js?v=25"></script>
+<script src="maps.js?v=28"></script>
+<script src="physics.js?v=28"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1343,7 +1360,7 @@ const inp = { left: false, right: false, jump: false };               // keyboar
 const tin = { ax: 0, jump: false, btnL: false, btnR: false, btnJ: false, jumpUntil: 0 };   // touch
 const others = new Map();
 const net = { online: 0, peak: 0 };
-let myId = 0, online = false, ws = null, clockOff = 0, retry = 0, retryTimer = 0, room = { id: 0, n: 1, max: 200 };
+let myId = 0, online = false, lobbyOn = false, ws = null, clockOff = 0, retry = 0, retryTimer = 0, room = { id: 0, n: 1, max: 200 };
 let netState = 'connecting', lastSent = '', botAsked = false;
 let params = null; try { params = new URLSearchParams(location.search); } catch (e) {}
 const forced = params ? params.get('map') : null;      // testing only: ?map=1
@@ -1383,11 +1400,10 @@ function loadMap(slot, next) {
 }
 function respawn(quiet, useCp) {
   const m = S.map, cp = useCp && S.cpArmed >= 0 && m.checkpoints ? m.checkpoints[S.cpArmed] : null;
-  // the first fall after touching a flag brings you back to it; the flag is then used up until you touch one again
+  // a flag you have touched stays yours: every fall (and every manual reset) brings you back to it until you touch another one
   S.b = cp ? P.newBody((cp[0] + 0.5) * TS, cp[1] * TS - R - 1) : P.newBody(m.start[0], m.start[1]);   // the community spawn point is exactly the same for everyone
   if (cp) { S.cpFlash = 1; notice('Back at your checkpoint', ''); }
-  S.cpUsed = cp ? S.cpArmed : -1;   // a flag you have just used is spent until you touch a different one
-  S.cpArmed = -1;
+  S.cpUsed = -1;
   S.dead = 0; S.spawnT = 0.6; S.finished = false; S.bLatch = 0; S.bReady = false;
   if (!quiet) { beam(S.b.x, S.b.y + R, settings.color); ring(S.b.x, S.b.y, '#fff', 4, 46, 0.6); burst(S.b.x, S.b.y, [settings.color, settings.color2, '#fff'], 12, 160, 100); }
 }
@@ -1506,7 +1522,9 @@ function update(dt) {
   if (ev.lava) { die('lava'); return; }
   if (outOfBounds(b)) { die('void'); return; }
   S.edgeWarn = settings.edge && nearEdge(b);
-  const fw = settings.fallWarn && b.fall > P.FALL_WARN;
+  let wetBelow = false;   // landing in water is always safe, so no warning when the first thing under you is a pool
+  if (!b.ground && b.vy > 300) { const tx0 = Math.floor(b.x / TS), ty0 = Math.floor(b.y / TS); for (let dy = 1; dy <= 120; dy++) { const t = P.tile(w, tx0, ty0 + dy); if (t) { wetBelow = t === 5; break; } } }
+  const fw = settings.fallWarn && b.fall > P.FALL_WARN && !wetBelow;
   if (fw && !S.fallWarn) sfx('warn');
   S.fallWarn = fw; S.fallLvl = clamp((b.vy - 600) / 1300, 0, 1); windSet(S.fallLvl);
   let lw = false;   // lava just below while you are dropping: show the warning sign
@@ -1532,7 +1550,7 @@ function touchFlags() {   // checkpoint flags: touch one and your next fall brin
     if (S.cpUsed === i) continue;
     S.cpArmed = i; S.cpUsed = -1; S.cpFlash = 1; sfx('ready');
     burst((c[0] + 0.5) * TS, c[1] * TS - 60, ['#46d17a', '#fff', '#b9ffd3'], 14, 200, 80);
-    notice('Checkpoint! Your next fall brings you back here', ''); return;
+    notice('Checkpoint! Falls and resets bring you back here', ''); return;
   }
 }
 function collectCoins() {
@@ -1796,6 +1814,13 @@ function pressJump() { if (!blocked() && S.mode === 'play' && S.b && !S.away && 
 function pressBoost() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0 && settings.boost) S.bLatch = 0.25; }
 function pullReady() { return !!(settings.boost && settings.boostPull && S.b && S.mode === 'play' && S.dead <= 0 && S.b.bcharge >= 1 && !S.b.boost); }
 function backToStart() { if (S.mode !== 'play') return; S.started = false; S.cpArmed = -1; S.cpUsed = -1; $('finishbanner').classList.add('hide'); respawn(); }
+function resetPress() {   // the reset button / key: with a checkpoint it counts as a fall and brings you back to it; pressed again on the flag it starts you over
+  if (S.mode !== 'play' || !S.b || S.away || S.dead > 0) return;
+  const cp = S.cpArmed >= 0 && S.map.checkpoints ? S.map.checkpoints[S.cpArmed] : null;
+  if (!cp) { backToStart(); return; }
+  if (Math.abs(S.b.x - (cp[0] + 0.5) * TS) < 50 && Math.abs(S.b.y - (cp[1] * TS - R)) < 40) { backToStart(); notice('Checkpoint cleared. Back at the start', ''); return; }
+  die('reset');
+}
 
 const keysDown = new Set();
 function actionOf(code) { const k = settings.keys; for (const a in k) if (k[a].indexOf(code) >= 0) return a; return null; }
@@ -1820,7 +1845,7 @@ addEventListener('keydown', e => {
   if (!a) return;
   if (!$('settings').classList.contains('hide')) closeSettingsNow();
   e.preventDefault();
-  if (a === 'back') { if (!e.repeat && !blocked()) backToStart(); return; }
+  if (a === 'back') { if (!e.repeat && !blocked()) resetPress(); return; }
   if (a === 'boost') { if (!e.repeat) pressBoost(); return; }
   if (detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); applyDeps(); }
   keysDown.add(e.code); syncKeys();
@@ -2033,7 +2058,7 @@ $('btnRefresh').onclick = () => {   // same as reloading the page: also checks f
   try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(r => { if (r) r.update(); }).catch(() => {}); } catch (e) {}
   setTimeout(() => location.reload(), 250);
 };
-$('btnRespawn').onclick = () => { backToStart(); };
+$('btnRespawn').onclick = () => { resetPress(); };
 
 // tabs
 const tabBtns = $('tabs').querySelectorAll('button');
@@ -2279,7 +2304,7 @@ function friendNote(e, nm, on) {   // a special heads-up when someone you track 
   const t = who(nm || e.name) + (on ? ' is online' : ' went offline');
   notice('★ ' + t, ''); addFeed('★ ' + t, 'friend', true); sfx(on ? 'join' : 'leave');
 }
-const wsSend = o => { if (ws && ws.readyState === 1 && online) ws.send(JSON.stringify(o)); };
+const wsSend = o => { if (ws && ws.readyState === 1 && (online || lobbyOn)) ws.send(JSON.stringify(o)); };
 
 function linkMsg(m) {
   switch (m.t) {
@@ -2353,6 +2378,12 @@ function drawPerson(g, x, y, r, col) {   // a little round badge with a person i
   g.fillStyle = col; g.strokeStyle = '#fff'; g.lineWidth = r * 0.22; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.stroke();
   g.fillStyle = '#fff'; g.beginPath(); g.arc(x, y - r * 0.28, r * 0.28, 0, TAU); g.fill();
   g.beginPath(); g.arc(x, y + r * 0.62, r * 0.5, Math.PI * 1.1, Math.PI * 1.9); g.fill();
+}
+function pinShown(pub) {   // true while a tracked friend wears the big pin on screen (so the little name tag is not drawn as well)
+  if (!pub) return false;
+  const e = lkOf(pub); if (!e || !e.arrow || !e.ok || !e.on || e.x == null || e.dead || performance.now() - e.t >= 3500 || !S.view) return false;
+  const v = S.view, dx = e.sx - (v.l + v.w / 2), dy = e.sy - (v.t + v.h / 2);
+  return Math.abs(dx) < v.w / 2 - 20 && Math.abs(dy) < v.h / 2 - 20;
 }
 function drawTrack(camL, camT, vw, vh, sc) {
   const L = liveLinks(); if (!L.length) return;
@@ -2486,6 +2517,29 @@ function reqCard(r) {
   no.onclick = () => { wsSend({ t: 'tden', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); };
   d.appendChild(ok); d.appendChild(no); return d;
 }
+const lastOn = t => { const a = ago(t); return a === 'just now' ? 'Was just on' : 'Last on ' + a; };
+const BELL = [{ i: 'bell', t: 'All alerts' }, { i: 'bell-half', t: 'Quiet' }, { i: 'bell-off', t: 'Off' }];
+function iconBtn(cls, name, label, fn, text) {   // a button holding an icon (and optional words); label is for screen readers and hover
+  const b = el('button', cls); b.innerHTML = ic(name) + (text ? '<span>' + text + '</span>' : ''); b.title = label; b.setAttribute('aria-label', label); b.onclick = fn; return b;
+}
+function friendCard(l) {   // one friend, one card: who they are at the top, then only that friend's own settings
+  const nm = who(l.name), c = el('div', 'fcard' + (l.ok && l.on ? '' : ' off'));
+  const h = el('div', 'fhead'); h.appendChild(dot(l.color));
+  const n = el('div', 'lname'); n.appendChild(el('b', '', nm));
+  const sb = el('div', 'lsub'); sb.appendChild(codeTag(l.code)); sb.appendChild(document.createTextNode(' · ' + (!l.ok ? 'Waiting for them to come back' : l.on ? 'World ' + (l.w || '?') : lastOn(l.last)))); n.appendChild(sb); h.appendChild(n);
+  if (l.ok) h.appendChild(el('span', 'fstat' + (l.on ? ' on' : ''), l.on ? 'Online' : 'Offline'));
+  c.appendChild(h);
+  const m = el('div', 'fline'); const ml = el('div', 'flab'); ml.textContent = 'On your map'; m.appendChild(ml);
+  const o = el('div', 'fopts');
+  o.appendChild(chip('Big and glowing', l.big, () => { l.big = !l.big; saveLinks(); lpRender(); }, 'Show ' + nm + ' bigger and glowing on both maps'));
+  o.appendChild(chip('Arrow', l.arrow, () => { l.arrow = !l.arrow; saveLinks(); lpRender(); }, 'Point to ' + nm + ' with an arrow and a name tag'));
+  m.appendChild(o); c.appendChild(m);
+  const a = el('div', 'fline'), al = el('div', 'flab'); al.appendChild(document.createTextNode('Alerts from ')); al.appendChild(el('b', '', nm)); a.appendChild(al);
+  const k = l.mute | 0, bt = iconBtn('bell b' + k, BELL[k].i, 'Alerts from ' + nm + ': ' + BELL[k].t + '. Tap to change.', () => { l.mute = (k + 1) % 3; saveLinks(); lpRender(); }, BELL[k].t);
+  a.appendChild(bt); a.appendChild(el('div', 'fnote', MUTE_NOTE[k])); c.appendChild(a);
+  const f = el('div', 'ffoot'), x = el('button', 'btn sm quiet', 'Stop tracking ' + nm); x.onclick = () => disconnectLink(l.pub); f.appendChild(x); c.appendChild(f);
+  return c;
+}
 function lpRender() {
   const rq = $('lreqs'); rq.textContent = '';
   reqs.slice(0, 3).forEach(r => { const c = el('div', 'paper lreqcard'); c.appendChild(reqCard(r)); rq.appendChild(c); });
@@ -2494,33 +2548,25 @@ function lpRender() {
   showMyCode();
   const list = $('lpList'); list.textContent = '';
   $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
-  if (!lks.length) list.appendChild(el('div', 'small dim', 'Nobody yet. Find a player below.'));
-  for (const l of lks) {
-    const f = el('div', 'frow'), d = nameRow(l.name, l.code, l.color, !l.ok ? 'Waiting for them to come back' : l.on ? 'Online · World ' + (l.w || '?') : 'Last on ' + ago(l.last));
-    const x = el('button', 'btn sm', 'Disconnect'); x.onclick = () => disconnectLink(l.pub); d.appendChild(x); f.appendChild(d);
-    const o = el('div', 'fopts');
-    o.appendChild(chip('Big on the map', l.big, () => { l.big = !l.big; saveLinks(); lpRender(); }, 'Show them bigger and glowing on both maps'));
-    o.appendChild(chip('Arrow', l.arrow, () => { l.arrow = !l.arrow; saveLinks(); lpRender(); }, 'Point to them with an arrow and a name tag'));
-    f.appendChild(o);
-    const mu = el('div', 'fmute'); mu.appendChild(el('span', 'small dim', 'Alerts'));
-    ['On', 'Quiet', 'Silent'].forEach((t, k) => mu.appendChild(chip(t, l.mute === k, () => { l.mute = k; saveLinks(); lpRender(); })));
-    mu.appendChild(el('div', 'fnote', MUTE_NOTE[l.mute])); f.appendChild(mu);
-    list.appendChild(f);
-  }
+  if (!lks.length) list.appendChild(el('div', 'small dim', 'No friends yet. Find a player below and tap Track.'));
+  for (const l of lks) list.appendChild(friendCard(l));
   const rl = $('lpReqs'); rl.textContent = '';
   reqs.forEach(r => rl.appendChild(reqCard(r))); $('lpReqH').classList.toggle('hide', !reqs.length);
+  $('lpResH').textContent = (lpQ ? 'Search results' : 'Players from the last 7 days') + '. Tap a bell to mute or unmute someone.';
+  $('lpConn').textContent = (online || lobbyOn) ? '' : (inSolo() && !inHome) ? "You are in your own world, so friends are off here. They work on the main menu and in multiplayer." : 'Connecting to the server…';
+  $('lpConn').classList.toggle('hide', !$('lpConn').textContent);
   const res = $('lpRes'); res.textContent = '';
   const shown = lpFound.filter(f => !reqs.some(r => r.pub === f.pub));
-  if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody found. You can also type someone\'s code.' : 'Nobody else yet.'));
+  if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody found. You can also type someone\'s code.' : 'Nobody has played in the last 7 days yet.'));
   for (const f of shown) {
     const linked = f.l || lkOf(f.pub), sent = sentTo.has(f.pub), muted = !!mutes[f.pub];
-    const d = nameRow(f.name, f.code, f.color, f.on ? 'Online now · World ' + f.w : 'Last on ' + ago(f.last));
-    if (!linked) {
-      const mb = el('button', 'btn sm', muted ? 'Unmute' : 'Mute');
-      mb.onclick = () => { if (muted) delete mutes[f.pub]; else mutes[f.pub] = { n: f.name, c: f.code }; saveMutes(); lpRender(); };
-      d.appendChild(mb);
+    const d = nameRow(f.name, f.code, f.color, f.on ? 'Online now · World ' + f.w : lastOn(f.last));
+    if (!linked) {   // someone who is not a friend: their alerts are simply on or off
+      d.appendChild(iconBtn('btn sm belli' + (muted ? ' mu' : ''), muted ? 'bell-off' : 'bell', muted ? 'Alerts from ' + who(f.name) + ' are off. Tap to turn on.' : 'Alerts from ' + who(f.name) + ' are on. Tap to turn off.', () => {
+        if (muted) delete mutes[f.pub]; else mutes[f.pub] = { n: f.name, c: f.code }; saveMutes(); lpRender();
+      }));
     }
-    const b = el('button', 'btn sm' + (linked || sent ? '' : ' prim'), linked ? 'Tracking' : sent ? 'Sent' : 'Track');
+    const b = el('button', 'btn sm' + (linked || sent ? '' : ' prim'), linked ? 'Friend' : sent ? 'Sent' : 'Track');
     if (linked || sent || lks.length >= MAXLINK) b.disabled = true;
     b.onclick = () => { wsSend({ t: 'treq', to: f.pub }); b.disabled = true; b.textContent = 'Sent'; };
     d.appendChild(b); res.appendChild(d);
@@ -2528,8 +2574,9 @@ function lpRender() {
   const ml = $('mutedList'); ml.textContent = ''; const mk = Object.keys(mutes);
   $('mutedH').classList.toggle('hide', !mk.length);
   for (const pub of mk) {
-    const d = nameRow(mutes[pub].n, mutes[pub].c, '#888', 'Muted: no emojis, no join / leave lines'); const ub = el('button', 'btn sm', 'Unmute');
-    ub.onclick = () => { delete mutes[pub]; saveMutes(); lpRender(); }; d.appendChild(ub); ml.appendChild(d);
+    const d = nameRow(mutes[pub].n, mutes[pub].c, '#888', 'No emojis, no join / leave lines');
+    d.appendChild(iconBtn('btn sm belli', 'bell', 'Turn alerts from ' + who(mutes[pub].n) + ' back on', () => { delete mutes[pub]; saveMutes(); lpRender(); }, 'Unmute'));
+    ml.appendChild(d);
   }
 }
 function disconnectLink(pub) {
@@ -2539,8 +2586,40 @@ function disconnectLink(pub) {
 }
 function lpAfterTab() { lpRefresh(); lpRender(); }
 function lpSearch() { wsSend({ t: 'find', q: lpQ }); }
-function lpRefresh() { clearInterval(lpTimer); lpTimer = 0; if (friendsShown()) { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 6000); } }
+function lpRefresh() { clearInterval(lpTimer); lpTimer = 0; if (friendsShown()) { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 8000); } }
 $('lpQ').addEventListener('input', () => { clearTimeout(lpDeb); lpDeb = setTimeout(() => { lpQ = $('lpQ').value.trim(); lpSearch(); }, 250); });
+
+/* ----- everybody plays the same version. If yours is out of date, you drop out of the run, the page updates, and you land back in the game ----- */
+const UPLOG = 'bp_updates', UPRES = 'bp_resume';
+let updating = false;
+function resumeAfterUpdate() { try { const v = sessionStorage.getItem(UPRES); sessionStorage.removeItem(UPRES); return v === '1'; } catch (e) { return false; } }
+function wipeAndReload() {
+  const go = () => location.replace(location.pathname + '?r=' + Date.now() + location.hash);
+  try {
+    Promise.all([
+      navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(rs => Promise.all(rs.map(r => r.unregister()))) : 0,
+      window.caches ? caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k)))) : 0
+    ]).then(go, go);
+  } catch (e) { go(); }
+  setTimeout(go, 2500);
+}
+function forceUpdate() {
+  if (updating) return;
+  const now = Date.now(); let recent = [];
+  try { recent = JSON.parse(sessionStorage.getItem(UPLOG) || '[]').filter(t => now - t < 120000); recent.push(now); sessionStorage.setItem(UPLOG, JSON.stringify(recent)); } catch (e) {}
+  updating = true;
+  if (recent.length > 3) { notice('A newer version is out. Close this tab and open the game again.', 'urgent'); return; }   // (never loop if something keeps serving the old page)
+  notice('New version! Updating…', 'urgent');
+  const wasPlaying = !inHome;
+  if (wasPlaying) { try { die('update'); } catch (e) {} }   // you drop out of the run; you come back at the start with the new physics
+  try { if (wasPlaying) sessionStorage.setItem(UPRES, '1'); } catch (e) {}
+  setTimeout(wipeAndReload, wasPlaying ? 1300 : 400);
+}
+function checkBuild() {
+  const B = window.__BUILD; if (updating || !B || B.charAt(0) === '_' || !/^https?:$/.test(location.protocol)) return;
+  try { fetch('/version?x=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(v => { if (v && v.build && v.build !== B) forceUpdate(); }).catch(() => {}); } catch (e) {}
+}
+setInterval(checkBuild, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) checkBuild(); });
 
 /* ----- names: everyone has one, and it can change once a day ----- */
 const NAMEKEY = 'ballrun4_nameat';
@@ -2627,6 +2706,7 @@ function showHome() {
   clearTimeout(retryTimer); retryTimer = 0;
   homeMode = settings.mp; $('homeMp').checked = settings.mp; $('homeAuto').checked = !!settings.autoEnter; homeModeText();
   nameUI(); homeStats();
+  retry = 0; connect();   // the main menu is connected too: friends, invites and requests work from here
   if (!settings.name && !askedName) { askedName = true; setTimeout(openNameModal, 350); }
   keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0;
 }
@@ -2637,14 +2717,18 @@ function enterGame(auto) {
   inHome = false; document.body.classList.remove('home'); $('home').classList.add('hide');
   try { auWake(); } catch (e) {}
   if (settings.mp !== homeMode) setMultiplayer(settings.mp);
-  else if (settings.mp) { retry = 0; if (!ws) { setNet('connecting'); connect(); } }
+  else if (settings.mp) joinWorld();
   else setNet('solo');
   setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
   if (reenter) backToStart(); reenter = true;
   if (firstEntry && settings.intro && !auto) showIntro(); firstEntry = false;
   nameUI(); trackVis();
 }
-function quitToHome() { dropConnection(); showHome(); setNet(settings.mp ? 'offline' : 'solo'); }
+function quitToHome() {
+  if (ws && ws.readyState === 1 && online) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; others.clear(); lastSent = ''; }   // leave the world, stay connected for friends
+  else dropConnection();
+  showHome(); setNet(settings.mp ? 'offline' : 'solo');
+}
 /* pause: your ball waits, the menu has Resume, Settings and Main menu */
 function clearInput() { keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0; }
 function openPause() {
@@ -2710,6 +2794,7 @@ $('homeShare').onclick = async () => {
   shareTip("Sorry, we can't share right now", 4000);   // 4. nothing worked
 };
 addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && $('nameModal').classList.contains('hide') && $('shareModal').classList.contains('hide') && !typing()) enterGame(false); });
+setTimeout(() => { if (inHome) { retry = 0; connect(); } }, 500);   // the main menu connects to the server too, so friends and invites work before you press Play
 
 /* ================= networking ================= */
 function setNet(state) {
@@ -2722,13 +2807,13 @@ function setNet(state) {
 }
 function dropConnection() {
   if (ws) { const s = ws; ws = null; try { s.close(); } catch (e) {} }
-  online = false; others.clear(); lastSent = '';
+  online = false; lobbyOn = false; others.clear(); lastSent = '';
 }
 function setMultiplayer(on) {
   settings.mp = on; save(); $('setMp').checked = on;
   bots.length = 0;
   if (on) {
-    retry = 0; setNet('connecting'); connect();
+    joinWorld();
     const ls = Math.floor(Date.now() / SLOT_MS); startTransition(ls, (ls + 1) * SLOT_MS);   // back to the shared map: your ball restarts there
     addFeed('You are back in multiplayer', 'join', true);
   } else {
@@ -2737,29 +2822,39 @@ function setMultiplayer(on) {
   }
   applyDeps(); syncUI(); newBotTarget();
 }
+/* The game server is reached from the main menu too ("lobby"): friends, invites and requests all work there, but you are not in any world and nobody sees you.
+   Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
+const helloMsg = lobby => JSON.stringify({ t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, b: window.__BUILD || '' });
+function joinWorld() {
+  if (ws && ws.readyState === 1 && lobbyOn) { lobbyOn = false; retry = 0; setNet('connecting'); ws.send(helloMsg(false)); }
+  else if (!ws) { retry = 0; setNet('connecting'); connect(); }
+}
 function connect() {
-  if (!settings.mp || ws || !settings.name || inHome) return;
-  if (location.protocol === 'file:' || !('WebSocket' in window)) { setNet('offline'); return; }
+  const lobby = inHome;
+  if (ws) return;
+  if (!lobby && (!settings.mp || !settings.name)) return;
+  if (location.protocol === 'file:' || !('WebSocket' in window)) { if (!lobby) setNet('offline'); return; }
   let sock;
   // the game server lives on Render. Any other address (like ballpit.party) still talks to it; only your own computer talks to itself.
   const home = /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(location.hostname) || /onrender\.com$/.test(location.hostname);
   try { sock = home ? new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host) : new WebSocket('wss://ballpit-party.onrender.com'); }
   catch (e) { scheduleRetry(); return; }
   ws = sock; sock.binaryType = 'arraybuffer';
-  if (netState !== 'online') setNet('connecting');
-  sock.onopen = () => { if (sock === ws) sock.send(JSON.stringify({ t: 'hello', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims() })); };
+  if (!lobby && netState !== 'online') setNet('connecting');
+  sock.onopen = () => { if (sock === ws) sock.send(helloMsg(inHome)); };
   sock.onmessage = e => { if (sock !== ws) return; if (typeof e.data !== 'string') { onBin(e.data); return; } let m; try { m = JSON.parse(e.data); } catch (x) { return; } onMsg(m); };
   sock.onclose = () => {
     if (sock !== ws) return;
     ws = null;
     if (online) addFeed('Disconnected, reconnecting…', 'bad', true);
-    online = false; others.clear(); lks.forEach(l => { l.on = 0; l.x = null; }); reqs = []; sentTo.clear(); lpRender();
-    if (settings.mp) { setNet('offline'); scheduleRetry(); }
+    online = false; lobbyOn = false; others.clear(); lks.forEach(l => { l.on = 0; l.x = null; }); reqs = []; sentTo.clear(); lpRender();
+    if (inHome) scheduleRetry();
+    else if (settings.mp) { setNet('offline'); scheduleRetry(); }
   };
   sock.onerror = () => {};
 }
 function scheduleRetry() {
-  if (retryTimer || !settings.mp || inHome) return;
+  if (retryTimer || (!settings.mp && !inHome)) return;
   retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(10000, 1500 + retry * 1500));
 }
 setTimeout(() => { if (netState === "connecting" && settings.name) setNet("offline"); }, 3500);
@@ -2816,7 +2911,15 @@ $('worldpop').onclick = () => $('worldpop').classList.add('hide');
 function onMsg(m) {
   if (linkMsg(m)) return;
   switch (m.t) {
+    case 'update': forceUpdate(); return;   // the server only lets people with the same version in
     case 'welcome':
+      if (m.lobby) {   // connected from the main menu: friends work, but you are not in a world
+        lobbyOn = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); net.online = m.online; net.peak = m.peak;
+        myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode();
+        if (m.name) nameServer(m.name, m.nameLeft | 0, false);
+        lpRefresh(); lpRender();
+        break;
+      }
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
       net.online = m.online; net.peak = m.peak;
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
@@ -3056,9 +3159,9 @@ function drawSky(sw, sh, camL, camT, p, dt, fade) {   // far away, so the sun an
     const k = c.d * sc, ext = c.s * (1.5 + c.d * 3), wrapW = (m.W + 260) * TS * k;
     let x = sw / 2 + (c.x * TS - cxw) * k + S.t * c.sp * (0.5 + c.d * 2); x = ((x + ext) % wrapW + wrapW) % wrapW - ext;
     const y = sh / 2 + (c.y * TS - cyw) * k;
-    if (x < -ext || x > sw + ext || y < -ext || y > sh * 0.92) continue;
-    const s = c.s * (0.55 + c.d * 1.6) * Math.min(1.4, sc);
-    drawCloud(x, y, s, c.k, (0.55 + c.d * 1.2) * 0.8 * fade);
+    if (x < -ext || x > sw + ext || y < -ext || y > sh * 1.02) continue;
+    const s = c.s * (0.55 + c.d * 1.6) * Math.min(1.4, sc), low = clamp((sh * 1.0 - y) / (sh * 0.3), 0, 1);   // they thin out gently towards the horizon instead of blinking off
+    drawCloud(x, y, s, c.k, (0.55 + c.d * 1.2) * 0.8 * fade * low * low * (3 - 2 * low));
   }
   skyLife(sw, sh, dt, fade, night, hN);
 }
@@ -3465,7 +3568,16 @@ function drawDyn(camL, camT, vw, vh) {
       if (d._pv > 280 && d.vy < d._pv - 220) sfx('thud');
       d._pv = d.vy;
     }
-    if (d.k === 'b') {
+    if (d.k === 'b' && d.kind === 5) {   // a spring: a base, a coil and a springy top that squashes when you land on it
+      const sq = d.sq > 0 ? Math.sin(Math.min(1, d.sq / 0.25) * Math.PI) * 0.45 : 0, bh = 8, topH = 7, coil = (d.hh * 2 - bh - topH) * (1 - sq), x0 = d.x - d.hw, yb = d.y + d.hh;
+      ctx.save(); if (d.rot) { ctx.translate(d.x, d.y); ctx.rotate(d.rot); ctx.translate(-d.x, -d.y); }
+      ctx.fillStyle = '#3fa66b'; wob(x0, yb - bh, d.hw * 2, bh, 1.4, i); ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 3.2; ctx.beginPath(); const cy0 = yb - bh, n = 4;
+      ctx.moveTo(d.x - d.hw + 7, cy0); for (let k = 0; k < n; k++) { const ya = cy0 - coil * (k + 0.5) / n, yc = cy0 - coil * (k + 1) / n; ctx.lineTo(d.x + (k % 2 ? -1 : 1) * (d.hw - 7), ya); ctx.lineTo(d.x + (k % 2 ? 1 : -1) * (d.hw - 7), yc); }
+      ctx.stroke(); ctx.lineWidth = 2.4;
+      ctx.fillStyle = '#ff6a8a'; wob(x0 - 2, cy0 - coil - topH, d.hw * 2 + 4, topH, 1.4, i + 3); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    } else if (d.k === 'b') {
       ctx.save(); if (d.rot) { ctx.translate(d.x, d.y); ctx.rotate(d.rot); ctx.translate(-d.x, -d.y); }   // a tipping crate really turns
       ctx.fillStyle = d.hw > 20 ? '#ffb020' : '#ffc233'; wob(d.x - d.hw, d.y - d.hh, d.hw * 2, d.hh * 2, 1.7, i); ctx.fill(); ctx.stroke();
       ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(d.x - d.hw + 4, d.y - d.hh + 4); ctx.lineTo(d.x + d.hw - 4, d.y + d.hh - 4); ctx.moveTo(d.x + d.hw - 4, d.y - d.hh + 4); ctx.lineTo(d.x - d.hw + 4, d.y + d.hh - 4); ctx.stroke(); ctx.lineWidth = 2.4; ctx.restore();
@@ -3569,8 +3681,9 @@ function renderInner(dt, nowT) {
       if (nx < camL - m || nx > camL + vw + m || ny < camT - m * 2 || ny > camT + vh + m) return;
       let sc2 = 1; if (o.morph > 0) { o.morph = Math.max(0, o.morph - dt * 1.6); sc2 = 1 + 0.35 * Math.sin(o.morph * 3.14); }
       drawBall(nx, ny, o.rot, o.color, o.color2, o.pat, 0.88, false, sc2);
-      drawLabel(o.name, false, o.crown, nx, ny);
-      if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (settings.tags && o.name ? 38 : 22) - (o.crown ? 14 : 0));
+      const pinned = pinShown(o.pub);
+      if (!pinned) drawLabel(o.name, false, o.crown, nx, ny);
+      if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 : settings.tags && o.name ? 38 : 22) - (o.crown ? 14 : 0));
     });
     for (let i = 0; i < bots.length; i++) {
       const bt = bots[i], bb = bt.b;
@@ -3857,10 +3970,10 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
+if (params && params.get('test')) window.__d = { lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, solo: () => solo };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
-if (settings.autoEnter && settings.name) enterGame(true); else showHome();
+if ((settings.autoEnter || resumeAfterUpdate()) && settings.name) enterGame(true); else showHome();
 newBotTarget();
 hudTick();
 requestAnimationFrame(frame);
