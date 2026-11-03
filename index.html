@@ -131,7 +131,7 @@
   .pane{display:none}.pane.on{display:block}
   .pane h4{margin:12px 0 4px;font-size:13px;letter-spacing:1px;text-transform:uppercase;opacity:.6;font-weight:400}
   .pane h4:first-child{margin-top:2px}
-  .row{margin:8px 0}
+  .row{margin:8px 0}.todrow{display:flex;align-items:center;gap:8px}.todrow #selTod{flex:1;min-width:0}
   .lbl{display:block;font-size:13px;opacity:.8;margin-bottom:3px}
   .dim{opacity:.6}.small{font-size:12px}
   input[type=text]{background:#120f1c;border:2px solid var(--line);color:var(--ink);border-radius:var(--wob);padding:6px 10px;font:inherit;font-size:17px;width:100%;-webkit-user-select:text;user-select:text}
@@ -883,6 +883,8 @@
       <div class="dep" data-dep="!mp"><div>
         <h4><span data-ic="map"></span> Your private world</h4>
         <div class="small dim">Pick any level you like. What you build, move, open and collect on a level is saved until you reset that level.</div>
+        <div class="row todrow"><span data-ic="clock"></span><div id="selTod"></div></div>
+        <div class="small dim" id="todDesc"></div>
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
         <button class="btn full" id="btnInvite" type="button"><span data-ic="users"></span>Invite friends to this level</button>
       </div></div>
@@ -1051,8 +1053,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=47"></script>
-<script src="physics.js?v=47"></script>
+<script src="maps.js?v=48"></script>
+<script src="physics.js?v=48"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1094,7 +1096,7 @@ function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight',
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, autoEnter: false, mp: true, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
-    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
+    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
     keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
@@ -1115,6 +1117,7 @@ function normalize() {
   ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
   settings.keys = cleanKeys(settings.keys);
   if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);
+  if (['live', 'morning', 'midday', 'night'].indexOf(settings.tod) < 0) settings.tod = 'live';
   settings.soloLen = 0;   // your own world never runs out: it stays until you reset that level
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
@@ -1659,7 +1662,7 @@ function initWarnings() {
   const rem = S.nextAt - nowMs();
   warned = {};
   TH.forEach(t => { if (rem <= t * 60000) warned[t] = true; });   // thresholds already passed when you arrived are skipped
-  if (!inSolo() && rem <= 3600000 && rem > 5000) {
+  if (S.slot >= 0 && S.slot < SOLO_BASE && !inSolo() && !party && rem <= 3600000 && rem > 5000) {
     const mins = Math.round(rem / 60000);
     notice(mins < 1 ? 'This session ends in less than a minute.' : 'This session ends in ' + mins + ' minute' + (mins === 1 ? '' : 's') + '.', rem < 600000 ? 'urgent' : '');
   }
@@ -2415,6 +2418,9 @@ const selScheme = makeSelect($('selScheme'), Object.keys(SCHEMES).map(k => ({ v:
   v => { settings.scheme = v; save(); $('schemeDesc').textContent = SCHEMES[v].desc; applyTouchUI(); });
 const selPreset = makeSelect($('selPreset'), Object.keys(PRESETS).map(k => ({ v: k, label: PRESETS[k].name })),
   v => { settings[presetK()] = v; if (v !== 'custom') { settings[posK()] = null; } else if (!settings[posK()]) { const c = curLayout(), o = {}; BK.forEach(q => { o[q] = c[q].auto ? (curPts[q] ? toAnchor(curPts[q][0], curPts[q][1]) : { a: 'c', dx: 0, dy: 100 }) : Object.assign({}, c[q]); }); settings[posK()] = o; } save(); applyTouchUI(); });
+const TODS = { live: 'Follows the real clock, like the public worlds.', morning: 'It is always morning in your private world.', midday: 'It is always midday in your private world.', night: 'It is always night in your private world.' };
+const selTod = makeSelect($('selTod'), [{ v: 'live', label: 'Time of day: Live' }, { v: 'morning', label: 'Time of day: Morning' }, { v: 'midday', label: 'Time of day: Midday' }, { v: 'night', label: 'Time of day: Night' }],
+  v => { settings.tod = v; save(); $('todDesc').textContent = TODS[v]; });
 const selMusic = makeSelect($('selMusic'), [{ v: 'none', label: 'No music' }, { v: 'peaceful', label: 'Peaceful' }, { v: 'upbeat', label: 'Upbeat' }, { v: 'exciting', label: 'Exciting' }],
   v => { settings.music = v; save(); $('musicDesc').textContent = MUSIC_INFO[v]; if (!AU.ctx) auInit(); musicStart(); auVol(); });
 
@@ -2464,7 +2470,7 @@ function syncUI() {
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
     ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
-  selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music);
+  selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); $('todDesc').textContent = TODS[settings.tod];
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
   $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMax; $('botMaxVal').textContent = settings.botMax;
   buildKeys();
@@ -3684,6 +3690,7 @@ function onMsg(m) {
         lpRefresh(); lpRender();
         break;
       }
+      if (inSolo() && !m.priv) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a public world we are no longer going to)
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
       if (party && !m.priv) { partyOver(''); return; }
@@ -3720,7 +3727,8 @@ function onMsg(m) {
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
     case 'padd': { if (!S.world || !party || !P.propDims(m.k | 0).half) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) d.sleep = false; if (party.role === 'host') { S.bought.push([m.k | 0, m.x | 0, m.y | 0]); wDirty = true; } burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); break; }
     case 'pcp': { if (!S.map || !party) break; S.map.checkpoints.push([m.x, m.y]); if (party.role === 'host') { S.boughtCps.push([m.x, m.y]); wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
-    case 'newmap': clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; startTransition(m.slot, m.next); break;
+    case 'newmap': if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
+      clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; startTransition(m.slot, m.next); break;
     case 'fin': {
       const mine = m.id === myId, o = others.get(m.id);
       if (mine) { S.crown = true; $('fbText').textContent = 'Place #' + m.rank + ' · Time ' + fmtT(m.ms); }
@@ -3846,7 +3854,9 @@ function skyAt(p) {
   for (let i = 1; i < SKY.length; i++) if (p <= SKY[i][0]) { const a = SKY[i - 1], b = SKY[i], u = (p - a[0]) / (b[0] - a[0] || 1); return [a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u, a[3] + (b[3] - a[3]) * u, a[4] + (b[4] - a[4]) * u]; }
   const l = SKY[SKY.length - 1]; return [l[1], l[2], l[3], l[4]];
 }
+const TOD_PH = { morning: 0.1, midday: 0.55, night: 0.985 };
 function dayPhase() {
+  if (inSolo() && TOD_PH[settings.tod] !== undefined) return TOD_PH[settings.tod];   // your private world can stay at one time of day
   const len = inSolo() ? settings.soloLen * 60000 : party ? 0 : SLOT_MS;
   if (len > 0) return clamp(1 - (S.nextAt - nowMs()) / len, 0, 1);
   return (Date.now() % SLOT_MS) / SLOT_MS;
@@ -4704,13 +4714,13 @@ function worldText() {
 function hudTick() {
   const rem = S.nextAt - nowMs();
   const tm = $('timer');
-  const endless = (inSolo() && settings.soloLen === 0) || !!party;
+  const endless = S.slot >= SOLO_BASE || (inSolo() && settings.soloLen === 0) || !!party;   // a private level never has a timer, whatever else is going on
   $('nexttimer').textContent = endless ? '∞' : fmtClock(rem);
   $('tlab').textContent = endless ? 'no limit' : 'next map';
   tm.className = endless ? '' : rem <= 30000 && rem > 0 ? 'final' : rem <= 60000 ? 'low' : '';
   if (S.mode === 'play') {
     TH.forEach(t => {
-      if (!inSolo() && !party && !warned[t] && rem <= t * 60000) {
+      if (S.slot >= 0 && S.slot < SOLO_BASE && !inSolo() && !party && !warned[t] && rem <= t * 60000) {
         warned[t] = true;
         notice('Session ends in ' + (t === 60 ? '1 hour' : t + ' minute' + (t > 1 ? 's' : '')) + '. Everyone moves to a new map.', t <= 5 ? 'urgent' : '');
       }
@@ -4739,7 +4749,7 @@ function hudTick() {
 setInterval(hudTick, 250);
 
 function fillTimerPop(rem) {
-  const sl = inSolo(), endless = (sl && settings.soloLen === 0) || !!party;
+  const sl = inSolo(), endless = S.slot >= SOLO_BASE || (sl && settings.soloLen === 0) || !!party;
   $('tpName').textContent = S.map.name;
   $('tpChange').textContent = endless ? 'This level stays until you pick another' : 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
   $('tpCoins').textContent = isBeaten(S.idx) ? 'You have beaten this map' : 'Not beaten yet';
