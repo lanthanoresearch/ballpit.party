@@ -395,7 +395,7 @@
   .hplay:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.4)}
   .hbtns{display:flex;gap:8px;flex-wrap:wrap}.hbtns .btn{flex:1;min-width:110px}
   #home .sw2{margin:4px 0 0}
-  body.home #top,body.home #stack,body.home #hr,body.home #touch,body.home #joy,body.home #editbar{display:none!important}
+  body.home #top,body.home #stack,body.home #hr,body.home #touch,body.home #touch2,body.home #joy,body.home #editbar{display:none!important}
   #intro,#confirm{z-index:12}
   @media (prefers-reduced-motion:reduce){#home h1{animation:none}}
   .epcard{width:min(400px,100%);text-align:center}
@@ -445,13 +445,40 @@
   #placeBar.bad{border-color:#ff7a6a}
   #placeBar .pi{display:flex;flex-direction:column;line-height:1.15;min-width:0;flex:1 1 auto;overflow:hidden}#placeBar .pi b{font-weight:normal;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#placeBar.tch #placeOk{display:none}#placeBar .pi small{font-size:11.5px;opacity:.75}
   #placeBar .btn{padding:7px 14px;min-height:38px}
-  #tpl{position:fixed;z-index:3;width:68px;height:68px;border-radius:50%;border:3px solid #fff;background:rgba(47,158,97,.92);color:#fff;font-size:30px;padding:0;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;touch-action:none;box-shadow:0 0 0 4px rgba(120,255,170,.4),0 0 20px rgba(80,230,140,.8);animation:rdy .55s ease-in-out infinite alternate}
-  #tpl svg{stroke-width:3}#tpl.no{opacity:.45;background:rgba(150,60,50,.9);animation:none;box-shadow:none}
+  #touch2 button{position:fixed;z-index:3;width:68px;height:68px;border-radius:50%;border:3px solid rgba(255,255,255,.55);background:rgba(255,255,255,.18);font-size:28px;padding:0;color:#fff;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;touch-action:none}
+  #touch2 button.on{background:rgba(255,255,255,.5)}
+  #touch2 #ts{--p:0;border-color:rgba(255,210,61,.7);background:conic-gradient(rgba(255,210,61,.9) calc(var(--p)*1%),rgba(255,255,255,.18) 0)}
+  #touch2 #ts.rdy{border-color:#fff;box-shadow:0 0 0 4px rgba(255,210,61,.55),0 0 22px rgba(255,210,61,.9);animation:rdy .55s ease-in-out infinite alternate}
+  #touch2 #tpl{border-color:#fff;background:rgba(47,158,97,.92);box-shadow:0 0 0 4px rgba(120,255,170,.4),0 0 20px rgba(80,230,140,.8);animation:rdy .55s ease-in-out infinite alternate}
+  #touch2 #tpl.no{opacity:.45;background:rgba(150,60,50,.9);animation:none;box-shadow:none}
+  #touch2 #tpc{border-color:#fff;background:rgba(168,40,28,.88);font-size:22px}
+  #touch2 svg,#touch svg{stroke-width:2.6}
+  #touch2 button.edit,#touch button.edit{border-style:dashed;border-color:var(--accent);background:rgba(255,204,61,.25);cursor:grab;animation:none;box-shadow:none}
+  #touch2 #tpl.edit,#touch2 #tpc.edit,#touch2 #ts.edit{animation:none;box-shadow:none;border-style:dashed;border-color:var(--accent);background:rgba(255,204,61,.25)}
+  #touch2 button.sel,#touch button.sel{border-style:solid;border-color:#fff;box-shadow:0 0 0 4px rgba(255,204,61,.9),0 0 18px rgba(255,204,61,.8)}
+  #touch2 button.bad,#touch button.bad{border-color:#ff5a4a;background:rgba(255,90,74,.35)}
+  #editbar{flex-direction:column;align-items:stretch;gap:6px;padding:6px 12px;width:min(560px,calc(100vw - 16px));box-sizing:border-box}
+  #editbar .eb1,#editbar .eb2{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}#editbar .eb1 b{font-weight:normal;font-size:14px}#editbar .ebb{display:flex;gap:6px}
+  #ebPresets{display:flex;gap:4px}#ebPresets button{padding:4px 9px;font-size:13px;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink)}#ebPresets button.on{background:#2f9e61}
+  .ebs{display:flex;align-items:center;gap:8px;font-size:13px;flex:1;min-width:190px;justify-content:flex-end}.ebs b{font-weight:normal}.ebs input{flex:1;min-width:80px;max-width:180px}.ebs .dim{min-width:38px}
+  #placeBar.tch .btn{display:none}
   @media (max-height:520px){#placeBar{padding:3px 4px 3px 10px;gap:6px}#placeBar .pi small{display:none}#placeBar .btn{padding:4px 10px;min-height:32px}}
   #homeWallet{position:fixed;right:12px;top:12px;top:calc(12px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:4;display:none;align-items:center;gap:12px;padding:6px 12px;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);color:#2b1d12;font-size:16px;box-shadow:2px 3px 0 rgba(43,29,18,.3);touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
   body.home #homeWallet{display:inline-flex}#homeWallet span{display:inline-flex;align-items:center;gap:5px}#homeWallet .ic{width:19px;height:19px}
   #coinpill{pointer-events:auto!important;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
   #cdIn.bad{border-color:#ff7a6a;animation:shake .3s}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .lbtn{cursor:pointer;border-radius:6px}.lbtn:hover b,.lbtn:focus-visible b{text-decoration:underline}.lbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .profcard{width:min(400px,100%);display:flex;flex-direction:column;gap:12px;text-align:left}
+  .profcard .phead{display:flex;align-items:center;gap:14px}.profcard .pball{width:54px;height:54px;border-radius:50%;border:3px solid #000;flex:none;box-shadow:inset -6px -8px 0 rgba(0,0,0,.18)}
+  .profcard h3{margin:0;font-size:26px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pwho{min-width:0}.psub{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px;opacity:.9}
+  .pstat{font-size:13px;opacity:.7}.pstat.on{color:#7be0a0;opacity:1}
+  .pbeat{background:#2c2644;border:2px solid var(--line);border-radius:var(--wob);padding:8px 12px}.pbl{display:flex;align-items:baseline;gap:8px}.pbl b{font-weight:normal;font-size:20px}.pbl span{opacity:.6;font-size:14px}
+  .pbar{height:10px;border-radius:6px;background:#15111f;margin-top:6px;overflow:hidden;border:1px solid rgba(232,220,192,.3)}.pbar i{display:block;height:100%;background:linear-gradient(90deg,#2f9e61,#7be0a0);width:0;transition:width .4s}
+  .pacts{display:flex;flex-direction:column;gap:7px}.pacts .btn{width:100%;padding:9px 12px;font-size:16px}
+  .profcard .cfoot{justify-content:center}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){.profcard{width:min(600px,100%);display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;padding:10px 16px}.profcard .phead,.profcard .pbeat{grid-column:1}.profcard .pacts{grid-column:2;grid-row:1/3;justify-content:center}.profcard .cfoot{grid-column:1/-1}.profcard .pball{width:42px;height:42px}.profcard h3{font-size:22px}}
+  #settings.only .tabs{display:none}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){#settings.only{grid-template-columns:minmax(0,1fr)!important;width:min(560px,calc(100vw - 20px))!important}#settings.only .sbody{grid-column:1!important;grid-row:2!important}}
   #phraseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
   #phraseGrid button{padding:9px 4px;font-size:14px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
   #phraseGrid button:active,#phraseGrid button:hover{background:#3a3355}#phraseGrid button:active{transform:scale(.95)}
@@ -506,14 +533,17 @@
   @media (max-height:540px){
     #home{padding:8px}#home h1{font-size:34px}#home .hsub,#homeModeNote{display:none}
     #home .hbox{width:min(660px,100%);gap:8px}
-    #home .card{display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-template-columns:1fr 1fr;gap:6px 18px;padding:12px 16px}
+    #home .card{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto;gap:8px 18px;padding:12px 16px;align-items:center}
+    #home .card>#ned1{grid-column:1;grid-row:1}#home .card>.mpbig{grid-column:1;grid-row:2;margin:0}#home .card>.hplay{grid-column:1;grid-row:3}
+    #home .card>.hbtns{grid-column:2;grid-row:1/3;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;align-self:stretch}#home .card>.hbtns .btn{margin:0;width:100%;height:100%}#home .card>.hbtns #homeHelp{grid-column:1/-1}
+    #home .card>.sw2{grid-column:2;grid-row:3;margin:0}
     #home .hplay{font-size:22px;padding:8px}#home .sw2 small{display:none}
     .scene{--gh:18vh}
   }
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
-  #nameModal,#shareModal,#codeModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:13}
+  #nameModal,#shareModal,#codeModal,#profModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:13}
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
   .nname.dim{opacity:.55}
@@ -726,14 +756,16 @@
 </div></div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 
-<button id="tpl" class="hide" type="button" aria-label="Place" data-ic="check"></button>
 <div id="touch" class="hide"><button id="tl" data-ic="left"></button><button id="tr" data-ic="right"></button><button id="tj" data-ic="up"></button><button id="tb" data-ic="bolt" class="hide"></button></div>
 <div id="joy" class="hide"><i class="jb"></i><i class="jk"></i></div>
-<div id="editbar" class="paper hide"><span>Drag the buttons where you want them</span><button class="btn" id="editReset">Reset</button><button class="btn prim" id="editDone">Done</button></div>
+<div id="editbar" class="paper hide" role="group" aria-label="Edit your buttons"><div class="eb1"><b>Drag a button to move it, tap it to resize.</b><span class="ebb"><button class="btn sm" id="editReset" type="button">Reset</button><button class="btn prim sm" id="editDone" type="button">Done</button></span></div>
+  <div class="eb2"><div id="ebPresets" role="group" aria-label="Layouts"><button type="button" data-p="spread">Spread out</button><button type="button" data-p="moveleft">Move left</button><button type="button" data-p="moveright">Move right</button></div>
+  <label class="ebs"><span>Size: <b id="ebSelName">Jump</b></span><input type="range" id="ebSize" min="0.5" max="1.8" step="0.05"><span id="ebSizeVal" class="dim"></span></label></div></div>
+<div id="touch2"><button id="ts" class="hide" type="button" aria-label="Power jump" data-ic="spark"></button><button id="tpl" class="hide" type="button" aria-label="Place" data-ic="check"></button><button id="tpc" class="hide" type="button" aria-label="Cancel" data-ic="close"></button></div>
 
 <div id="sback"></div>
 <div id="settings" class="paper hide">
-  <div class="shead"><span>Settings</span><button id="btnCloseSet" class="xbtn" title="Close" data-ic="close"></button></div>
+  <div class="shead"><span id="shTitle">Settings</span><button id="btnCloseSet" class="xbtn" title="Close" data-ic="close"></button></div>
   <div class="tabs" id="tabs">
     <button data-tab="you" class="on"><span data-ic="user"></span><span>You</span></button>
     <button data-tab="controls"><span data-ic="pad"></span><span>Controls</span></button>
@@ -756,11 +788,13 @@
     </section>
     <section class="pane" data-pane="controls">
       <div class="row"><span class="lbl"><span data-ic="pad"></span> Controls</span><div id="selInput"></div><div class="small dim" id="inputDesc" style="margin-top:4px"></div></div>
+      <h4><span data-ic="spark"></span> Power jump</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Power jump button</b><small>The extra tall jump gets its own button. It fills as you land perfect jumps; tap it when it is full. The normal jump stays a normal jump.</small></span></span><input type="checkbox" id="setSuperBtn"><i></i></label>
       <h4><span data-ic="bolt"></span> Boost</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Boost</b><small>Keep rolling one way and a ring fills above your ball. When it is full, launch!</small></span></span><input type="checkbox" id="setBoost"><i></i></label>
       <div class="dep" data-dep="boost"><div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Launch by itself</b><small>Boost the moment the ring is full, no button needed</small></span></span><input type="checkbox" id="setBoostAuto"><i></i></label>
-        <div class="dep" data-dep="touchbtn"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Boost button</b><small>A button next to jump</small></span></span><input type="checkbox" id="setBoostBtn"><i></i></label></div></div>
+        <div class="dep" data-dep="boostbtn"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Boost button</b><small>A button next to jump</small></span></span><input type="checkbox" id="setBoostBtn"><i></i></label></div></div>
         <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="right"></span><span><b>Pull to boost</b><small>When the ring is full, pull farther the way you are rolling</small></span></span><input type="checkbox" id="setBoostPull"><i></i></label></div></div>
       </div></div>
       <div class="dep" data-dep="kb"><div>
@@ -888,6 +922,13 @@
   <button class="ok" id="btnOk">OK</button></div>
 </div></div>
 
+<div id="profModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="profName"><div class="card profcard">
+  <div class="phead"><i id="profDot" class="pball"></i><div class="pwho"><h3 id="profName"></h3><div class="psub"><span id="profCode" class="code"></span><span id="profStatus" class="pstat"></span></div></div></div>
+  <div class="pbeat"><div class="pbl"><b id="profBeat"></b><span id="profBeatOf"></span></div><div class="pbar"><i id="profBar"></i></div></div>
+  <div id="profActs" class="pacts"></div>
+  <div class="cfoot"><button id="profClose" class="btn" type="button">Close</button></div>
+</div></div>
+
 <div id="codeModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="cdTitle"><div class="card nmcard">
   <h3 id="cdTitle">Enter a code</h3>
   <input type="text" id="cdIn" maxlength="24" placeholder="Code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -950,8 +991,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=40"></script>
-<script src="physics.js?v=40"></script>
+<script src="maps.js?v=41"></script>
+<script src="physics.js?v=41"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -989,13 +1030,13 @@ function fillIcons(root) {
 fillIcons();
 
 /* ================= settings (saved in this browser, restored exactly on return) ================= */
-function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], back: ['KeyR'] }; }
+function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, autoEnter: false, mp: true, bots: false, botMax: 8, botMark: false, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: 'rotate', soloLen: 180, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
-    boost: true, boostAuto: false, boostBtn: true, boostPull: true, joy: true,
+    boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
     keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'spread', btnPos: null, btnPosP: null, perOrient: false };
 }
 let settings = defaults();
@@ -1018,13 +1059,14 @@ function normalize() {
   settings.btnSize = clamp(+settings.btnSize || 1, 0.7, 1.5);
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'perOrient', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'perOrient', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn'].forEach(k => { settings[k] = !!settings[k]; });
+  { const bm = settings.btnMul && typeof settings.btnMul === 'object' ? settings.btnMul : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings.btnMul = o; }
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
     if (!bp || typeof bp !== 'object') settings[n] = null;
     else {
       ['l', 'r', 'j'].forEach(k => { const q = bp[k]; if (!q || ['l', 'r', 'c'].indexOf(q.a) < 0 || !isFinite(q.dx) || !isFinite(q.dy)) settings[n] = null; });
-      if (settings[n] && bp.b) { const q = bp.b; if (['l', 'r', 'c'].indexOf(q.a) < 0 || !isFinite(q.dx) || !isFinite(q.dy)) delete bp.b; }
+      if (settings[n]) ['b', 's', 'p', 'c'].forEach(k => { const q = bp[k]; if (q && (['l', 'r', 'c'].indexOf(q.a) < 0 || !isFinite(q.dx) || !isFinite(q.dy))) delete bp[k]; });
     }
   });
   if (settings.btnPos === null && settings.preset === 'custom') settings.preset = 'spread';
@@ -1032,11 +1074,11 @@ function normalize() {
 // keys: each key may do only one thing, and every action needs at least one key
 function cleanKeys(k) {
   const d = defKeys(), out = {}, used = {};
-  ['left', 'right', 'jump', 'boost', 'back'].forEach(a => {
+  ['left', 'right', 'jump', 'boost', 'power', 'back'].forEach(a => {
     const list = (k && Array.isArray(k[a])) ? k[a] : d[a]; out[a] = [];
     list.forEach(c => { if (typeof c === 'string' && c.length < 24 && c !== 'Escape' && !used[c] && out[a].length < 4) { used[c] = a; out[a].push(c); } });
   });
-  ['left', 'right', 'jump', 'boost', 'back'].forEach(a => { if (!out[a].length) { const c = d[a].find(x => !used[x]); if (c) { out[a].push(c); used[c] = a; } } });
+  ['left', 'right', 'jump', 'boost', 'power', 'back'].forEach(a => { if (!out[a].length) { const c = d[a].find(x => !used[x]); if (c) { out[a].push(c); used[c] = a; } } });
   return out;
 }
 normalize();
@@ -1505,7 +1547,7 @@ function nearEdge(b) {
   return b.x < 9 * TS || b.x > (m.W - 9) * TS || b.y < 4 * TS || b.y > P.killYAt(S.world, b.x) - 9 * TS;
 }
 function finishRun() {
-  S.finished = true; S.finT = 5; S.crown = true; sfx('finish'); setBeaten(S.idx);
+  S.finished = true; S.finT = 5; S.crown = true; sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
   S.finMs = S.started ? performance.now() - S.runStart : 0;
   $('fbText').textContent = 'Time ' + fmtT(S.finMs);
   $('finishbanner').classList.remove('hide');
@@ -1560,7 +1602,7 @@ function startTransition(slot, next) {
 let placing = null;   // the item you are building right now (a ghost that follows you until you tap Place)
 let inHome = true, paused = false;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text' && !a.readOnly; };
-const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
+const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('profModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 function update(dt) {
   S.t += dt;
@@ -1583,6 +1625,7 @@ function update(dt) {
   b.bAuto = !bl && settings.boost && settings.boostAuto;
   if (!settings.boost) { b.bReq = false; S.bLatch = 0; } else if (S.bLatch > 0 && !bl) { S.bLatch -= dt; b.bReq = true; }
   b.noJm = false;   // only you have the jump meter
+  b.sjSep = !!settings.superBtn;   // a separate power-jump button: the normal jump never uses the full meter
   const ev = P.step(b, w, ax, jheld, dt);
   P.stepSwitches(w, b);
   if (w.ev.length) worldEvents();
@@ -1618,6 +1661,8 @@ let wallet = { c: 0, g: 0 }, walletFresh = true;   // what you can spend: coins,
 try { const o = JSON.parse(localStorage.getItem(WALKEY) || 'null'); if (o) { wallet.c = Math.max(0, o.c | 0); wallet.g = Math.max(0, o.g | 0); walletFresh = false; } } catch (e) {}
 const saveWallet = () => { try { localStorage.setItem(WALKEY, JSON.stringify(wallet)); } catch (e) {} };
 const isBeaten = idx => { try { return !!JSON.parse(localStorage.getItem(BEATKEY) || '{}')[idx]; } catch (e) { return false; } };
+const beatCount = () => { try { return Object.keys(JSON.parse(localStorage.getItem(BEATKEY) || '{}')).length; } catch (e) { return 0; } };
+const infoMsg = () => JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, beat: beatCount() });
 function setBeaten(idx) { try { const o = JSON.parse(localStorage.getItem(BEATKEY) || '{}'); if (!o[idx]) { o[idx] = 1; localStorage.setItem(BEATKEY, JSON.stringify(o)); } } catch (e) {} }
 let wDirty = false, lastWorldStr = '', lastSave = 0;
 function touchFlags() {   // checkpoint flags: touch one and your next fall brings you back to it
@@ -1924,6 +1969,7 @@ addEventListener('keydown', e => {
   e.preventDefault();
   if (a === 'back') { if (!e.repeat && !blocked()) resetPress(); return; }
   if (a === 'boost') { if (!e.repeat) pressBoost(); return; }
+  if (a === 'power') { if (!e.repeat) pressSuper(); return; }
   if (detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); applyDeps(); }
   keysDown.add(e.code); syncKeys();
 });
@@ -1944,7 +1990,32 @@ const PRESETS = {
   custom: { name: 'Custom (the way you moved them)', pos: null }
 };
 const isPortrait = () => window.innerHeight > window.innerWidth;
-function withB(p) { return Object.assign({}, p, { b: p.b || { a: p.j.a, dx: p.j.dx, dy: p.j.dy + 112 } }); }   // no saved spot for the boost button: put it just above jump
+const BK = ['l', 'r', 'j', 'b', 's', 'p', 'c'];   // left, right, jump, boost, power jump, place, cancel
+const BNAME = { l: 'Move left', r: 'Move right', j: 'Jump', b: 'Boost', s: 'Power jump', p: 'Place', c: 'Cancel' };
+const BEL = { l: 'tl', r: 'tr', j: 'tj', b: 'tb', s: 'ts', p: 'tpl', c: 'tpc' };
+function withB(p) {   // every button has a spot. The boost button sits above jump; power jump, place and cancel are put in the nearest free space unless you moved them
+  const o = Object.assign({}, p);
+  if (!o.b) o.b = { a: p.j.a, dx: p.j.dx, dy: p.j.dy + 112 };
+  ['s', 'p', 'c'].forEach(k => { if (!o[k]) o[k] = { auto: 1 }; });
+  return o;
+}
+function autoSpot(k, pts, rs, W, H) {   // the closest place to where a thumb would look for it that is free of the interface and of the other buttons
+  const sz = btnSize(k), r = sz / 2, P0 = pts.p, J = pts.j || pts.r || [W / 2, H - 80, 80], Bb = pts.b;
+  let ax, ay;
+  if (k === 's') { const q = Bb || J; ax = q[0] + (q[0] > W / 2 ? -86 : 86); ay = q[1]; }
+  else if (k === 'p') { ax = J[0] + (J[0] > W * 0.62 ? -100 : J[0] < W * 0.38 ? 100 : 100); ay = J[1]; }
+  else { ax = P0 ? P0[0] : J[0] + 100; ay = P0 ? P0[1] - (P0[2] + sz) / 2 - 8 : J[1] - 80; }
+  let best = null, bc = 1e9;
+  for (let y = r + 8; y <= H - r - 4; y += 8) for (let x = r + 4; x <= W - r - 4; x += 8) {
+    let ok = true; for (let i = 0; i < rs.length && ok; i++) if (hitRect(x, y, r, rs[i])) ok = false;
+    for (const kk in pts) { if (!ok) break; const q = pts[kk]; if (Math.hypot(q[0] - x, q[1] - y) < (q[2] + sz) / 2 + 8) ok = false; }
+    if (!ok) continue;
+    const c = Math.hypot(x - ax, y - ay) + (k === 'c' && P0 && y > P0[1] ? 60 : 0) + (y < H * 0.3 ? 40 : 0);
+    if (c < bc) { bc = c; best = [x, y]; }
+  }
+  return best ? best.concat(sz) : null;
+}
+const toAnchor = (x, y) => { const W = window.innerWidth, H = window.innerHeight, a = x < W * 0.4 ? 'l' : x > W * 0.6 ? 'r' : 'c'; return { a, dx: Math.round(a === 'l' ? x : a === 'r' ? W - x : x - W / 2), dy: Math.round(H - y) }; };
 function curLayout() {
   if (settings.preset === 'custom') {
     const L = (settings.perOrient && isPortrait() && settings.btnPosP) ? settings.btnPosP : settings.btnPos;
@@ -1954,23 +2025,62 @@ function curLayout() {
   if (settings.scheme === 'swipebtn') p = { l: p.l, r: p.r, j: settings.preset === 'moveright' ? { a: 'l', dx: 66, dy: 84 } : { a: 'r', dx: 66, dy: 84 } };
   return withB(p);
 }
-const boostBtnOn = () => !!(settings.boost && settings.boostBtn && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));
-function btnSize(k) { return Math.round((k === 'j' ? 92 : k === 'b' || k === 'p' ? 68 : 78) * settings.btnSize * (window.innerHeight < 460 ? 0.84 : 1)); }   // (a bit smaller when the phone is on its side, so they don't cover the view)
+const boostBtnOn = () => !!(settings.boost && !settings.boostAuto && settings.boostBtn && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));
+const BASE_SZ = { j: 92, b: 68, s: 68, p: 68, c: 56 };
+function btnSize(k) { return Math.round(clamp((BASE_SZ[k] || 78) * settings.btnSize * ((settings.btnMul && settings.btnMul[k]) || 1) * (window.innerHeight < 460 ? 0.84 : 1), 34, 190)); }   // (a bit smaller when the phone is on its side, so they don't cover the view)
 function btnXY(q, W, H, sz) { const r = sz / 2; return [clamp(q.a === 'l' ? q.dx : q.a === 'r' ? W - q.dx : W / 2 + q.dx, r + 4, W - r - 4), clamp(H - q.dy, r + 8, H - r - 4)]; }
-function layoutTouch() {
-  const W = window.innerWidth, H = window.innerHeight, L = curLayout(), showP = !!(typeof placing !== 'undefined' && placing && touchActive() && !editMode), showB = touchActive() || editMode, ks = (showB ? (settings.scheme === 'swipebtn' ? ['j'] : ['l', 'r', 'j']).concat(boostBtnOn() || editMode ? ['b'] : []) : []).concat(showP ? ['p'] : []), pts = {};
-  if (showP) { const bq = L.b; L.p = { a: bq.a, dx: bq.dx + (boostBtnOn() ? 86 : 0), dy: bq.dy }; }
-  ks.forEach(k => { const sz = btnSize(k); pts[k] = btnXY(L[k], W, H, sz).concat(sz); });
-  // never let two buttons sit on top of each other (a narrow screen can squeeze them)
-  for (let it = 0; it < 4; it++) for (let a = 0; a < ks.length; a++) for (let b = a + 1; b < ks.length; b++) {
-    const p = pts[ks[a]], q = pts[ks[b]], need = (p[2] + q[2]) / 2 + 6, dx = q[0] - p[0], dy = q[1] - p[1];
-    if (Math.hypot(dx, dy) < need) {
-      if (Math.abs(dy) > Math.abs(dx)) { const push = (need - Math.abs(dy)) / 2 + 1, sg = dy >= 0 ? 1 : -1; p[1] = clamp(p[1] - sg * push, p[2] / 2 + 8, H - p[2] / 2 - 4); q[1] = clamp(q[1] + sg * push, q[2] / 2 + 8, H - q[2] / 2 - 4); }
-      else { const push = (need - Math.abs(dx)) / 2 + 1, sg = dx >= 0 ? 1 : -1; p[0] = clamp(p[0] - sg * push, p[2] / 2 + 4, W - p[2] / 2 - 4); q[0] = clamp(q[0] + sg * push, q[2] / 2 + 4, W - q[2] / 2 - 4); }
-    }
+// which buttons are on screen right now (while you are editing, every one of them is)
+function visK(k) {
+  if (editMode) return k === 'l' || k === 'r' ? settings.scheme === 'buttons' : true;
+  if (!touchActive()) return false;
+  switch (k) {
+    case 'l': case 'r': return settings.scheme === 'buttons';
+    case 'j': return settings.scheme === 'buttons' || settings.scheme === 'swipebtn';
+    case 'b': return boostBtnOn();
+    case 's': return !!settings.superBtn;
+    default: return !!(typeof placing !== 'undefined' && placing);   // place and cancel only while you are building
   }
-  [['tl', 'l'], ['tr', 'r'], ['tj', 'j'], ['tb', 'b'], ['tpl', 'p']].forEach(p => {
-    const el = $(p[0]), pt = pts[p[1]]; if (!pt) return;
+}
+// the parts of the screen the buttons must keep off: the info panel, the top buttons, the shop and chat buttons, and (while editing) the edit bar
+const KEEP_OFF = ['hl', 'hr', 'subbar', 'editbar'];
+function uiRects() {
+  const out = [];
+  KEEP_OFF.forEach(id => { const e = $(id); if (!e || e.classList.contains('hide') || e.offsetParent === null && getComputedStyle(e).position !== 'fixed') return; const r = e.getBoundingClientRect(); if (r.width > 2 && r.height > 2) out.push([r.left - 4, r.top - 4, r.right + 4, r.bottom + 4]); });
+  return out;
+}
+const hitRect = (x, y, r, q) => { const cx = clamp(x, q[0], q[2]), cy = clamp(y, q[1], q[3]); return (x - cx) * (x - cx) + (y - cy) * (y - cy) < r * r; };
+let curPts = {};
+function validAt(k, x, y, sz) {   // may button k (this size) sit here? Not off screen, not on the interface, not on another button
+  const W = window.innerWidth, H = window.innerHeight; sz = sz || btnSize(k); const r = sz / 2;
+  if (x < r + 4 || x > W - r - 4 || y < r + 8 || y > H - r - 4) return false;
+  const rs = uiRects(); for (let i = 0; i < rs.length; i++) if (hitRect(x, y, r, rs[i])) return false;
+  for (const kk in curPts) { if (kk === k) continue; const q = curPts[kk]; if (Math.hypot(q[0] - x, q[1] - y) < (q[2] + sz) / 2 + 6) return false; }
+  return true;
+}
+function layoutTouch() {
+  const W = window.innerWidth, H = window.innerHeight, L = curLayout(), ks = BK.filter(visK), pts = {}, rs = uiRects();
+  ks.forEach(k => { if (L[k].auto) return; const sz = btnSize(k); pts[k] = btnXY(L[k], W, H, sz).concat(sz); });
+  ['s', 'p', 'c'].forEach(k => { if (ks.indexOf(k) < 0 || !L[k].auto) return; pts[k] = autoSpot(k, pts, rs, W, H) || [W / 2, H / 2, btnSize(k)]; });
+  // never let two buttons sit on top of each other, or on the interface (a narrow screen can squeeze them)
+  for (let it = 0; it < 8; it++) {
+    for (let a = 0; a < ks.length; a++) for (let b = a + 1; b < ks.length; b++) {
+      const p = pts[ks[a]], q = pts[ks[b]], need = (p[2] + q[2]) / 2 + 6, dx = q[0] - p[0], dy = q[1] - p[1];
+      if (Math.hypot(dx, dy) < need) {
+        if (Math.abs(dy) > Math.abs(dx)) { const push = (need - Math.abs(dy)) / 2 + 1, sg = dy >= 0 ? 1 : -1; p[1] = clamp(p[1] - sg * push, p[2] / 2 + 8, H - p[2] / 2 - 4); q[1] = clamp(q[1] + sg * push, q[2] / 2 + 8, H - q[2] / 2 - 4); }
+        else { const push = (need - Math.abs(dx)) / 2 + 1, sg = dx >= 0 ? 1 : -1; p[0] = clamp(p[0] - sg * push, p[2] / 2 + 4, W - p[2] / 2 - 4); q[0] = clamp(q[0] + sg * push, q[2] / 2 + 4, W - q[2] / 2 - 4); }
+      }
+    }
+    ks.forEach(k => { const p = pts[k], r = p[2] / 2; rs.forEach(q => {
+      if (!hitRect(p[0], p[1], r, q)) return;
+      const cx = clamp(p[0], q[0], q[2]), cy = clamp(p[1], q[1], q[3]), d = Math.hypot(p[0] - cx, p[1] - cy);
+      if (d > 0.01) { const push = r - d + 1; p[0] += (p[0] - cx) / d * push; p[1] += (p[1] - cy) / d * push; }
+      else { const dl = p[0] - q[0], dr = q[2] - p[0], du = p[1] - q[1], dd = q[3] - p[1], m = Math.min(dl, dr, du, dd); if (m === dl) p[0] = q[0] - r - 1; else if (m === dr) p[0] = q[2] + r + 1; else if (m === du) p[1] = q[1] - r - 1; else p[1] = q[3] + r + 1; }
+      p[0] = clamp(p[0], r + 4, W - r - 4); p[1] = clamp(p[1], r + 8, H - r - 4);
+    }); });
+  }
+  curPts = pts;
+  BK.forEach(k => {
+    const el = $(BEL[k]), pt = pts[k]; if (!pt) return;
     el.style.left = pt[0] + 'px'; el.style.top = pt[1] + 'px'; el.style.width = el.style.height = pt[2] + 'px';
   });
 }
@@ -1980,11 +2090,12 @@ function applyTouchUI() {
   const showBtns = on && (sc === 'buttons' || sc === 'swipebtn');
   $('touch').classList.toggle('hide', !showBtns);
   $('tl').classList.toggle('hide', sc !== 'buttons'); $('tr').classList.toggle('hide', sc !== 'buttons');
-  $('tb').classList.toggle('hide', !(boostBtnOn() || editMode));
-  ['tl', 'tr', 'tj', 'tb'].forEach(id => $(id).classList.toggle('edit', editMode));
+  $('tb').classList.toggle('hide', !visK('b') || !showBtns);
+  ['ts', 'tpl', 'tpc'].forEach(id => { const k = id === 'ts' ? 's' : id === 'tpl' ? 'p' : 'c'; $(id).classList.toggle('hide', !(on && visK(k))); });
+  BK.forEach(k => $(BEL[k]).classList.toggle('edit', editMode));
   layoutTouch();
   $('btnEditLayout').disabled = !(sc === 'buttons' || sc === 'swipebtn');
-  $('btnResetLayout').disabled = !(settings.btnPos || settings.btnPosP);
+  $('btnResetLayout').disabled = !(settings.btnPos || settings.btnPosP || Object.keys(settings.btnMul || {}).length);
   $('presetRow').classList.toggle('hide', !(sc === 'buttons' || sc === 'swipebtn'));
   if (!on) { tin.ax = 0; tin.jump = false; }
 }
@@ -2014,29 +2125,53 @@ function bindBtn(id, key) {
   else { b.addEventListener('touchstart', down, { passive: false }); b.addEventListener('touchend', up, { passive: false }); b.addEventListener('touchcancel', up, { passive: false }); }
 }
 bindBtn('tl', 'L'); bindBtn('tr', 'R'); bindBtn('tj', 'J'); bindBtn('tb', 'B');
-// drag the buttons around (edit mode)
+// power jump, place and cancel: a tap is all they need
+function pressSuper() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0 && (S.b.jm || 0) >= 1) { S.b.sjReq = 0.25; S.b.jbuf = 0.12; } }
+[['ts', () => pressSuper()], ['tpl', () => { if (typeof finishPlacing === 'function') finishPlacing(); }], ['tpc', () => { if (typeof cancelPlacing === 'function') cancelPlacing(); }]].forEach(p => {
+  const b = $(p[0]), act = e => { if (editMode) return; e.preventDefault(); b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 140); p[1](); };
+  if (window.PointerEvent) b.addEventListener('pointerdown', act); else b.addEventListener('touchstart', act, { passive: false });
+});
+// ----- editing the buttons: drag one to move it, tap it to pick it and change its size. They can never be put on the interface or on each other. -----
+let editSel = 'j';
 function layoutKey() { return (settings.perOrient && isPortrait()) ? 'btnPosP' : 'btnPos'; }
-[['tl', 'l'], ['tr', 'r'], ['tj', 'j'], ['tb', 'b']].forEach(p => {
-  const el = $(p[0]);
+function selectBtn(k) {
+  editSel = k; BK.forEach(q => $(BEL[q]).classList.toggle('sel', q === k && editMode));
+  $('ebSelName').textContent = BNAME[k]; const v = (settings.btnMul && settings.btnMul[k]) || 1; $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%';
+}
+function editChips() { document.querySelectorAll('#ebPresets button').forEach(b => { const on = b.getAttribute('data-p') === settings.preset; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }); }
+BK.forEach(k => {
+  const el = $(BEL[k]);
   el.addEventListener('pointerdown', e => {
-    if (!editMode) return; e.preventDefault(); el.setPointerCapture(e.pointerId);
+    if (!editMode) return; e.preventDefault(); el.setPointerCapture(e.pointerId); selectBtn(k);
     const key = layoutKey();
-    if (settings.preset !== 'custom' || !settings[key]) { const cur = curLayout(); settings[key] = { l: Object.assign({}, cur.l), r: Object.assign({}, cur.r), j: Object.assign({}, cur.j), b: Object.assign({}, cur.b) }; settings.preset = 'custom'; selPreset.set('custom'); }
+    if (settings.preset !== 'custom' || !settings[key]) { const cur = curLayout(), o = {}; BK.forEach(q => { o[q] = cur[q].auto ? (curPts[q] ? toAnchor(curPts[q][0], curPts[q][1]) : { a: 'c', dx: 0, dy: 100 }) : Object.assign({}, cur[q]); }); settings[key] = o; settings.preset = 'custom'; selPreset.set('custom'); editChips(); }
+    let last = (curPts[k] || [0, 0]).slice(0, 2), moved = false;
     const mv = ev => {
-      const W = window.innerWidth, H = window.innerHeight, x = clamp(ev.clientX, 20, W - 20), y = clamp(ev.clientY, 40, H - 20), a = x < W * 0.4 ? 'l' : x > W * 0.6 ? 'r' : 'c';
-      settings[key][p[1]] = { a, dx: Math.round(a === 'l' ? x : a === 'r' ? W - x : x - W / 2), dy: Math.round(H - y) }; layoutTouch();
+      const W = window.innerWidth, H = window.innerHeight; let x = clamp(ev.clientX, 20, W - 20), y = clamp(ev.clientY, 20, H - 12);
+      if (!validAt(k, x, y)) { if (validAt(k, x, last[1])) y = last[1]; else if (validAt(k, last[0], y)) x = last[0]; else { el.classList.add('bad'); return; } }   // slide along whatever is in the way
+      el.classList.remove('bad'); last = [x, y]; moved = true;
+      const a = x < W * 0.4 ? 'l' : x > W * 0.6 ? 'r' : 'c';
+      settings[key][k] = { a, dx: Math.round(a === 'l' ? x : a === 'r' ? W - x : x - W / 2), dy: Math.round(H - y) }; layoutTouch();
     };
-    const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); save(); $('btnResetLayout').disabled = false; };
+    const up = () => { el.classList.remove('bad'); el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); save(); $('btnResetLayout').disabled = false; };
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   });
 });
+$('ebSize').addEventListener('input', () => {
+  const k = editSel, want = +$('ebSize').value, old = (settings.btnMul && settings.btnMul[k]) || 1, p = curPts[k];
+  let v = want; const setMul = m => { if (Math.abs(m - 1) < 0.001) delete settings.btnMul[k]; else settings.btnMul[k] = m; };
+  if (p && v > old) { setMul(v); while (v > old && !validAt(k, p[0], p[1])) { v = Math.round((v - 0.05) * 100) / 100; setMul(v); } }   // bigger is only allowed while it still fits
+  else setMul(v);
+  $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%'; save(); layoutTouch(); $('btnResetLayout').disabled = false;
+});
+document.querySelectorAll('#ebPresets button').forEach(b => b.addEventListener('click', () => { const p = b.getAttribute('data-p'); settings.preset = p; selPreset.set(p); save(); applyTouchUI(); editChips(); selectBtn(editSel); }));
 function startEdit() {
   if ($('btnEditLayout').disabled) return;
-  editMode = true; $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); applyTouchUI();
+  editMode = true; $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); applyTouchUI(); editChips(); selectBtn(editSel); layoutTouch();
 }
-function endEdit() { editMode = false; $('editbar').classList.add('hide'); applyTouchUI(); $('settings').classList.remove('hide'); }
+function endEdit() { editMode = false; $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
 $('editDone').onclick = endEdit;
-function resetLayout() { settings.btnPos = null; settings.btnPosP = null; if (settings.preset === 'custom') settings.preset = 'spread'; selPreset.set(settings.preset); save(); applyTouchUI(); }
+function resetLayout() { settings.btnPos = null; settings.btnPosP = null; settings.btnMul = {}; if (settings.preset === 'custom') settings.preset = 'spread'; selPreset.set(settings.preset); save(); applyTouchUI(); if (editMode) { editChips(); selectBtn(editSel); } }
 $('editReset').onclick = resetLayout;
 $('btnEditLayout').onclick = startEdit;
 $('btnResetLayout').onclick = resetLayout;
@@ -2120,7 +2255,7 @@ function maybeAskBots() {
 $('btnOk').onclick = () => { auWake(); settings.intro = !$('dontShow').checked; $('setIntro').checked = settings.intro; save(); $('intro').classList.add('hide'); setTimeout(maybeAskBots, 400); };
 function showIntro() { $('dontShow').checked = !settings.intro; $('intro').classList.remove('hide'); }
 function closeSettingsNow() {
-  $('settings').classList.add('hide'); $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
+  $('settings').classList.add('hide'); $('settings').classList.remove('only'); $('shTitle').textContent = 'Settings'; $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
   try { const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); } catch (e) {}
   if (typeof lpAfterTab === 'function') lpAfterTab();
 }
@@ -2205,7 +2340,7 @@ function syncUI() {
   nameUI();
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setAuto', 'autoEnter'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
-    ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setPerOrient', 'perOrient'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setJoy', 'joy']]
+    ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setPerOrient', 'perOrient'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(settings.preset); selMusic.set(settings.music);
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
@@ -2223,7 +2358,7 @@ bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.dea
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
 bindToggle('setBots', 'bots', () => { if (settings.bots) { newBotTarget(); botNextSpawn = 0.8; } });
-bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto'); bindToggle('setBoostBtn', 'boostBtn', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull'); bindToggle('setJoy', 'joy', () => joyUpdate());
+bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull'); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); bindToggle('setPerOrient', 'perOrient', () => layoutTouch());
 $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
@@ -2245,7 +2380,7 @@ $('setFallWarn').onchange = () => {
   askConfirm('Turn off the warning sign?', 'The sign tells you when you are near lava, near the edge of the world, or falling so fast that the landing could be your last.', 'Turn it off', () => { settings.fallWarn = settings.edge = false; S.edgeWarn = S.fallWarn = S.lavaWarn = false; $('setFallWarn').checked = false; save(); sfx('off'); });
 };
 /* ----- keyboard: pick your own keys (a key can do only one thing) ----- */
-const KEYACT = [['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['boost', 'bolt', 'Boost'], ['back', 'flag', 'Back to start']];
+const KEYACT = [['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['boost', 'bolt', 'Boost'], ['power', 'spark', 'Power jump (with its own button)'], ['back', 'flag', 'Back to start']];
 const KEYNAMES = { Space: 'Space', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Enter: 'Enter', ShiftLeft: 'L-Shift', ShiftRight: 'R-Shift', Tab: 'Tab', Backspace: 'Backspace', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`', CapsLock: 'Caps' };
 const keyLabel = c => KEYNAMES[c] || (c.indexOf('Key') === 0 ? c.slice(3) : c.indexOf('Digit') === 0 ? c.slice(5) : c.indexOf('Numpad') === 0 ? 'Num ' + c.slice(6) : c);
 const RESERVED = ['Escape', 'Minus', 'Equal', 'NumpadAdd', 'NumpadSubtract', 'MetaLeft', 'MetaRight', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ContextMenu'];
@@ -2305,6 +2440,7 @@ const showKb = () => settings.inputMode === 'keyboard' || (settings.inputMode ==
 const showTouch = () => settings.inputMode === 'touch' || (settings.inputMode === 'auto' && touchActive());
 const DEPS = {
   kb: showKb, touch: showTouch, touchbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'),
+  boostbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn') && !settings.boostAuto,
   boost: () => settings.boost, touchgest: () => showTouch() && settings.scheme !== 'buttons',
   mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => settings.bots, '!bots': () => !settings.bots,
   minimap: () => settings.minimap, sfx: () => settings.sfx, music: () => settings.music !== 'none'
@@ -2392,7 +2528,7 @@ function linkMsg(m) {
       for (const o of list) {
         seen.add(o.pub); let e = lkOf(o.pub);
         if (!e) { if (lks.length >= MAXLINK) continue; e = { pub: o.pub, code: '', name: '', color: '#ccc', last: 0, ok: false, on: 0, x: null, big: true, arrow: true, mute: 0 }; lks.push(e); if (linksReady) notice(who(o.name) + ' is now tracking you too', ''); }
-        e.ok = true; e.code = o.code; e.name = o.name; e.color = o.color; e.last = o.last; e.w = o.w;
+        e.ok = true; e.code = o.code; e.name = o.name; e.color = o.color; e.last = o.last; e.w = o.w; e.b = o.b | 0;
         if (o.on) e.on = 1; else { e.on = 0; e.x = null; }
       }
       for (const e of lks) if (!seen.has(e.pub)) { e.ok = false; e.on = 0; e.x = null; }
@@ -2689,12 +2825,11 @@ let placeUIKey = null;
 function refreshPlaceUI() {   // the little bar (and, on a phone, the round button) that finish the build
   const g = placing, on = !!g, key = on ? g.it.id + (g.ok ? 1 : 0) + (touchActive() ? 1 : 0) : '';
   if (key === placeUIKey) return; placeUIKey = key;
-  $('placeBar').classList.toggle('hide', !on); $('tpl').classList.toggle('hide', !(on && touchActive()));
+  $('placeBar').classList.toggle('hide', !on); applyTouchUI();
   if (!on) return;
   $('placeName').textContent = g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok);
   $('placeHint').textContent = g.ok ? (touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : 'No room here. Move somewhere with space';
-  layoutTouch();
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
@@ -2774,12 +2909,13 @@ setInterval(trackVis, 500);
 function dot(c) { const i = document.createElement('i'); i.className = 'ldot'; i.style.background = c; return i; }
 function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 function chip(label, on, fn, title) { const c = el('button', 'chip' + (on ? ' on' : ''), label); if (title) c.title = title; c.onclick = fn; return c; }
-function nameRow(name, code, color, sub) {   // dot, the name with its short code, and a line under it
+function nameRow(name, code, color, sub, prof) {   // dot, the name with its short code, and a line under it
   const d = el('div', 'lrow'); d.appendChild(dot(color));
-  const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(name))); const sb = el('div', 'lsub'); if (code) { sb.appendChild(codeTag(code)); sb.appendChild(document.createTextNode(' · ')); } sb.appendChild(document.createTextNode(sub)); nm.appendChild(sb); d.appendChild(nm); return d;
+  const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(name))); const sb = el('div', 'lsub'); if (code) { sb.appendChild(codeTag(code)); sb.appendChild(document.createTextNode(' · ')); } sb.appendChild(document.createTextNode(sub)); nm.appendChild(sb); if (prof) { nm.classList.add('lbtn'); nm.tabIndex = 0; nm.setAttribute('role', 'button'); nm.setAttribute('aria-label', 'See ' + who(name) + "'s profile"); nm.onclick = () => openProfile(prof); nm.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProfile(prof); } }; }
+  d.appendChild(nm); return d;
 }
 function reqCard(r) {
-  const d = nameRow(r.name, r.code, r.color, 'wants to track you. Check that their code is right before you accept.');
+  const d = nameRow(r.name, r.code, r.color, 'wants to track you. Check that their code is right before you accept.', r);
   const ok = el('button', 'btn prim sm', 'Accept'), no = el('button', 'btn sm', 'Not now');
   ok.onclick = () => { wsSend({ t: 'tacc', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); };
   no.onclick = () => { wsSend({ t: 'tden', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); };
@@ -2793,7 +2929,7 @@ function iconBtn(cls, name, label, fn, text) {   // a button holding an icon (an
 function friendCard(l) {   // one friend, one card: who they are at the top, then only that friend's own settings
   const nm = who(l.name), c = el('div', 'fcard' + (l.ok && l.on ? '' : ' off'));
   const h = el('div', 'fhead'); h.appendChild(dot(l.color));
-  const n = el('div', 'lname'); n.appendChild(el('b', '', nm));
+  const n = el('div', 'lname lbtn'); n.tabIndex = 0; n.setAttribute('role', 'button'); n.setAttribute('aria-label', 'See ' + nm + "'s profile"); n.onclick = () => openProfile(l); n.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProfile(l); } }; n.appendChild(el('b', '', nm));
   const sb = el('div', 'lsub'); sb.appendChild(codeTag(l.code)); sb.appendChild(document.createTextNode(' · ' + (!l.ok ? 'Waiting for them to come back' : l.on ? 'World ' + (l.w || '?') : lastOn(l.last)))); n.appendChild(sb); h.appendChild(n);
   if (l.ok) h.appendChild(el('span', 'fstat' + (l.on ? ' on' : ''), l.on ? 'Online' : 'Offline'));
   c.appendChild(h);
@@ -2808,7 +2944,33 @@ function friendCard(l) {   // one friend, one card: who they are at the top, the
   const f = el('div', 'ffoot'), x = el('button', 'btn sm quiet', 'Stop tracking ' + nm); x.onclick = () => askConfirm('Stop tracking ' + nm + '?', 'You will stop seeing each other on the map. To track each other again, you both need to send and accept a new request.', 'Stop tracking', () => disconnectLink(l.pub), { no: 'Keep ' + nm }); f.appendChild(x); c.appendChild(f);
   return c;
 }
+
+/* ----- a player's profile: who they are, how many levels they have beaten, their friend number, and what you can do ----- */
+const LEVELS = 50;
+let profPub = '', profSnap = null;
+function profData(pub) { return (lks.filter(l => l.pub === pub)[0]) || (lpFound.filter(f => f.pub === pub)[0]) || reqs.filter(r => r.pub === pub)[0] || (profSnap && profSnap.pub === pub ? profSnap : null); }
+function openProfile(p) { if (!p) return; profPub = p.pub; profSnap = Object.assign({}, p); profRender(); $('profModal').classList.remove('hide'); setTimeout(() => { try { $('profClose').focus(); } catch (e) {} }, 30); }
+function closeProfile() { profPub = ''; $('profModal').classList.add('hide'); }
+function profRender() {
+  if (!profPub) return; const p = profData(profPub); if (!p) { closeProfile(); return; }
+  const nm = who(p.name), linked = !!lkOf(p.pub), sent = sentTo.has(p.pub), isReq = reqs.some(r => r.pub === p.pub), n = p.b | 0;
+  $('profDot').style.background = p.color || '#ccc'; $('profName').textContent = nm; $('profCode').textContent = '#' + (p.code || '');
+  const on = linked ? (lkOf(p.pub).on ? 1 : 0) : p.on, w = linked ? lkOf(p.pub).w : p.w, last = linked ? lkOf(p.pub).last : p.last;
+  $('profStatus').textContent = on ? 'Online now' + (w ? ' · World ' + w : '') : last ? lastOn(last) : '';
+  $('profStatus').className = 'pstat' + (on ? ' on' : '');
+  $('profBeat').parentNode.parentNode.classList.toggle('hide', p.b === undefined); $('profBeat').textContent = n + (n === 1 ? ' level beaten' : ' levels beaten'); $('profBeatOf').textContent = 'of ' + LEVELS; $('profBar').style.width = Math.min(100, n / LEVELS * 100) + '%';
+  const act = $('profActs'); act.textContent = '';
+  const add = (cls, txt, fn, dis) => { const b = el('button', cls, txt); b.type = 'button'; if (dis) b.disabled = true; b.onclick = fn; act.appendChild(b); return b; };
+  if (isReq) { add('btn prim', 'Accept friend request', () => { wsSend({ t: 'tacc', to: p.pub }); reqs = reqs.filter(q => q.pub !== p.pub); lpRender(); profRender(); }); }
+  else if (linked) add('btn', 'Friends. Tap to stop tracking', () => { const l = lkOf(p.pub); closeProfile(); askConfirm('Stop tracking ' + nm + '?', 'You will stop seeing each other on the map. To track each other again, you both need to send and accept a new request.', 'Stop tracking', () => disconnectLink(p.pub)); });
+  else add('btn prim', sent ? 'Request sent' : lks.length >= MAXLINK ? 'You are tracking ' + MAXLINK + ' people already' : 'Track as a friend', () => { wsSend({ t: 'treq', to: p.pub }); sentTo.add(p.pub); profRender(); }, sent || lks.length >= MAXLINK);
+  if (!linked) { const muted = !!mutes[p.pub]; add('btn', muted ? 'Turn alerts back on' : 'Mute alerts from ' + nm, () => { if (muted) delete mutes[p.pub]; else mutes[p.pub] = { n: p.name, c: p.code }; saveMutes(); lpRender(); profRender(); }); }
+  add('btn quiet', 'Copy their friend number', () => { const t = '#' + p.code; try { navigator.clipboard.writeText(t).then(() => notice('Copied ' + t, ''), () => notice(t, '')); } catch (e) { notice(t, ''); } });
+}
+$('profClose').onclick = closeProfile; $('profModal').addEventListener('pointerdown', e => { if (e.target === $('profModal')) closeProfile(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('profModal').classList.contains('hide')) { closeProfile(); e.stopPropagation(); e.preventDefault(); } }, true);
 function lpRender() {
+  if (profPub) profRender();
   const rq = $('lreqs'); rq.textContent = '';
   reqs.slice(0, 3).forEach(r => { const c = el('div', 'paper lreqcard'); c.appendChild(reqCard(r)); rq.appendChild(c); });
   trackVis();
@@ -2828,7 +2990,7 @@ function lpRender() {
   if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody found. You can also type someone\'s code.' : 'Nobody has played in the last 7 days yet.'));
   for (const f of shown) {
     const linked = f.l || lkOf(f.pub), sent = sentTo.has(f.pub), muted = !!mutes[f.pub];
-    const d = nameRow(f.name, f.code, f.color, f.on ? 'Online now · World ' + f.w : lastOn(f.last));
+    const d = nameRow(f.name, f.code, f.color, f.on ? 'Online now · World ' + f.w : lastOn(f.last), f);
     if (!linked) {   // someone who is not a friend: their alerts are simply on or off
       d.appendChild(iconBtn('btn sm belli' + (muted ? ' mu' : ''), muted ? 'bell-off' : 'bell', muted ? 'Alerts from ' + who(f.name) + ' are off. Tap to turn on.' : 'Alerts from ' + who(f.name) + ' are on. Tap to turn off.', () => {
         if (muted) delete mutes[f.pub]; else mutes[f.pub] = { n: f.name, c: f.code }; saveMutes(); lpRender();
@@ -2898,7 +3060,7 @@ function nameServer(name, left, denied) {   // the server has the last word on n
   if (name) { settings.name = name; save(); }
   nameUnlockAt = left > 0 ? Date.now() + left : 0; try { localStorage.setItem(NAMEKEY, String(nameUnlockAt)); } catch (e) {}
   if (denied) notice('You can change your name again in ' + hm(left), '');
-  lastSent = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
+  lastSent = infoMsg();
   nameUI();
 }
 const ADJ = ['Happy', 'Sunny', 'Cozy', 'Bouncy', 'Mellow', 'Swift', 'Lucky', 'Fuzzy', 'Jolly', 'Breezy', 'Zesty', 'Calm', 'Brave', 'Dizzy', 'Merry', 'Snappy'];
@@ -3027,7 +3189,7 @@ $('homeMp').onchange = () => {
   askConfirm('Play solo?', "You'll be in a private world of your own. Nobody else can see you and you won't see anyone, but you can still turn on bots. Want to play with everyone instead? Stay on Multiplayer.", 'Play solo', () => { $('homeMp').checked = false; settings.mp = false; save(); $('setMp').checked = false; applyDeps(); syncUI(); homeModeText(); }, { no: 'Stay online', yesClass: 'go' });
 };
 $('homeAuto').onchange = () => { settings.autoEnter = $('homeAuto').checked; save(); $('setAuto').checked = settings.autoEnter; };
-$('homeLook').onclick = () => { showTab('you'); toggleSettings(); };
+$('homeLook').onclick = () => { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; } showTab('you'); toggleSettings(); };
 $('homeSet').onclick = () => toggleSettings();
 $('homeHelp').onclick = () => showIntro();
 /* Share: 1) the system share sheet, 2) copy the link automatically, 3) a pop-up with the link to copy by hand, 4) say we can't. The first one that works stops the chain. */
@@ -3065,7 +3227,7 @@ $('homeShare').onclick = async () => {
 addEventListener('keydown', e => { if (inHome && e.key === 'Enter' && $('settings').classList.contains('hide') && $('intro').classList.contains('hide') && $('confirm').classList.contains('hide') && $('nameModal').classList.contains('hide') && $('shareModal').classList.contains('hide') && !typing()) enterGame(false); });
 setTimeout(() => { if (inHome) { retry = 0; connect(); } }, 500);   // the main menu connects to the server too, so friends and invites work before you press Play
 
-$('placeOk').onclick = () => finishPlacing(); $('placeCancel').onclick = () => cancelPlacing(); $('tpl').onclick = () => finishPlacing();
+$('placeOk').onclick = () => finishPlacing(); $('placeCancel').onclick = () => cancelPlacing();
 
 /* ----- a secret code: double-tap the coins and diamonds (in the game or on the main screen) ----- */
 function homeWalletRender() { const k = wallet.c + ':' + wallet.g; if (homeWalletRender.k === k) return; homeWalletRender.k = k; $('homeWallet').innerHTML = '<span>' + ico('gcoin') + wallet.c + '</span><span>' + ico('gem') + wallet.g + '</span>'; }
@@ -3112,7 +3274,7 @@ function setMultiplayer(on) {
 }
 /* The game server is reached from the main menu too ("lobby"): friends, invites and requests all work there, but you are not in any world and nobody sees you.
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
-const helloMsg = lobby => JSON.stringify({ t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, b: window.__BUILD || '' });
+const helloMsg = lobby => JSON.stringify({ t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' });
 function joinWorld() {
   if (ws && ws.readyState === 1 && lobbyOn) { lobbyOn = false; retry = 0; setNet('connecting'); ws.send(helloMsg(false)); }
   else if (!ws) { retry = 0; setNet('connecting'); connect(); }
@@ -3156,7 +3318,7 @@ window.addEventListener('focus', retryNow);
 setTimeout(() => { if (netState === "connecting" && settings.name) setNet("offline"); }, 3500);
 function sendInfo() {
   if (!online || !ws || ws.readyState !== 1) return;
-  const msg = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
+  const msg = infoMsg();
   if (msg === lastSent) return;
   lastSent = msg; ws.send(msg);
 }
@@ -3244,7 +3406,7 @@ function onMsg(m) {
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
       net.online = m.online; net.peak = m.peak;
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
-      lastSent = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
+      lastSent = infoMsg();
       others.clear();
       m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); });
       setNet('online');
@@ -3968,8 +4130,9 @@ function renderInner(dt, nowT) {
   const sc = Math.max(clamp(zoomBase() * settings.zoom, 0.2, 5), sw / VIEW_MAX_W, sh / VIEW_MAX_H);
   const vw = sw / sc, vh = sh / sc, b = S.b;
   updateFx(dt);
-  { const tj = $('tj'); const tg = clamp(b.jm || 0, 0, 1); S.jmv = (S.jmv || 0) + (tg - (S.jmv || 0)) * Math.min(1, dt * 14); if (Math.abs(tg - S.jmv) < 0.004) S.jmv = tg;   // the meter glides instead of jumping
-    const q = Math.round(S.jmv * 100); if (q !== S.tjq) { S.tjq = q; tj.style.setProperty('--p', q); tj.classList.toggle('rdy', q >= 99); } }
+  { const sep = !!settings.superBtn, tg = clamp(b.jm || 0, 0, 1); S.jmv = (S.jmv || 0) + (tg - (S.jmv || 0)) * Math.min(1, dt * 14); if (Math.abs(tg - S.jmv) < 0.004) S.jmv = tg;   // the meter glides instead of jumping
+    const q = Math.round(S.jmv * 100);
+    if (q !== S.tjq || sep !== S.tjsep) { S.tjq = q; S.tjsep = sep; const el = sep ? $('ts') : $('tj'), other = sep ? $('tj') : $('ts'); el.style.setProperty('--p', q); el.classList.toggle('rdy', q >= 99 && !editMode); other.style.setProperty('--p', 0); other.classList.remove('rdy'); } }   // (with the separate power-jump button the ring lives on that button)
   { const tb = $('tb'); if (!tb.classList.contains('hide') && !editMode) { const q = Math.round(clamp(b.bcharge || 0, 0, 1) * 100); if (q !== S.tbq) { S.tbq = q; tb.style.setProperty('--p', q); tb.classList.toggle('rdy', q >= 100 && !b.boost); } } }
   const k = 1 - Math.exp(-7 * dt);
   S.camx += (b.x - S.camx) * k;

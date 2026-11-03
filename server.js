@@ -86,7 +86,7 @@ try {
   const o = JSON.parse(fs.readFileSync(LINKS_FILE, 'utf8'));
   for (const k in (o.links || {})) if (PUB.test(k)) links.set(k, new Set((o.links[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));
   for (const k in (o.gone || {})) if (PUB.test(k)) gone.set(k, new Set((o.gone[k] || []).filter(v => PUB.test(v)).slice(0, 50)));
-  for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', last: +v.last || 0, nameAt: +v.nameAt || 0 }); }
+  for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', last: +v.last || 0, nameAt: +v.nameAt || 0, beat: Math.max(0, Math.min(999, v.beat | 0)) }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
 } catch (e) {}
 function saveLinks(sync) {
@@ -105,7 +105,7 @@ function addLink(a, b) { linkSet(a).add(b); linkSet(b).add(a); linksDirty = true
 function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; }
 const WEEK_MS = 7 * 86400000, STALE_MS = 60 * 86400000;   // the player list shows the last week; anybody gone for two months is deleted
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
-const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), on: live(q) ? 1 : 0, w: q && q.room ? q.room.id : 0, last: q ? Date.now() : (k.last || 0) }; };
+const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), on: live(q) ? 1 : 0, w: q && q.room ? q.room.id : 0, last: q ? Date.now() : (k.last || 0), b: k.beat | 0 }; };
 function sendLinks(p) {   // everyone this player is linked to, with their short code, whether they are online, and when they were last here
   send(p, { t: 'links', list: [...(links.get(p.pub) || [])].map(peerInfo) });
 }
@@ -238,7 +238,7 @@ wss.on('connection', (ws, req) => {
       if (!nm && !lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || randomName();   // everybody has a name once they play
       if (!nm && lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || '';          // (a brand-new visitor on the menu has not picked one yet: that first pick stays free)
       const nameLeft = setName(p, nm);
-      if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.last = Date.now(); linksDirty = true; }
+      if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.last = Date.now(); if (m.beat != null) k.beat = Math.max(0, Math.min(999, m.beat | 0)); linksDirty = true; }
       if (room) {
         room.players.set(p.id, p);
         online++; statsDirty = true;
@@ -302,7 +302,7 @@ wss.on('connection', (ws, req) => {
         const linked = !!(mine && mine.has(pub));
         if (!on && !linked && now - last > (browse ? WEEK_MS : STALE_MS)) return;
         if (!browse && !(nm.toLowerCase().indexOf(q) >= 0 || code === qc || code.indexOf(qc) === 0 && qc.length >= 3)) return;
-        out.push({ pub, code, name: nm, color: q2 ? q2.color : k.color, on: on ? 1 : 0, w: on && on !== true ? on.id : 0, last, here: on && on !== true && on === p.room ? 1 : 0, l: linked ? 1 : 0 });
+        out.push({ pub, code, name: nm, color: q2 ? q2.color : k.color, b: k.beat | 0, on: on ? 1 : 0, w: on && on !== true ? on.id : 0, last, here: on && on !== true && on === p.room ? 1 : 0, l: linked ? 1 : 0 });
       });
       out.sort((a, b) => (b.here - a.here) || (b.on - a.on) || (b.last - a.last));
       send(p, { t: 'found', q: raw, list: out.slice(0, browse ? 80 : 30), n: out.length });
@@ -346,7 +346,7 @@ wss.on('connection', (ws, req) => {
       const want = cleanName(m.name) || p.name, left = setName(p, want);
       send(p, { t: 'name', name: p.name, left, denied: want !== p.name ? 1 : 0 });
       p.color = cleanColor(m.color, p.color); p.color2 = cleanColor(m.color2, p.color2); p.pat = cleanPat(m.pat);
-      if (p.pub && known.get(p.pub)) { known.get(p.pub).color = p.color; linksDirty = true; }
+      if (p.pub && known.get(p.pub)) { known.get(p.pub).color = p.color; if (m.beat != null) known.get(p.pub).beat = Math.max(0, Math.min(999, m.beat | 0)); linksDirty = true; }
       if (p.pub) for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (q) sendLinks(q); }
       if (p.room) broadcast(p.room, { t: 'info', id: p.id, name: p.name, color: p.color, color2: p.color2, pat: p.pat }, p);
     } else if (m.t === 'finish') {

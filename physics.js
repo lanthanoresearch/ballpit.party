@@ -479,6 +479,7 @@
       // The jump meter: three perfect jumps in a row (full height, each started within a split second of landing) fill it. Jump again straight away while it is full and you get the extra tall jump.
       // Jump while it is full and you get an extra tall jump. Wait too long and it drains away. (Only your own ball has a meter.)
       b.holdLeft = Math.max(0, (b.holdLeft || 0) - dt);
+      b.sjReq = Math.max(0, (b.sjReq || 0) - dt);   // (with a separate power-jump button: only a tap on that button, not the normal jump, uses the full meter)
       if (!b.noJm) {
         if (b.ground) {
           b.jmt += dt;
@@ -487,7 +488,7 @@
         } else b.jmt = 0;   // frozen while you are in the air
       }
       if (b.jbuf > 0 && b.coyote > 0) {
-        const sup = !b.noJm && b.jm >= 1;
+        const sup = !b.noJm && b.jm >= 1 && (!b.sjSep || b.sjReq > 0);
         b.vy = sup ? -JUMP * SJ_MUL : -JUMP; b.coyote = 0; b.jbuf = 0; b.ground = false; ev.jumped = true;   // (a boost carries on through a jump)
         if (sup) { b.holdLeft = 2; b.jm = 0; b.jfill = false; ev.superJump = true; }   // the tall jump always gets its full height
         else if (!b.noJm) { b.jfill = true; b.jm0 = b.jm; b.jy0 = b.y; }   // the meter now fills as the jump climbs
