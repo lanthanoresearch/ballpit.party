@@ -873,8 +873,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=31"></script>
-<script src="physics.js?v=31"></script>
+<script src="maps.js?v=32"></script>
+<script src="physics.js?v=32"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2358,7 +2358,7 @@ function trackBin(dv, len, ty) {   // 2: everybody (far away too) for the maps. 
     for (let off = 3; off + 12 <= len; off += 12) {
       const num = dv.getUint32(off, true), e = lks.find(l => lkNum(l.pub) === num); if (!e) continue;
       const yr = dv.getUint16(off + 6, true);
-      e.dead = yr === 65535; e.x = dv.getUint16(off + 4, true) * 4; e.y = e.dead ? e.y : yr * 2; e.w = dv.getUint16(off + 8, true); e.t = t;
+      e.dead = yr === 65535; e.x = dv.getUint16(off + 4, true) * 4; e.y = e.dead ? e.y : yr * 2; e.w = dv.getUint16(off + 8, true); e.vx = e.dead ? 0 : dv.getInt8(off + 10) * 5; e.vy = e.dead ? 0 : dv.getInt8(off + 11) * 20; e.t = t;
       if (e.sx == null || e.dead) { e.sx = e.x; e.sy = e.y; }
     }
   }
@@ -2383,12 +2383,19 @@ function pinShown(pub) {   // true while a tracked friend wears the big pin on s
   const v = S.view, dx = e.sx - (v.l + v.w / 2), dy = e.sy - (v.t + v.h / 2);
   return Math.abs(dx) < v.w / 2 - 20 && Math.abs(dy) < v.h / 2 - 20;
 }
+function trackFollow(e) {   // keeps the pin glued to the friend: their drawn ball when they are near, otherwise a smooth guess from the last few updates
+  const now = performance.now(), dt = clamp((now - (e.f || now)) / 1000, 0, 0.1); e.f = now;
+  let o = null; others.forEach(q => { if (!o && q.pub === e.pub && q.seen && !q.dead) o = q; });
+  if (o) { e.sx = o.cx; e.sy = o.cy; return; }
+  const a = clamp((now - e.t) / 1000, 0, 0.5), tx = e.x + (e.vx || 0) * a, ty = e.y + (e.vy || 0) * a, k = 1 - Math.exp(-dt / 0.06);
+  if (Math.abs(tx - e.sx) > 600 || Math.abs(ty - e.sy) > 600) { e.sx = tx; e.sy = ty; } else { e.sx += (tx - e.sx) * k; e.sy += (ty - e.sy) * k; }
+}
 function drawTrack(camL, camT, vw, vh, sc) {
   const L = liveLinks(); if (!L.length) return;
   const vx = camL + vw / 2, vy = camT + vh / 2, z = 1 / Math.max(0.45, sc), bob = Math.sin(S.t * 3) * 3;
   for (const e of L) {
+    trackFollow(e);
     if (!e.arrow) continue;
-    e.sx += (e.x - e.sx) * 0.2; e.sy += (e.y - e.sy) * 0.2;
     const dx = e.sx - vx, dy = e.sy - vy, name = e.name || 'Friend';
     ctx.save();
     if (Math.abs(dx) < vw / 2 - 20 && Math.abs(dy) < vh / 2 - 20) {   // on screen: a pin over their head
@@ -2414,8 +2421,9 @@ function drawTrack(camL, camT, vw, vh, sc) {
 function drawLinksOnMap(g, toX, toY, r, labels, inside) {   // toX/toY turn tile numbers into canvas pixels
   const t = performance.now();
   for (const e of liveLinks()) {
+    trackFollow(e);
     if (!e.big) continue;
-    let x = toX(e.x / TS), y = toY(e.y / TS); const w = g.canvas.width, h = g.canvas.height;
+    let x = toX((e.sx == null ? e.x : e.sx) / TS), y = toY((e.sy == null ? e.y : e.sy) / TS); const w = g.canvas.width, h = g.canvas.height;
     const out = x < 8 || y < 8 || x > w - 8 || y > h - 8;
     if (out && inside) continue;
     x = clamp(x, 10, w - 10); y = clamp(y, 10, h - 10);

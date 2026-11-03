@@ -399,11 +399,11 @@ setInterval(() => {
   for (const r of byPub.values()) {
     if (!r.room || r.ws.readyState !== 1) continue;
     const ls = links.get(r.pub); if (!ls || !ls.size) continue;
-    const arr = []; for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has) arr.push(q); }
-    if (!arr.length) continue;
+    const arr = []; let fresh = tickN % 10 === 0; for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has) { arr.push(q); if (q.moved) fresh = true; } }
+    if (!arr.length || !fresh) continue;   // (only when somebody moved, plus a heartbeat every second)
     const buf = Buffer.allocUnsafe(3 + arr.length * 12);
     buf[0] = 3; buf.writeUInt16LE(curSlot & 0xFFFF, 1);
-    arr.forEach((q, k) => { const o = 3 + k * 12; buf.writeUInt32LE(parseInt(q.pub.slice(0, 8), 16) >>> 0, o); buf.writeUInt16LE(q.x >> 2, o + 4); buf.writeUInt16LE(q.dead ? 65535 : (q.y >> 1), o + 6); buf.writeUInt16LE(q.room.id & 0xFFFF, o + 8); buf.writeUInt16LE(0, o + 10); });
+    arr.forEach((q, k) => { const o = 3 + k * 12; buf.writeUInt32LE(parseInt(q.pub.slice(0, 8), 16) >>> 0, o); buf.writeUInt16LE(q.x >> 2, o + 4); buf.writeUInt16LE(q.dead ? 65535 : (q.y >> 1), o + 6); buf.writeUInt16LE(q.room.id & 0xFFFF, o + 8); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round(q.vx / 5))), o + 10); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round(q.vy / 20))), o + 11); });
     r.ws.send(buf, { binary: true });
   }
   for (const room of rooms.values()) {
