@@ -286,7 +286,7 @@
 
   const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
   const SJ_MUL = 1.42, JM_RISE = 200, JM_DRAIN = 1.6, JM_GRACE = 0.3, JM_HOLD = 0.5;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
-  const BOOST_T = 1.6, BOOST_V = 450;   // seconds of steady rolling to fill the ring, and the boosted top speed
+  const BOOST_T = 1.6, BOOST_V = MAXV * 2;   // seconds of steady rolling to fill the ring, and the boosted top speed (double)
   const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false, boosted: false, superJump: false };
 
   // ax: -1/0/1, jheld: jump button held. Set b.jbuf = 0.12 on a jump press.

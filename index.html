@@ -146,7 +146,7 @@
   .sw .c{width:24px;height:24px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:0 0 0 2px rgba(0,0,0,.5)}
   .sw .c.on{border-color:#fff}
   .sw .custom{width:auto;height:24px;border-radius:12px;padding:0 9px;font-size:13px;background:#3a3355;border:2px solid var(--line);display:flex;align-items:center;gap:5px;box-shadow:none}
-  .sw .chip{width:14px;height:14px;border-radius:50%;border:2px solid #fff;display:inline-block}
+  .sw .cchip{width:14px;height:14px;min-width:14px;flex:none;border-radius:50%;border:2px solid #fff;display:inline-block;box-sizing:border-box}
   .pats{display:flex;gap:6px;flex-wrap:wrap}
   .pats canvas{width:38px;height:38px;border-radius:50%;cursor:pointer;border:3px solid transparent;background:#120f1c}
   .pats canvas.on{border-color:#fff}
@@ -177,7 +177,6 @@
   #joy{position:fixed;z-index:3;width:0;height:0;pointer-events:none}
   #joy .jb{position:absolute;left:-54px;top:-54px;width:108px;height:108px;border-radius:50%;border:3px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12)}
   #joy .jk{position:absolute;left:-24px;top:-24px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.55);border:3px solid rgba(255,255,255,.9)}
-  #joy.rdy .jb{border-color:#ffd23d;box-shadow:0 0 18px rgba(255,210,61,.8)}#joy.rdy .jk{background:rgba(255,210,61,.9)}
   #touch button.edit{border-style:dashed;border-color:var(--accent);background:rgba(255,204,61,.25);cursor:grab}
   #editbar{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:20;padding:8px 14px;display:flex;gap:10px;align-items:center;font-size:15px;flex-wrap:wrap;justify-content:center}
   /* ---- modals ---- */
@@ -666,6 +665,7 @@
     <section class="pane on" data-pane="you">
       <div class="you"><canvas id="preview" width="64" height="64"></canvas>
         <div style="flex:1"><div class="ned" id="ned2"></div></div></div>
+      <div class="mycode" style="margin-top:8px"><span>Your friend code</span><b id="myCodeV2">······</b></div>
       <h4><span data-ic="ball"></span> Ball colour</h4><div class="sw" id="colors1"></div>
       <h4><span data-ic="spark"></span> Pattern</h4><div class="pats" id="pats"></div>
       <h4><span data-ic="spark"></span> Pattern colour</h4><div class="sw" id="colors2"></div>
@@ -856,8 +856,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=21"></script>
-<script src="physics.js?v=21"></script>
+<script src="maps.js?v=23"></script>
+<script src="physics.js?v=23"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1898,10 +1898,10 @@ function joyUpdate() {   // the little joystick that appears where you touch (sw
   const el = $('joy'); let p = null; gp.forEach(q => { if (!p) p = q; });
   if (!p || !settings.joy || settings.scheme === 'buttons' || !touchActive() || editMode) { el.classList.add('hide'); return; }
   const rdy = pullReady(), lim = rdy ? 76 : 32, dx = clamp(p.x - p.ax, -lim, lim);
-  el.classList.remove('hide'); el.classList.toggle('rdy', !!rdy);
+  el.classList.remove('hide'); el.classList.remove('rdy');   // the stick stays a plain round stick: no gold, no stretching
   el.style.left = p.ax + 'px'; el.style.top = p.sy + 'px';
-  el.firstChild.style.transform = 'scaleX(' + (rdy ? 1.45 : 1) + ')';
-  el.lastChild.style.transform = 'translate(' + (dx * 1.35).toFixed(1) + 'px,' + clamp((p.y - p.sy) * 0.3, -14, 14).toFixed(1) + 'px)';
+  const kx = clamp(dx * 1.35, -42, 42);   // the knob stays inside the ring
+  el.lastChild.style.transform = 'translate(' + kx.toFixed(1) + 'px,' + clamp((p.y - p.sy) * 0.3, -14, 14).toFixed(1) + 'px)';
 }
 function bindBtn(id, key) {
   const b = $(id);
@@ -2082,7 +2082,7 @@ function buildLook() {
   [['colors1', 'color'], ['colors2', 'color2']].forEach(p => {
     const box = $(p[0]); box.innerHTML = '';
     PALETTE.forEach(c => { const d = document.createElement('div'); d.className = 'c'; d.style.background = c; d.onclick = () => { settings[p[1]] = c; lookChanged(); }; box.appendChild(d); });
-    const cb = document.createElement('div'); cb.className = 'c custom'; cb.innerHTML = '<span class="chip"></span>Custom';
+    const cb = document.createElement('div'); cb.className = 'c custom'; cb.innerHTML = '<span class="cchip"></span>Custom';
     cb.onclick = () => {
       if (CP.open && CP.anchor === cb) { closePicker(); return; }
       let timer = 0;
@@ -2231,6 +2231,32 @@ if (!/^[A-Za-z0-9_-]{16,64}$/.test(devId)) {
   devId = [...a].map(v => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[v % 62]).join('');
   try { localStorage.setItem(DEVKEY, devId); } catch (e) {}
 }
+/* your friend code is worked out from this browser's own id (same recipe as the server), so it is always there, online or not */
+function sha256hex(s) {
+  const b = new TextEncoder().encode(s), l = b.length, n = ((l + 9 + 63) >> 6) << 6, d = new Uint8Array(n); d.set(b); d[l] = 0x80;
+  const dv = new DataView(d.buffer); dv.setUint32(n - 4, (l * 8) >>> 0); dv.setUint32(n - 8, Math.floor(l * 8 / 4294967296));
+  const K = [], H0 = []; let c = 0;
+  for (let p = 2; c < 64; p++) { let pr = true; for (let q = 2; q * q <= p; q++) if (p % q === 0) { pr = false; break; } if (pr) { K[c] = (Math.cbrt(p) % 1 * 4294967296) | 0; if (c < 8) H0[c] = (Math.sqrt(p) % 1 * 4294967296) | 0; c++; } }
+  const w = new Int32Array(64), rr = (x, k) => (x >>> k) | (x << (32 - k)); let H = H0.slice();
+  for (let o = 0; o < n; o += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getInt32(o + i * 4);
+    for (let i = 16; i < 64; i++) { const a = w[i - 15], e = w[i - 2]; w[i] = (w[i - 16] + (rr(a, 7) ^ rr(a, 18) ^ (a >>> 3)) + w[i - 7] + (rr(e, 17) ^ rr(e, 19) ^ (e >>> 10))) | 0; }
+    let [a, b2, c2, d2, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (h + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0, t2 = ((rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & b2) ^ (a & c2) ^ (b2 & c2))) | 0;
+      h = g; g = f; f = e; e = (d2 + t1) | 0; d2 = c2; c2 = b2; b2 = a; a = (t1 + t2) | 0;
+    }
+    H = [(H[0] + a) | 0, (H[1] + b2) | 0, (H[2] + c2) | 0, (H[3] + d2) | 0, (H[4] + e) | 0, (H[5] + f) | 0, (H[6] + g) | 0, (H[7] + h) | 0];
+  }
+  return H.map(v => (v >>> 0).toString(16).padStart(8, '0')).join('');
+}
+const CODE_CH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', CODEKEY = 'ballrun4_code';
+function localCode() {
+  try { let n = BigInt('0x' + sha256hex('ballpit:' + devId).slice(0, 12)), c = ''; for (let i = 0; i < 6; i++) { c = CODE_CH[Number(n % 31n)] + c; n /= 31n; } return c; } catch (e) { return ''; }
+}
+let myCode = localCode(); try { if (myCode) localStorage.setItem(CODEKEY, myCode); else myCode = localStorage.getItem(CODEKEY) || ''; } catch (e) {}
+function showMyCode() { ['myCodeV', 'myCodeV2'].forEach(id => { const e = $(id); if (e) e.textContent = myCode || '······'; }); }
+showMyCode();
 let lks = [];      // people I track (and who track me): { pub, code, name, color, last, ok (the server confirms it), on (online now), w (their world), x, y, sx, sy, dead, t, big, arrow, mute }
 try { lks = (JSON.parse(localStorage.getItem(LKKEY) || '[]') || []).filter(l => l && /^[0-9a-f]{16}$/.test(l.pub)).slice(0, MAXLINK).map(l => ({ pub: l.pub, code: String(l.code || '').slice(0, 6), name: String(l.name || '').slice(0, 12), color: HEX.test(l.color) ? l.color : '#ccc', last: +l.last || 0, ok: false, on: 0, x: null, big: l.big !== false, arrow: l.arrow !== false, mute: (l.mute | 0) % 3 })); } catch (e) {}
 const saveLinks = () => { try { localStorage.setItem(LKKEY, JSON.stringify(lks.map(l => ({ pub: l.pub, code: l.code, name: l.name, color: l.color, last: l.last, big: l.big, arrow: l.arrow, mute: l.mute })))); } catch (e) {} };
@@ -2238,7 +2264,7 @@ const linkClaims = () => lks.map(l => l.pub);
 const ft = (dx, dy) => Math.round(Math.hypot(dx, dy) / TS / 2);   // distances are in feet; one foot is two blocks
 const lkNum = pub => parseInt(pub.slice(0, 8), 16) >>> 0;
 let linksReady = false;
-let reqs = [], sentTo = new Set(), lpFound = [], myCode = '';
+let reqs = [], sentTo = new Set(), lpFound = [];
 const MUTEKEY = 'ballrun4_mutes', CMKEY = 'ballrun4_chatmute', CTKEY = 'ballrun4_ctab';
 let mutes = {}; try { mutes = JSON.parse(localStorage.getItem(MUTEKEY) || '{}') || {}; } catch (e) {}   // players who are not friends but you muted: pub -> { n, c }
 let chatMuted = false; try { chatMuted = localStorage.getItem(CMKEY) === '1'; } catch (e) {}
@@ -2465,7 +2491,7 @@ function lpRender() {
   reqs.slice(0, 3).forEach(r => { const c = el('div', 'paper lreqcard'); c.appendChild(reqCard(r)); rq.appendChild(c); });
   trackVis();
   if (!friendsShown()) return;
-  $('myCodeV').textContent = myCode || '······';
+  showMyCode();
   const list = $('lpList'); list.textContent = '';
   $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
   if (!lks.length) list.appendChild(el('div', 'small dim', 'Nobody yet. Find a player below.'));
@@ -2793,7 +2819,7 @@ function onMsg(m) {
     case 'welcome':
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
       net.online = m.online; net.peak = m.peak;
-      myCode = m.code || myCode; nameServer(m.name, m.nameLeft | 0, false);
+      myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat });
       others.clear();
       m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); });
