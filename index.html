@@ -117,7 +117,7 @@
   #finishbanner{position:fixed;left:50%;top:22%;transform:translateX(-50%);padding:12px 26px;text-align:center;z-index:5;border-color:var(--accent)}
   #finishbanner h2{margin:0 0 2px;font-size:30px;color:var(--accent);font-weight:400}
   /* ---- settings ---- */
-  #settings{position:fixed;right:10px;top:58px;top:calc(58px + env(safe-area-inset-top));width:min(380px,calc(100vw - 20px));max-height:calc(100% - 70px);display:flex;flex-direction:column;z-index:8;touch-action:pan-y;overflow:hidden}
+  #settings{position:fixed;right:10px;top:58px;top:calc(58px + env(safe-area-inset-top));width:min(380px,calc(100vw - 20px));max-height:calc(100% - 70px);display:flex;flex-direction:column;z-index:8;touch-action:pan-y;overflow:hidden;overflow:clip}
   .shead{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px 14px;font-size:20px;flex:none}
   .xbtn{width:34px;height:30px;display:flex;align-items:center;justify-content:center;background:#3a3355;border:2px solid var(--line);border-radius:var(--wob);padding:0}
   .xbtn:hover{background:var(--bad)}
@@ -260,7 +260,7 @@
   }
   @media (max-width:600px){#netstat{left:auto;right:10px;transform:none;top:96px;top:calc(96px + env(safe-area-inset-top))}#edgewarn,#fallwarn,#beaconbar{top:94px;top:calc(94px + env(safe-area-inset-top))}}
   .dep{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows .28s ease,opacity .22s ease}
-  .dep>div{overflow:hidden;min-height:0}
+  .dep>div{overflow:hidden;overflow:clip;min-height:0}
   .dep.off{grid-template-rows:0fr;opacity:0;pointer-events:none}
   .mpbig{display:block;margin:4px 0 8px;cursor:pointer;position:relative}
   .mpbig input{position:absolute;opacity:0;pointer-events:none}
@@ -422,6 +422,24 @@
     #shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.shopitem{padding:5px 8px}.shopitem .sico{width:32px;height:32px}.shopitem .sinfo b{font-size:15px}.shopitem .sinfo small{display:none}.shopitem button{min-width:70px;padding:4px 6px}.shopcard .small{margin:0 0 4px;font-size:12px}.shopcard .cfoot{margin-top:2px}.shopcard .cfoot button{padding:5px 18px}
     .epcard{width:min(680px,100%);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start;padding:10px 14px}.epcard h3,.epcard .cfoot{grid-column:1/-1;margin:0 0 4px}
     #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:5px;margin:4px 0}#phraseGrid button{padding:6px 2px;font-size:13px}
+  }
+  #intro .card{display:flex;flex-direction:column;overflow:hidden;max-height:100%}
+  #intro .ibody{overflow-y:auto;min-height:0;flex:1;-webkit-overflow-scrolling:touch}
+  #intro .ifoot{flex:none}
+  @media (max-height:540px){
+    #intro{padding:8px}#intro .card{width:min(760px,100%);padding:10px 16px}#intro .card h1{font-size:22px;margin:0 0 2px;flex:none}
+    #intro .card p{font-size:14px;margin:5px 0}#intro .legend{font-size:13px;margin:6px 0;gap:4px 12px}
+    #intro .ifoot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:6px;border-top:2px dashed rgba(232,220,192,.3);margin-top:6px}
+    #intro .dont{margin:0}#intro .ok{width:auto;min-width:130px;margin:0;padding:6px 22px;font-size:18px}
+    #home .mptrack{height:50px;font-size:16px}#home .mptrack>span{gap:5px}
+  }
+  @media (max-height:520px) and (min-aspect-ratio:1/1){
+    #settings{display:grid;grid-template-columns:104px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);width:min(720px,calc(100vw - 20px))!important;max-height:calc(100% - 16px)!important}
+    #settings .shead{grid-column:1/-1;padding:4px 8px 2px 14px;font-size:18px}
+    #settings .tabs{grid-column:1;grid-row:2;flex-direction:column;gap:2px;padding:4px 6px 6px;border-bottom:0;border-right:2px dashed rgba(232,220,192,.35);overflow-y:auto;min-height:0}
+    #settings .tabs button{flex:none;flex-direction:row;justify-content:flex-start;gap:8px;padding:5px 8px;font-size:13px}
+    #settings .tabs button svg{font-size:17px}
+    #settings .sbody{grid-column:2;grid-row:2;padding:6px 12px 12px}
   }
   #phraseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
   #phraseGrid button{padding:9px 4px;font-size:14px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
@@ -838,6 +856,7 @@
 </div></div>
 <div id="intro" class="overlay hide"><div class="card">
   <h1><span data-ic="ball"></span>BALLPIT.PARTY</h1>
+  <div class="ibody">
   <p>You're a ball. Everyone online shares one huge world and is racing to find the <b>checkered flag</b>. Nothing tells you where it is, or where anyone else is. Pick a direction and explore.</p>
   <div class="legend">
     <span><i class="lg" style="background:#8a6a46"></i>Ground: safe to stand on</span>
@@ -850,8 +869,9 @@
   </div>
   <p>Move with <kbd>A</kbd><kbd>D</kbd> or the arrows, jump with <kbd>W</kbd> or <kbd>Space</kbd>: tap for a hop, hold for a big jump. On a phone, use the on-screen controls (you can pick swipe styles in settings). Get the <i>middle</i> of your ball onto a block or you'll roll off.</p>
   <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump. Touch a checkpoint flag and your next fall brings you back to it once. Tap the chat button to send an emoji or a quick message, and add friends in Settings to see where they are. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
-  <label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
-  <button class="ok" id="btnOk">OK</button>
+  </div>
+  <div class="ifoot"><label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
+  <button class="ok" id="btnOk">OK</button></div>
 </div></div>
 
 <div id="nameModal" class="overlay hide"><div class="card nmcard">
@@ -909,8 +929,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=37"></script>
-<script src="physics.js?v=37"></script>
+<script src="maps.js?v=38"></script>
+<script src="physics.js?v=38"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2083,6 +2103,7 @@ function closeSettingsNow() {
 function toggleSettings() { if ($('settings').classList.contains('hide')) { $('settings').classList.remove('hide'); $('pause').classList.add('sopen'); if (typeof lpAfterTab === 'function') lpAfterTab(); } else closeSettingsNow(); }
 // the dimmed backdrop: any tap outside the pop-up closes it (the game keeps running behind it)
 new MutationObserver(() => { $('sback').style.display = $('settings').classList.contains('hide') ? 'none' : 'block'; }).observe($('settings'), { attributes: true, attributeFilter: ['class'] });
+document.addEventListener('scroll', e => { const t = e.target; if (t && t.nodeType === 1 && (t.id === 'settings' || t.parentNode === $('settings') && t.className !== 'sbody' || (t.parentNode && t.parentNode.classList && t.parentNode.classList.contains('dep')))) { t.scrollTop = 0; t.scrollLeft = 0; } }, true);   // (the frame of the settings box never scrolls by itself, even when the browser tries to bring a tapped switch into view)
 $('sback').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); closeSettingsNow(); });
 $('sback').addEventListener('touchstart', e => { e.preventDefault(); closeSettingsNow(); }, { passive: false });
 $('btnSettings').onclick = () => togglePause();
