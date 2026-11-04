@@ -14,7 +14,7 @@
         for (let xx = r[0]; xx < r[0] + r[2]; xx++) if (xx >= 0 && xx < W) grid[yy * W + xx] = r[4];
       }
     }
-    const w = { W, H, grid, map, dyn: [], doors: [], plates: [], btns: [], see: [], ev: [], focus: null };
+    const w = { W, H, grid, map, dyn: [], doors: [], plates: [], btns: [], see: [], pads: [], portals: [], ev: [], focus: null };
     const G = map.gadgets || {};
     (G.doors || []).forEach((d, i) => { const o = { id: i, x: d[0], y: d[1], w: d[2], h: d[3], open: false, latched: false }; w.doors.push(o); setDoorTiles(w, o, false); });
     (G.plates || []).forEach(p => w.plates.push({ x: p[0], y: p[1], w: p[2], to: p[3], on: false }));
@@ -24,9 +24,9 @@
     return w;
   }
 
-  function setDoorTiles(w, d, open) {
+  function setDoorTiles(w, d, open) {   // the top row (the beam) is always solid, so a crate or ball can stand on a gate whether it is open or shut
     d.open = open;
-    for (let yy = d.y; yy < d.y + d.h; yy++) for (let xx = d.x; xx < d.x + d.w; xx++) if (xx >= 0 && xx < w.W && yy >= 0 && yy < w.H) w.grid[yy * w.W + xx] = open ? 0 : 9;
+    for (let yy = d.y; yy < d.y + d.h; yy++) for (let xx = d.x; xx < d.x + d.w; xx++) if (xx >= 0 && xx < w.W && yy >= 0 && yy < w.H) w.grid[yy * w.W + xx] = open && yy > d.y ? 0 : 9;
   }
   const killYAt = (w, x) => { const f = w.map.floorY; return f ? f[clamp(Math.floor(x / TS), 0, w.W - 1)] * TS : w.map.killY; };
 
@@ -227,9 +227,22 @@
     }
     return on;
   }
+  function seeGuard(w, o, half) {   // whatever was on top of a plank can never end up underneath it: if it did get through (a fast fall, a plank swinging up into it), put it back on top
+    for (let i = 0; i < w.see.length; i++) {
+      const s = w.see[i], rx = o.x - s.cx, ry = o.y - s.cy;
+      if (Math.abs(rx) > s.hl + 80 || Math.abs(ry) > s.hl + 120) { if (o.sg === i) o.sg = -1; continue; }
+      const c = Math.cos(s.ang), sn = Math.sin(s.ang), along = rx * c + ry * sn, nrm = rx * sn - ry * c;
+      if (Math.abs(along) > s.hl + 4) { if (o.sg === i) o.sg = -1; continue; }
+      if (nrm >= 0) { o.sg = i; continue; }
+      if (o.sg === i && nrm > -(half + SEE_TH + 50)) {
+        const need = half + SEE_TH - nrm; o.x += sn * need; o.y -= c * need;
+        const vn = o.vx * sn - o.vy * c; if (vn < 0) { o.vx -= vn * sn; o.vy += vn * c; }
+      }
+    }
+  }
   /* ---------- buttons, pressure plates and doors ---------- */
   function doorBlocked(w, d, b) {
-    const x0 = d.x * TS, x1 = (d.x + d.w) * TS, y0 = d.y * TS, y1 = (d.y + d.h) * TS;
+    const x0 = d.x * TS, x1 = (d.x + d.w) * TS, y0 = (d.y + 1) * TS, y1 = (d.y + d.h) * TS;   // (the beam above is always solid, so only the gap below it can be blocked)
     if (b && b.x + R > x0 && b.x - R < x1 && b.y + R > y0 && b.y - R < y1) return true;
     for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const e = o.r || o.hw; if (o.x + e > x0 && o.x - e < x1 && o.y + e > y0 && o.y - e < y1) return true; }
     return false;
@@ -328,6 +341,7 @@
   }
   function stepDyn(w, dt) {
     stepSee(w, dt);
+    for (let i = 0; i < w.pads.length; i++) if (w.pads[i].t > 0) w.pads[i].t = Math.max(0, w.pads[i].t - dt);
     const L = w.dyn; if (!L.length) return;
     const f = w.focus, FR = 1100;
     for (let i = 0; i < L.length; i++) {
@@ -340,7 +354,7 @@
       let burn = false;
       if (d.k === 'o') {
         d.x += d.vx * dt; d.y += d.vy * dt; burn = ballTiles(d, w); d.rot += d.vx * dt / d.r;
-        if (w.see.length) seeBody(d, w, d.m * 60);
+        if (w.see.length) { seeBody(d, w, d.m * 60); seeGuard(w, d, d.r); }
         if (d.gr || d.touch) {   // rolling friction: a ball coasts, slows down and comes to rest (on ice it keeps sliding)
           if (tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.r + 2) / TS)) !== 3) { d.vx *= Math.max(0, 1 - 0.9 * dt); d.vx = approach(d.vx, 0, 55 * dt); }
           else d.vx *= Math.max(0, 1 - 0.2 * dt);
@@ -356,6 +370,7 @@
         }
         d.gr = boxHits(w, d.x, d.y + 1, d.hw, d.hh);
         const sp = w.see.length ? seeBox(w, d, dt) : null;
+        if (w.see.length) seeGuard(w, d, d.hh);
         if (sp) { d.sr = sp.ang; if (Math.abs(Math.sin(sp.ang)) <= 0.06) d.gr = true; }
         const under = tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh + 2) / TS));
         if (d.gr || d.touch) d.vx = approach(d.vx, 0, (under === 3 ? 40 : 900) * dt);
@@ -365,6 +380,9 @@
         boxSettle(w, d, L, dt); d.pc = false;
         if (!onPlank && !d.spin && d.kind !== 5 && d.kind !== 6 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
       }
+      if (w.pads.length && (d.gr || d.touch)) { const pd = padAt(w, d.x, d.y + (d.r || d.hh)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; } }
+      if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
+        if (!d.pcd && d.vy > -60 && (d.gr || d.touch)) { const pt = portalAt(w, d.x, d.y + (d.r || d.hh)); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - (d.r || d.hh) - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; d.tip = null; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
       d.touch = false;
       if (burn || d.y > killYAt(w, d.x) || d.x < -200 || d.x > w.W * TS + 200) { d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
     }
@@ -382,6 +400,22 @@
       const d = L[i]; if (d.k !== 'b' || d.burn > 0 || d.sleep || d.tip) continue;
       if (boxHits(w, d.x, d.y, d.hw, d.hh)) { for (let k = 0; k < 24 && boxHits(w, d.x, d.y, d.hw, d.hh); k++) { d.y -= 1; } if (d.vy > 0) d.vy = 0; }
     }
+  }
+  // shove a crate sideways by dx, carrying along any crates in front of it (a row of crates moves together, and a jammed row acts as a wall, so nothing is ever squeezed into something else)
+  function shoveBox(w, d, dx, depth, jr) {
+    if (depth > 5) return false;
+    const x0 = d.x; d.x += dx;
+    if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x = x0; return false; }
+    jr.push([d, x0]);
+    const L = w.dyn;
+    for (let i = 0; i < L.length; i++) {
+      const e = L[i]; if (e === d || e.k !== 'b' || e.burn > 0 || Math.abs(e.x - d.x) > 90 || Math.abs(e.y - d.y) > 90) continue;
+      const ox = d.hw + e.hw - Math.abs(d.x - e.x), oy = d.hh + e.hh - Math.abs(d.y - e.y);
+      if (ox <= 0 || oy <= 3 || (e.x - d.x) * dx <= 0) continue;   // not in front of it (or only resting on top of it)
+      if (!shoveBox(w, e, Math.sign(dx) * ox, depth + 1, jr)) return false;
+      e.vx = d.vx; e.touch = true;
+    }
+    return true;
   }
   // the player (a circle) against the pushables
   function collideDyn(b, w) {
@@ -404,10 +438,9 @@
           if (!boxHits(w, d.x, d.y - pen, d.hw, d.hh)) { d.y -= pen; if (d.vy > b.vy) d.vy = b.vy; if (d.hw > 20 && b.vy < 0) b.vy *= 0.6; d.touch = true; }
           else { b.y += ny * pen; if (b.vy < 0) b.vy = 0; }
         } else {                           // pushing from the side: the crate is simply carried along; heavier ones slow you a little
-          const mv = nx * pen;               // push the crate completely out of the ball's way
-          d.x -= mv;
-          if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x += mv; b.x += nx * pen; if (b.vx * nx < 0) b.vx = 0; }   // it is jammed against something: it acts like a wall
-          else if (b.vx * nx < 0) { d.vx = b.vx; b.vx *= 1 / (1 + d.m * 0.18); }
+          const mv = nx * pen, jr = [];       // push the crate completely out of the ball's way (and whatever is in front of it)
+          if (!shoveBox(w, d, -mv, 0, jr)) { for (let q = jr.length - 1; q >= 0; q--) jr[q][0].x = jr[q][1]; b.x += nx * pen; if (b.vx * nx < 0) b.vx = 0; }   // it is jammed against something: it acts like a wall
+          else if (b.vx * nx < 0) { let M = 0; for (const q of jr) { q[0].vx = b.vx; M += q[0].m; } b.vx *= 1 / (1 + M * 0.18); }
           d.touch = true;
         }
       } else {
@@ -427,17 +460,33 @@
   const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
   const SJ_MUL = 1.42, JM_FILL = 0.345, JM_DRAIN = 7, JM_GRACE = 0.13, JM_HOLD = 0.2;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
   const BOOST_T = 1.6, BOOST_V = MAXV * 2;   // seconds of steady rolling to fill the ring, and the boosted top speed (double)
-  const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false, boosted: false, superJump: false };
+  const ev = { lava: false, jumped: false, landed: false, bounced: false, splat: false, boosted: false, superJump: false, pad: false, portal: false };
 
+  /* ---------- floor boosters: a strip set into the ground that throws whatever rolls over it ---------- */
+  const PAD_V = MAXV * 2.1;
+  function padAt(w, x, bottom) {
+    for (let i = 0; i < w.pads.length; i++) { const q = w.pads[i], fy = q.y * TS; if (x > q.x * TS - 4 && x < (q.x + q.w) * TS + 4 && bottom >= fy - 5 && bottom <= fy + 6) return q; }
+    return null;
+  }
+  function addPad(w, q) { const p = { x: q[0], y: q[1], w: 2, dir: q[2] < 0 ? -1 : 1, t: 0 }; w.pads.push(p); return p; }
+  /* ---------- portals: two holes in the ground, joined. Whatever goes into one comes out of the other, thrown to the side it was last heading ---------- */
+  function addPortal(w, q) { const p = { a: { x: (q[1] + 1) * TS, y: q[2] * TS }, b: { x: (q[3] + 1) * TS, y: q[4] * TS } }; w.portals.push(p); return p; }
+  function portalAt(w, x, bottom) {
+    for (let i = 0; i < w.portals.length; i++) { const p = w.portals[i];
+      if (Math.abs(x - p.a.x) < 26 && bottom >= p.a.y - 6 && bottom <= p.a.y + 12) return { from: p.a, to: p.b };
+      if (Math.abs(x - p.b.x) < 26 && bottom >= p.b.y - 6 && bottom <= p.b.y + 12) return { from: p.b, to: p.a }; }
+    return null;
+  }
   // ax: -1/0/1, jheld: jump button held. Set b.jbuf = 0.12 on a jump press.
   function step(b, w, ax, jheld, dt) {
-    ev.lava = false; ev.jumped = false; ev.landed = false; ev.bounced = false; ev.splat = false; ev.boosted = false; ev.superJump = false;
+    ev.lava = false; ev.jumped = false; ev.landed = false; ev.bounced = false; ev.splat = false; ev.boosted = false; ev.superJump = false; ev.pad = false; ev.portal = false;
     const tx = Math.floor(b.x / TS), ty = Math.floor(b.y / TS);
     const water = tile(w, tx, ty) === 5;
     b.water = water;
     b.swimCool = Math.max(0, b.swimCool - dt);
     b.jbuf = Math.max(0, b.jbuf - dt);
     const wasGround = b.ground, preVy = b.vy;
+    if (w.pads.length && b.ground && !water) { const pd = padAt(w, b.x, b.y + R); if (pd) { b.vx = approach(b.vx, pd.dir * PAD_V, 9000 * dt); b.padHit = true; if (pd.t <= 0) { ev.pad = true; w.ev.push({ k: 'pad', x: (pd.x + pd.w / 2) * TS, y: pd.y * TS }); } pd.t = 0.3; } }
 
     if (water) {
       // swimming: slow, floaty. Hold jump to swim up; at the surface it hops you out.
@@ -460,13 +509,13 @@
       let target = (ax && Math.sign(b.vx) === Math.sign(ax) && Math.abs(b.vx) > MAXV) ? b.vx : ax * MAXV;
       // boost: keep rolling the same way long enough and a ring fills; once it is full you can launch (button, pull, or automatically)
       const dir = ax > 0 ? 1 : ax < 0 ? -1 : 0;
-      if (dir && dir !== b.hdir) { b.hdir = dir; b.hold = 0; }
-      if (!b.boost) {
-        if (dir && Math.sign(b.vx) === dir && Math.abs(b.vx) > MAXV * 0.8) b.hold = Math.min(BOOST_T, b.hold + dt);
+      if (b.ground && dir && dir !== b.hdir) { b.hdir = dir; b.hold = 0; }
+      if (!b.boost && b.ground) {   // the ring only fills while you roll along the ground; in the air it just keeps what it has
+        if (dir && dir === b.hdir && Math.sign(b.vx) === dir && Math.abs(b.vx) > MAXV * 0.8) b.hold = Math.min(BOOST_T, b.hold + dt);
         else b.hold = Math.max(0, b.hold - dt * 2);
       }
       b.bcharge = b.hold / BOOST_T;
-      if (!b.boost && b.bcharge >= 1 && dir && (b.bReq || b.bAuto)) { b.boost = true; b.bdir = dir; b.btime = 0; b.hold = 0; b.bcharge = 0; ev.boosted = true; }
+      if (!b.boost && b.bcharge >= 1 && dir && dir === b.hdir && (b.bReq || b.bAuto)) { b.boost = true; b.bdir = dir; b.btime = 0; b.hold = 0; b.bcharge = 0; ev.boosted = true; }
       b.bReq = false;
       let brate = rate;
       if (b.boost) {
@@ -504,9 +553,12 @@
     if (b.jfill) { if (b.ground) b.jfill = false; else b.jm = Math.max(b.jm, Math.min(1, b.jm0 + JM_FILL * clamp((b.jy0 - b.y - 130) / 70, 0, 1))); }   // only a full-height jump fills the meter (a third of it), and only if you jump again within a split second of landing: three perfect jumps in a row make the tall one   // two full-height jumps fill the whole meter; a small hop fills a little
     b.rot += (b.vx * dt) / R;
     b.bnc = false; b.bncV = 0; b.onSee = null;
+    if (Math.abs(b.vx) > 15) b.pdir = b.vx > 0 ? 1 : -1;
+    b.pcd = Math.max(0, (b.pcd || 0) - dt);
     ev.lava = collide(b, w);
+    if (w.portals.length && !b.ghost && !b.pcd && b.vy > -60) { const pt = portalAt(w, b.x, b.y + R); if (pt) { const dir = b.pdir || 1; b.x = pt.to.x + dir * 36; b.y = pt.to.y - R - 2; b.vx = dir * Math.max(300, Math.abs(b.vx)); b.vy = -340; b.ground = false; b.flat = false; b.pcd = 0.6; b.fall = 0; b.launched = true; ev.portal = true; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } }
     if (!b.ghost && w.dyn.length) collideDyn(b, w);
-    if (w.see.length) seeBody(b, w, 60);
+    if (w.see.length) { seeBody(b, w, 60); if (!b.ghost) seeGuard(w, b, R); }
     const wet = water || tile(w, Math.floor(b.x / TS), Math.floor(b.y / TS)) === 5 || tile(w, Math.floor(b.x / TS), Math.floor((b.y + R * 0.8) / TS)) === 5;   // (checked again after moving: you can land in a shallow pool in the very same step)
     if (b.ground || wet) { if (!wasGround && !wet && !b.bnc && b.fall >= FALL_DIE) ev.splat = true; b.fall = 0; }
     else if (b.vy > 300) b.fall += dt; else if (b.vy < 0) b.fall = 0;
@@ -515,7 +567,7 @@
     return ev;
   }
 
-  const api = { TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
+  const api = { addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

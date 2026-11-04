@@ -796,7 +796,7 @@
   <h3 id="shopTitle">Shop</h3>
   <div id="shopWallet"></div>
   <div id="shopList"></div>
-  <div class="small dim">Crates, balls and springs appear as a ghost next to you: slide it where you want and tap Place. They are only yours and stay until the map changes.</div>
+  <div class="small dim">What you buy appears as a ghost next to you: slide it where you want and tap Place. It stays until the map changes.</div>
   <div class="cfoot"><button id="shopClose" class="btn" type="button">Close</button></div>
 </div></div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
@@ -1072,8 +1072,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=51"></script>
-<script src="physics.js?v=51"></script>
+<script src="maps.js?v=53"></script>
+<script src="physics.js?v=53"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1360,6 +1360,7 @@ const SFX = {
   thud: () => { noise(0.1, 0.18, 450, 90); tone(100, 0.1, 'sine', 0.2, 55); },
   door: () => { const t = AU.ctx.currentTime; noise(0.8, 0.14, 500, 180, 'bandpass'); tone(110, 0.8, 'sawtooth', 0.05, 70); [0, 4, 7].forEach((s, i) => tone(hz(72 + s), 0.3, 'triangle', 0.08, 0, t + 0.3 + i * 0.07)); },
   doorClose: () => { noise(0.6, 0.14, 300, 500, 'bandpass'); tone(90, 0.5, 'sawtooth', 0.05, 60); const t = AU.ctx.currentTime; noise(0.12, 0.3, 500, 100, 'lowpass', t + 0.5); },
+  portal: () => { const t = AU.ctx.currentTime; tone(220, 0.25, 'sine', 0.1, 880, t); tone(660, 0.2, 'triangle', 0.07, 1320, t + 0.08); noise(0.2, 0.06, 2000, 600, 'bandpass'); },
   plate: () => { tone(260, 0.07, 'square', 0.1, 140); },
   btn: () => { const t = AU.ctx.currentTime; tone(420, 0.08, 'square', 0.1, 0, t); tone(630, 0.14, 'square', 0.09, 0, t + 0.07); },
   splash: () => { noise(0.35, 0.2, 3200, 500, 'bandpass'); tone(500, 0.12, 'sine', 0.06, 200); },
@@ -1605,7 +1606,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; S.boughtGates = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
   restoreWorld(slot);
   if (S.guest && party.priv) applyPartyProps(party.priv);
   S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
@@ -1809,9 +1810,17 @@ function worldEvents() {
     const e = L[i];
     if (e.k === 'door') { sfx(e.open ? 'door' : 'doorClose'); ring(e.x, e.y, '#ffd23d', 8, 70, 0.6); if (e.open) burst(e.x, e.y, ['#ffd23d', '#fff'], 16, 180, 80); S.shake = Math.max(S.shake, 0.15); wDirty = true; }
     else if (e.k === 'plate') { sfx('plate'); ring(e.x, e.y, e.on ? '#58d68d' : '#999', 4, 36, 0.3); }
+    else if (e.k === 'portal') { sfx('portal'); ring(e.x, e.y, '#ffd23d', 6, 50, 0.4); ring(e.x2, e.y2, '#3da5ff', 6, 50, 0.4); burst(e.x2, e.y2 - 6, ['#3da5ff', '#fff', '#ffd23d'], 12, 200, 60); }
+    else if (e.k === 'pad') { sfx('boost'); ring(e.x, e.y, '#ffd23d', 5, 46, 0.35); }
     else if (e.k === 'btn') { sfx('btn'); ring(e.x, e.y, '#ff5b4a', 4, 50, 0.4); burst(e.x, e.y, ['#ff5b4a', '#fff'], 10, 150, 80); wDirty = true; }
   }
   L.length = 0;
+}
+const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad') && q.slice(1, 4).every(Number.isFinite)) || (q.length >= 5 && q[0] === 'por' && q.slice(1, 5).every(Number.isFinite)));
+function addMisc(w, q) {   // ['see', column, ground row, 0]: a teeter-totter standing on the ground, centre over the two tiles from that column.  ['pad', column, ground row, direction]: a floor booster, 2 tiles wide
+  if (q[0] === 'see') w.see.push({ cx: (q[1] + 1) * TS, cy: q[2] * TS - 46, hl: 3 * TS, tilt: 0, ang: 0, av: 0, tq: 0 });
+  else if (q[0] === 'por') P.addPortal(w, q);
+  else P.addPad(w, [q[1], q[2], q[3]]);
 }
 const validGate = q => Array.isArray(q) && q.length >= 5 && q.slice(0, 5).every(Number.isFinite) && q[2] >= 2 && q[2] <= 8;
 function addGate(w, q, quiet) {   // q = [column, top row, height in tiles, trigger column, trigger row]: a gate (shut), and a 2-wide trigger plate that holds it open while something is on it
@@ -1823,6 +1832,7 @@ function addGate(w, q, quiet) {   // q = [column, top row, height in tiles, trig
 }
 function applyPartyProps(pv) {   // what the host built is there when you arrive
   (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) P.addProp(S.world, q[0], q[1], q[2]); });
+  (pv.misc || []).forEach(q => { if (validMisc(q)) addMisc(S.world, q); });
   (pv.gates || []).forEach(q => { if (validGate(q)) addGate(S.world, q, true); });
   (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2) S.map.checkpoints.push([q[0], q[1]]); });
 }
@@ -1831,7 +1841,7 @@ function saveWorld(force) {
   const w = S.world, dyn = [];
   for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) dyn.push([i, 0, 0, 1]); else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2) dyn.push([i, Math.round(d.x), Math.round(d.y), 0]); }
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
-  const str = JSON.stringify({ slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, dyn, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN });
+  const str = JSON.stringify({ slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dyn, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN });
   if (str !== lastWorldStr) {
     lastWorldStr = str;
     if (S.slot >= SOLO_BASE) { solo2[S.idx] = JSON.parse(str); delete solo2[S.idx].slot; saveSolo(); }   // your own world: one save for every level
@@ -1847,6 +1857,7 @@ function restoreWorld(slot) {
     const w = S.world;
     (o.buys || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { P.addProp(w, q[0], q[1], q[2]); S.bought.push([q[0], q[1], q[2]]); } });   // the things you bought here come back first, in the same order
     (o.gates || []).forEach(q => { if (validGate(q)) { addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
+    (o.misc || []).forEach(q => { if (validMisc(q)) { addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
     (o.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
     (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.vx = d.vy = 0; } });
     (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
@@ -2920,8 +2931,11 @@ const SHOP = [
   { id: 'ball0', name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
   { id: 'ball1', name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
   { id: 'ball2', name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
-  { id: 'gate', name: 'Gate', info: 'A tall gate and a trigger plate. The gate is open while something is on the trigger.', c: 200, g: 2, gate: 7 },
-  { id: 'gateS', name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 }
+  { id: 'gate', name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
+  { id: 'gateS', name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
+  { id: 'see', name: 'Teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
+  { id: 'pad', name: 'Floor booster', info: 'Set into the ground. Roll over it and it throws you forward.', c: 100, g: 0, misc: 'pad' },
+  { id: 'portal', name: 'Portals', info: 'A yellow and a blue portal in the ground. Go in one and come out of the other.', c: 1000, g: 20, portal: true }
 ];
 const shopIcon = id => {
   const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
@@ -2929,6 +2943,9 @@ const shopIcon = id => {
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
   if (id === 'gate' || id === 'gateS') { const h = id === 'gate' ? 26 : 13; return '<svg viewBox="0 0 40 40"><rect x="7" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="15" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="23" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="5" y="' + (28 - h) + '" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="29" y="32" width="9" height="4" fill="#e0a93c" ' + st + '/></svg>'; }
+  if (id === 'portal') return '<svg viewBox="0 0 40 40"><ellipse cx="12" cy="30" rx="10" ry="4" fill="#ffd23d" ' + st + '/><ellipse cx="12" cy="30" rx="5" ry="1.8" fill="#7a5a00"/><ellipse cx="29" cy="30" rx="10" ry="4" fill="#3da5ff" ' + st + '/><ellipse cx="29" cy="30" rx="5" ry="1.8" fill="#0b2f6b"/><path d="M12 24c0-9 17-9 17 0" fill="none" stroke="#16100c" stroke-width="2" stroke-dasharray="3 3"/></svg>';
+  if (id === 'see') return '<svg viewBox="0 0 40 40"><polygon points="20,22 11,35 29,35" fill="#6b6b78" ' + st + '/><rect x="3" y="17" width="34" height="5" fill="#e8923a" transform="rotate(-12 20 20)" ' + st + '/></svg>';
+  if (id === 'pad') return '<svg viewBox="0 0 40 40"><rect x="3" y="22" width="34" height="12" fill="#8a6a46" ' + st + '/><rect x="6" y="19" width="28" height="6" fill="#ffd23d" ' + st + '/><path d="M14 22h9M20 19l4 3-4 3" fill="none" stroke="#16100c" stroke-width="2.2" stroke-linejoin="round"/></svg>';
   if (id === 'box0') return '<svg viewBox="0 0 40 40"><rect x="9" y="9" width="22" height="22" rx="2" fill="#ffc233" ' + st + '/><path d="M13 13L27 27M27 13L13 27" fill="none" ' + st + ' stroke-width="1.800"/></svg>';
   if (id === 'box1') return '<svg viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="2.500" fill="#ffb020" ' + st + '/><path d="M9 9L31 31M31 9L9 31" fill="none" ' + st + ' stroke-width="1.800"/></svg>';
   const r = id === 'ball0' ? 6 : id === 'ball1' ? 11 : 17;
@@ -2956,6 +2973,7 @@ function toggleShop(on) {
 }
 $('btnShop').onclick = () => toggleShop(!shopOpen);
 $('shopClose').onclick = () => toggleShop(false);
+const boughtN = () => S.bought.length + S.boughtGates.length + S.boughtMisc.length;
 const MAX_BOUGHT = 40;   // per map: plenty to play with, and the physics stays quick
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
 // 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
@@ -2986,20 +3004,40 @@ function flagSpot(side) {   // a checkpoint flag stands on the ground beside you
     for (let k = -2; k < 9; k++) {
       const t = P.tile(w, tx, row + k);
       if (t === 2) break;
-      if (t === 1 || t === 3 || t === 4 || t === 6) { if (!solidT(P.tile(w, tx, row + k - 1)) && !solidT(P.tile(w, tx, row + k - 2)) && P.tile(w, tx, row + k - 1) !== 2) return { tx, row: row + k }; break; }
+      if (t === 1 || t === 3 || t === 4 || t === 6) { if (k < 0 && !solidT(P.tile(w, tx, row + k + 1))) continue; if (!solidT(P.tile(w, tx, row + k - 1)) && !solidT(P.tile(w, tx, row + k - 2)) && P.tile(w, tx, row + k - 1) !== 2) return { tx, row: row + k }; break; }
     }
   }
   return null;
 }
-function gateSpot(side, h) {   // a gate: one tile wide, standing on the ground beside you, with clear air above it
+const tileIt = it => it && (it.id === 'flag' || it.gate || it.misc || it.portal);
+function gateSpot(side, hmax) {   // a gate: one tile wide, standing on the ground beside you, with clear air above it
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 2; pass++) {
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 0.9)) / TS), row = Math.floor((b.y + R + 1) / TS);
     let gr = -1;
-    for (let k = -2; k < 8; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (solidT(t)) { gr = row + k; break; } }
+    for (let k = -2; k < 8; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (solidT(t)) { if (k < 0 && !solidT(P.tile(w, tx, row + k + 1))) continue; gr = row + k; break; } }   // (a solid tile just above your feet with air under it is a ceiling, not ground)
     if (gr < 0) continue;
-    let ok = true; for (let y = gr - h; y < gr && ok; y++) { const t = P.tile(w, tx, y); if (t !== 0 || y < 1) ok = false; }
-    if (ok) return { tx, gr };
+    let h = 0; while (h < hmax && gr - h - 1 >= 1 && P.tile(w, tx, gr - h - 1) === 0) h++;   // as tall as it can be, up to its full height: under a ceiling it just gets shorter (but never under 2 tiles)
+    if (h >= 2 && w.dyn.some(o => o.burn <= 0 && Math.abs(o.x - (tx + 0.5) * TS) < (o.r || o.hw) + TS / 2 && o.y + (o.r || o.hh) > (gr - h) * TS && o.y - (o.r || o.hh) < gr * TS)) continue;   // something is standing right there
+    if (h >= 2) return { tx, gr, h };
+  }
+  return null;
+}
+function flatSpot(side, centre, need) {   // two tiles of level ground beside you with open air above them (a teeter-totter's centre or a floor booster); returns the left column and the ground row
+  const w = S.world, b = S.b;
+  for (let pass = 0; pass < 2; pass++) {
+    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.3)) / TS) - 1, row = Math.floor((b.y + R + 1) / TS);
+    for (let k = -2; k < 8; k++) {
+      const a = P.tile(w, tx, row + k), c = P.tile(w, tx + 1, row + k);
+      if (a === 2 || c === 2) break;
+      const g1 = centre ? solidT(a) && a !== 9 : (a === 1 || a === 3 || a === 4), g2 = centre ? solidT(c) && c !== 9 : (c === 1 || c === 3 || c === 4);
+      if (g1 || g2) {
+        if (k < 0 && ((g1 && !solidT(P.tile(w, tx, row + k + 1))) || (g2 && !solidT(P.tile(w, tx + 1, row + k + 1))))) continue;
+        if (!(g1 && g2)) break;
+        for (let y = row + k - need; y < row + k; y++) if (P.tile(w, tx, y) !== 0 || P.tile(w, tx + 1, y) !== 0) return null;
+        return { tx, gr: row + k };
+      }
+    }
   }
   return null;
 }
@@ -3021,11 +3059,13 @@ function computeGhost() {
   const g = placing, b = S.b; if (!g || !b) return;
   const ax = (inp.right ? 1 : 0) - (inp.left ? 1 : 0) || (Math.abs(tin.ax) > 0.15 ? Math.sign(tin.ax) : 0) || (Math.abs(b.vx) > 25 ? Math.sign(b.vx) : 0);
   if (ax) g.side = ax;
-  if (g.it.id === 'flag' || g.it.gate) {   // tile-based things
+  if (tileIt(g.it)) {   // tile-based things
     let sp = null, cx, cy;
     if (g.it.id === 'flag') { sp = flagSpot(g.side); if (sp) { g.ftx = sp.tx; g.frow = sp.row; cx = (sp.tx + 0.5) * TS; cy = sp.row * TS - 30; } }
     else if (g.stage === 2) { sp = plateSpot(g.side, g.gate); if (sp) { g.ptx = sp.tx; g.prow = sp.row; g.py0 = sp.y0; cx = (sp.tx + 1) * TS; cy = sp.y0; } }
-    else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - g.it.gate / 2) * TS; } }
+    else if (g.it.portal) { sp = flatSpot(g.side, false, 1); if (sp && g.stage === 2 && g.pA && Math.abs(sp.tx - g.pA.tx) < 4 && Math.abs(sp.gr - g.pA.gr) < 3) sp = null; if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - 2; } }
+    else if (g.it.misc) { sp = flatSpot(g.side, g.it.misc === 'see', g.it.misc === 'see' ? 2 : 1); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - (g.it.misc === 'see' ? 46 : 4); } }
+    else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; g.gh = sp.h; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - sp.h / 2) * TS; } }
     g.ok = !!sp;
     if (!sp) { cx = b.x + g.side * (R + TS); cy = b.y; }
     g.tx = cx; g.ty = cy;
@@ -3041,7 +3081,7 @@ function drawGhost(dt, nowT) {
   computeGhost();
   const a = Math.min(1, dt * 20); g.dx += (g.tx - g.dx) * a; g.dy += (g.ty - g.dy) * a;
   refreshPlaceUI();
-  if (g.it.id === 'flag' || g.it.gate) { drawTileGhost(g, nowT); return; }
+  if (tileIt(g.it)) { drawTileGhost(g, nowT); return; }
   const k = g.it.kind, q = P.propDims(k), x = g.dx, y = g.dy, bad = !g.ok, INKc = '#16100c';
   ctx.save(); ctx.globalAlpha = 0.55 + 0.15 * Math.sin(nowT / 170); ctx.lineWidth = 2.4; ctx.lineJoin = 'round';
   if (k === 5 || k === 6) {
@@ -3061,32 +3101,51 @@ function drawGhost(dt, nowT) {
 }
 function gateShape(x, top, h, alpha, bad) {   // bars between two beams, as drawn for the real gates
   ctx.save(); ctx.globalAlpha = alpha; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.strokeStyle = '#16100c';
-  const hh = h * TS; ctx.fillStyle = bad ? '#ff7a6a' : '#b8862b';
-  for (let k = 0; k < 2; k++) { const bx = x + 8 + k * 16; ctx.fillRect(bx, top, 7, hh); ctx.strokeRect(bx, top, 7, hh); }
-  ctx.fillStyle = bad ? '#ff7a6a' : '#5b4a3a'; ctx.fillRect(x - 3, top - 9, TS + 6, 11); ctx.strokeRect(x - 3, top - 9, TS + 6, 11);
+  const hh = (h - 1) * TS; ctx.fillStyle = bad ? '#ff7a6a' : '#b8862b';
+  for (let k = 0; k < 2; k++) { const bx = x + 8 + k * 16; ctx.fillRect(bx, top + TS, 7, hh); ctx.strokeRect(bx, top + TS, 7, hh); }
+  ctx.fillStyle = bad ? '#ff7a6a' : '#5b4a3a'; ctx.fillRect(x - 3, top, TS + 6, TS); ctx.strokeRect(x - 3, top, TS + 6, TS);
   ctx.restore();
 }
 function plateShape(x, y, alpha, bad) {
   ctx.save(); ctx.globalAlpha = alpha; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.strokeStyle = '#16100c'; ctx.fillStyle = bad ? '#ff7a6a' : '#e0a93c';
   ctx.fillRect(x + 3, y - 8, TS * 2 - 6, 8); ctx.strokeRect(x + 3, y - 8, TS * 2 - 6, 8); ctx.restore();
 }
+function portalShape(x, y, col, alpha, nowT) {   // a glowing hole in the ground
+  ctx.save(); ctx.globalAlpha = Math.min(1, alpha);
+  const gl = ctx.createRadialGradient(x, y, 2, x, y, 46); gl.addColorStop(0, col); gl.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = gl; ctx.globalAlpha = Math.min(1, alpha) * 0.55; ctx.beginPath(); ctx.ellipse(x, y - 4, 46, 22, 0, 0, 7); ctx.fill();
+  ctx.globalAlpha = Math.min(1, alpha); ctx.fillStyle = '#0b0714'; ctx.strokeStyle = col; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.ellipse(x, y, 28, 8, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.lineWidth = 1.6; ctx.strokeStyle = '#fff'; for (let k = 0; k < 3; k++) { const a = nowT / 260 + k * 2.1; ctx.beginPath(); ctx.ellipse(x, y, 20 - 5 * ((a % 3) / 3) * 2, 5.5 - 1.4 * ((a % 3) / 3) * 2, 0, a, a + 1.5); ctx.stroke(); }
+  ctx.restore();
+}
 function drawTileGhost(g, nowT) {
   const bad = !g.ok, pulse = 0.55 + 0.15 * Math.sin(nowT / 170);
   ctx.save(); ctx.lineJoin = 'round';
-  if (g.it.id === 'flag') {
+  if (g.it.portal) {
+    if (g.stage === 2 && g.pA) portalShape((g.pA.tx + 1) * TS, g.pA.gr * TS, '#ffd23d', 0.9, nowT);
+    portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : (g.stage === 2 ? '#3da5ff' : '#ffd23d'), pulse + 0.2, nowT);
+  } else if (g.it.misc === 'see') {
+    const cx = g.dx, cy = g.dy; ctx.globalAlpha = pulse; ctx.lineWidth = 2.4; ctx.strokeStyle = '#16100c';
+    ctx.fillStyle = bad ? '#ff7a6a' : '#6b6b78'; ctx.beginPath(); ctx.moveTo(cx, cy + 4); ctx.lineTo(cx - 24, cy + 46); ctx.lineTo(cx + 24, cy + 46); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = bad ? '#ff7a6a' : '#e8923a'; ctx.fillRect(cx - 3 * TS, cy - 6, 6 * TS, 12); ctx.strokeRect(cx - 3 * TS, cy - 6, 6 * TS, 12);
+  } else if (g.it.misc === 'pad') {
+    const x = g.dx - TS, y = g.dy + 4, d = g.side < 0 ? -1 : 1; ctx.globalAlpha = pulse; ctx.lineWidth = 2.4; ctx.strokeStyle = '#16100c';
+    ctx.fillStyle = bad ? '#ff7a6a' : '#ffd23d'; ctx.fillRect(x + 2, y - 4, 2 * TS - 4, 8); ctx.strokeRect(x + 2, y - 4, 2 * TS - 4, 8);
+    ctx.beginPath(); for (let k = 0; k < 2; k++) { const ax = g.dx + (k - 0.5) * 22 * d; ctx.moveTo(ax - 5 * d, y - 3); ctx.lineTo(ax + 3 * d, y); ctx.lineTo(ax - 5 * d, y + 3); } ctx.stroke();
+  } else if (g.it.id === 'flag') {
     const x = g.dx, yb = bad ? g.dy + 30 : g.frow * TS;
     ctx.globalAlpha = pulse; ctx.lineWidth = 2.4; ctx.strokeStyle = '#16100c'; ctx.fillStyle = bad ? '#ff7a6a' : '#ff8a1f';
     ctx.beginPath(); ctx.moveTo(x, yb); ctx.lineTo(x, yb - 62); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, yb - 62); ctx.lineTo(x + 26, yb - 52); ctx.lineTo(x, yb - 42); ctx.closePath(); ctx.fill(); ctx.stroke();
   } else if (g.stage === 2) {
-    gateShape(g.gate.tx * TS, (g.gate.gr - g.it.gate) * TS, g.it.gate, 0.9, false);   // the gate you just placed
+    gateShape(g.gate.tx * TS, (g.gate.gr - g.gate.h) * TS, g.gate.h, 0.9, false);   // the gate you just placed
     if (!bad) {
       const x = g.dx - TS, land = g.prow * TS;
       plateShape(x, g.dy, pulse, false);
       if (land - g.dy > 14) { ctx.globalAlpha = 0.9; ctx.setLineDash([5, 5]); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(g.dx, g.dy + 4); ctx.lineTo(g.dx, land - 10); ctx.stroke(); ctx.setLineDash([]); plateShape((g.ptx) * TS, land, 0.45, false); }
     } else plateShape(g.dx - TS, g.dy, pulse, true);
   } else {
-    const top = bad ? g.dy - g.it.gate * TS / 2 : (g.ggr - g.it.gate) * TS, x = bad ? g.dx - TS / 2 : g.gtx * TS;
-    gateShape(x, top, g.it.gate, pulse, bad);
+    const hh = bad ? g.it.gate : g.gh, top = bad ? g.dy - hh * TS / 2 : (g.ggr - hh) * TS, x = bad ? g.dx - TS / 2 : g.gtx * TS;
+    gateShape(x, top, hh, pulse, bad);
   }
   ctx.restore();
 }
@@ -3096,28 +3155,37 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (key === placeUIKey) return; placeUIKey = key;
   $('placeBar').classList.toggle('hide', !on); applyTouchUI();
   if (!on) return;
-  $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
-  $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = g.it.gate && g.stage === 1 ? 'Next' : 'Place';
-  $('placeHint').textContent = g.ok ? (g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : 'No room here. Move somewhere with space';
+  $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
+  $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : 'Place';
+  $('placeHint').textContent = g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : 'No room here. Move somewhere with space';
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
 }
 function cancelPlacing(quiet) {
   if (!placing) return;
-  if (!quiet && placing.it.gate && placing.stage === 2) { placing.stage = 1; placing.gate = null; placing.dx = undefined; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui'); return; }   // back to the gate: nothing is bought until both are placed
+  if (!quiet && (placing.it.gate || placing.it.portal) && placing.stage === 2) { placing.stage = 1; placing.gate = null; placing.pA = null; placing.dx = undefined; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui'); return; }   // back to the gate: nothing is bought until both are placed
   placing = null; placeUIKey = null; refreshPlaceUI(); if (!quiet) notice('Nothing was bought', ''); }
 function finishPlacing() {
   const g = placing; if (!g || !canShop()) return;
   const it = g.it; computeGhost();
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); cancelPlacing(true); return; }
-  if (it.id !== 'flag' && S.bought.length + S.boughtGates.length >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); cancelPlacing(true); return; }
+  if (it.id !== 'flag' && boughtN() >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); cancelPlacing(true); return; }
   if (!g.ok) { notice('No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
-  if (it.gate && g.stage === 1) { g.gate = { tx: g.gtx, gr: g.ggr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
-  if (it.gate) {
-    const q = [g.gate.tx, g.gate.gr - it.gate, it.gate, g.ptx, g.prow, Math.round(g.py0)];
+  if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
+  if (it.portal) {
+    const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr];
+    addMisc(S.world, q); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('portal');
+    burst((q[1] + 1) * TS, q[2] * TS - 8, ['#ffd23d', '#fff'], 14, 160, 60); burst((q[3] + 1) * TS, q[4] * TS - 8, ['#3da5ff', '#fff'], 14, 160, 60);
+  } else if (it.gate && g.stage === 1) { g.gate = { tx: g.gtx, gr: g.ggr, h: g.gh }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
+  else if (it.gate) {
+    const q = [g.gate.tx, g.gate.gr - g.gate.h, g.gate.h, g.ptx, g.prow, Math.round(g.py0)];
     addGate(S.world, q); S.boughtGates.push(q.slice(0, 5)); partyBuild({ t: 'pgate', g: q.slice(0, 5) }); wDirty = true;
-    burst((q[0] + 0.5) * TS, (q[1] + it.gate / 2) * TS, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[0] + 0.5) * TS, (q[1] + it.gate / 2) * TS, '#fff', 4, 40, 0.4);
+    burst((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, '#fff', 4, 40, 0.4);
+  } else if (it.misc) {
+    const q = [it.misc, g.mtx, g.mgr, it.misc === 'pad' ? (g.side < 0 ? -1 : 1) : 0];
+    addMisc(S.world, q); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true;
+    burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4);
   } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
   else placeProp(it.kind, [g.tx, g.ty]);
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
@@ -3142,7 +3210,7 @@ function buyItem(it) {
   if (!canShop() || !it) return;
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); shopRender(); return; }
   if (it.give) { wallet.g -= it.g; wallet.c += it.give; saveWallet(); sfx('gem'); shopRender(); return; }   // a trade, not a thing: the shop stays open
-  if (it.id !== 'flag' && S.bought.length + S.boughtGates.length >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); return; }
+  if (it.id !== 'flag' && boughtN() >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); return; }
   toggleShop(false);
   startPlacing(it);   // everything you build works the same way: the shop closes and a ghost follows you until you place it
 }
@@ -3677,7 +3745,7 @@ function setMultiplayer(on) {
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
-  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), props: S.bought, cps: S.boughtCps, gates: S.boughtGates }; else o.join = party.host; }   // a friend's world: open mine, or go to theirs
+  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), props: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc }; else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   return JSON.stringify(o);
 };
 function joinWorld() {
@@ -3853,6 +3921,7 @@ function onMsg(m) {
     case 'pclose': partyOver(who(m.name) + ' closed their private game'); break;
     case 'inv': partyInvited(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
+    case 'pobj': { if (!S.world || !party || !validMisc(m.g)) break; addMisc(S.world, m.g); if (party.role === 'host') { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); wDirty = true; } sfx('big'); break; }
     case 'pgate': { if (!S.world || !party || !validGate(m.g)) break; addGate(S.world, m.g); if (party.role === 'host') { S.boughtGates.push(m.g.slice(0, 5)); wDirty = true; } sfx('big'); break; }
     case 'padd': { if (!S.world || !party || !P.propDims(m.k | 0).half) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) d.sleep = false; if (party.role === 'host') { S.bought.push([m.k | 0, m.x | 0, m.y | 0]); wDirty = true; } burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); break; }
     case 'pcp': { if (!S.map || !party) break; S.map.checkpoints.push([m.x, m.y]); if (party.role === 'host') { S.boughtCps.push([m.x, m.y]); wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
@@ -4313,15 +4382,35 @@ function drawGadgets(camL, camT, vw, vh, dt) {
     if (d.a === undefined) d.a = d.open ? 1 : 0;
     d.a += ((d.open ? 1 : 0) - d.a) * Math.min(1, dt * 5);
     if (px > camL + vw + 40 || px + ww < camL - 40 || py > camT + vh + 40 || py + hh < camT - 40) continue;
-    const bh = Math.max(6, hh * (1 - d.a)), n = Math.max(2, Math.round(ww / 12));
+    const gy = py + TS, gh = hh - TS, bh = Math.max(6, gh * (1 - d.a)), n = Math.max(2, Math.round(ww / 12));   // the top tile is a solid beam you can stand on; the bars hang below it and slide up into it
     ctx.fillStyle = '#b8862b';
-    for (let k = 0; k < n; k++) { const bx = px + (k + 0.5) * ww / n - 3.5; ctx.fillRect(bx, py, 7, bh); ctx.strokeRect(bx, py, 7, bh); }
-    ctx.fillStyle = '#8c6420'; for (let k = 1; k <= 2; k++) { const by = py + hh * k / 3; if (by < py + bh - 4) { ctx.fillRect(px, by - 3, ww, 6); ctx.strokeRect(px, by - 3, ww, 6); } }
-    ctx.fillStyle = '#5b4a3a'; ctx.fillRect(px - 5, py - 9, ww + 10, 11); ctx.strokeRect(px - 5, py - 9, ww + 10, 11);
+    for (let k = 0; k < n; k++) { const bx = px + (k + 0.5) * ww / n - 3.5; ctx.fillRect(bx, gy, 7, bh); ctx.strokeRect(bx, gy, 7, bh); }
+    ctx.fillStyle = '#8c6420'; for (let k = 1; k <= 2; k++) { const by = gy + gh * k / 3; if (by < gy + bh - 4) { ctx.fillRect(px, by - 3, ww, 6); ctx.strokeRect(px, by - 3, ww, 6); } }
+    ctx.fillStyle = '#5b4a3a'; ctx.fillRect(px - 4, py, ww + 8, TS); ctx.strokeRect(px - 4, py, ww + 8, TS);
+    ctx.fillStyle = '#6e5a46'; ctx.fillRect(px, py + 6, ww, 5); ctx.fillRect(px, py + TS - 11, ww, 5);
     if (d.a < 0.3) {   // padlock
-      const lx = px + ww / 2, ly = py + hh / 2;
+      const lx = px + ww / 2, ly = gy + gh / 2;
       ctx.fillStyle = '#ffd23d'; ctx.fillRect(lx - 8, ly - 4, 16, 13); ctx.strokeRect(lx - 8, ly - 4, 16, 13);
       ctx.beginPath(); ctx.arc(lx, ly - 4, 6, Math.PI, 0); ctx.stroke();
+    }
+  }
+  // floor boosters: a strip set into the ground
+  for (let i = 0; i < w.pads.length; i++) {
+    const q = w.pads[i], x = q.x * TS, y = q.y * TS, ww = q.w * TS;
+    if (x > camL + vw + 20 || x + ww < camL - 20 || y < camT - 30 || y > camT + vh + 30) continue;
+    ctx.fillStyle = '#ffd23d'; ctx.fillRect(x + 2, y - 1, ww - 4, 7); ctx.strokeRect(x + 2, y - 1, ww - 4, 7);
+    ctx.fillStyle = '#16100c';
+    const ph = (S.t * 3) % 1;
+    for (let k = 0; k < 3; k++) { const cx = x + 10 + ((k + ph) % 3) / 3 * (ww - 20); ctx.beginPath(); ctx.moveTo(cx - 4 * q.dir, y); ctx.lineTo(cx + 3 * q.dir, y + 2.5); ctx.lineTo(cx - 4 * q.dir, y + 5); ctx.lineTo(cx - 1 * q.dir, y + 2.5); ctx.closePath(); ctx.fill(); }
+    if (q.t > 0 && fxOn() && Math.random() < 0.5) burst(x + Math.random() * ww, y, ['#ffd23d', '#fff'], 1, 90, 40);
+  }
+  // portals: glowing holes in the ground, yellow and blue
+  for (let i = 0; i < w.portals.length; i++) {
+    const q = w.portals[i];
+    for (const [e, col] of [[q.a, '#ffd23d'], [q.b, '#3da5ff']]) {
+      if (e.x < camL - 60 || e.x > camL + vw + 60 || e.y < camT - 60 || e.y > camT + vh + 60) continue;
+      portalShape(e.x, e.y, col, 1, S.t * 1000);
+      if (fxOn() && Math.random() < 0.18) burst(e.x + (Math.random() - 0.5) * 40, e.y - 2, [col, '#fff'], 1, 60, 40);
     }
   }
   // teeter-totters
@@ -4907,7 +4996,7 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((settings.autoEnter || resumeAfterUpdate()) && settings.name) enterGame(true); else showHome();

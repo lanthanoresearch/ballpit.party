@@ -1005,36 +1005,42 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         const pickK = () => { let t = 0; for (const k in KW) t += KW[k]; let r = UR() * t; for (const k in KW) { r -= KW[k]; if (r <= 0) return k; } return 'plain'; };
         const flat = (x0, x1, f, h, kind) => { for (let x = x0; x < x1; x++) { fl[gi(x)] = f; kd[gi(x)] = kind || 1; put(x, Math.max(T.top, f - h), x + 1, f, 0); } };
         let x = spineLo, f = T.f0, lastGate = -99, segN = 0;
-        const stepTo = (tf, h) => { while (f !== tf && x < spineHi) { f += f < tf ? 1 : -1; flat(x, x + 2, f, h || 7); x += 2; } };
+        const stepTo = (tf, h) => { while (f !== tf && x < spineHi) { f += f < tf ? 1 : -1; flat(x, x + 2, f, h || HT); x += 2; } };
+        let cavL = 0, cavH = 0;   // a stretch of cavern: the roof lifts well above the usual tunnel
         const walk = (len, h, kind) => {
           const x1 = Math.min(spineHi, x + len);
-          while (x < x1) { const run = ui(2, 5); flat(x, Math.min(x1, x + run), f, h, kind); x += run; if (x < x1 - 2 && UR() < 0.55) { f = Math.max(T.fmin, Math.min(T.fmax, f + (UR() < 0.5 ? -1 : 1))); flat(x, x + 2, f, h, kind); x += 2; } }
+          while (x < x1) {
+            if (cavL <= 0 && kind === 1 && UR() < 0.14) { cavL = ui(10, 24); cavH = ui(2, 6); }
+            const hh = h + (cavL > 0 && kind === 1 ? cavH : 0), run = Math.min(ui(3, 7), x1 - x);   // (a run never skips columns: nothing is left standing between two stretches)
+            flat(x, x + run, f, hh, kind); x += run; cavL -= run;
+            if (x < x1 - 2 && UR() < 0.5) { f = Math.max(T.fmin, Math.min(T.fmax, f + (UR() < 0.5 ? -1 : 1))); flat(x, x + 2, f, hh, kind); x += 2; cavL -= 2; }
+          }
         };
         const coinsAlong = (x0, x1, step) => { for (let c = x0 + 1; c < x1 - 1; c += step) if (kd[gi(c)] <= 2) coin(c + 0.5, FL(c) - 1.2, 0); };
         const hall = (W, h) => { const x0 = x; for (let c = x0; c < x0 + W; c++) { fl[gi(c)] = f; kd[gi(c)] = 3; put(c, Math.max(T.top, f - h), c + 1, f, 0); } return x0; };
         while (x < spineHi - 30) {
           const zn = T.zones.find(q => q[1] > x);
-          if (zn && zn[0] - x < 60) { if (x < zn[0]) walk(zn[0] - x, 7, 1); walk(zn[1] - x + 2, 7, 1); continue; }   // a shaft comes down here: plain tunnel
+          if (zn && zn[0] - x < 60) { if (x < zn[0]) walk(zn[0] - x, HT, 1); walk(zn[1] - x + 2, HT, 1); continue; }   // a shaft comes down here: plain tunnel
           const kind = segN < 2 ? 'plain' : pickK(); segN++;
           const x00 = x;
-          if (kind === 'plain') { walk(ui(14, 34), 7, 1); coinsAlong(x00, x, 2); if (UR() < 0.4 && x - x00 > 12) crateColumn(x00 + ui(3, x - x00 - 5), FL(x00 + 4), ui(2, 4)); if (UR() < 0.25) jenga(x00 + ui(2, Math.max(2, x - x00 - 6)), FL(x00 + 3), ui(4, 6)); }
-          else if (kind === 'ice') { walk(ui(12, 22), 7, 2); for (let c = x00; c < x; c++) mk[mix(c, FL(c))] = 3; coinsAlong(x00, x, 3); }
+          if (kind === 'plain') { walk(ui(14, 34), HT, 1); coinsAlong(x00, x, 2); if (UR() < 0.4 && x - x00 > 12) crateColumn(x00 + ui(3, x - x00 - 5), FL(x00 + 4), ui(2, 4)); if (UR() < 0.25) jenga(x00 + ui(2, Math.max(2, x - x00 - 6)), FL(x00 + 3), ui(4, 6)); }
+          else if (kind === 'ice') { walk(ui(12, 22), HT, 2); for (let c = x00; c < x; c++) mk[mix(c, FL(c))] = 3; coinsAlong(x00, x, 3); }
           else if (kind === 'lava' || kind === 'wide' || kind === 'water') {
-            walk(ui(4, 8), 7, 1); stepTo(Math.min(T.fmax - 3, Math.max(T.fmin, f)), 7);
+            walk(ui(4, 8), HT, 1); stepTo(Math.min(T.fmax - 3, Math.max(T.fmin, f)), HT);
             const w = kind === 'lava' ? ui(3, 5) : kind === 'wide' ? ui(8, 11) : ui(8, 14), x0 = x;
-            for (let c = x0; c < x0 + w; c++) { fl[gi(c)] = f; kd[gi(c)] = 3; put(c, Math.max(T.top, f - 7), c + 1, f, 0); put(c, f, c + 1, f + 3, kind === 'water' ? 5 : 2); }
+            for (let c = x0; c < x0 + w; c++) { fl[gi(c)] = f; kd[gi(c)] = 3; put(c, Math.max(T.top, f - HT), c + 1, f, 0); put(c, f, c + 1, f + 3, kind === 'water' ? 5 : 2); }
             if (kind === 'wide') gad.see.push([x0 + w / 2, f + 0.15, w / 2 + 0.8, 0]);
             if (kind === 'water') { for (let c = x0 + 3; c < x0 + w - 2; c += 3) put(c, f - 1, c + 1, f, 1); coinRow(x0 + 1, f + 1.4, w - 2, 1, 0); }
             else { coin(x0 + w / 2, f - 3.2, 1); coinRow(x0 + 0.5, f - 2.2, w, w > 6 ? 2 : 1, 0); }
-            x += w; walk(ui(4, 8), 7, 1);
+            x += w; walk(ui(4, 8), HT, 1);
           } else if (kind === 'shelf') {
-            walk(4, 7, 1); stepTo(Math.max(T.fmin + 5, Math.min(T.fmax, f)), 7);
+            walk(4, HT, 1); stepTo(Math.max(T.fmin + 5, Math.min(T.fmax, f)), HT);
             const W = 13, x0 = hall(W, 13);
             put(x0 + 1, f, x0 + 4, f + 1, 6); put(x0 + 7, f - 6, x0 + W, f - 4, 1);
             coinRow(x0 + 7.5, f - 7.2, 5, 1, 0); coin(x0 + 10, f - 8.6, 2); coin(x0 + 2.5, f - 3.5, 0); coin(x0 + 2.5, f - 5, 0);
-            x += W; walk(ui(3, 6), 7, 1);
+            x += W; walk(ui(3, 6), HT, 1);
           } else if (kind === 'gate' && x - lastGate > 60) {
-            walk(3, 7, 1); stepTo(Math.max(T.top + 12, Math.min(T.fmax, f)), 7);
+            walk(3, HT, 1); stepTo(Math.max(T.top + 12, Math.min(T.fmax, f)), HT);
             const W = 38, x0 = hall(W, 12), id = gad.doors.length, dx = x0 + 19;
             gad.doors.push([dx, f - 7, 1, 7]); put(dx, Math.max(T.top, f - 12), dx + 1, f - 7, 1); decor.push([2, dx, f]);
             for (const side of [-1, 1]) {
@@ -1045,38 +1051,38 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
             gad.plates.push([dx - 5, f, 2, [id]]); gad.plates.push([dx + 4, f, 2, [id]]);
             for (const o of [-9, -8, -7, 8, 9, 10]) props.push([0, dx + o, f]);
             coinRow(dx + 2, f - 1.2, 3, 1, 1); coin(dx - 3, f - 1.2, 2);
-            ugCps.push([dx + 6, f]); x += W; lastGate = x; ugStats.gates++; ugStats.halls++; walk(ui(3, 6), 7, 1);
+            ugCps.push([dx + 6, f]); x += W; lastGate = x; ugStats.gates++; ugStats.halls++; walk(ui(3, 6), HT, 1);
           } else if (kind === 'lake') {
-            walk(3, 7, 1); stepTo(Math.max(T.fmin + 4, Math.min(T.fmax - 3, f)), 7);
+            walk(3, HT, 1); stepTo(Math.max(T.fmin + 4, Math.min(T.fmax - 3, f)), HT);
             const W = 24, x0 = hall(W, 11);
             put(x0 + 4, f, x0 + W - 4, f + 4, 2);
             for (let sx = x0 + 6, k = 0; sx < x0 + W - 6; sx += 4, k++) { put(sx, f - 1 - (k % 2), sx + 2, f + 4, 1); coin(sx + 1, f - 2.4 - (k % 2), k === 1 ? 2 : 0); }
             coinRow(x0 + 1, f - 1.2, 3, 1, 0); coinRow(x0 + W - 4, f - 1.2, 3, 1, 0);
-            x += W; walk(ui(3, 6), 7, 1);
+            x += W; walk(ui(3, 6), HT, 1);
           } else if (kind === 'crates') {
-            walk(3, 8, 1); const W = 26, x0 = hall(W, 10);
+            walk(3, HT, 1); const W = 26, x0 = hall(W, 10);
             jenga(x0 + 4, f, ui(5, 7)); cratePyramid(x0 + 10, f, 4); crateColumn(x0 + 17, f, ui(4, 6)); props.push([2, x0 + 21, f]); props.push([3, x0 + 23, f]);
-            coinRow(x0 + 2, f - 1.2, 22, 2, 0); x += W; walk(ui(3, 6), 7, 1);
+            coinRow(x0 + 2, f - 1.2, 22, 2, 0); x += W; walk(ui(3, 6), HT, 1);
           } else if (kind === 'pit') {
-            walk(3, 8, 1); const W = 22, x0 = hall(W, 9);
+            walk(3, HT, 1); const W = 22, x0 = hall(W, 9);
             put(x0 + 3, f, x0 + W - 3, f + 2, 0);
             for (let i = 0; i < 18; i++) props.push([4, x0 + 3.4 + i * 0.82, f + 2]);
             for (let i = 0; i < 17; i++) props.push([4, x0 + 3.8 + i * 0.82, f + 1.26]);
-            coinRow(x0 + 5, f - 1.2, 12, 1, 0); coin(x0 + 11, f - 2.8, 1); x += W; walk(ui(3, 6), 7, 1);
-          } else walk(ui(8, 14), 7, 1);
+            coinRow(x0 + 5, f - 1.2, 12, 1, 0); coin(x0 + 11, f - 2.8, 1); x += W; walk(ui(3, 6), HT, 1);
+          } else walk(ui(8, 14), HT, 1);
           if (segN % 5 === 0) ugCps.push([x - 3, FL(x - 3)]);
         }
         const endX = x; for (let c = endX; c < spineHi; c++) { fl[gi(c)] = f; kd[gi(c)] = 1; put(c, Math.max(T.top, f - 7), c + 1, f, 0); }
         return { fl, kd, endX };
       }
-      const SWID = 14;
+      const SWID = 14, HT = 10, LTOP = U0 + 21;   // tunnels are 10 tiles tall (caverns even taller)
       const bad = new Uint8Array(NW + 40);
       for (const q of gfeat) for (let c = Math.floor(q[0]) - 3; c <= q[0] + q[2] + 3; c++) if (c >= xl && c <= xr) bad[gi(c)] = 1;
       for (const q of noUG) for (let c = q[0]; c <= q[1]; c++) if (c >= xl && c <= xr) bad[gi(c)] = 1;
       for (const q of gad.see) for (let c = Math.floor(q[0] - q[2]) - 3; c <= q[0] + q[2] + 3; c++) if (c >= xl && c <= xr) bad[gi(c)] = 1;
       // plan where the shafts will go first, so the tunnels underneath can be made plain right there
       const sitesU = [], sitesL = [], zU = [], zL = [];
-      const nS = ui(8, 14), nS2 = ui(5, 9);
+      const nS = ui(10, 16), nS2 = ui(8, 13);
       const siteOk = x0 => { let lo = 1e9, hi = -1e9; for (let c = x0 - 2; c <= x0 + SWID + 2; c++) { if (bad[gi(c)]) return false; const g = gh[gi(c)]; lo = Math.min(lo, g); hi = Math.max(hi, g); } return hi - lo <= 6 && hi < U0 - 3; };
       for (let tries = 0; tries < 4000 && sitesU.length < nS; tries++) {
         const x0 = ui(spineLo + 8, spineHi - SWID - 8); if (!siteOk(x0)) continue;
@@ -1089,8 +1095,8 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         sitesL.push(x0); zU.push([x0 - 4, x0 + SWID + 4]); zL.push([x0 - 4, x0 + SWID + 4]);
       }
       zU.sort((p, q) => p[0] - q[0]); zL.sort((p, q) => p[0] - q[0]);
-      const upper = spine({ top: U0 + 1, f0: U0 + 15, fmin: U0 + 9, fmax: U0 + 17, deep: 0, zones: zU });
-      const lower = spine({ top: U0 + 24, f0: UB - 8, fmin: UB - 12, fmax: UB - 5, deep: 1, zones: zL });
+      const upper = spine({ top: U0 + 1, f0: U0 + 15, fmin: U0 + 11, fmax: U0 + 17, deep: 0, zones: zU });
+      const lower = spine({ top: LTOP, f0: UB - 8, fmin: UB - 10, fmax: UB - 5, deep: 1, zones: zL });
       const shafts = [], shafts2 = [];
       const ledges = (x0, rimL, rimR, bottom) => {   // ledges spaced evenly from the floor up to the rim, never more than 4 apart, alternating sides
         const T = Math.min(rimL, rimR), topSide = rimL <= rimR ? 0 : 1, H = bottom - (T + 3), n = Math.max(1, Math.ceil(H / 4)), out = [];
@@ -1111,7 +1117,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         if (shafts.some(s => Math.abs(s - x0) < SWID + 14)) continue;
         shafts.push(x0); const rim = gh[gi(x0 - 1)];
         for (let c = x0; c < x0 + SWID; c++) put(c, gh[gi(c)], c + 1, upper.fl[gi(c)], 0);
-        for (let c = x0; c < x0 + SWID; c++) { if (upper.fl[gi(c)] !== fmax) { put(c, fmax, c + 1, upper.fl[gi(c)], 1); put(c, Math.max(U0 + 1, fmax - 7), c + 1, fmax, 0); upper.fl[gi(c)] = fmax; } }
+        for (let c = x0; c < x0 + SWID; c++) { if (upper.fl[gi(c)] !== fmax) { put(c, fmax, c + 1, upper.fl[gi(c)], 1); put(c, Math.max(U0 + 1, fmax - HT), c + 1, fmax, 0); upper.fl[gi(c)] = fmax; } }
         const led = ledges(x0, gh[gi(x0 - 1)], gh[gi(x0 + SWID)], fmax);
         coinRow(x0 + 1.5, rim + 1.8, 3, 1, 0); coinRow(x0 + SWID - 4.5, rim + 4.8, 3, 1, 0); ugCps.push([x0 + 7, fmax]);
         occ.add(x0 - 2, rim - 14, x0 + SWID + 2, fmax + 1); occB.add(x0 - 2, rim - 14, x0 + SWID + 2, fmax + 1);
@@ -1127,7 +1133,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         if (shafts.some(s => Math.abs(s - x0) < SWID + 10)) continue;
         shafts.push(x0);
         for (let c = x0; c < x0 + SWID; c++) put(c, gh[gi(c)], c + 1, upper.fl[gi(c)], 0);
-        for (let c = x0; c < x0 + SWID; c++) { if (upper.fl[gi(c)] !== fmax) { put(c, fmax, c + 1, upper.fl[gi(c)], 1); put(c, Math.max(U0 + 1, fmax - 7), c + 1, fmax, 0); upper.fl[gi(c)] = fmax; } }
+        for (let c = x0; c < x0 + SWID; c++) { if (upper.fl[gi(c)] !== fmax) { put(c, fmax, c + 1, upper.fl[gi(c)], 1); put(c, Math.max(U0 + 1, fmax - HT), c + 1, fmax, 0); upper.fl[gi(c)] = fmax; } }
         const rL = gh[gi(x0 - 1)], rR = gh[gi(x0 + SWID)], led = ledges(x0, rL, rR, fmax);
         coinRow(x0 + 1.5, Math.min(rL, rR) + 1.8, 3, 1, 0); ugCps.push([x0 + 7, fmax]);
         occ.add(x0 - 2, Math.min(rL, rR) - 14, x0 + SWID + 2, fmax + 1); occB.add(x0 - 2, Math.min(rL, rR) - 14, x0 + SWID + 2, fmax + 1);
@@ -1143,7 +1149,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         if (shafts2.some(s => Math.abs(s - x0) < SWID + 30) || shafts.some(s => Math.abs(s - x0) < SWID + 6)) continue;
         shafts2.push(x0);
         for (let c = x0; c < x0 + SWID; c++) { put(c, upper.fl[gi(c)], c + 1, lower.fl[gi(c)], 0); }
-        for (let c = x0; c < x0 + SWID; c++) { if (lower.fl[gi(c)] !== fd) { put(c, fd, c + 1, lower.fl[gi(c)], 1); put(c, Math.max(U0 + 24, fd - 7), c + 1, fd, 0); lower.fl[gi(c)] = fd; } }
+        for (let c = x0; c < x0 + SWID; c++) { if (lower.fl[gi(c)] !== fd) { put(c, fd, c + 1, lower.fl[gi(c)], 1); put(c, Math.max(LTOP, fd - HT), c + 1, fd, 0); lower.fl[gi(c)] = fd; } }
         const led = ledges(x0, fu, fu, fd);
         // a lip around the top so you do not step into it by accident
         coinRow(x0 + 1.5, fu + 1.8, 3, 1, 0); ugCps.push([x0 + 7, fd]);
