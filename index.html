@@ -39,6 +39,10 @@
   #chBadge{position:relative;left:-14px;top:-10px;width:16px;height:16px;border-radius:50%;background:var(--bad);color:#fff;font:700 11px/16px var(--font);text-align:center;font-style:normal;pointer-events:none;margin-right:-16px}
   .lpbody{}
   .lrow{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px dashed rgba(232,220,192,.25)}
+  .invbtn{display:flex;align-items:center;gap:12px;width:100%;margin:2px 0 8px;padding:10px 14px;text-align:left;color:#2a2008;font-family:inherit;background:linear-gradient(135deg,#ffd75e,#ffb347);border:2px solid #fff3c4;border-radius:var(--wob);box-shadow:0 3px 0 rgba(0,0,0,.35);cursor:pointer}
+  .invbtn.hide{display:none}.invbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+  .invbtn [data-ic]{flex:0 0 auto;width:26px;height:26px}.invbtn .it{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;line-height:1.15}.invbtn b{font-size:18px;font-weight:400}.invbtn small{font-size:13px;opacity:.75}.invbtn .inva{font-size:28px;line-height:1;opacity:.6}
+  canvas.ldot{border:0!important;border-radius:0!important;background:none!important}
   .ldot{width:16px;height:16px;border-radius:50%;border:2px solid #000;flex:none;display:inline-block}
   .lname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lsub{font-size:12px;opacity:.65;white-space:normal}
   .btn.sm{padding:3px 9px;font-size:14px;flex:none}.btn:disabled{opacity:.5}
@@ -432,7 +436,7 @@
     #shopKeep{padding:1px 8px;margin:0 0 4px}#shopKeep small{display:none}#shopKeep b{font-size:14px;font-weight:normal}#shopList{grid-template-columns:repeat(4,1fr)}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
     #emoGrid button{aspect-ratio:auto;height:36px;padding:3px}.epcard{padding:8px 12px}.epcard h3{font-size:19px}#phraseGrid button{padding:4px 2px}
     .profcard{padding:8px 14px}.profcard .phead{gap:10px}.profcard .pbeat{padding:5px 10px}
-    .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}.pcard h3{grid-column:1/-1;font-size:22px}.pcard #pauseSub,.pcard #pResume{grid-column:1/-1}.pcard .pbtn{padding:7px;font-size:17px;gap:6px}.pcard #pResume{font-size:20px}.pcard #pauseSub{margin:-2px 0}
+    .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}.pcard h3{grid-column:1/-1;font-size:22px}.pcard #pauseSub,.pcard #pResume,.pcard #pHome{grid-column:1/-1}.pcard .pbtn{padding:7px;font-size:17px;gap:6px}.pcard #pResume{font-size:20px}.pcard #pauseSub{margin:-2px 0}
   }
   #intro .card{display:flex;flex-direction:column;overflow:hidden;max-height:100%}
   #intro .ibody{overflow-y:auto;min-height:0;flex:1;-webkit-overflow-scrolling:touch}
@@ -560,7 +564,7 @@
   .pbtn{display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;font-size:21px;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink);box-shadow:0 4px 0 rgba(0,0,0,.35)}
   .pbtn.go{background:#2f9e61;font-size:25px}.pbtn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
   @media (max-height:520px) and (min-aspect-ratio:1/1){
-    #pause .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}#pause .pcard h3{grid-column:1/-1;font-size:22px}#pause .pcard #pauseSub,#pause .pcard #pResume{grid-column:1/-1}#pause .pcard .pbtn{padding:7px;font-size:17px;gap:6px}#pause .pcard #pResume{font-size:20px}#pause .pcard #pauseSub{margin:-2px 0}
+    #pause .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}#pause .pcard h3{grid-column:1/-1;font-size:22px}#pause .pcard #pauseSub,#pause .pcard #pResume,#pause .pcard #pHome{grid-column:1/-1}#pause .pcard .pbtn{padding:7px;font-size:17px;gap:6px}#pause .pcard #pResume{font-size:20px}#pause .pcard #pauseSub{margin:-2px 0}
   }
   @media (max-height:340px) and (min-aspect-ratio:1/1){
     #emoGrid button{height:30px;padding:1px}#emoGrid{gap:3px;margin:2px 0}#phraseGrid{gap:3px;margin:2px 0}#phraseGrid button{padding:2px 2px}.epcard{padding:6px 12px;column-gap:10px}.epcard h3{font-size:17px;margin:0 0 2px}
@@ -919,7 +923,7 @@
     </section>
     <section class="pane" data-pane="friends">
       <div id="myCode" class="mycode"><span>Your code</span><b id="myCodeV">······</b><span class="small dim">Friends can check it matches</span></div>
-      <button class="btn full hide" id="btnInviteF" type="button"><span data-ic="users"></span>Invite friends to play</button>
+      <button class="invbtn hide" id="btnInviteF" type="button"><span data-ic="users"></span><span class="it"><b id="invT">Invite friends to play</b><small id="invS">Pick friends and send them a link to this world</small></span><span class="inva">›</span></button>
       <h4><span data-ic="users"></span> Your friends <span id="lpCount" class="dim"></span></h4><div class="small dim fhint">Friends show on each other's maps. Tap a friend to open their profile, where their settings are.</div><div id="lpList"></div>
       <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Friend requests</h4><div id="lpReqs"></div>
       <h4><span data-ic="search"></span> Find players</h4>
@@ -1087,8 +1091,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=70"></script>
-<script src="physics.js?v=70"></script>
+<script src="maps.js?v=71"></script>
+<script src="physics.js?v=71"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2952,7 +2956,8 @@ function drawLinksOnMap(g, toX, toY, r, labels, inside) {   // toX/toY turn tile
     g.save();
     const gr = g.createRadialGradient(x, y, r * 0.3, x, y, r * 3.2); gr.addColorStop(0, e.color); gr.addColorStop(1, 'rgba(255,255,255,0)');
     g.globalAlpha = 0.45 + 0.25 * p; g.fillStyle = gr; g.beginPath(); g.arc(x, y, r * 3.2, 0, TAU); g.fill();
-    g.globalAlpha = 1; g.fillStyle = e.color; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.stroke();
+    g.globalAlpha = 1; g.fillStyle = e.color; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r + 1.5, 0, TAU); g.fill(); g.stroke();
+    g.drawImage(sprite(HEX.test(e.color) ? e.color : '#ccc', HEX.test(e.color2) ? e.color2 : '#ffffff', (e.pat | 0) % PATTERNS.length), x - r - 1, y - r - 1, 2 * r + 2, 2 * r + 2);   // (the ball as it really looks)
     g.strokeStyle = 'rgba(255,255,255,' + (0.8 - 0.5 * p) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r + 3 + p * 3, 0, TAU); g.stroke();
     if (labels && e.name) { g.font = '14px ' + FONT; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 3.5; g.strokeStyle = 'rgba(0,0,0,.85)'; g.strokeText(e.name, x, y - r - 8); g.fillStyle = '#fff'; g.fillText(e.name, x, y - r - 8); }
     g.restore();
@@ -3451,7 +3456,7 @@ setInterval(() => {
   }
 }, 120);
 addEventListener('storage', e => { if (e.key === WALKEY) { try { const o = JSON.parse(e.newValue || 'null'); if (o) { wallet.c = Math.max(0, o.c | 0); wallet.g = Math.max(0, o.g | 0); if (shopOpen) shopRender(); } } catch (x) {} } });   // (another tab of the game spent or earned something)
-const openFriends = () => { if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
+const openFriends = () => { if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Friends'; toggleSettings(); } showTab('friends'); };
 $('linkpill').onclick = e => { e.stopPropagation(); openFriends(); };
 const friendsShown = () => !$('settings').classList.contains('hide') && $('settings').querySelector('.pane.on[data-pane="friends"]') !== null;
 
@@ -3468,11 +3473,15 @@ function trackVis() {
   if (inHome && chatOpen) toggleChat(false);
 }
 setInterval(trackVis, 500);
-function dot(c) { const i = document.createElement('i'); i.className = 'ldot'; i.style.background = c; return i; }
+function dot(o) {   // a little picture of the player's real ball: its colours and pattern, as it looks in the game
+  if (typeof o === 'string') o = { color: o };
+  const cv = document.createElement('canvas'); cv.className = 'ldot'; cv.width = cv.height = 44;
+  cv.getContext('2d').drawImage(sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length), 0, 0, 44, 44); return cv;
+}
 function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 function chip(label, on, fn, title) { const c = el('button', 'chip' + (on ? ' on' : ''), label); if (title) c.title = title; c.onclick = fn; return c; }
 function nameRow(name, code, color, sub, prof) {   // dot, the name with its short code, and a line under it
-  const d = el('div', 'lrow'); d.appendChild(dot(color));
+  const d = el('div', 'lrow'); d.appendChild(dot({ color, color2: prof && prof.color2, pat: prof && prof.pat }));
   const nm = el('div', 'lname'); nm.appendChild(el('b', '', who(name))); const sb = el('div', 'lsub'); if (code) { sb.appendChild(codeTag(code)); sb.appendChild(document.createTextNode(' · ')); } sb.appendChild(document.createTextNode(sub)); nm.appendChild(sb); if (prof) { nm.classList.add('lbtn'); nm.tabIndex = 0; nm.setAttribute('role', 'button'); nm.setAttribute('aria-label', 'See ' + who(name) + "'s profile"); nm.onclick = () => openProfile(prof); nm.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProfile(prof); } }; }
   d.appendChild(nm); return d;
 }
@@ -3490,7 +3499,7 @@ function iconBtn(cls, name, label, fn, text) {   // a button holding an icon (an
 }
 function friendCard(l) {   // one friend, one row. Tap it for their profile, where all of that friend's settings live.
   const live = l.ok && l.on, nm = who(l.name), c = el('div', 'frow' + (live ? '' : ' off'));
-  c.appendChild(dot(l.color));
+  c.appendChild(dot(l));
   const n = el('div', 'lname lbtn'); n.tabIndex = 0; n.setAttribute('role', 'button'); n.setAttribute('aria-label', nm + "'s profile and settings");
   n.onclick = () => openProfile(l); n.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProfile(l); } };
   n.appendChild(el('b', '', nm));
@@ -3874,7 +3883,7 @@ function ivRender() {
   if (!fl.length) box.appendChild(el('div', 'small dim', 'You have no friends yet. Add friends in Settings > Friends, then come back and invite them.'));
   const ready = !!(party && online);
   fl.forEach(l => {
-    const r = el('div', 'ivrow'); r.appendChild(dot(l.color)); r.appendChild(el('span', 'ivn', who(l.name))); r.appendChild(el('span', 'ivs', l.ok && l.on ? (l.w < 0 ? 'In a private world' : 'Online') : 'Offline'));
+    const r = el('div', 'ivrow'); r.appendChild(dot(l)); r.appendChild(el('span', 'ivn', who(l.name))); r.appendChild(el('span', 'ivs', l.ok && l.on ? (l.w < 0 ? 'In a private world' : 'Online') : 'Offline'));
     const sent = !!(party && party.invited && party.invited.has(l.pub));
     const b = el('button', 'btn sm' + (ready && !sent ? ' prim' : ''), sent ? 'Invited' : !ready ? 'Connecting…' : 'Invite'); b.type = 'button'; b.disabled = !ready || sent;
     b.onclick = () => { try { ws.send(JSON.stringify({ t: 'inv', to: l.pub, keep: $('ivKeep').checked })); } catch (e) {} if (party.invited) party.invited.add(l.pub); sfx('ui'); ivRender(); };
@@ -3893,7 +3902,7 @@ function closeInvites() { $('invModal').classList.add('hide'); clearInterval(ope
 $('ivNo').onclick = closeInvites;
 $('ivStop').onclick = () => { stopHosting(); closeInvites(); };
 $('invModal').addEventListener('pointerdown', e => { if (e.target === $('invModal')) closeInvites(); });
-$('pInvite').onclick = () => { sfx('ui'); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
+$('pInvite').onclick = () => { sfx('ui'); openFriends(); };
 $('btnInviteF').onclick = () => { sfx('ui'); openInvites(); };
 $('btnInvite').onclick = () => { if (inHome) { notice('Start playing first, then invite friends from the pause menu', ''); return; } sfx('ui'); openInvites(); };
 
@@ -3913,7 +3922,7 @@ function lvlRender() {
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
   const sl = !settings.mp && !party; $('pLevel').classList.toggle('hide', !sl); $('pReset').classList.toggle('hide', !sl);
   $('pSave').classList.toggle('hide', !((settings.mp && !party) || (party && party.role === 'guest')) || !S.world || S.slot < 0);
-  const canInv = !settings.mp && !(party && party.role === 'guest'); $('btnInviteF').classList.toggle('hide', !canInv || inHome); $('btnInviteF').lastChild.textContent = party ? 'Invite friends (game is open)' : 'Invite friends to play';
+  const canInv = !settings.mp && !(party && party.role === 'guest'); $('btnInviteF').classList.toggle('hide', !canInv || inHome); $('invT').textContent = party ? 'Invite more friends' : 'Invite friends to play'; $('invS').textContent = party ? 'Your world is open. Send another link' : 'Pick friends and send them a link to this world';
 }
 function lvBuild() {
   const g = $('lvGrid'); g.innerHTML = '';
@@ -5145,7 +5154,7 @@ function drawMinimapBig() {
   if (z >= 6) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = X(c[0] + 0.5), y = Y(c[1]); if (x < 0 || y < 0 || x > cw || y > ch) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.8, y - 12, 2, 12); g.beginPath(); g.moveTo(x + 1, y - 12); g.lineTo(x + 10, y - 9); g.lineTo(x + 1, y - 6); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 0.8; g.stroke(); });
   if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; g.fillStyle = bt.color; g.beginPath(); g.arc(X(bt.b.x / TS), Y(bt.b.y / TS), 3.5, 0, TAU); g.fill(); });
-  if (settings.mmPlayers) others.forEach(o => { const q = opos(o); if (!q) return; g.fillStyle = o.color; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(X(q.x / TS), Y(q.y / TS), 4, 0, TAU); g.fill(); g.stroke(); });
+  if (settings.mmPlayers) others.forEach(o => { const q = opos(o); if (!q) return; g.drawImage(sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length), X(q.x / TS) - 5.5, Y(q.y / TS) - 5.5, 11, 11); });
   drawLinksOnMap(g, X, Y, 7, true, false);
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
   const bon = mapFin();
