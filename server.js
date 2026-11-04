@@ -86,7 +86,7 @@ try {
   const o = JSON.parse(fs.readFileSync(LINKS_FILE, 'utf8'));
   for (const k in (o.links || {})) if (PUB.test(k)) links.set(k, new Set((o.links[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));
   for (const k in (o.gone || {})) if (PUB.test(k)) gone.set(k, new Set((o.gone[k] || []).filter(v => PUB.test(v)).slice(0, 50)));
-  for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', last: +v.last || 0, nameAt: +v.nameAt || 0, beat: Math.max(0, Math.min(999, v.beat | 0)) }); }
+  for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', color2: HEX.test(v.color2) ? v.color2 : '#ffffff', pat: cleanPat(v.pat), last: +v.last || 0, nameAt: +v.nameAt || 0, beat: Math.max(0, Math.min(999, v.beat | 0)) }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
 } catch (e) {}
 function saveLinks(sync) {
@@ -105,7 +105,7 @@ function addLink(a, b) { linkSet(a).add(b); linkSet(b).add(a); linksDirty = true
 function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; }
 const WEEK_MS = 7 * 86400000, STALE_MS = 60 * 86400000;   // the player list shows the last week; anybody gone for two months is deleted
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
-const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), on: live(q) ? 1 : 0, w: q && q.room ? (q.room.priv ? -1 : q.room.id) : 0, last: q ? Date.now() : (k.last || 0), b: k.beat | 0 }; };
+const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), color2: q ? q.color2 : (k.color2 || '#ffffff'), pat: q ? q.pat | 0 : (k.pat | 0), on: live(q) ? 1 : 0, w: q && q.room ? (q.room.priv ? -1 : q.room.id) : 0, last: q ? Date.now() : (k.last || 0), b: k.beat | 0 }; };
 function sendLinks(p) {   // everyone this player is linked to, with their short code, whether they are online, and when they were last here
   send(p, { t: 'links', list: [...(links.get(p.pub) || [])].map(peerInfo) });
 }
@@ -113,7 +113,7 @@ function sendLinks(p) {   // everyone this player is linked to, with their short
 function setName(p, nm) {
   if (!p.pub) { p.name = nm; return 0; }
   const now = Date.now(); let k = known.get(p.pub);
-  if (!k) { k = { name: nm, color: p.color, last: now, nameAt: 0 }; known.set(p.pub, k); p.name = nm; linksDirty = true; return 0; }
+  if (!k) { k = { name: nm, color: p.color, color2: p.color2, pat: p.pat | 0, last: now, nameAt: 0 }; known.set(p.pub, k); p.name = nm; linksDirty = true; return 0; }
   if (nm !== k.name) {
     if (k.nameAt && now - k.nameAt < DAY) { p.name = k.name; return DAY - (now - k.nameAt); }
     if (k.name || k.nameAt) k.nameAt = now;
@@ -246,7 +246,7 @@ wss.on('connection', (ws, req) => {
         const clean = (a, n, f) => (Array.isArray(a) ? a.slice(0, n).map(f).filter(Boolean) : []);
         const props = clean(m.host.props, 400, q => (Array.isArray(q) && q.length === 3 && (q[0] | 0) >= 0 && (q[0] | 0) <= 7 && Number.isFinite(q[1]) && Number.isFinite(q[2]) ? [q[0] | 0, Math.round(q[1]), Math.round(q[2])] : null));
         const gates = clean(m.host.gates, 40, q => (Array.isArray(q) && q.length === 5 && q.every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 ? q.map(Math.round) : null));
-        const misc = clean(m.host.misc, 40, q => (Array.isArray(q) && q.length === 4 && (q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), Math.round(q[3])] : Array.isArray(q) && q.length === 4 && (q[0] === 'see' || q[0] === 'pad') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[3] < 0 ? -1 : q[3] > 0 ? 1 : 0] : (Array.isArray(q) && q.length === 5 && q[0] === 'por' && q.slice(1).every(Number.isFinite) ? ['por', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])] : null)));
+        const misc = clean(m.host.misc, 40, q => (Array.isArray(q) && q.length === 4 && (q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || q[0] === 'tl') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), Math.round(q[3])] : Array.isArray(q) && q.length === 4 && (q[0] === 'see' || q[0] === 'pad') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[3] < 0 ? -1 : q[3] > 0 ? 1 : 0] : (Array.isArray(q) && q.length === 5 && q[0] === 'por' && q.slice(1).every(Number.isFinite) ? ['por', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])] : null)));
         const cps = clean(m.host.cps, 60, q => (Array.isArray(q) && q.length === 2 && Number.isFinite(q[0]) && Number.isFinite(q[1]) ? [Math.round(q[0]), Math.round(q[1])] : null));
         room = { id: key, players: new Map(), finishers: [], priv: { owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] };
@@ -262,7 +262,7 @@ wss.on('connection', (ws, req) => {
       if (!nm && !lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || randomName();   // everybody has a name once they play
       if (!nm && lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || '';          // (a brand-new visitor on the menu has not picked one yet: that first pick stays free)
       const nameLeft = setName(p, nm);
-      if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.last = Date.now(); if (m.beat != null) k.beat = Math.max(0, Math.min(999, m.beat | 0)); linksDirty = true; }
+      if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.color2 = p.color2; k.pat = p.pat | 0; k.last = Date.now(); if (m.beat != null) k.beat = Math.max(0, Math.min(999, m.beat | 0)); linksDirty = true; }
       if (room) {
         room.players.set(p.id, p);
         online++; statsDirty = true;
@@ -296,7 +296,7 @@ wss.on('connection', (ws, req) => {
           if (k.slice(17) !== p.pub) return;
           if (Date.now() - v.t > REQ_TTL) { pend.delete(k); return; }
           const from = k.slice(0, 16), pi = peerInfo(from);
-          send(p, { t: 'treq', pub: from, code: pi.code, name: pi.name, color: pi.color });
+          send(p, { t: 'treq', pub: from, code: pi.code, name: pi.name, color: pi.color, color2: pi.color2, pat: pi.pat });
         });
       }
       return;
@@ -326,9 +326,9 @@ wss.on('connection', (ws, req) => {
       if (live(q)) send(q, { t: 'inv', pub: p.pub, name: p.name, idx: r.priv.idx });
       send(p, { t: 'invsent', pub: m.to, on: live(q) ? 1 : 0 });
     } else if (m.t === 'pobj') {   // a teeter-totter or a floor booster, built in a friend's world
-      const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav')) || (m.g.length === 5 && m.g[0] === 'por')) || !m.g.slice(1).every(Number.isFinite) || bstate(r).misc.length >= 40) return;
+      const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl')) || (m.g.length === 5 && m.g[0] === 'por')) || !m.g.slice(1).every(Number.isFinite) || bstate(r).misc.length >= 40) return;
       const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
-      const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); broadcast(r, { t: 'pobj', g: e }, p);
+      const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); broadcast(r, { t: 'pobj', g: e }, p);
     } else if (m.t === 'pgate') {   // a gate and its trigger, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || m.g.length !== 5 || !m.g.every(Number.isFinite) || m.g[2] < 2 || m.g[2] > 8 || bstate(r).gates.length >= 40) return;
       const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
@@ -354,7 +354,7 @@ wss.on('connection', (ws, req) => {
         const linked = !!(mine && mine.has(pub));
         if (!on && !linked && now - last > (WEEK_MS)) return;
         if (!browse && !(nm.toLowerCase().indexOf(q) >= 0 || code === qc || code.indexOf(qc) === 0 && qc.length >= 3)) return;
-        out.push({ pub, code, name: nm, color: q2 ? q2.color : k.color, b: k.beat | 0, on: on ? 1 : 0, w: on && on !== true ? on.id : 0, last, here: on && on !== true && on === p.room ? 1 : 0, l: linked ? 1 : 0 });
+        out.push({ pub, code, name: nm, color: q2 ? q2.color : k.color, color2: q2 ? q2.color2 : (k.color2 || '#ffffff'), pat: q2 ? q2.pat | 0 : (k.pat | 0), b: k.beat | 0, on: on ? 1 : 0, w: on && on !== true ? on.id : 0, last, here: on && on !== true && on === p.room ? 1 : 0, l: linked ? 1 : 0 });
       });
       out.sort((a, b) => (b.here - a.here) || (b.on - a.on) || (b.last - a.last));
       send(p, { t: 'found', q: raw, list: out.slice(0, browse ? 80 : 30), n: out.length });
@@ -370,7 +370,7 @@ wss.on('connection', (ws, req) => {
         if (linkSet(m.to).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, name: tn, why: 'theirs' });
         let n = 0; pend.forEach((v, k) => { if (k.indexOf(p.pub + '>') === 0) n++; }); if (n >= 8) return;
         pend.set(p.pub + '>' + m.to, { t: now }); linksDirty = true;
-        if (live(q)) send(q, { t: 'treq', pub: p.pub, code: codeOf(p.pub), name: p.name, color: p.color });
+        if (live(q)) send(q, { t: 'treq', pub: p.pub, code: codeOf(p.pub), name: p.name, color: p.color, color2: p.color2, pat: p.pat | 0 });
         send(p, { t: 'tsent', pub: m.to, name: tn, off: live(q) ? 0 : 1 });
       } else {
         const k = m.to + '>' + p.pub, pr = pend.get(k);
@@ -398,7 +398,7 @@ wss.on('connection', (ws, req) => {
       const want = cleanName(m.name) || p.name, left = setName(p, want);
       send(p, { t: 'name', name: p.name, left, denied: want !== p.name ? 1 : 0 });
       p.color = cleanColor(m.color, p.color); p.color2 = cleanColor(m.color2, p.color2); p.pat = cleanPat(m.pat);
-      if (p.pub && known.get(p.pub)) { known.get(p.pub).color = p.color; if (m.beat != null) known.get(p.pub).beat = Math.max(0, Math.min(999, m.beat | 0)); linksDirty = true; }
+      if (p.pub && known.get(p.pub)) { known.get(p.pub).color = p.color; known.get(p.pub).color2 = p.color2; known.get(p.pub).pat = p.pat | 0; if (m.beat != null) known.get(p.pub).beat = Math.max(0, Math.min(999, m.beat | 0)); linksDirty = true; }
       if (p.pub) for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (q) sendLinks(q); }
       if (p.room) broadcast(p.room, { t: 'info', id: p.id, name: p.name, color: p.color, color2: p.color2, pat: p.pat }, p);
     } else if (m.t === 'finish') {

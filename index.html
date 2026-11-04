@@ -592,6 +592,15 @@
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
   .nname.dim{opacity:.55}
+
+  .chead{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:3;background:#1c1830;margin:0 0 6px;flex:none}.chead h3{margin:0!important}.chead .xbtn{flex:none}
+  .epcard .chead{grid-column:1/-1}.epcard .chead h3{text-align:left}
+  .shoptabs{display:flex;gap:4px;margin:0 0 8px;flex:none}.shoptabs button{flex:1;min-width:0;padding:6px 2px;font-size:14px;background:none;border:2px solid transparent;border-radius:var(--wob);color:var(--ink);opacity:.7}.shoptabs button.on{opacity:1;background:#3a3355;border-color:var(--line)}
+  .lvmode{margin:0}.lvmode .todrow>div{flex:1;min-width:0}.lvmode .row{margin:4px 0}.lvmode .small{margin:0 0 4px}
+  #lvGrid{max-height:min(34vh,300px)}
+  #settings .tabs{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}#settings .sbody{touch-action:pan-y}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){.shoptabs{margin:0 0 4px}.shoptabs button{padding:3px 2px;font-size:13px}.chead{margin:0 0 2px}.lvmode .small{display:none}.lvmode .row{margin:2px 0}#lvGrid{max-height:calc(100vh - 200px)}}
+  canvas.pball{border:0!important;border-radius:0!important;box-shadow:none!important;background:none!important}
 </style>
 </head>
 <body>
@@ -787,17 +796,17 @@
   <div id="feed"></div>
 </div></div>
 <div id="emoPop" class="overlay hide"><div class="card epcard">
-  <h3>Say something</h3>
+  <div class="chead"><h3>Say something</h3><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="emoGrid"></div>
   <div id="phraseGrid"></div>
   <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim">Everyone in your world sees it.</span></div>
 </div></div>
 <div id="shopPop" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="shopTitle"><div class="card shopcard">
-  <h3 id="shopTitle">Shop</h3>
+  <div class="chead"><h3 id="shopTitle">Shop</h3><button id="shopClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="shopWallet"></div>
+  <div id="shopTabs" class="shoptabs" role="tablist"></div>
   <div id="shopList"></div>
   <div class="small dim">What you buy appears as a ghost next to you: slide it where you want and tap Place. It stays until the map changes.</div>
-  <div class="cfoot"><button id="shopClose" class="btn" type="button">Close</button></div>
 </div></div>
 <div id="mmbig" class="overlay hide"><div class="card mmcard"><div class="mmtitle"><span data-ic="map"></span><b id="mmbigName"></b><span class="mmtools"><button class="btn" id="mmZin" title="Zoom in"><span data-ic="plus"></span></button><button class="btn" id="mmZout" title="Zoom out"><span data-ic="minus"></span></button><button class="btn" id="mmFind" title="Back to me"><span data-ic="pin"></span></button><button class="xbtn" id="mmClose" title="Close" data-ic="close"></button></span></div><canvas id="mmbigc" width="900" height="520"></canvas><div class="small dim" id="mmbigNote"></div></div></div>
 
@@ -898,11 +907,7 @@
       </div></div>
       <div class="dep" data-dep="!mp"><div>
         <h4><span data-ic="map"></span> Your private world</h4>
-        <div class="small dim">Pick any level you like. What you build, move, open and collect on a level is saved until you reset that level.</div>
-        <div class="row todrow"><span data-ic="clock"></span><div id="selTod"></div></div>
-        <div class="small dim" id="todDesc"></div>
-        <div class="row todrow"><span data-ic="flag"></span><div id="selFin"></div></div>
-        <div class="small dim" id="finDesc"></div>
+        <div class="small dim">Pick any level you like, and set the time of day and the finish there, before you play. What you build, move, open and collect on a level is saved until you reset that level.</div>
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
         <button class="btn full" id="btnInvite" type="button"><span data-ic="users"></span>Invite friends to this level</button>
       </div></div>
@@ -988,7 +993,7 @@
 </div></div>
 
 <div id="profModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="profName"><div class="card profcard">
-  <div class="phead"><i id="profDot" class="pball"></i><div class="pwho"><h3 id="profName"></h3><div class="psub"><span id="profCode" class="code"></span><span id="profStatus" class="pstat"></span></div></div></div>
+  <div class="phead"><canvas id="profDot" class="pball" width="108" height="108"></canvas><div class="pwho"><h3 id="profName"></h3><div class="psub"><span id="profCode" class="code"></span><span id="profStatus" class="pstat"></span></div></div></div>
   <div class="pbeat"><div class="pbl"><b id="profBeat"></b><span id="profBeatOf"></span></div><div class="pbar"><i id="profBar"></i></div></div>
   <div id="profSet" class="psets hide"></div>
   <div id="profActs" class="pacts"></div>
@@ -1007,6 +1012,12 @@
   <h3 id="lvTitle">Pick a level</h3>
   <div id="lvGrid" role="listbox" aria-label="Levels"></div>
   <div class="lvsel"><b id="lvName"></b><span class="small dim" id="lvNote"></span></div>
+  <div class="lvmode">
+    <div class="row todrow"><span data-ic="clock"></span><div id="selTod"></div></div>
+    <div class="small dim" id="todDesc"></div>
+    <div class="row todrow"><span data-ic="flag"></span><div id="selFin"></div></div>
+    <div class="small dim" id="finDesc"></div>
+  </div>
   <div class="btns"><button id="lvReset" type="button" class="danger">Reset level</button><button id="lvNo" type="button">Close</button><button id="lvOk" type="button" class="go">Play</button></div>
 </div></div>
 
@@ -1072,8 +1083,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=60"></script>
-<script src="physics.js?v=60"></script>
+<script src="maps.js?v=61"></script>
+<script src="physics.js?v=61"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1838,10 +1849,10 @@ function worldEvents() {
   }
   L.length = 0;
 }
-const startRect = () => { const s = S.map && S.map.start; if (!s) return null; const sx = Math.floor(s[0] / TS), sy = Math.floor(s[1] / TS); return { tx0: sx - 7, tx1: sx + 7, ty0: sy - 12, ty1: sy + 2 }; };   // the start zone: 15 x 15 blocks around where you appear (nothing can be built in it)
+const startRect = () => { const s = S.map && S.map.start; if (!s) return null; const sx = Math.floor(s[0] / TS), sy = Math.floor(s[1] / TS); return { tx0: sx - 2, tx1: sx + 2, ty0: sy - 3, ty1: sy + 1 }; };   // the start zone: 5 x 5 blocks around where you appear (nothing can be built in it)
 const startTile = (tx, ty) => { const z = startRect(); return !!z && tx >= z.tx0 && tx <= z.tx1 && ty >= z.ty0 && ty <= z.ty1; };
 const startBlock = (px, py, m) => { const z = startRect(); if (!z) return false; m = m === undefined ? TS * 0.6 : m; return px >= z.tx0 * TS - m && px <= (z.tx1 + 1) * TS + m && py >= z.ty0 * TS - m && py <= (z.ty1 + 1) * TS + m; };   // (a little extra room, so nothing can hang over the edge of it)
-const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav') && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && q[0] === 'por' && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
+const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && q[0] === 'por' && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
   for (let i = w.drops.length - 1; i >= 0; i--) {
@@ -1849,8 +1860,21 @@ function stepDrops(w, dt) {   // a ground spring set down over open air falls un
     if (d.y >= d.r * TS) { setBouncePad(w, d.tx, d.r, d.n); w.drops.splice(i, 1); const cx = (d.tx + d.n / 2) * TS; sfx('thud'); ring(cx, d.r * TS, '#35e0c2', 5, 46, 0.35); burst(cx, d.r * TS - 4, ['#35e0c2', '#fff'], 8, 140, 60); }
   }
 }
+function setTerrain(w, tx, r, to, anim) {   // lava, ice, water or grey rock, one tile
+  if (tx < 0 || tx >= w.W || r < 0 || r >= w.H) return;
+  const i = r * w.W + tx, cur = w.grid[i]; if (cur === 4 || cur === 6 || cur === 9) return;
+  const rock = w.rock && w.rock[i];
+  if (to === 7) { w.grid[i] = 1; (w.rock = w.rock || new Uint8Array(w.W * w.H))[i] = 1; } else { w.grid[i] = to; if (w.rock) w.rock[i] = 0; }
+  if (!anim) return;
+  const x = (tx + 0.5) * TS, y = r * TS + TS / 2;
+  if (to === 2) { burst(x, y, ['#ff4d2e', '#ff8a3d', '#ffd23d'], 16, 200, 160); ring(x, r * TS, '#ff8a3d', 5, 50, 0.4); sfx('lava'); }
+  else if (to === 3) { burst(x, y, ['#d4f6ff', '#7fdcff', '#fff'], 16, 170, 90); ring(x, r * TS, '#7fdcff', 5, 50, 0.4); sfx('thud'); }
+  else if (to === 5) { burst(x, y, cur === 2 || cur === 3 ? ['#fff', '#cfe9ff', '#2e7be6'] : ['#2e7be6', '#8cc4ff', '#fff'], 20, 190, 140); ring(x, r * TS, '#8cc4ff', 5, 54, 0.4); sfx('splash'); }
+  else { burst(x, y, ['#fff', '#b7bcc6', '#80858f'], 22, 170, 160); ring(x, r * TS, '#b7bcc6', 5, 50, 0.45); sfx('thud'); }
+}
 function addMisc(w, q, anim) {   // ['see', column, ground row, 0]: a teeter-totter standing on the ground, centre over the two tiles from that column.  ['pad', column, ground row, direction]: a floor booster, 2 tiles wide
   if (q[0] === 'bnc' || q[0] === 'spr') { const n = q[0] === 'spr' ? 1 : 2; if (anim && q[2] - q[3] > 1) (w.drops = w.drops || []).push({ tx: q[1], r: q[2], y: q[3] * TS, v: 0, n }); else setBouncePad(w, q[1], q[2], n); }
+  else if (q[0] === 'tl') setTerrain(w, q[1], q[2], q[3], anim);
   else if (q[0] === 'lav') { { const i = q[2] * w.W + q[1]; if (q[2] < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 2; } if (anim) { burst((q[1] + 0.5) * TS, q[2] * TS - 6, ['#ff4d2e', '#ff8a3d', '#ffd23d'], 16, 200, 160); ring((q[1] + 0.5) * TS, q[2] * TS, '#ff8a3d', 5, 50, 0.4); sfx('lava'); } }
   else if (q[0] === 'see') w.see.push({ cx: (q[1] + 1) * TS, cy: q[2] * TS - 46, hl: 3 * TS, tilt: 0, ang: 0, av: 0, tq: 0 });
   else if (q[0] === 'por') P.addPortal(w, q);
@@ -2501,7 +2525,7 @@ function closeSettingsNow() {
 function toggleSettings() { if ($('settings').classList.contains('hide')) { $('settings').classList.remove('hide'); $('pause').classList.add('sopen'); if (typeof lpAfterTab === 'function') lpAfterTab(); } else closeSettingsNow(); }
 // the dimmed backdrop: any tap outside the pop-up closes it (the game keeps running behind it)
 new MutationObserver(() => { $('sback').style.display = $('settings').classList.contains('hide') ? 'none' : 'block'; }).observe($('settings'), { attributes: true, attributeFilter: ['class'] });
-document.addEventListener('scroll', e => { const t = e.target; if (t && t.nodeType === 1 && (t.id === 'settings' || t.parentNode === $('settings') && t.className !== 'sbody' || (t.parentNode && t.parentNode.classList && t.parentNode.classList.contains('dep')))) { t.scrollTop = 0; t.scrollLeft = 0; } }, true);   // (the frame of the settings box never scrolls by itself, even when the browser tries to bring a tapped switch into view)
+document.addEventListener('scroll', e => { const t = e.target; if (t && t.nodeType === 1 && (t.id === 'settings' || t.parentNode === $('settings') && t.className !== 'sbody' && t.className !== 'tabs' || (t.parentNode && t.parentNode.classList && t.parentNode.classList.contains('dep')))) { t.scrollTop = 0; t.scrollLeft = 0; } }, true);   // (the frame of the settings box never scrolls by itself, even when the browser tries to bring a tapped switch into view)
 $('sback').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); closeSettingsNow(); });
 $('sback').addEventListener('touchstart', e => { e.preventDefault(); closeSettingsNow(); }, { passive: false });
 $('btnSettings').onclick = () => togglePause();
@@ -2733,8 +2757,8 @@ let myCode = localCode(); try { if (myCode) localStorage.setItem(CODEKEY, myCode
 function showMyCode() { ['myCodeV', 'myCodeV2'].forEach(id => { const e = $(id); if (e) e.textContent = myCode || '······'; }); }
 showMyCode();
 let lks = [];      // people I track (and who track me): { pub, code, name, color, last, ok (the server confirms it), on (online now), w (their world), x, y, sx, sy, dead, t, big, arrow, mute }
-try { lks = (JSON.parse(localStorage.getItem(LKKEY) || '[]') || []).filter(l => l && /^[0-9a-f]{16}$/.test(l.pub)).slice(0, MAXLINK).map(l => ({ pub: l.pub, code: String(l.code || '').slice(0, 6), name: String(l.name || '').slice(0, 12), color: HEX.test(l.color) ? l.color : '#ccc', last: +l.last || 0, ok: false, on: 0, x: null, big: l.big !== false, arrow: l.arrow !== false, mute: (l.mute | 0) % 3 })); } catch (e) {}
-const saveLinks = () => { try { localStorage.setItem(LKKEY, JSON.stringify(lks.map(l => ({ pub: l.pub, code: l.code, name: l.name, color: l.color, last: l.last, big: l.big, arrow: l.arrow, mute: l.mute })))); } catch (e) {} };
+try { lks = (JSON.parse(localStorage.getItem(LKKEY) || '[]') || []).filter(l => l && /^[0-9a-f]{16}$/.test(l.pub)).slice(0, MAXLINK).map(l => ({ pub: l.pub, code: String(l.code || '').slice(0, 6), name: String(l.name || '').slice(0, 12), color: HEX.test(l.color) ? l.color : '#ccc', color2: HEX.test(l.color2) ? l.color2 : '#ffffff', pat: (l.pat | 0) % 6, last: +l.last || 0, ok: false, on: 0, x: null, big: l.big !== false, arrow: l.arrow !== false, mute: (l.mute | 0) % 3 })); } catch (e) {}
+const saveLinks = () => { try { localStorage.setItem(LKKEY, JSON.stringify(lks.map(l => ({ pub: l.pub, code: l.code, name: l.name, color: l.color, color2: l.color2, pat: l.pat, last: l.last, big: l.big, arrow: l.arrow, mute: l.mute })))); } catch (e) {} };
 const linkClaims = () => lks.map(l => l.pub);
 const ft = (dx, dy) => Math.round(Math.hypot(dx, dy) / TS / 2);   // distances are in feet; one foot is two blocks
 const lkNum = pub => parseInt(pub.slice(0, 8), 16) >>> 0;
@@ -2761,11 +2785,11 @@ const SEENKEY = 'ballrun4_seen', WEEK = 7 * 86400000;
 let seen = {}; try { seen = JSON.parse(localStorage.getItem(SEENKEY) || '{}') || {}; } catch (e) { seen = {}; }
 function pruneSeen() { const now = Date.now(); for (const k in seen) { const e = seen[k]; if (!e || !/^[0-9a-f]{16}$/.test(k) || !e.n || (now - (+e.t || 0) > WEEK && !lkOf(k))) delete seen[k]; } }
 function saveSeen() { pruneSeen(); try { localStorage.setItem(SEENKEY, JSON.stringify(seen)); } catch (e) {} }
-function noteSeen(pub, name, color, code, last, b) {
+function noteSeen(pub, name, color, code, last, b, color2, pat) {
   if (!/^[0-9a-f]{16}$/.test(pub || '') || !name) return;
-  const e = seen[pub] || (seen[pub] = {}); e.n = String(name).slice(0, 12); if (code) e.c = String(code).slice(0, 6); if (HEX.test(color)) e.col = color; e.t = Math.max(+e.t || 0, last || Date.now()); if (b !== undefined) e.b = b | 0;
+  const e = seen[pub] || (seen[pub] = {}); e.n = String(name).slice(0, 12); if (code) e.c = String(code).slice(0, 6); if (HEX.test(color)) e.col = color; if (HEX.test(color2)) e.col2 = color2; if (pat !== undefined) e.pat = pat | 0; e.t = Math.max(+e.t || 0, last || Date.now()); if (b !== undefined) e.b = b | 0;
 }
-const seenEntry = pub => { const e = seen[pub]; return e ? { pub, code: e.c || '', name: e.n, color: e.col || '#ccc', b: e.b, on: 0, w: 0, last: +e.t || 0, l: 0 } : null; };
+const seenEntry = pub => { const e = seen[pub]; return e ? { pub, code: e.c || '', name: e.n, color: e.col || '#ccc', color2: e.col2, pat: e.pat | 0, b: e.b, on: 0, w: 0, last: +e.t || 0, l: 0 } : null; };
 function foundList() {   // what the server says, plus anybody this device remembers from the last week
   const out = lpFound.slice(), have = new Set(out.map(f => f.pub)), now = Date.now(), q = lpQ.toLowerCase(), qc = lpQ.toUpperCase().replace(/^#/, '');
   const extra = [];
@@ -2786,14 +2810,14 @@ function linkMsg(m) {
       for (const o of list) {
         seen.add(o.pub); let e = lkOf(o.pub);
         if (!e) { if (lks.length >= MAXLINK) continue; e = { pub: o.pub, code: '', name: '', color: '#ccc', last: 0, ok: false, on: 0, x: null, big: true, arrow: true, mute: 0 }; lks.push(e); if (linksReady) notice(who(o.name) + ' added you back. You are friends now', ''); }
-        e.ok = true; e.code = o.code; e.name = o.name; e.color = o.color; e.last = o.last; e.w = o.w; e.b = o.b | 0;
+        e.ok = true; e.code = o.code; e.name = o.name; e.color = o.color; e.color2 = o.color2; e.pat = o.pat | 0; e.last = o.last; e.w = o.w; e.b = o.b | 0;
         if (o.on) e.on = 1; else { e.on = 0; e.x = null; }
       }
       for (const e of lks) if (!seen.has(e.pub)) { e.ok = false; e.on = 0; e.x = null; }
       linksReady = true; saveLinks(); lpRender(); return true;
     }
     case 'treq':
-      if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, code: m.code || '', name: String(m.name || '').slice(0, 12), color: HEX.test(m.color) ? m.color : '#ccc' });
+      if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, code: m.code || '', name: String(m.name || '').slice(0, 12), color: HEX.test(m.color) ? m.color : '#ccc', color2: m.color2, pat: m.pat | 0 });
       sfx('ready'); notice('★ ' + who(m.name) + ' wants to be your friend', ''); lpRender(); return true;
     case 'tsent': sentTo.add(m.pub); notice(m.off ? who(m.name) + ' is offline. They will see your request when they are back' : 'Request sent to ' + who(m.name), ''); lpRender(); return true;
     case 'tno': {
@@ -2816,7 +2840,7 @@ function linkMsg(m) {
       addFeedEmo(who(m.name), m.i | 0, e ? 'friend' : '');
       return true;
     }
-    case 'found': lpFound = m.list || []; if (!m.q) { for (const f of lpFound) noteSeen(f.pub, f.name, f.color, f.code, f.last, f.b); saveSeen(); } lpRender(); return true;
+    case 'found': lpFound = m.list || []; if (!m.q) { for (const f of lpFound) noteSeen(f.pub, f.name, f.color, f.code, f.last, f.b, f.color2, f.pat); saveSeen(); } lpRender(); return true;
     case 'name': nameServer(m.name, m.left | 0, !!m.denied); return true;
   }
   return false;
@@ -2985,28 +3009,34 @@ $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop'))
 
 /* ----- the shop: spend coins (and diamonds) on things that appear right next to you. They are only yours: nobody else sees them. ----- */
 const SHOP = [
-  { id: 'coins', name: '250 coins', info: 'Trade one diamond for coins.', c: 0, g: 1, give: 250 },
-  { id: 'spring', name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
-  { id: 'flag', name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot.', c: 400, g: 5 },
-  { id: 'box0', name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
-  { id: 'box1', name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
-  { id: 'ball0', name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
-  { id: 'ball1', name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
-  { id: 'ball2', name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
-  { id: 'gate', name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
-  { id: 'gateS', name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
-  { id: 'see', name: 'Teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
-  { id: 'pad', name: 'Floor booster', info: 'Set into the ground. Roll over it and it throws you forward.', c: 100, g: 0, misc: 'pad' },
-  { id: 'portal', name: 'Portals', info: 'A yellow and a blue portal in the ground. Go in one and come out of the other.', c: 1000, g: 20, portal: true },
-  { id: 'bnc', name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
-  { id: 'lava', name: 'Lava', info: 'One tile of lava set into the ground. Anything that touches it burns up.', c: 600, g: 0, misc: 'lav' }
+  { cat: 'coins', id: 'coins', name: '250 coins', info: 'Trade one diamond for coins.', c: 0, g: 1, give: 250 },
+  { cat: 'blocks', id: 'spring', name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
+  { cat: 'gadgets', id: 'flag', name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot.', c: 400, g: 5 },
+  { cat: 'blocks', id: 'box0', name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
+  { cat: 'blocks', id: 'box1', name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
+  { cat: 'blocks', id: 'ball0', name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
+  { cat: 'blocks', id: 'ball1', name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
+  { cat: 'blocks', id: 'ball2', name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
+  { cat: 'gates', id: 'gate', name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
+  { cat: 'gates', id: 'gateS', name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
+  { cat: 'gadgets', id: 'see', name: 'Teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
+  { cat: 'gadgets', id: 'pad', name: 'Floor booster', info: 'Set into the ground. Roll over it and it throws you forward.', c: 100, g: 0, misc: 'pad' },
+  { cat: 'gadgets', id: 'portal', name: 'Portals', info: 'A yellow and a blue portal in the ground. Go in one and come out of the other.', c: 1000, g: 20, portal: true },
+  { cat: 'gadgets', id: 'bnc', name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
+  { cat: 'terrain', id: 'lava', name: 'Lava', info: 'One tile of lava set into plain ground. Anything that touches it burns up.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
+  { cat: 'terrain', id: 'ice', name: 'Ice', info: 'One tile of slippery ice set into plain ground.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
+  { cat: 'terrain', id: 'water', name: 'Water', info: 'One tile of water. On lava it makes grey rock. On ice it sits on top.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
+const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
+let shopTab = 'blocks';
 const shopIcon = id => {
   const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
   if (id === 'coins') return '<svg viewBox="0 0 40 40"><circle cx="15" cy="26" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="4.500" fill="none" stroke="#a06400" stroke-width="1.800"/></svg>';
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
   if (id === 'gate' || id === 'gateS') { const h = id === 'gate' ? 26 : 13; return '<svg viewBox="0 0 40 40"><rect x="7" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="15" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="23" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="5" y="' + (28 - h) + '" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="29" y="32" width="9" height="4" fill="#e0a93c" ' + st + '/></svg>'; }
+  if (id === 'ice') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#bfeeff" ' + st + '/><path d="M18 25l4 4M22 25l-3 6" stroke="#fff" stroke-width="1.6" fill="none"/><path d="M20 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#d4f6ff" ' + st + ' stroke-width="1.4"/></svg>';
+  if (id === 'water') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#2e7be6" ' + st + '/><path d="M16 26q2-3 4 0t4 0" fill="none" stroke="#bfe0ff" stroke-width="1.6"/><path d="M20 6c4 6 6 9 6 12a6 6 0 0 1-12 0c0-3 2-6 6-12z" fill="#4a95f0" ' + st + ' stroke-width="1.6"/></svg>';
   if (id === 'lava') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#ff4a1c" ' + st + '/><circle cx="20" cy="19" r="2.4" fill="#ffb02e"/><circle cx="17" cy="14" r="1.6" fill="#ff8a3d"/><circle cx="23" cy="11" r="1.3" fill="#ffd23d"/></svg>';
   if (id === 'bnc') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="32" height="12" fill="#8a6a46" ' + st + '/><rect x="8" y="22" width="24" height="7" fill="#1c7f78" ' + st + '/><rect x="5" y="17" width="30" height="6" fill="#35e0c2" ' + st + '/><path d="M15 21l5-4 5 4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/></svg>';
   if (id === 'portal') return '<svg viewBox="0 0 40 40"><ellipse cx="12" cy="30" rx="10" ry="4" fill="#ffd23d" ' + st + '/><ellipse cx="12" cy="30" rx="5" ry="1.8" fill="#7a5a00"/><ellipse cx="29" cy="30" rx="10" ry="4" fill="#3da5ff" ' + st + '/><ellipse cx="29" cy="30" rx="5" ry="1.8" fill="#0b2f6b"/><path d="M12 24c0-9 17-9 17 0" fill="none" stroke="#16100c" stroke-width="2" stroke-dasharray="3 3"/></svg>';
@@ -3022,8 +3052,10 @@ const canShop = () => !inHome && !paused && S.mode === 'play' && !!S.b && !S.awa
 let shopOpen = false;
 function shopRender() {
   $('shopWallet').innerHTML = '<span>' + ico('gcoin') + fmtN(wallet.c) + '</span><span>' + ico('gem') + fmtN(wallet.g) + '</span>';
+  const T = $('shopTabs'); T.innerHTML = '';
+  SHOP_TABS.forEach(([id, name]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.className = id === shopTab ? 'on' : ''; b.onclick = () => { shopTab = id; sfx('ui'); shopRender(); const l = $('shopList'); l.scrollTop = 0; }; T.appendChild(b); });
   const L = $('shopList'); L.innerHTML = '';
-  SHOP.forEach(it => {
+  SHOP.filter(it => it.cat === shopTab).forEach(it => {
     const row = document.createElement('div'); row.className = 'shopitem';
     const ok = wallet.c >= it.c && wallet.g >= it.g;
     row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + '</b><small>' + it.info + '</small></div>';
@@ -3039,6 +3071,7 @@ function toggleShop(on) {
 }
 $('btnShop').onclick = () => toggleShop(!shopOpen);
 $('shopClose').onclick = () => toggleShop(false);
+$('chatClose').onclick = () => toggleChat(false);
 const boughtN = () => Math.max(0, S.bought.length + S.boughtGates.length + S.boughtMisc.length - (S.rcvN | 0));   // (only what you bought counts, not what others in the world built)
 const MAX_BOUGHT = 40;   // per map: plenty to play with, and the physics stays quick
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
@@ -3121,24 +3154,26 @@ function plateSpot(side, gate) {   // the trigger: 2 tiles wide. Over open air i
   }
   return null;
 }
-function lavaSpot(side) {   // lava: one tile wide, set into the ground beside you
+function terrainSpot(kind, side) {   // lava, ice or water: one tile, set into plain ground beside you. Mixing them: lava on ice and ice on lava make water; water on lava makes grey rock; water on ice sits on top of it.
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 2; pass++) {
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.1)) / TS), row = Math.floor((b.y + R + 1) / TS);
     for (let k = -2; k < 9; k++) {
-      const t = P.tile(w, tx, row + k);
-      if (t === 2) break;
-      if (t === 1 || t === 3) {
-        if (k < 0 && !solidT(P.tile(w, tx, row + k + 1))) continue;
-        if (solidT(P.tile(w, tx, row + k - 1)) || P.tile(w, tx, row + k - 1) === 2) break;
-        const gr = row + k, cx = (tx + 0.5) * TS;
-        if (w.dyn.some(o => o.burn <= 0 && Math.abs(o.x - cx) < (o.r || o.hw) + TS / 2 && o.y + (o.r || o.hh) > (gr - 2) * TS && o.y - (o.r || o.hh) < (gr + 1) * TS)) return null;
-        if (w.pads.some(p => p.y === gr && tx >= p.x && tx < p.x + p.w) || w.see.some(q => Math.abs(q.cx - cx) < q.hl + TS / 2 && Math.abs(q.cy - (gr * TS - 46)) < 40) || (w.drops || []).some(q => q.tx === tx)) return null;   // (only bare ground: nothing built on it)
-        if (S.map.checkpoints.some(c => Math.abs(c[0] - tx) <= 1 && Math.abs(c[1] - gr) <= 1)) return null;
-        return { tx, gr, side: s };
-      }
-      if (t !== 0 && !solidT(t)) continue;
-      if (solidT(t)) break;
+      const r = row + k, t = P.tile(w, tx, r);
+      if (t === 0) continue;
+      if (P.tile(w, tx, r - 1) !== 0) break;
+      if (k < 0 && P.tile(w, tx, r + 1) === 0) continue;
+      const rk = !!(w.rock && w.rock[r * w.W + tx]);
+      let tr = null, to = 0;
+      if (kind === 'lava') { if (t === 1 && !rk) { tr = r; to = 2; } else if (t === 3) { tr = r; to = 5; } }
+      else if (kind === 'ice') { if (t === 1 && !rk) { tr = r; to = 3; } else if (t === 2) { tr = r; to = 5; } }
+      else { if (t === 1 && !rk) { tr = r; to = 5; } else if (t === 2) { tr = r; to = 7; } else if (t === 3) { tr = r - 1; to = 5; } }
+      if (tr === null) break;
+      const cx = (tx + 0.5) * TS;
+      if (w.dyn.some(o => o.burn <= 0 && Math.abs(o.x - cx) < (o.r || o.hw) + TS / 2 && o.y + (o.r || o.hh) > (r - 2) * TS && o.y - (o.r || o.hh) < (r + 1) * TS)) return null;
+      if (w.pads.some(p => p.y === r && tx >= p.x && tx < p.x + p.w) || w.see.some(q => Math.abs(q.cx - cx) < q.hl + TS / 2 && Math.abs(q.cy - (r * TS - 46)) < 40) || (w.drops || []).some(q => q.tx === tx)) return null;
+      if (S.map.checkpoints.some(c => Math.abs(c[0] - tx) <= 1 && Math.abs(c[1] - r) <= 1)) return null;
+      return { tx, gr: r, row: tr, to, side: s };
     }
   }
   return null;
@@ -3174,7 +3209,7 @@ function portalClash(g, sp, cx) {   // nothing can be made on top of a portal, a
   if (it.misc === 'see') return portalHere(cx, 3 * TS, sp.gr);
   if (it.misc === 'pad') return portalHere(cx, TS, sp.gr);
   if (it.misc === 'spr') return portalHere((sp.tx + 0.5) * TS, 20, sp.r);
-  if (it.misc === 'lav') return portalHere(cx, 20, sp.gr);
+  if (it.misc === 'ter') return portalHere(cx, 20, sp.gr);
   return false;
 }
 function computeGhost() {
@@ -3187,7 +3222,7 @@ function computeGhost() {
     else if (g.stage === 2 && g.it.gate) { sp = plateSpot(g.side, g.gate); if (sp) { g.ptx = sp.tx; g.prow = sp.row; g.py0 = sp.y0; cx = (sp.tx + 1) * TS; cy = sp.y0; } }
     else if (g.it.portal) { sp = flatSpot(g.side, false, 1, true); if (sp && g.stage === 2 && g.pA && Math.abs(sp.tx - g.pA.tx) < 4 && Math.abs(sp.gr - g.pA.gr) < 3) sp = null; if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - 2; } }
     else if (g.it.misc === 'spr') { sp = bncSpot(g.side); if (sp) { g.mtx = sp.tx; g.mgr = sp.r; g.mr0 = sp.r0; cx = (sp.tx + 0.5) * TS; cy = (sp.r - 0.5) * TS; } }
-    else if (g.it.misc === 'lav') { sp = lavaSpot(g.side); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 0.5) * TS; cy = (sp.gr + 0.5) * TS; } }
+    else if (g.it.misc === 'ter') { sp = terrainSpot(g.it.ter, g.side); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } }
     else if (g.it.misc) { sp = flatSpot(g.side, g.it.misc === 'see', g.it.misc === 'see' ? 2 : 1); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; g.mside = sp.side; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - (g.it.misc === 'see' ? 46 : 4); } }
     else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; g.gh = sp.h; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - sp.h / 2) * TS; } }
     g.ok = !!sp; g.sb = false;
@@ -3254,9 +3289,10 @@ function drawTileGhost(g, nowT) {
   if (g.it.portal) {
     if (g.stage === 2 && g.pA) portalShape((g.pA.tx + 1) * TS, g.pA.gr * TS, '#ffd23d', 0.9, nowT);
     portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : (g.stage === 2 ? '#3da5ff' : '#ffd23d'), pulse + 0.2, nowT);
-  } else if (g.it.misc === 'lav') {
-    const x = bad ? Math.floor(g.dx / TS) * TS : g.mtx * TS, y = bad ? g.dy - TS / 2 : g.mgr * TS;
-    ctx.globalAlpha = pulse + 0.15; ctx.fillStyle = bad ? '#ff7a6a' : '#ff4a1c'; ctx.fillRect(x, y, TS, TS); ctx.fillStyle = bad ? '#ffb0a6' : '#ffb02e'; ctx.fillRect(x, y, TS, 7);
+  } else if (g.it.misc === 'ter') {
+    const x = bad ? Math.floor(g.dx / TS) * TS : g.mtx * TS, y = bad ? g.dy - TS / 2 : g.mgr * TS, to = g.mto;
+    ctx.globalAlpha = pulse + 0.15; ctx.fillStyle = bad ? '#ff7a6a' : to === 2 ? '#ff4a1c' : to === 3 ? '#bfeeff' : to === 5 ? '#2e7be6' : '#80858f'; ctx.fillRect(x, y, TS, TS);
+    ctx.fillStyle = bad ? '#ffb0a6' : to === 2 ? '#ffb02e' : to === 3 ? '#fff' : to === 5 ? '#8cc4ff' : '#b7bcc6'; ctx.fillRect(x, y, TS, 7);
     ctx.strokeStyle = '#16100c'; ctx.lineWidth = 2.4; ctx.strokeRect(x, y, TS, TS);
   } else if (g.it.misc === 'spr') {
     const fall = !bad && g.mgr - g.mr0 > 1, y = bad ? g.dy - TS / 2 : (fall ? g.mr0 : g.mgr) * TS;
@@ -3323,9 +3359,9 @@ function finishPlacing() {
     addGate(S.world, q); S.boughtGates.push(q.slice(0, 5)); partyBuild({ t: 'pgate', g: q.slice(0, 5) }); wDirty = true;
     burst((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, '#fff', 4, 40, 0.4);
   } else if (it.misc) {
-    const q = [it.misc, g.mtx, g.mgr, it.misc === 'pad' ? ((g.mside || g.side) < 0 ? -1 : 1) : it.misc === 'spr' ? g.mr0 : 0];
+    const q = [it.misc === 'ter' ? 'tl' : it.misc, g.mtx, g.mgr, it.misc === 'ter' ? g.mto : it.misc === 'pad' ? ((g.mside || g.side) < 0 ? -1 : 1) : it.misc === 'spr' ? g.mr0 : 0];
     addMisc(S.world, q, true); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true;
-    burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4);
+    if (q[0] !== 'tl') { burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4); }
   } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
   else placeProp(it.kind, [g.tx, g.ty]);
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
@@ -3430,10 +3466,13 @@ let profPub = '', profSnap = null;
 function profData(pub) { return (lks.filter(l => l.pub === pub)[0]) || (lpFound.filter(f => f.pub === pub)[0]) || reqs.filter(r => r.pub === pub)[0] || seenEntry(pub) || (profSnap && profSnap.pub === pub ? profSnap : null); }
 function openProfile(p) { if (!p) return; profPub = p.pub; profSnap = Object.assign({}, p); profRender(); $('profModal').classList.remove('hide'); setTimeout(() => { try { $('profClose').focus(); } catch (e) {} }, 30); }
 function closeProfile() { profPub = ''; $('profModal').classList.add('hide'); }
+const isMe = p => !!p && !!myCode && String(p.code || '').toUpperCase().replace(/^#/, '') === String(myCode).toUpperCase().replace(/^#/, '');
 function profRender() {
   if (!profPub) return; const p = profData(profPub); if (!p) { closeProfile(); return; }
   const nm = who(p.name), linked = !!lkOf(p.pub), sent = sentTo.has(p.pub), isReq = reqs.some(r => r.pub === p.pub), n = p.b | 0;
-  $('profDot').style.background = p.color || '#ccc'; $('profName').textContent = nm; $('profCode').textContent = '#' + (p.code || '');
+  const me = isMe(p), c1 = me ? settings.color : p.color, c2 = me ? settings.color2 : p.color2, pt = me ? settings.pat : p.pat;
+  { const cv = $('profDot'), g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); g.drawImage(sprite(HEX.test(c1) ? c1 : '#ccc', HEX.test(c2) ? c2 : '#ffffff', (pt | 0) % PATTERNS.length), 0, 0, cv.width, cv.height); }   // the ball exactly as it looks in the game
+  $('profName').textContent = nm; $('profCode').textContent = '#' + (p.code || '');
   const on = linked ? (lkOf(p.pub).on ? 1 : 0) : p.on, w = linked ? lkOf(p.pub).w : p.w, last = linked ? lkOf(p.pub).last : p.last;
   $('profStatus').textContent = on ? 'Online now' + (w ? ' · World ' + w : '') : last ? lastOn(last) : '';
   $('profStatus').className = 'pstat' + (on ? ' on' : '');
@@ -3442,7 +3481,7 @@ function profRender() {
   const add = (cls, txt, fn, dis) => { const b = el('button', cls, txt); b.type = 'button'; if (dis) b.disabled = true; b.onclick = fn; act.appendChild(b); return b; };
   const ps = $('profSet'); ps.textContent = '';
   const row = (label, note) => { const r = el('div', 'prow'); const t = el('div', 'ptxt'); t.appendChild(el('b', '', label)); if (note) t.appendChild(el('small', '', note)); r.appendChild(t); ps.appendChild(r); return r; };
-  if (linked) {   // everything about this one friend
+  if (me) {} else if (linked) {   // everything about this one friend
     const l = lkOf(p.pub);
     const m1 = row('On your map', 'How ' + nm + ' looks while you play'), o = el('div', 'fopts');
     o.appendChild(chip('Big and glowing', l.big, () => { l.big = !l.big; saveLinks(); lpRender(); }, 'Show ' + nm + ' bigger and glowing on both maps'));
@@ -3456,8 +3495,9 @@ function profRender() {
   }
   ps.classList.toggle('hide', !ps.childNodes.length);
   if (isReq) { add('btn prim', 'Accept friend request', () => { wsSend({ t: 'tacc', to: p.pub }); reqs = reqs.filter(q => q.pub !== p.pub); lpRender(); profRender(); }); }
+  else if (me) add('btn quiet', 'You', () => {}, true);
   else if (!linked) add('btn prim', sent ? 'Request sent' : lks.length >= MAXLINK ? 'You have ' + MAXLINK + ' friends already' : 'Add friend', () => { wsSend({ t: 'treq', to: p.pub, nm: p.name }); sentTo.add(p.pub); profRender(); }, sent || lks.length >= MAXLINK);
-  add('btn quiet', 'Copy their friend number', () => { const t = '#' + p.code; try { navigator.clipboard.writeText(t).then(() => notice('Copied ' + t, ''), () => notice(t, '')); } catch (e) { notice(t, ''); } });
+  add('btn quiet', me ? 'Copy my friend number' : 'Copy their friend number', () => { const t = '#' + p.code; try { navigator.clipboard.writeText(t).then(() => notice('Copied ' + t, ''), () => notice(t, '')); } catch (e) { notice(t, ''); } });
   if (linked) add('btn danger', 'Unfriend', () => { closeProfile(); askConfirm('Unfriend ' + nm + '?', 'You will stop seeing each other on the map. To be friends again, you both need to send and accept a new request.', 'Unfriend', () => disconnectLink(p.pub), { no: 'Keep ' + nm }); });
 }
 $('profClose').onclick = closeProfile; $('profModal').addEventListener('pointerdown', e => { if (e.target === $('profModal')) closeProfile(); });
@@ -3484,8 +3524,8 @@ function lpRender() {
   for (const f of shown) {
     const linked = f.l || lkOf(f.pub), sent = sentTo.has(f.pub), muted = !!mutes[f.pub];
     const d = nameRow(f.name, f.code, f.color, (f.on ? 'Online now · ' + (f.w < 0 ? 'in a private world' : 'World ' + f.w) : lastOn(f.last)) + (muted ? ' · Muted' : ''), f);
-    const b = el('button', 'btn sm' + (linked || sent ? '' : ' prim'), linked ? 'Friend' : sent ? 'Sent' : 'Add friend');
-    if (linked || sent || lks.length >= MAXLINK) b.disabled = true;
+    const you = isMe(f), b = el('button', 'btn sm' + (linked || sent || you ? '' : ' prim'), you ? 'You' : linked ? 'Friend' : sent ? 'Sent' : 'Add friend');
+    if (you || linked || sent || lks.length >= MAXLINK) b.disabled = true;
     b.onclick = () => { wsSend({ t: 'treq', to: f.pub, nm: f.name }); b.disabled = true; b.textContent = 'Sent'; };
     d.appendChild(b); res.appendChild(d);
   }
@@ -4052,7 +4092,7 @@ function onMsg(m) {
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = infoMsg();
       others.clear();
-      m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); noteSeen(o.pub, p.name, p.color, p.code); }); saveSeen();
+      m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); noteSeen(o.pub, p.name, p.color, p.code, undefined, undefined, p.color2, p.pat); }); saveSeen();
       setNet('online');
       if (m.priv) addFeed(party.role === 'host' ? 'Your private game is open: invite your friends' : 'You joined ' + who(party.name) + "'s private game", 'join', true); else addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
@@ -4064,7 +4104,7 @@ function onMsg(m) {
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
-    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat); o.pub = m.pub || ''; others.set(m.id, o); noteSeen(o.pub, m.name, m.color, m.code); saveSeen(); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
+    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat); o.pub = m.pub || ''; others.set(m.id, o); noteSeen(o.pub, m.name, m.color, m.code, undefined, undefined, m.color2, m.pat); saveSeen(); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
     case 'leave': { others.delete(m.id); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' left', 'leave', false, 'human'); if (settings.joinMsg) sfx('leave'); } botNote(); break; }
     case 'info': {   // someone changed how they look: show a clear little transformation
       const o = others.get(m.id);
@@ -4452,9 +4492,10 @@ function drawTiles(camL, camT, vw, vh) {
         continue;
       }
       const th = THEMES[tg[i]] || THEMES[0];
-      ctx.fillStyle = t === 1 ? th.solid : t === 3 ? ICE : LAVA;
+      const rk = t === 1 && S.world.rock && S.world.rock[i];   // grey rock (made by water on lava)
+      ctx.fillStyle = rk ? '#80858f' : t === 1 ? th.solid : t === 3 ? ICE : LAVA;
       ctx.fillRect(px, py, TS + 0.5, TS + 0.5);
-      if (ty === 0 || g[i - W] === 0 || g[i - W] === 5) { ctx.fillStyle = t === 1 ? th.top : t === 3 ? '#d4f6ff' : '#ffc04a'; ctx.fillRect(px, py, TS + 0.5, 7); }
+      if (ty === 0 || g[i - W] === 0 || g[i - W] === 5) { ctx.fillStyle = rk ? '#b7bcc6' : t === 1 ? th.top : t === 3 ? '#d4f6ff' : '#ffc04a'; ctx.fillRect(px, py, TS + 0.5, 7); }
     }
   }
   // pen outlines on every exposed edge
