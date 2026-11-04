@@ -219,7 +219,7 @@
 
   /* ---- v5 additions ---- */
   #onl{font-size:13px}
-  #coinpill{display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:14px;padding:1px 9px;pointer-events:none}
+  #coinpill{white-space:nowrap;max-width:100%;display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:14px;padding:1px 9px;pointer-events:none}
   #timer{cursor:pointer;pointer-events:auto}
   #tpop{position:fixed;right:10px;top:50px;top:calc(50px + env(safe-area-inset-top));width:min(310px,calc(100vw - 20px));z-index:7;padding:10px 14px 12px;font-size:15px}
   #tpop h3{margin:0 0 6px;font-size:20px;font-weight:400;display:flex;align-items:center;gap:8px}
@@ -418,12 +418,19 @@
   .shopitem button{flex:none;min-width:84px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 8px;line-height:1.1}
   .shopitem button .pr{display:inline-flex;align-items:center;gap:3px;font-size:14px}.shopitem button .pr .ic{width:14px;height:14px}
   .shopitem button:disabled{opacity:.45}
+  @media (min-width:700px){.shopcard{width:min(720px,100%)}#shopList{display:grid;grid-template-columns:1fr 1fr}.shopitem .sinfo small{display:none}}
+  @media (max-width:699px) and (max-aspect-ratio:1/1){#shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px}.shopitem{flex-direction:column;gap:3px;text-align:center;padding:6px}.shopitem .sinfo small{display:none}.shopitem button{flex-direction:row;gap:8px;min-width:0;width:100%;justify-content:center}}
+  @media (max-width:699px) and (max-aspect-ratio:1/1) and (min-height:760px){.shopitem .sinfo small{display:block}}
   @media (max-height:520px) and (min-aspect-ratio:1/1){
     #hl{--hlw:122px}#infoRow .pill{font-size:12px}.gemw{margin-left:3px}#coinpill{padding:1px 6px;gap:3px}
     .shopcard{width:min(720px,100%);padding:10px 14px}.shopcard h3{margin:0 0 2px;font-size:19px}#shopWallet{margin:0 0 6px;font-size:16px}
     #shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.shopitem{padding:5px 8px}.shopitem .sico{width:32px;height:32px}.shopitem .sinfo b{font-size:15px}.shopitem .sinfo small{display:none}.shopitem button{min-width:70px;padding:4px 6px}.shopcard .small{margin:0 0 4px;font-size:12px}.shopcard .cfoot{margin-top:2px}.shopcard .cfoot button{padding:5px 18px}
     .epcard{width:min(680px,100%);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start;padding:10px 14px}.epcard h3,.epcard .cfoot{grid-column:1/-1;margin:0 0 4px}
     #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:5px;margin:4px 0}#phraseGrid button{padding:6px 2px;font-size:13px}
+    #shopList{grid-template-columns:repeat(4,1fr)}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
+    #emoGrid button{aspect-ratio:auto;height:36px;padding:3px}.epcard{padding:8px 12px}.epcard h3{font-size:19px}#phraseGrid button{padding:4px 2px}
+    .profcard{padding:8px 14px}.profcard .phead{gap:10px}.profcard .pbeat{padding:5px 10px}
+    .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}.pcard h3{grid-column:1/-1;font-size:22px}.pcard #pauseSub,.pcard #pResume{grid-column:1/-1}.pcard .pbtn{padding:7px;font-size:17px;gap:6px}.pcard #pResume{font-size:20px}.pcard #pauseSub{margin:-2px 0}
   }
   #intro .card{display:flex;flex-direction:column;overflow:hidden;max-height:100%}
   #intro .ibody{overflow-y:auto;min-height:0;flex:1;-webkit-overflow-scrolling:touch}
@@ -471,13 +478,14 @@
   #placeBar.tch .btn{display:none}
   @media (max-height:520px){#placeBar{padding:3px 4px 3px 10px;gap:6px}#placeBar .pi small{display:none}#placeBar .btn{padding:4px 10px;min-height:32px}}
   #homeWallet{position:fixed;right:12px;top:12px;top:calc(12px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:4;display:none;align-items:center;gap:12px;padding:6px 12px;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);color:#2b1d12;font-size:16px;box-shadow:2px 3px 0 rgba(43,29,18,.3);touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
-  body.home #homeWallet{display:inline-flex}#homeWallet span{display:inline-flex;align-items:center;gap:5px}#homeWallet .ic{width:19px;height:19px}
+  body.home #homeWallet{display:inline-flex}#homeWallet span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}#homeWallet{max-width:calc(100vw - 80px)}#homeWallet .ic{width:19px;height:19px}
   #coinpill{pointer-events:auto!important;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
   #cdIn.bad{border-color:#ff7a6a;animation:shake .3s}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .lbtn{cursor:pointer;border-radius:6px}.lbtn:hover b,.lbtn:focus-visible b{text-decoration:underline}.lbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .lvcard{width:min(520px,100%);display:flex;flex-direction:column;gap:8px;text-align:left}.lvcard h3{margin:0;font-size:26px}.lvcard .btns{margin-top:4px}
   #lvGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:6px;max-height:min(46vh,360px);overflow-y:auto;padding:3px;touch-action:pan-y;-webkit-overflow-scrolling:touch}
   #ivList{display:flex;flex-direction:column;gap:6px;max-height:min(46vh,340px);overflow-y:auto;touch-action:pan-y}
+  .ivkeep{display:flex;gap:10px;align-items:flex-start;margin:8px 0;padding:8px 10px;background:#2c2644;border:2px solid var(--line);border-radius:var(--wob);cursor:pointer;font-size:15px}.ivkeep input{width:22px;height:22px;margin:2px 0 0;flex:none;accent-color:#2f9e61}.ivkeep small{display:block;font-size:12px;opacity:.65;margin-top:2px}
   .ivrow{display:flex;align-items:center;gap:10px;padding:6px 8px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644}.ivrow .ldot{flex:none}.ivrow .ivn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}.ivrow .ivs{font-size:13px;opacity:.65;flex:none}.ivrow .btn{flex:none}
   .lvb{position:relative;padding:9px 0;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink);font-size:17px}.lvb b{font-weight:normal}
   .lvb.cur{border-color:var(--accent)}.lvb.sel{background:#2f9e61;border-color:#fff}
@@ -547,6 +555,14 @@
   .pcard{width:min(340px,100%);display:flex;flex-direction:column;gap:10px;text-align:center}.pcard h3{display:flex;gap:8px;align-items:center;justify-content:center;font-size:30px;margin:0}
   .pbtn{display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;font-size:21px;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink);box-shadow:0 4px 0 rgba(0,0,0,.35)}
   .pbtn.go{background:#2f9e61;font-size:25px}.pbtn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){
+    #pause .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}#pause .pcard h3{grid-column:1/-1;font-size:22px}#pause .pcard #pauseSub,#pause .pcard #pResume{grid-column:1/-1}#pause .pcard .pbtn{padding:7px;font-size:17px;gap:6px}#pause .pcard #pResume{font-size:20px}#pause .pcard #pauseSub{margin:-2px 0}
+  }
+  @media (max-height:340px) and (min-aspect-ratio:1/1){
+    #emoGrid button{height:30px;padding:1px}#emoGrid{gap:3px;margin:2px 0}#phraseGrid{gap:3px;margin:2px 0}#phraseGrid button{padding:2px 2px}.epcard{padding:6px 12px;column-gap:10px}.epcard h3{font-size:17px;margin:0 0 2px}
+    .profcard{padding:6px 12px}.profcard .phead{gap:8px}.profcard .pbeat{padding:3px 8px}.profcard h3,.profcard .small{margin-top:0;margin-bottom:2px}
+  }
+  .shopcard{display:flex;flex-direction:column;overflow:hidden}.shopcard #shopList{overflow-y:auto;min-height:0;flex:1 1 auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.shopcard h3,.shopcard #shopWallet,.shopcard .small,.shopcard .cfoot{flex:none}
   #pause{z-index:7;background:rgba(10,8,16,.5);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
   #home .card{color:var(--ink)}
   #homeShare{position:fixed;left:12px;top:12px;top:calc(12px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left));z-index:4;width:42px;height:40px;font-size:20px;cursor:pointer}
@@ -885,6 +901,8 @@
         <div class="small dim">Pick any level you like. What you build, move, open and collect on a level is saved until you reset that level.</div>
         <div class="row todrow"><span data-ic="clock"></span><div id="selTod"></div></div>
         <div class="small dim" id="todDesc"></div>
+        <div class="row todrow"><span data-ic="flag"></span><div id="selFin"></div></div>
+        <div class="small dim" id="finDesc"></div>
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
         <button class="btn full" id="btnInvite" type="button"><span data-ic="users"></span>Invite friends to this level</button>
       </div></div>
@@ -979,7 +997,8 @@
 
 <div id="invModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="ivTitle"><div class="card lvcard">
   <h3 id="ivTitle">Invite friends</h3>
-  <div class="small dim" id="ivSub">Friends you invite get a message and can join you on this level. They see what you built, and can build too. They get it when they are on the main menu or in a public world (not in their own private world), for as long as your world is open.</div>
+  <div class="small dim" id="ivSub">Friends you invite get a message and can join your private game on this level. They see what you built, and can build too. They get it when they are on the main menu or in a public world (not in their own private world).</div>
+  <label class="ivkeep"><input type="checkbox" id="ivKeep" checked><span>Keep the invitation open as long as the game is open<small>If you turn this off, a friend is only asked once and not again if they leave.</small></span></label>
   <div id="ivList"></div>
   <div class="btns"><button id="ivStop" type="button" class="danger hide">Close my world</button><button id="ivNo" type="button" class="go">Done</button></div>
 </div></div>
@@ -1053,8 +1072,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=49"></script>
-<script src="physics.js?v=49"></script>
+<script src="maps.js?v=51"></script>
+<script src="physics.js?v=51"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1096,7 +1115,7 @@ function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight',
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, autoEnter: false, mp: true, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
-    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
+    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', finMode: 'normal', edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
     keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
@@ -1117,6 +1136,7 @@ function normalize() {
   ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
   settings.keys = cleanKeys(settings.keys);
   if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);
+  if (['normal', 'always', 'off'].indexOf(settings.finMode) < 0) settings.finMode = 'normal';
   if (['live', 'morning', 'midday', 'night'].indexOf(settings.tod) < 0) settings.tod = 'live';
   settings.soloLen = 0;   // your own world never runs out: it stays until you reset that level
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
@@ -1165,6 +1185,12 @@ function addFeed(text, cls, force, kind) {
   setTimeout(() => { if (d.parentNode) d.parentNode.removeChild(d); }, 7000);
 }
 let noticeT = 0;
+function fmtN(n) {   // money that never gets too long: 9,999, then 10k, 12.5k, 1.2M ...
+  n = Math.max(0, Math.floor(+n || 0)); if (n < 10000) return n.toLocaleString('en-US');
+  const u = [[1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'k']];
+  for (const [v, s] of u) if (n >= v) { const x = n / v; return (x >= 100 ? Math.round(x) : Math.round(x * 10) / 10) + s; }
+  return String(n);
+}
 function notice(text, kind, nk) {
   const n = $('notice'); n.textContent = text; n.className = 'show' + (kind ? ' ' + kind : ''); { const ic = nameIcon(nk); if (ic) n.insertBefore(ic, n.firstChild); }
   clearTimeout(noticeT); noticeT = setTimeout(() => { n.className = ''; }, 6500);
@@ -1579,7 +1605,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; S.boughtGates = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
   restoreWorld(slot);
   if (S.guest && party.priv) applyPartyProps(party.priv);
   S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
@@ -1648,9 +1674,14 @@ const hasSoloSave = i => !!solo2[i];
 function soloRoll() {}   // (a level of your own never ends by itself)
 function soloSlot() { return SOLO_BASE + soloLevel(); }
 function soloNext() { return Date.now() + 3e11; }
-function soloGo(fade) {   // load (or fade into) your own world: the level you picked, just as you left it
+function enterMap(slot, next) {   // going somewhere on purpose: no 'change' screen, you are simply there (the fade is only for a map that swaps while you are in it)
+  if (S.map && S.slot >= 0) saveWorld(true);
+  S.mode = 'play'; $('fade').classList.remove('on'); loadMap(slot, next);
+}
+function soloGo(announce) {   // your own world: the level you picked, just as you left it
   clockOff = 0; loadSolo();
-  if (fade) startTransition(soloSlot(), soloNext()); else loadMap(soloSlot(), soloNext());
+  enterMap(soloSlot(), soloNext());
+  if (announce) announceEntry({ slot: soloSlot() });
 }
 function soloReset(idx) {   // start this level over: everything goes back to how it was at the start
   delete solo2[idx]; saveSolo();
@@ -1668,7 +1699,7 @@ function initWarnings() {
   }
 }
 function startTransition(slot, next) {
-  S.pending = slot; S.pendingNext = next || (S.nextAt + SLOT_MS);
+  S.pending = slot; S.pendingNext = next || BallMaps.slotStart(slot + 1);
   if (S.mode === 'fade') return;
   saveWorld(true); sfx('swoosh');
   S.mode = 'fade'; S.fadeT0 = performance.now(); bots.length = 0;
@@ -1782,8 +1813,17 @@ function worldEvents() {
   }
   L.length = 0;
 }
+const validGate = q => Array.isArray(q) && q.length >= 5 && q.slice(0, 5).every(Number.isFinite) && q[2] >= 2 && q[2] <= 8;
+function addGate(w, q, quiet) {   // q = [column, top row, height in tiles, trigger column, trigger row]: a gate (shut), and a 2-wide trigger plate that holds it open while something is on it
+  const id = w.doors.length, d = { id, x: q[0], y: q[1], w: 1, h: q[2], open: false, latched: false };
+  w.doors.push(d); P.setDoorTiles(w, d, false);
+  const pl = { x: q[3], y: q[4], w: 2, to: [id], on: false };
+  if (!quiet) pl.fall = { y: (q[5] !== undefined ? q[5] : q[4] * TS - 80), v: 0 };   // (a trigger placed over nothing falls and then stays where it lands)
+  w.plates.push(pl); return d;
+}
 function applyPartyProps(pv) {   // what the host built is there when you arrive
   (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) P.addProp(S.world, q[0], q[1], q[2]); });
+  (pv.gates || []).forEach(q => { if (validGate(q)) addGate(S.world, q, true); });
   (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2) S.map.checkpoints.push([q[0], q[1]]); });
 }
 function saveWorld(force) {
@@ -1791,7 +1831,7 @@ function saveWorld(force) {
   const w = S.world, dyn = [];
   for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) dyn.push([i, 0, 0, 1]); else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2) dyn.push([i, Math.round(d.x), Math.round(d.y), 0]); }
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
-  const str = JSON.stringify({ slot: S.slot, buys: S.bought, cps: S.boughtCps, dyn, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN });
+  const str = JSON.stringify({ slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, dyn, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN });
   if (str !== lastWorldStr) {
     lastWorldStr = str;
     if (S.slot >= SOLO_BASE) { solo2[S.idx] = JSON.parse(str); delete solo2[S.idx].slot; saveSolo(); }   // your own world: one save for every level
@@ -1806,6 +1846,7 @@ function restoreWorld(slot) {
     if (!o || (slot < SOLO_BASE && o.slot !== slot)) return;           // a new session (or a level you reset): everything starts fresh
     const w = S.world;
     (o.buys || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { P.addProp(w, q[0], q[1], q[2]); S.bought.push([q[0], q[1], q[2]]); } });   // the things you bought here come back first, in the same order
+    (o.gates || []).forEach(q => { if (validGate(q)) { addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
     (o.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
     (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.vx = d.vy = 0; } });
     (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
@@ -2421,6 +2462,9 @@ const selPreset = makeSelect($('selPreset'), Object.keys(PRESETS).map(k => ({ v:
 const TODS = { live: 'Follows the real clock, like the public worlds.', morning: 'It is always morning in your private world.', midday: 'It is always midday in your private world.', night: 'It is always night in your private world.' };
 const selTod = makeSelect($('selTod'), [{ v: 'live', label: 'Time of day: Live' }, { v: 'morning', label: 'Time of day: Morning' }, { v: 'midday', label: 'Time of day: Midday' }, { v: 'night', label: 'Time of day: Night' }],
   v => { settings.tod = v; save(); $('todDesc').textContent = TODS[v]; });
+const FINS = { normal: 'The finish flashes on the map every now and then, like in public worlds.', always: 'The finish is always shown on the map, with an arrow.', off: 'The finish is never shown. You have to find it yourself.' };
+const selFin = makeSelect($('selFin'), [{ v: 'normal', label: 'Finish: Normal' }, { v: 'always', label: 'Finish: Always shown' }, { v: 'off', label: 'Finish: Never shown' }],
+  v => { settings.finMode = v; save(); $('finDesc').textContent = FINS[v]; });
 const selMusic = makeSelect($('selMusic'), [{ v: 'none', label: 'No music' }, { v: 'peaceful', label: 'Peaceful' }, { v: 'upbeat', label: 'Upbeat' }, { v: 'exciting', label: 'Exciting' }],
   v => { settings.music = v; save(); $('musicDesc').textContent = MUSIC_INFO[v]; if (!AU.ctx) auInit(); musicStart(); auVol(); });
 
@@ -2470,7 +2514,7 @@ function syncUI() {
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
     ['setBeacon', 'beacon'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
-  selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); $('todDesc').textContent = TODS[settings.tod];
+  selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); selFin.set(settings.finMode); $('finDesc').textContent = FINS[settings.finMode]; $('todDesc').textContent = TODS[settings.tod];
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
   $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMax; $('botMaxVal').textContent = settings.botMax;
   buildKeys();
@@ -2875,13 +2919,16 @@ const SHOP = [
   { id: 'box1', name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
   { id: 'ball0', name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
   { id: 'ball1', name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
-  { id: 'ball2', name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 }
+  { id: 'ball2', name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
+  { id: 'gate', name: 'Gate', info: 'A tall gate and a trigger plate. The gate is open while something is on the trigger.', c: 200, g: 2, gate: 7 },
+  { id: 'gateS', name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 }
 ];
 const shopIcon = id => {
   const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
   if (id === 'coins') return '<svg viewBox="0 0 40 40"><circle cx="15" cy="26" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="4.500" fill="none" stroke="#a06400" stroke-width="1.800"/></svg>';
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
+  if (id === 'gate' || id === 'gateS') { const h = id === 'gate' ? 26 : 13; return '<svg viewBox="0 0 40 40"><rect x="7" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="15" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="23" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="5" y="' + (28 - h) + '" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="29" y="32" width="9" height="4" fill="#e0a93c" ' + st + '/></svg>'; }
   if (id === 'box0') return '<svg viewBox="0 0 40 40"><rect x="9" y="9" width="22" height="22" rx="2" fill="#ffc233" ' + st + '/><path d="M13 13L27 27M27 13L13 27" fill="none" ' + st + ' stroke-width="1.800"/></svg>';
   if (id === 'box1') return '<svg viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="2.500" fill="#ffb020" ' + st + '/><path d="M9 9L31 31M31 9L9 31" fill="none" ' + st + ' stroke-width="1.800"/></svg>';
   const r = id === 'ball0' ? 6 : id === 'ball1' ? 11 : 17;
@@ -2891,7 +2938,7 @@ const ico = n => '<svg class="ic" viewBox="0 0 24 24"><use href="#i-' + n + '"/>
 const canShop = () => !inHome && !paused && S.mode === 'play' && !!S.b && !S.away && S.dead <= 0;
 let shopOpen = false;
 function shopRender() {
-  $('shopWallet').innerHTML = '<span>' + ico('gcoin') + wallet.c + '</span><span>' + ico('gem') + wallet.g + '</span>';
+  $('shopWallet').innerHTML = '<span>' + ico('gcoin') + fmtN(wallet.c) + '</span><span>' + ico('gem') + fmtN(wallet.g) + '</span>';
   const L = $('shopList'); L.innerHTML = '';
   SHOP.forEach(it => {
     const row = document.createElement('div'); row.className = 'shopitem';
@@ -2932,10 +2979,59 @@ function ghostSpot(kind, side) {   // always the same rules: a set distance besi
   const y = climb(b.x, b.y - R - half - 2);   // last try: right on top of you
   return y !== null ? [b.x, y, 0] : null;
 }
+function flagSpot(side) {   // a checkpoint flag stands on the ground beside you, like every other thing you place
+  const w = S.world, b = S.b;
+  for (let pass = 0; pass < 2; pass++) {
+    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 0.7)) / TS), row = Math.floor((b.y + R + 1) / TS);
+    for (let k = -2; k < 9; k++) {
+      const t = P.tile(w, tx, row + k);
+      if (t === 2) break;
+      if (t === 1 || t === 3 || t === 4 || t === 6) { if (!solidT(P.tile(w, tx, row + k - 1)) && !solidT(P.tile(w, tx, row + k - 2)) && P.tile(w, tx, row + k - 1) !== 2) return { tx, row: row + k }; break; }
+    }
+  }
+  return null;
+}
+function gateSpot(side, h) {   // a gate: one tile wide, standing on the ground beside you, with clear air above it
+  const w = S.world, b = S.b;
+  for (let pass = 0; pass < 2; pass++) {
+    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 0.9)) / TS), row = Math.floor((b.y + R + 1) / TS);
+    let gr = -1;
+    for (let k = -2; k < 8; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (solidT(t)) { gr = row + k; break; } }
+    if (gr < 0) continue;
+    let ok = true; for (let y = gr - h; y < gr && ok; y++) { const t = P.tile(w, tx, y); if (t !== 0 || y < 1) ok = false; }
+    if (ok) return { tx, gr };
+  }
+  return null;
+}
+function plateSpot(side, gate) {   // the trigger: 2 tiles wide. Over open air it will fall until it lands, then stay.
+  const w = S.world, b = S.b;
+  for (let pass = 0; pass < 2; pass++) {
+    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.4)) / TS) - 1, r0 = Math.floor((b.y + R - 2) / TS);
+    if (solidT(P.tile(w, tx, r0)) || solidT(P.tile(w, tx + 1, r0))) continue;
+    if (gate && tx + 1 >= gate.tx - 0 && tx <= gate.tx) continue;   // not on the gate itself
+    for (let r = r0; r < r0 + 80 && r < w.H; r++) {
+      const a = P.tile(w, tx, r), c = P.tile(w, tx + 1, r);
+      if (a === 2 || c === 2) break;
+      if (solidT(a) || solidT(c)) { if (a === 9 || c === 9) break; return { tx, row: r, y0: r0 * TS + TS / 2 }; }
+    }
+  }
+  return null;
+}
 function computeGhost() {
   const g = placing, b = S.b; if (!g || !b) return;
   const ax = (inp.right ? 1 : 0) - (inp.left ? 1 : 0) || (Math.abs(tin.ax) > 0.15 ? Math.sign(tin.ax) : 0) || (Math.abs(b.vx) > 25 ? Math.sign(b.vx) : 0);
   if (ax) g.side = ax;
+  if (g.it.id === 'flag' || g.it.gate) {   // tile-based things
+    let sp = null, cx, cy;
+    if (g.it.id === 'flag') { sp = flagSpot(g.side); if (sp) { g.ftx = sp.tx; g.frow = sp.row; cx = (sp.tx + 0.5) * TS; cy = sp.row * TS - 30; } }
+    else if (g.stage === 2) { sp = plateSpot(g.side, g.gate); if (sp) { g.ptx = sp.tx; g.prow = sp.row; g.py0 = sp.y0; cx = (sp.tx + 1) * TS; cy = sp.y0; } }
+    else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - g.it.gate / 2) * TS; } }
+    g.ok = !!sp;
+    if (!sp) { cx = b.x + g.side * (R + TS); cy = b.y; }
+    g.tx = cx; g.ty = cy;
+    if (g.dx === undefined || Math.hypot(g.dx - g.tx, g.dy - g.ty) > 200) { g.dx = g.tx; g.dy = g.ty; }
+    return;
+  }
   const spot = ghostSpot(g.it.kind, g.side), q = P.propDims(g.it.kind);
   if (spot) { g.tx = spot[0]; g.ty = spot[1]; g.ok = true; } else { g.tx = b.x + g.side * (R + q.half + 3); g.ty = b.y + R - q.half; g.ok = false; }
   if (g.dx === undefined || Math.hypot(g.dx - g.tx, g.dy - g.ty) > 200) { g.dx = g.tx; g.dy = g.ty; }
@@ -2945,6 +3041,7 @@ function drawGhost(dt, nowT) {
   computeGhost();
   const a = Math.min(1, dt * 20); g.dx += (g.tx - g.dx) * a; g.dy += (g.ty - g.dy) * a;
   refreshPlaceUI();
+  if (g.it.id === 'flag' || g.it.gate) { drawTileGhost(g, nowT); return; }
   const k = g.it.kind, q = P.propDims(k), x = g.dx, y = g.dy, bad = !g.ok, INKc = '#16100c';
   ctx.save(); ctx.globalAlpha = 0.55 + 0.15 * Math.sin(nowT / 170); ctx.lineWidth = 2.4; ctx.lineJoin = 'round';
   if (k === 5 || k === 6) {
@@ -2962,27 +3059,67 @@ function drawGhost(dt, nowT) {
   const r0 = q.half + 4; ctx.beginPath(); if (q.r) ctx.arc(x, y, q.r + 4, 0, TAU); else ctx.rect(x - r0, y - r0, r0 * 2, r0 * 2); ctx.stroke();
   ctx.restore();
 }
+function gateShape(x, top, h, alpha, bad) {   // bars between two beams, as drawn for the real gates
+  ctx.save(); ctx.globalAlpha = alpha; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.strokeStyle = '#16100c';
+  const hh = h * TS; ctx.fillStyle = bad ? '#ff7a6a' : '#b8862b';
+  for (let k = 0; k < 2; k++) { const bx = x + 8 + k * 16; ctx.fillRect(bx, top, 7, hh); ctx.strokeRect(bx, top, 7, hh); }
+  ctx.fillStyle = bad ? '#ff7a6a' : '#5b4a3a'; ctx.fillRect(x - 3, top - 9, TS + 6, 11); ctx.strokeRect(x - 3, top - 9, TS + 6, 11);
+  ctx.restore();
+}
+function plateShape(x, y, alpha, bad) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.strokeStyle = '#16100c'; ctx.fillStyle = bad ? '#ff7a6a' : '#e0a93c';
+  ctx.fillRect(x + 3, y - 8, TS * 2 - 6, 8); ctx.strokeRect(x + 3, y - 8, TS * 2 - 6, 8); ctx.restore();
+}
+function drawTileGhost(g, nowT) {
+  const bad = !g.ok, pulse = 0.55 + 0.15 * Math.sin(nowT / 170);
+  ctx.save(); ctx.lineJoin = 'round';
+  if (g.it.id === 'flag') {
+    const x = g.dx, yb = bad ? g.dy + 30 : g.frow * TS;
+    ctx.globalAlpha = pulse; ctx.lineWidth = 2.4; ctx.strokeStyle = '#16100c'; ctx.fillStyle = bad ? '#ff7a6a' : '#ff8a1f';
+    ctx.beginPath(); ctx.moveTo(x, yb); ctx.lineTo(x, yb - 62); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, yb - 62); ctx.lineTo(x + 26, yb - 52); ctx.lineTo(x, yb - 42); ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else if (g.stage === 2) {
+    gateShape(g.gate.tx * TS, (g.gate.gr - g.it.gate) * TS, g.it.gate, 0.9, false);   // the gate you just placed
+    if (!bad) {
+      const x = g.dx - TS, land = g.prow * TS;
+      plateShape(x, g.dy, pulse, false);
+      if (land - g.dy > 14) { ctx.globalAlpha = 0.9; ctx.setLineDash([5, 5]); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(g.dx, g.dy + 4); ctx.lineTo(g.dx, land - 10); ctx.stroke(); ctx.setLineDash([]); plateShape((g.ptx) * TS, land, 0.45, false); }
+    } else plateShape(g.dx - TS, g.dy, pulse, true);
+  } else {
+    const top = bad ? g.dy - g.it.gate * TS / 2 : (g.ggr - g.it.gate) * TS, x = bad ? g.dx - TS / 2 : g.gtx * TS;
+    gateShape(x, top, g.it.gate, pulse, bad);
+  }
+  ctx.restore();
+}
 let placeUIKey = null;
 function refreshPlaceUI() {   // the little bar (and, on a phone, the round button) that finish the build
-  const g = placing, on = !!g, key = on ? g.it.id + (g.ok ? 1 : 0) + (touchActive() ? 1 : 0) : '';
+  const g = placing, on = !!g, key = on ? g.it.id + (g.stage || 0) + (g.ok ? 1 : 0) + (touchActive() ? 1 : 0) : '';
   if (key === placeUIKey) return; placeUIKey = key;
   $('placeBar').classList.toggle('hide', !on); applyTouchUI();
   if (!on) return;
-  $('placeName').textContent = g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
-  $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok);
-  $('placeHint').textContent = g.ok ? (touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : 'No room here. Move somewhere with space';
+  $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
+  $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = g.it.gate && g.stage === 1 ? 'Next' : 'Place';
+  $('placeHint').textContent = g.ok ? (g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : 'No room here. Move somewhere with space';
 }
 function startPlacing(it) {
-  placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
+  placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
 }
-function cancelPlacing(quiet) { if (!placing) return; placing = null; placeUIKey = null; refreshPlaceUI(); if (!quiet) notice('Nothing was bought', ''); }
+function cancelPlacing(quiet) {
+  if (!placing) return;
+  if (!quiet && placing.it.gate && placing.stage === 2) { placing.stage = 1; placing.gate = null; placing.dx = undefined; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui'); return; }   // back to the gate: nothing is bought until both are placed
+  placing = null; placeUIKey = null; refreshPlaceUI(); if (!quiet) notice('Nothing was bought', ''); }
 function finishPlacing() {
   const g = placing; if (!g || !canShop()) return;
   const it = g.it; computeGhost();
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); cancelPlacing(true); return; }
-  if (S.bought.length >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); cancelPlacing(true); return; }
+  if (it.id !== 'flag' && S.bought.length + S.boughtGates.length >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); cancelPlacing(true); return; }
   if (!g.ok) { notice('No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
-  placeProp(it.kind, [g.tx, g.ty]);
+  if (it.gate && g.stage === 1) { g.gate = { tx: g.gtx, gr: g.ggr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
+  if (it.gate) {
+    const q = [g.gate.tx, g.gate.gr - it.gate, it.gate, g.ptx, g.prow, Math.round(g.py0)];
+    addGate(S.world, q); S.boughtGates.push(q.slice(0, 5)); partyBuild({ t: 'pgate', g: q.slice(0, 5) }); wDirty = true;
+    burst((q[0] + 0.5) * TS, (q[1] + it.gate / 2) * TS, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[0] + 0.5) * TS, (q[1] + it.gate / 2) * TS, '#fff', 4, 40, 0.4);
+  } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
+  else placeProp(it.kind, [g.tx, g.ty]);
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   placing = null; placeUIKey = null; refreshPlaceUI();
 }
@@ -2992,11 +3129,8 @@ function placeProp(kind, at) {
   S.bought.push([kind, Math.round(at[0]), Math.round(at[1])]); wDirty = true;
   burst(at[0], at[1], ['#fff', '#ffd23d'], 10, 140, 60); ring(at[0], at[1], '#fff', 4, 34, 0.4);
 }
-function placeFlag() {   // right where you are: it lands on the ground under you and is your checkpoint at once
-  const w = S.world, b = S.b, tx = Math.floor(b.x / TS), row = Math.floor((b.y + R + 2) / TS);
-  let found = -1;
-  for (let k = 0; k < 8; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (t === 1 || t === 3 || t === 4 || t === 6) { found = row + k; break; } }
-  if (found < 0) return false;
+function placeFlagAt(tx, found) {   // on the ground where the ghost stood: it is your checkpoint at once
+  const w = S.world, b = S.b;
   const cp = [tx, found], m = S.map; m.checkpoints.push(cp); S.boughtCps.push(cp); partyBuild({ t: 'pcp', x: tx, y: found });
   S.cpArmed = m.checkpoints.length - 1; S.cpUsed = -1; S.cpFlash = 1; wDirty = true;
   const fx0 = (tx + 0.5) * TS;
@@ -3004,31 +3138,16 @@ function placeFlag() {   // right where you are: it lands on the ground under yo
   notice('Checkpoint placed. Your next fall or reset brings you back here', '');
   return true;
 }
-let pendingBuy = null;   // something you paid for in your mind but that had no room yet: it waits until you move somewhere with space
-function attemptBuy(it) {   // the flag: true = placed and paid for
-  if (wallet.c < it.c || wallet.g < it.g) return false;
-  if (!placeFlag()) return false;
-  wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
-  return true;
-}
 function buyItem(it) {
   if (!canShop() || !it) return;
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); shopRender(); return; }
   if (it.give) { wallet.g -= it.g; wallet.c += it.give; saveWallet(); sfx('gem'); shopRender(); return; }   // a trade, not a thing: the shop stays open
-  if (it.id !== 'flag' && S.bought.length >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); return; }
+  if (it.id !== 'flag' && S.bought.length + S.boughtGates.length >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); return; }
   toggleShop(false);
-  if (it.id !== 'flag') { startPlacing(it); return; }   // things you build: the shop closes and a ghost follows you until you place it
-  if (attemptBuy(it)) { pendingBuy = null; return; }
-  pendingBuy = { it, x: S.b.x, y: S.b.y };   // the flag needs ground under you: it drops the moment you land
-  notice('No solid ground under you. The flag drops when you land', 'urgent');
+  startPlacing(it);   // everything you build works the same way: the shop closes and a ghost follows you until you place it
 }
 setInterval(() => {
   if (placing && (S.mode !== 'play' || !S.b || S.away || inHome)) cancelPlacing(true);
-  if (!pendingBuy) return;
-  if (S.mode !== 'play' || !S.b || S.away || S.dead > 0) { if (S.mode !== 'play' || S.away) pendingBuy = null; return; }
-  if (paused || wallet.c < pendingBuy.it.c || wallet.g < pendingBuy.it.g) { if (!paused) pendingBuy = null; return; }
-  if (pendingBuy.it.id !== 'flag' && Math.hypot(S.b.x - pendingBuy.x, S.b.y - pendingBuy.y) < 24) return;   // wait until you have moved
-  if (attemptBuy(pendingBuy.it)) pendingBuy = null; else { pendingBuy.x = S.b.x; pendingBuy.y = S.b.y; }
 }, 250);
 addEventListener('storage', e => { if (e.key === WALKEY) { try { const o = JSON.parse(e.newValue || 'null'); if (o) { wallet.c = Math.max(0, o.c | 0); wallet.g = Math.max(0, o.g | 0); if (shopOpen) shopRender(); } } catch (x) {} } });   // (another tab of the game spent or earned something)
 const openFriends = () => { if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
@@ -3295,6 +3414,7 @@ function enterGame(auto) {
   else { setNet('solo'); if (S.slot !== soloSlot()) soloGo(false); }
   setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
   if (reenter) backToStart(); reenter = true;
+  if (!settings.mp) setTimeout(() => announceEntry({ slot: soloSlot() }), 350);
   if (firstEntry && settings.intro && !auto) showIntro(); firstEntry = false;
   nameUI(); trackVis();
 }
@@ -3309,7 +3429,7 @@ function clearInput() { keysDown.clear(); inp.left = inp.right = inp.jump = fals
 function openPause() {
   if (inHome || paused) return;
   toggleChat(false); toggleShop(false); paused = true; clearInput();
-  $('pauseSub').textContent = settings.mp ? 'The world keeps going. Your ball waits for you.' : party ? (party.role === 'host' ? 'Your world is open for friends. It keeps going.' : 'You are in ' + who(party.name) + "'s world. It keeps going.") : lvlLabel() + '. Everything is paused.'; lvlRender();
+  $('pauseSub').textContent = settings.mp ? 'The world keeps going. Your ball waits for you.' : party ? (party.role === 'host' ? 'Your private game is open for friends. It keeps going.' : 'You are in ' + who(party.name) + "'s private game. It keeps going.") : lvlLabel() + '. Everything is paused.'; lvlRender();
   $('pause').classList.remove('hide'); sfx('ui');
 }
 function resumeGame() { if (!paused) return; paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); sfx('ui'); }
@@ -3410,7 +3530,7 @@ function startHosting() {
 function stopHosting() {
   if (!party || party.role !== 'host') return;
   if (ws && ws.readyState === 1) { try { ws.send('{"t":"lobby"}'); } catch (e) {} }
-  party = null; online = false; others.clear(); dropConnection(); setNet('solo'); lvlRender(); notice('Your world is closed to friends', '');
+  party = null; online = false; others.clear(); dropConnection(); setNet('solo'); lvlRender(); notice('Your private game is closed to friends', '');
 }
 function joinParty(hp, name) {
   if (ws && ws.readyState === 1 && (online || party)) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; others.clear(); lastSent = ''; }
@@ -3423,9 +3543,9 @@ function joinParty(hp, name) {
 }
 function partyInvited(m) {
   if (typeof m.pub !== 'string' || (mutes[m.pub] || 0) >= 2) return;
-  if (!$('confirm').classList.contains('hide')) { notice(who(m.name) + ' invited you to their world', ''); return; }
+  if (!$('confirm').classList.contains('hide')) { notice(who(m.name) + ' invited you to their private game', ''); return; }
   sfx('notice');
-  askConfirm(who(m.name) + ' invited you', 'Join their world on ' + lvLabelOf(Math.max(0, Math.min(BallMaps.count - 1, m.idx | 0))) + '. You will see each other, can chat, and can build together.', 'Join', () => joinParty(m.pub, m.name), { yesClass: 'go', no: 'Not now' });
+  askConfirm(who(m.name) + ' invited you', 'Join their private game on ' + lvLabelOf(Math.max(0, Math.min(BallMaps.count - 1, m.idx | 0))) + '. You will see each other, can chat, and can build together.', 'Join', () => joinParty(m.pub, m.name), { yesClass: 'go', no: 'Not now' });
 }
 function ivRender() {
   if ($('invModal').classList.contains('hide')) return;
@@ -3437,7 +3557,7 @@ function ivRender() {
     const r = el('div', 'ivrow'); r.appendChild(dot(l.color)); r.appendChild(el('span', 'ivn', who(l.name))); r.appendChild(el('span', 'ivs', l.ok && l.on ? (l.w < 0 ? 'In a private world' : 'Online') : 'Offline'));
     const sent = !!(party && party.invited && party.invited.has(l.pub));
     const b = el('button', 'btn sm' + (ready && !sent ? ' prim' : ''), sent ? 'Invited' : !ready ? 'Connecting…' : 'Invite'); b.type = 'button'; b.disabled = !ready || sent;
-    b.onclick = () => { try { ws.send(JSON.stringify({ t: 'inv', to: l.pub })); } catch (e) {} if (party.invited) party.invited.add(l.pub); sfx('ui'); ivRender(); };
+    b.onclick = () => { try { ws.send(JSON.stringify({ t: 'inv', to: l.pub, keep: $('ivKeep').checked })); } catch (e) {} if (party.invited) party.invited.add(l.pub); sfx('ui'); ivRender(); };
     r.appendChild(b); box.appendChild(r);
   });
   $('ivStop').classList.toggle('hide', !party);
@@ -3460,7 +3580,7 @@ $('btnInvite').onclick = () => { if (inHome) { notice('Start playing first, then
 let lvSel = 0;
 const lvLabelOf = i => 'Level ' + (i + 1) + ': ' + BallMaps.names[i];
 function lvlLabel() { return lvLabelOf(soloLevel()); }
-const pubIdx = () => { const s = Math.floor(nowMs() / SLOT_MS); return { i: ((s % BallMaps.count) + BallMaps.count) % BallMaps.count, next: (s + 1) * SLOT_MS }; };
+const pubIdx = () => { const s = BallMaps.slotOf(nowMs()); return { i: ((s % BallMaps.count) + BallMaps.count) % BallMaps.count, next: BallMaps.slotStart(s + 1) }; };
 function lvlRender() {
   const pub = $('homeMp').checked, h = $('homeLvl');
   let t = lvlLabel();
@@ -3471,7 +3591,7 @@ function lvlRender() {
   }
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
   const sl = !settings.mp && !party; $('pLevel').classList.toggle('hide', !sl); $('pReset').classList.toggle('hide', !sl);
-  $('pInvite').classList.toggle('hide', settings.mp || !!(party && party.role === 'guest')); $('pInvite').lastChild.textContent = party ? 'Invite friends (world is open)' : 'Invite friends';
+  $('pInvite').classList.toggle('hide', settings.mp || !!(party && party.role === 'guest')); $('pInvite').lastChild.textContent = party ? 'Invite friends (game is open)' : 'Invite friends';
 }
 function lvBuild() {
   const g = $('lvGrid'); g.innerHTML = '';
@@ -3511,7 +3631,7 @@ $('btnPickLvl').onclick = () => { sfx('ui'); openLevels(); };
 lvlRender();
 
 /* ----- a secret code: double-tap the coins and diamonds (in the game or on the main screen) ----- */
-function homeWalletRender() { const k = wallet.c + ':' + wallet.g; if (homeWalletRender.k === k) return; homeWalletRender.k = k; $('homeWallet').innerHTML = '<span>' + ico('gcoin') + wallet.c + '</span><span>' + ico('gem') + wallet.g + '</span>'; }
+function homeWalletRender() { const k = wallet.c + ':' + wallet.g; if (homeWalletRender.k === k) return; homeWalletRender.k = k; $('homeWallet').innerHTML = '<span>' + ico('gcoin') + fmtN(wallet.c) + '</span><span>' + ico('gem') + fmtN(wallet.g) + '</span>'; }
 setInterval(() => { if (inHome) homeWalletRender(); }, 400);
 setInterval(() => { if (inHome && $('homeMp').checked) lvlRender(); }, 1000);
 let codeBack = null;
@@ -3546,11 +3666,10 @@ function setMultiplayer(on) {
   bots.length = 0;
   if (on) {
     joinWorld();
-    const ls = Math.floor(Date.now() / SLOT_MS); startTransition(ls, (ls + 1) * SLOT_MS);   // back to the shared map: your ball restarts there
+    const ls = BallMaps.slotOf(Date.now()); enterMap(ls, BallMaps.slotStart(ls + 1));   // back to the shared map: your ball restarts there
     addFeed('You are back in a public world', 'join', true);
   } else {
     dropConnection(); setNet('solo'); soloGo(true);
-    addFeed('You are in your private world now', 'bad', true);
   }
   applyDeps(); syncUI(); newBotTarget();
 }
@@ -3558,7 +3677,7 @@ function setMultiplayer(on) {
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
-  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), props: S.bought, cps: S.boughtCps }; else o.join = party.host; }   // a friend's world: open mine, or go to theirs
+  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), props: S.bought, cps: S.boughtCps, gates: S.boughtGates }; else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   return JSON.stringify(o);
 };
 function joinWorld() {
@@ -3667,13 +3786,22 @@ function onBin(buf) {   // compact position update: [1][slot u16] then per playe
   }
 }
 let lastWorldShown = 0, worldPopT = 0;
+const leftText = ms => { const m = Math.max(1, Math.round(ms / 60000)); return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60 ? (m % 60) + 'm' : '') : m + ' min'; };
+function announceEntry(o) {   // when you arrive somewhere: which map, how long is left, how many are there. (No 'change' screen: that is only for a map that swaps while you are in it.)
+  const idx = ((o.slot % BallMaps.count) + BallMaps.count) % BallMaps.count, mapT = lvLabelOf(idx); let title, sub;
+  if (party) { title = party.role === 'host' ? 'Your private game' : who(party.name) + "'s private game"; sub = mapT + (o.n ? ' · ' + o.n + ' here' : ''); }
+  else if (o.slot >= SOLO_BASE || inSolo()) { title = 'Your private world'; sub = mapT + ' · no time limit · only you'; }
+  else { title = 'Public World ' + (room.id || ''); sub = mapT + ' · ' + leftText((o.next || S.nextAt) - nowMs()) + ' left · ' + (o.n || room.n) + ' player' + ((o.n || room.n) === 1 ? '' : 's'); }
+  const el = $('worldpop'); el.innerHTML = '<b></b><span></span>'; el.firstChild.textContent = title; el.lastChild.textContent = sub; el.classList.remove('hide');
+  clearTimeout(worldPopT); worldPopT = setTimeout(() => el.classList.add('hide'), 5000);
+}
 function showWorldPop(id, full) {   // "You're in World 1" or "World 1 was too full, you've been pushed to World 2"
   const el = $('worldpop'), list = full.slice().sort((a, b) => a - b);
   let h;
   if (list.length) {
     const was = list.length === 1 ? 'World ' + list[0] + ' was' : 'Worlds ' + list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1] + ' were';
     h = '<b>' + was + ' too full</b>You\'ve been pushed to World ' + id + '. Each world holds up to ' + room.max + ' players, so a new one opens when the others fill up.';
-  } else h = '<b>You\'re in Public World ' + id + '</b>Everyone in World ' + id + ' plays the same map and can see each other. Each world holds up to ' + room.max + ' players.';
+  } else h = '<b>Public World ' + id + '</b>Everyone here plays the same map. Each world holds up to ' + room.max + ' players.';
   el.innerHTML = h; el.classList.remove('hide'); sfx('notice');
   clearTimeout(worldPopT); worldPopT = setTimeout(() => el.classList.add('hide'), list.length ? 10000 : 6000);
 }
@@ -3701,11 +3829,11 @@ function onMsg(m) {
       others.clear();
       m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); noteSeen(o.pub, p.name, p.color, p.code); }); saveSeen();
       setNet('online');
-      if (m.priv) addFeed(party.role === 'host' ? 'Your world is open: invite your friends' : 'You joined ' + who(party.name) + "'s world", 'join', true); else addFeed('You joined World ' + m.room, 'join', true);
+      if (m.priv) addFeed(party.role === 'host' ? 'Your private game is open: invite your friends' : 'You joined ' + who(party.name) + "'s private game", 'join', true); else addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
       if (party && party.role === 'guest') { loadMap(m.slot, m.next); }
       else if (m.slot !== S.slot && forced === null) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
-      if (!m.priv && lastWorldShown !== m.room) { lastWorldShown = m.room; showWorldPop(m.room, m.full || []); }
+      if (m.priv) announceEntry({ slot: m.priv.idx, n: m.n }); else if ((m.full || []).length) showWorldPop(m.room, m.full); else announceEntry({ slot: m.slot, next: m.next, n: m.n });
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
@@ -3721,10 +3849,11 @@ function onMsg(m) {
       break;
     }
     case 'stats': net.online = m.online; net.peak = m.peak; break;
-    case 'jno': partyOver(m.why === 'full' ? "That world is full" : m.why === 'busy' ? 'Your world is still closing. Try again in a moment' : "You can't join that world any more"); break;
-    case 'pclose': partyOver(who(m.name) + ' closed their world'); break;
+    case 'jno': partyOver(m.why === 'full' ? 'That private game is full' : m.why === 'busy' ? 'Your private game is still closing. Try again in a moment' : "You can't join that private game any more"); break;
+    case 'pclose': partyOver(who(m.name) + ' closed their private game'); break;
     case 'inv': partyInvited(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
+    case 'pgate': { if (!S.world || !party || !validGate(m.g)) break; addGate(S.world, m.g); if (party.role === 'host') { S.boughtGates.push(m.g.slice(0, 5)); wDirty = true; } sfx('big'); break; }
     case 'padd': { if (!S.world || !party || !P.propDims(m.k | 0).half) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) d.sleep = false; if (party.role === 'host') { S.bought.push([m.k | 0, m.x | 0, m.y | 0]); wDirty = true; } burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); break; }
     case 'pcp': { if (!S.map || !party) break; S.map.checkpoints.push([m.x, m.y]); if (party.role === 'host') { S.boughtCps.push([m.x, m.y]); wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'newmap': if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
@@ -3856,10 +3985,10 @@ function skyAt(p) {
 }
 const TOD_PH = { morning: 0.1, midday: 0.55, night: 0.985 };
 function dayPhase() {
-  if (inSolo() && TOD_PH[settings.tod] !== undefined) return TOD_PH[settings.tod];   // your private world can stay at one time of day
+  if (privWorld() && TOD_PH[settings.tod] !== undefined) return TOD_PH[settings.tod];   // your private world can stay at one time of day
   const len = inSolo() ? settings.soloLen * 60000 : party ? 0 : SLOT_MS;
   if (len > 0) return clamp(1 - (S.nextAt - nowMs()) / len, 0, 1);
-  return (Date.now() % SLOT_MS) / SLOT_MS;
+  const t = Date.now(); return clamp((t - BallMaps.slotStart(BallMaps.slotOf(t))) / SLOT_MS, 0, 1);
 }
 /* ----- the sky: sun, moon, stars, clouds, birds and fireflies. All of it is drawn on your own device and is never shared. ----- */
 function cloudsFor(m) {   // the clouds of this map: more of them the higher up you go
@@ -4163,7 +4292,8 @@ function drawGadgets(camL, camT, vw, vh, dt) {
   }
   // pressure plates and buttons
   for (let i = 0; i < w.plates.length; i++) {
-    const q = w.plates[i], x = q.x * TS, y = q.y * TS, ww = q.w * TS;
+    const q = w.plates[i], x = q.x * TS, ww = q.w * TS; let y = q.y * TS;
+    if (q.fall) { q.fall.v += 1900 * dt; q.fall.y += q.fall.v * dt; if (q.fall.y >= y) { q.fall = null; sfx('plate'); ring((q.x + q.w / 2) * TS, y, '#e0a93c', 4, 40, 0.3); S.shake = Math.max(S.shake, 0.08); } else y = q.fall.y; }
     if (x > camL + vw + 20 || x + ww < camL - 20 || y < camT - 30 || y > camT + vh + 30) continue;
     const h = q.on ? 3 : 8;
     ctx.fillStyle = q.on ? '#58d68d' : '#e0a93c'; ctx.fillRect(x + 3, y - h, ww - 6, h); ctx.strokeRect(x + 3, y - h, ww - 6, h);
@@ -4472,7 +4602,7 @@ function renderInner(dt, nowT) {
   if (camL + vw > ww + 2 * TS) ctx.fillRect(ww + 2 * TS, camT - 10, camL + vw - ww - 2 * TS + 10, vh + 20);
   drawTiles(camL, camT, vw, vh);
   drawSpawn(); drawCheckpoints(camL, camT, vw, vh); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh); drawGhost(dt, nowT);
-  if (S.beaconOn && settings.beacon) drawBeacon(camL, camT, vw, vh, sc);
+  if (S.beaconOn && beaconOK()) drawBeacon(camL, camT, vw, vh, sc);
   drawTrack(camL, camT, vw, vh, sc);
   S.view = { l: camL, t: camT, w: vw, h: vh };
 
@@ -4581,7 +4711,7 @@ function drawMinimap() {
   }
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = (c[0] + 0.5 - left) * ppt, y = (c[1] - top) * ppt; if (x < 3 || y < 7 || x > w - 3 || y > h) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.5, y - 7, 1.4, 7); g.beginPath(); g.moveTo(x + 1, y - 7); g.lineTo(x + 6, y - 5.2); g.lineTo(x + 1, y - 3.4); g.fill(); });
   drawLinksOnMap(g, x => (x - left) * ppt, y => (y - top) * ppt, 5, false, false);
-  if (S.beaconOn && settings.beacon) {   // while the beacon is on, the finish shows on the map: a flag if it is in view, otherwise an arrow on the edge pointing the way
+  if (S.beaconOn && beaconOK()) {   // while the beacon is on, the finish shows on the map: a flag if it is in view, otherwise an arrow on the edge pointing the way
     const f = m.flag, fx = (f[0] - left) * ppt, fy = (f[1] - top) * ppt, inView = fx > 6 && fx < w - 6 && fy > 6 && fy < h - 6;
     if (inView) drawFinishIcon(g, fx, fy, 1, now);
     else {
@@ -4657,7 +4787,7 @@ function drawMinimapBig() {
   if (settings.mmPlayers) others.forEach(o => { const q = opos(o); if (!q) return; g.fillStyle = o.color; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(X(q.x / TS), Y(q.y / TS), 4, 0, TAU); g.fill(); g.stroke(); });
   drawLinksOnMap(g, X, Y, 7, true, false);
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
-  const bon = S.beaconOn && settings.beacon;
+  const bon = S.beaconOn && beaconOK();
   if (bon) drawFinishIcon(g, X(m.flag[0]), Y(m.flag[1]), 1.5 + Math.min(1.5, z * 0.08), performance.now());
   const px = X(S.b.x / TS), py = Y(S.b.y / TS), pulse = 6 + Math.sin(performance.now() / 180) * 1.8;
   g.strokeStyle = '#fff'; g.lineWidth = 2.4; g.fillStyle = settings.color; g.beginPath(); g.arc(px, py, pulse, 0, TAU); g.fill(); g.stroke();
@@ -4698,7 +4828,10 @@ setInterval(drawMinimapBig, 140);
 const BEACON_LEN = 15000, BEACON_WIN = 600000;   // one beacon in every 10-minute window, at a random moment in its first 5 minutes: 5 to 15 minutes apart
 const bhash = n => { let h = Math.imul(n | 0, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; return (h >>> 0) / 4294967296; };
 const beaconStart = w => w * BEACON_WIN + Math.floor(bhash(w + 17) * 300000);
-function beaconInfo(t) {   // same answer for everyone, because it only depends on the clock
+const privWorld = () => inSolo() || !!party;   // a private world or a private game: its owner decides about the finish and the time of day
+const beaconOK = () => privWorld() ? settings.finMode !== 'off' : settings.beacon;
+function beaconInfo(t) {   // same answer for everyone, because it only depends on the clock (in a private world the settings say)
+  if (privWorld()) { if (settings.finMode === 'always') return { on: true, ph: 0, next: 0 }; if (settings.finMode === 'off') return { on: false, ph: 0, next: 1e9 }; }
   const w = Math.floor(t / BEACON_WIN), s0 = beaconStart(w);
   if (t >= s0 && t < s0 + BEACON_LEN) return { on: true, ph: t - s0, next: 0 };
   return { on: false, ph: 0, next: (t < s0 ? s0 : beaconStart(w + 1)) - t };
@@ -4706,7 +4839,7 @@ function beaconInfo(t) {   // same answer for everyone, because it only depends 
 let lastGemShown = -1, lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
 const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 function worldText() {
-  if (party && online) return party.role === 'host' ? 'Your world · ' + room.n + ' here' : who(party.name) + "'s world · " + room.n + ' here';
+  if (party && online) return party.role === 'host' ? 'Your private game · ' + room.n + ' here' : who(party.name) + "'s private game · " + room.n + ' here';
   if (inSolo()) return '';
   if (online) return 'World ' + room.id + ' · ' + room.n + ' player' + (room.n === 1 ? '' : 's');
   return '';
@@ -4727,21 +4860,21 @@ function hudTick() {
     });
     const sec = Math.ceil(rem / 1000);
     if (!endless && sec <= 10 && sec > 0 && sec !== lastTickSec) { lastTickSec = sec; sfx('tick'); }
-    if (rem <= 0 && !endless) { if (inSolo()) { soloRoll(); startTransition(soloSlot(), soloNext()); } else startTransition(S.slot + 1, S.nextAt + SLOT_MS); }
+    if (rem <= 0 && !endless) { if (inSolo()) { soloRoll(); startTransition(soloSlot(), soloNext()); } else startTransition(S.slot + 1, BallMaps.slotStart(S.slot + 2)); }
   }
   // beacon: every 30 minutes (on the clock) for 15 seconds
-  const bi = beaconInfo(nowMs()), ph = bi.ph, bon = !!(settings.beacon && S.mode === 'play' && !S.finished && S.dead <= 0 && bi.on);
+  const bi = beaconInfo(nowMs()), ph = bi.ph, bon = !!(beaconOK() && S.mode === 'play' && !S.finished && S.dead <= 0 && bi.on);
   if (bon && !S.beaconOn) { sfx('beacon'); lastBeaconSfx = performance.now(); }
   S.beaconOn = bon;
   $('beaconbar').classList.toggle('hide', !bon);
   if (bon && S.b) {
     const f = S.map.flag, dx = f[0] * TS - S.b.x, dy = f[1] * TS - S.b.y, d = ft(dx, dy);
     const hz = Math.abs(dx) > 4 * TS ? (dx > 0 ? 'right' : 'left') : '', vt = Math.abs(dy) > 4 * TS ? (dy > 0 ? 'down' : 'up') : '';
-    $('beaconText').textContent = 'Beacon! The finish is ' + d + 'b away' + (hz || vt ? ': ' + [vt, hz].filter(Boolean).join(' and ') : '') + ' · ' + Math.ceil((BEACON_LEN - ph) / 1000) + 's';
+    $('beaconText').textContent = 'Beacon! The finish is ' + d + 'b away' + (hz || vt ? ': ' + [vt, hz].filter(Boolean).join(' and ') : '') + (settings.finMode === 'always' && privWorld() ? '' : ' · ' + Math.ceil((BEACON_LEN - ph) / 1000) + 's');
   }
   $('onl').textContent = worldText();
-  if (wallet.c !== lastCoinShown) { lastCoinShown = wallet.c; $('coinN').textContent = wallet.c; }
-  if (wallet.g !== lastGemShown) { lastGemShown = wallet.g; $('gemN').textContent = wallet.g; }
+  if (wallet.c !== lastCoinShown) { lastCoinShown = wallet.c; $('coinN').textContent = fmtN(wallet.c); }
+  if (wallet.g !== lastGemShown) { lastGemShown = wallet.g; $('gemN').textContent = fmtN(wallet.g); }
   $('coinpill').title = 'Your coins and diamonds. Spend them in the shop (the + button).';
   $('mpstats').textContent = online && party ? worldText() + '.' : online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : '');
   if (!$('tpop').classList.contains('hide')) fillTimerPop(rem);
@@ -4755,8 +4888,8 @@ function fillTimerPop(rem) {
   $('tpCoins').textContent = isBeaten(S.idx) ? 'You have beaten this map' : 'Not beaten yet';
   $('tpWorld').textContent = party ? worldText() : sl ? 'Private world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'Public world ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
   $('tpNext').textContent = endless ? '' : 'Up next: ' + BallMaps.names[(S.slot + 1) % BallMaps.count];
-  const bi = beaconInfo(nowMs()), on = !!(settings.beacon && S.mode === 'play' && !S.finished && bi.on), ar = $('tpArrow');
-  $('tpBeacon').textContent = !settings.beacon ? 'Finish beacon is off' : on ? 'Beacon is on! Follow the arrow' : 'Finish beacon in ' + fmtClock(bi.next);
+  const bi = beaconInfo(nowMs()), on = !!(beaconOK() && S.mode === 'play' && !S.finished && bi.on), ar = $('tpArrow');
+  $('tpBeacon').textContent = !beaconOK() ? 'Finish beacon is off' : on ? 'Beacon is on! Follow the arrow' : 'Finish beacon in ' + fmtClock(bi.next);
   ar.classList.toggle('hide', !on);
   if (on && S.b) { const f = S.map.flag, a = Math.atan2(f[1] * TS - S.b.y, f[0] * TS - S.b.x) * 180 / Math.PI + 90; ar.style.transform = 'rotate(' + a.toFixed(0) + 'deg)'; }
 }
@@ -4769,12 +4902,12 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
 {
   if (!settings.mp && forced === null) { loadSolo(); soloGo(false); }
   else {
-    const ls = forced !== null ? (+forced || 0) : Math.floor(Date.now() / SLOT_MS);
-    S.nextAt = forcedLeft !== null ? Date.now() + (+forcedLeft || 60) * 1000 : forced !== null ? Date.now() + 4 * 3600000 : (ls + 1) * SLOT_MS;
+    const ls = forced !== null ? (+forced || 0) : BallMaps.slotOf(Date.now());
+    S.nextAt = forcedLeft !== null ? Date.now() + (+forcedLeft || 60) * 1000 : forced !== null ? Date.now() + 4 * 3600000 : BallMaps.slotStart(ls + 1);
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { placing: () => placing, finishPlacing, cancelPlacing, wallet, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((settings.autoEnter || resumeAfterUpdate()) && settings.name) enterGame(true); else showHome();

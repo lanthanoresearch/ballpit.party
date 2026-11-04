@@ -126,8 +126,8 @@ function setName(p, nm) {
 /* ---------- rooms ---------- */
 let nextId = 1, nextRoomId = 1, online = 0;
 const rooms = new Map();
-const slotNow = () => Math.floor((Date.now() - OFFSET_MS) / SLOT_MS);
-const nextAt = s => (s + 1) * SLOT_MS + OFFSET_MS;
+const slotNow = () => maps.slotOf(Date.now() - OFFSET_MS);
+const nextAt = s => maps.slotStart(s + 1) + OFFSET_MS;
 let curSlot = slotNow();
 const PRIV_BASE = 3000000, PRIV_MAX = 12;   // a friend's own world (their solo level, with the things they built) is a private room; its slot is the same number the solo game uses
 const rslot = r => (r && r.priv ? r.priv.slot : curSlot);
@@ -244,8 +244,9 @@ wss.on('connection', (ws, req) => {
         if (rooms.has(key)) { send(p, { t: 'jno', why: 'busy' }); return; }
         const clean = (a, n, f) => (Array.isArray(a) ? a.slice(0, n).map(f).filter(Boolean) : []);
         const props = clean(m.host.props, 400, q => (Array.isArray(q) && q.length === 3 && (q[0] | 0) >= 0 && (q[0] | 0) <= 7 && Number.isFinite(q[1]) && Number.isFinite(q[2]) ? [q[0] | 0, Math.round(q[1]), Math.round(q[2])] : null));
+        const gates = clean(m.host.gates, 24, q => (Array.isArray(q) && q.length === 5 && q.every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 ? q.map(Math.round) : null));
         const cps = clean(m.host.cps, 60, q => (Array.isArray(q) && q.length === 2 && Number.isFinite(q[0]) && Number.isFinite(q[1]) ? [Math.round(q[0]), Math.round(q[1])] : null));
-        room = { id: key, players: new Map(), finishers: [], priv: { owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, invited: new Set() } };
+        room = { id: key, players: new Map(), finishers: [], priv: { owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] };
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
         const hr = rooms.get(privKey(m.join));
@@ -267,7 +268,7 @@ wss.on('connection', (ws, req) => {
         send(p, {
           t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
-          priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
+          priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? 1 : 0 }))
         });
         broadcast(room, { t: 'join', id: p.id, pub: p.pub, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
@@ -287,7 +288,7 @@ wss.on('connection', (ws, req) => {
         }
         if (removed.length) send(p, { t: 'unl', gone: removed });
         sendLinks(p);
-        rooms.forEach(r => { if (r.priv && r.priv.invited.has(p.pub) && r !== p.room) send(p, { t: 'inv', pub: r.priv.hostPub, name: (byPub.get(r.priv.hostPub) || {}).name || '', idx: r.priv.idx }); });   // an invite that came while you were away
+        rooms.forEach(r => { if (r.priv && (r.priv.keep.has(p.pub) || r.priv.once.has(p.pub)) && r !== p.room) { r.priv.once.delete(p.pub); send(p, { t: 'inv', pub: r.priv.hostPub, name: (byPub.get(r.priv.hostPub) || {}).name || '', idx: r.priv.idx }); } });   // an invite that came while you were away (one that was sent as 'ask once' is only shown the first time)
         for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (live(q)) { sendLinks(q); if (!wasOn) send(q, { t: 'lon', pub: p.pub, name: p.name }); } }
         pend.forEach((v, k) => {   // friend requests that arrived while you were away
           if (k.slice(17) !== p.pub) return;
@@ -318,9 +319,14 @@ wss.on('connection', (ws, req) => {
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to)) return;
       const now = Date.now(); if (now - (p.lastInv || 0) < 700) return; p.lastInv = now;
       r.priv.invited.add(m.to);
-      const q = byPub.get(m.to);
+      const q = byPub.get(m.to), keep = m.keep !== false;   // 'keep open' (the default): they are asked again every time they come back, for as long as the game is open
+      if (keep) { r.priv.keep.add(m.to); r.priv.once.delete(m.to); } else { r.priv.keep.delete(m.to); if (!live(q)) r.priv.once.add(m.to); }
       if (live(q)) send(q, { t: 'inv', pub: p.pub, name: p.name, idx: r.priv.idx });
       send(p, { t: 'invsent', pub: m.to, on: live(q) ? 1 : 0 });
+    } else if (m.t === 'pgate') {   // a gate and its trigger, built in a friend's world
+      const r = p.room; if (!r || !r.priv || !Array.isArray(m.g) || m.g.length !== 5 || !m.g.every(Number.isFinite) || m.g[2] < 2 || m.g[2] > 8 || r.priv.gates.length >= 24) return;
+      const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
+      const e = m.g.map(Math.round); r.priv.gates.push(e); broadcast(r, { t: 'pgate', g: e }, p);
     } else if (m.t === 'padd' || m.t === 'pcp') {   // somebody built something in a friend's world: everyone there gets it
       const r = p.room; if (!r || !r.priv) return;
       const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;

@@ -1502,9 +1502,30 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     const up = snake(mainDir, 1, UPN, true);
     const dn = snake(-mainDir, -1, DNN, false);
     const mainPath = up.all, decPath = dn.all;
-    // the hidden finish: the very end of the climb
-    let fin = null;
-    for (let back = 0; back < 12 && !fin && back < mainPath.length; back++) {
+    // the hidden finish: somewhere far from the start, picked at random along the climb (not always in a far corner). The part of the climb beyond it stays as extra world.
+    let fin = null; const tailPath = [];
+    {
+      const FR = rng(d.seed + 7771), hh = Math.max(40, LS * (UPN - 1));
+      const nd = e => Math.hypot((e[0] + e[2] / 2) / Math.max(100, xr), e[1] / hh);
+      let cand = []; mainPath.forEach((e, i) => { if (i >= mainPath.length * 0.3 && nd(e) >= 0.75) cand.push(i); });
+      if (cand.length < 6) { const o = mainPath.map((e, i) => i).filter(i => i >= mainPath.length * 0.3).sort((p, q) => nd(mainPath[q]) - nd(mainPath[p])); cand = o.slice(0, Math.max(6, Math.floor(o.length * 0.15))); }
+      for (let k = cand.length - 1; k > 0; k--) { const j = Math.floor(FR() * (k + 1)); const t = cand[k]; cand[k] = cand[j]; cand[j] = t; }
+      const direct = FR() < 0.55;   // either build a little finish platform out from a spot on the climb, or put the flag right on a broad platform of it (which can be anywhere, not only at the far ends)
+      if (direct) {
+        const plain = cand.filter(i => { const e = mainPath[i]; return e[2] >= 8 && e[4] === 0 && !e[6] && !e[12]; });
+        if (plain.length) { const i = plain[Math.floor(FR() * plain.length)], e = mainPath[i]; fin = [e[0], e[1], e[2]]; addRect([e[0], e[1], e[2], 1, 4, e[3], e[5]]); e[9] = 0; e[12] = 1; tailPath.push(...mainPath.splice(i + 1)); }
+      }
+      for (let ci = 0; ci < Math.min(cand.length, 40) && !fin; ci++) {
+        const i = cand[ci], e = mainPath[i], row = Math.max(0, Math.min(UPN - 1, Math.round(-e[1] / LS))), lt = laneOf(bandAt(e[0]), row);
+        for (let att = 0; att < 8 && !fin; att++) {
+          const dir = att % 2 ? -(e[11] || 1) : (e[11] || 1);
+          const mode = att < 4 ? (att < 2 ? 'up' : 'right') : att < 6 ? 'right' : 'up';   // up in the open air between two lanes first, so the finish can be anywhere along a lane
+          const pw = growDir(e, [SEG(mode, mode === 'up' ? 3 + (att & 1) : 3, lt.th, Object.assign({}, lt, mode === 'up' ? { zw: 26, ext: 1 } : {}))], d.seed + 4000 + att * 11 + ci * 3, dir, WHOLE, { fin: true, main: true, kind: 'fin' });
+          if (pw && pw.fin) { fin = pw.fin; tailPath.push(...mainPath.splice(i + 1)); mainPath.push(...pw); }
+        }
+      }
+    }
+    for (let back = 0; back < 12 && !fin && back < mainPath.length; back++) {   // (if that found nothing: the very end of the climb)
       const e = mainPath[mainPath.length - 1 - back], lt = laneOf(bandAt(e[0]), UPN - 1);
       for (let att = 0; att < 8 && !fin; att++) {
         const dir = att % 2 ? -(e[11] || 1) : (e[11] || 1);
@@ -1653,9 +1674,9 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         got.push(c); cps.push([c.x, c.y]); if (c.e) c.e[9] = 0;
       }
     }
-    satellites(decPath, 0.4); satellites(mainPath, 0.35); satellites(gruns, 0.3);
-    chaos(decPath, 1); chaos(mainPath, 0.95); chaos(gruns, 0.6);
-    addStructures(decPath);   // (the real route stays plain so it is always fair)
+    satellites(decPath, 0.4); satellites(tailPath, 0.4); satellites(mainPath, 0.35); satellites(gruns, 0.3);
+    chaos(decPath, 1); chaos(tailPath, 1); chaos(mainPath, 0.95); chaos(gruns, 0.6);
+    addStructures(decPath); addStructures(tailPath);   // (the real route stays plain so it is always fair)
     // crate gates on the real route: a tall door that only opens while something heavy sits on the plate. Three crates are provided; waste them and you are stuck.
     function gates(pw, p, any) {
       for (let i = 0; i < pw.length - 1; i++) {
@@ -1691,15 +1712,15 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         e[9] = 0;
       }
     }
-    padFun(decPath, 0.3); padFun(gruns, 0.22);
+    padFun(decPath, 0.3); padFun(tailPath, 0.3); padFun(gruns, 0.22);
     // checkpoint flags: one on a calm platform every so often. Touch one and your next fall brings you back to it (once).
-    skyDistricts(mainPath); skyDistricts(decPath);
-    satellites(mainPath, 0.5); satellites(decPath, 0.55); satellites(gruns, 0.3);
-    addProps(mainPath, 0.9); addProps(decPath, 0.95);
-    addCoins(mainPath, 0.62); addCoins(decPath, 0.55);
+    skyDistricts(mainPath); skyDistricts(decPath); skyDistricts(tailPath);
+    satellites(mainPath, 0.5); satellites(decPath, 0.55); satellites(tailPath, 0.55); satellites(gruns, 0.3);
+    addProps(mainPath, 0.9); addProps(decPath, 0.95); addProps(tailPath, 0.95);
+    addCoins(mainPath, 0.62); addCoins(decPath, 0.55); addCoins(tailPath, 0.55);
     for (let i = 0; i < 9; i++) coin(fin[0] + 2 + i * (fin[2] - 4) / 8, fin[1] - 1.5 - Math.sin(i / 8 * Math.PI) * 1.5, i === 4 ? 2 : 1);
-    addCeilings(mainPath); addCeilings(decPath);
-    addLavaSea(mainPath); addLavaSea(decPath);
+    addCeilings(mainPath); addCeilings(decPath); addCeilings(tailPath);
+    addLavaSea(mainPath); addLavaSea(decPath); addLavaSea(tailPath);
     // a bounce pad on a wide platform throws you up to a ledge, and a little tower of ledges climbs on from there, ending in a room
     function towerUp(A) {
       if (A[4] !== 0 || A[2] < 9 || !A[9] || A[6]) return false;
@@ -1720,9 +1741,9 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       return true;
     }
     function towers(pw, prob) { for (const e of pw) if (e[2] >= 9 && e[4] === 0 && BR() < prob && branchCount < MAXB) towerUp(e); }
-    branches(mainPath, 0); branches(decPath, 0); branches(gruns, 1);
-    towers(mainPath, 0.95); towers(decPath, 0.95); towers(gruns, 0.5);
-    floaters(decPath, VFP); floaters(gruns, VFP * 0.7); floaters(mainPath, VFP * 0.4);
+    branches(mainPath, 0); branches(decPath, 0); branches(tailPath, 0); branches(gruns, 1);
+    towers(mainPath, 0.95); towers(decPath, 0.95); towers(tailPath, 0.95); towers(gruns, 0.5);
+    floaters(decPath, VFP); floaters(tailPath, VFP); floaters(gruns, VFP * 0.7); floaters(mainPath, VFP * 0.4);
 
     const path = [mainPath.length && mainPath[0][0] + mainPath[0][2] / 2 < SW / 2 ? [0, 0, 9] : [SW - 9, 0, 9]].concat(mainPath.map(e => [e[0], e[1], e[2], e[12] || 0]));
 
@@ -1859,7 +1880,18 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     return map;
   }
 
-  const api = { TS, R, count: DEFS.length, names: DEFS.map(d => d.name), themes: THEMES, generate };
+  /* The public maps change every 3 hours on the clock in US Central time (12, 3, 6, 9, 12, 3, 6, 9), summer time included. */
+  const SLOT_LEN = 3 * 3600 * 1000, HR = 3600000;
+  function centralOff(t) {   // what to add to UTC to get Central time: -6h in winter, -5h in summer
+    const y = new Date(t).getUTCFullYear(), nthSun = (m, n) => { const first = (7 - new Date(Date.UTC(y, m, 1)).getUTCDay()) % 7 + 1; return first + (n - 1) * 7; };
+    return t >= Date.UTC(y, 2, nthSun(2, 2), 8) && t < Date.UTC(y, 10, nthSun(10, 1), 7) ? -5 * HR : -6 * HR;
+  }
+  const slotOf = t => Math.floor((t + centralOff(t)) / SLOT_LEN);
+  function slotStart(s) {   // the moment map number s begins
+    for (const off of [-6 * HR, -5 * HR]) { const t = s * SLOT_LEN - off; if (slotOf(t) === s && slotOf(t - 1) === s - 1) return t; }
+    return s * SLOT_LEN + 6 * HR;
+  }
+  const api = { TS, R, count: DEFS.length, names: DEFS.map(d => d.name), themes: THEMES, generate, slotOf, slotStart, SLOT_LEN };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallMaps = api;
 })(typeof window !== 'undefined' ? window : globalThis);
