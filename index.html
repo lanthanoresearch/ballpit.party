@@ -1072,8 +1072,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=54"></script>
-<script src="physics.js?v=54"></script>
+<script src="maps.js?v=55"></script>
+<script src="physics.js?v=55"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1592,7 +1592,7 @@ const TH_COUNT = THEMES.length;
 function loadMap(slot, next) {
   S.guest = !!(party && party.role === 'guest');   // visiting a friend's world: nothing here is saved to your own
   const m0 = BallMaps.generate(slot % BallMaps.count), m = Object.assign({}, m0, { checkpoints: (m0.checkpoints || []).slice() });   // (your own copy of the flag list: flags you buy are yours alone)
-  S.slot = slot; S.idx = m.idx; S.map = m; S.world = P.makeWorld(m);
+  S.slot = slot; S.idx = m.idx; S.map = m; S.world = P.makeWorld(m); S.world.nb = { dyn: S.world.dyn.length, doors: S.world.doors.length, btns: S.world.btns.length }; S.pubKeys = new Set();
   if (next) S.nextAt = next;
   const W = m.W, H = m.H, tg = new Uint8Array(W * H);
   for (const r of m.rects) for (let y = r[1]; y < r[1] + r[3]; y++) { if (y < 0 || y >= H) continue; for (let x = r[0]; x < r[0] + r[2]; x++) if (x >= 0 && x < W) tg[y * W + x] = r[5]; }
@@ -1609,6 +1609,8 @@ function loadMap(slot, next) {
   S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
   restoreWorld(slot);
   if (S.guest && party.priv) applyPartyProps(party.priv);
+  else if (S.pendingBuild && S.pendingBuild.slot === slot) applyPubBuild(S.pendingBuild.b);
+  S.pendingBuild = null;
   S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
   others.forEach(o => { o.crown = false; });
   bots.length = 0; botNextSpawn = rnd(1, 4); fx.length = 0;
@@ -1686,6 +1688,7 @@ const SOLOKEY = 'ballrun4_solo2', SOLO_BASE = 3000000;
 let solo2 = {};   // one saved world per level, until you reset that level: { levelNumber: what you built, moved, opened and collected }
 let party = null;   // a friend's world: { role: 'host' | 'guest', host: their id, name, priv }
 const inSolo = () => !settings.mp && !party;
+const shared = () => !!party || (online && !inSolo() && S.slot >= 0 && S.slot < SOLO_BASE);   // is what you build shown to everyone in the room? (private games and public worlds)
 function loadSolo() { try { const o = JSON.parse(localStorage.getItem(SOLOKEY) || 'null'); if (o && typeof o === 'object') solo2 = o; } catch (e) {} }
 function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo2)); } catch (e) {} }
 const soloLevel = () => Math.max(0, Math.min(BallMaps.count - 1, +settings.soloMap || 0));
@@ -1864,6 +1867,14 @@ function addGate(w, q, quiet) {   // q = [column, top row, height in tiles, trig
   if (!quiet) pl.fall = { y: (q[5] !== undefined ? q[5] : q[4] * TS - 80), v: 0 };   // (a trigger placed over nothing falls and then stays where it lands)
   w.plates.push(pl); return d;
 }
+const pkey = (k, q) => k + JSON.stringify(q);
+function applyPubBuild(pv) {   // what everyone in a public world has built so far (each thing only once, however often it is told)
+  if (!pv || !S.world) return; const seen = S.pubKeys, take = (k, q) => { const key = pkey(k, q); if (seen.has(key)) return false; seen.add(key); return true; };
+  (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !startBlock(q[1], q[2]) && take('p', q)) P.addProp(S.world, q[0], q[1], q[2]).bought = true; });
+  (pv.misc || []).forEach(q => { if (validMisc(q) && take('m', q)) addMisc(S.world, q); });
+  (pv.gates || []).forEach(q => { if (validGate(q) && take('g', q)) addGate(S.world, q, true); });
+  (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1]) && take('c', q)) S.map.checkpoints.push([q[0], q[1]]); });
+}
 function applyPartyProps(pv) {   // what the host built is there when you arrive
   (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !startBlock(q[1], q[2])) P.addProp(S.world, q[0], q[1], q[2]).bought = true; });
   (pv.misc || []).forEach(q => { if (validMisc(q)) addMisc(S.world, q); });
@@ -1872,10 +1883,10 @@ function applyPartyProps(pv) {   // what the host built is there when you arrive
 }
 function saveWorld(force) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
-  const w = S.world, dyn = [];
-  for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) dyn.push([i, 0, 0, 1]); else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2) dyn.push([i, Math.round(d.x), Math.round(d.y), 0]); }
+  const w = S.world, dyn = [], pub = S.slot < SOLO_BASE, nb = w.nb || { dyn: 1e9, doors: 1e9, btns: 1e9 };   // (a public world's builds belong to the room, not to your save)
+  for (let i = 0; i < w.dyn.length && (!pub || i < nb.dyn); i++) { const d = w.dyn[i]; if (d.burn > 0) dyn.push([i, 0, 0, 1]); else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2) dyn.push([i, Math.round(d.x), Math.round(d.y), 0]); }
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
-  const str = JSON.stringify({ slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dyn, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN });
+  const str = JSON.stringify({ slot: S.slot, buys: pub ? [] : S.bought, cps: pub ? [] : S.boughtCps, gates: pub ? [] : S.boughtGates, misc: pub ? [] : S.boughtMisc, dyn, doors: w.doors.slice(0, pub ? nb.doors : 1e9).map(d => (d.latched ? 1 : 0)), btns: w.btns.slice(0, pub ? nb.btns : 1e9).map(q => (q.on ? 1 : 0)), got, n: S.coinN });
   if (str !== lastWorldStr) {
     lastWorldStr = str;
     if (S.slot >= SOLO_BASE) { solo2[S.idx] = JSON.parse(str); delete solo2[S.idx].slot; saveSolo(); }   // your own world: one save for every level
@@ -1889,10 +1900,11 @@ function restoreWorld(slot) {
     const o = slot >= SOLO_BASE ? solo2[S.idx] : JSON.parse(localStorage.getItem(WKEY) || 'null');
     if (!o || (slot < SOLO_BASE && o.slot !== slot)) return;           // a new session (or a level you reset): everything starts fresh
     const w = S.world;
-    (o.buys || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); if (startBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
-    (o.gates || []).forEach(q => { if (validGate(q)) { addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
-    (o.misc || []).forEach(q => { if (validMisc(q)) { addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
-    (o.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
+    const own = slot >= SOLO_BASE;   // (what was built in a public world is the room's, never kept in your save)
+    (own ? o.buys || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); if (startBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
+    (own ? o.gates || [] : []).forEach(q => { if (validGate(q)) { addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
+    (own ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
+    (own ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
     (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.vx = d.vy = 0; } });
     (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
     (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
@@ -3250,7 +3262,10 @@ function finishPlacing() {
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   placing = null; placeUIKey = null; refreshPlaceUI();
 }
-function partyBuild(msg) { if (party && online && ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }
+function pubTake(k, q) { if (!S.pubKeys) return true; const key = pkey(k, q.map(v => (typeof v === "number" ? Math.round(v) : v))); if (S.pubKeys.has(key)) return false; S.pubKeys.add(key); return true; }
+function partyBuild(msg) {
+  if (!party && shared() && S.pubKeys) { const g = msg.g; S.pubKeys.add(msg.t === 'padd' ? pkey('p', [msg.k, msg.x, msg.y]) : msg.t === 'pcp' ? pkey('c', [msg.x, msg.y]) : pkey(msg.t === 'pgate' ? 'g' : 'm', g)); }   // (what you build is already in your world: remember it so it is not added twice)
+  if (shared() && online && ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }
 function placeProp(kind, at) {
   const d = P.addProp(S.world, kind, at[0], at[1]); d.sleep = false; d.bought = true; partyBuild({ t: 'padd', k: kind, x: Math.round(at[0]), y: Math.round(at[1]) });
   const rec = [kind, Math.round(at[0]), Math.round(at[1])]; d.brec = rec; S.bought.push(rec); wDirty = true;
@@ -3965,7 +3980,9 @@ function onMsg(m) {
       if (m.priv) addFeed(party.role === 'host' ? 'Your private game is open: invite your friends' : 'You joined ' + who(party.name) + "'s private game", 'join', true); else addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
       if (party && party.role === 'guest') { loadMap(m.slot, m.next); }
+      else if (!m.priv && m.build && m.room !== S.pubRoom && S.pubKeys && S.pubKeys.size && S.slot === m.slot) { S.pubRoom = m.room; loadMap(m.slot, m.next); }   // (a different world than the one you were building in: start from its map)
       else if (m.slot !== S.slot && forced === null) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
+      if (!m.priv && m.build) { S.pubRoom = m.room; if (S.slot === m.slot && S.world && S.mode !== 'fade') applyPubBuild(m.build); else S.pendingBuild = { slot: m.slot, b: m.build }; }
       if (m.priv) announceEntry({ slot: m.priv.idx, n: m.n }); else if ((m.full || []).length) showWorldPop(m.room, m.full); else announceEntry({ slot: m.slot, next: m.next, n: m.n });
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
@@ -3986,10 +4003,10 @@ function onMsg(m) {
     case 'pclose': partyOver(who(m.name) + ' closed their private game'); break;
     case 'inv': partyInvited(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
-    case 'pobj': { if (!S.world || !party || !validMisc(m.g)) break; addMisc(S.world, m.g, true); if (party.role === 'host') { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); wDirty = true; } sfx('big'); break; }
-    case 'pgate': { if (!S.world || !party || !validGate(m.g)) break; addGate(S.world, m.g); if (party.role === 'host') { S.boughtGates.push(m.g.slice(0, 5)); wDirty = true; } sfx('big'); break; }
-    case 'padd': { if (!S.world || !party || !P.propDims(m.k | 0).half || startBlock(m.x, m.y)) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; } if (party.role === 'host') { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); wDirty = true; } burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); break; }
-    case 'pcp': { if (!S.map || !party || startTile(m.x, m.y)) break; S.map.checkpoints.push([m.x, m.y]); if (party.role === 'host') { S.boughtCps.push([m.x, m.y]); wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
+    case 'pobj': { if (!S.world || !shared() || !validMisc(m.g) || (!party && !pubTake('m', m.g))) break; addMisc(S.world, m.g, true); if (party && party.role === 'host') { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); wDirty = true; } sfx('big'); break; }
+    case 'pgate': { if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); if (party && party.role === 'host') { S.boughtGates.push(m.g.slice(0, 5)); wDirty = true; } sfx('big'); break; }
+    case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y) || (!party && !pubTake('p', [m.k | 0, m.x | 0, m.y | 0]))) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; } if (party && party.role === 'host') { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); wDirty = true; } burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); break; }
+    case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); if (party && party.role === 'host') { S.boughtCps.push([m.x, m.y]); wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'newmap': if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; startTransition(m.slot, m.next); break;
     case 'fin': {

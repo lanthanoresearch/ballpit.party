@@ -130,6 +130,7 @@ const slotNow = () => maps.slotOf(Date.now() - OFFSET_MS);
 const nextAt = s => maps.slotStart(s + 1) + OFFSET_MS;
 let curSlot = slotNow();
 const PRIV_BASE = 3000000, PRIV_MAX = 12;   // a friend's own world (their solo level, with the things they built) is a private room; its slot is the same number the solo game uses
+const bstate = r => (r ? (r.priv || (r.build = r.build || { props: [], cps: [], gates: [], misc: [] })) : null);   // what has been built in a world: a friend's world keeps it with the game, a public world keeps it until the map changes
 const rslot = r => (r && r.priv ? r.priv.slot : curSlot);
 const privKey = pub => 'p' + pub;
 
@@ -269,7 +270,7 @@ wss.on('connection', (ws, req) => {
         send(p, {
           t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
-          priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
+          build: room.priv ? undefined : bstate(room), priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? 1 : 0 }))
         });
         broadcast(room, { t: 'join', id: p.id, pub: p.pub, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
@@ -325,22 +326,22 @@ wss.on('connection', (ws, req) => {
       if (live(q)) send(q, { t: 'inv', pub: p.pub, name: p.name, idx: r.priv.idx });
       send(p, { t: 'invsent', pub: m.to, on: live(q) ? 1 : 0 });
     } else if (m.t === 'pobj') {   // a teeter-totter or a floor booster, built in a friend's world
-      const r = p.room; if (!r || !r.priv || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc')) || (m.g.length === 5 && m.g[0] === 'por')) || !m.g.slice(1).every(Number.isFinite) || r.priv.misc.length >= 40) return;
+      const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc')) || (m.g.length === 5 && m.g[0] === 'por')) || !m.g.slice(1).every(Number.isFinite) || bstate(r).misc.length >= 40) return;
       const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
-      const e = m.g[0] === 'bnc' ? ['bnc', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; r.priv.misc.push(e); broadcast(r, { t: 'pobj', g: e }, p);
+      const e = m.g[0] === 'bnc' ? ['bnc', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); broadcast(r, { t: 'pobj', g: e }, p);
     } else if (m.t === 'pgate') {   // a gate and its trigger, built in a friend's world
-      const r = p.room; if (!r || !r.priv || !Array.isArray(m.g) || m.g.length !== 5 || !m.g.every(Number.isFinite) || m.g[2] < 2 || m.g[2] > 8 || r.priv.gates.length >= 40) return;
+      const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || m.g.length !== 5 || !m.g.every(Number.isFinite) || m.g[2] < 2 || m.g[2] > 8 || bstate(r).gates.length >= 40) return;
       const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
-      const e = m.g.map(Math.round); r.priv.gates.push(e); broadcast(r, { t: 'pgate', g: e }, p);
+      const e = m.g.map(Math.round); bstate(r).gates.push(e); broadcast(r, { t: 'pgate', g: e }, p);
     } else if (m.t === 'padd' || m.t === 'pcp') {   // somebody built something in a friend's world: everyone there gets it
-      const r = p.room; if (!r || !r.priv) return;
+      const r = p.room; if (!bstate(p.room)) return;
       const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
       if (m.t === 'padd') {
-        const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y) || r.priv.props.length >= 400) return;
-        const e = [k, Math.round(m.x), Math.round(m.y)]; r.priv.props.push(e); broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2] }, p);
+        const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).props.length >= 400) return;
+        const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2] }, p);
       } else {
-        if (!Number.isFinite(m.x) || !Number.isFinite(m.y) || r.priv.cps.length >= 60) return;
-        const e = [Math.round(m.x), Math.round(m.y)]; r.priv.cps.push(e); broadcast(r, { t: 'pcp', x: e[0], y: e[1] }, p);
+        if (!Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).cps.length >= 60) return;
+        const e = [Math.round(m.x), Math.round(m.y)]; bstate(r).cps.push(e); broadcast(r, { t: 'pcp', x: e[0], y: e[1] }, p);
       }
     } else if (m.t === 'find') {
       const now = Date.now(); if (now - p.lastFind < 250) return; p.lastFind = now;
@@ -504,6 +505,7 @@ setInterval(() => {
   console.log('New session / map:', maps.names[curSlot % maps.count]);
   for (const room of rooms.values()) {
     if (room.priv) continue;
+    room.build = null;
     room.finishers = [];
     for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); }
     broadcast(room, { t: 'newmap', slot: curSlot, next: nextAt(curSlot), now: Date.now() });
