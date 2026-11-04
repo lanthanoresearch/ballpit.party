@@ -31,8 +31,8 @@
   const killYAt = (w, x) => { const f = w.map.floorY; return f ? f[clamp(Math.floor(x / TS), 0, w.W - 1)] * TS : w.map.killY; };
 
   function tile(w, tx, ty) {
-    if (tx < 0 || tx >= w.W) return 0;      // beyond the world's edge is empty space (the game kills you out there)
-    if (ty < 0 || ty >= w.H) return 0;
+    if (tx < 0 || tx >= w.W || ty < 0) return 1;      // the world is a closed box: solid walls on both sides and a solid ceiling (only the bottom is open, and it kills)
+    if (ty >= w.H) return 0;
     return w.grid[ty * w.W + tx];
   }
 
@@ -395,7 +395,7 @@
         if (!d.pcd && d.vy > -60 && (d.gr || d.touch)) { const pt = portalAt(w, d.x, d.y + (d.r || d.hh)); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - (d.r || d.hh) - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; d.tip = null; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
       if (Math.abs(d.x - nx0) + Math.abs(d.y - ny0) < 1.0 && Math.abs(d.vx) < 25 && !burn) { d.rest = (d.rest || 0) + dt; if (d.rest > 0.5) { if (!d.nap) { d.rx = d.x; d.ry = d.y; } d.nap = true; } } else { d.rest = 0; d.nap = false; }
       d.touch = false;
-      if (burn || d.y > killYAt(w, d.x) || d.x < -200 || d.x > w.W * TS + 200) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
+      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
     }
     for (let pass = 0, hit = true; pass < 3 && hit; pass++) {   // (a few rounds while things overlap, so a pile settles instead of sinking into itself)
       hit = false;

@@ -1114,8 +1114,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=77"></script>
-<script src="physics.js?v=77"></script>
+<script src="maps.js?v=80"></script>
+<script src="physics.js?v=80"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1706,11 +1706,11 @@ function die(why) {
 }
 function outOfBounds(b) {
   const m = S.map;
-  return b.x < -2 * TS || b.x > (m.W + 2) * TS || b.y < -6 * TS || b.y > P.killYAt(S.world, b.x);
+  return b.x < 0 || b.x > m.W * TS || b.y < 0 || b.y > P.killYAt(S.world, b.x);   // the box is solid, but anything that gets out of it is lost
 }
 function nearEdge(b) {
   const m = S.map;
-  return b.x < 9 * TS || b.x > (m.W - 9) * TS || b.y < 4 * TS || b.y > P.killYAt(S.world, b.x) - 9 * TS;
+  return b.y > P.killYAt(S.world, b.x) - 9 * TS;   // (the walls and ceiling are solid now: only the open bottom is a danger)
 }
 function finishRun() {
   S.finished = true; S.finT = 5; S.crown = true; sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
@@ -3164,25 +3164,25 @@ const atLimit = it => !!it.max && ownCount(it) >= it.max;
 const limitNote = it => it.ter === 'dig' ? 'You have dug the most you can on this map (' + it.max + ')' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
 // 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
-function ghostSpot(kind, side) {   // always the same rules: a set distance beside you; if something is in the way, climb it (up to 5 blocks); if that fails try the other side; then on top of you; else there is no room
-  const w = S.world, b = S.b, q = P.propDims(kind), half = q.half, hw = q.hw || q.r, MAXUP = 5 * TS;
-  const climb = (x, y0) => {   // lift from y0 until the spot is clear of walls and of other things (a crate or ball in the way: sit on top of it)
+const pullNow = () => ({ down: !!(tin.down || keysDown.has('ArrowDown') || keysDown.has('KeyS')), up: !!(inp.jump || tin.jump || keysDown.has('ArrowUp') || keysDown.has('KeyW')) });   // what you are pulling on the controls
+function ghostSpot(kind, side, pull) {   // a set distance beside you, on the side you point to, at your feet. Nothing is swapped for you: if it does not fit it goes red. Pull up and it climbs a wall (up to 5 blocks); pull down and it goes down as far as there is room (up to 5 blocks)
+  pull = pull || {};
+  const w = S.world, b = S.b, q = P.propDims(kind), half = q.half, hw = q.hw || q.r, MAXUP = 5 * TS, s = side < 0 ? -1 : 1;
+  const topOf = (x, y) => { let top = null; for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const oh = o.r || o.hw; if (Math.abs(o.x - x) < oh + hw - 3 && Math.abs(o.y - y) < oh + half - 3) { const t = o.y - oh; if (top === null || t < top) top = t; } } return top; };
+  const x = b.x + s * (R + half + 3), y0 = b.y + R - half;
+  const fits = y => P.spotFree(w, x, y, hw, half) && topOf(x, y) === null;
+  if (pull.up) {   // pointing at the wall and up: lift until it is clear (a crate or ball in the way: sit on top of it)
     let y = y0;
     for (let n = 0; n < 160 && y0 - y <= MAXUP; n++) {
       if (!P.spotFree(w, x, y, hw, half)) { y -= 2; continue; }
-      let top = null;
-      for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const oh = o.r || o.hw; if (Math.abs(o.x - x) < oh + hw - 3 && Math.abs(o.y - y) < oh + half - 3) { const t = o.y - oh; if (top === null || t < top) top = t; } }
-      if (top === null) return y;
+      const top = topOf(x, y); if (top === null) return [x, y, s];
       y = top - half - 0.5;
     }
     return null;
-  };
-  for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
-    const s = pass ? -side : side, x = b.x + s * (R + half + 3), y = climb(x, b.y + R - half);
-    if (y !== null) return [x, y, s];
   }
-  const y = climb(b.x, b.y - R - half - 2);   // last try: right on top of you
-  return y !== null ? [b.x, y, 0] : null;
+  if (!fits(y0)) return null;
+  if (pull.down) { let y = y0; while (y - y0 < MAXUP && fits(y + 2)) y += 2; return [x, y, s]; }
+  return [x, y0, s];
 }
 function flagSpot(side) {   // a checkpoint flag stands on the ground beside you, like every other thing you place
   const w = S.world, b = S.b;
@@ -3250,7 +3250,7 @@ function terrainBlocked(tx, r, tight) {   // something in the way of changing th
 }
 /* Terrain (lava, ice, water, dirt) and Dig work on the tile IN FRONT of you, the way you are facing, and never farther than one block from you:
    the tile right beside the one your ball is in (dirt, which grows into empty air, may use the next one when your ball is touching the first).
-   Straight ahead comes first. The tile below it or above it is only used when you pull down or up on the controls, or when nothing straight ahead works.
+   Straight ahead (or the ground in front of you) is the default. Pull down on the controls for the tile below, pull up for the tile above; only the one you chose is tried.
    The first one where this item can do something wins. If none can, the ghost turns red. It never reaches farther, and never switches sides. */
 function terrainSpot(kind, side, pull) {
   pull = pull || {};
@@ -3274,7 +3274,7 @@ function terrainSpot(kind, side, pull) {
   const inWater = T(cx, cy) === 5;
   const ahead = [[tx, cy]], down = kind === 'water' && inWater ? [[cx, cy + 1]] : [[tx, cy + 1]], up = [[tx, cy - 1]];
   if (kind === 'dig' && pull.down) down.unshift([cx, cy + 1]);   // pulling down while digging: the ground under you
-  const probes = pull.down ? [...down, ...ahead, ...up] : pull.up ? [...up, ...ahead, ...down] : [...ahead, ...down, ...up];
+  const probes = pull.down ? down : pull.up ? up : [...ahead, ...down];   // you choose: straight ahead (or the ground in front of you), pull down for below, pull up for above. Nothing else is tried
   for (const [x, r] of probes) {
     const a = act(x, r); if (!a) continue;
     if (terrainBlocked(x, a.row, kind === 'dirt')) continue;
@@ -3326,7 +3326,7 @@ function computeGhost() {
     else if (g.stage === 2 && g.it.gate) { sp = plateSpot(g.side, g.gate); if (sp) { g.ptx = sp.tx; g.prow = sp.row; g.py0 = sp.y0; cx = (sp.tx + 1) * TS; cy = sp.y0; } }
     else if (g.it.portal) { sp = flatSpot(g.side, false, 1, true); if (sp && g.stage === 2 && g.pA && Math.abs(sp.tx - g.pA.tx) < 4 && Math.abs(sp.gr - g.pA.gr) < 3) sp = null; if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - 2; } }
     else if (g.it.misc === 'spr') { sp = bncSpot(g.side); if (sp) { g.mtx = sp.tx; g.mgr = sp.r; g.mr0 = sp.r0; cx = (sp.tx + 0.5) * TS; cy = (sp.r - 0.5) * TS; } }
-    else if (g.it.misc === 'ter') { sp = terrainSpot(g.it.ter, g.side, { down: !!(tin.down || keysDown.has('ArrowDown') || keysDown.has('KeyS')), up: !!(inp.jump || tin.jump || keysDown.has('ArrowUp') || keysDown.has('KeyW')) }); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } }
+    else if (g.it.misc === 'ter') { sp = terrainSpot(g.it.ter, g.side, pullNow()); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } }
     else if (g.it.misc) { sp = flatSpot(g.side, g.it.misc === 'see', g.it.misc === 'see' ? 2 : 1); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; g.mside = sp.side; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - (g.it.misc === 'see' ? 46 : 4); } }
     else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; g.gh = sp.h; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - sp.h / 2) * TS; } }
     g.ok = !!sp; g.sb = false;
@@ -3337,7 +3337,7 @@ function computeGhost() {
     if (g.dx === undefined || Math.hypot(g.dx - g.tx, g.dy - g.ty) > 200) { g.dx = g.tx; g.dy = g.ty; }
     return;
   }
-  const spot = ghostSpot(g.it.kind, g.side), q = P.propDims(g.it.kind);
+  const spot = ghostSpot(g.it.kind, g.side, pullNow()), q = P.propDims(g.it.kind);
   g.sb = false;
   g.pc = !!spot && S.world.portals.some(e => [e.a, e.b].some(p => Math.abs(p.x - spot[0]) < q.half + 26 && p.y > spot[1] - q.half - 3 * TS && p.y < spot[1] + q.half + TS));
   if (spot && startBlock(spot[0], spot[1])) { g.sb = true; g.ok = false; g.tx = spot[0]; g.ty = spot[1]; }
@@ -3394,10 +3394,20 @@ function drawTileGhost(g, nowT) {
     if (g.stage === 2 && g.pA) portalShape((g.pA.tx + 1) * TS, g.pA.gr * TS, '#ffd23d', 0.9, nowT);
     portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : (g.stage === 2 ? '#3da5ff' : '#ffd23d'), pulse + 0.2, nowT);
   } else if (g.it.misc === 'ter') {
-    const x = bad ? Math.floor(g.dx / TS) * TS : g.mtx * TS, y = bad ? g.dy - TS / 2 : g.mgr * TS, to = g.mto;
-    ctx.globalAlpha = pulse + 0.15; ctx.fillStyle = bad ? '#ff7a6a' : to === 0 ? '#f3ead6' : to === 1 ? '#8a5a33' : to === 2 ? '#ff4a1c' : to === 3 ? '#bfeeff' : to === 5 ? '#2e7be6' : '#80858f'; ctx.fillRect(x, y, TS, TS);
-    ctx.fillStyle = bad ? '#ffb0a6' : to === 0 ? '#fff' : to === 1 ? '#c08850' : to === 2 ? '#ffb02e' : to === 3 ? '#fff' : to === 5 ? '#8cc4ff' : '#b7bcc6'; ctx.fillRect(x, y, TS, 7);
-    ctx.strokeStyle = '#16100c'; ctx.lineWidth = 2.4; ctx.strokeRect(x, y, TS, TS);
+    const x = bad ? Math.floor(g.dx / TS) * TS : g.mtx * TS, y = bad ? g.dy - TS / 2 : g.mgr * TS, to = g.mto, dig = g.it.ter === 'dig';
+    const RC = (px, py, w, h, r) => { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(px, py, w, h, r); else ctx.rect(px, py, w, h); };
+    const body = to === 1 ? '#8a5a33' : to === 2 ? '#ff4a1c' : to === 3 ? '#bfeeff' : to === 5 ? '#2e7be6' : '#80858f', lite = to === 1 ? '#c08850' : to === 2 ? '#ffb02e' : to === 3 ? '#ffffff' : to === 5 ? '#8cc4ff' : '#b7bcc6';
+    const line = bad ? '#ff5a4a' : '#ffffff', ins = 2;
+    ctx.save(); RC(x + ins, y + ins, TS - ins * 2, TS - ins * 2, 6);
+    if (bad) { ctx.globalAlpha = 0.28 + 0.1 * Math.sin(nowT / 170); ctx.fillStyle = '#ff3b2e'; ctx.fill(); }
+    else if (dig) { ctx.globalAlpha = 0.2; ctx.fillStyle = '#fff'; ctx.fill(); ctx.globalAlpha = 0.5; ctx.save(); ctx.clip(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); for (let k = -TS; k < TS * 2; k += 10) { ctx.moveTo(x + k, y + TS); ctx.lineTo(x + k + TS, y); } ctx.stroke(); ctx.restore(); }
+    else { ctx.globalAlpha = 0.62 + 0.12 * Math.sin(nowT / 170); ctx.fillStyle = body; ctx.fill(); ctx.globalAlpha *= 0.9; ctx.fillStyle = lite; RC(x + ins, y + ins, TS - ins * 2, 8, 6); ctx.fill(); }
+    ctx.globalAlpha = 0.95; ctx.strokeStyle = line; ctx.lineWidth = 2; RC(x + ins, y + ins, TS - ins * 2, TS - ins * 2, 6);
+    if (dig && !bad) { ctx.setLineDash([6, 4]); ctx.lineDashOffset = -nowT / 45; } ctx.stroke(); ctx.setLineDash([]);
+    if (bad) { ctx.lineCap = 'round'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 13, y + 13); ctx.lineTo(x + TS - 13, y + TS - 13); ctx.moveTo(x + TS - 13, y + 13); ctx.lineTo(x + 13, y + TS - 13); ctx.stroke(); }
+    ctx.lineCap = 'round'; ctx.lineWidth = 3; ctx.beginPath(); const c = 9, o = 1;   // the four corner marks: the same on every block, so the target tile is always easy to find
+    for (const [cx0, cy0, dx, dy] of [[x - o, y - o, 1, 1], [x + TS + o, y - o, -1, 1], [x - o, y + TS + o, 1, -1], [x + TS + o, y + TS + o, -1, -1]]) { ctx.moveTo(cx0 + dx * c, cy0); ctx.lineTo(cx0, cy0); ctx.lineTo(cx0, cy0 + dy * c); }
+    ctx.stroke(); ctx.restore();
   } else if (g.it.misc === 'spr') {
     const fall = !bad && g.mgr - g.mr0 > 1, y = bad ? g.dy - TS / 2 : (fall ? g.mr0 : g.mgr) * TS;
     ctx.globalAlpha = pulse;
@@ -4036,7 +4046,7 @@ $('lvFil').addEventListener('click', e => { const b = e.target.closest('button')
 $('lvUnl').onchange = () => {   // every private map decides for itself: earn coins and diamonds there, or have them without limit
   const i = lvSel, on = $('lvUnl').checked; purseOf(i).u = on ? 1 : 0; saveWallet(); sfx(on ? 'on' : 'off'); $('lvMoney').textContent = lvMoneyText(i);
   lastCoinShown = lastGemShown = -1; homeWalletRender.k = ''; if (shopOpen) shopRender();
-  if (!inHome) askConfirm('Start this map\'s money over?', (on ? 'This map now has unlimited coins and diamonds. ' : 'This map now makes you earn coins and diamonds again. ') + 'Set the coins and diamonds you had saved on ' + lvLabelOf(i) + ' back to zero?', 'Reset to zero', () => { resetPurseOf(i); lvSelect(lvSel); lastCoinShown = lastGemShown = -1; homeWalletRender.k = ''; if (shopOpen) shopRender(); }, { no: 'Keep what I have', yesClass: 'danger' });
+
 };
 function openLevels() {
   loadSolo(); lvBuild(); lvSelect(soloLevel()); $('lvlModal').classList.remove('hide');
@@ -5264,6 +5274,46 @@ function mbSize() {
   const c = mbCanvas(), r = c.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1), cw = Math.max(240, Math.round(r.width * dpr)), ch = Math.max(160, Math.round(r.height * dpr));
   if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; return true; } return false;
 }
+/* the big map's land: one pixel per tile, coloured straight from the live grid, so it is the same at every zoom and always shows built land, dug holes, doors, water, lava and ice */
+const mbT = { cv: null, key: '', at: 0, rgb: null };
+function mbRgb() {
+  if (mbT.rgb) return mbT.rgb;
+  const c = document.createElement('canvas'); c.width = c.height = 1; const g = c.getContext('2d', { willReadFrequently: true });
+  const px = col => { g.clearRect(0, 0, 1, 1); g.fillStyle = col; g.fillRect(0, 0, 1, 1); const d = g.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2]]; };
+  mbT.rgb = { top: THEMES.map(t => px(t.top)), solid: THEMES.map(t => px(t.solid)), lava: px(LAVA), ice: px(ICE), water: px('#2e7be6'), pad: px('#3bd1c0'), fin: px('#ffd23d'), door: px('#8a5a2b'), rock: px('#80858f') };
+  return mbT.rgb;
+}
+function mbTilesBuild() {
+  const w = S.world, W = w.W, H = w.H, gr = w.grid, rk = w.rock, tg = S.tg, C = mbRgb();
+  if (!mbT.cv || mbT.cv.width !== W || mbT.cv.height !== H) { mbT.cv = document.createElement('canvas'); mbT.cv.width = W; mbT.cv.height = H; }
+  const g = mbT.cv.getContext('2d'), im = g.createImageData(W, H), d = im.data;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x, t = gr[i]; if (!t) continue;
+    let c;
+    if (t === 1) { if (rk && rk[i]) c = C.rock; else { const th = tg ? tg[i] : 0, up = y > 0 ? gr[i - W] : 1; c = (up === 1 || up === 9 ? C.solid : C.top)[th] || C.solid[0]; } }
+    else if (t === 2) c = C.lava; else if (t === 3) c = C.ice; else if (t === 4) c = C.fin; else if (t === 5) c = C.water; else if (t === 6) c = C.pad; else if (t === 9) c = C.door; else continue;
+    const o = i * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
+  }
+  g.putImageData(im, 0, 0); mbT.at = performance.now();
+}
+function mbTilesDraw(g, L, T, Rr, B, z, cw, ch) {
+  const w = S.world; if (!w) return; const W = w.W, H = w.H;
+  if (!mbT.cv || performance.now() - mbT.at > 500 || mbT.key !== S.slot + ':' + W + 'x' + H) { mbT.key = S.slot + ':' + W + 'x' + H; mbTilesBuild(); }
+  const sx0 = Math.max(0, Math.floor(L)), sy0 = Math.max(0, Math.floor(T)), sx1 = Math.min(W, Math.ceil(Rr)), sy1 = Math.min(H, Math.ceil(B));
+  if (sx1 <= sx0 || sy1 <= sy0) return;
+  g.imageSmoothingEnabled = z < 1; if (z < 1) g.imageSmoothingQuality = 'high';
+  g.drawImage(mbT.cv, sx0, sy0, sx1 - sx0, sy1 - sy0, (sx0 - L) * z, (sy0 - T) * z, (sx1 - sx0) * z, (sy1 - sy0) * z);
+  g.imageSmoothingEnabled = true;
+  const X = v => (v - L) * z, Y = v => (v - T) * z;
+  g.fillStyle = '#80858f'; const bw = Math.max(1.5, z * 0.6); g.fillRect(X(0), Y(0), W * z, bw); g.fillRect(X(0), Y(0), bw, H * z); g.fillRect(X(W) - bw, Y(0), bw, H * z);   // the walls and ceiling that close the world in
+  g.lineWidth = 1;
+  for (const q of w.doors) {   // an open gate is drawn as an outline so you can still see where it is
+    if (q.x > Rr || q.x + q.w < L || q.y > B || q.y + q.h < T) continue;
+    if (q.open) { g.strokeStyle = '#8a5a2b'; g.strokeRect(X(q.x) + 0.5, Y(q.y) + 0.5, Math.max(2, q.w * z - 1), Math.max(2, q.h * z - 1)); }
+  }
+  for (const q of w.plates) { if (q.x > Rr || q.x + q.w < L || q.y > B + 1 || q.y < T - 1) continue; g.fillStyle = q.on ? '#3fd37a' : '#d65a4a'; g.fillRect(X(q.x), Y(q.y) - Math.max(2, z * 0.3), Math.max(3, q.w * z), Math.max(2, z * 0.3)); }
+  for (const q of w.btns) { if (q.x > Rr || q.x + 1 < L || q.y > B + 1 || q.y < T - 1) continue; const s = Math.max(3, z * 0.8); g.fillStyle = q.on ? '#3fd37a' : '#d65a4a'; g.fillRect(X(q.x + 0.5) - s / 2, Y(q.y) - s * 0.7, s, s * 0.7); g.strokeStyle = '#16100c'; g.strokeRect(X(q.x + 0.5) - s / 2, Y(q.y) - s * 0.7, s, s * 0.7); }
+}
 function drawMinimapBig() {
   if (!mmBigOn || !S.map || !S.b) return;
   mbSize(); mbClamp();
@@ -5276,28 +5326,9 @@ function drawMinimapBig() {
     g.globalAlpha = 0.55; g.fillStyle = THEMES[q[4]].bg; const x0 = X(q[0]), y0 = Y(q[1]); g.fillRect(x0, y0, X(q[2]) - x0, Y(q[3]) - y0);
   }
   g.globalAlpha = 1;
-  // the kill zone along the bottom of the level
-  g.fillStyle = 'rgba(255,70,40,.22)'; const fl = m.floorY, xs = Math.max(0, Math.floor(L)), xe = Math.min(m.W - 1, Math.ceil(Rr));
-  for (let x = xs; x <= xe; x += Math.max(1, Math.floor(3 / z))) { const y0 = Y(fl[x]); if (y0 < ch) g.fillRect(X(x), Math.max(0, y0), Math.max(2, Math.ceil(3)), ch - Math.max(0, y0)); }
-  const rects = m.rects, detail = z >= 3;
-  for (let i = 0; i < rects.length; i++) {
-    const r = rects[i]; if (r[0] > Rr || r[0] + r[2] < L || r[1] > B || r[1] + r[3] < T) continue;
-    const t = r[4], th = THEMES[r[5]], x0 = X(r[0]), y0 = Y(r[1]), w = Math.max(1, X(r[0] + r[2]) - x0), h = Math.max(1, Y(r[1] + r[3]) - y0);
-    if (t === 2) g.fillStyle = LAVA; else if (t === 3) g.fillStyle = ICE; else if (t === 5) g.fillStyle = '#2e7be6'; else if (t === 6) g.fillStyle = '#3bd1c0';
-    else { g.fillStyle = detail ? th.solid : th.top; g.fillRect(x0, y0, w, h); if (detail) { g.fillStyle = th.top; g.fillRect(x0, y0, w, Math.max(1, Math.round(z * 0.45))); } continue; }
-    g.fillRect(x0, y0, w, h);
-  }
-  {   // what has been built or dug since the map was made: land, water, lava, ice, rock (a dug tile is cleared back to the map's own colour)
-    const bg = (x, y) => { for (const q of m.zones) if (x >= q[0] && x < q[2] && y >= q[1] && y < q[3]) return THEMES[q[4]].bg; return null; };
-    for (const q of S.boughtMisc) {
-      if (q[0] !== 'tl') continue; const tx = q[1], ty = q[2], to = q[3]; if (tx + 1 < L || tx > Rr || ty + 1 < T || ty > B) continue;
-      const x0 = X(tx), y0 = Y(ty), sz = Math.max(1, X(tx + 1) - x0), sy = Math.max(1, Y(ty + 1) - y0);
-      if (to === 0) { g.globalAlpha = 1; g.fillStyle = '#100d18'; g.fillRect(x0, y0, sz, sy); const zb = bg(tx, ty); if (zb) { g.globalAlpha = 0.55; g.fillStyle = zb; g.fillRect(x0, y0, sz, sy); g.globalAlpha = 1; } continue; }
-      g.fillStyle = to === 2 ? LAVA : to === 3 ? ICE : to === 5 ? '#2e7be6' : to === 7 ? '#80858f' : (THEMES[S.tg[ty * m.W + tx]] || THEMES[0])[detail ? 'solid' : 'top']; g.fillRect(x0, y0, sz, sy);
-    }
-  }
+  mbTilesDraw(g, L, T, Rr, B, z, cw, ch);
   drawThings(g, X, Y, z, L, T, Rr, B);
-  if (z >= 6) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
+  if (z >= 1.5) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = X(c[0] + 0.5), y = Y(c[1]); if (x < 0 || y < 0 || x > cw || y > ch) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.8, y - 12, 2, 12); g.beginPath(); g.moveTo(x + 1, y - 12); g.lineTo(x + 10, y - 9); g.lineTo(x + 1, y - 6); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 0.8; g.stroke(); });
   if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; g.fillStyle = bt.color; g.beginPath(); g.arc(X(bt.b.x / TS), Y(bt.b.y / TS), 3.5, 0, TAU); g.fill(); });
   if (settings.mmPlayers) others.forEach(o => { const q = opos(o); if (!q) return; g.drawImage(sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length), X(q.x / TS) - 5.5, Y(q.y / TS) - 5.5, 11, 11); });
@@ -5426,7 +5457,7 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();
