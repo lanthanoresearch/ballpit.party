@@ -1114,8 +1114,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=82"></script>
-<script src="physics.js?v=82"></script>
+<script src="maps.js?v=83"></script>
+<script src="physics.js?v=83"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -4014,7 +4014,7 @@ function lvlRender() {
 }
 let lvF = 'all';   // which kind of levels the picker shows
 const biomeOf = id => THEMES.find(t => t.id === id);
-const lvLen = i => { const n = BallMaps.meta && BallMaps.meta[i] ? BallMaps.meta[i].len : 0; return n && n < 5000 ? 'Short' : n && n < 9000 ? 'Medium' : n ? 'Long' : ''; /* by how far the way to the finish winds */ };
+const lvLen = i => { const n = BallMaps.meta && BallMaps.meta[i] ? BallMaps.meta[i].len : 0; return n && n < 350 ? 'Short' : n && n < 480 ? 'Medium' : n && n < 620 ? 'Long' : n ? 'Very long' : ''; };
 function lvBuild() {
   const g = $('lvGrid'); g.innerHTML = '';
   for (let i = 0; i < BallMaps.count; i++) {
