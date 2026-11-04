@@ -230,6 +230,7 @@
   #tpop h3{margin:0 0 6px;font-size:20px;font-weight:400;display:flex;align-items:center;gap:8px}
   #tpop .tl{display:flex;align-items:center;gap:8px;margin:5px 0}
   #tpop .tl svg{font-size:18px;opacity:.8}
+  #tpop .ndw{width:18px;display:flex;justify-content:center;flex:none}#tpop .ndw i{width:11px;height:11px;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.35)}#tpop i.s-ok{background:#4ddc7a}#tpop i.s-wait{background:#ffb347}#tpop i.s-bad{background:#ff5b4a}
   #tpop .nx{opacity:.75;font-size:13px;margin-top:6px;border-top:2px dashed rgba(232,220,192,.3);padding-top:6px}
   #worldpop{position:fixed;left:50%;top:96px;transform:translateX(-50%);z-index:9;padding:10px 16px;max-width:min(92vw,460px);text-align:center;font-size:16px;line-height:1.3}
   #worldpop b{display:block;font-size:19px;font-weight:400;margin-bottom:2px}
@@ -788,6 +789,7 @@
       <h3><span data-ic="map"></span><span id="tpName"></span></h3>
       <div class="tl"><span data-ic="clock"></span><span id="tpChange"></span></div>
       <div class="tl"><span data-ic="crown"></span><span id="tpCoins"></span></div>
+      <div class="tl"><span class="ndw"><i id="tpDot"></i></span><span id="tpNet"></span></div>
       <div class="tl"><span data-ic="globe"></span><span id="tpWorld"></span></div>
       <div class="tl"><span data-ic="beacon"></span><span id="tpBeacon"></span><span id="tpArrow" class="hide"><svg class="ic" viewBox="0 0 24 24"><use href="#i-up"/></svg></span></div>
       <div class="nx"><span id="tpNext"></span></div>
@@ -1102,8 +1104,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=73"></script>
-<script src="physics.js?v=73"></script>
+<script src="maps.js?v=74"></script>
+<script src="physics.js?v=74"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3747,7 +3749,7 @@ function homeStats() {
 }
 window.__sprite = () => sprite(settings.color, settings.color2, settings.pat);   // the loading screen and the main screen show your real ball
 try { window.__scene($('homeScene'), 'home'); } catch (e) {}
-function homeModeText() { $('homeModeNote').textContent = $('homeMp').checked ? 'A public world. Everyone online shares it.' : 'Your private world. Nobody else can see you.'; lvlRender(); }
+function homeModeText() { netRender(); $('homeModeNote').textContent = $('homeMp').checked ? 'A public world. Everyone online shares it.' : 'Your private world. Nobody else can see you.'; lvlRender(); }
 function showHome() {
   if (S.map && S.slot >= 0 && !inHome) saveWorld(true);
   if (party) leaveParty();   // leaving a private game: if it was yours, it ends and everyone in it goes back to their own world
@@ -4030,14 +4032,27 @@ function onDoubleTap(el, fn) { let t = 0, x = 0, y = 0; el.addEventListener('cli
 onDoubleTap($('homeWallet'), openCode); onDoubleTap($('coinpill'), openCode);
 
 /* ================= networking ================= */
-let netShownParty = false;
+/* The little bubble at the top says two plain things. The word is the kind of game: Public or Private. The dot is the connection: green = connected, orange = connecting, red = not connected. */
+function netView() {
+  const open = !!(ws && ws.readyState === 1) && (online || lobbyOn);
+  const wait = !open && (netState === 'connecting' || !!(ws && ws.readyState === 0));
+  return { pub: !party && !!settings.mp, st: open ? 'ok' : wait ? 'wait' : 'bad', open };
+}
+function netRender() {
+  const v = netView(), k = (v.pub ? 'P' : 'V') + v.st + (party ? 'g' : '');
+  if (netRender.k === k) return; netRender.k = k;
+  $('netstat').classList.remove('hide');
+  $('netText').textContent = v.pub ? 'Public' : 'Private';
+  $('netstat').querySelector('i').className = 's-' + v.st;
+}
+function netDetail() {   // the same thing in words, for the expanded panel
+  const v = netView();
+  if (v.st === 'ok') return v.pub ? 'Public. Connected to the server.' : party ? 'Private game. Connected, so friends can be here with you.' : 'Private. Connected, so friends can find you and invite you.';
+  if (v.st === 'wait') return (v.pub ? 'Public. ' : 'Private. ') + 'Connecting to the server…';
+  return v.pub ? 'Public. Not connected. Trying again…' : party ? 'Private game. Not connected.' : 'Private. Not connected. You are playing alone in your own world.';
+}
 function setNet(state) {
-  netState = state;
-  const n = $('netstat'); n.classList.remove('hide');   // one little bubble says it all: Online (green), Checking (amber), Disconnected (red), Private (blue)
-  const solo = state === 'solo' || location.protocol === 'file:' || (state === 'online' && !!party);   // (a private game with friends is still private, even though it is online)
-  netShownParty = !!party;
-  $('netText').textContent = state === 'online' && !party ? 'Public' : solo ? 'Private' : state === 'connecting' ? 'Checking' : 'Disconnected';
-  n.querySelector('i').className = state === 'online' && !party ? 's-ok' : solo ? 's-solo' : state === 'connecting' ? 's-wait' : 's-bad';
+  netState = state; netRender();
   if (state === 'offline' || state === 'solo') setTimeout(maybeAskBots, 700);
 }
 function dropConnection() {
@@ -5267,6 +5282,7 @@ function worldText() {
   return '';
 }
 function hudTick() {
+  netRender();
   const rem = S.nextAt - nowMs();
   const tm = $('timer');
   const endless = S.slot >= SOLO_BASE || (inSolo() && settings.soloLen === 0) || !!party;   // a private level never has a timer, whatever else is going on
@@ -5308,7 +5324,7 @@ function fillTimerPop(rem) {
   $('tpName').textContent = S.map.name;
   $('tpChange').textContent = endless ? 'This level stays until you pick another' : 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
   $('tpCoins').textContent = isBeaten(S.idx) ? 'You have beaten this map' : 'Not beaten yet';
-  if (netShownParty !== !!party) setNet(netState);
+  $('tpNet').textContent = netDetail(); $('tpDot').className = 's-' + netView().st;
   $('tpWorld').textContent = party ? worldText() : sl ? 'Private world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'Public world ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
   $('tpNext').textContent = endless ? '' : 'Up next: ' + BallMaps.names[(S.slot + 1) % BallMaps.count];
   const bi = beaconInfo(nowMs()), on = !!(beaconOK() && S.mode === 'play' && !S.finished && bi.on), ar = $('tpArrow');
