@@ -1072,8 +1072,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=55"></script>
-<script src="physics.js?v=55"></script>
+<script src="maps.js?v=57"></script>
+<script src="physics.js?v=57"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1838,13 +1838,9 @@ function worldEvents() {
   }
   L.length = 0;
 }
-const startTile = (tx, ty) => {   // each map's start platform (it always sits in the same place relative to where you appear)
-  const s = S.map && S.map.start; if (!s) return false;
-  const x = tx - (Math.floor(s[0] / TS) - 1), y = ty - (Math.floor(s[1] / TS) + 1);
-  return x >= -2 && x <= 44 && y >= -17 && y <= 14;
-};
-const _unusedStartRange = (tx, ty) => tx >= -2 && tx <= 44 && ty >= -17 && ty <= 14;   // the start area: nothing can be built there, and anything that ends up there is destroyed
-const startBlock = (px, py) => startTile(Math.floor(px / TS), Math.floor(py / TS));
+const startRect = () => { const s = S.map && S.map.start; if (!s) return null; const sx = Math.floor(s[0] / TS), sy = Math.floor(s[1] / TS); return { tx0: sx - 2, tx1: sx + 2, ty0: sy - 3, ty1: sy + 1 }; };   // the start zone: 5 x 5 blocks around where you appear (nothing can be built in it)
+const startTile = (tx, ty) => { const z = startRect(); return !!z && tx >= z.tx0 && tx <= z.tx1 && ty >= z.ty0 && ty <= z.ty1; };
+const startBlock = (px, py, m) => { const z = startRect(); if (!z) return false; m = m === undefined ? TS * 0.6 : m; return px >= z.tx0 * TS - m && px <= (z.tx1 + 1) * TS + m && py >= z.ty0 * TS - m && py <= (z.ty1 + 1) * TS + m; };   // (a little extra room, so nothing can hang over the edge of it)
 const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc') && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && q[0] === 'por' && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
 function setBouncePad(w, tx, r) { for (let k = 0; k < 2; k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
@@ -3290,13 +3286,13 @@ function buyItem(it) {
 }
 setInterval(() => {
   if (placing && (S.mode !== 'play' || !S.b || S.away || inHome)) cancelPlacing(true);
-  if (S.world && S.mode === 'play' && S.world.dyn) for (const d of S.world.dyn) {   // anything you bought that ends up in the start area (rolled, pushed or thrown in) is destroyed
-    if (!d.bought || d.burn > 0 || !startBlock(d.x, d.y)) continue;
-    burst(d.x, d.y, ['#fff', '#ff8a3d', '#ffd23d'], 14, 200, 80); ring(d.x, d.y, '#ff8a3d', 5, 44, 0.4); sfx('thud');
+  if (S.world && S.mode === 'play' && S.world.dyn) for (const d of S.world.dyn) {   // anything that falls, rolls or is pushed into the start zone burns up
+    if (d.burn > 0 || !startBlock(d.x, d.y, 0)) continue;
+    burst(d.x, d.y, ['#fff', '#ff8a3d', '#ffd23d', '#ff4d2e'], 22, 260, 120); ring(d.x, d.y, '#ff8a3d', 6, 64, 0.45); ring(d.x, d.y, '#ffd23d', 3, 36, 0.3); sfx('lava');
     d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0;
     wDirty = true;
   }
-}, 250);
+}, 120);
 addEventListener('storage', e => { if (e.key === WALKEY) { try { const o = JSON.parse(e.newValue || 'null'); if (o) { wallet.c = Math.max(0, o.c | 0); wallet.g = Math.max(0, o.g | 0); if (shopOpen) shopRender(); } } catch (x) {} } });   // (another tab of the game spent or earned something)
 const openFriends = () => { if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
 $('linkpill').onclick = e => { e.stopPropagation(); openFriends(); };
@@ -4425,6 +4421,17 @@ function drawPad(px, py, tx) {   // bounce pad: a springy cushion with arrows th
 }
 function drawGadgets(camL, camT, vw, vh, dt) {
   const w = S.world, m = S.map;
+  { const z = startRect(); if (z) {   // the start zone: a marked square where nothing can be built
+    const x = z.tx0 * TS, y = z.ty0 * TS, ww = (z.tx1 - z.tx0 + 1) * TS, hh = (z.ty1 - z.ty0 + 1) * TS;
+    if (x < camL + vw && x + ww > camL && y < camT + vh && y + hh > camT) {
+      const pu = 0.5 + 0.5 * Math.sin(performance.now() / 600);
+      ctx.save(); ctx.fillStyle = 'rgba(255,110,60,' + (0.07 + 0.03 * pu) + ')'; ctx.fillRect(x, y, ww, hh);
+      ctx.strokeStyle = 'rgba(255,150,80,' + (0.55 + 0.25 * pu) + ')'; ctx.lineWidth = 2.5; ctx.setLineDash([12, 9]); ctx.lineDashOffset = -performance.now() / 60; ctx.strokeRect(x + 1.5, y + 1.5, ww - 3, hh - 3);
+      ctx.setLineDash([]); ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(255,170,90,.9)'; ctx.beginPath();
+      for (const [cx, cy, dx, dy] of [[x, y, 1, 1], [x + ww, y, -1, 1], [x, y + hh, 1, -1], [x + ww, y + hh, -1, -1]]) { ctx.moveTo(cx + dx * 16, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy + dy * 16); }
+      ctx.stroke(); ctx.restore();
+    }
+  } }
   ctx.lineJoin = 'round'; ctx.lineWidth = 2.4; ctx.strokeStyle = INK;
   // decorations: treasure chest, signs
   for (let i = 0; i < m.decor.length; i++) {
@@ -4483,7 +4490,7 @@ function drawGadgets(camL, camT, vw, vh, dt) {
     ctx.fillStyle = '#ffd23d'; ctx.fillRect(x + 2, y - 1, ww - 4, 7); ctx.strokeRect(x + 2, y - 1, ww - 4, 7);
     ctx.fillStyle = '#16100c';
     const ph = (S.t * 3) % 1;
-    for (let k = 0; k < 3; k++) { const cx = x + 10 + ((k + ph) % 3) / 3 * (ww - 20); ctx.beginPath(); ctx.moveTo(cx - 4 * q.dir, y); ctx.lineTo(cx + 3 * q.dir, y + 2.5); ctx.lineTo(cx - 4 * q.dir, y + 5); ctx.lineTo(cx - 1 * q.dir, y + 2.5); ctx.closePath(); ctx.fill(); }
+    for (let k = 0; k < 3; k++) { const cx = x + 10 + ((k + (q.dir < 0 ? 1 - ph : ph)) % 3) / 3 * (ww - 20); ctx.beginPath(); ctx.moveTo(cx - 4 * q.dir, y); ctx.lineTo(cx + 3 * q.dir, y + 2.5); ctx.lineTo(cx - 4 * q.dir, y + 5); ctx.lineTo(cx - 1 * q.dir, y + 2.5); ctx.closePath(); ctx.fill(); }
     if (q.t > 0 && fxOn() && Math.random() < 0.5) burst(x + Math.random() * ww, y, ['#ffd23d', '#fff'], 1, 90, 40);
   }
   for (const d of (w.drops || [])) for (let k = 0; k < 2; k++) drawPad((d.tx + k) * TS, d.y, d.tx + k);   // a ground spring on its way down
