@@ -1086,8 +1086,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=65"></script>
-<script src="physics.js?v=65"></script>
+<script src="maps.js?v=67"></script>
+<script src="physics.js?v=67"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3044,7 +3044,7 @@ const SHOP = [
   { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'One tile of lava set into plain ground. Anything that touches it burns up.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'One tile of slippery ice set into plain ground.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
-  { cat: 'terrain', id: 'dirt', max: 600, name: 'Dirt', info: 'One tile of dirt, built onto other dirt (touching its side, top or bottom, not just a corner). It never falls.', c: 150, g: 7, misc: 'ter', ter: 'dirt' },
+  { cat: 'terrain', id: 'dirt', max: 600, name: 'Dirt', info: 'One tile of dirt, built onto other dirt (touching its side, top or bottom, not just a corner). It never falls. Set into water, it turns that water into dirt.', c: 150, g: 7, misc: 'ter', ter: 'dirt' },
   { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'One tile of water. On lava it makes grey rock. On ice it sits on top. Inside a pool it digs on down and sideways, one connected tile at a time.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
 const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
@@ -3113,7 +3113,7 @@ function ghostSpot(kind, side) {   // always the same rules: a set distance besi
     }
     return null;
   };
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
     const s = pass ? -side : side, x = b.x + s * (R + half + 3), y = climb(x, b.y + R - half);
     if (y !== null) return [x, y, s];
   }
@@ -3122,9 +3122,9 @@ function ghostSpot(kind, side) {   // always the same rules: a set distance besi
 }
 function flagSpot(side) {   // a checkpoint flag stands on the ground beside you, like every other thing you place
   const w = S.world, b = S.b;
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 0.7)) / TS), row = Math.floor((b.y + R + 1) / TS);
-    for (let k = -2; k < 9; k++) {
+    for (let k = -2; k < 2; k++) {
       const t = P.tile(w, tx, row + k);
       if (t === 2) break;
       if (t === 1 || t === 3 || t === 4 || t === 6) { if (k < 0 && !solidT(P.tile(w, tx, row + k + 1))) continue; if (!solidT(P.tile(w, tx, row + k - 1)) && !solidT(P.tile(w, tx, row + k - 2)) && P.tile(w, tx, row + k - 1) !== 2) return { tx, row: row + k }; break; }
@@ -3135,10 +3135,10 @@ function flagSpot(side) {   // a checkpoint flag stands on the ground beside you
 const tileIt = it => it && (it.id === 'flag' || it.gate || it.misc || it.portal);
 function gateSpot(side, hmax) {   // a gate: one tile wide, standing on the ground beside you, with clear air above it
   const w = S.world, b = S.b;
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 0.9)) / TS), row = Math.floor((b.y + R + 1) / TS);
     let gr = -1;
-    for (let k = -2; k < 8; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (solidT(t)) { if (k < 0 && !solidT(P.tile(w, tx, row + k + 1))) continue; gr = row + k; break; } }   // (a solid tile just above your feet with air under it is a ceiling, not ground)
+    for (let k = -2; k < 2; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (solidT(t)) { if (k < 0 && !solidT(P.tile(w, tx, row + k + 1))) continue; gr = row + k; break; } }   // (a solid tile just above your feet with air under it is a ceiling, not ground)
     if (gr < 0) continue;
     let h = 0; while (h < hmax && gr - h - 1 >= 1 && P.tile(w, tx, gr - h - 1) === 0) h++;   // as tall as it can be, up to its full height: under a ceiling it just gets shorter (but never under 2 tiles)
     if (h >= 2 && w.dyn.some(o => o.burn <= 0 && Math.abs(o.x - (tx + 0.5) * TS) < (o.r || o.hw) + TS / 2 && o.y + (o.r || o.hh) > (gr - h) * TS && o.y - (o.r || o.hh) < gr * TS)) continue;   // something is standing right there
@@ -3148,7 +3148,7 @@ function gateSpot(side, hmax) {   // a gate: one tile wide, standing on the grou
 }
 function flatSpot(side, centre, need, lavaOk) {   // two tiles of level ground beside you with open air above them (a teeter-totter's centre or a floor booster); returns the left column and the ground row
   const w = S.world, b = S.b;
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.3)) / TS) - 1, row = Math.floor((b.y + R + 1) / TS);
     for (let k = -2; k < 2; k++) {
       const a = P.tile(w, tx, row + k), c = P.tile(w, tx + 1, row + k);
@@ -3166,7 +3166,7 @@ function flatSpot(side, centre, need, lavaOk) {   // two tiles of level ground b
 }
 function plateSpot(side, gate) {   // the trigger: 2 tiles wide. Over open air it will fall until it lands, then stay.
   const w = S.world, b = S.b;
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.4)) / TS) - 1, r0 = Math.floor((b.y + R - 2) / TS);
     if (solidT(P.tile(w, tx, r0)) || solidT(P.tile(w, tx + 1, r0))) continue;
     if (gate && tx + 1 >= gate.tx - 0 && tx <= gate.tx) continue;   // not on the gate itself
@@ -3184,56 +3184,37 @@ function terrainBlocked(tx, r, tight) {   // something in the way of changing th
   if (w.pads.some(p => p.y === r && tx >= p.x && tx < p.x + p.w) || w.see.some(q => Math.abs(q.cx - cx) < q.hl + TS / 2 && Math.abs(q.cy - (r * TS - 46)) < 40) || (w.drops || []).some(q => q.tx === tx)) return true;
   return S.map.checkpoints.some(c => Math.abs(c[0] - tx) <= 1 && Math.abs(c[1] - r) <= 1);
 }
-function dirtSpot(side) {   // dirt only grows out of other dirt: the new tile has to touch dirt with a whole side (corners do not count). Nothing hangs in the air.
-  const w = S.world, b = S.b, feet = Math.floor((b.y + R + 2) / TS) - 1;
-  for (let pass = 0; pass < 2; pass++) {
-    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.1)) / TS); let best = null;
-    if (tx < 1 || tx >= w.W - 1) continue;
-    for (let r = feet + 1; r >= feet - 4; r--) {   // starting level with the ground you stand on (on a ledge: the tile right beside it, so you can keep going), then up
-      if (r < 1 || r >= w.H - 1 || P.tile(w, tx, r) !== 0) continue;
-      if (P.tile(w, tx, r + 1) !== 1 && P.tile(w, tx, r - 1) !== 1 && P.tile(w, tx - 1, r) !== 1 && P.tile(w, tx + 1, r) !== 1) continue;
-      if (Math.abs(b.x - (tx + 0.5) * TS) < R + TS / 2 && Math.abs(b.y - (r + 0.5) * TS) < R + TS / 2) continue;
-      best = { r }; break;
-    }
-    if (best && !terrainBlocked(tx, best.r, true)) return { tx, gr: best.r, row: best.r, to: 1, side: s };
-  }
-  return null;
-}
-function waterExtend(s) {   // water spreads on down and sideways into the dirt of its own pool: the new tile must touch water with a whole side
-  const w = S.world, b = S.b, tx = Math.floor((b.x + s * (R + TS * 1.1)) / TS), r0 = Math.floor(b.y / TS); let best = null;
-  for (let r = r0 - 1; r < r0 + 10 && r < w.H - 1; r++) { const t = P.tile(w, tx, r); if (t === 5) continue; if (t === 1 && r > 0 && P.tile(w, tx, r - 1) === 5) best = { tx, r, d: Math.abs(r - r0) }; break; }
-  for (let k = 0; k < 14; k++) { const xx = tx + s * k, t = P.tile(w, xx, r0); if (t === 5) continue; if (t === 1 && P.tile(w, xx - s, r0) === 5 && (!best || k < best.d)) best = { tx: xx, r: r0, d: k }; break; }
-  if (!best || best.tx < 1 || best.tx >= w.W - 1 || terrainBlocked(best.tx, best.r)) return null;
-  return { tx: best.tx, gr: best.r, row: best.r, to: 5, side: s };
-}
-function terrainSpot(kind, side) {   // lava, ice or water: one tile, set into plain ground beside you. Mixing them: lava on ice and ice on lava make water; water on lava makes grey rock; water on ice sits on top of it.
-  const w = S.world, b = S.b;
-  if (kind === 'dirt') return dirtSpot(side);
-  for (let pass = 0; pass < 2; pass++) {
-    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.1)) / TS), row = Math.floor((b.y + R + 1) / TS);
-    if (kind === 'water') { const e = waterExtend(s); if (e) return e; }
-    for (let k = -2; k < 2; k++) {   // only the ground around your own level: up a couple of tiles, or one step down
-      const r = row + k, t = P.tile(w, tx, r);
-      if (t === 0) continue;
-      if (P.tile(w, tx, r - 1) !== 0) break;
-      if (k < 0 && P.tile(w, tx, r + 1) === 0) continue;
-      let tr = null, to = 0;
-      if (kind === 'lava') { if (t === 1) { tr = r; to = 2; } else if (t === 3) { tr = r; to = 5; } }
-      else if (kind === 'ice') { if (t === 1) { tr = r; to = 3; } else if (t === 2) { tr = r; to = 5; } }
-      else { if (t === 1) { tr = r; to = 5; } else if (t === 2) { tr = r; to = 7; } else if (t === 3) { tr = r - 1; to = 5; } }
-      if (tr === null) break;
-      const cx = (tx + 0.5) * TS;
-      if (w.dyn.some(o => o.burn <= 0 && Math.abs(o.x - cx) < (o.r || o.hw) + TS / 2 && o.y + (o.r || o.hh) > (r - 2) * TS && o.y - (o.r || o.hh) < (r + 1) * TS)) return null;
-      if (w.pads.some(p => p.y === r && tx >= p.x && tx < p.x + p.w) || w.see.some(q => Math.abs(q.cx - cx) < q.hl + TS / 2 && Math.abs(q.cy - (r * TS - 46)) < 40) || (w.drops || []).some(q => q.tx === tx)) return null;
-      if (S.map.checkpoints.some(c => Math.abs(c[0] - tx) <= 1 && Math.abs(c[1] - r) <= 1)) return null;
-      return { tx, gr: r, row: tr, to, side: s };
-    }
+/* Terrain (lava, ice, water, dirt) always works on the tile IN FRONT of you, the way you are facing, and only on the tiles right around it:
+   first the tile straight ahead, then the one above it, then the one below it (water: straight ahead, then straight down under you when you are in water, otherwise below the tile ahead).
+   The first one where this item can do something wins. If none can, the ghost turns red. It never reaches farther, and never switches sides. */
+function terrainSpot(kind, side) {
+  const w = S.world, b = S.b, s = side < 0 ? -1 : 1, cx = Math.floor(b.x / TS), cy = Math.floor(b.y / TS), tx = cx + s;
+  if (tx < 1 || tx >= w.W - 1) return null;
+  const T = (x, r) => P.tile(w, x, r), open = t => t === 0 || t === 5;
+  const exposed = (x, r) => open(T(x - 1, r)) || open(T(x + 1, r)) || open(T(x, r - 1)) || open(T(x, r + 1));   // the surface of something, not its inside
+  const act = (x, r) => {   // what this item does to the tile (x, r): the tile it changes, and what it becomes
+    if (x < 1 || x >= w.W - 1 || r < 1 || r >= w.H - 1) return null;
+    const t = T(x, r);
+    if (kind === 'dirt') return (t === 0 || t === 5) && (T(x, r + 1) === 1 || T(x, r - 1) === 1 || T(x - 1, r) === 1 || T(x + 1, r) === 1) ? { row: r, to: 1 } : null;   // grows out of dirt, side to side (never just a corner)
+    if (t === 1 && exposed(x, r)) return { row: r, to: kind === 'lava' ? 2 : kind === 'ice' ? 3 : 5 };
+    if (kind === 'lava' && t === 3 && exposed(x, r)) return { row: r, to: 5 };
+    if (kind === 'ice' && t === 2 && exposed(x, r)) return { row: r, to: 5 };
+    if (kind === 'water' && t === 2 && exposed(x, r)) return { row: r, to: 7 };
+    if (kind === 'water' && t === 3 && T(x, r - 1) === 0) return { row: r - 1, to: 5 };   // water sits on top of ice
+    return null;
+  };
+  const probes = kind === 'water' ? [[tx, cy], T(cx, cy) === 5 ? [cx, cy + 1] : [tx, cy + 1]] : [[tx, cy], [tx, cy - 1], [tx, cy + 1]];
+  for (const [x, r] of probes) {
+    const a = act(x, r); if (!a) continue;
+    if (kind === 'dirt' && Math.abs(b.x - (x + 0.5) * TS) < R + TS / 2 && Math.abs(b.y - (a.row + 0.5) * TS) < R + TS / 2) continue;   // not into yourself
+    if (terrainBlocked(x, a.row, kind === 'dirt')) continue;
+    return { tx: x, gr: a.row, row: a.row, to: a.to, side: s };
   }
   return null;
 }
 function bncSpot(side) {   // a ground spring: one tile wide. Over open air it falls until it reaches the ground, then it sits in it.
   const w = S.world, b = S.b;
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.1)) / TS), r0 = Math.floor((b.y + R - 2) / TS);
     if (solidT(P.tile(w, tx, r0))) continue;
     for (let r = r0 + 1; r < r0 + 80 && r < w.H; r++) {
@@ -3386,7 +3367,7 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (!on) return;
   $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : 'Place';
-  $('placeHint').textContent = g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
+  $('placeHint').textContent = g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? 'It goes on the tile in front of you. Turn around to use the other side' : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
