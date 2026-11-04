@@ -339,16 +339,26 @@
     d.rot += (tgt - d.rot) * Math.min(1, 16 * dt);
     if (Math.abs(tgt - d.rot) < 0.02) d.rot = 0;
   }
+  let dynTick = 0; const DYN_BUDGET = 160;
   function stepDyn(w, dt) {
+    dynTick++;
     stepSee(w, dt);
     for (let i = 0; i < w.pads.length; i++) if (w.pads[i].t > 0) w.pads[i].t = Math.max(0, w.pads[i].t - dt);
     const L = w.dyn; if (!L.length) return;
     const f = w.focus, FR = 1100;
+    if (f) {   // a very busy pile near you: only the nearest few dozen things are simulated each moment, so the game stays smooth however much has been built
+      const near = [];
+      for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0 || d.nap || Math.abs(d.x - f.x) > FR || Math.abs(d.y - f.y) > FR) continue; near.push(d); }
+      if (near.length > DYN_BUDGET) { near.sort((a, b) => Math.abs(a.x - f.x) + Math.abs(a.y - f.y) - Math.abs(b.x - f.x) - Math.abs(b.y - f.y)); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }
+    }
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
+      if (d.skip) { d.sleep = true; continue; }
       if (d.burn > 0) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; } continue; }
       if (f && (Math.abs(d.x - f.x) > FR || Math.abs(d.y - f.y) > FR)) { d.sleep = true; continue; }   // far from you: frozen (saves work)
       d.sleep = false;
+      if (d.nap) { if (Math.abs(d.x - d.rx) + Math.abs(d.y - d.ry) > 2) { d.nap = false; d.rest = 0; } else if ((dynTick + i) % 12 !== 0) continue; }   // at rest: it only checks in now and then (so a big pile that has settled costs next to nothing, and anything that changes under it wakes it within a moment)
+      const nx0 = d.x, ny0 = d.y;
       if (d.sq > 0) d.sq = Math.max(0, d.sq - dt);
       d.vy = Math.min(900, d.vy + GRAV * dt);
       let burn = false;
@@ -383,6 +393,7 @@
       if (w.pads.length && (d.gr || d.touch)) { const pd = padAt(w, d.x, d.y + (d.r || d.hh)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; } }
       if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
         if (!d.pcd && d.vy > -60 && (d.gr || d.touch)) { const pt = portalAt(w, d.x, d.y + (d.r || d.hh)); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - (d.r || d.hh) - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; d.tip = null; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
+      if (Math.abs(d.x - nx0) + Math.abs(d.y - ny0) < 1.0 && Math.abs(d.vx) < 25 && !burn) { d.rest = (d.rest || 0) + dt; if (d.rest > 0.5) { if (!d.nap) { d.rx = d.x; d.ry = d.y; } d.nap = true; } } else { d.rest = 0; d.nap = false; }
       d.touch = false;
       if (burn || d.y > killYAt(w, d.x) || d.x < -200 || d.x > w.W * TS + 200) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
     }
@@ -391,20 +402,20 @@
       for (let i = 0; i < L.length; i++) {
         const a = L[i]; if (a.burn > 0 || a.sleep) continue;
         for (let j = i + 1; j < L.length; j++) {
-          const b = L[j]; if (b.burn > 0 || b.sleep || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
+          const b = L[j]; if (b.burn > 0 || b.sleep || (a.nap && b.nap) || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
           if (pairSep(a, b, 0.15, w)) hit = true;
         }
       }
     }
     for (let i = 0; i < L.length; i++) {   // nothing is ever left inside the ground: lift a crate that has been pushed into it
-      const d = L[i]; if (d.k !== 'b' || d.burn > 0 || d.sleep || d.tip) continue;
+      const d = L[i]; if (d.k !== 'b' || d.burn > 0 || d.sleep || d.nap || d.tip) continue;
       if (boxHits(w, d.x, d.y, d.hw, d.hh)) { for (let k = 0; k < 24 && boxHits(w, d.x, d.y, d.hw, d.hh); k++) { d.y -= 1; } if (d.vy > 0) d.vy = 0; }
     }
   }
   // shove a crate sideways by dx, carrying along any crates in front of it (a row of crates moves together, and a jammed row acts as a wall, so nothing is ever squeezed into something else)
   function shoveBox(w, d, dx, depth, jr) {
     if (depth > 5) return false;
-    const x0 = d.x; d.x += dx;
+    const x0 = d.x; d.x += dx; d.nap = false; d.rest = 0;
     if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x = x0; return false; }
     jr.push([d, x0]);
     const L = w.dyn;
@@ -423,7 +434,7 @@
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
       if (d.burn > 0 || Math.abs(d.x - b.x) > 90 || Math.abs(d.y - b.y) > 90) continue;
-      d.sleep = false;
+      d.sleep = false; d.nap = false; d.rest = 0;
       if (d.k === 'b') {
         const px = clamp(b.x, d.x - d.hw, d.x + d.hw), py = clamp(b.y, d.y - d.hh, d.y + d.hh);
         let dx = b.x - px, dy = b.y - py, d2 = dx * dx + dy * dy;

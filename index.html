@@ -413,6 +413,7 @@
   #shopKeep{margin:0 0 7px;padding:5px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644}#shopKeep .ti{display:flex;flex-direction:column;gap:1px;text-align:left}#shopKeep small{font-size:12px;opacity:.65}
   #shopList{display:flex;flex-direction:column;gap:7px;margin:0 0 10px}
   .shopitem{display:flex;align-items:center;gap:10px;padding:7px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;text-align:left}
+  .shopitem .lim{font-size:12px;font-weight:normal;opacity:.65;margin-left:4px;white-space:nowrap}.shopitem .lim.full{color:#ff9a8a;opacity:1}
   .shopitem .sico{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}
   .shopitem .sico svg{width:100%;height:100%}
   .shopitem .sinfo{flex:1;min-width:0;line-height:1.15}.shopitem .sinfo b{display:block;font-weight:normal;font-size:16px}.shopitem .sinfo small{opacity:.7;font-size:12.5px}
@@ -1085,8 +1086,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=64"></script>
-<script src="physics.js?v=64"></script>
+<script src="maps.js?v=65"></script>
+<script src="physics.js?v=65"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1619,7 +1620,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.own = {}; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
   restoreWorld(slot);
   if (S.guest && party.priv) applyPartyProps(party.priv);
   else if (S.pendingBuild && S.pendingBuild.slot === slot) pubSync(S.pendingBuild.b);
@@ -1709,7 +1710,7 @@ const hasSoloSave = i => !!solo2[i];
 const soloFrom = i => (solo2[i] && solo2[i].from) || '';   // where a copy saved from someone else's world came from
 function saveCopy() {   // keep this world, as it is right now, as your own private version of this level
   if (!S.world || !S.map || S.slot < 0) return false;
-  const o = worldObj(); delete o.slot; o.got = []; o.n = 0; o.rcv = o.buys.length + o.gates.length + o.misc.length;   // (everything in it counts as already there, so you can still build)
+  const o = worldObj(); delete o.slot; o.got = []; o.n = 0; o.rcv = o.buys.length + o.gates.length + o.misc.length; o.own = {};   // (everything in it counts as already there, so you can still build)
   o.from = party ? who(party.name) : 'a public world';
   solo2[S.idx] = o; saveSolo(); return true;
 }
@@ -1903,12 +1904,12 @@ function pubSync(pv) {   // you arrive in a public world: you get what the room 
   if (!pv || !S.world) return;
   const has = new Set(); [['p', pv.props], ['m', pv.misc], ['g', pv.gates], ['c', pv.cps]].forEach(([k, a]) => (a || []).forEach(q => has.add(pkey(k, q))));
   applyPubBuild(pv);
+  sendBulk({ props: S.bought.filter(q => !has.has(pkey('p', q))), gates: S.boughtGates.filter(q => !has.has(pkey('g', q))), misc: S.boughtMisc.filter(q => !has.has(pkey('m', q))), cps: S.boughtCps.filter(q => !has.has(pkey('c', q))) });
+}
+function sendBulk(lists) {   // tell the world what you have built, 25 things at a time (a big build is no big message)
   const out = [];
-  S.bought.forEach(q => { if (!has.has(pkey('p', q))) out.push({ t: 'padd', k: q[0], x: q[1], y: q[2] }); });
-  S.boughtGates.forEach(q => { if (!has.has(pkey('g', q))) out.push({ t: 'pgate', g: q }); });
-  S.boughtMisc.forEach(q => { if (!has.has(pkey('m', q))) out.push({ t: 'pobj', g: q }); });
-  S.boughtCps.forEach(q => { if (!has.has(pkey('c', q))) out.push({ t: 'pcp', x: q[0], y: q[1] }); });
-  out.forEach((msg, i) => setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 250 * (i + 1)));
+  ['cps', 'gates', 'props', 'misc'].forEach(k => { const a = lists[k] || []; for (let i = 0; i < a.length; i += 25) out.push({ t: 'pb', [k]: a.slice(i, i + 25) }); });
+  out.forEach((msg, i) => setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (i + 1)));
 }
 function applyPubBuild(pv) {   // what everyone in a public world has built so far (each thing only once, however often it is told). It becomes part of your world, so it is kept for when you come back
   if (!pv || !S.world) return; const seen = S.pubKeys, take = (k, q) => { const key = pkey(k, q); if (seen.has(key)) return false; seen.add(key); return true; };
@@ -1923,6 +1924,13 @@ function applyPartyProps(pv) {   // what the host built is there when you arrive
   (pv.gates || []).forEach(q => { if (validGate(q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
   (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
 }
+function deriveOwn() {   // saves from before every item had its own count: work it out from what is there
+  const o = {}, add = id => { if (id) o[id] = (o[id] | 0) + 1; };
+  S.bought.forEach(r => { const it = SHOP.find(s => s.kind === r[0] && !s.misc && !s.gate && !s.portal); add(it && it.id); });
+  S.boughtGates.forEach(q => { const it = SHOP.find(s => s.gate === q[2]); add(it && it.id); });
+  S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? 'see' : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'lav' ? 'lava' : k === 'tl' ? { 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
+  S.boughtCps.forEach(() => add('flag')); return o;
+}
 function worldObj() {   // the world exactly as it is right now: everything built, where everything is and how it is moving
   const w = S.world, dyn = [], r2 = v => Math.round(v * 100) / 100;
   for (let i = 0; i < w.dyn.length; i++) {   // every thing that has been moved, with how it was moving and turning
@@ -1932,7 +1940,7 @@ function worldObj() {   // the world exactly as it is right now: everything buil
   }
   const see = w.see.map(q => [r2(q.ang), r2(q.av), r2(q.tilt)]);
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
-  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, rcv: S.rcvN | 0, dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
+  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, rcv: S.rcvN | 0, own: S.own, dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
 }
 function saveWorld(force) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
@@ -1956,7 +1964,7 @@ function restoreWorld(slot) {
     (own ? o.gates || [] : []).forEach(q => { if (validGate(q)) { key('g', q.slice(0, 5)); addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
     (own ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 5 : 4)); addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
     (own ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
-    S.rcvN = o.rcv | 0;
+    S.rcvN = o.rcv | 0; S.own = o.own && typeof o.own === 'object' ? o.own : deriveOwn();
     (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } else { d.x = q[1]; d.y = q[2]; d.vx = q[4] || 0; d.vy = q[5] || 0; d.rot = q[6] || 0; d.av = q[7] || 0; if (Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1 || Math.abs(d.av) > 0.05) d.sleep = false; } });
     (o.see || []).forEach((q, i) => { const e = w.see[i]; if (e && Array.isArray(q)) { e.ang = q[0] || 0; e.av = q[1] || 0; e.tilt = q[2] || 0; } });
     (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
@@ -3021,23 +3029,23 @@ $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop'))
 /* ----- the shop: spend coins (and diamonds) on things that appear right next to you. They are only yours: nobody else sees them. ----- */
 const SHOP = [
   { cat: 'coins', id: 'coins', name: '250 coins', info: 'Trade one diamond for coins.', c: 0, g: 1, give: 250 },
-  { cat: 'gadgets', id: 'spring', name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
-  { cat: 'gadgets', id: 'flag', name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot.', c: 400, g: 5 },
-  { cat: 'blocks', id: 'box0', name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
-  { cat: 'blocks', id: 'box1', name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
-  { cat: 'blocks', id: 'ball0', name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
-  { cat: 'blocks', id: 'ball1', name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
-  { cat: 'blocks', id: 'ball2', name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
-  { cat: 'gates', id: 'gate', name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
-  { cat: 'gates', id: 'gateS', name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
-  { cat: 'gadgets', id: 'see', name: 'Teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
-  { cat: 'gadgets', id: 'pad', name: 'Floor booster', info: 'Set into the ground. Roll over it and it throws you forward.', c: 100, g: 0, misc: 'pad' },
-  { cat: 'gadgets', id: 'portal', name: 'Portals', info: 'A yellow and a blue portal in the ground. Go in one and come out of the other.', c: 1000, g: 20, portal: true },
-  { cat: 'gadgets', id: 'bnc', name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
-  { cat: 'terrain', id: 'lava', name: 'Lava', info: 'One tile of lava set into plain ground. Anything that touches it burns up.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
-  { cat: 'terrain', id: 'ice', name: 'Ice', info: 'One tile of slippery ice set into plain ground.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
-  { cat: 'terrain', id: 'dirt', name: 'Dirt', info: 'One tile of dirt, built onto other dirt (touching its side, top or bottom, not just a corner). It never falls.', c: 150, g: 7, misc: 'ter', ter: 'dirt' },
-  { cat: 'terrain', id: 'water', name: 'Water', info: 'One tile of water. On lava it makes grey rock. On ice it sits on top. Inside a pool it digs on down and sideways, one connected tile at a time.', c: 150, g: 7, misc: 'ter', ter: 'water' }
+  { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
+  { cat: 'gadgets', id: 'flag', max: 30, name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot.', c: 400, g: 5 },
+  { cat: 'blocks', id: 'box0', max: 100, name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
+  { cat: 'blocks', id: 'box1', max: 80, name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
+  { cat: 'blocks', id: 'ball0', max: 100, name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
+  { cat: 'blocks', id: 'ball1', max: 100, name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
+  { cat: 'blocks', id: 'ball2', max: 80, name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
+  { cat: 'gates', id: 'gate', max: 40, name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
+  { cat: 'gates', id: 'gateS', max: 40, name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
+  { cat: 'gadgets', id: 'see', max: 25, name: 'Teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
+  { cat: 'gadgets', id: 'pad', max: 100, name: 'Floor booster', info: 'Set into the ground. Roll over it and it throws you forward.', c: 100, g: 0, misc: 'pad' },
+  { cat: 'gadgets', id: 'portal', max: 20, name: 'Portals', info: 'A yellow and a blue portal in the ground. Go in one and come out of the other.', c: 1000, g: 20, portal: true },
+  { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
+  { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'One tile of lava set into plain ground. Anything that touches it burns up.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
+  { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'One tile of slippery ice set into plain ground.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
+  { cat: 'terrain', id: 'dirt', max: 600, name: 'Dirt', info: 'One tile of dirt, built onto other dirt (touching its side, top or bottom, not just a corner). It never falls.', c: 150, g: 7, misc: 'ter', ter: 'dirt' },
+  { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'One tile of water. On lava it makes grey rock. On ice it sits on top. Inside a pool it digs on down and sideways, one connected tile at a time.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
 const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
 let shopTab = 'blocks';
@@ -3071,8 +3079,8 @@ function shopRender() {
   const L = $('shopList'); L.innerHTML = '';
   SHOP.filter(it => it.cat === shopTab).forEach(it => {
     const row = document.createElement('div'); row.className = 'shopitem';
-    const ok = wallet.c >= it.c && wallet.g >= it.g;
-    row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + '</b><small>' + it.info + '</small></div>';
+    const full = atLimit(it), ok = wallet.c >= it.c && wallet.g >= it.g && !full;
+    row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + (it.max ? ' <span class="lim' + (full ? ' full' : '') + '">' + ownCount(it) + '/' + it.max + '</span>' : '') + '</b><small>' + it.info + '</small></div>';
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.disabled = !ok;
     b.innerHTML = (it.c ? '<span class="pr">' + ico('gcoin') + it.c + '</span>' : '') + (it.g ? '<span class="pr">' + ico('gem') + it.g + '</span>' : '');
     b.onclick = () => buyItem(it); row.appendChild(b); L.appendChild(row);
@@ -3087,8 +3095,9 @@ $('setKeep').onchange = () => { settings.terrKeep = $('setKeep').checked; save()
 $('btnShop').onclick = () => toggleShop(!shopOpen);
 $('shopClose').onclick = () => toggleShop(false);
 $('chatClose').onclick = () => toggleChat(false);
-const boughtN = () => Math.max(0, S.bought.length + S.boughtGates.length + S.boughtMisc.length - (S.rcvN | 0));   // (only what you bought counts, not what others in the world built)
-const MAX_BOUGHT = 40;   // per map: plenty to play with, and the physics stays quick
+const ownCount = it => (S.own && S.own[it.id]) | 0;   // how many of this you have built on this map (what others built does not count)
+const atLimit = it => !!it.max && ownCount(it) >= it.max;
+const limitNote = it => 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
 // 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
 function ghostSpot(kind, side) {   // always the same rules: a set distance beside you; if something is in the way, climb it (up to 5 blocks); if that fails try the other side; then on top of you; else there is no room
@@ -3390,7 +3399,7 @@ function finishPlacing() {
   const g = placing; if (!g || !canShop()) return;
   const it = g.it; computeGhost();
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); cancelPlacing(true); return; }
-  if (it.id !== 'flag' && boughtN() >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); cancelPlacing(true); return; }
+  if (atLimit(it)) { notice(limitNote(it), 'urgent'); cancelPlacing(true); return; }
   if (!g.ok) { notice(g.sb ? 'You cannot build in the start area' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
   if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   if (it.portal) {
@@ -3408,11 +3417,12 @@ function finishPlacing() {
     if (q[0] !== 'tl') { burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4); }
   } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
   else placeProp(it.kind, [g.tx, g.ty]);
+  (S.own = S.own || {})[it.id] = ownCount(it) + 1;
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   placing = null; placeUIKey = null; refreshPlaceUI();
   if (it.misc === 'ter' && settings.terrKeep) {   // keep going with the same terrain until you cancel or the money runs out
     if (wallet.c < it.c || wallet.g < it.g) notice('Out of ' + (wallet.c < it.c ? 'coins' : 'diamonds') + '. You are done placing', 'urgent');
-    else if (boughtN() >= MAX_BOUGHT) notice('You already have a lot of things here. You are done placing', 'urgent');
+    else if (atLimit(it)) notice('That is the most ' + it.name + ' you can build here. You are done placing', 'urgent');
     else { startPlacing(it); placing.side = g.side; computeGhost(); }
   }
 }
@@ -3438,7 +3448,7 @@ function buyItem(it) {
   if (!canShop() || !it) return;
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); shopRender(); return; }
   if (it.give) { wallet.g -= it.g; wallet.c += it.give; saveWallet(); sfx('gem'); shopRender(); return; }   // a trade, not a thing: the shop stays open
-  if (it.id !== 'flag' && boughtN() >= MAX_BOUGHT) { notice('You already have a lot of things here. Wait for the next map', 'urgent'); return; }
+  if (atLimit(it)) { notice(limitNote(it), 'urgent'); shopRender(); return; }
   toggleShop(false);
   startPlacing(it);   // everything you build works the same way: the shop closes and a ghost follows you until you place it
 }
@@ -4008,7 +4018,7 @@ function setMultiplayer(on) {
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
-  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), props: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc }; else o.join = party.host; }   // a friend's world: open mine, or go to theirs
+  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel() }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   return JSON.stringify(o);
 };
 function joinWorld() {
@@ -4153,7 +4163,7 @@ function onMsg(m) {
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
       if (party && !m.priv) { partyOver(''); return; }
-      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; }
+      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host') sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps }); }
       net.online = m.online; net.peak = m.peak;
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = infoMsg();
@@ -4186,9 +4196,10 @@ function onMsg(m) {
     case 'pclose': partyOver(who(m.name) + ' closed their private game'); break;
     case 'inv': partyInvited(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
-    case 'pobj': { if (!S.world || !shared() || !validMisc(m.g) || (!party && !pubTake('m', m.g))) break; addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } sfx('big'); break; }
-    case 'pgate': { if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } sfx('big'); break; }
-    case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y) || (!party && !pubTake('p', [m.k | 0, m.x | 0, m.y | 0]))) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); break; }
+    case 'pobj': { if (!S.world || !shared() || !validMisc(m.g) || (!party && !pubTake('m', m.g))) break; addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
+    case 'pgate': { if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
+    case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); sfx('big'); break;
+    case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y) || (!party && !pubTake('p', [m.k | 0, m.x | 0, m.y | 0]))) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
     case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'newmap': if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; startTransition(m.slot, m.next); break;
