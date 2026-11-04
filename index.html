@@ -39,7 +39,8 @@
   #chBadge{position:relative;left:-14px;top:-10px;width:16px;height:16px;border-radius:50%;background:var(--bad);color:#fff;font:700 11px/16px var(--font);text-align:center;font-style:normal;pointer-events:none;margin-right:-16px}
   .lpbody{}
   .lrow{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px dashed rgba(232,220,192,.25)}
-  .invbtn{display:flex;align-items:center;gap:12px;width:100%;margin:2px 0 8px;padding:10px 14px;text-align:left;color:#2a2008;font-family:inherit;background:linear-gradient(135deg,#ffd75e,#ffb347);border:2px solid #fff3c4;border-radius:var(--wob);box-shadow:0 3px 0 rgba(0,0,0,.35);cursor:pointer}
+  .addcard{max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px)}.addcard #adBody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}#btnAddF{margin:8px 0 2px}
+  .invbtn{display:flex;align-items:center;gap:12px;width:100%;margin:14px 0 10px;padding:10px 14px;text-align:left;color:#2a2008;font-family:inherit;background:linear-gradient(135deg,#ffd75e,#ffb347);border:2px solid #fff3c4;border-radius:var(--wob);box-shadow:0 3px 0 rgba(0,0,0,.35);cursor:pointer}
   .invbtn.hide{display:none}.invbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
   .invbtn [data-ic]{flex:0 0 auto;width:26px;height:26px}.invbtn .it{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;line-height:1.15}.invbtn b{font-size:18px;font-weight:400}.invbtn small{font-size:13px;opacity:.75}.invbtn .inva{font-size:28px;line-height:1;opacity:.6}
   canvas.ldot{border:0!important;border-radius:0!important;background:none!important}
@@ -596,7 +597,7 @@
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
-  #nameModal,#shareModal,#codeModal,#profModal,#lvlModal,#invModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}
+  #nameModal,#shareModal,#codeModal,#profModal,#lvlModal,#invModal,#addModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
   .nname.dim{opacity:.55}
@@ -917,6 +918,7 @@
       <div class="dep" data-dep="!mp"><div>
         <h4><span data-ic="map"></span> Your private world</h4>
         <div class="small dim">Pick any level you like, and set the time of day and the finish there, before you play. What you build, move, open and collect on a level is saved until you reset that level.</div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="gcoin"></span><span><b>Unlimited coins and diamonds</b><small>Off: you earn them here. Public worlds always keep their own</small></span></span><input type="checkbox" id="setUnl"><i></i></label>
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
         <button class="btn full" id="btnInvite" type="button"><span data-ic="users"></span>Invite friends to this level</button>
       </div></div>
@@ -926,10 +928,7 @@
       <button class="invbtn hide" id="btnInviteF" type="button"><span data-ic="users"></span><span class="it"><b id="invT">Invite friends to play</b><small id="invS">Pick friends and send them a link to this world</small></span><span class="inva">›</span></button>
       <h4><span data-ic="users"></span> Your friends <span id="lpCount" class="dim"></span></h4><div class="small dim fhint">Friends show on each other's maps. Tap a friend to open their profile, where their settings are.</div><div id="lpList"></div>
       <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Friend requests</h4><div id="lpReqs"></div>
-      <h4><span data-ic="search"></span> Find players</h4>
-      <div id="lpConn" class="small dim"></div>
-      <input type="text" id="lpQ" maxlength="12" placeholder="Search by name or code (optional)" autocomplete="off" spellcheck="false"><div class="small dim fhint" id="lpResH">Players from the last 7 days</div><div id="lpRes"></div>
-      <h4 id="mutedH" class="hide"><span data-ic="bell-off"></span> Muted players</h4><div id="mutedList"></div>
+      <button class="btn full prim" id="btnAddF" type="button"><span data-ic="search"></span>Add a friend</button>
     </section>
     <section class="pane" data-pane="bots">
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Pretend players that only you can see</small></span></span><input type="checkbox" id="setBots"><i></i></label>
@@ -1017,6 +1016,17 @@
   <div class="btns"><button id="ivStop" type="button" class="danger hide">Close my world</button><button id="ivNo" type="button" class="go">Done</button></div>
 </div></div>
 
+<div id="addModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="adTitle"><div class="card lvcard addcard">
+  <h3 id="adTitle">Add a friend</h3>
+  <div id="lpConn" class="small dim"></div>
+  <input type="text" id="lpQ" maxlength="12" placeholder="Search by name or code (optional)" autocomplete="off" spellcheck="false">
+  <div id="adBody">
+    <div class="small dim fhint" id="lpResH">Players from the last 7 days</div><div id="lpRes"></div>
+    <h4 id="mutedH" class="hide"><span data-ic="bell-off"></span> Muted players</h4><div id="mutedList"></div>
+  </div>
+  <div class="btns"><button id="adNo" type="button" class="go">Done</button></div>
+</div></div>
+
 <div id="lvlModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="lvTitle"><div class="card lvcard">
   <h3 id="lvTitle">Pick a level</h3>
   <div id="lvGrid" role="listbox" aria-label="Levels"></div>
@@ -1091,8 +1101,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=71"></script>
-<script src="physics.js?v=71"></script>
+<script src="maps.js?v=72"></script>
+<script src="physics.js?v=72"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1134,7 +1144,7 @@ function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight',
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
-    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
+    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', finArrow: true, terrKeep: false, unl: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
     keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
@@ -1816,9 +1826,22 @@ function update(dt) {
 
 /* ----- coins (just for fun: they count up, and your browser remembers your best per map) ----- */
 const WKEY = 'ballrun4_world', WALKEY = 'ballrun4_wallet', BEATKEY = 'ballrun4_beaten';
-let wallet = { c: 0, g: 0 }, walletFresh = true;   // what you can spend: coins, and diamonds (the gems)
-try { const o = JSON.parse(localStorage.getItem(WALKEY) || 'null'); if (o) { wallet.c = Math.max(0, o.c | 0); wallet.g = Math.max(0, o.g | 0); walletFresh = false; } } catch (e) {}
-const saveWallet = () => { try { localStorage.setItem(WALKEY, JSON.stringify(wallet)); } catch (e) {} };
+/* Two separate purses. Public worlds: the coins and diamonds you earn there, kept between visits. Your own private worlds: a purse of their own
+   (or, if you choose it in the settings, unlimited coins and diamonds). `wallet` always means the one for the mode you are in. */
+const WALKEY_PRIV = 'ballrun4_wallet_priv';
+const purseP = { c: 0, g: 0 }, purseV = { c: 0, g: 0 };
+let walletFresh = true;
+const unlimitedNow = () => !settings.mp && !!settings.unl;
+const purseNow = () => settings.mp ? purseP : purseV;
+const wallet = {
+  get c() { return unlimitedNow() ? 1e9 : purseNow().c; }, set c(v) { if (!unlimitedNow()) purseNow().c = v; },
+  get g() { return unlimitedNow() ? 1e9 : purseNow().g; }, set g(v) { if (!unlimitedNow()) purseNow().g = v; }
+};
+const fmtW = v => v >= 1e9 ? '\u221e' : fmtN(v);   // (unlimited shows as the infinity sign)
+function loadPurse(key, p) { try { const o = JSON.parse(localStorage.getItem(key) || 'null'); if (o) { p.c = Math.max(0, o.c | 0); p.g = Math.max(0, o.g | 0); return true; } } catch (e) {} return false; }
+if (loadPurse(WALKEY, purseP)) walletFresh = false; loadPurse(WALKEY_PRIV, purseV);
+const saveWallet = () => { try { localStorage.setItem(WALKEY, JSON.stringify(purseP)); localStorage.setItem(WALKEY_PRIV, JSON.stringify(purseV)); } catch (e) {} };
+const resetPrivatePurse = () => { purseV.c = 0; purseV.g = 0; saveWallet(); };
 const isBeaten = idx => { try { return !!JSON.parse(localStorage.getItem(BEATKEY) || '{}')[idx]; } catch (e) { return false; } };
 const beatCount = () => { try { return Object.keys(JSON.parse(localStorage.getItem(BEATKEY) || '{}')).length; } catch (e) { return 0; } };
 const infoMsg = () => JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, beat: beatCount() });
@@ -1976,7 +1999,7 @@ function restoreWorld(slot) {
     (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
     (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
     (o.got || []).forEach(i => { if (i < S.coinGot.length) S.coinGot[i] = 1; });
-    S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; wallet.c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
+    S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; purseNow().c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
   } catch (e) {}
 }
 setInterval(() => { if (S.mode === 'play' && !S.away) saveWorld(); }, 4000);
@@ -2634,7 +2657,7 @@ function syncUI() {
   nameUI();
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
-    ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg']]
+    ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setUnl', 'unl'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); $('todDesc').textContent = TODS[settings.tod];
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
@@ -2645,7 +2668,12 @@ function syncUI() {
   buildLook(); refreshLook(); applyMmVisibility();
 }
 function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); sfx($(id).checked ? 'on' : 'off'); if (fn) fn(); }; }
-bindToggle('setTags', 'tags'); bindToggle('setFinArrow', 'finArrow'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
+bindToggle('setTags', 'tags'); bindToggle('setFinArrow', 'finArrow');
+bindToggle('setUnl', 'unl', () => {   // how money works in your private worlds changed: offer a clean start (not on the main menu, where you are only setting up)
+  lastCoinShown = lastGemShown = -1; homeWalletRender.k = ''; if (shopOpen) shopRender();
+  if (inHome) return;
+  askConfirm('Start private money over?', settings.unl ? 'Your private worlds now have unlimited coins and diamonds. Set the coins and diamonds you had saved there back to zero too?' : 'Your private worlds now work for coins and diamonds again. Start from zero?', 'Reset to zero', () => { resetPrivatePurse(); lastCoinShown = lastGemShown = -1; homeWalletRender.k = ''; if (shopOpen) shopRender(); }, { no: 'Keep what I have', yesClass: 'danger' });
+}); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
 bindToggle('setBotMark', 'botMark'); bindToggle('setPeopleMark', 'peopleMark'); bindToggle('setBotMsg', 'botMsg'); bindToggle('setPeopleMsg', 'peopleMsg'); bindToggle('setPower', 'powerJump', () => { if (S.b && !settings.powerJump) { S.b.jm = 0; S.b.jfill = false; } applyTouchUI(); applyDeps(); }); bindToggle('setBotAsk', 'botAsk'); bindToggle('setMmPlayers', 'mmPlayers'); bindToggle('setMmBots', 'mmBots');
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
@@ -3079,9 +3107,10 @@ const ico = n => '<svg class="ic" viewBox="0 0 24 24"><use href="#i-' + n + '"/>
 const canShop = () => !inHome && !paused && S.mode === 'play' && !!S.b && !S.away && S.dead <= 0;
 let shopOpen = false;
 function shopRender() {
-  $('shopWallet').innerHTML = '<span>' + ico('gcoin') + fmtN(wallet.c) + '</span><span>' + ico('gem') + fmtN(wallet.g) + '</span>';
+  $('shopWallet').innerHTML = '<span>' + ico('gcoin') + fmtW(wallet.c) + '</span><span>' + ico('gem') + fmtW(wallet.g) + '</span>';
   const T = $('shopTabs'); T.innerHTML = '';
-  SHOP_TABS.forEach(([id, name]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.className = id === shopTab ? 'on' : ''; b.onclick = () => { shopTab = id; sfx('ui'); shopRender(); const l = $('shopList'); l.scrollTop = 0; }; T.appendChild(b); });
+  if (unlimitedNow() && shopTab === 'coins') shopTab = 'blocks';   // (nothing to trade for when coins never run out)
+  SHOP_TABS.filter(t => !(unlimitedNow() && t[0] === 'coins')).forEach(([id, name]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.className = id === shopTab ? 'on' : ''; b.onclick = () => { shopTab = id; sfx('ui'); shopRender(); const l = $('shopList'); l.scrollTop = 0; }; T.appendChild(b); });
   $('shopKeep').classList.toggle('hide', shopTab !== 'terrain'); $('setKeep').checked = !!settings.terrKeep;
   const L = $('shopList'); L.innerHTML = '';
   SHOP.filter(it => it.cat === shopTab).forEach(it => {
@@ -3455,7 +3484,7 @@ setInterval(() => {
     wDirty = true;
   }
 }, 120);
-addEventListener('storage', e => { if (e.key === WALKEY) { try { const o = JSON.parse(e.newValue || 'null'); if (o) { wallet.c = Math.max(0, o.c | 0); wallet.g = Math.max(0, o.g | 0); if (shopOpen) shopRender(); } } catch (x) {} } });   // (another tab of the game spent or earned something)
+addEventListener('storage', e => { if (e.key === WALKEY || e.key === WALKEY_PRIV) { try { const o = JSON.parse(e.newValue || 'null'); const p = e.key === WALKEY ? purseP : purseV; if (o) { p.c = Math.max(0, o.c | 0); p.g = Math.max(0, o.g | 0); if (shopOpen) shopRender(); } } catch (x) {} } });   // (another tab of the game spent or earned something)
 const openFriends = () => { if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Friends'; toggleSettings(); } showTab('friends'); };
 $('linkpill').onclick = e => { e.stopPropagation(); openFriends(); };
 const friendsShown = () => !$('settings').classList.contains('hide') && $('settings').querySelector('.pane.on[data-pane="friends"]') !== null;
@@ -3561,7 +3590,7 @@ function lpRender() {
   showMyCode();
   const list = $('lpList'); list.textContent = '';
   $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
-  if (!lks.length) list.appendChild(el('div', 'small dim', 'No friends yet. Find a player below and tap Add friend.'));
+  if (!lks.length) list.appendChild(el('div', 'small dim', 'No friends yet. Tap Add a friend to find players.'));
   for (const l of lks) list.appendChild(friendCard(l));
   const rl = $('lpReqs'); rl.textContent = '';
   reqs.forEach(r => rl.appendChild(reqCard(r))); $('lpReqH').classList.toggle('hide', !reqs.length);
@@ -3591,7 +3620,11 @@ function disconnectLink(pub) {
   const e = lkOf(pub); if (e) lks.splice(lks.indexOf(e), 1);
   saveLinks(); sfx('ui'); lpRender();
 }
-function lpAfterTab() { lpRefresh(); lpRender(); }
+function openAdd() { sfx('ui'); $('addModal').classList.remove('hide'); lpRefresh(); lpRender(); }
+function closeAdd() { $('addModal').classList.add('hide'); try { $('lpQ').blur(); } catch (e) {} }
+$('btnAddF').onclick = openAdd; $('adNo').onclick = () => { sfx('ui'); closeAdd(); };
+$('addModal').addEventListener('pointerdown', e => { if (e.target === $('addModal')) closeAdd(); });
+function lpAfterTab() { if (!$('addModal').classList.contains('hide') && !friendsShown()) closeAdd(); lpRefresh(); lpRender(); }
 function lpSearch() { wsSend({ t: 'find', q: lpQ }); }
 function lpRefresh() { clearInterval(lpTimer); lpTimer = 0; if (friendsShown()) { lpQ = $('lpQ').value.trim(); lpSearch(); lpTimer = setInterval(lpSearch, 3000); } }
 $('lpQ').addEventListener('input', () => { clearTimeout(lpDeb); lpDeb = setTimeout(() => { lpQ = $('lpQ').value.trim(); lpSearch(); }, 250); });
@@ -3754,6 +3787,7 @@ function escMenu() {   // Escape: closes whatever is on top, then pauses / resum
   if (!$('shareModal').classList.contains('hide')) { closeShareModal(); return; }
   if (chatOpen) { toggleChat(false); return; }
   if (shopOpen) { toggleShop(false); return; }
+  if (!$('addModal').classList.contains('hide')) { closeAdd(); return; }
   if (!$('invModal').classList.contains('hide')) { closeInvites(); return; }
   if (!$('lvlModal').classList.contains('hide')) { closeLevels(); return; }
   if (!$('nameModal').classList.contains('hide')) { closeNameModal(); return; }
@@ -3763,11 +3797,18 @@ function escMenu() {   // Escape: closes whatever is on top, then pauses / resum
 }
 $('pResume').onclick = resumeGame;
 $('pLevel').onclick = () => { sfx('ui'); openLevels(); };
-$('pSave').onclick = () => {   // keep a copy of the world you are in as one of your own private maps
-  const idx = S.idx, doIt = () => { if (saveCopy()) { notice('Saved to your private maps', ''); lvlRender(); } };
+const soloDesc = i => {   // what is already saved on that private level, in words
+  const o = solo2[i]; if (!o) return '';
+  const n = (o.buys ? o.buys.length : 0) + (o.gates ? o.gates.length : 0) + (o.misc ? o.misc.length : 0);
+  return (o.from ? 'a copy saved from ' + o.from : 'your own world') + (n ? ' with ' + n + (n === 1 ? ' thing' : ' things') + ' built in it' : ' with nothing built in it yet');
+};
+$('pSave').onclick = () => {   // keep a copy of the world you are in as one of your own private maps: ask, and if something is already saved there, say what and ask again
+  const idx = S.idx, label = lvLabelOf(idx), doIt = () => { if (saveCopy()) { notice('Saved to your private maps', ''); lvlRender(); } };
   sfx('ui');
-  if (!hasSoloSave(idx)) { doIt(); return; }
-  askConfirm('Replace your ' + lvLabelOf(idx) + '?', 'Your private version of this level, with everything you built there, is replaced by this world exactly as it is right now.', 'Replace it', doIt, { no: 'Keep mine' });
+  askConfirm('Save this world?', 'A copy of this world, exactly as it is right now, goes into your private maps as ' + label + '.', hasSoloSave(idx) ? 'Continue' : 'Save it', () => {
+    if (!hasSoloSave(idx)) { doIt(); return; }
+    askConfirm('Replace what is saved?', label + ' in your private maps already has ' + soloDesc(idx) + '. Saving replaces all of it with this world, and that cannot be undone. Replace it?', 'Yes, replace it', doIt, { no: 'Keep mine' });
+  }, { no: 'Cancel', yesClass: 'go' });
 };
 $('pReset').onclick = () => askResetLevel(soloLevel(), () => resumeGame());
 $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
@@ -3782,7 +3823,7 @@ addEventListener('popstate', () => {
   if (!$('confirm').classList.contains('hide')) { $('cfNo').click(); return; }
   if (!$('settings').classList.contains('hide')) { closeSettingsNow(); return; }
   if (chatOpen) { toggleChat(false); return; }
-  for (const id of ['profModal', 'invModal', 'lvlModal', 'codeModal', 'nameModal', 'shareModal', 'shopPop', 'mmbig', 'intro']) {
+  for (const id of ['profModal', 'addModal', 'invModal', 'lvlModal', 'codeModal', 'nameModal', 'shareModal', 'shopPop', 'mmbig', 'intro']) {
     const m = $(id); if (m && !m.classList.contains('hide')) { try { m.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); } catch (e) {} if (!m.classList.contains('hide') && id === 'intro') { const ok = m.querySelector('.ok'); if (ok) ok.click(); } return; }
   }
   if (inHome) askConfirm('Leave ballpit.party?', 'Going back will take you out of the game.', 'Leave', () => { leavingPage = true; try { history.go(-2); } catch (e) {} setTimeout(() => { leavingPage = false; try { window.close(); } catch (e) {} }, 600); }, { no: 'Stay', yesClass: 'danger' });
@@ -3963,7 +4004,7 @@ $('btnPickLvl').onclick = () => { sfx('ui'); openLevels(); };
 lvlRender();
 
 /* ----- a secret code: double-tap the coins and diamonds (in the game or on the main screen) ----- */
-function homeWalletRender() { const k = wallet.c + ':' + wallet.g; if (homeWalletRender.k === k) return; homeWalletRender.k = k; $('homeWallet').innerHTML = '<span>' + ico('gcoin') + fmtN(wallet.c) + '</span><span>' + ico('gem') + fmtN(wallet.g) + '</span>'; }
+function homeWalletRender() { const k = wallet.c + ':' + wallet.g; if (homeWalletRender.k === k) return; homeWalletRender.k = k; $('homeWallet').innerHTML = '<span>' + ico('gcoin') + fmtW(wallet.c) + '</span><span>' + ico('gem') + fmtW(wallet.g) + '</span>'; }
 setInterval(() => { if (inHome) homeWalletRender(); }, 400);
 setInterval(() => { if (inHome && $('homeMp').checked) lvlRender(); }, 1000);
 let codeBack = null;
@@ -5244,8 +5285,8 @@ function hudTick() {
     $('beaconText').textContent = 'Beacon! The finish is ' + d + 'b away' + (hz || vt ? ': ' + [vt, hz].filter(Boolean).join(' and ') : '') + ' · ' + Math.ceil((BEACON_LEN - ph) / 1000) + 's';
   }
   $('onl').textContent = worldText();
-  if (wallet.c !== lastCoinShown) { lastCoinShown = wallet.c; $('coinN').textContent = fmtN(wallet.c); }
-  if (wallet.g !== lastGemShown) { lastGemShown = wallet.g; $('gemN').textContent = fmtN(wallet.g); }
+  if (wallet.c !== lastCoinShown) { lastCoinShown = wallet.c; $('coinN').textContent = fmtW(wallet.c); }
+  if (wallet.g !== lastGemShown) { lastGemShown = wallet.g; $('gemN').textContent = fmtW(wallet.g); }
   $('coinpill').title = 'Your coins and diamonds. Spend them in the shop (the + button).';
   $('mpstats').textContent = online && party ? worldText() + '.' : online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : '');
   if (!$('tpop').classList.contains('hide')) fillTimerPop(rem);
