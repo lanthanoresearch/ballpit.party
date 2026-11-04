@@ -919,6 +919,7 @@
     </section>
     <section class="pane" data-pane="friends">
       <div id="myCode" class="mycode"><span>Your code</span><b id="myCodeV">······</b><span class="small dim">Friends can check it matches</span></div>
+      <button class="btn full hide" id="btnInviteF" type="button"><span data-ic="users"></span>Invite friends to play</button>
       <h4><span data-ic="users"></span> Your friends <span id="lpCount" class="dim"></span></h4><div class="small dim fhint">Friends show on each other's maps. Tap a friend to open their profile, where their settings are.</div><div id="lpList"></div>
       <h4 id="lpReqH" class="hide"><span data-ic="chat"></span> Friend requests</h4><div id="lpReqs"></div>
       <h4><span data-ic="search"></span> Find players</h4>
@@ -969,7 +970,7 @@
   <h3><span data-ic="pause"></span>Paused</h3>
   <div class="small dim" id="pauseSub"></div>
   <button id="pResume" class="pbtn go" type="button"><span data-ic="play"></span>Resume</button>
-  <button id="pInvite" class="pbtn hide" type="button"><span data-ic="users"></span>Invite friends</button>
+  <button id="pInvite" class="pbtn" type="button"><span data-ic="users"></span>Friends</button>
   <button id="pSave" class="pbtn hide" type="button"><span data-ic="map"></span>Save to my private maps</button>
   <button id="pLevel" class="pbtn hide" type="button"><span data-ic="map"></span>Change level</button>
   <button id="pReset" class="pbtn hide" type="button"><span data-ic="reset"></span>Reset this level</button>
@@ -1086,8 +1087,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=68"></script>
-<script src="physics.js?v=68"></script>
+<script src="maps.js?v=70"></script>
+<script src="physics.js?v=70"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1874,6 +1875,7 @@ function setTerrain(w, tx, r, to, anim) {   // lava, ice, water or grey rock, on
   if (tx < 0 || tx >= w.W || r < 0 || r >= w.H) return;
   const i = r * w.W + tx, cur = w.grid[i]; if (cur === 4 || cur === 6 || cur === 9) return;
   const rock = w.rock && w.rock[i];
+  if (to === 1 && S.tg && w === S.world) { for (const j of [i + w.W, i - 1, i + 1, i - w.W]) if (j >= 0 && j < w.grid.length && w.grid[j] === 1) { S.tg[i] = S.tg[j]; break; } }   // new dirt looks like the ground it grows from: same colours and scenery as that part of the map
   if (to === 7) { w.grid[i] = 1; (w.rock = w.rock || new Uint8Array(w.W * w.H))[i] = 1; } else { w.grid[i] = to; if (w.rock) w.rock[i] = 0; }
   if (!anim) return;
   const x = (tx + 0.5) * TS, y = r * TS + TS / 2;
@@ -2974,7 +2976,7 @@ const EMO = [
 const emoSvg = i => '<svg class="emo" viewBox="0 0 32 32" aria-label="' + EMO[i].n + '"><circle cx="16" cy="16" r="14" fill="' + EMO[i].bg + '" stroke="#16100c" stroke-width="2"/>' +
   EMO[i].op.map(o => o[0] === 'f' ? '<path d="' + o[1] + '" fill="' + o[2] + '"/>' : '<path d="' + o[1] + '" fill="none" stroke="' + o[2] + '" stroke-width="' + o[3] + '" stroke-linecap="round" stroke-linejoin="round"/>').join('') + '</svg>';
 const emoPaths = EMO.map(e => e.op.map(o => new Path2D(o[1])));
-const PHRASES = ['Follow me', 'This way', 'Here', 'Okay', 'Yes', 'No', 'Thanks', 'Wait for me', 'Nice one!', 'Help!', 'Careful!', 'Good luck'];   // ready-made messages: sent by number (after the emojis), so nothing else can ever be typed into the game
+const PHRASES = ['Follow me', 'This way', 'Here', 'Okay', 'Yes', 'No', 'Thanks', 'Wait for me', 'Nice one!', 'Help!', 'Careful!', 'Good luck', 'Hi!', 'Goodbye!'];   // ready-made messages: sent by number (after the emojis), so nothing else can ever be typed into the game
 const CHATN = EMO.length + PHRASES.length, isPhrase = i => i >= EMO.length;
 function drawEmoBubble(em, x, y) {   // a speech bubble with the emoji, floating above a ball for a few seconds
   const age = S.t - em.t; if (age > 3.2 || age < 0) return;
@@ -3891,7 +3893,8 @@ function closeInvites() { $('invModal').classList.add('hide'); clearInterval(ope
 $('ivNo').onclick = closeInvites;
 $('ivStop').onclick = () => { stopHosting(); closeInvites(); };
 $('invModal').addEventListener('pointerdown', e => { if (e.target === $('invModal')) closeInvites(); });
-$('pInvite').onclick = () => { sfx('ui'); openInvites(); };
+$('pInvite').onclick = () => { sfx('ui'); if ($('settings').classList.contains('hide')) toggleSettings(); showTab('friends'); };
+$('btnInviteF').onclick = () => { sfx('ui'); openInvites(); };
 $('btnInvite').onclick = () => { if (inHome) { notice('Start playing first, then invite friends from the pause menu', ''); return; } sfx('ui'); openInvites(); };
 
 /* ----- your own world: pick any of the levels. Each one keeps what you did on it until you reset it ----- */
@@ -3910,7 +3913,7 @@ function lvlRender() {
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
   const sl = !settings.mp && !party; $('pLevel').classList.toggle('hide', !sl); $('pReset').classList.toggle('hide', !sl);
   $('pSave').classList.toggle('hide', !((settings.mp && !party) || (party && party.role === 'guest')) || !S.world || S.slot < 0);
-  $('pInvite').classList.toggle('hide', settings.mp || !!(party && party.role === 'guest')); $('pInvite').lastChild.textContent = party ? 'Invite friends (game is open)' : 'Invite friends';
+  const canInv = !settings.mp && !(party && party.role === 'guest'); $('btnInviteF').classList.toggle('hide', !canInv || inHome); $('btnInviteF').lastChild.textContent = party ? 'Invite friends (game is open)' : 'Invite friends to play';
 }
 function lvBuild() {
   const g = $('lvGrid'); g.innerHTML = '';
