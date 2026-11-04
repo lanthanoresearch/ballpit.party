@@ -1897,7 +1897,8 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     for (const off of [-6 * HR, -5 * HR]) { const t = s * SLOT_LEN - off; if (slotOf(t) === s && slotOf(t - 1) === s - 1) return t; }
     return s * SLOT_LEN + 6 * HR;
   }
-  const api = { TS, R, count: DEFS.length, names: DEFS.map(d => d.name), themes: THEMES, generate, slotOf, slotStart, SLOT_LEN };
+  const meta = DEFS.map(d => ({ len: Math.round(((d.xr || 0) - (d.xl || 0)) || 0), th: [...new Set((d.bands || []).map(b => b.g && b.g.th).filter(Boolean))] }));   // (what the level picker shows: how long, which kinds of ground)
+  const api = { TS, R, count: DEFS.length, names: DEFS.map(d => d.name), meta, themes: THEMES, generate, slotOf, slotStart, SLOT_LEN };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallMaps = api;
 })(typeof window !== 'undefined' ? window : globalThis);
