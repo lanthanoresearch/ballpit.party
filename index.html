@@ -410,6 +410,7 @@
   #shopWallet{display:flex;gap:16px;justify-content:center;align-items:center;font-size:18px;margin:2px 0 10px}
   #shopWallet span{display:inline-flex;align-items:center;gap:6px}#shopWallet .ic{width:22px;height:22px}
   .shopcard .cfoot{justify-content:center}
+  #shopKeep{margin:0 0 7px;padding:5px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644}#shopKeep .ti{display:flex;flex-direction:column;gap:1px;text-align:left}#shopKeep small{font-size:12px;opacity:.65}
   #shopList{display:flex;flex-direction:column;gap:7px;margin:0 0 10px}
   .shopitem{display:flex;align-items:center;gap:10px;padding:7px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;text-align:left}
   .shopitem .sico{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}
@@ -427,7 +428,7 @@
     #shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.shopitem{padding:5px 8px}.shopitem .sico{width:32px;height:32px}.shopitem .sinfo b{font-size:15px}.shopitem .sinfo small{display:none}.shopitem button{min-width:70px;padding:4px 6px}.shopcard .small{margin:0 0 4px;font-size:12px}.shopcard .cfoot{margin-top:2px}.shopcard .cfoot button{padding:5px 18px}
     .epcard{width:min(680px,100%);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start;padding:10px 14px}.epcard h3,.epcard .cfoot{grid-column:1/-1;margin:0 0 4px}
     #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:5px;margin:4px 0}#phraseGrid button{padding:6px 2px;font-size:13px}
-    #shopList{grid-template-columns:repeat(4,1fr)}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
+    #shopKeep{padding:1px 8px;margin:0 0 4px}#shopKeep small{display:none}#shopKeep b{font-size:14px;font-weight:normal}#shopList{grid-template-columns:repeat(4,1fr)}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
     #emoGrid button{aspect-ratio:auto;height:36px;padding:3px}.epcard{padding:8px 12px}.epcard h3{font-size:19px}#phraseGrid button{padding:4px 2px}
     .profcard{padding:8px 14px}.profcard .phead{gap:10px}.profcard .pbeat{padding:5px 10px}
     .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}.pcard h3{grid-column:1/-1;font-size:22px}.pcard #pauseSub,.pcard #pResume{grid-column:1/-1}.pcard .pbtn{padding:7px;font-size:17px;gap:6px}.pcard #pResume{font-size:20px}.pcard #pauseSub{margin:-2px 0}
@@ -807,6 +808,7 @@
   <div class="chead"><h3 id="shopTitle">Shop</h3><button id="shopClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="shopWallet"></div>
   <div id="shopTabs" class="shoptabs" role="tablist"></div>
+  <label id="shopKeep" class="sw2 hide"><span class="ti"><b>Keep placing</b><small>Place one after another until you cancel or run out</small></span><input type="checkbox" id="setKeep"><i></i></label>
   <div id="shopList"></div>
   <div class="small dim">What you buy appears as a ghost next to you: slide it where you want and tap Place. It stays until the map changes.</div>
 </div></div>
@@ -1083,8 +1085,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=62"></script>
-<script src="physics.js?v=62"></script>
+<script src="maps.js?v=64"></script>
+<script src="physics.js?v=64"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1126,7 +1128,7 @@ function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight',
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
-    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', finArrow: true, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
+    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
     keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
@@ -3045,6 +3047,7 @@ const shopIcon = id => {
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
   if (id === 'gate' || id === 'gateS') { const h = id === 'gate' ? 26 : 13; return '<svg viewBox="0 0 40 40"><rect x="7" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="15" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="23" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="5" y="' + (28 - h) + '" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="29" y="32" width="9" height="4" fill="#e0a93c" ' + st + '/></svg>'; }
+  if (id === 'dirt') return '<svg viewBox="0 0 40 40"><rect x="3" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="9" width="14" height="15" fill="#b07a45" ' + st + '/><rect x="17" y="9" width="14" height="5" fill="#d9a064" ' + st + '/><circle cx="22" cy="19" r="1.400" fill="#7a4e28"/><circle cx="27" cy="17" r="1.100" fill="#7a4e28"/><circle cx="8" cy="30" r="1.300" fill="#5a3e22"/><circle cx="24" cy="31" r="1.300" fill="#5a3e22"/><path d="M35 12h4M37 10v4" stroke="#fff" stroke-width="2" fill="none"/></svg>';
   if (id === 'ice') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#bfeeff" ' + st + '/><path d="M18 25l4 4M22 25l-3 6" stroke="#fff" stroke-width="1.6" fill="none"/><path d="M20 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#d4f6ff" ' + st + ' stroke-width="1.4"/></svg>';
   if (id === 'water') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#2e7be6" ' + st + '/><path d="M16 26q2-3 4 0t4 0" fill="none" stroke="#bfe0ff" stroke-width="1.6"/><path d="M20 6c4 6 6 9 6 12a6 6 0 0 1-12 0c0-3 2-6 6-12z" fill="#4a95f0" ' + st + ' stroke-width="1.6"/></svg>';
   if (id === 'lava') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#ff4a1c" ' + st + '/><circle cx="20" cy="19" r="2.4" fill="#ffb02e"/><circle cx="17" cy="14" r="1.6" fill="#ff8a3d"/><circle cx="23" cy="11" r="1.3" fill="#ffd23d"/></svg>';
@@ -3064,6 +3067,7 @@ function shopRender() {
   $('shopWallet').innerHTML = '<span>' + ico('gcoin') + fmtN(wallet.c) + '</span><span>' + ico('gem') + fmtN(wallet.g) + '</span>';
   const T = $('shopTabs'); T.innerHTML = '';
   SHOP_TABS.forEach(([id, name]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.className = id === shopTab ? 'on' : ''; b.onclick = () => { shopTab = id; sfx('ui'); shopRender(); const l = $('shopList'); l.scrollTop = 0; }; T.appendChild(b); });
+  $('shopKeep').classList.toggle('hide', shopTab !== 'terrain'); $('setKeep').checked = !!settings.terrKeep;
   const L = $('shopList'); L.innerHTML = '';
   SHOP.filter(it => it.cat === shopTab).forEach(it => {
     const row = document.createElement('div'); row.className = 'shopitem';
@@ -3079,6 +3083,7 @@ function toggleShop(on) {
   shopOpen = on; $('shopPop').classList.toggle('hide', !on);
   if (on) { if (chatOpen) toggleChat(false); if (typeof closeSettingsNow === 'function') closeSettingsNow(); shopRender(); sfx('ui'); }
 }
+$('setKeep').onchange = () => { settings.terrKeep = $('setKeep').checked; save(); sfx($('setKeep').checked ? 'on' : 'off'); };
 $('btnShop').onclick = () => toggleShop(!shopOpen);
 $('shopClose').onclick = () => toggleShop(false);
 $('chatClose').onclick = () => toggleChat(false);
@@ -3136,7 +3141,7 @@ function flatSpot(side, centre, need, lavaOk) {   // two tiles of level ground b
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 2; pass++) {
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.3)) / TS) - 1, row = Math.floor((b.y + R + 1) / TS);
-    for (let k = -2; k < 8; k++) {
+    for (let k = -2; k < 2; k++) {
       const a = P.tile(w, tx, row + k), c = P.tile(w, tx + 1, row + k);
       if ((a === 2 || c === 2) && !lavaOk) break;
       const g1 = centre ? solidT(a) && a !== 9 : (a === 1 || a === 3 || a === 4 || (lavaOk && a === 2)), g2 = centre ? solidT(c) && c !== 9 : (c === 1 || c === 3 || c === 4 || (lavaOk && c === 2));
@@ -3171,15 +3176,15 @@ function terrainBlocked(tx, r, tight) {   // something in the way of changing th
   return S.map.checkpoints.some(c => Math.abs(c[0] - tx) <= 1 && Math.abs(c[1] - r) <= 1);
 }
 function dirtSpot(side) {   // dirt only grows out of other dirt: the new tile has to touch dirt with a whole side (corners do not count). Nothing hangs in the air.
-  const w = S.world, b = S.b, feet = Math.floor((b.y + R) / TS);
+  const w = S.world, b = S.b, feet = Math.floor((b.y + R + 2) / TS) - 1;
   for (let pass = 0; pass < 2; pass++) {
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.1)) / TS); let best = null;
     if (tx < 1 || tx >= w.W - 1) continue;
-    for (let r = feet - 5; r <= feet + 3; r++) {
+    for (let r = feet + 1; r >= feet - 4; r--) {   // starting level with the ground you stand on (on a ledge: the tile right beside it, so you can keep going), then up
       if (r < 1 || r >= w.H - 1 || P.tile(w, tx, r) !== 0) continue;
       if (P.tile(w, tx, r + 1) !== 1 && P.tile(w, tx, r - 1) !== 1 && P.tile(w, tx - 1, r) !== 1 && P.tile(w, tx + 1, r) !== 1) continue;
       if (Math.abs(b.x - (tx + 0.5) * TS) < R + TS / 2 && Math.abs(b.y - (r + 0.5) * TS) < R + TS / 2) continue;
-      const d = Math.abs(r - (feet + 1)); if (!best || d < best.d || (d === best.d && r > best.r)) best = { r, d };
+      best = { r }; break;
     }
     if (best && !terrainBlocked(tx, best.r, true)) return { tx, gr: best.r, row: best.r, to: 1, side: s };
   }
@@ -3198,7 +3203,7 @@ function terrainSpot(kind, side) {   // lava, ice or water: one tile, set into p
   for (let pass = 0; pass < 2; pass++) {
     const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.1)) / TS), row = Math.floor((b.y + R + 1) / TS);
     if (kind === 'water') { const e = waterExtend(s); if (e) return e; }
-    for (let k = -2; k < 9; k++) {
+    for (let k = -2; k < 2; k++) {   // only the ground around your own level: up a couple of tiles, or one step down
       const r = row + k, t = P.tile(w, tx, r);
       if (t === 0) continue;
       if (P.tile(w, tx, r - 1) !== 0) break;
@@ -3405,6 +3410,11 @@ function finishPlacing() {
   else placeProp(it.kind, [g.tx, g.ty]);
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   placing = null; placeUIKey = null; refreshPlaceUI();
+  if (it.misc === 'ter' && settings.terrKeep) {   // keep going with the same terrain until you cancel or the money runs out
+    if (wallet.c < it.c || wallet.g < it.g) notice('Out of ' + (wallet.c < it.c ? 'coins' : 'diamonds') + '. You are done placing', 'urgent');
+    else if (boughtN() >= MAX_BOUGHT) notice('You already have a lot of things here. You are done placing', 'urgent');
+    else { startPlacing(it); placing.side = g.side; computeGhost(); }
+  }
 }
 function pubTake(k, q) { if (!S.pubKeys) return true; const key = pkey(k, q.map(v => (typeof v === "number" ? Math.round(v) : v))); if (S.pubKeys.has(key)) return false; S.pubKeys.add(key); return true; }
 function partyBuild(msg) {
@@ -3959,7 +3969,7 @@ function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
-  if (v === 'maker') { wallet.c = 10000; wallet.g = 50; saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice('Your money is now 10,000 coins and 50 diamonds', ''); return; }
+  if (v === 'maker') { wallet.c = Math.max(wallet.c, 10000); wallet.g = Math.max(wallet.g, 500); saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice('Your money is topped up to 10,000 coins and 500 diamonds', ''); return; }
   $('cdIn').classList.remove('bad'); void $('cdIn').offsetWidth; $('cdIn').classList.add('bad'); $('cdNote').textContent = v ? "That code doesn't work" : 'Type a code first'; sfx('warn');
 }
 $('cdOk').onclick = submitCode; $('cdNo').onclick = closeCode;
