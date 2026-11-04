@@ -1086,8 +1086,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=67"></script>
-<script src="physics.js?v=67"></script>
+<script src="maps.js?v=68"></script>
+<script src="physics.js?v=68"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3188,7 +3188,7 @@ function terrainBlocked(tx, r, tight) {   // something in the way of changing th
    first the tile straight ahead, then the one above it, then the one below it (water: straight ahead, then straight down under you when you are in water, otherwise below the tile ahead).
    The first one where this item can do something wins. If none can, the ghost turns red. It never reaches farther, and never switches sides. */
 function terrainSpot(kind, side) {
-  const w = S.world, b = S.b, s = side < 0 ? -1 : 1, cx = Math.floor(b.x / TS), cy = Math.floor(b.y / TS), tx = cx + s;
+  const w = S.world, b = S.b, s = side < 0 ? -1 : 1, cx = Math.floor(b.x / TS), cy = Math.floor(b.y / TS), tx = s > 0 ? Math.floor((b.x + R) / TS) + 1 : Math.floor((b.x - R) / TS) - 1;   // the first tile in front that your ball does not touch: it moves one tile at a time as you walk, never on and off
   if (tx < 1 || tx >= w.W - 1) return null;
   const T = (x, r) => P.tile(w, x, r), open = t => t === 0 || t === 5;
   const exposed = (x, r) => open(T(x - 1, r)) || open(T(x + 1, r)) || open(T(x, r - 1)) || open(T(x, r + 1));   // the surface of something, not its inside
@@ -3206,7 +3206,6 @@ function terrainSpot(kind, side) {
   const probes = kind === 'water' ? [[tx, cy], T(cx, cy) === 5 ? [cx, cy + 1] : [tx, cy + 1]] : [[tx, cy], [tx, cy - 1], [tx, cy + 1]];
   for (const [x, r] of probes) {
     const a = act(x, r); if (!a) continue;
-    if (kind === 'dirt' && Math.abs(b.x - (x + 0.5) * TS) < R + TS / 2 && Math.abs(b.y - (a.row + 0.5) * TS) < R + TS / 2) continue;   // not into yourself
     if (terrainBlocked(x, a.row, kind === 'dirt')) continue;
     return { tx: x, gr: a.row, row: a.row, to: a.to, side: s };
   }
