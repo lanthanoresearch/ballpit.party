@@ -428,13 +428,14 @@
   @media (min-width:700px){.shopcard{width:min(720px,100%)}#shopList{display:grid;grid-template-columns:1fr 1fr}.shopitem .sinfo small{display:none}}
   @media (max-width:699px) and (max-aspect-ratio:1/1){#shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px}.shopitem{flex-direction:column;gap:3px;text-align:center;padding:6px}.shopitem .sinfo small{display:none}.shopitem button{flex-direction:row;gap:8px;min-width:0;width:100%;justify-content:center}}
   @media (max-width:699px) and (max-aspect-ratio:1/1) and (min-height:760px){.shopitem .sinfo small{display:block}}
+  @media (max-width:699px) and (max-aspect-ratio:1/1){#shopList.dense .shopitem .sinfo small{display:none}}
   @media (max-height:520px) and (min-aspect-ratio:1/1){
     #hl{--hlw:122px}#infoRow .pill{font-size:12px}.gemw{margin-left:3px}#coinpill{padding:1px 6px;gap:3px}
     .shopcard{width:min(720px,100%);padding:10px 14px}.shopcard h3{margin:0 0 2px;font-size:19px}#shopWallet{margin:0 0 6px;font-size:16px}
     #shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.shopitem{padding:5px 8px}.shopitem .sico{width:32px;height:32px}.shopitem .sinfo b{font-size:15px}.shopitem .sinfo small{display:none}.shopitem button{min-width:70px;padding:4px 6px}.shopcard .small{margin:0 0 4px;font-size:12px}.shopcard .cfoot{margin-top:2px}.shopcard .cfoot button{padding:5px 18px}
     .epcard{width:min(680px,100%);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start;padding:10px 14px}.epcard h3,.epcard .cfoot{grid-column:1/-1;margin:0 0 4px}
     #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:5px;margin:4px 0}#phraseGrid button{padding:6px 2px;font-size:13px}
-    #shopKeep{padding:1px 8px;margin:0 0 4px}#shopKeep small{display:none}#shopKeep b{font-size:14px;font-weight:normal}#shopList{grid-template-columns:repeat(4,1fr)}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
+    #shopKeep{padding:1px 8px;margin:0 0 4px}#shopKeep small{display:none}#shopKeep b{font-size:14px;font-weight:normal}#shopList{grid-template-columns:repeat(5,1fr)}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
     #emoGrid button{aspect-ratio:auto;height:36px;padding:3px}.epcard{padding:8px 12px}.epcard h3{font-size:19px}#phraseGrid button{padding:4px 2px}
     .profcard{padding:8px 14px}.profcard .phead{gap:10px}.profcard .pbeat{padding:5px 10px}
     .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}.pcard h3{grid-column:1/-1;font-size:22px}.pcard #pauseSub,.pcard #pResume,.pcard #pHome{grid-column:1/-1}.pcard .pbtn{padding:7px;font-size:17px;gap:6px}.pcard #pResume{font-size:20px}.pcard #pauseSub{margin:-2px 0}
@@ -1101,8 +1102,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=72"></script>
-<script src="physics.js?v=72"></script>
+<script src="maps.js?v=73"></script>
+<script src="physics.js?v=73"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1890,7 +1891,7 @@ function worldEvents() {
 const startRect = () => { const s = S.map && S.map.start; if (!s) return null; const sx = Math.floor(s[0] / TS), sy = Math.floor(s[1] / TS); return { tx0: sx - 2, tx1: sx + 2, ty0: sy - 3, ty1: sy + 1 }; };   // the start zone: 5 x 5 blocks around where you appear (nothing can be built in it)
 const startTile = (tx, ty) => { const z = startRect(); return !!z && tx >= z.tx0 && tx <= z.tx1 && ty >= z.ty0 && ty <= z.ty1; };
 const startBlock = (px, py, m) => { const z = startRect(); if (!z) return false; m = m === undefined ? TS * 0.6 : m; return px >= z.tx0 * TS - m && px <= (z.tx1 + 1) * TS + m && py >= z.ty0 * TS - m && py <= (z.ty1 + 1) * TS + m; };   // (a little extra room, so nothing can hang over the edge of it)
-const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && q[0] === 'por' && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
+const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && q[0] === 'por' && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
   for (let i = w.drops.length - 1; i >= 0; i--) {
@@ -1909,6 +1910,7 @@ function setTerrain(w, tx, r, to, anim) {   // lava, ice, water or grey rock, on
   if (to === 2) { burst(x, y, ['#ff4d2e', '#ff8a3d', '#ffd23d'], 16, 200, 160); ring(x, r * TS, '#ff8a3d', 5, 50, 0.4); sfx('lava'); }
   else if (to === 3) { burst(x, y, ['#d4f6ff', '#7fdcff', '#fff'], 16, 170, 90); ring(x, r * TS, '#7fdcff', 5, 50, 0.4); sfx('thud'); }
   else if (to === 5) { burst(x, y, cur === 2 || cur === 3 ? ['#fff', '#cfe9ff', '#2e7be6'] : ['#2e7be6', '#8cc4ff', '#fff'], 20, 190, 140); ring(x, r * TS, '#8cc4ff', 5, 54, 0.4); sfx('splash'); }
+  else if (to === 0) { burst(x, y, ['#b7a38a', '#8a6a46', '#fff'], 18, 160, 120); ring(x, r * TS, '#f3ead6', 5, 50, 0.4); sfx('thud'); }
   else if (to === 1) { burst(x, y, ['#8a5a33', '#b07a45', '#5a3a1e'], 16, 170, 110); ring(x, r * TS, '#b07a45', 5, 50, 0.4); sfx('thud'); }
   else { burst(x, y, ['#fff', '#b7bcc6', '#80858f'], 22, 170, 160); ring(x, r * TS, '#b7bcc6', 5, 50, 0.45); sfx('thud'); }
 }
@@ -1957,7 +1959,7 @@ function deriveOwn() {   // saves from before every item had its own count: work
   const o = {}, add = id => { if (id) o[id] = (o[id] | 0) + 1; };
   S.bought.forEach(r => { const it = SHOP.find(s => s.kind === r[0] && !s.misc && !s.gate && !s.portal); add(it && it.id); });
   S.boughtGates.forEach(q => { const it = SHOP.find(s => s.gate === q[2]); add(it && it.id); });
-  S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? 'see' : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'lav' ? 'lava' : k === 'tl' ? { 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
+  S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? 'see' : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'lav' ? 'lava' : k === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
   S.boughtCps.forEach(() => add('flag')); return o;
 }
 function worldObj() {   // the world exactly as it is right now: everything built, where everything is and how it is moving
@@ -2498,10 +2500,9 @@ function gDown(id, x, y) { gp.set(id, { ax: x, ay: y, x, y, sx: x, sy: y, t0: pe
 function gMove(id, x, y) {
   const p = gp.get(id); if (!p) return;
   p.x = x; p.y = y; if (Math.abs(x - p.sx) + Math.abs(y - p.sy) > 12) p.moved = true;
-  const rdy = pullReady(), cap = rdy ? 76 : 32;    // when the boost ring is full the anchor lets you pull farther, and that extra pull launches it
-  if (x - p.ax > cap) p.ax = x - cap; else if (p.ax - x > cap) p.ax = x + cap;     // the anchor trails behind, so turning around is quick
+  const rdy = pullReady();    // (the sideways anchor stays exactly where you first touched: drag as far as you like, and you keep full speed until you come back close to it)
   if (y > p.ay) p.ay = y; else if (p.ay - y > 90) p.ay = y + 90;
-  if (rdy && Math.abs(x - p.ax) >= 66 && Math.sign(x - p.ax) === (S.b.hdir || 0)) { pressBoost(); p.ax = x - Math.sign(x - p.ax) * 32; }
+  if (rdy && Math.abs(x - p.ax) >= 66 && Math.sign(x - p.ax) === (S.b.hdir || 0)) { pressBoost(); }
   recomputeTouch();
 }
 function gUp(id) {
@@ -3077,10 +3078,11 @@ const SHOP = [
   { cat: 'gadgets', id: 'pad', max: 100, name: 'Floor booster', info: 'Set into the ground. Roll over it and it throws you forward.', c: 100, g: 0, misc: 'pad' },
   { cat: 'gadgets', id: 'portal', max: 20, name: 'Portals', info: 'A yellow and a blue portal in the ground. Go in one and come out of the other.', c: 1000, g: 20, portal: true },
   { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
-  { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'One tile of lava set into plain ground. Anything that touches it burns up.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
-  { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'One tile of slippery ice set into plain ground.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
-  { cat: 'terrain', id: 'dirt', max: 600, name: 'Dirt', info: 'One tile of dirt, built onto other dirt (touching its side, top or bottom, not just a corner). It never falls. Set into water, it turns that water into dirt.', c: 150, g: 7, misc: 'ter', ter: 'dirt' },
-  { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'One tile of water. On lava it makes grey rock. On ice it sits on top. Inside a pool it digs on down and sideways, one connected tile at a time.', c: 150, g: 7, misc: 'ter', ter: 'water' }
+  { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns a tile of ground into lava. It burns anything that touches it.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
+  { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns a tile of ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
+  { cat: 'terrain', id: 'dirt', max: 600, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water into dirt.', c: 150, g: 7, misc: 'ter', ter: 'dirt' },
+  { cat: 'terrain', id: 'dig', max: 300, name: 'Dig', info: 'Clears a tile of dirt, ice or rock. Not lava or water.', c: 600, g: 0, misc: 'ter', ter: 'dig' },
+  { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'On lava it makes rock, on ice it sits on top. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
 const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
 let shopTab = 'blocks';
@@ -3090,6 +3092,7 @@ const shopIcon = id => {
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
   if (id === 'gate' || id === 'gateS') { const h = id === 'gate' ? 26 : 13; return '<svg viewBox="0 0 40 40"><rect x="7" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="15" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="23" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="5" y="' + (28 - h) + '" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="29" y="32" width="9" height="4" fill="#e0a93c" ' + st + '/></svg>'; }
+  if (id === 'dig') return '<svg viewBox="0 0 40 40"><rect x="3" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="23" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="9" width="14" height="15" fill="none" stroke="#f3ead6" stroke-width="2.200" stroke-dasharray="3 3"/><path d="M20 12L28 21M28 12L20 21" fill="none" stroke="#ff7a6a" stroke-width="2.400" stroke-linecap="round"/></svg>';
   if (id === 'dirt') return '<svg viewBox="0 0 40 40"><rect x="3" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="9" width="14" height="15" fill="#b07a45" ' + st + '/><rect x="17" y="9" width="14" height="5" fill="#d9a064" ' + st + '/><circle cx="22" cy="19" r="1.400" fill="#7a4e28"/><circle cx="27" cy="17" r="1.100" fill="#7a4e28"/><circle cx="8" cy="30" r="1.300" fill="#5a3e22"/><circle cx="24" cy="31" r="1.300" fill="#5a3e22"/><path d="M35 12h4M37 10v4" stroke="#fff" stroke-width="2" fill="none"/></svg>';
   if (id === 'ice') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#bfeeff" ' + st + '/><path d="M18 25l4 4M22 25l-3 6" stroke="#fff" stroke-width="1.6" fill="none"/><path d="M20 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#d4f6ff" ' + st + ' stroke-width="1.4"/></svg>';
   if (id === 'water') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#2e7be6" ' + st + '/><path d="M16 26q2-3 4 0t4 0" fill="none" stroke="#bfe0ff" stroke-width="1.6"/><path d="M20 6c4 6 6 9 6 12a6 6 0 0 1-12 0c0-3 2-6 6-12z" fill="#4a95f0" ' + st + ' stroke-width="1.6"/></svg>';
@@ -3112,7 +3115,7 @@ function shopRender() {
   if (unlimitedNow() && shopTab === 'coins') shopTab = 'blocks';   // (nothing to trade for when coins never run out)
   SHOP_TABS.filter(t => !(unlimitedNow() && t[0] === 'coins')).forEach(([id, name]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.className = id === shopTab ? 'on' : ''; b.onclick = () => { shopTab = id; sfx('ui'); shopRender(); const l = $('shopList'); l.scrollTop = 0; }; T.appendChild(b); });
   $('shopKeep').classList.toggle('hide', shopTab !== 'terrain'); $('setKeep').checked = !!settings.terrKeep;
-  const L = $('shopList'); L.innerHTML = '';
+  const L = $('shopList'); L.innerHTML = ''; L.classList.toggle('dense', shopTab === 'terrain');   // (five terrain cards: names and prices only on a narrow phone, so the card never has to scroll)
   SHOP.filter(it => it.cat === shopTab).forEach(it => {
     const row = document.createElement('div'); row.className = 'shopitem';
     const full = atLimit(it), ok = wallet.c >= it.c && wallet.g >= it.g && !full;
@@ -3223,7 +3226,7 @@ function terrainBlocked(tx, r, tight) {   // something in the way of changing th
 /* Terrain (lava, ice, water, dirt) always works on the tile IN FRONT of you, the way you are facing, and only on the tiles right around it:
    first the tile straight ahead, then the one above it, then the one below it (water: straight ahead, then straight down under you when you are in water, otherwise below the tile ahead).
    The first one where this item can do something wins. If none can, the ghost turns red. It never reaches farther, and never switches sides. */
-function terrainSpot(kind, side) {
+function terrainSpot(kind, side, push) {
   const w = S.world, b = S.b, s = side < 0 ? -1 : 1, cx = Math.floor(b.x / TS), cy = Math.floor(b.y / TS), tx = s > 0 ? Math.floor((b.x + R) / TS) + 1 : Math.floor((b.x - R) / TS) - 1;   // the first tile in front that your ball does not touch: it moves one tile at a time as you walk, never on and off
   if (tx < 1 || tx >= w.W - 1) return null;
   const T = (x, r) => P.tile(w, x, r), open = t => t === 0 || t === 5;
@@ -3231,6 +3234,7 @@ function terrainSpot(kind, side) {
   const act = (x, r) => {   // what this item does to the tile (x, r): the tile it changes, and what it becomes
     if (x < 1 || x >= w.W - 1 || r < 1 || r >= w.H - 1) return null;
     const t = T(x, r);
+    if (kind === 'dig') return (t === 1 || t === 3) && exposed(x, r) ? { row: r, to: 0 } : null;   // dirt, rock and ice only. Lava and water have to be changed first
     if (kind === 'dirt') return (t === 0 || t === 5) && (T(x, r + 1) === 1 || T(x, r - 1) === 1 || T(x - 1, r) === 1 || T(x + 1, r) === 1) ? { row: r, to: 1 } : null;   // grows out of dirt, side to side (never just a corner)
     if (t === 1 && exposed(x, r)) return { row: r, to: kind === 'lava' ? 2 : kind === 'ice' ? 3 : 5 };
     if (kind === 'lava' && t === 3 && exposed(x, r)) return { row: r, to: 5 };
@@ -3239,7 +3243,11 @@ function terrainSpot(kind, side) {
     if (kind === 'water' && t === 3 && T(x, r - 1) === 0) return { row: r - 1, to: 5 };   // water sits on top of ice
     return null;
   };
-  const probes = kind === 'water' ? [[tx, cy], T(cx, cy) === 5 ? [cx, cy + 1] : [tx, cy + 1]] : [[tx, cy], [tx, cy - 1], [tx, cy + 1]];
+  const inWater = T(cx, cy) === 5;
+  const probes = kind === 'water' ? (inWater ? (push ? [[tx, cy], [cx, cy + 1]] : [[cx, cy + 1], [tx, cy]]) : [[tx, cy], [tx, cy + 1]])   // water: sinking in a pool digs on down; pushing left or right digs sideways
+    : kind === 'dirt' ? [[tx, cy + 1], [tx, cy], [tx, cy - 1]]   // dirt: the ground level in front first (it extends your ledge), then a step up, then above
+    : kind === 'dig' ? [[tx, cy], [tx, cy + 1], [tx, cy - 1]]
+    : [[tx, cy], [tx, cy + 1], [tx, cy - 1]];   // lava and ice: straight ahead, then the ground in front of you, and only then up above you
   for (const [x, r] of probes) {
     const a = act(x, r); if (!a) continue;
     if (terrainBlocked(x, a.row, kind === 'dirt')) continue;
@@ -3291,7 +3299,7 @@ function computeGhost() {
     else if (g.stage === 2 && g.it.gate) { sp = plateSpot(g.side, g.gate); if (sp) { g.ptx = sp.tx; g.prow = sp.row; g.py0 = sp.y0; cx = (sp.tx + 1) * TS; cy = sp.y0; } }
     else if (g.it.portal) { sp = flatSpot(g.side, false, 1, true); if (sp && g.stage === 2 && g.pA && Math.abs(sp.tx - g.pA.tx) < 4 && Math.abs(sp.gr - g.pA.gr) < 3) sp = null; if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - 2; } }
     else if (g.it.misc === 'spr') { sp = bncSpot(g.side); if (sp) { g.mtx = sp.tx; g.mgr = sp.r; g.mr0 = sp.r0; cx = (sp.tx + 0.5) * TS; cy = (sp.r - 0.5) * TS; } }
-    else if (g.it.misc === 'ter') { sp = terrainSpot(g.it.ter, g.side); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } }
+    else if (g.it.misc === 'ter') { sp = terrainSpot(g.it.ter, g.side, !!(inp.left || inp.right || Math.abs(tin.ax) > 0.15)); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } }
     else if (g.it.misc) { sp = flatSpot(g.side, g.it.misc === 'see', g.it.misc === 'see' ? 2 : 1); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; g.mside = sp.side; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - (g.it.misc === 'see' ? 46 : 4); } }
     else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; g.gh = sp.h; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - sp.h / 2) * TS; } }
     g.ok = !!sp; g.sb = false;
@@ -3360,8 +3368,8 @@ function drawTileGhost(g, nowT) {
     portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : (g.stage === 2 ? '#3da5ff' : '#ffd23d'), pulse + 0.2, nowT);
   } else if (g.it.misc === 'ter') {
     const x = bad ? Math.floor(g.dx / TS) * TS : g.mtx * TS, y = bad ? g.dy - TS / 2 : g.mgr * TS, to = g.mto;
-    ctx.globalAlpha = pulse + 0.15; ctx.fillStyle = bad ? '#ff7a6a' : to === 1 ? '#8a5a33' : to === 2 ? '#ff4a1c' : to === 3 ? '#bfeeff' : to === 5 ? '#2e7be6' : '#80858f'; ctx.fillRect(x, y, TS, TS);
-    ctx.fillStyle = bad ? '#ffb0a6' : to === 1 ? '#c08850' : to === 2 ? '#ffb02e' : to === 3 ? '#fff' : to === 5 ? '#8cc4ff' : '#b7bcc6'; ctx.fillRect(x, y, TS, 7);
+    ctx.globalAlpha = pulse + 0.15; ctx.fillStyle = bad ? '#ff7a6a' : to === 0 ? '#f3ead6' : to === 1 ? '#8a5a33' : to === 2 ? '#ff4a1c' : to === 3 ? '#bfeeff' : to === 5 ? '#2e7be6' : '#80858f'; ctx.fillRect(x, y, TS, TS);
+    ctx.fillStyle = bad ? '#ffb0a6' : to === 0 ? '#fff' : to === 1 ? '#c08850' : to === 2 ? '#ffb02e' : to === 3 ? '#fff' : to === 5 ? '#8cc4ff' : '#b7bcc6'; ctx.fillRect(x, y, TS, 7);
     ctx.strokeStyle = '#16100c'; ctx.lineWidth = 2.4; ctx.strokeRect(x, y, TS, TS);
   } else if (g.it.misc === 'spr') {
     const fall = !bad && g.mgr - g.mr0 > 1, y = bad ? g.dy - TS / 2 : (fall ? g.mr0 : g.mgr) * TS;
@@ -3402,7 +3410,7 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (!on) return;
   $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : 'Place';
-  $('placeHint').textContent = g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? 'It goes on the tile in front of you. Turn around to use the other side' : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
+  $('placeHint').textContent = g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? 'It clears the tile in front of you. Turn around to use the other side' : 'It goes on the tile in front of you. Turn around to use the other side') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
@@ -4022,12 +4030,14 @@ function onDoubleTap(el, fn) { let t = 0, x = 0, y = 0; el.addEventListener('cli
 onDoubleTap($('homeWallet'), openCode); onDoubleTap($('coinpill'), openCode);
 
 /* ================= networking ================= */
+let netShownParty = false;
 function setNet(state) {
   netState = state;
   const n = $('netstat'); n.classList.remove('hide');   // one little bubble says it all: Online (green), Checking (amber), Disconnected (red), Private (blue)
-  const solo = state === 'solo' || location.protocol === 'file:';
-  $('netText').textContent = state === 'online' ? 'Public' : solo ? 'Private' : state === 'connecting' ? 'Checking' : 'Disconnected';
-  n.querySelector('i').className = state === 'online' ? 's-ok' : solo ? 's-solo' : state === 'connecting' ? 's-wait' : 's-bad';
+  const solo = state === 'solo' || location.protocol === 'file:' || (state === 'online' && !!party);   // (a private game with friends is still private, even though it is online)
+  netShownParty = !!party;
+  $('netText').textContent = state === 'online' && !party ? 'Public' : solo ? 'Private' : state === 'connecting' ? 'Checking' : 'Disconnected';
+  n.querySelector('i').className = state === 'online' && !party ? 's-ok' : solo ? 's-solo' : state === 'connecting' ? 's-wait' : 's-bad';
   if (state === 'offline' || state === 'solo') setTimeout(maybeAskBots, 700);
 }
 function dropConnection() {
@@ -5298,6 +5308,7 @@ function fillTimerPop(rem) {
   $('tpName').textContent = S.map.name;
   $('tpChange').textContent = endless ? 'This level stays until you pick another' : 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
   $('tpCoins').textContent = isBeaten(S.idx) ? 'You have beaten this map' : 'Not beaten yet';
+  if (netShownParty !== !!party) setNet(netState);
   $('tpWorld').textContent = party ? worldText() : sl ? 'Private world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'Public world ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
   $('tpNext').textContent = endless ? '' : 'Up next: ' + BallMaps.names[(S.slot + 1) % BallMaps.count];
   const bi = beaconInfo(nowMs()), on = !!(beaconOK() && S.mode === 'play' && !S.finished && bi.on), ar = $('tpArrow');
