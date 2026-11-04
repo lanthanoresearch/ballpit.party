@@ -1019,7 +1019,7 @@
   <div class="small dim" id="ivSub">Friends you invite get a message and can join your private game on this level. They see what you built, and can build too. They get it wherever they are, unless they are already in a private game with someone.</div>
   <label class="ivkeep"><input type="checkbox" id="ivKeep" checked><span>Keep the invitation open as long as the game is open<small>If you turn this off, a friend is only asked once and not again if they leave.</small></span></label>
   <div id="ivList"></div>
-  <div class="btns"><button id="ivStop" type="button" class="danger hide">Close my world</button><button id="ivNo" type="button" class="go">Done</button></div>
+  <div class="btns"><button id="ivStop" type="button" class="danger hide">Stop sharing</button><button id="ivNo" type="button" class="go">Done</button></div>
 </div></div>
 
 <div id="addModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="adTitle"><div class="card lvcard addcard">
@@ -1114,8 +1114,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=80"></script>
-<script src="physics.js?v=80"></script>
+<script src="maps.js?v=81"></script>
+<script src="physics.js?v=81"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -4036,7 +4036,7 @@ function lvSelect(i) {
   document.querySelectorAll('#lvGrid .lvb').forEach(b => { const on = +b.getAttribute('data-i') === i; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
   $('lvName').textContent = lvLabelOf(i);
   const mt = BallMaps.meta && BallMaps.meta[i], tags = $('lvTags'); tags.innerHTML = '';
-  if (mt) { const len = lvLen(i); if (len) { const s = document.createElement('span'); s.textContent = len; tags.appendChild(s); } mt.th.slice(0, 4).map(biomeOf).filter(Boolean).forEach(t => { const s = document.createElement('span'); s.innerHTML = '<i style="background:' + t.top + '"></i>' + t.id.charAt(0).toUpperCase() + t.id.slice(1); tags.appendChild(s); }); }
+  if (mt) { const len = lvLen(i); if (len) { const s = document.createElement('span'); s.textContent = len; tags.appendChild(s); } mt.th.slice(0, 5).map(biomeOf).filter(Boolean).forEach(t => { const s = document.createElement('span'); s.innerHTML = '<i style="background:' + t.top + '"></i>' + t.id.charAt(0).toUpperCase() + t.id.slice(1); tags.appendChild(s); }); }
   $('lvNote').textContent = (isBeaten(i) ? 'You have beaten this level. ' : 'Not beaten yet. ') + (soloFrom(i) ? 'A copy saved from ' + soloFrom(i) + '.' : hasSoloSave(i) ? 'What you built here is saved.' : 'Nothing saved yet.');
   $('lvUnl').checked = unlimitedAt(i); $('lvMoney').textContent = lvMoneyText(i);
   $('lvReset').classList.toggle('hide', !hasSoloSave(i));
