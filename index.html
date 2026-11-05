@@ -1116,8 +1116,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=86"></script>
-<script src="physics.js?v=86"></script>
+<script src="maps.js?v=87"></script>
+<script src="physics.js?v=87"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2966,6 +2966,12 @@ function opos(o) {   // where a player is, for the maps: the live spot if they a
   if (o.mt && performance.now() - o.mt < 4500) return { x: o.mx, y: o.my };
   return null;
 }
+const tinyR = z => Math.max(1.4, R / TS * z);   /* a ball on the maps is drawn to scale (a speck when zoomed out), never bigger than it really is */
+const friendsOnMap = () => { const m = new Map(); for (const e of liveLinks()) { trackFollow(e); m.set(e.pub, e); } return m; };
+function dotFor(o, fr) {   /* where to draw somebody on the maps: a friend with the big marker is skipped (the marker is already there and follows them smoothly), a friend without it uses that same smooth spot, everybody else the last known spot */
+  const e = o.pub && fr.get(o.pub); if (e) return e.big ? null : { x: e.sx == null ? e.x : e.sx, y: e.sy == null ? e.y : e.sy };
+  return opos(o);
+}
 const liveLinks = () => lks.filter(l => l.ok && l.on && l.x != null && !l.dead && performance.now() - l.t < 3500);
 
 /* ----- on the game screen: an arrow at the edge pointing to each person, a name tag above them when they are on screen ----- */
@@ -4709,16 +4715,11 @@ function drawTiles(camL, camT, vw, vh) {
       if (t === 5) { water.push(px, py, (ty > 0 && g[i - W] !== 5) ? 1 : 0); continue; }
       if (t === 9) continue;                       // closed doors are drawn with the gadgets
       if (t === 6) { drawPad(px, py, tx); continue; }
-      if (t === 4) {
-        const h = TS / 2;
-        for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) { ctx.fillStyle = ((tx * 2 + a + ty * 2 + b) & 1) ? '#111' : '#fff'; ctx.fillRect(px + a * h, py + b * h, h + 0.5, h + 0.5); }
-        continue;
-      }
       const th = THEMES[tg[i]] || THEMES[0];
       const rk = t === 1 && S.world.rock && S.world.rock[i];   // grey rock (made by water on lava)
-      ctx.fillStyle = rk ? '#80858f' : t === 1 ? th.solid : t === 3 ? ICE : LAVA;
+      ctx.fillStyle = rk ? '#80858f' : (t === 1 || t === 4) ? th.solid : t === 3 ? ICE : LAVA;   /* (the finish ground is plain ground: only the flag marks it) */
       ctx.fillRect(px, py, TS + 0.5, TS + 0.5);
-      if (ty === 0 || g[i - W] === 0 || g[i - W] === 5) { ctx.fillStyle = rk ? '#b7bcc6' : t === 1 ? th.top : t === 3 ? '#d4f6ff' : '#ffc04a'; ctx.fillRect(px, py, TS + 0.5, 7); }
+      if (ty === 0 || g[i - W] === 0 || g[i - W] === 5) { ctx.fillStyle = rk ? '#b7bcc6' : (t === 1 || t === 4) ? th.top : t === 3 ? '#d4f6ff' : '#ffc04a'; ctx.fillRect(px, py, TS + 0.5, 7); }
     }
   }
   // pen outlines on every exposed edge
@@ -5235,14 +5236,15 @@ function drawMinimap() {
     // radar "ping": once in a while take a snapshot of who is on screen, then let the dots fade (very light on bandwidth)
     if (now - mmPing > PING_MS) mmPing = now;   // the ring still pulses; the dots themselves are always there
     mmDots.length = 0;
-    if (settings.mmPlayers) others.forEach(o => { const q = opos(o); if (q) mmDots.push({ x: q.x / TS, y: q.y / TS, c: o.color }); });
+    const fr = friendsOnMap();   /* a tracked friend is drawn once (by the friend marker), never twice */
+    if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) mmDots.push({ x: q.x / TS, y: q.y / TS, c: o.color }); });
     if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; const q = bt.b; mmDots.push({ x: q.x / TS, y: q.y / TS, c: bt.color }); });
     const age = (now - mmPing) / PING_MS;
     if (settings.mmPlayers || settings.mmBots) {
       g.strokeStyle = 'rgba(159,232,255,' + (0.5 * (1 - age)) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(w / 2, h / 2, age * Math.max(v.w, v.h) / TS * ppt * 0.6, 0, TAU); g.stroke();
       for (let i = 0; i < mmDots.length; i++) {
         const d = mmDots[i], x = (d.x - left) * ppt, y = (d.y - top) * ppt; if (x < 0 || y < 0 || x > w || y > h) continue;
-        g.globalAlpha = 1; g.fillStyle = d.c; g.strokeStyle = '#000'; g.lineWidth = 1; g.beginPath(); g.arc(x, y, 3, 0, TAU); g.fill(); g.stroke();
+        g.globalAlpha = 1; g.fillStyle = d.c; g.beginPath(); g.arc(x, y, tinyR(ppt), 0, TAU); g.fill(); if (tinyR(ppt) > 2.4) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 0.8; g.stroke(); }
       }
       g.globalAlpha = 1;
     }
@@ -5329,8 +5331,8 @@ function mbTilesBuild() {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x, t = gr[i]; if (!t) continue;
     let c;
-    if (t === 1) { if (rk && rk[i]) c = C.rock; else { const th = tg ? tg[i] : 0, up = y > 0 ? gr[i - W] : 1; c = (up === 1 || up === 9 ? C.solid : C.top)[th] || C.solid[0]; } }
-    else if (t === 2) c = C.lava; else if (t === 3) c = C.ice; else if (t === 4) c = C.fin; else if (t === 5) c = C.water; else if (t === 6) c = C.pad; else if (t === 9) c = C.door; else continue;
+    if (t === 1) { if (rk && rk[i]) c = C.rock; else { const th = tg ? tg[i] : 0, up = y > 0 ? gr[i - W] : 1; c = (up === 1 || up === 4 || up === 9 ? C.solid : C.top)[th] || C.solid[0]; } }
+    else if (t === 2) c = C.lava; else if (t === 3) c = C.ice; else if (t === 4) { const th = tg ? tg[i] : 0, up = y > 0 ? gr[i - W] : 1; c = (up === 1 || up === 4 || up === 9 ? C.solid : C.top)[th] || C.solid[0]; } else if (t === 5) c = C.water; else if (t === 6) c = C.pad; else if (t === 9) c = C.door; else continue;
     const o = i * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
   }
   g.putImageData(im, 0, 0); mbT.at = performance.now();
@@ -5369,8 +5371,11 @@ function drawMinimapBig() {
   drawThings(g, X, Y, z, L, T, Rr, B);
   if (z >= 1.5) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = X(c[0] + 0.5), y = Y(c[1]); if (x < 0 || y < 0 || x > cw || y > ch) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.8, y - 12, 2, 12); g.beginPath(); g.moveTo(x + 1, y - 12); g.lineTo(x + 10, y - 9); g.lineTo(x + 1, y - 6); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 0.8; g.stroke(); });
-  if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; g.fillStyle = bt.color; g.beginPath(); g.arc(X(bt.b.x / TS), Y(bt.b.y / TS), 3.5, 0, TAU); g.fill(); });
-  if (settings.mmPlayers) others.forEach(o => { const q = opos(o); if (!q) return; g.drawImage(sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length), X(q.x / TS) - 5.5, Y(q.y / TS) - 5.5, 11, 11); });
+  { const dr = tinyR(z), fr = friendsOnMap();   /* everybody else is drawn to scale, tiny when zoomed out */
+    const dotAt = (x, y, col, sp) => { if (dr >= 5 && sp) g.drawImage(sp, X(x / TS) - dr, Y(y / TS) - dr, dr * 2, dr * 2); else { g.fillStyle = col; g.beginPath(); g.arc(X(x / TS), Y(y / TS), dr, 0, TAU); g.fill(); if (dr > 2.4) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 0.8; g.stroke(); } } };
+    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; dotAt(bt.b.x, bt.b.y, bt.color, null); });
+    if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) dotAt(q.x, q.y, o.color, dr >= 5 ? sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length) : null); });
+  }
   drawLinksOnMap(g, X, Y, 7, true, false);
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
   const bon = mapFin();
