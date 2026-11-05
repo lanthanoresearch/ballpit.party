@@ -79,8 +79,9 @@ const gone = new Map();       // pub -> Set(pub): someone ended a link while thi
 const claimsOf = new Map();   // pub -> Set(pub): what each device says it is linked to (lets links rebuild after a server restart)
 const byPub = new Map();      // pub -> connected player
 const pend = new Map();       // "from>to" -> { t }
+const news = new Map();       // pub -> [{ p, ok, t }]: answers to this player's friend requests that came while they were away (yes or not now), kept until their device says it has seen them
 let linksDirty = false;
-const DAY = 24 * 3600 * 1000, REQ_TTL = 7 * DAY;
+const DAY = 24 * 3600 * 1000, REQ_TTL = 90 * DAY;   // a friend request waits for an answer for three months
 const known = new Map();      // pub -> { name, color, last, nameAt }: everyone who has ever been here, so they can be searched for later
 const CODE_CH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // short codes skip look-alike letters (no I, L, O, 0, 1)
 function codeOf(pub) { let n = BigInt('0x' + pub.slice(0, 12)), c = ''; for (let i = 0; i < 6; i++) { c = CODE_CH[Number(n % 31n)] + c; n /= 31n; } return c; }
@@ -90,22 +91,27 @@ try {
   for (const k in (o.gone || {})) if (PUB.test(k)) gone.set(k, new Set((o.gone[k] || []).filter(v => PUB.test(v)).slice(0, 50)));
   for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', color2: HEX.test(v.color2) ? v.color2 : '#ffffff', pat: cleanPat(v.pat), last: +v.last || 0, nameAt: +v.nameAt || 0, beat: Math.max(0, Math.min(999, v.beat | 0)) }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
+  for (const e of (o.news || [])) if (Array.isArray(e) && PUB.test(e[0]) && Array.isArray(e[1])) news.set(e[0], e[1].filter(x => x && PUB.test(x.p) && Date.now() - x.t < REQ_TTL).map(x => ({ p: x.p, ok: x.ok ? 1 : 0, t: +x.t })).slice(-30));
+  console.log('Restored ' + known.size + ' players, ' + [...links.values()].reduce((a, v) => a + v.size, 0) / 2 + ' friendships, ' + pend.size + ' waiting requests, from ' + LINKS_FILE);
 } catch (e) {}
 function saveLinks(sync) {
   if (!linksDirty) return; linksDirty = false;
   // keep only what is needed: people not seen for two months (and not tied to a friend link or a waiting request) are forgotten
-  { const old = Date.now() - STALE_MS, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); });
+  { const old = Date.now() - STALE_MS, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); }); news.forEach((v, k) => { need.add(k); v.forEach(x => need.add(x.p)); });
     known.forEach((v, k) => { if (v.last < old && !need.has(k) && !byPub.has(k)) known.delete(k); }); }
   if (known.size > 5000) [...known.entries()].sort((a, b) => a[1].last - b[1].last).slice(0, known.size - 5000).forEach(e => known.delete(e[0]));
-  const o = { links: {}, gone: {}, known: {}, pend: [...pend.entries()].map(e => [e[0], e[1].t]) };
+  const o = { links: {}, gone: {}, known: {}, pend: [...pend.entries()].map(e => [e[0], e[1].t]), news: [...news.entries()].filter(e => e[1].length) };
   links.forEach((v, k) => { if (v.size) o.links[k] = [...v]; }); gone.forEach((v, k) => { if (v.size) o.gone[k] = [...v]; }); known.forEach((v, k) => { o.known[k] = v; });
   const s = JSON.stringify(o);
-  try { if (sync) fs.writeFileSync(LINKS_FILE, s); else fs.writeFile(LINKS_FILE, s, () => {}); } catch (e) {}
+  try {   /* written to a side file first and then swapped in, so a restart in the middle of saving can never leave a half-written list */
+    const tmp = LINKS_FILE + '.tmp';
+    if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, LINKS_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, LINKS_FILE, () => {}); });
+  } catch (e) {}
 }
 const linkSet = pub => { let s = links.get(pub); if (!s) links.set(pub, s = new Set()); return s; };
 function addLink(a, b) { linkSet(a).add(b); linkSet(b).add(a); linksDirty = true; }
 function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; }
-const WEEK_MS = 7 * 86400000, STALE_MS = 60 * 86400000;   // the player list shows the last week; anybody gone for two months is deleted
+const STALE_MS = 90 * 86400000;   // everybody who has played is listed; anybody gone for three months (and not a friend or in a waiting request) is forgotten
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
 const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), color2: q ? q.color2 : (k.color2 || '#ffffff'), pat: q ? q.pat | 0 : (k.pat | 0), on: live(q) ? 1 : 0, w: q && q.room ? (q.room.priv ? -1 : q.room.id) : 0, last: q ? Date.now() : (k.last || 0), b: k.beat | 0 }; };
 function sendLinks(p) {   // everyone this player is linked to, with their short code, whether they are online, and when they were last here
@@ -141,7 +147,7 @@ const server = http.createServer((req, res) => {
   if (url === '/stats') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({
-      online, peak, slot: curSlot, map: maps.names[curSlot % maps.count],
+      online, peak, slot: curSlot, map: maps.names[curSlot % maps.count], players: known.size,   // (players: everybody on record; if this drops to a few after a restart, the saved file is not surviving restarts)
       rooms: [...rooms.values()].filter(r => !r.priv).map(r => ({ id: r.id, players: r.players.size }))
     }));
   }
@@ -294,6 +300,8 @@ wss.on('connection', (ws, req) => {
         sendLinks(p);
         rooms.forEach(r => { if (r.priv && (r.priv.keep.has(p.pub) || r.priv.once.has(p.pub)) && r !== p.room) { r.priv.once.delete(p.pub); send(p, { t: 'inv', pub: r.priv.hostPub, name: (byPub.get(r.priv.hostPub) || {}).name || '', idx: r.priv.idx }); } });   // an invite that came while you were away (one that was sent as 'ask once' is only shown the first time)
         for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (live(q)) { sendLinks(q); if (!wasOn) send(q, { t: 'lon', pub: p.pub, name: p.name }); } }
+        { const nl = news.get(p.pub); if (nl && nl.length) send(p, { t: 'tres', list: nl.map(x => { const pi = peerInfo(x.p); return { pub: x.p, code: pi.code, name: pi.name, ok: x.ok, t: x.t }; }) }); }   // answers to your requests that came while you were away
+        { const out = []; pend.forEach((v, k) => { if (k.slice(0, 16) === p.pub) { const to = k.slice(17), pi = peerInfo(to); out.push({ pub: to, code: pi.code, name: pi.name, t: v.t }); } }); send(p, { t: 'tout', list: out }); }   // requests you sent that nobody has answered yet
         pend.forEach((v, k) => {   // friend requests that arrived while you were away
           if (k.slice(17) !== p.pub) return;
           if (Date.now() - v.t > REQ_TTL) { pend.delete(k); return; }
@@ -355,18 +363,17 @@ wss.on('connection', (ws, req) => {
     } else if (m.t === 'find') {
       const now = Date.now(); if (now - p.lastFind < 250) return; p.lastFind = now;
       const raw = String(m.q == null ? '' : m.q).trim().slice(0, 12), q = raw.toLowerCase(), qc = raw.toUpperCase().replace(/^#/, ''), mine = links.get(p.pub), out = [];
-      const browse = !raw;   // nothing typed: the whole list of players from the last week. Typing searches everybody still on record.
+      const browse = !raw;   // nothing typed: everybody who has played (online first, then the most recent). Typing searches by name or friend number.
       known.forEach((k, pub) => {
         if (pub === p.pub) return;
         const code = codeOf(pub), q2 = byPub.get(pub), on = live(q2) ? (q2.room || true) : null, nm = q2 ? q2.name : k.name, last = on ? now : k.last;
         if (!nm) return;   // has never picked a name, so has never really played
         const linked = !!(mine && mine.has(pub));
-        if (!on && !linked && now - last > (WEEK_MS)) return;
         if (!browse && !(nm.toLowerCase().indexOf(q) >= 0 || code === qc || code.indexOf(qc) === 0 && qc.length >= 3)) return;
         out.push({ pub, code, name: nm, color: q2 ? q2.color : k.color, color2: q2 ? q2.color2 : (k.color2 || '#ffffff'), pat: q2 ? q2.pat | 0 : (k.pat | 0), b: k.beat | 0, on: on ? 1 : 0, w: on && on !== true ? on.id : 0, last, here: on && on !== true && on === p.room ? 1 : 0, l: linked ? 1 : 0 });
       });
       out.sort((a, b) => (b.here - a.here) || (b.on - a.on) || (b.last - a.last));
-      send(p, { t: 'found', q: raw, list: out.slice(0, browse ? 80 : 30), n: out.length });
+      send(p, { t: 'found', q: raw, list: out.slice(0, browse ? 120 : 40), n: out.length });
     } else if (m.t === 'treq' || m.t === 'tacc' || m.t === 'tden') {
       if (!p.pub || typeof m.to !== 'string' || !PUB.test(m.to) || m.to === p.pub) return;
       const q = byPub.get(m.to), now = Date.now();
@@ -378,6 +385,15 @@ wss.on('connection', (ws, req) => {
         if (linkSet(p.pub).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, name: tn, why: 'mine' });
         if (linkSet(m.to).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, name: tn, why: 'theirs' });
         let n = 0; pend.forEach((v, k) => { if (k.indexOf(p.pub + '>') === 0) n++; }); if (n >= 8) return;
+        const back = m.to + '>' + p.pub;
+        if (pend.has(back)) {   // they had already asked you: that is a yes from both sides
+          pend.delete(back); addLink(p.pub, m.to);
+          const gp = gone.get(p.pub), gq = gone.get(m.to); if (gp) gp.delete(m.to); if (gq) gq.delete(p.pub);
+          send(p, { t: 'tok', pub: m.to }); sendLinks(p);
+          if (live(q)) { send(q, { t: 'tres', list: [{ pub: p.pub, code: codeOf(p.pub), name: p.name, ok: 1, t: now }] }); sendLinks(q); }
+          else { let l = news.get(m.to); if (!l) news.set(m.to, l = []); l.push({ p: p.pub, ok: 1, t: now }); if (l.length > 30) l.shift(); }
+          return;
+        }
         pend.set(p.pub + '>' + m.to, { t: now }); linksDirty = true;
         if (live(q)) send(q, { t: 'treq', pub: p.pub, code: codeOf(p.pub), name: p.name, color: p.color, color2: p.color2, pat: p.pat | 0 });
         send(p, { t: 'tsent', pub: m.to, name: tn, off: live(q) ? 0 : 1 });
@@ -385,13 +401,16 @@ wss.on('connection', (ws, req) => {
         const k = m.to + '>' + p.pub, pr = pend.get(k);
         if (!pr || Date.now() - pr.t > REQ_TTL) { pend.delete(k); return send(p, { t: 'tno', pub: m.to, why: 'old' }); }
         pend.delete(k); linksDirty = true;
-        if (m.t === 'tden') { if (live(q)) send(q, { t: 'tno', pub: p.pub, name: p.name, why: 'deny' }); return; }
+        const tell = ok => { if (live(q)) send(q, { t: 'tres', list: [{ pub: p.pub, code: codeOf(p.pub), name: p.name, ok, t: Date.now() }] }); else { let l = news.get(m.to); if (!l) news.set(m.to, l = []); l.push({ p: p.pub, ok, t: Date.now() }); if (l.length > 30) l.shift(); linksDirty = true; } };   // the one who asked sees the answer now, or the next time they are on
+        if (m.t === 'tden') { tell(0); return; }
         if (linkSet(p.pub).size >= MAX_LINKS || linkSet(m.to).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, why: 'full' });
         addLink(p.pub, m.to);
         const gp = gone.get(p.pub), gq = gone.get(m.to); if (gp) gp.delete(m.to); if (gq) gq.delete(p.pub);
         send(p, { t: 'tok', pub: m.to }); sendLinks(p);
-        if (live(q)) { send(q, { t: 'tok', pub: p.pub }); sendLinks(q); }
+        tell(1); if (live(q)) sendLinks(q);
       }
+    } else if (m.t === 'rack') {   // your device has shown you the answers it was sent
+      if (p.pub && news.delete(p.pub)) linksDirty = true;
     } else if (m.t === 'unl') {
       if (!p.pub || typeof m.to !== 'string' || !PUB.test(m.to)) return;
       const had = linkSet(p.pub).has(m.to);
