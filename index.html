@@ -1116,8 +1116,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=87"></script>
-<script src="physics.js?v=87"></script>
+<script src="maps.js?v=88"></script>
+<script src="physics.js?v=88"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1651,6 +1651,7 @@ function loadMap(slot, next) {
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
   S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.own = {}; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
+  S.orig = S.world.grid.slice(); S.origTg = S.tg.slice(); S.mine = new Set();   /* how every tile began: a block that is put back the way it was needs no record at all */
   restoreWorld(slot);
   if (S.guest && party.priv) applyPartyProps(party.priv);
   else if (S.pendingBuild && S.pendingBuild.slot === slot) pubSync(S.pendingBuild.b);
@@ -1911,7 +1912,7 @@ function worldEvents() {
 const startRect = () => { const s = S.map && S.map.start; if (!s) return null; const sx = Math.floor(s[0] / TS), sy = Math.floor(s[1] / TS); return { tx0: sx - 2, tx1: sx + 2, ty0: sy - 3, ty1: sy + 1 }; };   // the start zone: 5 x 5 blocks around where you appear (nothing can be built in it)
 const startTile = (tx, ty) => { const z = startRect(); return !!z && tx >= z.tx0 && tx <= z.tx1 && ty >= z.ty0 && ty <= z.ty1; };
 const startBlock = (px, py, m) => { const z = startRect(); if (!z) return false; m = m === undefined ? TS * 0.6 : m; return px >= z.tx0 * TS - m && px <= (z.tx1 + 1) * TS + m && py >= z.ty0 * TS - m && py <= (z.ty1 + 1) * TS + m; };   // (a little extra room, so nothing can hang over the edge of it)
-const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && q[0] === 'por' && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
+const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && q[0] === 'por' && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
   for (let i = w.drops.length - 1; i >= 0; i--) {
@@ -1945,9 +1946,16 @@ function setTerrain(w, tx, r, to, anim) {   // lava, ice, water or grey rock, on
   else if (to === 1) { burst(x, y, ['#8a5a33', '#b07a45', '#5a3a1e'], 16, 170, 110); ring(x, r * TS, '#b07a45', 5, 50, 0.4); sfx('thud'); }
   else { burst(x, y, ['#fff', '#b7bcc6', '#80858f'], 22, 170, 160); ring(x, r * TS, '#b7bcc6', 5, 50, 0.45); sfx('thud'); }
 }
+function restoreTile(w, tx, r, anim) {   // back to how the map made it
+  if (w !== S.world || !S.orig || tx < 0 || tx >= w.W || r < 0 || r >= w.H) return;
+  const i = r * w.W + tx; setTerrain(w, tx, r, S.orig[i], anim); S.tg[i] = S.origTg[i];
+}
+function dropTileRecords(tx, r) {   // forget what was built or dug on this one tile; returns what was forgotten
+  const gone = []; for (let k = S.boughtMisc.length - 1; k >= 0; k--) { const q = S.boughtMisc[k]; if (q[0] === 'tl' && q[1] === tx && q[2] === r) { gone.push(q); S.boughtMisc.splice(k, 1); } } return gone;
+}
 function addMisc(w, q, anim) {   // ['see', column, ground row, 0]: a teeter-totter standing on the ground, centre over the two tiles from that column.  ['pad', column, ground row, direction]: a floor booster, 2 tiles wide
   if (q[0] === 'bnc' || q[0] === 'spr') { const n = q[0] === 'spr' ? 1 : 2; if (anim && q[2] - q[3] > 1) (w.drops = w.drops || []).push({ tx: q[1], r: q[2], y: q[3] * TS, v: 0, n }); else setBouncePad(w, q[1], q[2], n); }
-  else if (q[0] === 'tl') setTerrain(w, q[1], q[2], q[3], anim);
+  else if (q[0] === 'tl') { if (q[3] === -1) restoreTile(w, q[1], q[2], anim); else setTerrain(w, q[1], q[2], q[3], anim); }
   else if (q[0] === 'lav') { { const i = q[2] * w.W + q[1]; if (q[2] < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 2; } if (anim) { burst((q[1] + 0.5) * TS, q[2] * TS - 6, ['#ff4d2e', '#ff8a3d', '#ffd23d'], 16, 200, 160); ring((q[1] + 0.5) * TS, q[2] * TS, '#ff8a3d', 5, 50, 0.4); sfx('lava'); } }
   else if (q[0] === 'see') w.see.push({ cx: (q[1] + 1) * TS, cy: q[2] * TS - 46, hl: 3 * TS, tilt: 0, ang: 0, av: 0, tq: 0 });
   else if (q[0] === 'por') P.addPortal(w, q);
@@ -3498,11 +3506,20 @@ function finishPlacing() {
     burst((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, '#fff', 4, 40, 0.4);
   } else if (it.misc) {
     const q = [it.misc === 'ter' ? 'tl' : it.misc, g.mtx, g.mgr, it.misc === 'ter' ? g.mto : it.misc === 'pad' ? ((g.mside || g.side) < 0 ? -1 : 1) : it.misc === 'spr' ? g.mr0 : 0];
-    addMisc(S.world, q, true); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true;
+    addMisc(S.world, q, true);
+    if (q[0] === 'tl') {   /* one record per tile, ever. If the tile is back the way the map made it, there is nothing to remember at all, and it does not count */
+      const w = S.world, i = q[2] * w.W + q[1], gone = dropTileRecords(q[1], q[2]);
+      if (S.orig && w.grid[i] === S.orig[i] && !(w.rock && w.rock[i])) {
+        S.tg[i] = S.origTg[i]; g.cancelled = true;
+        if (S.mine.has(i)) for (const o of gone) { const id = { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[o[3]]; if (id && S.own && S.own[id] > 0) S.own[id]--; }
+        S.mine.delete(i); partyBuild({ t: 'pobj', g: ['tl', q[1], q[2], -1] });
+      } else { S.boughtMisc.push(q); S.mine.add(i); partyBuild({ t: 'pobj', g: q }); }
+      wDirty = true;
+    } else { S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; }
     if (q[0] !== 'tl') { burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4); }
   } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
   else placeProp(it.kind, [g.tx, g.ty]);
-  (S.own = S.own || {})[it.id] = ownCount(it) + 1;
+  S.own = S.own || {}; if (!g.cancelled) S.own[it.id] = ownCount(it) + 1;   /* (an action that cancels one of your own builds is not counted, and gives the earlier one back) */
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   placing = null; placeUIKey = null; refreshPlaceUI();
   if (it.misc === 'ter' && settings.terrKeep) {   // keep going with the same terrain until you cancel or the money runs out
@@ -4348,7 +4365,10 @@ function onMsg(m) {
     case 'pclose': partyOver(who(m.name) + ' closed their private game'); break;
     case 'inv': partyInvited(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
-    case 'pobj': { if (!S.world || !shared() || !validMisc(m.g) || (!party && !pubTake('m', m.g))) break; addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
+    case 'pobj': { if (!S.world || !shared() || !validMisc(m.g) || (!party && m.g[0] !== 'tl' && !pubTake('m', m.g))) break;   // (a terrain change is absolute, so applying it twice does no harm)
+      if (m.g[0] === 'tl' && m.g[3] === -1) { addMisc(S.world, m.g, true); dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); wDirty = true; break; }   // somebody put a tile back the way it was: nothing to remember
+      if (m.g[0] === 'tl') { dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); }
+      addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
     case 'pgate': { if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
     case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); sfx('big'); break;
     case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y) || (!party && !pubTake('p', [m.k | 0, m.x | 0, m.y | 0]))) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
