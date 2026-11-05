@@ -8,8 +8,6 @@
 //   HOME_URL          optional: visitors who arrive on any other address are sent here (e.g. https://ballpit.party)
 //   LINKS_FILE        where tracking links are saved (default ./links.json)
 //   MAX_PER_IP        max simultaneous connections from one address (default 10)
-//   PLAY_MODE         'app' (the default): the website sends visitors to an install page, and the game only runs inside the installed app.
-//                     'web': the game opens in the browser like a normal website.
 //   VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY   keys for phone and desktop notifications. Set both so they never change (otherwise they are made once and
 //                     kept in the links file). VAPID_SUBJECT is an optional contact address, e.g. mailto:you@example.com
 const http = require('http');
@@ -18,21 +16,20 @@ const crypto = require('crypto');
 const path = require('path');
 const { WebSocketServer } = require('ws');
 const maps = require('./maps.js');
+const P = require('./physics.js');
 
 const PORT = process.env.PORT || 3000;
-const DEFAULT_MODE = 'app';   // <- the one switch in the code: 'app' = the game only runs in the installed app. Change to 'web' to put the plain website back.
-const PLAY_MODE = String(process.env.PLAY_MODE || DEFAULT_MODE).toLowerCase() === 'web' ? 'web' : 'app';   // (or set the PLAY_MODE variable on Render, no code change needed)
 // what one world can hold of what people build (shared by everyone in it). Each player has their own, lower limits per item; these keep a full world quick.
-const ROOM_PROPS = 800, ROOM_GATES = 200, ROOM_MISC = 2500, ROOM_CPS = 150;
+const ROOM_PROPS = 800, ROOM_GATES = 200, ROOM_MISC = 6000, ROOM_CPS = 150;
 const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);   // players per world: few enough that a world full of builds stays smooth for everyone
 const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
-const TICK_MS = 100;                                      // up to 10 position updates per second, and only for players who actually sent something new (the client fills in the motion between them)
+const TICK_MS = 50;                                      // up to 10 position updates per second, and only for players who actually sent something new (the client fills in the motion between them)
 const RANGE = 3000;                                       // you only receive players within this many pixels of you (more than a screen)
 const MAX_PER_IP = parseInt(process.env.MAX_PER_IP, 10) || 10;
 const STATS_FILE = process.env.STATS_FILE || path.join(__dirname, 'stats.json');
 const PATTERNS = 6;
-const EMOJIS = 24;                                       // the built-in chat: 10 emojis and 14 ready-made phrases. Players can only send one of these (by number)
+const EMOJIS = 64;                                       // the built-in chat: 10 emojis and 14 ready-made phrases. Players can only send one of these (by number)
 const MAX_LINKS = 12;                                     // how many people one player can track
 const LINKS_FILE = process.env.LINKS_FILE || path.join(__dirname, 'links.json');
 
@@ -51,9 +48,7 @@ for (const [url, name, type] of [
   ['/icon-512.png', 'icon-512.png', 'image/png'],
   ['/icon-maskable-512.png', 'icon-maskable-512.png', 'image/png'],
   ['/manifest.webmanifest', 'manifest.webmanifest', 'application/manifest+json'],
-  ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8'],
-  ['/install.html', 'install.html', 'text/html; charset=utf-8'],
-  ['/install', 'install.html', 'text/html; charset=utf-8']
+  ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
@@ -136,7 +131,7 @@ function sendPush(pub, payload) {
 }
 const pushLast = new Map();   // pub + tag -> time: the same news is not pushed again and again
 function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map. Only to devices that are not connected right now.
-  const sub = pushSubs.get(pub); if (!sub || !sub[kind] || live(byPub.get(pub)) || (from && sub.mu && sub.mu.indexOf(from) >= 0)) return;
+  const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !sub[kind] || (live(here) && !here.hidden) || (from && sub.mu && sub.mu.indexOf(from) >= 0)) return;
   const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : 30000; if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
   if (pushLast.size > 4000) { for (const [kk, v] of pushLast) if (t - v > 3600000) pushLast.delete(kk); }
   sendPush(pub, { title: String(n[0]).slice(0, 60), body: String(n[1]).slice(0, 100), tag });
@@ -209,7 +204,7 @@ const server = http.createServer((req, res) => {
   if (url === '/stats') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({
-      online, peak, slot: curSlot, map: maps.names[curSlot % maps.count], players: known.size, mode: PLAY_MODE, push: pushSubs.size,   // (players: everybody on record; if this drops to a few after a restart, the saved file is not surviving restarts)
+      online, peak, slot: curSlot, map: maps.names[curSlot % maps.count], players: known.size, push: pushSubs.size,   // (players: everybody on record; if this drops to a few after a restart, the saved file is not surviving restarts)
       rooms: [...rooms.values()].filter(r => !r.priv).map(r => ({ id: r.id, players: r.players.size }))
     }));
   }
@@ -228,7 +223,7 @@ const server = http.createServer((req, res) => {
     // the share image needs a full web address, so fill in this site's own address
     const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
     const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim().replace(/[^A-Za-z0-9.:\-]/g, '');
-    body = Buffer.from(f.data.toString('utf8').split('__ORIGIN__').join(proto.replace(/[^a-z]/g, '') + '://' + host).split('__BUILD__').join(BUILD).split('__MODE__').join(PLAY_MODE));
+    body = Buffer.from(f.data.toString('utf8').split('__ORIGIN__').join(proto.replace(/[^a-z]/g, '') + '://' + host).split('__BUILD__').join(BUILD));
   }
   res.writeHead(200, { 'Content-Type': f.type, 'Cache-Control': f.type.indexOf('image/') === 0 ? 'public, max-age=3600' : 'no-store' });
   res.end(body);
@@ -246,6 +241,139 @@ function findRoom() {
     const nr = { id, players: new Map(), finishers: [] };
     rooms.set(id, nr);
     return { room: nr, full };
+  }
+}
+
+
+/* ---------- the shared world ----------
+   Every world (public or private) has ONE set of crates, balls, planks and gates, worked out here with the same physics the game uses (physics.js).
+   Players never touch each other, but everybody pushes the same things. Each device is sent where things are and shows exactly that. */
+const SIMDT = 1 / 60;
+function srvTerrain(w, tx, r, to) {
+  if (tx < 0 || tx >= w.W || r < 0 || r >= w.H) return;
+  const i = r * w.W + tx, cur = w.grid[i]; if (cur === 4 || cur === 6 || cur === 9) return;
+  w.grid[i] = to === 7 ? 1 : to;
+}
+function srvBounce(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
+function srvMisc(w, q) {
+  const k = q[0], TS = P.TS;
+  if (k === 'bnc' || k === 'spr') srvBounce(w, q[1], q[2], k === 'spr' ? 1 : 2);
+  else if (k === 'tl') { if (q[3] === -1) { const i = q[2] * w.W + q[1]; if (q[1] >= 0 && q[1] < w.W && q[2] >= 0 && q[2] < w.H) srvTerrain(w, q[1], q[2], w.orig[i]); } else srvTerrain(w, q[1], q[2], q[3]); }
+  else if (k === 'lav') { const i = q[2] * w.W + q[1]; if (q[2] < w.H && q[1] >= 0 && q[1] < w.W && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 2; }
+  else if (k === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: 3 * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
+  else if (k === 'por') P.addPortal(w, q);
+  else if (k === 'pad') P.addPad(w, [q[1], q[2], q[3]]);
+}
+function srvGate(w, q) {
+  const id = w.doors.length, d = { id, uid: P.hash32('g' + q.slice(0, 5).join(',')), x: q[0], y: q[1], w: 1, h: q[2], open: false, latched: false };
+  w.doors.push(d); P.setDoorTiles(w, d, false); w.plates.push({ x: q[3], y: q[4], w: 2, to: [id], on: false });
+}
+function roomWorld(room) {
+  if (room.world) return room.world;
+  const m = maps.generate(rslot(room) % maps.count), w = P.makeWorld(m);
+  w.orig = w.grid.slice(); w.closeDelay = 0.3; w.focus = []; w.follow = false;
+  const B = bstate(room);
+  (B.misc || []).forEach(q => { try { srvMisc(w, q); } catch (e) {} });
+  (B.gates || []).forEach(q => { try { srvGate(w, q); } catch (e) {} });
+  (B.props || []).forEach(q => { try { P.addProp(w, q[0], q[1], q[2]); } catch (e) {} });
+  room.world = w; room.verN = 1; room.acc = 0; room.dsig = ''; room.tk = 0;
+  w.dyn.forEach(d => { d.ver = 1; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; });
+  w.see.forEach(s => { s.lang = s.ang; });
+  return w;
+}
+const worldAdd = {   // somebody built something: it goes into the shared world straight away
+  prop: (r, q) => { if (r.world) { const d = P.addProp(r.world, q[0], q[1], q[2]); d.ver = ++r.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; } },
+  misc: (r, q) => { if (r.world) srvMisc(r.world, q); },
+  gate: (r, q) => { if (r.world) srvGate(r.world, q); }
+};
+function doorSig(w) {
+  let s = ''; for (const o of w.doors) s += (o.open ? 1 : 0) + (o.latched ? 2 : 0); s += '|'; for (const q of w.btns) s += q.on ? 1 : 0; s += '|'; for (const q of w.plates) s += q.on ? 1 : 0; return s;
+}
+function doorPacket(room) {
+  const w = room.world, d = [], b = [], p = [];
+  w.doors.forEach(o => { d.push(o.uid, (o.open ? 1 : 0) | (o.latched ? 2 : 0)); });
+  w.btns.forEach((q, i) => { if (q.on) b.push(i); });
+  w.plates.forEach(q => { if (q.on) p.push(P.hash32('l' + q.x + ',' + q.y)); });
+  return { t: 'dr', d, b, p };
+}
+function plankSend(room, planks, only) {
+  if (!planks.length) return;
+  const buf = Buffer.allocUnsafe(4 + planks.length * 12); buf[0] = 5; buf.writeUInt16LE(rslot(room) & 0xFFFF, 1); buf[3] = planks.length;
+  planks.forEach((s, k) => { const o = 4 + k * 12; buf.writeUInt32LE(s.uid >>> 0, o); buf.writeFloatLE(s.ang, o + 4); buf.writeFloatLE(Number.isFinite(s.av) ? s.av : 0, o + 8); });
+  if (only) { if (only.ws.readyState === 1) only.ws.send(buf, { binary: true }); return; }
+  for (const p of room.players.values()) if (p.ws.readyState === 1) p.ws.send(buf, { binary: true });
+}
+let simLast = Date.now();
+function simTick() {
+  const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
+  for (const room of rooms.values()) {
+    if (!room.players.size) continue;
+    const act = [...room.players.values()].filter(p => p.has && !p.dead && !p.hidden && p.ws.readyState === 1);
+    if (!act.length && !room.world) continue;
+    const w = roomWorld(room), slot = rslot(room) & 0xFFFF;
+    room.tk++;
+    room.acc += dtReal;
+    let n = 0; while (room.acc >= SIMDT && n < 6) { room.acc -= SIMDT; n++; }
+    if (room.acc > SIMDT) room.acc = 0;
+    for (const p of room.players.values()) if (!act.includes(p)) p.qx = undefined;
+    if (act.length && n) {
+      w.focus = act.map(p => ({ x: p.x, y: p.y }));
+      for (let k = 0; k < n; k++) {
+        P.stepDyn(w, SIMDT);
+        const list = [];
+        for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
+          const age = Math.min(0.12, (now - (p.tPos || now)) / 1000 + k * SIMDT), g = !!(p.st & 0x8000);
+          const tx = p.x + p.vx * age, ty = p.y + (g ? 0 : p.vy * age);
+          if (p.qx === undefined || Math.abs(tx - p.qx) > 220 || Math.abs(ty - p.qy) > 220) { p.qx = tx; p.qy = ty; }
+          else {
+            const lx = Math.max(7, Math.abs(p.vx) * SIMDT * 2), ly = Math.max(10, Math.abs(p.vy) * SIMDT * 2);
+            p.qx += Math.max(-lx, Math.min(lx, tx - p.qx)); p.qy += Math.max(-ly, Math.min(ly, ty - p.qy));
+          }
+          list.push({ x: p.qx, y: p.qy, vx: p.vx, vy: p.vy, ground: g });
+        }
+        for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground }; P.collideDyn(c, w); P.seeBody(c, w, 60); }
+        P.stepSwitches(w, list, SIMDT);
+      }
+      w.ev.length = 0;
+    }
+    // what changed, for the dyn things
+    for (let i = 0; i < w.dyn.length; i++) {
+      const d = w.dyn[i]; if (d.sleep) continue;
+      const bn = d.burn > 0;
+      if (bn !== d.lb || (!bn && Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04)) { d.ver = ++room.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; }
+    }
+    // gates and triggers: tell everybody when any of them changes (and now and then anyway)
+    const sig = doorSig(w);
+    if (sig !== room.dsig || room.tk % 100 === 0) { room.dsig = sig; broadcast(room, doorPacket(room)); }
+    // planks
+    const planks = []; for (const s of w.see) if (Math.abs(s.ang - s.lang) > 0.0004 || room.tk % 100 === 0) { planks.push(s); s.lang = s.ang; }
+    if (planks.length) plankSend(room, planks);
+    // crates and balls: each player is told about what changed near them
+    const resend = room.tk % 100 === 0;
+    for (const p of room.players.values()) {
+      if (!p.has || p.ws.readyState !== 1) continue;
+      if (!p.dver || resend) { p.dver = new Map(); p.more = 1; }
+      if (room.verN === p.sv && !p.more && Math.abs(p.x - p.sx) < 200 && Math.abs(p.y - p.sy) < 200) continue;   // nothing new, and they have not moved far
+      p.sv = room.verN; p.sx = p.x; p.sy = p.y; p.more = 0;
+      const out = [];
+      for (let i = 0; i < w.dyn.length && out.length < 90; i++) {
+        const d = w.dyn[i];
+        if (p.dver.get(d.uid) === d.ver) continue;
+        if (!(d.burn > 0) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue;
+        out.push(d);
+      }
+      if (out.length >= 90) p.more = 1;
+      if (!out.length) continue;
+      const buf = Buffer.allocUnsafe(4 + out.length * 21); buf[0] = 4; buf.writeUInt16LE(slot, 1); buf[3] = out.length;
+      out.forEach((d, k) => {
+        const o = 4 + k * 21, bn = d.burn > 0;
+        buf.writeUInt32LE(d.uid >>> 0, o); buf.writeFloatLE(bn ? 0 : d.x, o + 4); buf.writeFloatLE(bn ? 0 : d.y, o + 8);
+        buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(bn ? 0 : d.vx))), o + 12); buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(bn ? 0 : d.vy))), o + 14);
+        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = bn ? 1 : 0;
+        p.dver.set(d.uid, d.ver);
+      });
+      p.ws.send(buf, { binary: true });
+    }
   }
 }
 
@@ -290,6 +418,7 @@ wss.on('connection', (ws, req) => {
   ipCount.set(ip, c);
 
   const p = { id: nextId++, ws, name: '', color: '#ff4d4d', color2: '#ffffff', pat: 0, x: 0, y: 0, vx: 0, vy: 0, st: 0, dead: 0, has: false, moved: false, vis: new Set(), room: null, fin: -1, msgs: 0, pub: '', lastReq: 0, lastFind: 0, lastEmo: 0 };
+  try { ws._socket.setNoDelay(true); } catch (e) {}
   ws.isAlive = true;
   ws.on('pong', () => { ws.isAlive = true; });
   const rate = setInterval(() => { p.msgs = 0; }, 1000);
@@ -301,7 +430,7 @@ wss.on('connection', (ws, req) => {
       const x = Math.min(262000, raw.readUInt16LE(3) * 2), yr = raw.readUInt16LE(5), d = yr === 65535 ? 1 : 0;
       const y = d ? p.y : Math.min(131000, yr), vx = raw.readInt8(7) * 5, vy = raw.readInt8(8) * 20, st = raw.readUInt16LE(9);
       if (p.x !== x || p.y !== y || p.dead !== d || p.vx !== vx || p.vy !== vy || p.st !== st || !p.has) p.moved = true;
-      p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true;
+      p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true; p.tPos = Date.now();
       return;
     }
     let m;
@@ -347,6 +476,7 @@ wss.on('connection', (ws, req) => {
           build: room.priv ? undefined : bstate(room), priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? 1 : 0 }))
         });
+        p.dver = null; if (room.world) { send(p, doorPacket(room)); plankSend(room, room.world.see, p); }
         broadcast(room, { t: 'join', id: p.id, pub: p.pub, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
       } else {
         send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
@@ -365,7 +495,7 @@ wss.on('connection', (ws, req) => {
         if (removed.length) send(p, { t: 'unl', gone: removed });
         sendLinks(p);
         rooms.forEach(r => { if (r.priv && (r.priv.keep.has(p.pub) || r.priv.once.has(p.pub)) && r !== p.room) { r.priv.once.delete(p.pub); send(p, { t: 'inv', pub: r.priv.hostPub, name: (byPub.get(r.priv.hostPub) || {}).name || '', idx: r.priv.idx }); } });   // an invite that came while you were away (one that was sent as 'ask once' is only shown the first time)
-        for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (live(q)) { sendLinks(q); if (!wasOn) send(q, { t: 'lon', pub: p.pub, name: p.name }); } else if (!wasOn && p.name) pushTo(b, 'f', [p.name + ' is online', 'Jump in and play together'], 'on-' + p.pub, p.pub); }
+        for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (live(q)) { sendLinks(q); if (!wasOn) send(q, { t: 'lon', pub: p.pub, name: p.name }); } if (!wasOn && p.name) pushTo(b, 'f', [p.name + ' is online', 'Jump in and play together'], 'on-' + p.pub, p.pub); }
         { const nl = news.get(p.pub); if (nl && nl.length) send(p, { t: 'tres', list: nl.map(x => { const pi = peerInfo(x.p); return { pub: x.p, code: pi.code, name: pi.name, ok: x.ok, t: x.t }; }) }); }   // answers to your requests that came while you were away
         { const out = []; pend.forEach((v, k) => { if (k.slice(0, 16) === p.pub) { const to = k.slice(17), pi = peerInfo(to); out.push({ pub: to, code: pi.code, name: pi.name, t: v.t }); } }); send(p, { t: 'tout', list: out }); }   // requests you sent that nobody has answered yet
         pend.forEach((v, k) => {   // friend requests that arrived while you were away
@@ -386,20 +516,26 @@ wss.on('connection', (ws, req) => {
       const d = m.d ? 1 : 0;
       const x = Math.max(0, Math.min(262000, Math.round(m.x))), y = Math.max(0, Math.min(131000, Math.round(m.y)));
       if (p.x !== x || p.y !== y || p.dead !== d || !p.has) p.moved = true;
-      p.x = x; p.y = y; p.dead = d; p.vx = 0; p.vy = 0; p.st = 0x8000; p.has = true;
+      p.x = x; p.y = y; p.dead = d; p.vx = 0; p.vy = 0; p.st = 0x8000; p.has = true; p.tPos = Date.now();
     } else if (m.t === 'emo') {
       if (!p.room) return;
       const i = m.i | 0, now = Date.now();
       if (i < 0 || i >= EMOJIS || now - p.lastEmo < 900) return;
       p.lastEmo = now;
       broadcast(p.room, { t: 'emo', id: p.id, pub: p.pub, name: p.name, i }, p);
+    } else if (m.t === 'say') {   // a message built from a sentence and a pick-list: two small numbers, so nothing can be typed
+      if (!p.room) return;
+      const a = m.a | 0, b = m.b | 0, now = Date.now();
+      if (a < 0 || a >= 16 || b < 0 || b >= 40 || now - p.lastEmo < 900) return;
+      p.lastEmo = now;
+      broadcast(p.room, { t: 'say', id: p.id, pub: p.pub, name: p.name, a, b }, p);
     } else if (m.t === 'inv') {   // the host asks a friend to come to their world
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to)) return;
       const now = Date.now(); if (now - (p.lastInv || 0) < 700) return; p.lastInv = now;
       r.priv.invited.add(m.to);
       const q = byPub.get(m.to), keep = m.keep !== false;   // 'keep open' (the default): they are asked again every time they come back, for as long as the game is open
       if (keep) { r.priv.keep.add(m.to); r.priv.once.delete(m.to); } else { r.priv.keep.delete(m.to); if (!live(q)) r.priv.once.add(m.to); }
-      if (live(q)) send(q, { t: 'inv', pub: p.pub, name: p.name, idx: r.priv.idx }); else pushTo(m.to, 'i', [(p.name || 'A friend') + ' invited you', 'Join their private game'], 'inv-' + p.pub);
+      if (live(q)) send(q, { t: 'inv', pub: p.pub, name: p.name, idx: r.priv.idx }); pushTo(m.to, 'i', [(p.name || 'A friend') + ' invited you', 'Join their private game'], 'inv-' + p.pub);
       send(p, { t: 'invsent', pub: m.to, on: live(q) ? 1 : 0 });
     } else if (m.t === 'pb') {   // a bunch of builds at once (up to 25 of one kind): what somebody had built before joining this world
       const r = p.room; if (!r || !bstate(r)) return;
@@ -407,26 +543,35 @@ wss.on('connection', (ws, req) => {
       const B = bstate(r), e = {};
       const take = (key, arr, ok, cap) => { if (!Array.isArray(m[key])) return; const out = []; for (const q of m[key].slice(0, 25)) { const c = ok(q); if (c && arr.length < cap) { arr.push(c); out.push(c); } } if (out.length) e[key] = out; };
       take('props', B.props, okProp, ROOM_PROPS); take('gates', B.gates, okGate, ROOM_GATES); take('misc', B.misc, okMisc, ROOM_MISC); take('cps', B.cps, okCp, ROOM_CPS);
+      (e.props || []).forEach(q => worldAdd.prop(r, q)); (e.gates || []).forEach(q => worldAdd.gate(r, q)); (e.misc || []).forEach(q => worldAdd.misc(r, q));
       if (Object.keys(e).length) { e.t = 'pb'; broadcast(r, e, p); }
     } else if (m.t === 'pobj') {   // a teeter-totter or a floor booster, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl')) || (m.g.length === 5 && m.g[0] === 'por')) || !m.g.slice(1).every(Number.isFinite) || bstate(r).misc.length >= ROOM_MISC || ((m.g[0] === 'see' || m.g[0] === 'por') && bstate(r).misc.filter(q => q[0] === m.g[0]).length >= 80)) return;
       const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
       if (m.g[0] === 'tl') {   // one record per tile: a newer change replaces the older one, and -1 means the tile is back the way the map made it, so there is nothing to keep
-        const mb = bstate(r).misc, tx = Math.round(m.g[1]), ty = Math.round(m.g[2]);
-        for (let k = mb.length - 1; k >= 0; k--) if (mb[k][0] === 'tl' && mb[k][1] === tx && mb[k][2] === ty) mb.splice(k, 1);
-        if (Math.round(m.g[3]) === -1) { broadcast(r, { t: 'pobj', g: ['tl', tx, ty, -1] }, p); return; }
+        const put = (tx, ty, to) => {
+          const mb = bstate(r).misc;
+          for (let k = mb.length - 1; k >= 0; k--) if (mb[k][0] === 'tl' && mb[k][1] === tx && mb[k][2] === ty) mb.splice(k, 1);
+          if (to === -1) { worldAdd.misc(r, ['tl', tx, ty, -1]); return [tx, ty, -1]; }
+          if (![0, 1, 2, 3, 5, 7].includes(to) || mb.length >= ROOM_MISC) return null;
+          const e = ['tl', tx, ty, to]; mb.push(e); worldAdd.misc(r, e); return [tx, ty, to];
+        };
+        const g0 = put(Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])), ex = [];
+        if (Array.isArray(m.ex)) for (const q of m.ex.slice(0, 6)) if (Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)) { const c = put(Math.round(q[0]), Math.round(q[1]), Math.round(q[2])); if (c) ex.push(c); }
+        if (g0) broadcast(r, { t: 'pobj', g: ['tl', g0[0], g0[1], g0[2]], ex }, p);
+        return;
       }
-      const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); broadcast(r, { t: 'pobj', g: e }, p);
+      const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
     } else if (m.t === 'pgate') {   // a gate and its trigger, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || m.g.length !== 5 || !m.g.every(Number.isFinite) || m.g[2] < 2 || m.g[2] > 8 || bstate(r).gates.length >= ROOM_GATES) return;
       const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
-      const e = m.g.map(Math.round); bstate(r).gates.push(e); broadcast(r, { t: 'pgate', g: e }, p);
+      const e = m.g.map(Math.round); bstate(r).gates.push(e); worldAdd.gate(r, e); broadcast(r, { t: 'pgate', g: e }, p);
     } else if (m.t === 'padd' || m.t === 'pcp') {   // somebody built something in a friend's world: everyone there gets it
       const r = p.room; if (!bstate(p.room)) return;
       const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
       if (m.t === 'padd') {
         const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).props.length >= ROOM_PROPS) return;
-        const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2] }, p);
+        const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); worldAdd.prop(r, e); broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2] }, p);
       } else {
         if (!Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).cps.length >= ROOM_CPS) return;
         const e = [Math.round(m.x), Math.round(m.y)]; bstate(r).cps.push(e); broadcast(r, { t: 'pcp', x: e[0], y: e[1] }, p);
@@ -468,12 +613,12 @@ wss.on('connection', (ws, req) => {
         pend.set(p.pub + '>' + m.to, { t: now }); linksDirty = true;
         if (live(q)) send(q, { t: 'treq', pub: p.pub, code: codeOf(p.pub), name: p.name, color: p.color, color2: p.color2, pat: p.pat | 0 });
         send(p, { t: 'tsent', pub: m.to, name: tn, off: live(q) ? 0 : 1 });
-        if (!live(q)) pushTo(m.to, 'r', [(p.name || 'Someone') + ' wants to be your friend', 'Open ballpit.party to answer'], 'req-' + p.pub);
+        pushTo(m.to, 'r', [(p.name || 'Someone') + ' wants to be your friend', 'Open ballpit.party to answer'], 'req-' + p.pub);
       } else {
         const k = m.to + '>' + p.pub, pr = pend.get(k);
         if (!pr || Date.now() - pr.t > REQ_TTL) { pend.delete(k); return send(p, { t: 'tno', pub: m.to, why: 'old' }); }
         pend.delete(k); linksDirty = true;
-        const tell = ok => { if (live(q)) send(q, { t: 'tres', list: [{ pub: p.pub, code: codeOf(p.pub), name: p.name, ok, t: Date.now() }] }); else { let l = news.get(m.to); if (!l) news.set(m.to, l = []); l.push({ p: p.pub, ok, t: Date.now() }); if (l.length > 30) l.shift(); linksDirty = true; pushTo(m.to, 'r', [(p.name || 'Someone') + (ok ? ' accepted your friend request' : ' said not now to your friend request'), ok ? 'You are friends now' : 'Open ballpit.party to see'], 'ans-' + p.pub); } };   // the one who asked sees the answer now, or the next time they are on
+        const tell = ok => { if (live(q)) send(q, { t: 'tres', list: [{ pub: p.pub, code: codeOf(p.pub), name: p.name, ok, t: Date.now() }] }); else { let l = news.get(m.to); if (!l) news.set(m.to, l = []); l.push({ p: p.pub, ok, t: Date.now() }); if (l.length > 30) l.shift(); linksDirty = true; } pushTo(m.to, 'r', [(p.name || 'Someone') + (ok ? ' accepted your friend request' : ' said not now to your friend request'), ok ? 'You are friends now' : 'Open ballpit.party to see'], 'ans-' + p.pub); };   // the one who asked sees the answer now, or the next time they are on
         if (m.t === 'tden') { tell(0); return; }
         if (linkSet(p.pub).size >= MAX_LINKS || linkSet(m.to).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, why: 'full' });
         addLink(p.pub, m.to);
@@ -487,6 +632,8 @@ wss.on('connection', (ws, req) => {
       if (!pushSubs.has(p.pub) && pushSubs.size >= 8000) return;
       const pr = m.prefs && typeof m.prefs === 'object' ? m.prefs : {};
       pushSubs.set(p.pub, { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 12) : [], t: Date.now() }); linksDirty = true;
+    } else if (m.t === 'vis') {   // this page is in the background (or back): while it is, the server sends notifications as pushes
+      p.hidden = m.h ? 1 : 0;
     } else if (m.t === 'punsub') {
       if (p.pub && pushSubs.delete(p.pub)) linksDirty = true;
     } else if (m.t === 'rack') {   // your device has shown you the answers it was sent
@@ -594,6 +741,7 @@ setInterval(() => {
     for (const p of list) p.moved = false;
   }
 }, TICK_MS);
+setInterval(() => { try { simTick(); } catch (e) { console.log('sim error', e && e.stack); } }, TICK_MS);
 
 // "N online / record" counter
 setInterval(() => {
@@ -613,7 +761,7 @@ setInterval(() => {
   console.log('New session / map:', maps.names[curSlot % maps.count]);
   for (const room of rooms.values()) {
     if (room.priv) continue;
-    room.build = null;
+    room.build = null; room.world = null;
     room.finishers = [];
     for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); }
     broadcast(room, { t: 'newmap', slot: curSlot, next: nextAt(curSlot), now: Date.now() });

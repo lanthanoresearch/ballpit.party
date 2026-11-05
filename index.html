@@ -4,15 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#14111c">
-<meta name="ballpit-mode" content="__MODE__">
-<script>/* app mode: in a browser tab the game does not start, the visitor is sent to the install page. Inside the installed app (or on a site set to "web") it carries on as usual. */
-(function(){try{
-  var m=(document.querySelector('meta[name="ballpit-mode"]')||{}).content;
-  if(m==='web'||location.protocol==='file:'||/[?&]test=/.test(location.search))return;
-  var st=false;try{st=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: minimal-ui)').matches||matchMedia('(display-mode: window-controls-overlay)').matches||navigator.standalone===true||/^android-app:/.test(document.referrer);}catch(e){}
-  if(st)return;
-  window.__ballStop=1;location.replace('install.html');
-}catch(e){}})();</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://ballpit-party.onrender.com" crossorigin>
 <script>/* the very first thing the page does: nudge the game server awake (a tiny request), so by the time the menu is up it is already answering */
@@ -423,7 +414,8 @@
   #emoGrid button{height:auto;aspect-ratio:1;padding:6px;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;display:flex;align-items:center;justify-content:center}
   #emoGrid button:active{transform:scale(.92)}#emoGrid button.cool{opacity:.45}
   #emoGrid svg{width:100%;height:100%}
-  .epcard{max-height:92vh;overflow:auto}
+  .epcard{max-height:96vh;overflow:hidden}
+  @media (max-height:700px) and (max-aspect-ratio:1/1){.epcard{padding:10px 12px}#emoGrid{gap:5px;margin:4px 0 8px}#emoGrid button{aspect-ratio:auto;height:38px;padding:3px}#phraseGrid{gap:4px;margin:0 0 6px}#phraseGrid button{padding:6px 2px;font-size:12px}#sayBuild{gap:4px;margin:0 0 6px}#sayBuild select{padding:6px 8px;font-size:14px}.epcard .cfoot{gap:2px}}
   .shopcard{width:min(420px,100%);max-height:92vh;overflow:auto;text-align:center}
   #shopWallet{display:flex;gap:16px;justify-content:center;align-items:center;font-size:18px;margin:2px 0 10px}
   #shopWallet span{display:inline-flex;align-items:center;gap:6px}#shopWallet .ic{width:22px;height:22px}
@@ -447,7 +439,7 @@
     .shopcard{width:min(720px,100%);padding:10px 14px}.shopcard h3{margin:0 0 2px;font-size:19px}#shopWallet{margin:0 0 6px;font-size:16px}
     #shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.shopitem{padding:5px 8px}.shopitem .sico{width:32px;height:32px}.shopitem .sinfo b{font-size:15px}.shopitem .sinfo small{display:none}.shopitem button{min-width:70px;padding:4px 6px}.shopcard .small{margin:0 0 4px;font-size:12px}.shopcard .cfoot{margin-top:2px}.shopcard .cfoot button{padding:5px 18px}
     .epcard{width:min(680px,100%);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start;padding:10px 14px}.epcard h3,.epcard .cfoot{grid-column:1/-1;margin:0 0 4px}
-    #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:5px;margin:4px 0}#phraseGrid button{padding:6px 2px;font-size:13px}
+    #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:4px;margin:4px 0;align-content:start}#phraseGrid button{padding:6px 2px;font-size:12px}#sayBuild{gap:4px;margin:2px 0}#sayBuild select{padding:5px 6px;font-size:13px}#sayBuild .small{display:none}
     #shopKeep{padding:1px 8px;margin:0 0 4px}#shopKeep small{display:none}#shopKeep b{font-size:14px;font-weight:normal}#shopList{grid-template-columns:repeat(5,1fr)}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
     #emoGrid button{aspect-ratio:auto;height:36px;padding:3px}.epcard{padding:8px 12px}.epcard h3{font-size:19px}#phraseGrid button{padding:4px 2px}
     .profcard{padding:8px 14px}.profcard .phead{gap:10px}.profcard .pbeat{padding:5px 10px}
@@ -537,8 +529,11 @@
   @media (max-height:520px) and (min-aspect-ratio:1/1){#settings.only{grid-template-columns:minmax(0,1fr)!important;width:min(560px,calc(100vw - 20px))!important}#settings.only .sbody{grid-column:1!important;grid-row:2!important}}
 .btnrow{display:flex;gap:8px;margin:8px 0}.btnrow .btn{flex:1}.btnrow .btn+.btn{flex:none}
   #editbar{touch-action:none}#editbar input[type=range]{touch-action:none;height:28px}
-  #phraseGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
-  #phraseGrid button{padding:9px 4px;font-size:14px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
+  #phraseGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 10px}
+  #sayBuild{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;text-align:left}#sayBuild .small{margin:0}
+  #sayBuild select{width:100%;min-width:0;padding:9px 8px;font:inherit;font-size:15px;color:inherit;background:#2c2644;border:2px solid var(--line);border-radius:var(--wob)}
+  .sayrow{display:flex;gap:6px}.sayrow select{flex:1}.sayrow .chip{flex:0 0 auto;padding:0 16px;font-weight:700}#saySend{background:var(--accent);color:#1a1020;border:2px solid #16100c;opacity:1}
+  #phraseGrid button{padding:8px 2px;font-size:13px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
   #phraseGrid button:active,#phraseGrid button:hover{background:#3a3355}#phraseGrid button:active{transform:scale(.95)}
   #emoPop,#shopPop{z-index:11;background:rgba(10,8,16,.55)}
   #emoPop .cfoot{display:flex;flex-direction:column;gap:6px;align-items:center}
@@ -584,7 +579,7 @@
     #pause .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}#pause .pcard h3{grid-column:1/-1;font-size:22px}#pause .pcard #pauseSub,#pause .pcard #pResume,#pause .pcard #pHome{grid-column:1/-1}#pause .pcard .pbtn{padding:7px;font-size:17px;gap:6px}#pause .pcard #pResume{font-size:20px}#pause .pcard #pauseSub{margin:-2px 0}
   }
   @media (max-height:340px) and (min-aspect-ratio:1/1){
-    #emoGrid button{height:30px;padding:1px}#emoGrid{gap:3px;margin:2px 0}#phraseGrid{gap:3px;margin:2px 0}#phraseGrid button{padding:2px 2px}.epcard{padding:6px 12px;column-gap:10px}.epcard h3{font-size:17px;margin:0 0 2px}
+    #emoGrid button{height:26px;padding:1px}#emoGrid{gap:3px;margin:2px 0}#phraseGrid{gap:3px;margin:2px 0}#phraseGrid button{padding:1px 2px;font-size:11px}#sayBuild select{padding:2px 4px;font-size:12px}.sayrow .chip{padding:0 10px}.epcard{padding:6px 12px;column-gap:10px}.epcard h3{font-size:17px;margin:0 0 2px}
     .profcard{padding:6px 12px}.profcard .phead{gap:8px}.profcard .pbeat{padding:3px 8px}.profcard h3,.profcard .small{margin-top:0;margin-bottom:2px}
   }
   .shopcard{display:flex;flex-direction:column;overflow:hidden}.shopcard #shopList{overflow-y:auto;min-height:0;flex:1 1 auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.shopcard h3,.shopcard #shopWallet,.shopcard .small,.shopcard .cfoot{flex:none}
@@ -822,7 +817,8 @@
 </div></div>
 <div id="emoPop" class="overlay hide"><div class="card epcard">
   <div class="chead"><h3>Say something</h3><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
-  <div id="emoGrid"></div>
+  <div class="epl"><div id="emoGrid"></div>
+  <div id="sayBuild"><div class="small dim">Build a message</div><select id="sayTpl" aria-label="Message"></select><div class="sayrow"><select id="sayArg" aria-label="Choose"></select><button id="saySend" class="chip pri" type="button">Send</button></div></div></div>
   <div id="phraseGrid"></div>
   <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim">Everyone in your world sees it.</span></div>
 </div></div>
@@ -953,6 +949,7 @@
         <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Friend requests</b><small>Someone asks you, or answers you</small></span></span><input type="checkbox" id="setNRequests"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="share"></span><span><b>Game invites</b><small>A friend invites you to their private game</small></span></span><input type="checkbox" id="setNInvites"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>New map</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
+        <button class="btn full" id="ntTest" type="button"><span data-ic="bell"></span>Send a test notification</button>
       </div>
     </section>
     <section class="pane" data-pane="bots">
@@ -968,7 +965,7 @@
       <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small>The how-to-play card</small></span></span><input type="checkbox" id="setIntro"><i></i></label>
       <button class="btn full" id="btnRefresh"><span data-ic="reset"></span>Refresh the game</button>
       <button class="btn full" id="btnWelcome"><span data-ic="help"></span>How to play</button>
-      <button class="btn full hide" id="btnInstall"><span data-ic="install"></span>Install as an app</button>
+      <button class="btn full hide" id="btnInstall"><span data-ic="install"></span>Install the app</button>
       <div class="danger"><h4><span data-ic="warn"></span>Reset zone</h4>
         <div class="small">Puts every setting back the way it was on your first visit (name, colours, controls, zoom, everything).</div>
         <button class="btn red full" id="btnReset"><span data-ic="reset"></span>Reset all settings</button></div>
@@ -990,6 +987,7 @@
       <button id="homeLvl" class="btn lvrow" type="button"></button>
       <button id="homePlay" class="hplay" type="button">Play</button>
       <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
+      <div class="hbtns"><button class="btn hide" id="homeInstall" type="button"><span data-ic="install"></span>Install the app</button></div>
     </div>
     <div class="small dim" id="homeOnline"></div>
   </div>
@@ -1128,13 +1126,13 @@
   };
   if (!ok) window.__ballFail('browser is missing a basic feature (canvas / typed arrays)');
   window.onerror = function (msg, src, line) {
-    if (!window.__ballOk && !window.__ballStop) window.__ballFail(String(msg) + (src ? ' (' + String(src).split('/').pop() + ':' + line + ')' : '') + '. If this mentions maps.js or physics.js, those files are out of date: upload all five files together.');
+    if (!window.__ballOk) window.__ballFail(String(msg) + (src ? ' (' + String(src).split('/').pop() + ':' + line + ')' : '') + '. If this mentions maps.js or physics.js, those files are out of date: upload all five files together.');
   };
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=90"></script>
-<script src="physics.js?v=90"></script>
+<script src="maps.js?v=95"></script>
+<script src="physics.js?v=95"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1146,7 +1144,6 @@
 <script>
 (function () {
 'use strict';
-if (window.__ballStop) return;
 const TS = BallMaps.TS, R = BallMaps.R, P = BallPhysics, STEP = 1 / 120, SLOT_MS = 3 * 3600 * 1000;
 const THEMES = BallMaps.themes;
 const $ = id => document.getElementById(id);
@@ -1707,7 +1704,6 @@ function respawn(quiet, useCp) {
   // a flag works for one fall or reset: it brings you back once, then goes grey until you touch a different flag
   const cs = cp ? cpSpot(cp) : null;
   S.b = cp ? P.newBody(cs[0], cs[1]) : P.newBody(m.start[0], m.start[1]);   // the community spawn point is exactly the same for everyone
-  const rp = !cp && resumePos && appKeep() ? takeResume() : null; if (rp) { S.b.x = rp.x; S.b.y = rp.y; S.b.vx = rp.vx || 0; S.b.vy = rp.vy || 0; quiet = true; }   // (back in the app: where you were)
   if (cp) { S.cpFlash = 1; notice('Back at your checkpoint', ''); }
   if (cp) { S.cpUsed = S.cpArmed; S.cpArmed = -1; }   // a flag works once: after you come back to it, it goes grey until you touch a different one
   S.dead = 0; S.spawnT = 0.6; S.finished = false; S.bLatch = 0; S.bReady = false;
@@ -1814,6 +1810,7 @@ function update(dt) {
   const w = S.world;
   w.focus.x = S.b.x; w.focus.y = S.b.y;
   botsTick(dt);
+  followWorld(dt);
   P.stepDyn(w, dt);
   if (w.drops && w.drops.length) stepDrops(w, dt);
   if (S.spawnT > 0) S.spawnT -= dt;
@@ -1831,7 +1828,8 @@ function update(dt) {
   b.noJm = !settings.powerJump;   // only you have the jump meter (and only if power jump is switched on)
   b.sjSep = !!settings.superBtn;   // a separate power-jump button: the normal jump never uses the full meter
   const ev = P.step(b, w, ax, jheld, dt);
-  P.stepSwitches(w, b);
+  P.stepSwitches(w, b, dt);
+  if (w.follow) syncDoors();
   if (w.ev.length) worldEvents();
   collectCoins(); touchFlags();
   if (ev.boosted) { sfx('boost'); S.bLatch = 0; ring(b.x, b.y, '#ffd23d', 8, 70, 0.4); burst(b.x - b.bdir * R, b.y, ['#ffd23d', '#fff', '#ff8a3d'], 14, 260, 0); S.shake = Math.max(S.shake || 0, 0.12); }
@@ -1916,11 +1914,45 @@ function collectCoins() {
     burst(c[0], c[1], c[2] === 2 ? ['#7af0ff', '#fff', '#c58bff'] : ['#ffd23d', '#fff3a0'], c[2] ? 14 : 6, c[2] ? 220 : 120, 40);
   }
 }
+/* ---------- one world for everybody: the server works out where every crate, ball, plank and gate is, and this device shows exactly that ---------- */
+const followOn = () => !!(S.world && online && ws && ws.readyState === 1 && shared() && S.slot >= 0 && S.slot < SOLO_BASE + 1e6);
+function followWorld(dt) {
+  const w = S.world, fol = followOn(); if (w.follow !== fol) { w.follow = fol; if (!fol) { for (const d of w.dyn) { d.mineT = 0; d.sleep = false; } } }
+  if (!fol) return;
+  const t = performance.now();
+  for (let i = 0; i < w.dyn.length; i++) {
+    const d = w.dyn[i], s = d.sv; if (!s) continue;
+    if (s.burn) { if (!(d.burn >= 1e9)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } continue; }
+    if (d.burn >= 1e9) { d.burn = 0; d.x = s.x; d.y = s.y; d.vx = s.vx; d.vy = s.vy; d.rot = s.rot; d.mineT = 0; d.nap = false; d.rest = 0; continue; }
+    const age = Math.min(0.1, (t - s.t) / 1000), tx = s.x + s.vx * age, ty = s.y + s.vy * age, ex = tx - d.x, ey = ty - d.y, mine = d.mineT > 0;
+    if (Math.abs(ex) + Math.abs(ey) > 240) { d.x = tx; d.y = ty; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.mineT = 0; d.tip = null; continue; }
+    if (d.hold > 0) d.hold -= dt;
+    if (mine && Math.abs(ex) + Math.abs(ey) > 4 && S.b && Math.abs(S.b.vx) < 30 && Math.abs(S.b.vy) < 60) { d.errT = (d.errT || 0) + dt; if (d.errT > 0.35) { d.mineT = 0; d.hold = 0.6; d.errT = 0; } } else d.errT = 0;   // you are not pushing it, yet it still disagrees with the server's: take the server's
+    const k = 1 - Math.exp(-(mine && d.mineT > 0 ? 5 : 26) * dt);
+    d.x += ex * k; d.y += ey * k; d.rot += (s.rot - d.rot) * k;
+    if (!mine) { d.vx = s.vx; d.vy = s.vy; d.tip = null; d.nap = false; d.spin = false; d.av = 0; }
+  }
+}
+function syncDoors() {   // gates open at once for you (when you step on a trigger), and shut when the server says nobody is holding them
+  const w = S.world, m = w.srvDoors; if (!m) return;
+  for (let i = 0; i < w.doors.length; i++) {
+    const d = w.doors[i], f = m.get(d.uid); if (f === undefined) continue;
+    if (f & 2) d.latched = true; else if (Date.now() - (d.predT || 0) > 1200) d.latched = false;   // (what the server says; your own button press is believed for a moment, until it has been told)
+    if ((f & 1) && !d.open) { P.setDoorTiles(w, d, true); w.ev.push({ k: 'door', open: true, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
+    else if (!(f & 1) && d.open && Date.now() - (d.predT || 0) > 700 && !P.doorBlocked(w, d, S.b)) { P.setDoorTiles(w, d, false); w.ev.push({ k: 'door', open: false, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
+  }
+}
+function applyDoors(m) {
+  const w = S.world; if (!w || !Array.isArray(m.d)) return;
+  w.srvDoors = new Map(); for (let i = 0; i + 1 < m.d.length; i += 2) w.srvDoors.set(m.d[i], m.d[i + 1]);
+  { const bs = new Set(m.b || []); w.btns.forEach((q, i) => { if (bs.has(i)) { if (!q.on) { q.on = true; q.t = 1; } } else if (q.on && Date.now() - (q.pT || 0) > 1200) q.on = false; }); }
+  const on = new Set(m.p || []); w.plates.forEach(q => { q.srvOn = on.has(P.hash32('l' + q.x + ',' + q.y)); });
+}
 function worldEvents() {
   const w = S.world, L = w.ev;
   for (let i = 0; i < L.length; i++) {
     const e = L[i];
-    if (e.k === 'door') { sfx(e.open ? 'door' : 'doorClose'); ring(e.x, e.y, '#ffd23d', 8, 70, 0.6); if (e.open) burst(e.x, e.y, ['#ffd23d', '#fff'], 16, 180, 80); S.shake = Math.max(S.shake, 0.15); wDirty = true; }
+    if (e.k === 'door') { wDirty = true; if (S.b && Math.abs(e.x - S.b.x) < 1100 && Math.abs(e.y - S.b.y) < 800) { sfx(e.open ? 'door' : 'doorClose'); ring(e.x, e.y, '#ffd23d', 8, 70, 0.6); if (e.open) burst(e.x, e.y, ['#ffd23d', '#fff'], 16, 180, 80); S.shake = Math.max(S.shake, 0.15); } }
     else if (e.k === 'plate') { sfx('plate'); ring(e.x, e.y, e.on ? '#58d68d' : '#999', 4, 36, 0.3); }
     else if (e.k === 'portal') { sfx('portal'); ring(e.x, e.y, '#ffd23d', 6, 50, 0.4); ring(e.x2, e.y2, '#3da5ff', 6, 50, 0.4); burst(e.x2, e.y2 - 6, ['#3da5ff', '#fff', '#ffd23d'], 12, 200, 60); }
     else if (e.k === 'pad') { sfx('boost'); ring(e.x, e.y, '#ffd23d', 5, 46, 0.35); }
@@ -1976,13 +2008,13 @@ function addMisc(w, q, anim) {   // ['see', column, ground row, 0]: a teeter-tot
   if (q[0] === 'bnc' || q[0] === 'spr') { const n = q[0] === 'spr' ? 1 : 2; if (anim && q[2] - q[3] > 1) (w.drops = w.drops || []).push({ tx: q[1], r: q[2], y: q[3] * TS, v: 0, n }); else setBouncePad(w, q[1], q[2], n); }
   else if (q[0] === 'tl') { if (q[3] === -1) restoreTile(w, q[1], q[2], anim); else setTerrain(w, q[1], q[2], q[3], anim); }
   else if (q[0] === 'lav') { { const i = q[2] * w.W + q[1]; if (q[2] < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 2; } if (anim) { burst((q[1] + 0.5) * TS, q[2] * TS - 6, ['#ff4d2e', '#ff8a3d', '#ffd23d'], 16, 200, 160); ring((q[1] + 0.5) * TS, q[2] * TS, '#ff8a3d', 5, 50, 0.4); sfx('lava'); } }
-  else if (q[0] === 'see') w.see.push({ cx: (q[1] + 1) * TS, cy: q[2] * TS - 46, hl: 3 * TS, tilt: 0, ang: 0, av: 0, tq: 0 });
+  else if (q[0] === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: 3 * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
   else if (q[0] === 'por') P.addPortal(w, q);
   else P.addPad(w, [q[1], q[2], q[3]]);
 }
 const validGate = q => Array.isArray(q) && q.length >= 5 && q.slice(0, 5).every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 && !startTile(q[0], q[1]) && !startTile(q[3], q[4]);
 function addGate(w, q, quiet) {   // q = [column, top row, height in tiles, trigger column, trigger row]: a gate (shut), and a 2-wide trigger plate that holds it open while something is on it
-  const id = w.doors.length, d = { id, x: q[0], y: q[1], w: 1, h: q[2], open: false, latched: false };
+  const id = w.doors.length, d = { id, uid: P.hash32('g' + q.slice(0, 5).join(',')), x: q[0], y: q[1], w: 1, h: q[2], open: false, latched: false };
   w.doors.push(d); P.setDoorTiles(w, d, false);
   const pl = { x: q[3], y: q[4], w: 2, to: [id], on: false };
   if (!quiet) pl.fall = { y: (q[5] !== undefined ? q[5] : q[4] * TS - 80), v: 0 };   // (a trigger placed over nothing falls and then stays where it lands)
@@ -2062,19 +2094,13 @@ function restoreWorld(slot) {
     S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; purseP.c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
   } catch (e) {}
 }
-setInterval(() => { if (S.mode === 'play' && !S.away) { saveWorld(); savePos(); } }, 4000);
+setInterval(() => { if (S.mode === 'play' && !S.away) saveWorld(); }, 4000);
 addEventListener('beforeunload', () => saveWorld(true));
 addEventListener('pagehide', () => saveWorld(true)); document.addEventListener('visibilitychange', () => { if (document.hidden) saveWorld(true); });   // (whatever way you leave, the world is kept exactly as it is)
 
 /* leaving the screen = you are gone; coming back = fresh start at the spawn */
-/* the installed app keeps you exactly where you are: leaving the screen pauses you, it never kills or resets you, and a closed app puts you back where you were (same map, within 30 minutes) */
-const appKeep = () => { try { return (window.__appForce || ['standalone', 'fullscreen', 'minimal-ui', 'window-controls-overlay'].some(m => matchMedia('(display-mode: ' + m + ')').matches) || navigator.standalone === true) && (!/[?&]test=/.test(location.search) || !!window.__appForce); } catch (e) { return false; } };
-const POSKEY = 'ballpit-pos';
-let resumePos = null; try { resumePos = JSON.parse(localStorage.getItem(POSKEY) || 'null'); } catch (e) {}
-function savePos() { if (!appKeep() || !S.b || S.mode !== 'play' || S.slot < 0 || S.dead > 0 || S.finished) return; try { localStorage.setItem(POSKEY, JSON.stringify({ slot: S.slot, idx: S.idx | 0, x: S.b.x, y: S.b.y, vx: S.b.vx, vy: S.b.vy, t: Date.now() })); } catch (e) {} }
-function takeResume() { const r = resumePos; resumePos = null; return r && Date.now() - r.t < 1800000 && r.slot === S.slot && (r.idx | 0) === (S.idx | 0) && isFinite(r.x) && isFinite(r.y) ? r : null; }
-function goAway() { if (S.away || S.mode !== 'play') return; S.away = true; savePos(); saveWorld(true); windSet(0); sendPos(true); }
-function comeBack() { if (!S.away) return; if (appKeep()) { S.away = false; S.spawnT = Math.max(S.spawnT, 0.3); sendPos(true); return; } S.away = false; S.finished = false; S.started = false; $('finishbanner').classList.add('hide'); bots.length = 0; respawn(); sendPos(true); }
+function goAway() { if (S.away || S.mode !== 'play') return; S.away = true; saveWorld(true); windSet(0); sendPos(true); }
+function comeBack() { if (!S.away) return; S.away = false; S.finished = false; S.started = false; $('finishbanner').classList.add('hide'); bots.length = 0; respawn(); sendPos(true); }
 document.addEventListener('visibilitychange', () => { inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; if (document.hidden) goAway(); else comeBack(); });
 addEventListener('pagehide', goAway);
 addEventListener('pageshow', () => { if (!document.hidden) comeBack(); });
@@ -2798,12 +2824,21 @@ $('keyReset').onclick = () => { settings.keys = defKeys(); keysDown.clear(); syn
 // little click sounds for buttons
 document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('button'); if (t && !t.id.startsWith('t') && t.id !== 'cfYes') sfx('ui'); });
 // install as an app
-let installEv = null;
 const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
-addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; if (!isStandalone()) $('btnInstall').classList.remove('hide'); });
-addEventListener('appinstalled', () => { installEv = null; $('btnInstall').classList.add('hide'); });
-if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !isStandalone()) $('btnInstall').classList.remove('hide');
-$('btnInstall').onclick = () => { if (installEv) { installEv.prompt(); installEv = null; $('btnInstall').classList.add('hide'); } else askConfirm('Install ballpit.party', 'On iPhone and iPad: tap the Share button, then "Add to Home Screen". On other browsers, open the browser menu and choose "Install app" or "Add to Home screen".', 'Got it', () => {}, { no: 'Close', yesClass: 'go' }); };
+// Install the game as an app (it stays a web app, so it is always the newest version). Chrome and Edge install it with one tap; iPhone/iPad and Mac Safari use the Share / File menu.
+let installEv = null;
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const isMacSafari = /Macintosh/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Edg|OPR|Firefox/.test(navigator.userAgent) && !isIos;
+const installable = () => !isStandalone() && (!!installEv || isIos || isMacSafari);
+const showInstall = () => { const v = installable(); $('btnInstall').classList.toggle('hide', !v); $('homeInstall').classList.toggle('hide', !v); };
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; showInstall(); });
+addEventListener('appinstalled', () => { installEv = null; showInstall(); });
+const doInstall = () => {
+  if (installEv) { const ev = installEv; installEv = null; showInstall(); ev.prompt(); ev.userChoice.then(() => {}, () => {}); return; }
+  askConfirm('Install ballpit.party', isIos ? 'Tap the Share button, then "Add to Home Screen".' : 'In the menu bar choose File, then "Add to Dock".', 'Got it', () => {}, { no: 'Close', yesClass: 'go' });
+};
+$('btnInstall').onclick = doInstall; $('homeInstall').onclick = doInstall;
+showInstall();
 $('setFs').onchange = () => setFullscreen($('setFs').checked);
 $('setZoom').oninput = () => setZoom(+$('setZoom').value);
 $('zOut').onclick = () => setZoom(settings.zoom - 0.1);
@@ -2931,7 +2966,7 @@ function linkMsg(m) {
         if (o.on) e.on = 1; else { e.on = 0; e.x = null; }
       }
       for (const e of lks) if (!seen.has(e.pub)) { e.ok = false; e.on = 0; e.x = null; }
-      linksReady = true; saveLinks(); lpRender(); pushSyncSoon(); return true;
+      linksReady = true; saveLinks(); lpRender(); pushSyncSoon(); if (document.hidden) sendVis(); return true;
     }
     case 'treq':
       if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, code: m.code || '', name: String(m.name || '').slice(0, 12), color: HEX.test(m.color) ? m.color : '#ccc', color2: m.color2, pat: m.pat | 0 });
@@ -2970,6 +3005,13 @@ function linkMsg(m) {
       addFeedEmo(who(m.name), m.i | 0, e ? 'friend' : '');
       return true;
     }
+    case 'say': {
+      const o = others.get(m.id), e = lkOf(m.pub), txt = sayText(m.a, m.b);
+      if (chatMuted || muteOf(m.pub) >= 2 || txt === null) return true;
+      if (o) o.emo = { i: -1, txt, t: S.t };
+      addFeedEmo(who(m.name), -1, e ? 'friend' : '', txt);
+      return true;
+    }
     case 'found': lpFound = m.list || []; if (!m.q) { for (const f of lpFound) noteSeen(f.pub, f.name, f.color, f.code, f.last, f.b, f.color2, f.pat); saveSeen(); } lpRender(); return true;
     case 'name': nameServer(m.name, m.left | 0, !!m.denied); return true;
   }
@@ -3005,7 +3047,17 @@ function dotFor(o, fr) {   /* where to draw somebody on the maps: a friend with 
   const e = o.pub && fr.get(o.pub); if (e) return e.big ? null : { x: e.sx == null ? e.x : e.sx, y: e.sy == null ? e.y : e.sy };
   return opos(o);
 }
-const liveLinks = () => lks.filter(l => l.ok && l.on && l.x != null && !l.dead && performance.now() - l.t < 3500);
+const liveLinks = () => {   /* friends you can place right now: from the friend feed, and if that is quiet (or the server has forgotten the friendship) from where this world shows them. They are marked either way. */
+  const now = performance.now(), out = [];
+  for (const l of lks) {
+    if (l.ok && l.on && l.x != null && !l.dead && now - l.t < 3500) { out.push(l); continue; }
+    let o = null; others.forEach(q => { if (!o && q.pub === l.pub && !q.dead) o = q; });
+    const p = o && opos(o); if (!p) continue;
+    l.x = p.x; l.y = p.y; l.vx = l.vy = 0; l.dead = false; if (l.sx == null) { l.sx = p.x; l.sy = p.y; }   /* (l.t stays as it was: it only says when the friend feed last spoke) */
+    out.push(l);
+  }
+  return out;
+};
 
 /* ----- on the game screen: an arrow at the edge pointing to each person, a name tag above them when they are on screen ----- */
 function drawPerson(g, x, y, r, col) {   // a little round badge with a person in it
@@ -3015,7 +3067,7 @@ function drawPerson(g, x, y, r, col) {   // a little round badge with a person i
 }
 function pinShown(pub) {   // true while a tracked friend wears the big pin on screen (so the little name tag is not drawn as well)
   if (!pub) return false;
-  const e = lkOf(pub); if (!e || !e.arrow || !e.ok || !e.on || e.x == null || e.dead || performance.now() - e.t >= 3500 || !S.view) return false;
+  const e = lkOf(pub); if (!e || !e.arrow || !S.view || !liveLinks().includes(e)) return false;
   const v = S.view, dx = e.sx - (v.l + v.w / 2), dy = e.sy - (v.t + v.h / 2);
   return Math.abs(dx) < v.w / 2 - 20 && Math.abs(dy) < v.h / 2 - 20;
 }
@@ -3023,7 +3075,8 @@ function trackFollow(e) {   // keeps the pin glued to the friend: their drawn ba
   const now = performance.now(), dt = clamp((now - (e.f || now)) / 1000, 0, 0.1); e.f = now;
   let o = null; others.forEach(q => { if (!o && q.pub === e.pub && q.seen && !q.dead) o = q; });
   if (o) { e.sx = o.cx; e.sy = o.cy; return; }
-  const a = clamp((now - e.t) / 1000, 0, 0.5), tx = e.x + (e.vx || 0) * a, ty = e.y + (e.vy || 0) * a, k = 1 - Math.exp(-dt / 0.06);
+  const a = e.t ? clamp((now - e.t) / 1000, 0, 0.5) : 0, tx = e.x + (e.vx || 0) * a, ty = e.y + (e.vy || 0) * a, k = 1 - Math.exp(-dt / 0.06);
+  if (!isFinite(e.sx) || !isFinite(e.sy)) { e.sx = tx; e.sy = ty; }
   if (Math.abs(tx - e.sx) > 600 || Math.abs(ty - e.sy) > 600) { e.sx = tx; e.sy = ty; } else { e.sx += (tx - e.sx) * k; e.sy += (ty - e.sy) * k; }
 }
 function drawTrack(camL, camT, vw, vh, sc) {
@@ -3092,13 +3145,29 @@ const EMO = [
 const emoSvg = i => '<svg class="emo" viewBox="0 0 32 32" aria-label="' + EMO[i].n + '"><circle cx="16" cy="16" r="14" fill="' + EMO[i].bg + '" stroke="#16100c" stroke-width="2"/>' +
   EMO[i].op.map(o => o[0] === 'f' ? '<path d="' + o[1] + '" fill="' + o[2] + '"/>' : '<path d="' + o[1] + '" fill="none" stroke="' + o[2] + '" stroke-width="' + o[3] + '" stroke-linecap="round" stroke-linejoin="round"/>').join('') + '</svg>';
 const emoPaths = EMO.map(e => e.op.map(o => new Path2D(o[1])));
-const PHRASES = ['Follow me', 'This way', 'Here', 'Okay', 'Yes', 'No', 'Thanks', 'Wait for me', 'Nice one!', 'Help!', 'Careful!', 'Good luck', 'Hi!', 'Goodbye!'];   // ready-made messages: sent by number (after the emojis), so nothing else can ever be typed into the game
+const PHRASES = ['Hi!', 'Bye!', 'Yes', 'No', 'Thanks', 'Sorry', 'Wow!', 'Great!', 'Nice one!', 'Good luck', 'Follow me', 'This way', 'Wait for me', 'Help!', 'Careful!', 'Okay', 'Here', "Let's go", 'Well done', 'Oops!'];   // ready-made messages: sent by number (after the emojis), so nothing else can ever be typed into the game
 const CHATN = EMO.length + PHRASES.length, isPhrase = i => i >= EMO.length;
+/* messages built from a sentence and a pick-list: sent as two small numbers (which sentence, which pick), so there is still no typing, yet you can say a lot */
+const SAY_LISTS = {
+  item: ['dirt', 'water', 'lava', 'ice', 'rock', 'crates', 'balls', 'gates', 'flags', 'springs', 'boosters', 'teeter-totters', 'portals', 'coins', 'diamonds'],
+  act: ['help me', 'wait for me', 'follow me', 'go first', 'hold the button', 'open the gate', 'push the crate', 'build a bridge', 'add dirt', 'add water', 'dig here', 'place a flag'],
+  haz: ['lava', 'water', 'ice', 'the edge', 'the gap', 'that gate', 'that crate', 'that ball'],
+  dir: ['left', 'right', 'up', 'down', 'back', 'forward'],
+  place: ['here', 'the start', 'the finish', 'the top', 'the bottom', 'the gate', 'the button', 'a checkpoint', 'the teeter-totter'],
+  thing: ['help', 'dirt', 'water', 'the bridge', 'the gate', 'the flag', 'the ride', 'the spring']
+};
+const SAY = [
+  { t: 'Can you {}?', l: 'act', menu: 'Can you …?' }, { t: 'I need {}', l: 'item', menu: 'I need …' }, { t: 'No more {}!', l: 'item', menu: 'No more …' },
+  { t: 'More {}, please', l: 'item', menu: 'More …, please' }, { t: 'Watch out for {}', l: 'haz', menu: 'Watch out for …' }, { t: 'Go {}', l: 'dir', menu: 'Go …' },
+  { t: 'Meet at {}', l: 'place', menu: 'Meet at …' }, { t: 'Where is {}?', l: 'place', menu: 'Where is …?' }, { t: 'Thanks for {}', l: 'thing', menu: 'Thanks for …' },
+  { t: 'I will use {}', l: 'item', menu: 'I will use …' }, { t: 'Look at {}', l: 'place', menu: 'Look at …' }
+];
+const sayText = (a, b) => { const q = SAY[a | 0]; if (!q) return null; const v = SAY_LISTS[q.l][b | 0]; return v === undefined ? null : q.t.replace('{}', v); };
 function drawEmoBubble(em, x, y) {   // a speech bubble with the emoji, floating above a ball for a few seconds
   const age = S.t - em.t; if (age > 3.2 || age < 0) return;
   const a = Math.min(1, age * 6, (3.2 - age) * 2), rise = Math.min(1, age * 5) * 8, s = 34;
-  if (isPhrase(em.i)) {   // a ready-made phrase: the same bubble, stretched to fit the words
-    const txt = PHRASES[em.i - EMO.length]; if (txt === undefined) return;
+  if (em.txt || isPhrase(em.i)) {   // a ready-made phrase: the same bubble, stretched to fit the words
+    const txt = em.txt || PHRASES[em.i - EMO.length]; if (txt === undefined) return;
     ctx.save(); ctx.translate(x, y - rise); ctx.globalAlpha = a;
     ctx.font = '600 15px ' + FONT; const w = Math.ceil(ctx.measureText(txt).width) + 22, h = 28;
     ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
@@ -3114,9 +3183,10 @@ function drawEmoBubble(em, x, y) {   // a speech bubble with the emoji, floating
   e.op.forEach((o, k) => { const p = emoPaths[em.i][k]; if (o[0] === 'f') { ctx.fillStyle = o[2]; ctx.fill(p); } else { ctx.strokeStyle = o[2]; ctx.lineWidth = o[3]; ctx.lineCap = 'round'; ctx.stroke(p); } });
   ctx.restore();
 }
-function addFeedEmo(name, i, cls) {   // "Name" + the emoji, in the same list as joined / left
+function addFeedEmo(name, i, cls, txt) {   // "Name" + the emoji, in the same list as joined / left
   const d = document.createElement('div'); d.className = 'msg ' + (cls || ''); { const ic = nameIcon('human'); if (ic) d.appendChild(ic); }
-  if (isPhrase(i)) d.appendChild(document.createTextNode(name + ': ' + (PHRASES[i - EMO.length] || '')));
+  if (txt) d.appendChild(document.createTextNode(name + ': ' + txt));
+  else if (isPhrase(i)) d.appendChild(document.createTextNode(name + ': ' + (PHRASES[i - EMO.length] || '')));
   else { d.appendChild(document.createTextNode(name)); const sp = document.createElement('span'); sp.innerHTML = emoSvg(i); d.appendChild(sp.firstChild); }
   const f = $('feed'); f.appendChild(d); while (f.children.length > 6) f.removeChild(f.firstChild);
   setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 600); }, 7000);
@@ -3131,6 +3201,18 @@ function sendEmo(i) {
 }
 const eg = $('emoGrid');
 EMO.forEach((e, i) => { const b = document.createElement('button'); b.title = e.n; b.innerHTML = emoSvg(i); b.onclick = () => sendEmo(i); eg.appendChild(b); });
+function sendSay(a, b) {
+  const txt = sayText(a, b); if (txt === null) return;
+  if (performance.now() < emoCool || (!online && !inSolo())) return;
+  emoCool = performance.now() + 1000; wsSend({ t: 'say', a, b });
+  S.myEmo = { i: -1, txt, t: S.t }; addFeedEmo('You', -1, '', txt); sfx('ui'); toggleChat(false);
+}
+{
+  const st = $('sayTpl'), sa = $('sayArg');
+  SAY.forEach((q, k) => { const o = document.createElement('option'); o.value = k; o.textContent = q.menu; st.appendChild(o); });
+  const fill = () => { sa.innerHTML = ''; SAY_LISTS[SAY[+st.value].l].forEach((v, k) => { const o = document.createElement('option'); o.value = k; o.textContent = v; sa.appendChild(o); }); };
+  st.onchange = fill; fill(); $('saySend').onclick = () => sendSay(+st.value, +sa.value);
+}
 const pg = $('phraseGrid');
 PHRASES.forEach((t, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.onclick = () => sendEmo(EMO.length + k); pg.appendChild(b); });
 function setChatMute(on) { chatMuted = on; try { localStorage.setItem(CMKEY, on ? '1' : '0'); } catch (e) {} const c = $('chatMute'); c.classList.toggle('on', on); c.textContent = on ? 'Chat is muted' : 'Mute chat'; }
@@ -3162,9 +3244,9 @@ const SHOP = [
   { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns a tile of ground into lava. It burns anything that touches it.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns a tile of ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
-  { cat: 'terrain', id: 'dirt', max: 600, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water into dirt.', c: 150, g: 7, misc: 'ter', ter: 'dirt' },
+  { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water into dirt.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
   { cat: 'terrain', id: 'dig', max: 300, name: 'Dig', info: 'Clears a tile of dirt, ice or rock. Not lava or water.', c: 600, g: 0, misc: 'ter', ter: 'dig' },
-  { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'On lava it makes rock, on ice it sits on top. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
+  { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock and melts ice into water. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
 const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
 let shopTab = 'blocks';
@@ -3321,11 +3403,11 @@ function terrainSpot(kind, side, pull) {
     const t = T(x, r);
     if (kind === 'dig') return (t === 1 || t === 3) && exposed(x, r) ? { row: r, to: 0 } : null;   // dirt, rock and ice only. Lava and water have to be changed first
     if (kind === 'dirt') return (t === 0 || t === 5) && (T(x, r + 1) === 1 || T(x, r - 1) === 1 || T(x - 1, r) === 1 || T(x + 1, r) === 1) ? { row: r, to: 1 } : null;   // grows out of dirt, side to side (never just a corner)
-    if (t === 1 && exposed(x, r)) return { row: r, to: kind === 'lava' ? 2 : kind === 'ice' ? 3 : 5 };
+    if (t === 1 && exposed(x, r)) return { row: r, to: kind === 'lava' ? 2 : kind === 'ice' ? 3 : 5, water: kind === 'water' };
     if (kind === 'lava' && t === 3 && exposed(x, r)) return { row: r, to: 5 };
     if (kind === 'ice' && t === 2 && exposed(x, r)) return { row: r, to: 5 };
     if (kind === 'water' && t === 2 && exposed(x, r)) return { row: r, to: 7 };
-    if (kind === 'water' && t === 3 && T(x, r - 1) === 0) return { row: r - 1, to: 5 };   // water sits on top of ice
+    if (kind === 'water' && t === 3 && exposed(x, r)) return { row: r, to: 5 };   // water never rests on ice: the ice melts
     return null;
   };
   const inWater = T(cx, cy) === 5;
@@ -3335,9 +3417,16 @@ function terrainSpot(kind, side, pull) {
   for (const [x, r] of probes) {
     const a = act(x, r); if (!a) continue;
     if (terrainBlocked(x, a.row, kind === 'dirt')) continue;
-    return { tx: x, gr: a.row, row: a.row, to: a.to, side: s };
+    return { tx: x, gr: a.row, row: a.row, to: a.to, side: s, ex: a.to === 5 ? waterEx(x, a.row) : [] };
   }
   return null;
+}
+function waterEx(x, r) {   // water never sits on ice or beside lava: the ice under it melts, and any lava it touches turns to rock
+  const w = S.world, out = [], T = (a, b) => P.tile(w, a, b);
+  const ok = (a, b) => a >= 1 && a < w.W - 1 && b >= 1 && b < w.H - 1 && !startTile(a, b) && !terrainBlocked(a, b, false);
+  if (T(x, r + 1) === 3 && ok(x, r + 1)) out.push([x, r + 1, 5]);
+  for (const [a, b] of [[x - 1, r], [x + 1, r], [x, r - 1], [x, r + 1]]) if (T(a, b) === 2 && ok(a, b)) out.push([a, b, 7]);
+  return out;
 }
 function bncSpot(side) {   // a ground spring: one tile wide. Over open air it falls until it reaches the ground, then it sits in it.
   const w = S.world, b = S.b;
@@ -3373,6 +3462,15 @@ function portalClash(g, sp, cx) {   // nothing can be made on top of a portal, a
   if (it.misc === 'ter') return portalHere(cx, 20, sp.gr);
   return false;
 }
+function playerIn(x0, y0, x1, y1) {   // is somebody else's ball (that you can see) on this box?
+  const now = performance.now(); let hit = false;
+  others.forEach(o => {
+    if (hit || !o.seen || o.dead || now - o.seen > 3000) return;
+    const cx = Math.max(x0, Math.min(o.cx, x1)), cy = Math.max(y0, Math.min(o.cy, y1)), dx = o.cx - cx, dy = o.cy - cy;
+    if (dx * dx + dy * dy < (R + 3) * (R + 3)) hit = true;
+  });
+  return hit;
+}
 function computeGhost() {
   const g = placing, b = S.b; if (!g || !b) return;
   const ax = (inp.right ? 1 : 0) - (inp.left ? 1 : 0) || (Math.abs(tin.ax) > 0.15 ? Math.sign(tin.ax) : 0) || (Math.abs(b.vx) > 25 ? Math.sign(b.vx) : 0);
@@ -3383,12 +3481,25 @@ function computeGhost() {
     else if (g.stage === 2 && g.it.gate) { sp = plateSpot(g.side, g.gate); if (sp) { g.ptx = sp.tx; g.prow = sp.row; g.py0 = sp.y0; cx = (sp.tx + 1) * TS; cy = sp.y0; } }
     else if (g.it.portal) { sp = flatSpot(g.side, false, 1, true); if (sp && g.stage === 2 && g.pA && Math.abs(sp.tx - g.pA.tx) < 4 && Math.abs(sp.gr - g.pA.gr) < 3) sp = null; if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - 2; } }
     else if (g.it.misc === 'spr') { sp = bncSpot(g.side); if (sp) { g.mtx = sp.tx; g.mgr = sp.r; g.mr0 = sp.r0; cx = (sp.tx + 0.5) * TS; cy = (sp.r - 0.5) * TS; } }
-    else if (g.it.misc === 'ter') { sp = terrainSpot(g.it.ter, g.side, pullNow()); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } }
+    else if (g.it.misc === 'ter') { sp = terrainSpot(g.it.ter, g.side, pullNow()); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; g.mex = sp.ex || []; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } }
     else if (g.it.misc) { sp = flatSpot(g.side, g.it.misc === 'see', g.it.misc === 'see' ? 2 : 1); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; g.mside = sp.side; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - (g.it.misc === 'see' ? 46 : 4); } }
     else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; g.gh = sp.h; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - sp.h / 2) * TS; } }
     g.ok = !!sp; g.sb = false;
     if (sp && (startBlock(cx, cy) || (g.it.misc === 'spr' && startBlock(cx, g.mr0 * TS)) || (g.stage === 2 && g.it.gate && startBlock((sp.tx + 1) * TS, sp.row * TS)))) { g.ok = false; g.sb = true; }
     if (sp && g.ok && portalClash(g, sp, cx)) { g.ok = false; g.pc = true; } else g.pc = false;
+    g.pb = false;
+    if (sp && g.ok) {   // nobody can be built on or inside (not even somebody else's ball)
+      let rc;
+      if (g.it.id === 'flag') rc = [cx - 20, g.frow * TS - 64, cx + 20, g.frow * TS];
+      else if (g.stage === 2 && g.it.gate) rc = [g.ptx * TS, Math.min(g.py0, g.prow * TS) - 8, (g.ptx + 2) * TS, g.prow * TS + 8];
+      else if (g.it.portal) rc = [g.mtx * TS, g.mgr * TS - 70, (g.mtx + 2) * TS, g.mgr * TS];
+      else if (g.it.misc === 'spr') rc = [g.mtx * TS, g.mr0 * TS, (g.mtx + 1) * TS, (g.mgr + 1) * TS];
+      else if (g.it.misc === 'ter') { rc = [g.mtx * TS, g.mgr * TS, (g.mtx + 1) * TS, (g.mgr + 1) * TS]; }
+      else if (g.it.misc === 'see') rc = [(g.mtx + 1 - 3) * TS, g.mgr * TS - 100, (g.mtx + 1 + 3) * TS, g.mgr * TS];
+      else if (g.it.misc === 'pad') rc = [g.mtx * TS, g.mgr * TS - 14, (g.mtx + 2) * TS, g.mgr * TS + 4];
+      else rc = [g.gtx * TS, (g.ggr - g.gh) * TS, (g.gtx + 1) * TS, g.ggr * TS];
+      if (playerIn(rc[0], rc[1], rc[2], rc[3]) || (g.it.misc === 'ter' && (g.mex || []).some(e => playerIn(e[0] * TS, e[1] * TS, (e[0] + 1) * TS, (e[1] + 1) * TS)))) { g.ok = false; g.pb = true; }
+    }
     if (!sp) { cx = b.x + g.side * (R + TS); cy = b.y; }
     g.tx = cx; g.ty = cy;
     if (g.dx === undefined || Math.hypot(g.dx - g.tx, g.dy - g.ty) > 200) { g.dx = g.tx; g.dy = g.ty; }
@@ -3399,7 +3510,7 @@ function computeGhost() {
   g.pc = !!spot && S.world.portals.some(e => [e.a, e.b].some(p => Math.abs(p.x - spot[0]) < q.half + 26 && p.y > spot[1] - q.half - 3 * TS && p.y < spot[1] + q.half + TS));
   if (spot && startBlock(spot[0], spot[1])) { g.sb = true; g.ok = false; g.tx = spot[0]; g.ty = spot[1]; }
   else if (spot && g.pc) { g.ok = false; g.tx = spot[0]; g.ty = spot[1]; }
-  else if (spot) { g.tx = spot[0]; g.ty = spot[1]; g.ok = true; } else { g.tx = b.x + g.side * (R + q.half + 3); g.ty = b.y + R - q.half; g.ok = false; }
+  else if (spot) { g.tx = spot[0]; g.ty = spot[1]; g.ok = true; const hh = q.hw || q.r; g.pb = playerIn(spot[0] - hh, spot[1] - q.half, spot[0] + hh, spot[1] + q.half); if (g.pb) g.ok = false; } else { g.tx = b.x + g.side * (R + q.half + 3); g.ty = b.y + R - q.half; g.ok = false; }
   if (g.dx === undefined || Math.hypot(g.dx - g.tx, g.dy - g.ty) > 200) { g.dx = g.tx; g.dy = g.ty; }
 }
 function drawGhost(dt, nowT) {
@@ -3498,13 +3609,13 @@ function drawTileGhost(g, nowT) {
 }
 let placeUIKey = null;
 function refreshPlaceUI() {   // the little bar (and, on a phone, the round button) that finish the build
-  const g = placing, on = !!g, key = on ? g.it.id + (g.stage || 0) + (g.ok ? 1 : 0) + (g.sb ? 2 : 0) + (touchActive() ? 1 : 0) : '';
+  const g = placing, on = !!g, key = on ? g.it.id + (g.stage || 0) + (g.ok ? 1 : 0) + (g.sb ? 2 : 0) + (g.pb ? 4 : 0) + (touchActive() ? 1 : 0) : '';
   if (key === placeUIKey) return; placeUIKey = key;
   $('placeBar').classList.toggle('hide', !on); applyTouchUI();
   if (!on) return;
   $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Dig' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Dig' : 'Place');
-  $('placeHint').textContent = g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? 'It clears the tile in front of you. Turn around to use the other side' : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? 'Nothing to dig. Face dirt, ice or rock right beside you' : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
+  $('placeHint').textContent = g.pb ? 'A player is in the way. Wait for them to move' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? 'It clears the tile in front of you. Turn around to use the other side' : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? 'Nothing to dig. Face dirt, ice or rock right beside you' : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
@@ -3518,7 +3629,7 @@ function finishPlacing() {
   const it = g.it; computeGhost();
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); cancelPlacing(true); return; }
   if (atLimit(it)) { notice(limitNote(it), 'urgent'); cancelPlacing(true); return; }
-  if (!g.ok) { notice(g.sb ? 'You cannot build in the start area' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
+  if (!g.ok) { notice(g.sb ? 'You cannot build in the start area' : g.pb ? 'A player is in the way' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
   if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   if (it.portal) {
     const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr];
@@ -3532,13 +3643,18 @@ function finishPlacing() {
   } else if (it.misc) {
     const q = [it.misc === 'ter' ? 'tl' : it.misc, g.mtx, g.mgr, it.misc === 'ter' ? g.mto : it.misc === 'pad' ? ((g.mside || g.side) < 0 ? -1 : 1) : it.misc === 'spr' ? g.mr0 : 0];
     addMisc(S.world, q, true);
+    const exSend = [];
+    if (q[0] === 'tl') for (const e of (g.mex || [])) {   // what the water did to its neighbours (melted ice, lava turned to rock)
+      const eq = ['tl', e[0], e[1], e[2]], w2 = S.world, j = e[1] * w2.W + e[0]; addMisc(w2, eq, true); dropTileRecords(e[0], e[1]);
+      if (S.orig && w2.grid[j] === S.orig[j] && !(w2.rock && w2.rock[j])) { S.tg[j] = S.origTg[j]; exSend.push([e[0], e[1], -1]); } else { S.boughtMisc.push(eq); S.mine.add(j); exSend.push([e[0], e[1], e[2]]); }
+    }
     if (q[0] === 'tl') {   /* one record per tile, ever. If the tile is back the way the map made it, there is nothing to remember at all, and it does not count */
       const w = S.world, i = q[2] * w.W + q[1], gone = dropTileRecords(q[1], q[2]);
       if (S.orig && w.grid[i] === S.orig[i] && !(w.rock && w.rock[i])) {
         S.tg[i] = S.origTg[i]; g.cancelled = true;
         if (S.mine.has(i)) for (const o of gone) { const id = { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[o[3]]; if (id && S.own && S.own[id] > 0) S.own[id]--; }
-        S.mine.delete(i); partyBuild({ t: 'pobj', g: ['tl', q[1], q[2], -1] });
-      } else { S.boughtMisc.push(q); S.mine.add(i); partyBuild({ t: 'pobj', g: q }); }
+        S.mine.delete(i); partyBuild({ t: 'pobj', g: ['tl', q[1], q[2], -1], ex: exSend });
+      } else { S.boughtMisc.push(q); S.mine.add(i); partyBuild({ t: 'pobj', g: q, ex: exSend }); }
       wDirty = true;
     } else { S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; }
     if (q[0] !== 'tl') { burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4); }
@@ -4033,18 +4149,33 @@ function joinParty(hp, name) {
 }
 
 /* ----- notifications: real ones, on this device. In the background the game shows them itself; when it is closed the server pushes them. ----- */
-const notifOK = () => 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window && /^https:$|^http:$/.test(location.protocol);
+const notifOK = () => 'Notification' in window && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol);
 const notifOn = () => !!settings.notify && notifOK() && Notification.permission === 'granted';
-const swReg = () => (navigator.serviceWorker && navigator.serviceWorker.ready ? navigator.serviceWorker.ready.catch(() => null) : Promise.resolve(null));
-function sysNotify(kind, title, body, tag) {   // a notification from the system, only when you are not looking at the game
+let pushState = '';   // 'on': the server can reach this device when the game is closed. 'fail': this browser cannot do that (the game still notifies while it is open)
+const swReg = () => {   // the service worker is what shows notifications; make sure it exists and do not wait forever
+  if (!navigator.serviceWorker) return Promise.resolve(null);
+  return Promise.race([
+    navigator.serviceWorker.getRegistration().then(r => r || navigator.serviceWorker.register('sw.js')).then(() => navigator.serviceWorker.ready),
+    new Promise(res => setTimeout(() => res(null), 6000))
+  ]).catch(() => null);
+};
+async function showNow(title, body, tag) {   // true when the system accepted it
+  const o = { body, tag, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: './' } };
+  try {
+    const r = await swReg();
+    if (r) { await r.showNotification(title, o); return true; }
+  } catch (e) {}
+  try { new Notification(title, { body, tag, icon: 'icon-192.png' }); return true; } catch (e) { return false; }
+}
+function sysNotify(kind, title, body, tag) {   // a notification from the system, only when you are not looking at the game (the server sends the same one when the page is asleep; the same tag means you see it once)
   if (!notifOn() || !settings[kind] || (!document.hidden && document.hasFocus())) return;
-  swReg().then(r => r && r.showNotification(title, { body, tag, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: './' } })).catch(() => {});
+  showNow(title, body, tag);
 }
 function ntRender() {
   const on = notifOK() ? Notification.permission !== 'denied' : false;
   $('setNotify').checked = !!settings.notify && notifOn();
   $('setNotify').disabled = !on && !settings.notify;
-  $('ntSub').textContent = !notifOK() ? 'Not available on this device or browser' : Notification.permission === 'denied' ? 'Blocked. Allow notifications for ballpit.party in your browser settings' : 'Reach you here, even when the game is closed';
+  $('ntSub').textContent = !notifOK() ? 'Not available on this device or browser' : Notification.permission === 'denied' ? 'Blocked. Allow notifications for ballpit.party in your browser settings' : settings.notify && pushState === 'fail' ? 'On while the game is open. This browser cannot wake a closed game' : 'Reach you here, even when the game is closed';
   $('ntKinds').classList.toggle('hide', !(settings.notify && notifOn()));
   [['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps']].forEach(p => { $(p[0]).checked = !!settings[p[1]]; });
 }
@@ -4053,26 +4184,30 @@ let vapidKey = '', pushSock = null, pushSig = '', pushTimer = 0;
 async function pushSync() {   // tell the server where to reach this device, and what you want; or tell it to forget this device
   pushTimer = 0;
   if (!notifOK() || !(online || lobbyOn)) return;
-  const reg = await swReg(); if (!reg) return;
+  const reg = await swReg(); if (!reg || !reg.pushManager) { if (settings.notify) { pushState = 'fail'; ntRender(); try { console.warn('push signup failed: no push support'); } catch (x) {} } return; }
   if (!notifOn()) {
     if (pushSig) { pushSig = ''; wsSend({ t: 'punsub' }); }
+    pushState = '';
     try { const s = await reg.pushManager.getSubscription(); if (s) await s.unsubscribe(); } catch (e) {}
     return;
   }
   try {
     if (!vapidKey) { const r = await fetch(homeBase() + '/vapid', { cache: 'no-store' }); vapidKey = ((await r.json()) || {}).key || ''; }
-    if (!vapidKey) return;
+    if (!vapidKey) throw 0;
     const want = b64uBytes(vapidKey); let sub = await reg.pushManager.getSubscription();
     if (sub) { const have = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null; if (!have || have.length !== want.length || have.some((v, i) => v !== want[i])) { await sub.unsubscribe(); sub = null; } }   // (the server's keys changed: subscribe again)
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
     const prefs = { f: settings.nFriends ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, mu: lks.filter(l => l.mute >= 1).map(l => l.pub).slice(0, 12) };
     const j = sub.toJSON(), sig = JSON.stringify([j.endpoint, prefs]);
+    pushState = 'on'; ntRender();
     if (sig === pushSig && pushSock === ws) return;
     pushSig = sig; pushSock = ws;
     wsSend({ t: 'psub', sub: { endpoint: j.endpoint, keys: j.keys }, prefs });
-  } catch (e) {}
+  } catch (e) { pushState = 'fail'; ntRender(); try { console.warn('push signup failed:', e && e.message || e); } catch (x) {} }
 }
 const pushSyncSoon = () => { clearTimeout(pushTimer); pushTimer = setTimeout(pushSync, 1200); };
+const sendVis = () => wsSend({ t: 'vis', h: document.hidden ? 1 : 0 });   // while the page is in the background the server sends your notifications as pushes
+document.addEventListener('visibilitychange', sendVis);
 ['setNFriends', 'setNRequests', 'setNInvites', 'setNMaps'].forEach(id => { $(id).addEventListener('change', () => pushSyncSoon()); });
 $('setNotify').onchange = async () => {
   const want = $('setNotify').checked;
@@ -4082,7 +4217,13 @@ $('setNotify').onchange = async () => {
   if (perm === 'default') { try { perm = await Notification.requestPermission(); } catch (e) {} }
   if (perm !== 'granted') { settings.notify = false; save(); ntRender(); notice('Notifications are blocked. Allow them for ballpit.party in your browser settings', 'urgent'); return; }
   settings.notify = true; save(); sfx('on'); ntRender(); pushSync();
-  swReg().then(r => r && r.showNotification('Notifications are on', { body: 'You will hear about friends, requests and invites here.', tag: 'nt-on', icon: 'icon-192.png', badge: 'icon-192.png' })).catch(() => {});
+  const ok = await showNow('Notifications are on', 'You will hear about friends, requests and invites here.', 'nt-on');
+  if (!ok) notice('Notifications are on, but this device would not show one. Check that notifications are allowed in your system settings', 'urgent');
+};
+$('ntTest').onclick = async () => {
+  if (!notifOn()) { notice('Turn notifications on first', ''); return; }
+  const ok = await showNow('Test notification', 'If you can read this, notifications work.', 'nt-test');
+  notice(ok ? 'Test sent. Look for it on your screen' : 'The system would not show it. Check that notifications are allowed for this site and that Do Not Disturb or Focus is off', ok ? '' : 'urgent');
 };
 function partyInvited(m) {
   if (typeof m.pub !== 'string' || (mutes[m.pub] || 0) >= 2) return;
@@ -4329,10 +4470,28 @@ function otherPred(o, d) {   // where somebody else is d seconds after their las
   }
   pp.x = x; pp.y = y; return pp;
 }
+function dynBin(dv, len, ty) {   // where the shared crates, balls (type 4) and planks (type 5) are right now
+  const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (S.slot & 0xFFFF)) return;
+  const n = dv.getUint8(3), t = performance.now();
+  if (ty === 4) {
+    for (let k = 0; k < n; k++) {
+      const o = 4 + k * 21; if (o + 21 > len) break;
+      const d = w.dynBy.get(dv.getUint32(o, true)); if (!d) continue;
+      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, t };
+    }
+  } else {
+    for (let k = 0; k < n; k++) {
+      const o = 4 + k * 12; if (o + 12 > len) break;
+      const uid = dv.getUint32(o, true);
+      for (let i = 0; i < w.see.length; i++) if (w.see[i].uid === uid) { w.see[i].sa = dv.getFloat32(o + 4, true); w.see[i].sav = dv.getFloat32(o + 8, true); break; }
+    }
+  }
+}
 function onBin(buf) {   // compact position update: [1][slot u16] then per player [ id u32, x/2 u16, y u16, vx/5 i8, vy/20 i8, time+grounded u16 ]
   const dv = new DataView(buf);
   const ty = buf.byteLength >= 3 ? dv.getUint8(0) : 0;
   if (ty === 2 || ty === 3) { trackBin(dv, buf.byteLength, ty); return; }
+  if (ty === 4 || ty === 5) { dynBin(dv, buf.byteLength, ty); return; }
   if (ty !== 1) return;
   const sl = dv.getUint16(1, true);
   const okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;
@@ -4398,6 +4557,7 @@ $('worldpop').onclick = () => $('worldpop').classList.add('hide');
 function onMsg(m) {
   if (linkMsg(m)) return;
   switch (m.t) {
+    case 'dr': applyDoors(m); return;
     case 'update': forceUpdate(); return;   // the server only lets people with the same version in
     case 'welcome':
       if (m.lobby) {   // connected from the main menu: friends work, but you are not in a world
@@ -4444,7 +4604,8 @@ function onMsg(m) {
     case 'pclose': partyOver(who(m.name) + ' closed their private game'); break;
     case 'inv': partyInvited(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
-    case 'pobj': { if (!S.world || !shared() || !validMisc(m.g) || (!party && m.g[0] !== 'tl' && !pubTake('m', m.g))) break;   // (a terrain change is absolute, so applying it twice does no harm)
+    case 'pobj': { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1 }); });
+      if (!S.world || !shared() || !validMisc(m.g) || (!party && m.g[0] !== 'tl' && !pubTake('m', m.g))) break;   // (a terrain change is absolute, so applying it twice does no harm)
       if (m.g[0] === 'tl' && m.g[3] === -1) { addMisc(S.world, m.g, true); dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); wDirty = true; break; }   // somebody put a tile back the way it was: nothing to remember
       if (m.g[0] === 'tl') { dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); }
       addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
@@ -4452,7 +4613,7 @@ function onMsg(m) {
     case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); sfx('big'); break;
     case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y) || (!party && !pubTake('p', [m.k | 0, m.x | 0, m.y | 0]))) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
     case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
-    case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count]); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
+    case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; startTransition(m.slot, m.next); break;
     case 'fin': {
       const mine = m.id === myId, o = others.get(m.id);
@@ -4477,7 +4638,7 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
     const dt = (t - L.t) / 1000;
     if (d) { if (dt < 8) return; }
     else {
-      if (dt < 0.08) return;
+      if (dt < 0.05) return;
       const still = x === L.x && y === L.y && !qx && !qy && !L.vx && !L.vy;
       if (still) { if (dt < 8) return; }
       else {
@@ -5349,7 +5510,7 @@ function drawMinimap() {
     }
   }
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = (c[0] + 0.5 - left) * ppt, y = (c[1] - top) * ppt; if (x < 3 || y < 7 || x > w - 3 || y > h) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.5, y - 7, 1.4, 7); g.beginPath(); g.moveTo(x + 1, y - 7); g.lineTo(x + 6, y - 5.2); g.lineTo(x + 1, y - 3.4); g.fill(); });
-  drawLinksOnMap(g, x => (x - left) * ppt, y => (y - top) * ppt, 5, false, false);
+  drawLinksOnMap(g, x => (x - left) * ppt, y => (y - top) * ppt, 6.5, false, false);
   if (mapFin()) {   // while the beacon is on (always, in a private world), the finish shows on the map: a flag if it is in view, otherwise an arrow on the edge pointing the way
     const f = m.flag, fx = (f[0] - left) * ppt, fy = (f[1] - top) * ppt, inView = fx > 6 && fx < w - 6 && fy > 6 && fy < h - 6;
     if (inView) drawFinishIcon(g, fx, fy, 1, now);
@@ -5475,7 +5636,7 @@ function drawMinimapBig() {
     if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; dotAt(bt.b.x, bt.b.y, bt.color, null); });
     if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) dotAt(q.x, q.y, o.color, dr >= 5 ? sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length) : null); });
   }
-  drawLinksOnMap(g, X, Y, 7, true, false);
+  drawLinksOnMap(g, X, Y, 9, true, false);
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
   const bon = mapFin();
   if (bon) drawFinishIcon(g, X(m.flag[0]), Y(m.flag[1]), 1.5 + Math.min(1.5, z * 0.08), performance.now());
@@ -5600,7 +5761,7 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();
@@ -5609,7 +5770,6 @@ hudTick();
 requestAnimationFrame(frame);
 if (window.__bootStep) window.__bootStep('Rolling out the map…', 85);
 let bootSeen = 0; (function waitFirst() { if (S.map && S.b && ++bootSeen > 6) { if (window.__bootHide) window.__bootHide(); } else requestAnimationFrame(waitFirst); })();
-try { if ('wakeLock' in navigator && appKeep()) { let wl = null; const hold = () => { if (wl || document.hidden) return; navigator.wakeLock.request('screen').then(l => { wl = l; l.addEventListener('release', () => { wl = null; }); }).catch(() => {}); }; hold(); document.addEventListener('visibilitychange', hold); } } catch (e) {}   // (in the app the screen stays on while you play)
 try { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !(params && params.get('test'))) navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
 window.__ballOk = true;
 })();

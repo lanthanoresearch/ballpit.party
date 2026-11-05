@@ -6,6 +6,7 @@
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
   const approach = (a, t, d) => (a < t ? Math.min(a + d, t) : Math.max(a - d, t));
 
+  function hash32(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }   // (a stable name for a thing, the same on every device and on the server)
   function makeWorld(map) {
     const W = map.W, H = map.H, grid = new Uint8Array(W * H);
     for (const r of map.rects) {
@@ -14,12 +15,12 @@
         for (let xx = r[0]; xx < r[0] + r[2]; xx++) if (xx >= 0 && xx < W) grid[yy * W + xx] = r[4];
       }
     }
-    const w = { W, H, grid, map, dyn: [], doors: [], plates: [], btns: [], see: [], pads: [], portals: [], ev: [], focus: null };
+    const w = { W, H, grid, map, dyn: [], dynBy: new Map(), follow: false, doors: [], plates: [], btns: [], see: [], pads: [], portals: [], ev: [], focus: null };
     const G = map.gadgets || {};
-    (G.doors || []).forEach((d, i) => { const o = { id: i, x: d[0], y: d[1], w: d[2], h: d[3], open: false, latched: false }; w.doors.push(o); setDoorTiles(w, o, false); });
+    (G.doors || []).forEach((d, i) => { const o = { id: i, uid: hash32('d' + i), x: d[0], y: d[1], w: d[2], h: d[3], open: false, latched: false }; w.doors.push(o); setDoorTiles(w, o, false); });
     (G.plates || []).forEach(p => w.plates.push({ x: p[0], y: p[1], w: p[2], to: p[3], on: false }));
     (G.btns || []).forEach(p => w.btns.push({ x: p[0], y: p[1], to: p[2], on: false }));
-    (G.see || []).forEach(p => w.see.push({ cx: p[0] * TS, cy: p[1] * TS, hl: p[2] * TS, tilt: p[3], ang: p[3], av: 0, tq: 0 }));
+    (G.see || []).forEach(p => w.see.push({ cx: p[0] * TS, cy: p[1] * TS, hl: p[2] * TS, tilt: p[3], ang: p[3], av: 0, tq: 0, uid: hash32('s' + Math.round(p[0] * TS) + ',' + Math.round(p[1] * TS)) }));
     for (const p of (map.props || [])) addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5);   // pushable yellow things; each player has their own copy (never shared)
     return w;
   }
@@ -86,7 +87,8 @@
     const q = propDims(kind), hw = q.hw, r = q.r;
     const d = { k: r ? 'o' : 'b', x, y, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, av: 0, tip: null, spin: false, gr: false, touch: false, burn: 0,
       m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind };
-    d.hx = d.x; d.hy = d.y; w.dyn.push(d); return d;
+    d.hx = d.x; d.hy = d.y; d.uid = hash32('p' + kind + ',' + Math.round(x) + ',' + Math.round(y)); if (w.dynBy) { while (w.dynBy.has(d.uid)) d.uid = (d.uid + 1) >>> 0; w.dynBy.set(d.uid, d); }
+    w.dyn.push(d); return d;
   }
   function spotFree(w, x, y, hw, hh) {   // room for a thing this size: no walls, doors or lava
     const tx0 = Math.floor((x - hw) / TS), tx1 = Math.floor((x + hw - 0.01) / TS), ty0 = Math.floor((y - hh) / TS), ty1 = Math.floor((y + hh - 0.01) / TS);
@@ -178,10 +180,26 @@
     if (!o.ghost) s.tq += wt * u;
     return ny < -0.35;
   }
+  function nearF(f, x, y, rx, ry) {   // is this spot near the point of interest (or any of them: the server watches everybody in a world)?
+    if (!f) return true;
+    if (Array.isArray(f)) { for (let i = 0; i < f.length; i++) if (Math.abs(x - f[i].x) <= rx && Math.abs(y - f[i].y) <= ry) return true; return false; }
+    return Math.abs(x - f.x) <= rx && Math.abs(y - f.y) <= ry;
+  }
+  function distF(f, d) { if (!Array.isArray(f)) return Math.abs(d.x - f.x) + Math.abs(d.y - f.y); let m = 1e9; for (let i = 0; i < f.length; i++) m = Math.min(m, Math.abs(d.x - f[i].x) + Math.abs(d.y - f[i].y)); return m; }
   function stepSee(w, dt) {
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i], f = w.focus;
-      if (f && (Math.abs(s.cx - f.x) > 900 || Math.abs(s.cy - f.y) > 700)) continue;
+      if (f && !nearF(f, s.cx, s.cy, 900, 700) && !(w.follow && s.sa !== undefined)) continue;
+      if (w.follow && s.sa !== undefined) {   // a plank in the shared world: it follows the server's plank (and while you are on it, it also reacts at once, then agrees with the server)
+        const a0 = s.ang;
+        if (s.mineT > 0) {
+          s.mineT -= dt;
+          const target = s.tq === 0 ? s.tilt : clamp(s.tq / 3600, -1, 1) * SEE_MAX;
+          s.ang += (target - s.ang) * Math.min(1, 3.2 * dt);
+          s.ang += (s.sa - s.ang) * Math.min(1, 16 * dt);
+        } else s.ang += (s.sa + (s.sav || 0) * 0.04 - s.ang) * Math.min(1, 20 * dt);
+        s.av = (s.ang - a0) / dt; s.tq = 0; continue;
+      }
       const target = s.tq === 0 ? s.tilt : clamp(s.tq / 3600, -1, 1) * SEE_MAX;
       const a0 = s.ang; s.ang += (target - s.ang) * Math.min(1, 3.2 * dt);
       s.av = (s.ang - a0) / dt; s.tq = 0;
@@ -192,7 +210,7 @@
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i]; if (Math.abs(s.cx - b.x) > s.hl + 40 || Math.abs(s.cy - b.y) > s.hl + 60) continue;
       if (seeHit(s, b, b.r || R, wt)) {
-        on = true; b.onSee = s;
+        on = true; b.onSee = s; if (w.follow && b.r === undefined && !b.ghost) s.mineT = 0.6;
         const sl = Math.sin(s.ang);
         if (b.r === undefined) b.flat = Math.abs(sl) <= 0.06;   // on a tilted plank you slide; on a level one you grip
         if (b.r === undefined) { b.ground = true; b.gType = 1; }
@@ -241,25 +259,32 @@
     }
   }
   /* ---------- buttons, pressure plates and doors ---------- */
-  function doorBlocked(w, d, b) {
+  function doorBlocked(w, d, bs) {
     const x0 = d.x * TS, x1 = (d.x + d.w) * TS, y0 = (d.y + 1) * TS, y1 = (d.y + d.h) * TS;   // (the beam above is always solid, so only the gap below it can be blocked)
-    if (b && b.x + R > x0 && b.x - R < x1 && b.y + R > y0 && b.y - R < y1) return true;
+    const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [];
+    for (let k = 0; k < L.length; k++) { const b = L[k]; if (b && b.x + R > x0 && b.x - R < x1 && b.y + R > y0 && b.y - R < y1) return true; }
     for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const e = o.r || o.hw; if (o.x + e > x0 && o.x - e < x1 && o.y + e > y0 && o.y - e < y1) return true; }
     return false;
   }
-  function stepSwitches(w, b) {
-    const want = w.doors.map(d => d.latched);
+  // bs: a player body, or a list of them (the server passes everybody in the world). In follow mode (a device that is shown the server's world) a gate may only be opened here at once;
+  // shutting it is up to the server. dt (optional): with w.closeDelay, a gate waits that long after the last thing left its trigger before it shuts.
+  function stepSwitches(w, bs, dt) {
+    const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [], want = w.doors.map(d => d.latched);
     for (let i = 0; i < w.btns.length; i++) {
-      const q = w.btns[i]; if (q.on || !b || b.ghost) continue;
+      const q = w.btns[i]; if (q.on) continue;
       const x0 = q.x * TS - R, x1 = (q.x + 1) * TS + R, fy = q.y * TS;
-      if (b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6) {
-        q.on = true; q.t = 1; w.ev.push({ k: 'btn', x: (q.x + 0.5) * TS, y: fy });
-        for (const di of q.to) { w.doors[di].latched = true; want[di] = true; }
+      for (let k = 0; k < L.length; k++) {
+        const b = L[k]; if (!b || b.ghost) continue;
+        if (b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6) {
+          q.on = true; q.t = 1; q.pT = Date.now(); w.ev.push({ k: 'btn', x: (q.x + 0.5) * TS, y: fy });
+          for (const di of q.to) { w.doors[di].latched = true; want[di] = true; }
+          break;
+        }
       }
     }
     for (let i = 0; i < w.plates.length; i++) {
-      const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = false;
-      if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true;
+      const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = !!(w.follow && q.srvOn);
+      for (let k = 0; k < L.length && !on; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true; }
       for (let j = 0; j < w.dyn.length && !on; j++) {
         const o = w.dyn[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 300) continue;
         const bot = o.y + (o.r || o.hh);
@@ -270,8 +295,9 @@
     }
     for (let i = 0; i < w.doors.length; i++) {
       const d = w.doors[i];
-      if (want[i] && !d.open) { setDoorTiles(w, d, true); w.ev.push({ k: 'door', open: true, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
-      else if (!want[i] && d.open && !doorBlocked(w, d, b)) { setDoorTiles(w, d, false); w.ev.push({ k: 'door', open: false, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
+      if (want[i]) d.offT = 0; else d.offT = (d.offT || 0) + (dt || 0);
+      if (want[i] && !d.open) { setDoorTiles(w, d, true); d.predT = Date.now(); w.ev.push({ k: 'door', open: true, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
+      else if (!want[i] && d.open && !w.follow && !(w.closeDelay && d.offT < w.closeDelay) && !doorBlocked(w, d, L)) { setDoorTiles(w, d, false); w.ev.push({ k: 'door', open: false, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
     }
   }
 
@@ -345,17 +371,18 @@
     stepSee(w, dt);
     for (let i = 0; i < w.pads.length; i++) if (w.pads[i].t > 0) w.pads[i].t = Math.max(0, w.pads[i].t - dt);
     const L = w.dyn; if (!L.length) return;
-    const f = w.focus, FR = 1100;
+    const f = w.focus, FR = 1100, fol = w.follow;
     if (f) {   // a very busy pile near you: only the nearest few dozen things are simulated each moment, so the game stays smooth however much has been built
       const near = [];
-      for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0 || d.nap || Math.abs(d.x - f.x) > FR || Math.abs(d.y - f.y) > FR) continue; near.push(d); }
-      if (near.length > DYN_BUDGET) { near.sort((a, b) => Math.abs(a.x - f.x) + Math.abs(a.y - f.y) - Math.abs(b.x - f.x) - Math.abs(b.y - f.y)); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }
+      for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0 || d.nap || !nearF(f, d.x, d.y, FR, FR)) continue; near.push(d); }
+      if (near.length > DYN_BUDGET) { near.sort((a, b) => distF(f, a) - distF(f, b)); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }
     }
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
       if (d.skip) { d.sleep = true; continue; }
       if (d.burn > 0) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; } continue; }
-      if (f && (Math.abs(d.x - f.x) > FR || Math.abs(d.y - f.y) > FR)) { d.sleep = true; continue; }   // far from you: frozen (saves work)
+      if (fol && d.sv !== undefined) { if (!(d.mineT > 0)) { d.sleep = true; continue; } d.mineT -= dt; }   // (a thing the server has not told us about yet is still worked out here)   // in the shared world the server moves everything; only what you are pushing right now is also worked out here, so it answers at once
+      if (f && !nearF(f, d.x, d.y, FR, FR)) { d.sleep = true; continue; }   // far from you: frozen (saves work)
       d.sleep = false;
       if (d.nap) { if (Math.abs(d.x - d.rx) + Math.abs(d.y - d.ry) > 2) { d.nap = false; d.rest = 0; } else if ((dynTick + i) % 12 !== 0) continue; }   // at rest: it only checks in now and then (so a big pile that has settled costs next to nothing, and anything that changes under it wakes it within a moment)
       const nx0 = d.x, ny0 = d.y;
@@ -397,6 +424,19 @@
       d.touch = false;
       if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
     }
+    if (fol) {   // (only the things you are pushing are tested against the others; whatever they touch joins in)
+      const mine = []; for (let i = 0; i < L.length; i++) if ((L[i].mineT > 0 || L[i].sv === undefined) && !(L[i].burn > 0) && !L[i].sleep) mine.push(L[i]);
+      for (let pass = 0, hit = true; pass < 3 && hit && mine.length; pass++) {
+        hit = false;
+        for (let m = 0; m < mine.length; m++) {
+          const a = mine[m]; if (a.sleep) continue;
+          for (let j = 0; j < L.length; j++) {
+            const b = L[j]; if (b === a || b.burn > 0 || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
+            if (pairSep(a, b, 0.15, w)) { hit = true; if (!(b.mineT > 0)) { b.mineT = 0.45; b.sleep = false; mine.push(b); } }
+          }
+        }
+      }
+    } else
     for (let pass = 0, hit = true; pass < 3 && hit; pass++) {   // (a few rounds while things overlap, so a pile settles instead of sinking into itself)
       hit = false;
       for (let i = 0; i < L.length; i++) {
@@ -415,7 +455,7 @@
   // shove a crate sideways by dx, carrying along any crates in front of it (a row of crates moves together, and a jammed row acts as a wall, so nothing is ever squeezed into something else)
   function shoveBox(w, d, dx, depth, jr) {
     if (depth > 5) return false;
-    const x0 = d.x; d.x += dx; d.nap = false; d.rest = 0;
+    const x0 = d.x; d.x += dx; d.nap = false; d.rest = 0; if (w.follow) d.mineT = 0.45;
     if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x = x0; return false; }
     jr.push([d, x0]);
     const L = w.dyn;
@@ -434,13 +474,17 @@
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
       if (d.burn > 0 || Math.abs(d.x - b.x) > 90 || Math.abs(d.y - b.y) > 90) continue;
-      d.sleep = false; d.nap = false; d.rest = 0;
+      if (!w.follow) { d.sleep = false; d.nap = false; d.rest = 0; }
       if (d.k === 'b') {
         const px = clamp(b.x, d.x - d.hw, d.x + d.hw), py = clamp(b.y, d.y - d.hh, d.y + d.hh);
         let dx = b.x - px, dy = b.y - py, d2 = dx * dx + dy * dy;
         if (d2 >= R * R) continue;
+        if (w.follow && !(d.hold > 0)) { d.mineT = 0.45; d.sleep = false; d.nap = false; d.rest = 0; }
         let nx, ny, pen;
-        if (d2 === 0) { nx = 0; ny = -1; pen = R + d.hh; } else { const dd = Math.sqrt(d2); nx = dx / dd; ny = dy / dd; pen = R - dd; }
+        if (d2 === 0) {   // the ball's centre is inside the crate (it was pushed in, or lagged behind): leave by the nearest face
+          const ox = d.hw + R - Math.abs(b.x - d.x), oy = d.hh + R - Math.abs(b.y - d.y);
+          if (ox < oy) { nx = b.x === d.x ? (b.vx >= 0 ? -1 : 1) : (b.x > d.x ? 1 : -1); ny = 0; pen = ox; } else { nx = 0; ny = b.y > d.y ? 1 : -1; pen = oy; }
+        } else { const dd = Math.sqrt(d2); nx = dx / dd; ny = dy / dd; pen = R - dd; }
         if (ny < -0.6) {                   // standing on top
           b.y += ny * pen; if (b.vy > 0) b.vy = 0; b.ground = true; if (Math.abs(b.x - d.x) <= d.hw) { b.flat = true; b.gType = 1; }
           d.touch = true;
@@ -448,6 +492,8 @@
         } else if (ny > 0.6) {             // the crate is above you: it gets lifted (so one sitting on your head can never pin you down or stop you jumping); only a ceiling stops you
           if (!boxHits(w, d.x, d.y - pen, d.hw, d.hh)) { d.y -= pen; if (d.vy > b.vy) d.vy = b.vy; if (d.hw > 20 && b.vy < 0) b.vy *= 0.6; d.touch = true; }
           else { b.y += ny * pen; if (b.vy < 0) b.vy = 0; }
+        } else if (w.follow && d.hold > 0) {   // (the server's crate and yours disagree: it is a wall until they agree again)
+          b.x += nx * pen; if (b.vx * nx < 0) b.vx = 0; d.mineT = 0;
         } else {                           // pushing from the side: the crate is simply carried along; heavier ones slow you a little
           const mv = nx * pen, jr = [];       // push the crate completely out of the ball's way (and whatever is in front of it)
           if (!shoveBox(w, d, -mv, 0, jr)) { for (let q = jr.length - 1; q >= 0; q--) jr[q][0].x = jr[q][1]; b.x += nx * pen; if (b.vx * nx < 0) b.vx = 0; }   // it is jammed against something: it acts like a wall
@@ -457,6 +503,7 @@
       } else {
         const dx = d.x - b.x, dy = d.y - b.y, dist = Math.sqrt(dx * dx + dy * dy) || 0.001, pen = R + d.r - dist;
         if (pen <= 0) continue;
+        if (w.follow) { d.mineT = 0.45; d.sleep = false; d.nap = false; d.rest = 0; }
         const nx = dx / dist, ny = dy / dist, pm = 1.2, tm = pm + d.m;
         b.x -= nx * pen * (d.m / tm); b.y -= ny * pen * (d.m / tm); d.x += nx * pen * (pm / tm); d.y += ny * pen * (pm / tm);
         const vn = (d.vx - b.vx) * nx + (d.vy - b.vy) * ny;
@@ -578,7 +625,7 @@
     return ev;
   }
 
-  const api = { addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, FALL_WARN, FALL_DIE };
+  const api = { addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

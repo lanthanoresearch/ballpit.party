@@ -1,6 +1,6 @@
 /* ballpit.party service worker: lets the game install as an app and open without a network.
    Network first (so you always get the newest files), the saved copy is only the fallback. */
-const CACHE = 'ballpit-v90';
+const CACHE = 'ballpit-v95';
 const FILES = ['/', '/index.html', '/maps.js', '/physics.js', '/icon.svg', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES).catch(() => {})).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -13,7 +13,7 @@ self.addEventListener('fetch', e => {
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { try { d = { title: e.data.text() }; } catch (y) {} }
   const title = d.title || 'ballpit.party';
-  e.waitUntil(self.registration.showNotification(title, { body: d.body || '', tag: d.tag || 'bp', icon: '/icon-192.png', badge: '/icon-192.png', renotify: !!d.tag, data: { url: d.url || '/' } }));
+  e.waitUntil(self.registration.showNotification(title, { body: d.body || '', tag: d.tag || 'bp', icon: '/icon-192.png', badge: '/icon-192.png', renotify: false, data: { url: d.url || '/' } }));
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
