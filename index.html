@@ -1116,8 +1116,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=84"></script>
-<script src="physics.js?v=84"></script>
+<script src="maps.js?v=86"></script>
+<script src="physics.js?v=86"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1617,7 +1617,7 @@ function drawLabel(name, isBot, crown, x, y, isPerson) {
 /* ================= game state / maps ================= */
 const S = {
   mode: 'play', slot: -1, idx: 0, map: null, world: null, tg: null, b: null, t: 0, nextAt: 0, pending: -1, pendingNext: 0, fadeT0: 0,
-  dead: 0, spawnT: 0, shake: 0, bLatch: 0, bReady: false, airP: null, away: false, crown: false, started: false, runStart: 0, finished: false, finT: 0, finMs: 0,
+  dead: 0, spawnT: 0, shake: 0, bLatch: 0, bReady: false, airP: null, away: false, crown: false, done: false, started: false, runStart: 0, finished: false, finT: 0, finMs: 0,
   camx: 0, camy: 0, water: [], deathPos: null, edgeWarn: false, mm: null,
   lavaWarn: false, coinN: 0, coinGot: null, coinBest: 0, recordShown: false, fallWarn: false, wasWater: false, beaconOn: false, fallLvl: 0
 };
@@ -1655,7 +1655,7 @@ function loadMap(slot, next) {
   if (S.guest && party.priv) applyPartyProps(party.priv);
   else if (S.pendingBuild && S.pendingBuild.slot === slot) pubSync(S.pendingBuild.b);
   S.pendingBuild = null;
-  S.started = false; S.finished = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
+  S.started = false; S.finished = false; S.done = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;   // (done: you have finished this round. It stays that way until the next map, even if you fall and start again)
   others.forEach(o => { o.crown = false; });
   bots.length = 0; botNextSpawn = rnd(1, 4); fx.length = 0;
   S.deathPos = null;
@@ -1715,7 +1715,7 @@ function nearEdge(b) {
   return b.y > P.killYAt(S.world, b.x) - 9 * TS;   // (the walls and ceiling are solid now: only the open bottom is a danger)
 }
 function finishRun() {
-  S.finished = true; S.finT = 5; S.crown = true; sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
+  S.finished = true; S.done = true; S.finT = 5; S.crown = true; sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
   S.finMs = S.started ? performance.now() - S.runStart : 0;
   $('fbText').textContent = 'Time ' + fmtT(S.finMs);
   $('finishbanner').classList.remove('hide');
@@ -1836,7 +1836,7 @@ function update(dt) {
   if (lw && !S.lavaWarn) sfx('warn');
   S.lavaWarn = lw;
   const f = S.map.finish;
-  if (!S.finished && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) finishRun();
+  if (!S.finished && !S.done && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) finishRun();
 }
 
 /* ----- coins (just for fun: they count up, and your browser remembers your best per map) ----- */
@@ -4962,11 +4962,24 @@ function drawWater() {
   ctx.stroke();
 }
 function drawFinishFlag() {
-  const f = S.map.flag, fx0 = f[0] * TS, by = f[1] * TS, ph = 200, cell = 24;
+  const f = S.map.flag, fx0 = f[0] * TS, by = f[1] * TS, ph = 200, cell = 24, done = S.done;
+  if (done) {   // you have finished this round: the line turns gold and glows, and it no longer counts again until the next map
+    const p = 0.5 + 0.5 * Math.sin(S.t * 2.2);
+    ctx.save(); const gr = ctx.createLinearGradient(0, by - ph - 100, 0, by); gr.addColorStop(0, 'rgba(255,210,61,0)'); gr.addColorStop(1, 'rgba(255,210,61,.30)');
+    ctx.fillStyle = gr; ctx.fillRect(fx0 - 30, by - ph - 100, 6 * cell + 70, ph + 100);
+    ctx.globalAlpha = 0.16 + 0.1 * p; ctx.fillStyle = '#ffd23d'; ctx.beginPath(); ctx.arc(fx0 + 4 + 3 * cell, by - ph + 2 * cell, 110 + p * 8, 0, TAU); ctx.fill(); ctx.restore();
+  }
   ctx.lineWidth = 2.4; ctx.strokeStyle = INK;
-  ctx.fillStyle = '#eee'; ctx.fillRect(fx0 - 4, by - ph, 8, ph); ctx.strokeRect(fx0 - 4, by - ph, 8, ph);
-  for (let c = 0; c < 6; c++) for (let r = 0; r < 4; r++) { ctx.fillStyle = ((c + r) & 1) ? '#111' : '#fff'; ctx.fillRect(fx0 + 4 + c * cell, by - ph + r * cell + Math.sin(S.t * 3 + c) * 1.5, cell + 0.5, cell + 0.5); }
+  ctx.fillStyle = done ? '#ffe28a' : '#eee'; ctx.fillRect(fx0 - 4, by - ph, 8, ph); ctx.strokeRect(fx0 - 4, by - ph, 8, ph);
+  for (let c = 0; c < 6; c++) for (let r = 0; r < 4; r++) { ctx.fillStyle = ((c + r) & 1) ? (done ? '#d9a21b' : '#111') : (done ? '#fff1b8' : '#fff'); ctx.fillRect(fx0 + 4 + c * cell, by - ph + r * cell + Math.sin(S.t * 3 + c) * 1.5, cell + 0.5, cell + 0.5); }
   ctx.strokeRect(fx0 + 4, by - ph, 6 * cell, 4 * cell);
+  if (done) {
+    const cx = fx0 + 4 + 3 * cell, cy = by - ph + 2 * cell;
+    ctx.save(); ctx.fillStyle = '#ffd23d'; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, 24, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#16100c'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(cx - 11, cy + 1); ctx.lineTo(cx - 3, cy + 9); ctx.lineTo(cx + 12, cy - 9); ctx.stroke();
+    ctx.restore();
+    { ctx.save(); ctx.font = '16px ' + FONT; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText('Finished this round', cx, by - ph - 14); ctx.fillStyle = '#ffd23d'; ctx.fillText('Finished this round', cx, by - ph - 14); ctx.restore(); }
+  }
 }
 function drawCheckpoints(camL, camT, vw, vh) {   // big bright pennants you can spot from far away; the one you have touched turns green and glows
   const cps = S.map.checkpoints; if (!cps) return;

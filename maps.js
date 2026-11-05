@@ -1724,7 +1724,6 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     satellites(mainPath, 0.5); satellites(decPath, 0.55); satellites(tailPath, 0.55); satellites(gruns, 0.3);
     addProps(mainPath, 0.9); addProps(decPath, 0.95); addProps(tailPath, 0.95);
     addCoins(mainPath, 0.62); addCoins(decPath, 0.55); addCoins(tailPath, 0.55);
-    for (let i = 0; i < 9; i++) coin(fin[0] + 2 + i * (fin[2] - 4) / 8, fin[1] - 1.5 - Math.sin(i / 8 * Math.PI) * 1.5, i === 4 ? 2 : 1);
     addCeilings(mainPath); addCeilings(decPath); addCeilings(tailPath);
     addLavaSea(mainPath); addLavaSea(decPath); addLavaSea(tailPath);
     // a bounce pad on a wide platform throws you up to a ledge, and a little tower of ledges climbs on from there, ending in a room
