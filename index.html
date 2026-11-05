@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#14111c">
+<meta name="ballpit-mode" content="__MODE__">
+<script>/* app mode: in a browser tab the game does not start, the visitor is sent to the install page. Inside the installed app (or on a site set to "web") it carries on as usual. */
+(function(){try{
+  var m=(document.querySelector('meta[name="ballpit-mode"]')||{}).content;
+  if(m==='web'||location.protocol==='file:'||/[?&]test=/.test(location.search))return;
+  var st=false;try{st=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: minimal-ui)').matches||matchMedia('(display-mode: window-controls-overlay)').matches||navigator.standalone===true||/^android-app:/.test(document.referrer);}catch(e){}
+  if(st)return;
+  window.__ballStop=1;location.replace('install.html');
+}catch(e){}})();</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://ballpit-party.onrender.com" crossorigin>
 <script>/* the very first thing the page does: nudge the game server awake (a tiny request), so by the time the menu is up it is already answering */
@@ -937,6 +946,14 @@
       <h4 id="lpNewsH" class="hide"><span data-ic="check"></span> Answers to your requests</h4><div id="lpNews"></div>
       <h4 id="lpOutH" class="hide"><span data-ic="clock"></span> Waiting for an answer</h4><div id="lpOut"></div>
       <button class="btn full prim" id="btnAddF" type="button"><span data-ic="search"></span>Add a friend</button>
+      <h4><span data-ic="bell"></span> Notifications</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bell"></span><span><b>Notifications</b><small id="ntSub">Reach you here, even when the game is closed</small></span></span><input type="checkbox" id="setNotify"><i></i></label>
+      <div id="ntKinds" class="hide">
+        <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Friends come online</b><small>A friend you track starts playing</small></span></span><input type="checkbox" id="setNFriends"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Friend requests</b><small>Someone asks you, or answers you</small></span></span><input type="checkbox" id="setNRequests"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="share"></span><span><b>Game invites</b><small>A friend invites you to their private game</small></span></span><input type="checkbox" id="setNInvites"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>New map</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
+      </div>
     </section>
     <section class="pane" data-pane="bots">
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>Pretend players that only you can see</small></span></span><input type="checkbox" id="setBots"><i></i></label>
@@ -1116,8 +1133,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=88"></script>
-<script src="physics.js?v=88"></script>
+<script src="maps.js?v=90"></script>
+<script src="physics.js?v=90"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1160,6 +1177,7 @@ function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
+    notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
     keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
@@ -1689,6 +1707,7 @@ function respawn(quiet, useCp) {
   // a flag works for one fall or reset: it brings you back once, then goes grey until you touch a different flag
   const cs = cp ? cpSpot(cp) : null;
   S.b = cp ? P.newBody(cs[0], cs[1]) : P.newBody(m.start[0], m.start[1]);   // the community spawn point is exactly the same for everyone
+  const rp = !cp && resumePos && appKeep() ? takeResume() : null; if (rp) { S.b.x = rp.x; S.b.y = rp.y; S.b.vx = rp.vx || 0; S.b.vy = rp.vy || 0; quiet = true; }   // (back in the app: where you were)
   if (cp) { S.cpFlash = 1; notice('Back at your checkpoint', ''); }
   if (cp) { S.cpUsed = S.cpArmed; S.cpArmed = -1; }   // a flag works once: after you come back to it, it goes grey until you touch a different one
   S.dead = 0; S.spawnT = 0.6; S.finished = false; S.bLatch = 0; S.bReady = false;
@@ -2043,13 +2062,19 @@ function restoreWorld(slot) {
     S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; purseP.c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
   } catch (e) {}
 }
-setInterval(() => { if (S.mode === 'play' && !S.away) saveWorld(); }, 4000);
+setInterval(() => { if (S.mode === 'play' && !S.away) { saveWorld(); savePos(); } }, 4000);
 addEventListener('beforeunload', () => saveWorld(true));
 addEventListener('pagehide', () => saveWorld(true)); document.addEventListener('visibilitychange', () => { if (document.hidden) saveWorld(true); });   // (whatever way you leave, the world is kept exactly as it is)
 
 /* leaving the screen = you are gone; coming back = fresh start at the spawn */
-function goAway() { if (S.away || S.mode !== 'play') return; S.away = true; saveWorld(true); windSet(0); sendPos(true); }
-function comeBack() { if (!S.away) return; S.away = false; S.finished = false; S.started = false; $('finishbanner').classList.add('hide'); bots.length = 0; respawn(); sendPos(true); }
+/* the installed app keeps you exactly where you are: leaving the screen pauses you, it never kills or resets you, and a closed app puts you back where you were (same map, within 30 minutes) */
+const appKeep = () => { try { return (window.__appForce || ['standalone', 'fullscreen', 'minimal-ui', 'window-controls-overlay'].some(m => matchMedia('(display-mode: ' + m + ')').matches) || navigator.standalone === true) && (!/[?&]test=/.test(location.search) || !!window.__appForce); } catch (e) { return false; } };
+const POSKEY = 'ballpit-pos';
+let resumePos = null; try { resumePos = JSON.parse(localStorage.getItem(POSKEY) || 'null'); } catch (e) {}
+function savePos() { if (!appKeep() || !S.b || S.mode !== 'play' || S.slot < 0 || S.dead > 0 || S.finished) return; try { localStorage.setItem(POSKEY, JSON.stringify({ slot: S.slot, idx: S.idx | 0, x: S.b.x, y: S.b.y, vx: S.b.vx, vy: S.b.vy, t: Date.now() })); } catch (e) {} }
+function takeResume() { const r = resumePos; resumePos = null; return r && Date.now() - r.t < 1800000 && r.slot === S.slot && (r.idx | 0) === (S.idx | 0) && isFinite(r.x) && isFinite(r.y) ? r : null; }
+function goAway() { if (S.away || S.mode !== 'play') return; S.away = true; savePos(); saveWorld(true); windSet(0); sendPos(true); }
+function comeBack() { if (!S.away) return; if (appKeep()) { S.away = false; S.spawnT = Math.max(S.spawnT, 0.3); sendPos(true); return; } S.away = false; S.finished = false; S.started = false; $('finishbanner').classList.add('hide'); bots.length = 0; respawn(); sendPos(true); }
 document.addEventListener('visibilitychange', () => { inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; if (document.hidden) goAway(); else comeBack(); });
 addEventListener('pagehide', goAway);
 addEventListener('pageshow', () => { if (!document.hidden) comeBack(); });
@@ -2697,7 +2722,7 @@ function buildLook() {
 function syncUI() {
   nameUI();
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
-    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'],
+    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); $('todDesc').textContent = TODS[settings.tod];
@@ -2706,7 +2731,7 @@ function syncUI() {
   buildKeys();
   $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%';
   $('setFs').disabled = !fsSupported(); $('fsNote').textContent = fsSupported() ? '' : 'Full screen is not available on this device or browser.';
-  buildLook(); refreshLook(); applyMmVisibility();
+  buildLook(); refreshLook(); applyMmVisibility(); try { ntRender(); } catch (e) {}
 }
 function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); sfx($(id).checked ? 'on' : 'off'); if (fn) fn(); }; }
 bindToggle('setTags', 'tags'); bindToggle('setFinArrow', 'finArrow'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
@@ -2868,7 +2893,7 @@ const codeTag = c => { const s = document.createElement('span'); s.className = '
 function friendNote(e, nm, on) {   // a special heads-up when someone you track comes online or goes offline
   if (e.mute >= 1 || !settings.mp) return;
   const t = who(nm || e.name) + (on ? ' is online' : ' went offline');
-  notice('★ ' + t, '', 'human'); addFeed('★ ' + t, 'friend', true, 'human'); sfx(on ? 'join' : 'leave');
+  notice('★ ' + t, '', 'human'); addFeed('★ ' + t, 'friend', true, 'human'); sfx(on ? 'join' : 'leave'); if (on) sysNotify('nFriends', who(nm || e.name) + ' is online', 'Jump in and play together', 'on-' + e.pub);
 }
 const wsSend = o => { if (ws && ws.readyState === 1 && (online || lobbyOn)) ws.send(JSON.stringify(o)); };
 
@@ -2906,11 +2931,11 @@ function linkMsg(m) {
         if (o.on) e.on = 1; else { e.on = 0; e.x = null; }
       }
       for (const e of lks) if (!seen.has(e.pub)) { e.ok = false; e.on = 0; e.x = null; }
-      linksReady = true; saveLinks(); lpRender(); return true;
+      linksReady = true; saveLinks(); lpRender(); pushSyncSoon(); return true;
     }
     case 'treq':
       if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, code: m.code || '', name: String(m.name || '').slice(0, 12), color: HEX.test(m.color) ? m.color : '#ccc', color2: m.color2, pat: m.pat | 0 });
-      sfx('ready'); notice('★ ' + who(m.name) + ' wants to be your friend', ''); lpRender(); return true;
+      sfx('ready'); notice('★ ' + who(m.name) + ' wants to be your friend', ''); sysNotify('nRequests', who(m.name) + ' wants to be your friend', 'Open ballpit.party to answer', 'req-' + m.pub); lpRender(); return true;
     case 'tres': {   // the answer to a request you sent: now, or while you were away
       const list = m.list || []; let yes = 0, no = 0, last = null;
       for (const x of list) {
@@ -2920,7 +2945,7 @@ function linkMsg(m) {
         if (x.ok) yes++; else no++; last = x;
       }
       friendNews = friendNews.slice(0, 20); saveNews();
-      if (last) { sfx(yes ? 'join' : 'ui'); notice(list.length === 1 ? (last.ok ? '★ ' + who(last.name) + ' accepted your friend request' : who(last.name) + ' said not now to your friend request') : 'You have ' + list.length + ' answers to your friend requests', ''); }
+      if (last) { sysNotify('nRequests', who(last.name) + (last.ok ? ' accepted your friend request' : ' said not now to your friend request'), last.ok ? 'You are friends now' : 'Open ballpit.party to see', 'ans-' + last.pub); sfx(yes ? 'join' : 'ui'); notice(list.length === 1 ? (last.ok ? '★ ' + who(last.name) + ' accepted your friend request' : who(last.name) + ' said not now to your friend request') : 'You have ' + list.length + ' answers to your friend requests', ''); }
       wsSend({ t: 'rack' }); lpRender(); return true;
     }
     case 'tout': for (const x of (m.list || [])) if (/^[0-9a-f]{16}$/.test(x.pub || '')) { sentTo.add(x.pub); outReq[x.pub] = { name: String(x.name || '').slice(0, 12), code: x.code || '', t: +x.t || 0 }; } lpRender(); return true;
@@ -4006,8 +4031,62 @@ function joinParty(hp, name) {
   closeLevels(); closeInvites(); toggleChat(false); toggleShop(false);
   retry = 0; setNet('connecting'); joinWorld(); lvlRender();
 }
+
+/* ----- notifications: real ones, on this device. In the background the game shows them itself; when it is closed the server pushes them. ----- */
+const notifOK = () => 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window && /^https:$|^http:$/.test(location.protocol);
+const notifOn = () => !!settings.notify && notifOK() && Notification.permission === 'granted';
+const swReg = () => (navigator.serviceWorker && navigator.serviceWorker.ready ? navigator.serviceWorker.ready.catch(() => null) : Promise.resolve(null));
+function sysNotify(kind, title, body, tag) {   // a notification from the system, only when you are not looking at the game
+  if (!notifOn() || !settings[kind] || (!document.hidden && document.hasFocus())) return;
+  swReg().then(r => r && r.showNotification(title, { body, tag, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: './' } })).catch(() => {});
+}
+function ntRender() {
+  const on = notifOK() ? Notification.permission !== 'denied' : false;
+  $('setNotify').checked = !!settings.notify && notifOn();
+  $('setNotify').disabled = !on && !settings.notify;
+  $('ntSub').textContent = !notifOK() ? 'Not available on this device or browser' : Notification.permission === 'denied' ? 'Blocked. Allow notifications for ballpit.party in your browser settings' : 'Reach you here, even when the game is closed';
+  $('ntKinds').classList.toggle('hide', !(settings.notify && notifOn()));
+  [['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps']].forEach(p => { $(p[0]).checked = !!settings[p[1]]; });
+}
+const b64uBytes = s => { const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')), o = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; };
+let vapidKey = '', pushSock = null, pushSig = '', pushTimer = 0;
+async function pushSync() {   // tell the server where to reach this device, and what you want; or tell it to forget this device
+  pushTimer = 0;
+  if (!notifOK() || !(online || lobbyOn)) return;
+  const reg = await swReg(); if (!reg) return;
+  if (!notifOn()) {
+    if (pushSig) { pushSig = ''; wsSend({ t: 'punsub' }); }
+    try { const s = await reg.pushManager.getSubscription(); if (s) await s.unsubscribe(); } catch (e) {}
+    return;
+  }
+  try {
+    if (!vapidKey) { const r = await fetch(homeBase() + '/vapid', { cache: 'no-store' }); vapidKey = ((await r.json()) || {}).key || ''; }
+    if (!vapidKey) return;
+    const want = b64uBytes(vapidKey); let sub = await reg.pushManager.getSubscription();
+    if (sub) { const have = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null; if (!have || have.length !== want.length || have.some((v, i) => v !== want[i])) { await sub.unsubscribe(); sub = null; } }   // (the server's keys changed: subscribe again)
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
+    const prefs = { f: settings.nFriends ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, mu: lks.filter(l => l.mute >= 1).map(l => l.pub).slice(0, 12) };
+    const j = sub.toJSON(), sig = JSON.stringify([j.endpoint, prefs]);
+    if (sig === pushSig && pushSock === ws) return;
+    pushSig = sig; pushSock = ws;
+    wsSend({ t: 'psub', sub: { endpoint: j.endpoint, keys: j.keys }, prefs });
+  } catch (e) {}
+}
+const pushSyncSoon = () => { clearTimeout(pushTimer); pushTimer = setTimeout(pushSync, 1200); };
+['setNFriends', 'setNRequests', 'setNInvites', 'setNMaps'].forEach(id => { $(id).addEventListener('change', () => pushSyncSoon()); });
+$('setNotify').onchange = async () => {
+  const want = $('setNotify').checked;
+  if (!want) { settings.notify = false; save(); sfx('off'); ntRender(); pushSyncSoon(); return; }
+  if (!notifOK()) { $('setNotify').checked = false; notice('Notifications are not available on this device or browser', ''); return; }
+  let perm = Notification.permission;
+  if (perm === 'default') { try { perm = await Notification.requestPermission(); } catch (e) {} }
+  if (perm !== 'granted') { settings.notify = false; save(); ntRender(); notice('Notifications are blocked. Allow them for ballpit.party in your browser settings', 'urgent'); return; }
+  settings.notify = true; save(); sfx('on'); ntRender(); pushSync();
+  swReg().then(r => r && r.showNotification('Notifications are on', { body: 'You will hear about friends, requests and invites here.', tag: 'nt-on', icon: 'icon-192.png', badge: 'icon-192.png' })).catch(() => {});
+};
 function partyInvited(m) {
   if (typeof m.pub !== 'string' || (mutes[m.pub] || 0) >= 2) return;
+  sysNotify('nInvites', who(m.name) + ' invited you', 'Join their private game', 'inv-' + m.pub);
   if (!$('confirm').classList.contains('hide')) { notice(who(m.name) + ' invited you to their private game', ''); return; }
   sfx('notice');
   const warn = party ? (party.role === 'host' ? ' Joining ends your own private game and sends the friends in it home.' : ' You will leave the game you are in.') : '';
@@ -4373,7 +4452,7 @@ function onMsg(m) {
     case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); sfx('big'); break;
     case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y) || (!party && !pubTake('p', [m.k | 0, m.x | 0, m.y | 0]))) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
     case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
-    case 'newmap': if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
+    case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count]); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; startTransition(m.slot, m.next); break;
     case 'fin': {
       const mine = m.id === myId, o = others.get(m.id);
@@ -5530,6 +5609,7 @@ hudTick();
 requestAnimationFrame(frame);
 if (window.__bootStep) window.__bootStep('Rolling out the map…', 85);
 let bootSeen = 0; (function waitFirst() { if (S.map && S.b && ++bootSeen > 6) { if (window.__bootHide) window.__bootHide(); } else requestAnimationFrame(waitFirst); })();
+try { if ('wakeLock' in navigator && appKeep()) { let wl = null; const hold = () => { if (wl || document.hidden) return; navigator.wakeLock.request('screen').then(l => { wl = l; l.addEventListener('release', () => { wl = null; }); }).catch(() => {}); }; hold(); document.addEventListener('visibilitychange', hold); } } catch (e) {}   // (in the app the screen stays on while you play)
 try { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !(params && params.get('test'))) navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
 window.__ballOk = true;
 })();

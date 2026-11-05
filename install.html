@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14111c">
+<meta name="ballpit-mode" content="__MODE__">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="512x512" href="icon.png">
+<title>Get ballpit.party</title>
+<meta name="description" content="ballpit.party is an app. Install it to play.">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#f3ead6;--dim:#b9ad94;--paper:#1f1a2c;--line:#e8dcc0;--accent:#ffcc3d;--good:#58d68d;--bad:#ff5b4a;--font:"Patrick Hand","Segoe Print","Bradley Hand","Chalkboard SE","Comic Sans MS",cursive,sans-serif}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:#14111c;color:var(--ink);font-family:var(--font);font-size:19px;line-height:1.35}
+  body{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));background:radial-gradient(1200px 700px at 50% -10%,#2a2150 0,#14111c 62%)}
+  .card{width:100%;max-width:500px;background:var(--paper);border:2.5px solid var(--line);border-radius:18px 22px 16px 24px / 22px 16px 24px 18px;padding:26px 24px 22px;box-shadow:0 14px 44px rgba(0,0,0,.5);text-align:center}
+  .logo{width:92px;height:92px;margin:-62px auto 8px;display:block;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+  h1{margin:6px 0 4px;font-size:32px;font-weight:400;letter-spacing:.2px}
+  .sub{color:var(--dim);margin:0 0 18px}
+  .go{display:block;width:100%;font:inherit;font-size:24px;color:#14210f;background:var(--good);border:2.5px solid #16100c;border-radius:14px 16px 13px 17px / 16px 13px 17px 14px;padding:12px 16px;cursor:pointer;box-shadow:0 4px 0 #16100c;transition:transform .08s,box-shadow .08s}
+  .go:hover{filter:brightness(1.06)}.go:active{transform:translateY(3px);box-shadow:0 1px 0 #16100c}
+  .go[disabled]{opacity:.45;cursor:default;filter:none;box-shadow:0 4px 0 #16100c;transform:none}
+  .steps{margin:14px 0 0;padding:12px 14px;border:2px dashed rgba(232,220,192,.35);border-radius:12px;color:var(--ink);text-align:left;font-size:18px}
+  .steps b{color:var(--accent);font-weight:400}
+  .steps p{margin:0}.steps p+p{margin-top:6px}
+  .plats{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px 0 0}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:2px solid rgba(232,220,192,.45);border-radius:999px;font-size:16px;color:var(--ink)}
+  .chip i{width:9px;height:9px;border-radius:50%;background:var(--good);display:inline-block}
+  .chip.no{opacity:.5;border-style:dashed}.chip.no i{background:#8a8498}
+  .chip.me{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,204,61,.25)}
+  .done{display:none;color:var(--good);margin:12px 0 0}
+  .note{margin:16px 0 0;font-size:16px;color:var(--dim)}
+  .hide{display:none!important}
+  @media (max-width:420px){.card{padding:24px 16px 18px}h1{font-size:28px}.go{font-size:22px}}
+  @media (prefers-reduced-motion:no-preference){.card{animation:rise .35s ease-out}@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}}
+</style>
+</head>
+<body>
+<main class="card" id="card">
+  <img class="logo" src="icon.svg" alt="" width="92" height="92">
+  <h1>Get the ballpit.party app</h1>
+  <p class="sub" id="sub">Install it once, then play right from your desktop or home screen.</p>
+  <button class="go" id="install" type="button">Install the app</button>
+  <div class="steps hide" id="steps"></div>
+  <p class="done" id="done">Installed. Open ballpit.party from your apps and play.</p>
+  <div class="plats" id="plats">
+    <span class="chip" data-p="windows"><i></i>Windows</span>
+    <span class="chip" data-p="mac"><i></i>Mac</span>
+    <span class="chip" data-p="linux"><i></i>Linux</span>
+    <span class="chip" data-p="android"><i></i>Android</span>
+    <span class="chip no" data-p="ios"><i></i>iPhone and iPad: not yet</span>
+  </div>
+  <p class="note" id="note">Already installed? Open ballpit.party from your apps.</p>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var mode = (document.querySelector('meta[name="ballpit-mode"]') || {}).content;
+  var standalone = function () { try { return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: minimal-ui)').matches || matchMedia('(display-mode: window-controls-overlay)').matches || navigator.standalone === true || /^android-app:/.test(document.referrer); } catch (e) { return false; } };
+  if (mode === 'web' || standalone()) { location.replace('./'); return; }   // the website is open to everyone, or this already is the app: go play
+  try { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {}
+
+  var ua = navigator.userAgent || '', pf = navigator.platform || '';
+  var plat = /iPhone|iPad|iPod/.test(ua) || (pf === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios' : /Android/.test(ua) ? 'android' : /Win/.test(pf) || /Windows/.test(ua) ? 'windows' : /Mac/.test(pf) ? 'mac' : 'linux';
+  var br = /Edg\//.test(ua) ? 'edge' : /SamsungBrowser/.test(ua) ? 'samsung' : /OPR\/|Opera/.test(ua) ? 'opera' : /Firefox|FxiOS/.test(ua) ? 'firefox' : /Chrome|CriOS|Chromium/.test(ua) ? 'chrome' : /Safari/.test(ua) ? 'safari' : 'other';
+  var me = document.querySelector('.chip[data-p="' + plat + '"]'); if (me) me.classList.add('me');
+  var btn = $('install'), steps = $('steps'), deferred = null;
+  var say = function (html) { steps.innerHTML = html; steps.classList.toggle('hide', !html); };
+  var tip = function () {
+    if (plat === 'ios') { btn.classList.add('hide'); $('note').classList.add('hide'); $('sub').textContent = 'ballpit.party is not available on iPhone or iPad yet. Open it on a computer or an Android phone.'; return; }
+    if (plat === 'android') {
+      if (br === 'firefox') return say('<p>Open the browser menu, then choose <b>Install</b>.</p>');
+      if (br === 'samsung') return say('<p>Open the menu, choose <b>Add page to</b>, then <b>Home screen</b>.</p>');
+      return say('<p>Open the browser menu, then choose <b>Install app</b>.</p>');
+    }
+    if (br === 'firefox') { btn.classList.add('hide'); return say('<p>Firefox cannot install apps. Open this page in <b>Chrome</b> or <b>Edge</b> to install it.</p>'); }
+    if (plat === 'mac' && br === 'safari') return say('<p>In the menu bar choose <b>File</b>, then <b>Add to Dock</b>.</p>');
+    if (br === 'other') return say('<p>Open this page in <b>Chrome</b> or <b>Edge</b> to install it.</p>');
+    say('<p>Click the <b>install</b> icon at the right end of the address bar, then <b>Install</b>.</p>');
+  };
+  tip();
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; say(''); btn.disabled = false; });
+  window.addEventListener('appinstalled', function () { btn.classList.add('hide'); say(''); $('done').style.display = 'block'; $('note').classList.add('hide'); });
+  btn.onclick = function () {
+    if (deferred) { var d = deferred; deferred = null; d.prompt(); d.userChoice.then(function () {}, function () {}); return; }
+    tip(); steps.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  };
+  setInterval(function () { if (standalone()) location.replace('./'); }, 1500);
+})();
+</script>
+</body>
+</html>

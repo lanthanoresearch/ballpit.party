@@ -8,6 +8,10 @@
 //   HOME_URL          optional: visitors who arrive on any other address are sent here (e.g. https://ballpit.party)
 //   LINKS_FILE        where tracking links are saved (default ./links.json)
 //   MAX_PER_IP        max simultaneous connections from one address (default 10)
+//   PLAY_MODE         'app' (the default): the website sends visitors to an install page, and the game only runs inside the installed app.
+//                     'web': the game opens in the browser like a normal website.
+//   VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY   keys for phone and desktop notifications. Set both so they never change (otherwise they are made once and
+//                     kept in the links file). VAPID_SUBJECT is an optional contact address, e.g. mailto:you@example.com
 const http = require('http');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -16,6 +20,8 @@ const { WebSocketServer } = require('ws');
 const maps = require('./maps.js');
 
 const PORT = process.env.PORT || 3000;
+const DEFAULT_MODE = 'app';   // <- the one switch in the code: 'app' = the game only runs in the installed app. Change to 'web' to put the plain website back.
+const PLAY_MODE = String(process.env.PLAY_MODE || DEFAULT_MODE).toLowerCase() === 'web' ? 'web' : 'app';   // (or set the PLAY_MODE variable on Render, no code change needed)
 // what one world can hold of what people build (shared by everyone in it). Each player has their own, lower limits per item; these keep a full world quick.
 const ROOM_PROPS = 800, ROOM_GATES = 200, ROOM_MISC = 2500, ROOM_CPS = 150;
 const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);   // players per world: few enough that a world full of builds stays smooth for everyone
@@ -45,7 +51,9 @@ for (const [url, name, type] of [
   ['/icon-512.png', 'icon-512.png', 'image/png'],
   ['/icon-maskable-512.png', 'icon-maskable-512.png', 'image/png'],
   ['/manifest.webmanifest', 'manifest.webmanifest', 'application/manifest+json'],
-  ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
+  ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8'],
+  ['/install.html', 'install.html', 'text/html; charset=utf-8'],
+  ['/install', 'install.html', 'text/html; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
@@ -85,22 +93,75 @@ const DAY = 24 * 3600 * 1000, REQ_TTL = 90 * DAY;   // a friend request waits fo
 const known = new Map();      // pub -> { name, color, last, nameAt }: everyone who has ever been here, so they can be searched for later
 const CODE_CH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // short codes skip look-alike letters (no I, L, O, 0, 1)
 function codeOf(pub) { let n = BigInt('0x' + pub.slice(0, 12)), c = ''; for (let i = 0; i < 6; i++) { c = CODE_CH[Number(n % 31n)] + c; n /= 31n; } return c; }
+/* ---------- notifications to phones and computers (Web Push), written with Node's own crypto so nothing extra needs installing ----------
+   A device that wants them sends its address ("subscription") and what it wants. Only devices that are not connected right now are pushed to:
+   anybody who is in the game gets the same news inside the game. Subscriptions are rebuilt by each device whenever it connects. */
+const https = require('https');
+const b64u = b => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = s => Buffer.from(String(s).replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+const pushSubs = new Map();   // pub -> { ep, p, a, f, r, i, m, mu: [muted friend pubs], t }
+let vapid = null;             // { pub: base64url public key, key: private KeyObject, priv: base64url d }
+function makeVapid(pubB64, privB64) {
+  try {
+    const pub = unb64u(pubB64), d = unb64u(privB64); if (pub.length !== 65 || pub[0] !== 4 || d.length !== 32) return null;
+    const key = crypto.createPrivateKey({ key: { kty: 'EC', crv: 'P-256', x: b64u(pub.slice(1, 33)), y: b64u(pub.slice(33)), d: b64u(d) }, format: 'jwk' });
+    return { pub: b64u(pub), key, priv: b64u(d) };
+  } catch (e) { return null; }
+}
+function newVapid() {
+  const kp = crypto.generateKeyPairSync('ec', { namedCurve: 'prime256v1' }), j = kp.privateKey.export({ format: 'jwk' });
+  return makeVapid(b64u(Buffer.concat([Buffer.from([4]), unb64u(j.x), unb64u(j.y)])), j.d);
+}
+const PUSH_HOST = /(^|\.)(googleapis\.com|push\.services\.mozilla\.com|notify\.windows\.com|push\.apple\.com|mozilla\.com)$/i;
+const okPushUrl = u => { try { const x = new URL(u); return process.env.PUSH_ALLOW_ANY === '1' || (x.protocol === 'https:' && PUSH_HOST.test(x.hostname) && String(u).length < 700); } catch (e) { return false; } };
+function pushBody(sub, text) {   // RFC 8291 (aes128gcm): the message only the device can read
+  const ua = unb64u(sub.p), auth = unb64u(sub.a), ecdh = crypto.createECDH('prime256v1'); ecdh.generateKeys();
+  const asPub = ecdh.getPublicKey(), secret = ecdh.computeSecret(ua), salt = crypto.randomBytes(16);
+  const ikm = Buffer.from(crypto.hkdfSync('sha256', secret, auth, Buffer.concat([Buffer.from('WebPush: info\0'), ua, asPub]), 32));
+  const cek = Buffer.from(crypto.hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: aes128gcm\0'), 16)), nonce = Buffer.from(crypto.hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: nonce\0'), 12));
+  const c = crypto.createCipheriv('aes-128-gcm', cek, nonce), ct = Buffer.concat([c.update(Buffer.concat([Buffer.from(text), Buffer.from([2])])), c.final(), c.getAuthTag()]);
+  const hdr = Buffer.alloc(21); salt.copy(hdr, 0); hdr.writeUInt32BE(4096, 16); hdr[20] = asPub.length;
+  return Buffer.concat([hdr, asPub, ct]);
+}
+function sendPush(pub, payload) {
+  const sub = pushSubs.get(pub); if (!sub || !vapid) return;
+  let u; try { u = new URL(sub.ep); } catch (e) { pushSubs.delete(pub); return; }
+  const now = Math.floor(Date.now() / 1000), head = b64u(JSON.stringify({ typ: 'JWT', alg: 'ES256' })), claims = b64u(JSON.stringify({ aud: u.origin, exp: now + 12 * 3600, sub: process.env.VAPID_SUBJECT || 'https://ballpit.party' }));
+  const sig = crypto.sign('sha256', Buffer.from(head + '.' + claims), { key: vapid.key, dsaEncoding: 'ieee-p1363' });
+  let body; try { body = pushBody(sub, JSON.stringify(payload)); } catch (e) { return; }
+  const rq = (u.protocol === 'http:' ? http : https).request({ method: 'POST', hostname: u.hostname, port: u.port || undefined, path: u.pathname + u.search, timeout: 8000, headers: { 'Content-Type': 'application/octet-stream', 'Content-Encoding': 'aes128gcm', 'Content-Length': body.length, TTL: '3600', Urgency: 'normal', Authorization: 'vapid t=' + head + '.' + claims + '.' + b64u(sig) + ', k=' + vapid.pub } }, res => {
+    res.resume(); if (res.statusCode === 404 || res.statusCode === 410) { if (pushSubs.get(pub) === sub) { pushSubs.delete(pub); linksDirty = true; } }
+  });
+  rq.on('error', () => {}); rq.on('timeout', () => rq.destroy()); rq.end(body);
+}
+const pushLast = new Map();   // pub + tag -> time: the same news is not pushed again and again
+function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map. Only to devices that are not connected right now.
+  const sub = pushSubs.get(pub); if (!sub || !sub[kind] || live(byPub.get(pub)) || (from && sub.mu && sub.mu.indexOf(from) >= 0)) return;
+  const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : 30000; if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
+  if (pushLast.size > 4000) { for (const [kk, v] of pushLast) if (t - v > 3600000) pushLast.delete(kk); }
+  sendPush(pub, { title: String(n[0]).slice(0, 60), body: String(n[1]).slice(0, 100), tag });
+}
+
 try {
   const o = JSON.parse(fs.readFileSync(LINKS_FILE, 'utf8'));
   for (const k in (o.links || {})) if (PUB.test(k)) links.set(k, new Set((o.links[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));
   for (const k in (o.gone || {})) if (PUB.test(k)) gone.set(k, new Set((o.gone[k] || []).filter(v => PUB.test(v)).slice(0, 50)));
   for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', color2: HEX.test(v.color2) ? v.color2 : '#ffffff', pat: cleanPat(v.pat), last: +v.last || 0, nameAt: +v.nameAt || 0, beat: Math.max(0, Math.min(999, v.beat | 0)) }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
+  if (o.vapid && o.vapid.pub && o.vapid.priv) vapid = makeVapid(o.vapid.pub, o.vapid.priv);
+  for (const k in (o.push || {})) if (PUB.test(k) && o.push[k] && okPushUrl(o.push[k].ep)) { const v = o.push[k]; pushSubs.set(k, { ep: String(v.ep), p: String(v.p).slice(0, 100), a: String(v.a).slice(0, 40), f: v.f ? 1 : 0, r: v.r ? 1 : 0, i: v.i ? 1 : 0, m: v.m ? 1 : 0, mu: Array.isArray(v.mu) ? v.mu.filter(x => PUB.test(x)).slice(0, 12) : [], t: +v.t || 0 }); }
   for (const e of (o.news || [])) if (Array.isArray(e) && PUB.test(e[0]) && Array.isArray(e[1])) news.set(e[0], e[1].filter(x => x && PUB.test(x.p) && Date.now() - x.t < REQ_TTL).map(x => ({ p: x.p, ok: x.ok ? 1 : 0, t: +x.t })).slice(-30));
   console.log('Restored ' + known.size + ' players, ' + [...links.values()].reduce((a, v) => a + v.size, 0) / 2 + ' friendships, ' + pend.size + ' waiting requests, from ' + LINKS_FILE);
 } catch (e) {}
+{ const ev = process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY ? makeVapid(process.env.VAPID_PUBLIC_KEY.trim(), process.env.VAPID_PRIVATE_KEY.trim()) : null;
+  if (ev) vapid = ev; else if (!vapid) { vapid = newVapid(); linksDirty = true; } }   // (keys from the settings win; otherwise they are made once and kept with the saved links)
 function saveLinks(sync) {
   if (!linksDirty) return; linksDirty = false;
   // keep only what is needed: people not seen for two months (and not tied to a friend link or a waiting request) are forgotten
   { const old = Date.now() - STALE_MS, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); }); news.forEach((v, k) => { need.add(k); v.forEach(x => need.add(x.p)); });
     known.forEach((v, k) => { if (v.last < old && !need.has(k) && !byPub.has(k)) known.delete(k); }); }
   if (known.size > 5000) [...known.entries()].sort((a, b) => a[1].last - b[1].last).slice(0, known.size - 5000).forEach(e => known.delete(e[0]));
-  const o = { links: {}, gone: {}, known: {}, pend: [...pend.entries()].map(e => [e[0], e[1].t]), news: [...news.entries()].filter(e => e[1].length) };
+  const o = { links: {}, gone: {}, known: {}, pend: [...pend.entries()].map(e => [e[0], e[1].t]), news: [...news.entries()].filter(e => e[1].length), vapid: vapid ? { pub: vapid.pub, priv: vapid.priv } : undefined, push: Object.fromEntries(pushSubs) };
   links.forEach((v, k) => { if (v.size) o.links[k] = [...v]; }); gone.forEach((v, k) => { if (v.size) o.gone[k] = [...v]; }); known.forEach((v, k) => { o.known[k] = v; });
   const s = JSON.stringify(o);
   try {   /* written to a side file first and then swapped in, so a restart in the middle of saving can never leave a half-written list */
@@ -131,6 +192,7 @@ function setName(p, nm) {
   return k.nameAt && now - k.nameAt < DAY ? DAY - (now - k.nameAt) : 0;
 }
 
+
 /* ---------- rooms ---------- */
 let nextId = 1, nextRoomId = 1, online = 0;
 const rooms = new Map();
@@ -147,9 +209,13 @@ const server = http.createServer((req, res) => {
   if (url === '/stats') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({
-      online, peak, slot: curSlot, map: maps.names[curSlot % maps.count], players: known.size,   // (players: everybody on record; if this drops to a few after a restart, the saved file is not surviving restarts)
+      online, peak, slot: curSlot, map: maps.names[curSlot % maps.count], players: known.size, mode: PLAY_MODE, push: pushSubs.size,   // (players: everybody on record; if this drops to a few after a restart, the saved file is not surviving restarts)
       rooms: [...rooms.values()].filter(r => !r.priv).map(r => ({ id: r.id, players: r.players.size }))
     }));
+  }
+  if (url === '/vapid') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
+    return res.end(JSON.stringify({ key: vapid ? vapid.pub : '' }));
   }
   if (url === '/version') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
@@ -162,7 +228,7 @@ const server = http.createServer((req, res) => {
     // the share image needs a full web address, so fill in this site's own address
     const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
     const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim().replace(/[^A-Za-z0-9.:\-]/g, '');
-    body = Buffer.from(f.data.toString('utf8').split('__ORIGIN__').join(proto.replace(/[^a-z]/g, '') + '://' + host).split('__BUILD__').join(BUILD));
+    body = Buffer.from(f.data.toString('utf8').split('__ORIGIN__').join(proto.replace(/[^a-z]/g, '') + '://' + host).split('__BUILD__').join(BUILD).split('__MODE__').join(PLAY_MODE));
   }
   res.writeHead(200, { 'Content-Type': f.type, 'Cache-Control': f.type.indexOf('image/') === 0 ? 'public, max-age=3600' : 'no-store' });
   res.end(body);
@@ -299,7 +365,7 @@ wss.on('connection', (ws, req) => {
         if (removed.length) send(p, { t: 'unl', gone: removed });
         sendLinks(p);
         rooms.forEach(r => { if (r.priv && (r.priv.keep.has(p.pub) || r.priv.once.has(p.pub)) && r !== p.room) { r.priv.once.delete(p.pub); send(p, { t: 'inv', pub: r.priv.hostPub, name: (byPub.get(r.priv.hostPub) || {}).name || '', idx: r.priv.idx }); } });   // an invite that came while you were away (one that was sent as 'ask once' is only shown the first time)
-        for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (live(q)) { sendLinks(q); if (!wasOn) send(q, { t: 'lon', pub: p.pub, name: p.name }); } }
+        for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (live(q)) { sendLinks(q); if (!wasOn) send(q, { t: 'lon', pub: p.pub, name: p.name }); } else if (!wasOn && p.name) pushTo(b, 'f', [p.name + ' is online', 'Jump in and play together'], 'on-' + p.pub, p.pub); }
         { const nl = news.get(p.pub); if (nl && nl.length) send(p, { t: 'tres', list: nl.map(x => { const pi = peerInfo(x.p); return { pub: x.p, code: pi.code, name: pi.name, ok: x.ok, t: x.t }; }) }); }   // answers to your requests that came while you were away
         { const out = []; pend.forEach((v, k) => { if (k.slice(0, 16) === p.pub) { const to = k.slice(17), pi = peerInfo(to); out.push({ pub: to, code: pi.code, name: pi.name, t: v.t }); } }); send(p, { t: 'tout', list: out }); }   // requests you sent that nobody has answered yet
         pend.forEach((v, k) => {   // friend requests that arrived while you were away
@@ -333,7 +399,7 @@ wss.on('connection', (ws, req) => {
       r.priv.invited.add(m.to);
       const q = byPub.get(m.to), keep = m.keep !== false;   // 'keep open' (the default): they are asked again every time they come back, for as long as the game is open
       if (keep) { r.priv.keep.add(m.to); r.priv.once.delete(m.to); } else { r.priv.keep.delete(m.to); if (!live(q)) r.priv.once.add(m.to); }
-      if (live(q)) send(q, { t: 'inv', pub: p.pub, name: p.name, idx: r.priv.idx });
+      if (live(q)) send(q, { t: 'inv', pub: p.pub, name: p.name, idx: r.priv.idx }); else pushTo(m.to, 'i', [(p.name || 'A friend') + ' invited you', 'Join their private game'], 'inv-' + p.pub);
       send(p, { t: 'invsent', pub: m.to, on: live(q) ? 1 : 0 });
     } else if (m.t === 'pb') {   // a bunch of builds at once (up to 25 of one kind): what somebody had built before joining this world
       const r = p.room; if (!r || !bstate(r)) return;
@@ -402,11 +468,12 @@ wss.on('connection', (ws, req) => {
         pend.set(p.pub + '>' + m.to, { t: now }); linksDirty = true;
         if (live(q)) send(q, { t: 'treq', pub: p.pub, code: codeOf(p.pub), name: p.name, color: p.color, color2: p.color2, pat: p.pat | 0 });
         send(p, { t: 'tsent', pub: m.to, name: tn, off: live(q) ? 0 : 1 });
+        if (!live(q)) pushTo(m.to, 'r', [(p.name || 'Someone') + ' wants to be your friend', 'Open ballpit.party to answer'], 'req-' + p.pub);
       } else {
         const k = m.to + '>' + p.pub, pr = pend.get(k);
         if (!pr || Date.now() - pr.t > REQ_TTL) { pend.delete(k); return send(p, { t: 'tno', pub: m.to, why: 'old' }); }
         pend.delete(k); linksDirty = true;
-        const tell = ok => { if (live(q)) send(q, { t: 'tres', list: [{ pub: p.pub, code: codeOf(p.pub), name: p.name, ok, t: Date.now() }] }); else { let l = news.get(m.to); if (!l) news.set(m.to, l = []); l.push({ p: p.pub, ok, t: Date.now() }); if (l.length > 30) l.shift(); linksDirty = true; } };   // the one who asked sees the answer now, or the next time they are on
+        const tell = ok => { if (live(q)) send(q, { t: 'tres', list: [{ pub: p.pub, code: codeOf(p.pub), name: p.name, ok, t: Date.now() }] }); else { let l = news.get(m.to); if (!l) news.set(m.to, l = []); l.push({ p: p.pub, ok, t: Date.now() }); if (l.length > 30) l.shift(); linksDirty = true; pushTo(m.to, 'r', [(p.name || 'Someone') + (ok ? ' accepted your friend request' : ' said not now to your friend request'), ok ? 'You are friends now' : 'Open ballpit.party to see'], 'ans-' + p.pub); } };   // the one who asked sees the answer now, or the next time they are on
         if (m.t === 'tden') { tell(0); return; }
         if (linkSet(p.pub).size >= MAX_LINKS || linkSet(m.to).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, why: 'full' });
         addLink(p.pub, m.to);
@@ -414,6 +481,14 @@ wss.on('connection', (ws, req) => {
         send(p, { t: 'tok', pub: m.to }); sendLinks(p);
         tell(1); if (live(q)) sendLinks(q);
       }
+    } else if (m.t === 'psub') {   // this device wants notifications: where to reach it, and which kinds
+      if (!p.pub || !m.sub || typeof m.sub !== 'object' || !m.sub.keys || typeof m.sub.endpoint !== 'string' || !okPushUrl(m.sub.endpoint)) return;
+      const k1 = unb64u(m.sub.keys.p256dh || ''), k2 = unb64u(m.sub.keys.auth || ''); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16) return;
+      if (!pushSubs.has(p.pub) && pushSubs.size >= 8000) return;
+      const pr = m.prefs && typeof m.prefs === 'object' ? m.prefs : {};
+      pushSubs.set(p.pub, { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 12) : [], t: Date.now() }); linksDirty = true;
+    } else if (m.t === 'punsub') {
+      if (p.pub && pushSubs.delete(p.pub)) linksDirty = true;
     } else if (m.t === 'rack') {   // your device has shown you the answers it was sent
       if (p.pub && news.delete(p.pub)) linksDirty = true;
     } else if (m.t === 'unl') {
@@ -543,6 +618,7 @@ setInterval(() => {
     for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); }
     broadcast(room, { t: 'newmap', slot: curSlot, next: nextAt(curSlot), now: Date.now() });
   }
+  pushSubs.forEach((v, pub) => { if (v.m) pushTo(pub, 'm', ['A new map has started', maps.names[curSlot % maps.count]], 'map-' + curSlot); });   // (only devices that are not in the game right now)
 }, 1000);
 
 // Drop dead connections
