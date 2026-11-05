@@ -1131,8 +1131,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=96"></script>
-<script src="physics.js?v=96"></script>
+<script src="maps.js?v=98"></script>
+<script src="physics.js?v=98"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1803,6 +1803,7 @@ let inHome = true, paused = false;   // the main screen is up: nothing in the ga
 const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text' && !a.readOnly; };
 const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('profModal').classList.contains('hide') || !$('lvlModal').classList.contains('hide') || !$('invModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
+const pushC = { x: 0, y: 0, vx: 0, vy: 0, ground: false };
 function update(dt) {
   S.t += dt;
   if (paused) return;
@@ -1811,6 +1812,10 @@ function update(dt) {
   w.focus.x = S.b.x; w.focus.y = S.b.y;
   botsTick(dt);
   followWorld(dt);
+  if (w.follow && others.size) {   // the other players push crates and balls here just as they do on the server, so a block you share with somebody answers both of you at once
+    const bx0 = S.b.x, by0 = S.b.y;
+    others.forEach(o => { if (!o.seen || o.dead || Math.abs(o.cx - bx0) > 900 || Math.abs(o.cy - by0) > 700) return; pushC.x = o.cx; pushC.y = o.cy; pushC.vx = o.svx || 0; pushC.vy = o.svy || 0; pushC.ground = !!o.sg; P.collideDyn(pushC, w); });
+  }
   P.stepDyn(w, dt);
   if (w.drops && w.drops.length) stepDrops(w, dt);
   if (S.spawnT > 0) S.spawnT -= dt;
@@ -1931,7 +1936,9 @@ function followWorld(dt) {
     if (Math.abs(ex) + Math.abs(ey) > 240) { d.x = tx; d.y = ty; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.mineT = 0; d.tip = null; continue; }
     if (d.hold > 0) d.hold -= dt;
     if (mine && Math.abs(ex) + Math.abs(ey) > 4 && S.b && Math.abs(S.b.vx) < 30 && Math.abs(S.b.vy) < 60) { d.errT = (d.errT || 0) + dt; if (d.errT > 0.35) { d.mineT = 0; d.hold = 0.6; d.errT = 0; } } else d.errT = 0;   // you are not pushing it, yet it still disagrees with the server's: take the server's
-    const k = 1 - Math.exp(-(mine && d.mineT > 0 ? 5 : 26) * dt);
+    const err = Math.abs(ex) + Math.abs(ey);
+    if (mine && d.mineT > 0) d.relT = 0.3; else if (d.relT > 0) d.relT -= dt;
+    const k = 1 - Math.exp(-(mine && d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : 12) : d.relT > 0 && err < 40 ? 10 : 26) * dt);   // (what you are pushing yourself is only nudged toward the server's picture, and let go of gently; what others move follows at once)
     d.x += ex * k; d.y += ey * k; d.rot += (s.rot - d.rot) * k;
     if (!mine) { d.vx = s.vx; d.vy = s.vy; d.tip = null; d.nap = false; d.spin = false; d.av = 0; }
   }
@@ -4478,13 +4485,22 @@ const newOther = (name, color, color2, pat, crown) => ({ name: name || '', color
 function nearMe(x, y) { return S.b && Math.abs(x - S.b.x) < 2200 && Math.abs(y - S.b.y) < 1600; }
 const solidT = t => t === 1 || t === 3 || t === 4 || t === 6 || t === 9;
 const pp = { x: 0, y: 0 };
-function otherPred(o, d) {   // where somebody else is d seconds after their last update: their speed carries them on, gravity pulls them down in the air, and the floor stops them
+const RING = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7, 0.7], [-0.7, 0.7], [0.7, -0.7], [-0.7, -0.7]];
+function ballFree(x, y) { const w = S.world, r = R - 3; for (let i = 0; i < 8; i++) { if (solidT(P.tile(w, Math.floor((x + RING[i][0] * r) / TS), Math.floor((y + RING[i][1] * r) / TS)))) return false; } return true; }
+function otherPred(o, d) {   // where somebody else is d seconds after their last update: their speed carries them on, gravity pulls them down in the air, and the ground and walls stop them (the picture never goes through anything)
   const x = o.sx + o.svx * d;
-  let y = o.sy + o.svy * d + (o.sg ? 0 : 0.5 * P.GRAV * d * d);
-  if (y > o.sy + 2 && S.world) {            // falling: don't let the picture sink into the ground before their next update says they landed
-    for (let yy = o.sy; yy < y; yy += 10) { if (solidT(P.tile(S.world, Math.floor(x / TS), Math.floor((yy + R + 2) / TS)))) { y = Math.max(o.sy, Math.floor((yy + R + 2) / TS) * TS - R); break; } }
+  const y = o.sy + o.svy * d + (o.sg ? 0 : 0.5 * P.GRAV * d * d);
+  pp.x = x; pp.y = y;
+  if (!S.world || d < 0.012 || !ballFree(o.sx, o.sy)) return pp;
+  const n = Math.min(80, Math.ceil(Math.max(Math.abs(x - o.sx), Math.abs(y - o.sy)) / 6));
+  let cx = o.sx, cy = o.sy, bx = false, by = false;
+  for (let i = 1; i <= n; i++) {
+    const tx = o.sx + (x - o.sx) * i / n, ty = o.sy + (y - o.sy) * i / n;
+    if (!bx) { if (ballFree(tx, cy)) cx = tx; else bx = true; }
+    if (!by) { if (ballFree(cx, ty)) cy = ty; else by = true; }
+    if (bx && by) break;
   }
-  pp.x = x; pp.y = y; return pp;
+  pp.x = cx; pp.y = cy; return pp;
 }
 function dynBin(dv, len, ty) {   // where the shared crates, balls (type 4) and planks (type 5) are right now
   const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (S.slot & 0xFFFF)) return;
@@ -4655,12 +4671,13 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
     const dt = (t - L.t) / 1000;
     if (d) { if (dt < 8) return; }
     else {
-      if (dt < 0.05) return;
+      if (dt < 0.03) return;
       const still = x === L.x && y === L.y && !qx && !qy && !L.vx && !L.vy;
       if (still) { if (dt < 8) return; }
       else {
         const e = Math.min(0.7, dt), px = L.x + L.vx * e, py = L.y + L.vy * e + (L.g ? 0 : 0.5 * P.GRAV * e * e);
-        if (Math.abs(px - x) < 4 && Math.abs(py - y) < 4 && g === L.g && dt < 0.7) return;   // they would draw me about right already
+        const pvy = L.g ? L.vy : L.vy + P.GRAV * e;
+        if (Math.abs(px - x) < 2 && Math.abs(py - y) < 2 && g === L.g && dt < 0.7 && Math.abs(qx - L.vx) < 70 && Math.abs(qy - pvy) < 140) return;   // they would draw me about right already (a bump or a push changes the speed before the position shows it: that goes out at once)
       }
     }
   }
@@ -4670,7 +4687,7 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
   dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true);
   ws.send(buf);
 }
-setInterval(() => sendPos(false), 50);
+setInterval(() => sendPos(false), 30);
 
 /* ================= drawing (hand-drawn look, flat colours) ================= */
 const ICE = '#7fdcff', LAVA = '#ff4a1c', INK = 'rgba(22,15,12,.85)';

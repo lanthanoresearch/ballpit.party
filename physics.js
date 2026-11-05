@@ -186,6 +186,11 @@
     return Math.abs(x - f.x) <= rx && Math.abs(y - f.y) <= ry;
   }
   function distF(f, d) { if (!Array.isArray(f)) return Math.abs(d.x - f.x) + Math.abs(d.y - f.y); let m = 1e9; for (let i = 0; i < f.length; i++) m = Math.min(m, Math.abs(d.x - f[i].x) + Math.abs(d.y - f[i].y)); return m; }
+  function seeTarget(s, dt) {   // where the plank wants to lean: the weight on it, smoothed over a few steps (so a ball that lifts off and lands again every other step cannot make it chatter)
+    s.tqs = (s.tqs || 0) + (s.tq - (s.tqs || 0)) * Math.min(1, 5 * dt);
+    const wgt = Math.min(1, Math.abs(s.tqs) / 80);
+    return s.tilt * (1 - wgt) + clamp(s.tqs / 3600, -1, 1) * SEE_MAX * wgt;
+  }
   function stepSee(w, dt) {
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i], f = w.focus;
@@ -194,13 +199,13 @@
         const a0 = s.ang;
         if (s.mineT > 0) {
           s.mineT -= dt;
-          const target = s.tq === 0 ? s.tilt : clamp(s.tq / 3600, -1, 1) * SEE_MAX;
+          const target = seeTarget(s, dt);
           s.ang += (target - s.ang) * Math.min(1, 3.2 * dt);
           s.ang += (s.sa - s.ang) * Math.min(1, 16 * dt);
         } else s.ang += (s.sa + (s.sav || 0) * 0.04 - s.ang) * Math.min(1, 20 * dt);
         s.av = (s.ang - a0) / dt; s.tq = 0; continue;
       }
-      const target = s.tq === 0 ? s.tilt : clamp(s.tq / 3600, -1, 1) * SEE_MAX;
+      const target = seeTarget(s, dt);
       const a0 = s.ang; s.ang += (target - s.ang) * Math.min(1, 3.2 * dt);
       s.av = (s.ang - a0) / dt; s.tq = 0;
     }
@@ -391,7 +396,7 @@
       let burn = false;
       if (d.k === 'o') {
         d.x += d.vx * dt; d.y += d.vy * dt; burn = ballTiles(d, w); d.rot += d.vx * dt / d.r;
-        if (w.see.length) { seeBody(d, w, d.m * 60); seeGuard(w, d, d.r); }
+        if (w.see.length) { d.onp = seeBody(d, w, d.m * 60); seeGuard(w, d, d.r); } else d.onp = false;
         if (d.gr || d.touch) {   // rolling friction: a ball coasts, slows down and comes to rest (on ice it keeps sliding)
           if (tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.r + 2) / TS)) !== 3) { d.vx *= Math.max(0, 1 - 0.9 * dt); d.vx = approach(d.vx, 0, 55 * dt); }
           else d.vx *= Math.max(0, 1 - 0.2 * dt);
@@ -408,7 +413,7 @@
         d.gr = boxHits(w, d.x, d.y + 1, d.hw, d.hh);
         const sp = w.see.length ? seeBox(w, d, dt) : null;
         if (w.see.length) seeGuard(w, d, d.hh);
-        if (sp) { d.sr = sp.ang; if (Math.abs(Math.sin(sp.ang)) <= 0.06) d.gr = true; }
+        d.onp = !!sp; if (sp) { d.sr = sp.ang; if (Math.abs(Math.sin(sp.ang)) <= 0.06) d.gr = true; } else d.sr = undefined;   // (what sits on a plank never dozes off: its weight is what holds the plank where it is)
         const under = tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh + 2) / TS));
         if (d.gr || d.touch) d.vx = approach(d.vx, 0, (under === 3 ? 40 : 900) * dt);
         const tl = tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh - 4) / TS));
@@ -420,7 +425,7 @@
       if (w.pads.length && (d.gr || d.touch)) { const pd = padAt(w, d.x, d.y + (d.r || d.hh)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; } }
       if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
         if (!d.pcd && d.vy > -60 && (d.gr || d.touch)) { const pt = portalAt(w, d.x, d.y + (d.r || d.hh)); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - (d.r || d.hh) - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; d.tip = null; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
-      if (Math.abs(d.x - nx0) + Math.abs(d.y - ny0) < 1.0 && Math.abs(d.vx) < 25 && !burn) { d.rest = (d.rest || 0) + dt; if (d.rest > 0.5) { if (!d.nap) { d.rx = d.x; d.ry = d.y; } d.nap = true; } } else { d.rest = 0; d.nap = false; }
+      if (Math.abs(d.x - nx0) + Math.abs(d.y - ny0) < 1.0 && Math.abs(d.vx) < 25 && !burn && !d.onp) { d.rest = (d.rest || 0) + dt; if (d.rest > 0.5) { if (!d.nap) { d.rx = d.x; d.ry = d.y; } d.nap = true; } } else { d.rest = 0; d.nap = false; }
       d.touch = false;
       if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
     }
@@ -470,7 +475,7 @@
   }
   // the player (a circle) against the pushables
   function collideDyn(b, w) {
-    const L = w.dyn;
+    const L = w.cand || w.dyn;   // (the server hands over just the things that are anywhere near a player)
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
       if (d.burn > 0 || Math.abs(d.x - b.x) > 90 || Math.abs(d.y - b.y) > 90) continue;

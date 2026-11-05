@@ -24,7 +24,7 @@ const ROOM_PROPS = 800, ROOM_GATES = 200, ROOM_MISC = 6000, ROOM_CPS = 150;
 const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);   // players per world: few enough that a world full of builds stays smooth for everyone
 const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
-const TICK_MS = 50;                                      // up to 10 position updates per second, and only for players who actually sent something new (the client fills in the motion between them)
+const TICK_MS = 33;                                      // up to 30 position updates per second, and only for players who actually sent something new (the client fills in the motion between them)
 const RANGE = 3000;                                       // you only receive players within this many pixels of you (more than a screen)
 const MAX_PER_IP = parseInt(process.env.MAX_PER_IP, 10) || 10;
 const STATS_FILE = process.env.STATS_FILE || path.join(__dirname, 'stats.json');
@@ -283,7 +283,7 @@ function roomWorld(room) {
   return w;
 }
 const worldAdd = {   // somebody built something: it goes into the shared world straight away
-  prop: (r, q) => { if (r.world) { const d = P.addProp(r.world, q[0], q[1], q[2]); d.ver = ++r.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; return d; } },
+  prop: (r, q) => { if (r.world) { const d = P.addProp(r.world, q[0], q[1], q[2]); d.ver = ++r.verN; (r.chg = r.chg || []).push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; return d; } },
   misc: (r, q) => { if (r.world) srvMisc(r.world, q); },
   gate: (r, q) => { if (r.world) srvGate(r.world, q); }
 };
@@ -319,6 +319,7 @@ function simTick() {
     for (const p of room.players.values()) if (!act.includes(p)) p.qx = undefined;
     if (act.length && n) {
       w.focus = act.map(p => ({ x: p.x, y: p.y }));
+      { const fo = w.focus; w.cand = w.dyn.filter(d => { if (d.burn > 0) return false; for (let i = 0; i < fo.length; i++) if (Math.abs(d.x - fo[i].x) < 420 && Math.abs(d.y - fo[i].y) < 420) return true; return false; }); }
       for (let k = 0; k < n; k++) {
         P.stepDyn(w, SIMDT);
         const list = [];
@@ -333,45 +334,57 @@ function simTick() {
           list.push({ x: p.qx, y: p.qy, vx: p.vx, vy: p.vy, ground: g });
         }
         for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground }; P.collideDyn(c, w); P.seeBody(c, w, 60); }
-        P.stepSwitches(w, list, SIMDT);
+        if (k === n - 1) P.stepSwitches(w, list, SIMDT * n);   // (the buttons and plates are looked at once per update)
       }
       w.ev.length = 0;
     }
     // what changed, for the dyn things
+    const tickDt = Math.max(0.02, dtReal);
+    const chg = room.chg = room.chg || []; if (chg.length > 1500) { room.fullAll = true; chg.length = 0; }
     for (let i = 0; i < w.dyn.length; i++) {
       const d = w.dyn[i];
       if (d.sleep) {   // (a thing that went to sleep in the middle of a move is still told to everybody once, where it stopped)
-        if (!(d.burn > 0) && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || !d.lst)) { d.ver = ++room.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; d.lst = true; d.lvx = d.lvy = d.svx = d.svy = 0; d.px = undefined; }
+        if (!(d.burn > 0) && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || !d.lst)) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; d.lst = true; d.lvx = d.lvy = d.svx = d.svy = 0; d.px = undefined; }
         continue;
       }
       const bn = d.burn > 0;
-      const kx = d.px === undefined ? d.vx : (d.x - d.px) / (TICK_MS / 1000), ky = d.px === undefined ? d.vy : (d.y - d.py) / (TICK_MS / 1000);
+      const kx = d.px === undefined ? d.vx : (d.x - d.px) / tickDt, ky = d.px === undefined ? d.vy : (d.y - d.py) / tickDt;
       const dm = d.px === undefined ? 99 : Math.abs(d.x - d.px) + Math.abs(d.y - d.py); d.px = d.x; d.py = d.y;
       d.svx = Math.abs(d.vx - kx) > 40 + Math.abs(kx) * 0.6 ? Math.max(-1500, Math.min(1500, kx)) : d.vx;   // (what it really did this tick: a pile held up by what is under it keeps 'falling' in its own sums without moving at all)
       d.svy = Math.abs(d.vy - ky) > 40 + Math.abs(ky) * 0.6 ? Math.max(-1500, Math.min(1500, ky)) : d.vy;
       const still = !bn && ((Math.abs(d.svx) < 25 && Math.abs(d.svy) < 25) || dm < 0.5);
       const mv = !bn && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || still !== d.lst || (!still && Math.abs(d.svx - d.lvx) + Math.abs(d.svy - d.lvy) > 60));
-      if (bn !== d.lb || mv) { d.ver = ++room.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; d.lst = still; d.lvx = d.svx; d.lvy = d.svy; }
+      if (bn !== d.lb || mv) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; d.lst = still; d.lvx = d.svx; d.lvy = d.svy; }
     }
     // gates and triggers: tell everybody when any of them changes (and now and then anyway)
     const sig = doorSig(w);
-    if (sig !== room.dsig || room.tk % 100 === 0) { room.dsig = sig; broadcast(room, doorPacket(room)); }
+    if (sig !== room.dsig || room.tk % 150 === 0) { room.dsig = sig; broadcast(room, doorPacket(room)); }
     // planks
-    const planks = []; for (const s of w.see) if (Math.abs(s.ang - s.lang) > 0.0004 || room.tk % 100 === 0) { planks.push(s); s.lang = s.ang; }
+    const planks = []; for (const s of w.see) if (Math.abs(s.ang - s.lang) > 0.0004 || room.tk % 150 === 0) { planks.push(s); s.lang = s.ang; }
     if (planks.length) plankSend(room, planks);
     // crates and balls: each player is told about what changed near them
-    const resend = room.tk % 100 === 0;
+    const resend = room.tk % 150 === 0;
     for (const p of room.players.values()) {
       if (!p.has || p.ws.readyState !== 1) continue;
       if (!p.dver || resend) { p.dver = new Map(); p.more = 1; }
-      if (room.verN === p.sv && !p.more && Math.abs(p.x - p.sx) < 200 && Math.abs(p.y - p.sy) < 200) continue;   // nothing new, and they have not moved far
-      p.sv = room.verN; p.sx = p.x; p.sy = p.y; p.more = 0;
+      const full = p.more || room.fullAll || Math.abs(p.x - p.sx) >= 200 || Math.abs(p.y - p.sy) >= 200;
+      if (!full && !chg.length) continue;   // nothing new, and they have not moved far
       const out = [];
-      for (let i = 0; i < w.dyn.length && out.length < 90; i++) {
-        const d = w.dyn[i];
-        if (p.dver.get(d.uid) === d.ver) continue;
-        if (!(d.burn > 0) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue;
-        out.push(d);
+      if (full) {   // (a full look: first time, every few seconds, after moving far, or when more than fit last time)
+        p.sv = room.verN; p.sx = p.x; p.sy = p.y; p.more = 0;
+        for (let i = 0; i < w.dyn.length && out.length < 90; i++) {
+          const d = w.dyn[i];
+          if (p.dver.get(d.uid) === d.ver) continue;
+          if (!(d.burn > 0) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue;
+          out.push(d);
+        }
+      } else {   // (otherwise only what changed in this very tick is looked at)
+        for (let i = 0; i < chg.length && out.length < 90; i++) {
+          const d = chg[i];
+          if (p.dver.get(d.uid) === d.ver) continue;
+          if (!(d.burn > 0) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue;
+          out.push(d);
+        }
       }
       if (out.length >= 90) p.more = 1;
       if (!out.length) continue;
@@ -385,6 +398,7 @@ function simTick() {
       });
       p.ws.send(buf, { binary: true });
     }
+    chg.length = 0; room.fullAll = false;
   }
 }
 
@@ -439,7 +453,7 @@ wss.on('connection', (ws, req) => {
   const rate = setInterval(() => { p.msgs = 0; }, 1000);
 
   ws.on('message', (raw, isBinary) => {
-    if (++p.msgs > 60) return;                       // simple flood protection
+    if (++p.msgs > 100) return;                       // simple flood protection
     if (isBinary) {                                   // a position update: [0x70][slot u16][x/2 u16][y u16 (65535 = dead)][vx/5 i8][vy/20 i8][time u15 | grounded<<15]
       if (!p.room || raw.length !== 11 || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (rslot(p.room) & 0xFFFF)) return;
       const x = Math.min(262000, raw.readUInt16LE(3) * 2), yr = raw.readUInt16LE(5), d = yr === 65535 ? 1 : 0;
@@ -702,7 +716,7 @@ let tickN = 0;
 setInterval(() => {
   tickN++;
   // (c) a tiny overview every 2 seconds, so everyone shows up on the map even when they are far away
-  if (tickN % 20 === 0) {
+  if (tickN % 60 === 0) {
     for (const room of rooms.values()) {
       const list = [...room.players.values()];
       if (list.length < 2) continue;
@@ -722,7 +736,7 @@ setInterval(() => {
   for (const r of byPub.values()) {
     if (!r.room || r.ws.readyState !== 1) continue;
     const ls = links.get(r.pub); if (!ls || !ls.size) continue;
-    const arr = []; let fresh = tickN % 10 === 0; for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has && rslot(q.room) === rslot(r.room)) { arr.push(q); if (q.moved) fresh = true; } }
+    const arr = []; let fresh = tickN % 30 === 0; for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has && rslot(q.room) === rslot(r.room)) { arr.push(q); if (q.moved) fresh = true; } }
     if (!arr.length || !fresh) continue;   // (only when somebody moved, plus a heartbeat every second)
     const buf = Buffer.allocUnsafe(3 + arr.length * 12);
     buf[0] = 3; buf.writeUInt16LE(rslot(r.room) & 0xFFFF, 1);
