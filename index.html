@@ -1131,8 +1131,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=100"></script>
-<script src="physics.js?v=100"></script>
+<script src="maps.js?v=101"></script>
+<script src="physics.js?v=101"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1939,7 +1939,7 @@ function followWorld(dt) {
     const err = Math.abs(ex) + Math.abs(ey);
     if (mine && d.mineT > 0) d.relT = 0.3; else if (d.relT > 0) d.relT -= dt;
     const k = 1 - Math.exp(-(mine && d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : 12) : d.relT > 0 && err < 40 ? 10 : 26) * dt);   // (what you are pushing yourself is only nudged toward the server's picture, and let go of gently; what others move follows at once)
-    d.x += ex * k; d.y += ey * k; d.rot += (s.rot - d.rot) * k;
+    d.x += ex * k; d.y += ey * k; d.rot += (s.rot - d.rot) * (1 - Math.exp(-14 * dt));
     if (!mine) { d.vx = s.vx; d.vy = s.vy; d.tip = null; d.nap = false; d.spin = false; d.av = 0; }
   }
 }

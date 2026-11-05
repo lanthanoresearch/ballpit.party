@@ -363,11 +363,12 @@
   function boxSettle(w, d, L, dt) {   // after tumbling: spin while in the air, then lie flat again when it lands
     if (d.sr !== undefined) { d.rot += (d.sr - d.rot) * Math.min(1, 14 * dt); d.sr = undefined; d.spin = false; return; }   // on a plank it tilts with it
     if (!d.spin && !d.rot) return;
+    if (w.follow) { d.spin = false; d.av = 0; return; }   // (in the shared world only the server tumbles things; here the turn simply follows what the server says)
     const sup = (boxSupports(w, d, L).length > 0 || d.pc) && d.vy > -20 && Math.abs(d.vy) < 140;   // (resting on a ball counts too)
     if (!sup && d.spin) { d.rot += d.av * dt; d.av *= (1 - 0.4 * dt); return; }
     d.spin = false; d.av = 0;
     const tgt = Math.round(d.rot / HALF_PI) * HALF_PI;
-    d.rot += (tgt - d.rot) * Math.min(1, 16 * dt);
+    d.rot += (tgt - d.rot) * Math.min(1, 9 * dt);
     if (Math.abs(tgt - d.rot) < 0.02) d.rot = 0;
   }
   let dynTick = 0; const DYN_BUDGET = 160;
@@ -420,7 +421,7 @@
         if (tl === 2) burn = true;
         const onPlank = d.sr !== undefined;
         boxSettle(w, d, L, dt); d.pc = false;
-        if (!onPlank && !d.spin && d.kind !== 5 && d.kind !== 6 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
+        if (!onPlank && !d.spin && !w.follow && d.kind !== 5 && d.kind !== 6 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
       }
       if (w.pads.length && (d.gr || d.touch)) { const pd = padAt(w, d.x, d.y + (d.r || d.hh)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; } }
       if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
