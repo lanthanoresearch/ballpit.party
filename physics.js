@@ -425,6 +425,7 @@
       if (w.pads.length && (d.gr || d.touch)) { const pd = padAt(w, d.x, d.y + (d.r || d.hh)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; } }
       if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
         if (!d.pcd && d.vy > -60 && (d.gr || d.touch)) { const pt = portalAt(w, d.x, d.y + (d.r || d.hh)); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - (d.r || d.hh) - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; d.tip = null; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
+      d.dm = Math.abs(d.x - nx0) + Math.abs(d.y - ny0);
       if (Math.abs(d.x - nx0) + Math.abs(d.y - ny0) < 1.0 && Math.abs(d.vx) < 25 && !burn && !d.onp) { d.rest = (d.rest || 0) + dt; if (d.rest > 0.5) { if (!d.nap) { d.rx = d.x; d.ry = d.y; } d.nap = true; } } else { d.rest = 0; d.nap = false; }
       d.touch = false;
       if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
@@ -437,7 +438,7 @@
           const a = mine[m]; if (a.sleep) continue;
           for (let j = 0; j < L.length; j++) {
             const b = L[j]; if (b === a || b.burn > 0 || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
-            if (pairSep(a, b, 0.15, w)) { hit = true; if (!(b.mineT > 0) && (Math.abs(a.vx) + Math.abs(a.vy) > 25 || !a.sv || Math.abs(a.x - a.sv.x) + Math.abs(a.y - a.sv.y) > 6)) { b.mineT = 0.45; b.sleep = false; mine.push(b); } }   // (things that are only resting against each other stay with the server; they do not pull each other into this machine's own physics)
+            if (pairSep(a, b, 0.15, w)) { hit = true; if (!(b.mineT > 0) && (a.dm === undefined ? Math.abs(a.vx) + Math.abs(a.vy) > 25 : a.dm > 0.4) || !a.sv) { b.mineT = 0.45; b.sleep = false; mine.push(b); } }   // (things that are only resting against each other stay with the server; they do not pull each other into this machine's own physics)
           }
         }
       }
