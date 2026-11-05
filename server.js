@@ -239,6 +239,7 @@ function findRoom() {
     if (r && r.players.size >= MAX_PLAYERS) { full.push(id); continue; }
     if (r) return { room: r, full };
     const nr = { id, players: new Map(), finishers: [] };
+    { const sv = savedWorlds.get(id); if (sv) { if (sv.build) nr.build = sv.build; nr.snapDyn = sv.dyn; } }   // (a world that was here before comes back as it was)
     rooms.set(id, nr);
     return { room: nr, full };
   }
@@ -277,6 +278,8 @@ function roomWorld(room) {
   (B.misc || []).forEach(q => { try { srvMisc(w, q); } catch (e) {} });
   (B.gates || []).forEach(q => { try { srvGate(w, q); } catch (e) {} });
   (B.props || []).forEach(q => { try { P.addProp(w, q[0], q[1], q[2]); } catch (e) {} });
+  if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = false; d.rest = 0; } } }
+  room.snapDyn = undefined;
   room.world = w; room.verN = 1; room.acc = 0; room.dsig = ''; room.tk = 0;
   w.dyn.forEach(d => { d.ver = 1; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; });
   w.see.forEach(s => { s.lang = s.ang; });
@@ -305,6 +308,30 @@ function plankSend(room, planks, only) {
   for (const p of room.players.values()) if (p.ws.readyState === 1) p.ws.send(buf, { binary: true });
 }
 let simLast = Date.now();
+const ROOM_KEEP_MS = 15 * 60 * 1000;
+/* ---------- the public worlds are remembered ----------
+   What was built (dirt, gates, props) and where every crate and ball is are written to disk, so a world that empties out, or a server that restarts, comes back exactly as it was
+   (until the map changes). */
+const WORLD_FILE = process.env.WORLD_FILE || path.join(path.dirname(LINKS_FILE), 'world.json');
+const savedWorlds = new Map(); let worldsDirty = false;
+try {
+  const o = JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8')), cs = slotNow();
+  if (o && o.slot === cs) for (const k in (o.rooms || {})) { const v = o.rooms[k]; if (v && Array.isArray(v.dyn)) savedWorlds.set(+k, v); }
+  console.log('Restored ' + savedWorlds.size + ' worlds from ' + WORLD_FILE);
+} catch (e) {}
+function snapRoom(r) {
+  const w = r.world; if (!w) return r.snapDyn !== undefined ? { build: r.build || null, dyn: r.snapDyn } : null;
+  return { build: r.build || null, dyn: w.dyn.map(d => d.burn >= 1e9 ? null : [Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.rot * 1000) / 1000]) };
+}
+function keepWorlds(sync) {
+  for (const [id, r] of rooms) if (!r.priv && (r.world || r.snapDyn !== undefined)) { savedWorlds.set(id, snapRoom(r)); worldsDirty = true; }
+  if (!worldsDirty) return; worldsDirty = false;
+  const o = { slot: curSlot, rooms: {} }; savedWorlds.forEach((v, k) => { o.rooms[k] = v; });
+  const str = JSON.stringify(o), tmp = WORLD_FILE + '.tmp';
+  try { if (sync) { fs.writeFileSync(tmp, str); fs.renameSync(tmp, WORLD_FILE); } else fs.writeFile(tmp, str, er => { if (!er) fs.rename(tmp, WORLD_FILE, () => {}); }); } catch (e) {}
+}
+setInterval(() => keepWorlds(false), 20000).unref();
+setInterval(() => { const t = Date.now(); for (const [id, r] of rooms) if (r.players.size === 0 && (!r.emptyAt || t - r.emptyAt > ROOM_KEEP_MS)) { if (!r.priv) { const sn = snapRoom(r); if (sn) { savedWorlds.set(id, sn); worldsDirty = true; } } rooms.delete(id); } }, 30000).unref();
 function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
   for (const room of rooms.values()) {
@@ -426,7 +453,7 @@ function leave(p, toLobby) {
     online--; statsDirty = true;
     room.players.delete(p.id);
     for (const o of room.players.values()) o.vis.delete(p.id);
-    if (room.players.size === 0) rooms.delete(room.id);
+    if (room.players.size === 0) { if (room.priv) rooms.delete(room.id); else room.emptyAt = Date.now(); }   // (a public world is kept for a while after the last player leaves, so a dropped connection or a closed tab does not rebuild everything you knocked down)
     else broadcast(room, { t: 'leave', id: p.id, name: p.name, pub: p.pub, n: room.players.size });
   }
   if (p.pub && known.has(p.pub)) { known.get(p.pub).last = Date.now(); linksDirty = true; }
@@ -788,13 +815,15 @@ setInterval(() => {
   if (s === curSlot) return;
   curSlot = s;
   console.log('New session / map:', maps.names[curSlot % maps.count]);
+  savedWorlds.clear(); worldsDirty = true;
   for (const room of rooms.values()) {
     if (room.priv) continue;
-    room.build = null; room.world = null;
+    room.build = null; room.world = null; room.snapDyn = undefined;
     room.finishers = [];
     for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); }
     broadcast(room, { t: 'newmap', slot: curSlot, next: nextAt(curSlot), now: Date.now() });
   }
+  keepWorlds(false);
   pushSubs.forEach((v, pub) => { if (v.m) pushTo(pub, 'm', ['A new map has started', maps.names[curSlot % maps.count]], 'map-' + curSlot); });   // (only devices that are not in the game right now)
 }, 1000);
 
@@ -807,7 +836,7 @@ setInterval(() => {
   }
 }, 25000);
 
-function shutdown() { savePeak(true); saveLinks(true); process.exit(0); }
+function shutdown() { savePeak(true); saveLinks(true); try { keepWorlds(true); } catch (e) {} process.exit(0); }
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 

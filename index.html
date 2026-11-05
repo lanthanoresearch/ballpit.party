@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://ballpit-party.onrender.com" crossorigin>
 <script>/* the very first thing the page does: nudge the game server awake (a tiny request), so by the time the menu is up it is already answering */
-(function(){try{var h=location.hostname,own=/^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(h)||/onrender\.com$/.test(h);if(location.protocol==='file:')return;fetch((own?'':'https://ballpit-party.onrender.com')+'/version',{cache:'no-store'}).catch(function(){});}catch(e){}})();</script>
+(function(){try{var h=location.hostname,own=/^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(h)||/onrender\.com$/.test(h);if(location.protocol==='file:')return;try{var o=JSON.parse(localStorage.getItem('ballrun4')||'{}');if(o.offline&&!o.mp)return;}catch(e){}fetch((own?'':'https://ballpit-party.onrender.com')+'/version',{cache:'no-store'}).catch(function(){});}catch(e){}})();</script>
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="ballpit.party">
 <title>ballpit.party</title>
@@ -200,6 +200,8 @@
   #touch button.edit{border-style:dashed;border-color:var(--accent);background:rgba(255,204,61,.25);cursor:grab}
   #editbar{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);z-index:20;box-sizing:border-box;width:min(520px,calc(100vw - 16px));padding:8px 10px;display:flex;flex-direction:column;gap:8px;font-size:14px;overflow:hidden}
   /* ---- modals ---- */
+  .offsw{align-self:center}.offsw.on{background:rgba(120,170,255,.22);border-color:rgba(140,185,255,.7)}
+  #netGate{background:rgba(8,10,20,.82)}.ngcard{width:min(320px,100%);display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center}.ngcard h3{margin:0;font-size:24px}.ngspin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#fff;animation:ngs .9s linear infinite}@keyframes ngs{to{transform:rotate(360deg)}}
   .overlay{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:14px}
   #intro{background:rgba(8,6,16,.75);z-index:10}
   #confirm{background:rgba(8,6,16,.8);z-index:30}
@@ -710,6 +712,7 @@
   fill(15);
   /* 1) is this the newest version? If the page came out of an old cache, wipe the caches and reload once. 2) maybe the game has moved: redirect. */
   if (!/^https?:$/.test(location.protocol)) return;
+  try { var so = JSON.parse(localStorage.getItem('ballrun4') || '{}'); if (so.offline && !so.mp) { fill(40); return; } } catch (e) {}
   var done = false, give = setTimeout(function () { done = true; }, 4000);
   try {
     fetch('/version?x=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (v) {
@@ -984,6 +987,7 @@
       <div class="ned" id="ned1"></div>
       <label class="mpbig"><input type="checkbox" id="homeMp"><span class="mptrack"><span class="mpL"><span data-ic="user"></span>Private</span><span class="mpR"><span data-ic="globe"></span>Public</span><i></i></span></label>
       <div class="small dim" id="homeModeNote"></div>
+      <button id="homeOff" class="btn offsw hide" type="button" aria-pressed="false"><span data-ic="user"></span><span id="homeOffTxt">Offline mode: off</span></button>
       <button id="homeLvl" class="btn lvrow" type="button"></button>
       <button id="homePlay" class="hplay" type="button">Play</button>
       <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
@@ -992,6 +996,12 @@
     <div class="small dim" id="homeOnline"></div>
   </div>
 </div>
+<div id="netGate" class="overlay hide" role="alertdialog" aria-live="polite" aria-labelledby="ngTitle"><div class="card ngcard">
+  <div class="ngspin" aria-hidden="true"></div>
+  <h3 id="ngTitle">Connecting</h3>
+  <div class="small dim" id="ngSub">Loading the shared world</div>
+  <button id="ngSolo" class="pbtn hide" type="button">Play on my own instead</button>
+</div></div>
 <div id="pause" class="overlay hide"><div class="card pcard">
   <h3><span data-ic="pause"></span>Paused</h3>
   <div class="small dim" id="pauseSub"></div>
@@ -1131,8 +1141,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=102"></script>
-<script src="physics.js?v=102"></script>
+<script src="maps.js?v=105"></script>
+<script src="physics.js?v=105"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1172,7 +1182,7 @@ fillIcons();
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
@@ -1748,6 +1758,7 @@ const SOLOKEY = 'ballrun4_solo2', SOLO_BASE = 3000000;
 let solo2 = {};   // one saved world per level, until you reset that level: { levelNumber: what you built, moved, opened and collected }
 let party = null;   // a friend's world: { role: 'host' | 'guest', host: their id, name, priv }
 const inSolo = () => !settings.mp && !party;
+const offlineOn = () => !!settings.offline && !settings.mp && !party;   // a private game that never touches the server: no friends, no invites, nothing online
 const shared = () => !!party || (online && !inSolo() && S.slot >= 0 && S.slot < SOLO_BASE);   // is what you build shown to everyone in the room? (private games and public worlds)
 function loadSolo() { try { const o = JSON.parse(localStorage.getItem(SOLOKEY) || 'null'); if (o && typeof o === 'object') solo2 = o; } catch (e) {} }
 function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo2)); } catch (e) {} }
@@ -1804,10 +1815,28 @@ const typing = () => { const a = document.activeElement; return a && a.tagName =
 const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('profModal').classList.contains('hide') || !$('lvlModal').classList.contains('hide') || !$('invModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 const pushC = { x: 0, y: 0, vx: 0, vy: 0, ground: false };
+let gateT = 0, gateOn = false;
+function netGate(dt) {   // the server decides everything in a shared world, so nothing is playable until you are connected and the world has arrived
+  const need = (settings.mp || party) && !inHome && location.protocol !== 'file:' && 'WebSocket' in window;
+  let hold = false;
+  if (need) {
+    if (!(online && ws && ws.readyState === 1)) hold = true;
+    else if (S.world && S.world.dyn.length && !S.gotDyn && performance.now() - (S.welcomeAt || 0) < 2000) hold = true;
+  }
+  if (!hold) { if (gateOn) { gateOn = false; gateT = 0; $('netGate').classList.add('hide'); } if (need) S.wasOnline = true; return false; }
+  if (!gateOn) { gateOn = true; gateT = 0; $('netGate').classList.remove('hide'); }
+  gateT += dt;
+  const down = gateT > 9 && !(ws && ws.readyState === 1);
+  $('ngTitle').textContent = down ? "Can't reach the server" : S.wasOnline ? 'Reconnecting' : 'Connecting';
+  $('ngSub').textContent = down ? 'Still trying. You can also play on your own.' : S.wasOnline ? 'Hold on, the game continues once you are back' : 'Loading the shared world';
+  $('ngSolo').classList.toggle('hide', !down);
+  return true;
+}
 function update(dt) {
   S.t += dt;
   if (paused) return;
   if (S.mode !== 'play') return;
+  if (netGate(dt)) return;
   const w = S.world;
   w.focus.x = S.b.x; w.focus.y = S.b.y;
   botsTick(dt);
@@ -1829,9 +1858,12 @@ function update(dt) {
   b.noJm = !settings.powerJump;   // only you have the jump meter (and only if power jump is switched on)
   b.sjSep = !!settings.superBtn;   // a separate power-jump button: the normal jump never uses the full meter
   let held = null;
-  if (w.follow) { held = []; for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.sv && !(d.burn > 0) && Math.abs(d.x - b.x) < 130 && Math.abs(d.y - b.y) < 130) held.push(d, d.x, d.y, d.rot); } }
+  if (w.follow) { held = []; for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.sv && !(d.burn > 0) && Math.abs(d.x - b.x) < 260 && Math.abs(d.y - b.y) < 260) held.push(d, d.x, d.y); } }
   const ev = P.step(b, w, ax, jheld, dt);
-  if (held) for (let i = 0; i < held.length; i += 4) { const d = held[i]; d.x = held[i + 1]; d.y = held[i + 2]; d.rot = held[i + 3]; d.mineT = 0; }   // (you feel a block push back at once, but it is only the server that actually moves it)
+  if (held) for (let i = 0; i < held.length; i += 3) {   // (what you push moves with you at once, as an offset on top of the server's picture; the server's own movement of it then takes the offset over)
+    const d = held[i], mx = d.x - held[i + 1], my = d.y - held[i + 2];
+    if (mx || my) { d.ox = clamp((d.ox || 0) + mx, -70, 70); d.oy = clamp((d.oy || 0) + my, -70, 70); }
+  }
   P.stepSwitches(w, b, dt);
   if (w.follow) syncDoors();
   if (w.ev.length) worldEvents();
@@ -1931,7 +1963,10 @@ function followWorld(dt) {
     const age = Math.min(0.06, (t - s.t) / 1000), e0 = d.r || d.hw;
     let tx = s.x + s.vx * age, ty = s.y + s.vy * age;
     if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (never guess a position inside the ground)
-    d.mineT = 0; d.hold = 0; d.errT = 0;   // (one authority: the server's picture is the only one that moves things)
+    d.mineT = 0; d.hold = 0; d.errT = 0;   // (one authority: the server decides where everything is)
+    if (d.psx !== undefined) { const dsx = s.x - d.psx, dsy = s.y - d.psy; if (d.ox && dsx * d.ox > 0) d.ox -= Math.sign(d.ox) * Math.min(Math.abs(d.ox), Math.abs(dsx)); if (d.oy && dsy * d.oy > 0) d.oy -= Math.sign(d.oy) * Math.min(Math.abs(d.oy), Math.abs(dsy)); }
+    d.psx = s.x; d.psy = s.y;
+    if (d.ox || d.oy) { const f = Math.exp(-3 * dt); d.ox *= f; d.oy *= f; if (Math.abs(d.ox) < 0.05) d.ox = 0; if (Math.abs(d.oy) < 0.05) d.oy = 0; tx += d.ox || 0; ty += d.oy || 0; }
     const ex = tx - d.x, ey = ty - d.y, mine = false;
     if (Math.abs(ex) + Math.abs(ey) > 240) { d.x = tx; d.y = ty; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.mineT = 0; d.tip = null; continue; }
     if (d.hold > 0) d.hold -= dt;
@@ -2671,7 +2706,7 @@ $('cfNo').onclick = () => cfClose(false);
 $('cfYes').onclick = () => cfClose(true);
 
 function maybeAskBots() {
-  if (inHome || botAsked || settings.bots || !settings.botAsk || !$('intro').classList.contains('hide') || !$('confirm').classList.contains('hide')) return;
+  if (gateOn || inHome || botAsked || settings.bots || !settings.botAsk || !$('intro').classList.contains('hide') || !$('confirm').classList.contains('hide')) return;
   const alone = netState === 'offline' || netState === 'solo' || (online && others.size === 0);
   if (!alone) return;
   botAsked = true;
@@ -3735,7 +3770,7 @@ setInterval(() => {
   }
 }, 120);
 addEventListener('storage', e => { if (e.key === WALKEY || e.key === WALKEY_PRIV) { loadPurses(); if (shopOpen) shopRender(); } });   // (another tab of the game spent or earned something)
-const openFriends = () => { if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Friends'; toggleSettings(); } showTab('friends'); };
+const openFriends = () => { if (offlineOn()) { notice('Offline mode is on: friends and invites are switched off', ''); return; } if (chatOpen) toggleChat(false); if (!paused) openPause(); if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Friends'; toggleSettings(); } showTab('friends'); };
 $('linkpill').onclick = e => { e.stopPropagation(); openFriends(); };
 const friendsShown = () => !$('settings').classList.contains('hide') && $('settings').querySelector('.pane.on[data-pane="friends"]') !== null;
 
@@ -3914,7 +3949,7 @@ function forceUpdate() {
   setTimeout(wipeAndReload, wasPlaying ? 1300 : 400);
 }
 function checkBuild() {
-  const B = window.__BUILD; if (updating || !B || B.charAt(0) === '_' || !/^https?:$/.test(location.protocol)) return;
+  const B = window.__BUILD; if (offlineOn() || updating || !B || B.charAt(0) === '_' || !/^https?:$/.test(location.protocol)) return;
   try { fetch('/version?x=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(v => { if (v && v.build && v.build !== B) forceUpdate(); }).catch(() => {}); } catch (e) {}
 }
 setInterval(checkBuild, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) checkBuild(); });
@@ -3991,13 +4026,14 @@ function homeBase() { return /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(lo
 function homeStats() {
   const o = $('homeOnline'); o.textContent = '';
   if (location.protocol === 'file:') return;
+  if (offlineOn()) { o.textContent = 'Offline mode'; return; }
   fetch(homeBase() + '/stats', { cache: 'no-store' }).then(r => r.json()).then(j => {
     const n = j.online | 0; o.textContent = n > 0 ? n + (n === 1 ? ' player' : ' players') + ' online right now' : 'Nobody here yet. Be the first!';
   }).catch(() => {});
 }
 window.__sprite = () => sprite(settings.color, settings.color2, settings.pat);   // the loading screen and the main screen show your real ball
 try { window.__scene($('homeScene'), 'home'); } catch (e) {}
-function homeModeText() { netRender(); $('homeModeNote').textContent = $('homeMp').checked ? 'A public world. Everyone online shares it.' : 'Your private world. Nobody else can see you.'; lvlRender(); }
+function homeModeText() { netRender(); const pub = $('homeMp').checked; $('homeModeNote').textContent = pub ? 'A public world. Everyone online shares it.' : offlineOn() ? 'Your private world, fully offline. Nothing connects to the server.' : 'Your private world. Nobody else can see you.'; $('homeOff').classList.toggle('hide', pub); $('homeOff').classList.toggle('on', !!settings.offline); $('homeOffTxt').textContent = settings.offline ? 'Offline mode: on' : 'Offline mode: off'; lvlRender(); }
 function showHome() {
   if (S.map && S.slot >= 0 && !inHome) saveWorld(true);
   if (party) leaveParty();   // leaving a private game: if it was yours, it ends and everyone in it goes back to their own world
@@ -4070,6 +4106,8 @@ $('pSave').onclick = () => {   // keep a copy of the world you are in as one of 
 $('pReset').onclick = () => askResetLevel(soloLevel(), () => resumeGame());
 $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
 $('pHome').onclick = () => { sfx('ui'); quitToHome(); };
+$('ngSolo').onclick = () => { sfx('ui'); gateOn = false; $('netGate').classList.add('hide'); setMultiplayer(false); };
+setInterval(() => { if (gateOn && inHome) { gateOn = false; $('netGate').classList.add('hide'); } }, 400);
 $('pause').addEventListener('pointerdown', e => { if (e.target === $('pause') && $('settings').classList.contains('hide')) { e.preventDefault(); resumeGame(); } });
 /* ----- the Back button (phone or browser) never just throws you out: in a game it asks about the main menu, on the main menu it asks about leaving ----- */
 let leavingPage = false;
@@ -4087,7 +4125,22 @@ addEventListener('popstate', () => {
   else askConfirm('Back to the main menu?', 'Your ball leaves this world and you go to the main menu.', 'Main menu', () => quitToHome(), { no: 'Keep playing', yesClass: 'go' });
 });
 $('homePlay').onclick = () => enterGame(false);
-$('homeMp').onchange = () => { settings.mp = $('homeMp').checked; save(); $('setMp').checked = settings.mp; applyDeps(); syncUI(); homeModeText(); };   // two different games: switching is just a switch
+function setOffline(on) {
+  settings.offline = on; save();
+  if (on) { clearTimeout(retryTimer); retryTimer = 0; if (ws) dropConnection(); lks.forEach(l => { l.on = 0; l.x = null; }); lpRender(); setNet('solo'); }
+  else { retry = 0; connect(); }
+  netRender.k = ''; homeModeText(); netRender();
+}
+$('homeOff').onclick = () => {
+  sfx('ui');
+  if (settings.offline) { setOffline(false); return; }
+  askConfirm('Play offline?', 'This private game will never connect to the server. You will not be able to invite friends, see friend requests or get invites, and nobody can join you. Your progress stays on this device. You can switch it off here at any time.', 'Go offline', () => setOffline(true), { no: 'Stay online', yesClass: 'go' });
+};
+$('homeMp').onchange = () => {
+  const pub = $('homeMp').checked;
+  if (pub && settings.offline) { askConfirm('Public worlds need the server', 'Offline mode is on. To play in a public world it has to be switched off.', 'Switch it off', () => { settings.offline = false; save(); settings.mp = true; save(); $('setMp').checked = true; $('homeMp').checked = true; retry = 0; applyDeps(); syncUI(); homeModeText(); connect(); }, { no: 'Stay offline', yesClass: 'go' }); $('homeMp').checked = false; return; }
+  settings.mp = pub; save(); $('setMp').checked = settings.mp; applyDeps(); syncUI(); homeModeText();
+};   // two different games: switching is just a switch
 $('homeLook').onclick = () => { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; } showTab('you'); toggleSettings(); };
 $('homeSet').onclick = () => toggleSettings();
 $('homeHelp').onclick = () => showIntro();
@@ -4149,6 +4202,7 @@ function leaveParty() {   // you walk away from a private game (the main menu, o
   lvlRender();
 }
 function startHosting() {
+  if (offlineOn()) return false;
   if (party || settings.mp || inHome) return !!party;
   if (!settings.name) { notice('Pick a name first (Customize on the main menu)', 'urgent'); return false; }
   party = { role: 'host', invited: new Set() }; saveWorld(true);
@@ -4215,6 +4269,7 @@ async function pushSync() {   // tell the server where to reach this device, and
     return;
   }
   try {
+    if (offlineOn()) throw 0;
     if (!vapidKey) { const r = await fetch(homeBase() + '/vapid', { cache: 'no-store' }); vapidKey = ((await r.json()) || {}).key || ''; }
     if (!vapidKey) throw 0;
     const want = b64uBytes(vapidKey); let sub = await reg.pushManager.getSubscription();
@@ -4272,6 +4327,7 @@ function ivRender() {
   $('ivStop').classList.toggle('hide', !party);
 }
 function openInvites() {
+  if (offlineOn()) { notice('Offline mode is on: friends and invites are switched off', ''); return; }
   if (settings.mp || inHome || (party && party.role === 'guest')) return;
   if (!startHosting() && !party) return;
   if (!$('settings').classList.contains('hide')) closeSettingsNow();
@@ -4385,17 +4441,18 @@ onDoubleTap($('homeWallet'), openCode); onDoubleTap($('coinpill'), openCode);
 function netView() {
   const open = !!(ws && ws.readyState === 1) && (online || lobbyOn);
   const wait = !open && (netState === 'connecting' || !!(ws && ws.readyState === 0));
-  return { pub: !party && !!settings.mp, st: open ? 'ok' : wait ? 'wait' : 'bad', open };
+  return { pub: !party && !!settings.mp, st: offlineOn() ? 'solo' : open ? 'ok' : wait ? 'wait' : 'bad', open };
 }
 function netRender() {
   const v = netView(), k = (v.pub ? 'P' : 'V') + v.st + (party ? 'g' : '');
   if (netRender.k === k) return; netRender.k = k;
   $('netstat').classList.remove('hide');
-  $('netText').textContent = v.pub ? 'Public' : 'Private';
+  $('netText').textContent = v.pub ? 'Public' : offlineOn() ? 'Offline' : 'Private';
   $('netstat').querySelector('i').className = 's-' + v.st;
 }
 function netDetail() {   // the same thing in words, for the expanded panel
   const v = netView();
+  if (offlineOn()) return 'Private, offline. This game never connects to the server.';
   if (v.st === 'ok') return v.pub ? 'Public. Connected to the server.' : party ? 'Private game. Connected, so friends can be here with you.' : 'Private. Connected, so friends can find you and invite you.';
   if (v.st === 'wait') return (v.pub ? 'Public. ' : 'Private. ') + 'Connecting to the server…';
   return v.pub ? 'Public. Not connected. Trying again…' : party ? 'Private game. Not connected.' : 'Private. Not connected. You are playing alone in your own world.';
@@ -4415,7 +4472,7 @@ function dropConnection() {
 }
 function setMultiplayer(on) {
   if (party) leaveParty();   // switching between public and private ends a private game you were hosting
-  settings.mp = on; save(); $('setMp').checked = on;
+  settings.mp = on; if (on) settings.offline = false; save(); $('setMp').checked = on;
   bots.length = 0;
   if (on) {
     joinWorld();
@@ -4439,6 +4496,7 @@ function joinWorld() {
 }
 function connect() {
   const lobby = wantLobby();
+  if (offlineOn()) { if (ws) dropConnection(); return; }
   if (ws) return;
   if (!lobby && (!(settings.mp || party) || !settings.name)) return;
   if (location.protocol === 'file:' || !('WebSocket' in window)) { if (!lobby) setNet('offline'); return; }
@@ -4464,6 +4522,7 @@ function connect() {
   sock.onerror = () => {};
 }
 function scheduleRetry() {
+  if (offlineOn()) return;
   if (retryTimer || (!settings.mp && !!party)) return;   // (a friend's world does not reconnect by itself: it ends)
   retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(5000, Math.round(200 * Math.pow(1.45, retry - 1))));   // tries again almost at once, then eases off to every few seconds if the server stays away
 }
@@ -4502,7 +4561,8 @@ function otherPred(o, d) {   // where somebody else is d seconds after their las
   }
   pp.x = cx; pp.y = cy; return pp;
 }
-function dynBin(dv, len, ty) {   // where the shared crates, balls (type 4) and planks (type 5) are right now
+function dynBin(dv, len, ty) {
+  S.gotDyn = true;   // where the shared crates, balls (type 4) and planks (type 5) are right now
   const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (S.slot & 0xFFFF)) return;
   const n = dv.getUint8(3), t = performance.now();
   if (ty === 4) {
@@ -4601,6 +4661,7 @@ function onMsg(m) {
       }
       if (inSolo() && !m.priv) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a public world we are no longer going to)
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
+      S.welcomeAt = performance.now(); S.gotDyn = false;
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
       if (party && !m.priv) { partyOver(''); return; }
       if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host') sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps }); }
