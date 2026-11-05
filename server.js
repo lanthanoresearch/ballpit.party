@@ -339,9 +339,9 @@ function simTick() {
       w.ev.length = 0;
     }
     // what changed, for the dyn things
-    const tickDt = Math.max(0.02, dtReal);
+    const stepped = act.length > 0 && n > 0, tickDt = Math.max(1, n) * SIMDT;   // (only after the world really moved on: a tick with no step in it must not report everything as standing still)
     const chg = room.chg = room.chg || []; if (chg.length > 1500) { room.fullAll = true; chg.length = 0; }
-    for (let i = 0; i < w.dyn.length; i++) {
+    for (let i = 0; stepped && i < w.dyn.length; i++) {
       const d = w.dyn[i];
       if (d.sleep) {   // (a thing that went to sleep in the middle of a move is still told to everybody once, where it stopped)
         if (!(d.burn > 0) && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || !d.lst)) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; d.lst = true; d.lvx = d.lvy = d.svx = d.svy = 0; d.px = undefined; }
@@ -350,8 +350,8 @@ function simTick() {
       const bn = d.burn > 0;
       const kx = d.px === undefined ? d.vx : (d.x - d.px) / tickDt, ky = d.px === undefined ? d.vy : (d.y - d.py) / tickDt;
       const dm = d.px === undefined ? 99 : Math.abs(d.x - d.px) + Math.abs(d.y - d.py); d.px = d.x; d.py = d.y;
-      d.svx = Math.abs(d.vx - kx) > 40 + Math.abs(kx) * 0.6 ? Math.max(-1500, Math.min(1500, kx)) : d.vx;   // (what it really did this tick: a pile held up by what is under it keeps 'falling' in its own sums without moving at all)
-      d.svy = Math.abs(d.vy - ky) > 40 + Math.abs(ky) * 0.6 ? Math.max(-1500, Math.min(1500, ky)) : d.vy;
+      d.svx = Math.abs(d.vx) > 150 && Math.abs(kx) < Math.abs(d.vx) * 0.2 ? kx : d.vx;   // (a pile held up by what is under it keeps 'falling' in its own sums while not moving at all: what it really did is sent instead)
+      d.svy = Math.abs(d.vy) > 150 && Math.abs(ky) < Math.abs(d.vy) * 0.2 ? ky : d.vy;
       const still = !bn && ((Math.abs(d.svx) < 25 && Math.abs(d.svy) < 25) || dm < 0.5);
       const mv = !bn && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || still !== d.lst || (!still && Math.abs(d.svx - d.lvx) + Math.abs(d.svy - d.lvy) > 60));
       if (bn !== d.lb || mv) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; d.lst = still; d.lvx = d.svx; d.lvy = d.svy; }
