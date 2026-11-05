@@ -432,7 +432,7 @@
           const a = mine[m]; if (a.sleep) continue;
           for (let j = 0; j < L.length; j++) {
             const b = L[j]; if (b === a || b.burn > 0 || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
-            if (pairSep(a, b, 0.15, w)) { hit = true; if (!(b.mineT > 0)) { b.mineT = 0.45; b.sleep = false; mine.push(b); } }
+            if (pairSep(a, b, 0.15, w)) { hit = true; if (!(b.mineT > 0) && (Math.abs(a.vx) + Math.abs(a.vy) > 25 || !a.sv || Math.abs(a.x - a.sv.x) + Math.abs(a.y - a.sv.y) > 6)) { b.mineT = 0.45; b.sleep = false; mine.push(b); } }   // (things that are only resting against each other stay with the server; they do not pull each other into this machine's own physics)
           }
         }
       }
@@ -625,7 +625,22 @@
     return ev;
   }
 
-  const api = { addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const SOLIDT = t => t === 1 || t === 3 || t === 4 || t === 6 || t === 9;
+  function bodyOverlaps(w, x0, y0, x1, y1, pad) {   // is any crate or ball on this box?
+    for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) continue; const e = d.r || d.hw; if (d.x + e > x0 - (pad || 0) && d.x - e < x1 + (pad || 0) && d.y + e > y0 - (pad || 0) && d.y - e < y1 + (pad || 0)) return true; }
+    return false;
+  }
+  function liftOut(w, tx, r) {   // ground has just grown on this tile: whatever was sitting in it is lifted out on top (never left buried)
+    const x0 = tx * TS, y0 = r * TS, x1 = x0 + TS;
+    for (let i = 0; i < w.dyn.length; i++) {
+      const d = w.dyn[i]; if (d.burn > 0) continue; const e = d.r || d.hw;
+      if (!(d.x + e > x0 && d.x - e < x1 && d.y + e > y0 && d.y - e < y0 + TS)) continue;
+      let ny = y0 - e - 0.5, ok = false;
+      for (let k = 0; k < 6; k++) { if (!SOLIDT(tile(w, Math.floor((d.x - e + 2) / TS), Math.floor((ny + e - 1) / TS))) && !SOLIDT(tile(w, Math.floor((d.x + e - 2) / TS), Math.floor((ny + e - 1) / TS))) && !SOLIDT(tile(w, Math.floor((d.x - e + 2) / TS), Math.floor((ny - e + 1) / TS))) && !SOLIDT(tile(w, Math.floor((d.x + e - 2) / TS), Math.floor((ny - e + 1) / TS)))) { ok = true; break; } ny -= TS; }
+      if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
+    }
+  }
+  const api = { liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

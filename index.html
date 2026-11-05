@@ -1131,8 +1131,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=95"></script>
-<script src="physics.js?v=95"></script>
+<script src="maps.js?v=96"></script>
+<script src="physics.js?v=96"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1924,7 +1924,10 @@ function followWorld(dt) {
     const d = w.dyn[i], s = d.sv; if (!s) continue;
     if (s.burn) { if (!(d.burn >= 1e9)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } continue; }
     if (d.burn >= 1e9) { d.burn = 0; d.x = s.x; d.y = s.y; d.vx = s.vx; d.vy = s.vy; d.rot = s.rot; d.mineT = 0; d.nap = false; d.rest = 0; continue; }
-    const age = Math.min(0.1, (t - s.t) / 1000), tx = s.x + s.vx * age, ty = s.y + s.vy * age, ex = tx - d.x, ey = ty - d.y, mine = d.mineT > 0;
+    const age = Math.min(0.06, (t - s.t) / 1000), e0 = d.r || d.hw;
+    let tx = s.x + s.vx * age, ty = s.y + s.vy * age;
+    if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (never guess a position inside the ground)
+    const ex = tx - d.x, ey = ty - d.y, mine = d.mineT > 0;
     if (Math.abs(ex) + Math.abs(ey) > 240) { d.x = tx; d.y = ty; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.mineT = 0; d.tip = null; continue; }
     if (d.hold > 0) d.hold -= dt;
     if (mine && Math.abs(ex) + Math.abs(ey) > 4 && S.b && Math.abs(S.b.vx) < 30 && Math.abs(S.b.vy) < 60) { d.errT = (d.errT || 0) + dt; if (d.errT > 0.35) { d.mineT = 0; d.hold = 0.6; d.errT = 0; } } else d.errT = 0;   // you are not pushing it, yet it still disagrees with the server's: take the server's
@@ -1932,6 +1935,17 @@ function followWorld(dt) {
     d.x += ex * k; d.y += ey * k; d.rot += (s.rot - d.rot) * k;
     if (!mine) { d.vx = s.vx; d.vy = s.vy; d.tip = null; d.nap = false; d.spin = false; d.av = 0; }
   }
+}
+function adoptUid(w, d, u) {   // the server's name for a crate or ball: whatever else wore that name takes this one's old name
+  u = u >>> 0; if (!d || d.uid === u || !w.dynBy) return;
+  const other = w.dynBy.get(u), old = d.uid;
+  if (other && other !== d) { other.uid = old; w.dynBy.set(old, other); const sv = d.sv; d.sv = other.sv; other.sv = sv; } else if (w.dynBy.get(old) === d) w.dynBy.delete(old);
+  d.uid = u; w.dynBy.set(u, d);
+}
+function inSolidAt(w, x, y, e) {
+  const q = e - 4, TS2 = TS;
+  for (const [cx, cy] of [[x - q, y - q], [x + q, y - q], [x - q, y + q], [x + q, y + q], [x, y + q]]) { const v = P.tile(w, Math.floor(cx / TS2), Math.floor(cy / TS2)); if (v === 1 || v === 3 || v === 4 || v === 6 || v === 9) return true; }
+  return false;
 }
 function syncDoors() {   // gates open at once for you (when you step on a trigger), and shut when the server says nobody is holding them
   const w = S.world, m = w.srvDoors; if (!m) return;
@@ -1987,6 +2001,7 @@ function setTerrain(w, tx, r, to, anim) {   // lava, ice, water or grey rock, on
   const rock = w.rock && w.rock[i];
   if (to === 1 && S.tg && w === S.world) { for (const j of [i + w.W, i - 1, i + 1, i - w.W]) if (j >= 0 && j < w.grid.length && w.grid[j] === 1) { S.tg[i] = S.tg[j]; break; } }   // new dirt looks like the ground it grows from: same colours and scenery as that part of the map
   if (to === 7) { w.grid[i] = 1; (w.rock = w.rock || new Uint8Array(w.W * w.H))[i] = 1; } else { w.grid[i] = to; if (w.rock) w.rock[i] = 0; }
+  if (w.grid[i] === 1 || w.grid[i] === 3) P.liftOut(w, tx, r);
   if (w === S.world) mmUpdate(tx, r);   // the maps show what was built or dug
   if (!anim) return;
   const x = (tx + 0.5) * TS, y = r * TS + TS / 2;
@@ -3499,6 +3514,7 @@ function computeGhost() {
       else if (g.it.misc === 'pad') rc = [g.mtx * TS, g.mgr * TS - 14, (g.mtx + 2) * TS, g.mgr * TS + 4];
       else rc = [g.gtx * TS, (g.ggr - g.gh) * TS, (g.gtx + 1) * TS, g.ggr * TS];
       if (playerIn(rc[0], rc[1], rc[2], rc[3]) || (g.it.misc === 'ter' && (g.mex || []).some(e => playerIn(e[0] * TS, e[1] * TS, (e[0] + 1) * TS, (e[1] + 1) * TS)))) { g.ok = false; g.pb = true; }
+      else if (g.it.ter !== 'dig' && (P.bodyOverlaps(S.world, rc[0], rc[1], rc[2], rc[3], -2) || (g.it.misc === 'ter' && (g.mex || []).some(e => P.bodyOverlaps(S.world, e[0] * TS, e[1] * TS, (e[0] + 1) * TS, (e[1] + 1) * TS, -2))))) { g.ok = false; g.pb = true; }   // (nor on top of a crate or ball: one simple rule, it goes red and will not go down)
     }
     if (!sp) { cx = b.x + g.side * (R + TS); cy = b.y; }
     g.tx = cx; g.ty = cy;
@@ -3510,7 +3526,7 @@ function computeGhost() {
   g.pc = !!spot && S.world.portals.some(e => [e.a, e.b].some(p => Math.abs(p.x - spot[0]) < q.half + 26 && p.y > spot[1] - q.half - 3 * TS && p.y < spot[1] + q.half + TS));
   if (spot && startBlock(spot[0], spot[1])) { g.sb = true; g.ok = false; g.tx = spot[0]; g.ty = spot[1]; }
   else if (spot && g.pc) { g.ok = false; g.tx = spot[0]; g.ty = spot[1]; }
-  else if (spot) { g.tx = spot[0]; g.ty = spot[1]; g.ok = true; const hh = q.hw || q.r; g.pb = playerIn(spot[0] - hh, spot[1] - q.half, spot[0] + hh, spot[1] + q.half); if (g.pb) g.ok = false; } else { g.tx = b.x + g.side * (R + q.half + 3); g.ty = b.y + R - q.half; g.ok = false; }
+  else if (spot) { g.tx = spot[0]; g.ty = spot[1]; g.ok = true; const hh = q.hw || q.r; g.pb = playerIn(spot[0] - hh, spot[1] - q.half, spot[0] + hh, spot[1] + q.half) || P.bodyOverlaps(S.world, spot[0] - hh, spot[1] - q.half, spot[0] + hh, spot[1] + q.half, -2); if (g.pb) g.ok = false; } else { g.tx = b.x + g.side * (R + q.half + 3); g.ty = b.y + R - q.half; g.ok = false; }
   if (g.dx === undefined || Math.hypot(g.dx - g.tx, g.dy - g.ty) > 200) { g.dx = g.tx; g.dy = g.ty; }
 }
 function drawGhost(dt, nowT) {
@@ -3615,7 +3631,7 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (!on) return;
   $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Dig' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Dig' : 'Place');
-  $('placeHint').textContent = g.pb ? 'A player is in the way. Wait for them to move' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? 'It clears the tile in front of you. Turn around to use the other side' : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? 'Nothing to dig. Face dirt, ice or rock right beside you' : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
+  $('placeHint').textContent = g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? 'It clears the tile in front of you. Turn around to use the other side' : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? 'Nothing to dig. Face dirt, ice or rock right beside you' : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
@@ -3629,7 +3645,7 @@ function finishPlacing() {
   const it = g.it; computeGhost();
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); cancelPlacing(true); return; }
   if (atLimit(it)) { notice(limitNote(it), 'urgent'); cancelPlacing(true); return; }
-  if (!g.ok) { notice(g.sb ? 'You cannot build in the start area' : g.pb ? 'A player is in the way' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
+  if (!g.ok) { notice(g.sb ? 'You cannot build in the start area' : g.pb ? 'Something is in the way' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
   if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   if (it.portal) {
     const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr];
@@ -4611,7 +4627,8 @@ function onMsg(m) {
       addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
     case 'pgate': { if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
     case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); sfx('big'); break;
-    case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y) || (!party && !pubTake('p', [m.k | 0, m.x | 0, m.y | 0]))) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
+    case 'puid': { const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y); if (d) { adoptUid(w, d, m.u); d.srvU = true; } break; }
+    case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y) || (!party && !pubTake('p', [m.k | 0, m.x | 0, m.y | 0]))) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
     case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; startTransition(m.slot, m.next); break;

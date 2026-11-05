@@ -253,6 +253,7 @@ function srvTerrain(w, tx, r, to) {
   if (tx < 0 || tx >= w.W || r < 0 || r >= w.H) return;
   const i = r * w.W + tx, cur = w.grid[i]; if (cur === 4 || cur === 6 || cur === 9) return;
   w.grid[i] = to === 7 ? 1 : to;
+  if (w.grid[i] === 1 || w.grid[i] === 3) P.liftOut(w, tx, r);
 }
 function srvBounce(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
 function srvMisc(w, q) {
@@ -282,7 +283,7 @@ function roomWorld(room) {
   return w;
 }
 const worldAdd = {   // somebody built something: it goes into the shared world straight away
-  prop: (r, q) => { if (r.world) { const d = P.addProp(r.world, q[0], q[1], q[2]); d.ver = ++r.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; } },
+  prop: (r, q) => { if (r.world) { const d = P.addProp(r.world, q[0], q[1], q[2]); d.ver = ++r.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; return d; } },
   misc: (r, q) => { if (r.world) srvMisc(r.world, q); },
   gate: (r, q) => { if (r.world) srvGate(r.world, q); }
 };
@@ -338,9 +339,19 @@ function simTick() {
     }
     // what changed, for the dyn things
     for (let i = 0; i < w.dyn.length; i++) {
-      const d = w.dyn[i]; if (d.sleep) continue;
+      const d = w.dyn[i];
+      if (d.sleep) {   // (a thing that went to sleep in the middle of a move is still told to everybody once, where it stopped)
+        if (!(d.burn > 0) && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || !d.lst)) { d.ver = ++room.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; d.lst = true; d.lvx = d.lvy = d.svx = d.svy = 0; d.px = undefined; }
+        continue;
+      }
       const bn = d.burn > 0;
-      if (bn !== d.lb || (!bn && Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04)) { d.ver = ++room.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; }
+      const kx = d.px === undefined ? d.vx : (d.x - d.px) / (TICK_MS / 1000), ky = d.px === undefined ? d.vy : (d.y - d.py) / (TICK_MS / 1000);
+      const dm = d.px === undefined ? 99 : Math.abs(d.x - d.px) + Math.abs(d.y - d.py); d.px = d.x; d.py = d.y;
+      d.svx = Math.abs(d.vx - kx) > 40 + Math.abs(kx) * 0.6 ? Math.max(-1500, Math.min(1500, kx)) : d.vx;   // (what it really did this tick: a pile held up by what is under it keeps 'falling' in its own sums without moving at all)
+      d.svy = Math.abs(d.vy - ky) > 40 + Math.abs(ky) * 0.6 ? Math.max(-1500, Math.min(1500, ky)) : d.vy;
+      const still = !bn && ((Math.abs(d.svx) < 25 && Math.abs(d.svy) < 25) || dm < 0.5);
+      const mv = !bn && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || still !== d.lst || (!still && Math.abs(d.svx - d.lvx) + Math.abs(d.svy - d.lvy) > 60));
+      if (bn !== d.lb || mv) { d.ver = ++room.verN; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; d.lst = still; d.lvx = d.svx; d.lvy = d.svy; }
     }
     // gates and triggers: tell everybody when any of them changes (and now and then anyway)
     const sig = doorSig(w);
@@ -368,7 +379,7 @@ function simTick() {
       out.forEach((d, k) => {
         const o = 4 + k * 21, bn = d.burn > 0;
         buf.writeUInt32LE(d.uid >>> 0, o); buf.writeFloatLE(bn ? 0 : d.x, o + 4); buf.writeFloatLE(bn ? 0 : d.y, o + 8);
-        buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(bn ? 0 : d.vx))), o + 12); buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(bn ? 0 : d.vy))), o + 14);
+        const rest = bn || d.lst; buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svx))), o + 12); buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svy))), o + 14);
         buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = bn ? 1 : 0;
         p.dver.set(d.uid, d.ver);
       });
@@ -385,6 +396,10 @@ function send(p, obj) { if (p.ws.readyState === 1) p.ws.send(JSON.stringify(obj)
 function broadcast(room, obj, except) {
   const s = JSON.stringify(obj);
   for (const p of room.players.values()) if (p !== except && p.ws.readyState === 1) p.ws.send(s);
+}
+function addOk(p) {   // building is rate-limited as a bucket (a burst of placements is fine, a flood is not): dropping one would leave this world and the builder's out of step
+  const now = Date.now(); p.tok = Math.min(12, (p.tok === undefined ? 12 : p.tok) + (now - (p.tokT || now)) / 1000 * 8); p.tokT = now;
+  if (p.tok < 1) return false; p.tok -= 1; return true;
 }
 function leave(p, toLobby) {
   const room = p.room;
@@ -547,7 +562,7 @@ wss.on('connection', (ws, req) => {
       if (Object.keys(e).length) { e.t = 'pb'; broadcast(r, e, p); }
     } else if (m.t === 'pobj') {   // a teeter-totter or a floor booster, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl')) || (m.g.length === 5 && m.g[0] === 'por')) || !m.g.slice(1).every(Number.isFinite) || bstate(r).misc.length >= ROOM_MISC || ((m.g[0] === 'see' || m.g[0] === 'por') && bstate(r).misc.filter(q => q[0] === m.g[0]).length >= 80)) return;
-      const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
+      if (!addOk(p)) return;
       if (m.g[0] === 'tl') {   // one record per tile: a newer change replaces the older one, and -1 means the tile is back the way the map made it, so there is nothing to keep
         const put = (tx, ty, to) => {
           const mb = bstate(r).misc;
@@ -564,14 +579,14 @@ wss.on('connection', (ws, req) => {
       const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
     } else if (m.t === 'pgate') {   // a gate and its trigger, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || m.g.length !== 5 || !m.g.every(Number.isFinite) || m.g[2] < 2 || m.g[2] > 8 || bstate(r).gates.length >= ROOM_GATES) return;
-      const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
+      if (!addOk(p)) return;
       const e = m.g.map(Math.round); bstate(r).gates.push(e); worldAdd.gate(r, e); broadcast(r, { t: 'pgate', g: e }, p);
     } else if (m.t === 'padd' || m.t === 'pcp') {   // somebody built something in a friend's world: everyone there gets it
       const r = p.room; if (!bstate(p.room)) return;
-      const now = Date.now(); if (now - (p.lastAdd || 0) < 150) return; p.lastAdd = now;
+      if (!addOk(p)) return;
       if (m.t === 'padd') {
         const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).props.length >= ROOM_PROPS) return;
-        const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); worldAdd.prop(r, e); broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2] }, p);
+        const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); const nd = worldAdd.prop(r, e), nu = nd ? nd.uid : undefined; broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2], u: nu }, p); if (nu !== undefined) send(p, { t: 'puid', k: e[0], x: e[1], y: e[2], u: nu });   // (the server's name for it goes to everyone, so two things put down on the very same spot can never be mixed up)
       } else {
         if (!Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).cps.length >= ROOM_CPS) return;
         const e = [Math.round(m.x), Math.round(m.y)]; bstate(r).cps.push(e); broadcast(r, { t: 'pcp', x: e[0], y: e[1] }, p);
