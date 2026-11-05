@@ -387,7 +387,7 @@
       const d = L[i];
       if (d.skip) { d.sleep = true; continue; }
       if (d.burn > 0) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; } continue; }
-      if (fol && d.sv !== undefined) { if (!(d.mineT > 0)) { d.sleep = true; continue; } d.mineT -= dt; }   // (a thing the server has not told us about yet is still worked out here)   // in the shared world the server moves everything; only what you are pushing right now is also worked out here, so it answers at once
+      if (fol && d.sv !== undefined) { d.sleep = true; continue; }   // (a thing the server has not told us about yet is still worked out here)   // in the shared world the server moves everything; only what you are pushing right now is also worked out here, so it answers at once
       if (f && !nearF(f, d.x, d.y, FR, FR)) { d.sleep = true; continue; }   // far from you: frozen (saves work)
       d.sleep = false;
       if (d.nap) { if (Math.abs(d.x - d.rx) + Math.abs(d.y - d.ry) > 2) { d.nap = false; d.rest = 0; } else if ((dynTick + i) % 12 !== 0) continue; }   // at rest: it only checks in now and then (so a big pile that has settled costs next to nothing, and anything that changes under it wakes it within a moment)

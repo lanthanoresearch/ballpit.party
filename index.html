@@ -1131,8 +1131,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=101"></script>
-<script src="physics.js?v=101"></script>
+<script src="maps.js?v=102"></script>
+<script src="physics.js?v=102"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1812,10 +1812,6 @@ function update(dt) {
   w.focus.x = S.b.x; w.focus.y = S.b.y;
   botsTick(dt);
   followWorld(dt);
-  if (w.follow && others.size) {   // the other players push crates and balls here just as they do on the server, so a block you share with somebody answers both of you at once
-    const bx0 = S.b.x, by0 = S.b.y;
-    others.forEach(o => { if (!o.seen || o.dead || Math.abs(o.cx - bx0) > 900 || Math.abs(o.cy - by0) > 700) return; pushC.x = o.cx; pushC.y = o.cy; pushC.vx = o.svx || 0; pushC.vy = o.svy || 0; pushC.ground = !!o.sg; P.collideDyn(pushC, w); });
-  }
   P.stepDyn(w, dt);
   if (w.drops && w.drops.length) stepDrops(w, dt);
   if (S.spawnT > 0) S.spawnT -= dt;
@@ -1832,7 +1828,10 @@ function update(dt) {
   if (!settings.boost) { b.bReq = false; S.bLatch = 0; } else if (S.bLatch > 0 && !bl) { S.bLatch -= dt; b.bReq = true; }
   b.noJm = !settings.powerJump;   // only you have the jump meter (and only if power jump is switched on)
   b.sjSep = !!settings.superBtn;   // a separate power-jump button: the normal jump never uses the full meter
+  let held = null;
+  if (w.follow) { held = []; for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.sv && !(d.burn > 0) && Math.abs(d.x - b.x) < 130 && Math.abs(d.y - b.y) < 130) held.push(d, d.x, d.y, d.rot); } }
   const ev = P.step(b, w, ax, jheld, dt);
+  if (held) for (let i = 0; i < held.length; i += 4) { const d = held[i]; d.x = held[i + 1]; d.y = held[i + 2]; d.rot = held[i + 3]; d.mineT = 0; }   // (you feel a block push back at once, but it is only the server that actually moves it)
   P.stepSwitches(w, b, dt);
   if (w.follow) syncDoors();
   if (w.ev.length) worldEvents();
@@ -1932,7 +1931,8 @@ function followWorld(dt) {
     const age = Math.min(0.06, (t - s.t) / 1000), e0 = d.r || d.hw;
     let tx = s.x + s.vx * age, ty = s.y + s.vy * age;
     if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (never guess a position inside the ground)
-    const ex = tx - d.x, ey = ty - d.y, mine = d.mineT > 0;
+    d.mineT = 0; d.hold = 0; d.errT = 0;   // (one authority: the server's picture is the only one that moves things)
+    const ex = tx - d.x, ey = ty - d.y, mine = false;
     if (Math.abs(ex) + Math.abs(ey) > 240) { d.x = tx; d.y = ty; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.mineT = 0; d.tip = null; continue; }
     if (d.hold > 0) d.hold -= dt;
     if (mine && Math.abs(ex) + Math.abs(ey) > 4 && S.b && Math.abs(S.b.vx) < 30 && Math.abs(S.b.vy) < 60) { d.errT = (d.errT || 0) + dt; if (d.errT > 0.35) { d.mineT = 0; d.hold = 0.6; d.errT = 0; } } else d.errT = 0;   // you are not pushing it, yet it still disagrees with the server's: take the server's
