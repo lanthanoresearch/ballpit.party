@@ -1141,8 +1141,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=105"></script>
-<script src="physics.js?v=105"></script>
+<script src="maps.js?v=106"></script>
+<script src="physics.js?v=106"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1960,7 +1960,7 @@ function followWorld(dt) {
     const d = w.dyn[i], s = d.sv; if (!s) continue;
     if (s.burn) { if (!(d.burn >= 1e9)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } continue; }
     if (d.burn >= 1e9) { d.burn = 0; d.x = s.x; d.y = s.y; d.vx = s.vx; d.vy = s.vy; d.rot = s.rot; d.mineT = 0; d.nap = false; d.rest = 0; continue; }
-    const age = Math.min(0.06, (t - s.t) / 1000), e0 = d.r || d.hw;
+    const age = Math.min(Math.max(0.06, Math.min(0.25, (s.iv || 0) * 0.0012)), (t - s.t) / 1000), e0 = d.r || d.hw;   // (when the server's updates come slowly, things carry on a little longer in the direction they were going)
     let tx = s.x + s.vx * age, ty = s.y + s.vy * age;
     if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (never guess a position inside the ground)
     d.mineT = 0; d.hold = 0; d.errT = 0;   // (one authority: the server decides where everything is)
@@ -4569,7 +4569,7 @@ function dynBin(dv, len, ty) {
     for (let k = 0; k < n; k++) {
       const o = 4 + k * 21; if (o + 21 > len) break;
       const d = w.dynBy.get(dv.getUint32(o, true)); if (!d) continue;
-      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, t };
+      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0 };
     }
   } else {
     for (let k = 0; k < n; k++) {

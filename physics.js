@@ -290,8 +290,9 @@
     for (let i = 0; i < w.plates.length; i++) {
       const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = !!(w.follow && q.srvOn);
       for (let k = 0; k < L.length && !on; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true; }
-      for (let j = 0; j < w.dyn.length && !on; j++) {
-        const o = w.dyn[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 300) continue;
+      const DL = w.cand || w.dyn;   // (on the server: only the things near a player)
+      for (let j = 0; j < DL.length && !on; j++) {
+        const o = DL[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 300) continue;
         const bot = o.y + (o.r || o.hh);
         if (o.x > x0 && o.x < x1 && bot >= fy - 8 && bot <= fy + 6) on = true;
       }
