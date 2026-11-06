@@ -1190,39 +1190,46 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     const sTh = TH[laneOf(bandAt(0), 0).th];
     // A roomy, harmless playground: a little of everything and nothing that kills you.
     const SW = 41;
+    /* Every map has its own start (made from its own seed, so everybody gets the same one): the spawn on the left and the lookout with its
+       vault on the right stay put, and in between a few play stations are picked, shuffled and filled with different toys. */
+    const SR = rng(d.seed * 13 + 9001), sri = (a, b) => a + Math.floor(SR() * (b - a + 1)), spick = a => a[Math.floor(SR() * a.length)];
+    const toy = (x, y) => { const k = spick([0, 0, 2, 2, 7, 7, 3, 5, 4]); props.push([k, x, y]); };
     addRect([0, 0, 3, 2, 1, sTh, startGid]);                       // where you appear
-    addRect([6, 0, 6, 2, 1, sTh, startGid]);                       // a bounce pad and a coin trail
-    addRect([12, 1, 8, 1, 1, sTh, startGid]);                      // a basin one block down: crates in here can be pushed around but never off the edge
-    addRect([20, 0, 5, 2, 1, sTh, startGid]); addRect([21, 0, 3, 1, 3, sTh, startGid]);   // a patch of ice
-    addRect([25, 3, 9, 2, 1, sTh, startGid]);                      // the floor under the see-saw
+    addRect([3, 0, 3, 2, 1, sTh, startGid]);
+    const ST = {
+      pad: w => [6, x => { addRect([x, 0, 6, 2, 1, sTh, startGid]); addRect([x + 3, 0, 2, 1, 6, sTh, startGid]); coin(x + 3.5, -3.2, 0); coin(x + 3.5, -5.2, 0); coin(x + 3.5, -7.6, 1); toy(x + 1, 0); }],
+      basin: w => [8, x => { addRect([x, 1, 8, 1, 1, sTh, startGid]); const v = sri(0, 2); if (v === 0) { cratePyramid(x + 1.2, 1, 3); jenga(x + 5.2, 1, 5); } else if (v === 1) { for (let k = 0; k < 7; k++) props.push([spick([2, 7, 4]), x + 0.6 + k * 1.05, 1]); crateColumn(x + 6.6, 1, 3); } else { props.push([1, x + 1.6, 1]); props.push([0, x + 1.6, -0.9]); props.push([3, x + 5.4, 1]); toy(x + 3.6, 1); } coinRow(x + 2, -0.4, 5, 1, 0); }],
+      ice: w => [6, x => { addRect([x, 0, 6, 2, 1, sTh, startGid]); addRect([x + 1, 0, 4, 1, 3, sTh, startGid]); coinRow(x + 1.5, -1.6, 3, 1, 0); if (SR() < 0.6) props.push([spick([0, 2, 5]), x + 2.5, 0]); }],
+      seesaw: w => [11, x => { addRect([x, 0, 1, 5, 1, sTh, startGid]); addRect([x + 10, 0, 1, 5, 1, sTh, startGid]); addRect([x + 1, 3, 9, 2, 1, sTh, startGid]); gad.see.push([x + 5.5, 0.15, 5.3, 0]); const k = spick([4, 4, 7, 2]); for (let i = 0; i < 8; i++) props.push([k, x + 1.9 + i * 0.95, 3]); if (k !== 2) for (let i = 0; i < 7; i++) props.push([k, x + 2.4 + i * 0.95, 2.3]); coinRow(x + 3, -3.4, 5, 1, 0); }],   // (its plank reaches over the edges of the dip: nothing is put down within its reach, so it can always swing)
+      steps: w => [6, x => { addRect([x, 0, 6, 2, 1, sTh, startGid]); addRect([x + 2, -1, 3, 1, 1, sTh, startGid]); addRect([x + 3, -2, 2, 1, 1, sTh, startGid]); crateColumn(x + 3.6, -2, sri(2, 4)); coin(x + 1, -1.5, 0); coin(x + 2.5, -2.6, 0); coin(x + 4, -3.6 - 0.9 * 3, 1); }],
+      springs: w => [6, x => { addRect([x, 0, 6, 2, 1, sTh, startGid]); props.push([5, x + 1, 0]); props.push([5, x + 4, 0]); if (SR() < 0.4) props.push([6, x + 2.5, 0]); coinRow(x + 0.5, -6.5, 5, 1, SR() < 0.3 ? 1 : 0); }],
+      tower: w => [5, x => { addRect([x, 0, 5, 2, 1, sTh, startGid]); if (SR() < 0.5) jenga(x + 1.6, 0, sri(4, 7)); else { cratePyramid(x + 0.6, 0, 3); props.push([1, x + 1.5, -2.7]); } coin(x + 2.5, -7, 1); }],
+      pit: w => [7, x => { addRect([x, 2, 7, 2, 1, sTh, startGid]); for (let i = 0; i < 12; i++) props.push([spick([2, 7, 7, 4, 3]), x + 0.7 + (i % 6) * 1.05, 2 - Math.floor(i / 6) * 0.9]); coinRow(x + 1, -0.6, 5, 1, 0); }]
+    };
+    { let x = 6; const pool = Object.keys(ST); for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(SR() * (i + 1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+      for (const k of pool) { const [wd, draw] = ST[k](); if (x + wd > 34) continue; draw(x); x += wd; if (x >= 31) break; }
+      if (x < 34) { addRect([x, 0, 34 - x, 2, 1, sTh, startGid]); coinRow(x + 0.5, -1.4, 34 - x, 1, 0); } }
     addRect([34, 0, 7, 2, 1, sTh, startGid]);                      // a little lookout
-    addRect([9, 0, 2, 1, 6, sTh, startGid]);                       // bounce pad
-    coin(10, -3.2, 0); coin(10, -5.2, 0); coin(10, -7.6, 1);
-    gad.see.push([29.5, 0.15, 5.3, 0]);                            // a see-saw over a shallow dip
-    cratePyramid(13.2, 1, 3); jenga(17.2, 1, 5); props.push([2, 16.1, 1]); props.push([3, 19.2, 1]);
-    coinRow(14, -0.4, 6, 1, 0); coinRow(22, -1.6, 3, 1, 0); coinRow(27, -3.4, 5, 1, 0); coinRow(36, -1.4, 4, 1, 0); coin(38, -3.4, 1);
-    crateColumn(35.2, 0, 3);
+    crateColumn(35.2, 0, sri(2, 4)); coinRow(36, -1.4, 4, 1, 0); coin(38, -3.4, 1);
     occ.add(-1, -9, SW + 1, 3); occ.add(-1, -6, SW + 1, 8);
     addRect([0, 7, 9, 2, 1, sTh, startGid]); addRect([4, 7, 1, 1, 6, sTh, startGid]);
     occ.add(-1, 5, 11, 12); occB.add(-1, 5, 11, 12); occB.add(-1, -9, SW + 1, 12);
     coinRow(0.5, 5.4, 3, 1, 0); coinRow(6.5, 5.4, 3, 1, 0); coinRow(4, 3.2, 1, 1, 1);
-    // ---- more to play with at the start ----
+    // ---- up in the sky: ledges to climb, at different places on every map ----
     occ.add(-1, -14, SW + 1, -9); occB.add(-1, -14, SW + 1, -9);
-    // a staircase of ledges in the sky above the basin: bounce up from the pad, climb, and ride the gems
-    addRect([13, -5, 5, 1, 1, sTh, startGid]); addRect([20, -9, 5, 1, 1, sTh, startGid]); addRect([27, -12, 6, 1, 1, sTh, startGid]);
-    coinRow(13.5, -6.2, 4, 1, 0); coinRow(20.5, -10.2, 4, 1, 0); coinRow(27.5, -13.2, 5, 1, 0); coin(30, -14.8, 2); coin(22, -11.8, 1);
+    const L1 = sri(11, 15), L2 = sri(18, 22), L3 = sri(26, 29), H1 = -sri(4, 6), H2 = -sri(8, 9), H3 = -sri(11, 12);
+    addRect([L1, H1, 5, 1, 1, sTh, startGid]); addRect([L2, H2, 5, 1, 1, sTh, startGid]); addRect([L3, H3, 6, 1, 1, sTh, startGid]);
+    coinRow(L1 + 0.5, H1 - 1.2, 4, 1, 0); coinRow(L2 + 0.5, H2 - 1.2, 4, 1, 0); coinRow(L3 + 0.5, H3 - 1.2, 5, 1, 0); coin(L3 + 3, H3 - 2.8, 2); coin(L2 + 2, H2 - 2.8, 1);
+    if (SR() < 0.6) props.push([spick([0, 2, 7]), L2 + 2, H2]);
     // a switch on the first ledge opens a little vault at the lookout: crates and coins inside
-    { const id = gad.doors.length; gad.btns.push([15, -5, [id]]); decor.push([1, 15, -5]);
+    { const id = gad.doors.length; gad.btns.push([L1 + 2, H1, [id]]); decor.push([1, L1 + 2, H1]);
       gad.doors.push([37, -6, 1, 6]); decor.push([2, 37, 0]); addRect([37, -7, 4, 1, 1, sTh, startGid]);
-      coinRow(38, -1.2, 3, 1, 1); coin(39, -3, 2); props.push([0, 39, 0]); props.push([0, 40, 0]); props.push([3, 38.5, 0]); }
-    // a ball pit in the dip under the see-saw, and a coin wave over everything
-    for (let i = 0; i < 8; i++) props.push([4, 25.9 + i * 0.95, 3]);
-    for (let i = 0; i < 7; i++) props.push([4, 26.4 + i * 0.95, 2.3]);
-    for (let i = 0; i < 10; i++) coin(3 + i * 3.6, -8.4 - Math.sin(i / 9 * Math.PI) * 1.8, i === 4 || i === 5 ? 1 : 0);
-    // a second pair of crates to build with, a tall tower, and trampolines on the lookout
-    cratePyramid(2.6, 0, 3); crateColumn(5.6, 0, 4); jenga(23.4, 0, 4);
-    // the lower hideout: a hoard of coins and toys
-    coinRow(1.5, 5.4, 6, 1, 0); crateColumn(7, 7, 3); props.push([2, 2, 7]); props.push([3, 6.2, 7]);
+      coinRow(38, -1.2, 3, 1, 1); coin(39, -3, 2); props.push([0, 39, 0]); props.push([spick([0, 5, 1]), 40, 0]); props.push([spick([3, 2, 7]), 38.5, 0]); }
+    // a coin wave over everything
+    { const amp = 1 + SR() * 1.6, ph = SR() * 2; for (let i = 0; i < 10; i++) coin(3 + i * 3.6, -8.4 - Math.sin(i / 9 * Math.PI + ph) * amp, i === 4 || i === 5 ? 1 : 0); }
+    // a few things to build with near the spawn, and the lower hideout's hoard
+    if (SR() < 0.5) cratePyramid(2.6, 0, 3); else { crateColumn(3.4, 0, 2); toy(5, 0); }
+    coinRow(1.5, 5.4, 6, 1, 0); crateColumn(7, 7, sri(2, 3)); props.push([spick([2, 7, 4]), 2, 7]); props.push([spick([3, 2, 5]), 6.2, 7]);
     const startPlat = [0, 0, SW, sTh, 0, startGid, 0, 2, 0, 0, 0];
 
     /* --- lanes --- */

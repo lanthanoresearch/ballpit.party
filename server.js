@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 118;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 119;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -230,11 +230,34 @@ const server = http.createServer((req, res) => {
   res.end(body);
 });
 
-const wss = new WebSocketServer({ server, maxPayload: 1024, perMessageDeflate: false });
+const wss = new WebSocketServer({ server, maxPayload: 65536, perMessageDeflate: false });   // (a world's memory, sent back by a player after a restart, comes in parts of up to 60 KB)
 
 // Worlds are numbered 1, 2, 3...  Everyone goes to the lowest-numbered world with space; a new world only opens when the others are full.
+function roomFresh(r) {   // a public world this server knows nothing about (it was restarted and lost its memory): a player who was here may have it
+  if (!r || r.priv || r.seeded || !r.virgin) return false;   // (virgin: there was no memory of it at all when it was opened)
+  const b = r.build; return !b || (!b.props.length && !b.misc.length && !b.gates.length && !b.cps.length && !(b.dels || []).length);
+}
+function snapFor(r) {   // a world's memory as the players keep it: what is built, and where everything is that has been moved
+  const w = r.world; if (!w) return null;
+  const d = []; for (const o of w.dyn) { if (o.burn >= 1e9) d.push([o.uid >>> 0, 0, 0, 0, 1]); else if (!(o.burn > 0) && (Math.abs(o.x - o.hx) > 1 || Math.abs(o.y - o.hy) > 1 || Math.abs(o.rot) > 0.005)) d.push([o.uid >>> 0, Math.round(o.x * 10) / 10, Math.round(o.y * 10) / 10, Math.round(o.rot * 1000) / 1000]); }
+  return { d, s: w.see.filter(q => Math.abs(q.ang) > 0.001).map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]) };
+}
+const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+setInterval(() => {   // every few seconds each player is given the world's memory (only when it changed): if this server ever forgets, the last one here brings it back
+  const now = Date.now();
+  for (const r of rooms.values()) {
+    if (r.priv || !r.world || !r.players.size) continue;
+    const sn = snapFor(r); if (!sn) continue;
+    const bs = JSON.stringify(bstate(r)), bh = hashStr(bs), ds = JSON.stringify(sn), dh = hashStr(ds);
+    for (const p of r.players.values()) {
+      if (!p.has || p.ws.readyState !== 1 || (p.sbh === bh && p.sdh === dh)) continue;
+      const msg = '{"t":"wsnap","k":"' + wkey(r.id) + '","at":' + now + ',"bh":"' + bh + '"' + (p.sbh === bh ? '' : ',"b":' + bs) + ',"w":' + ds + '}';
+      try { p.ws.send(msg); p.sbh = bh; p.sdh = dh; } catch (e) {}
+    }
+  }
+}, 10000).unref();
 function loadSaved(r) {   // what this map's room had the last time it was played (things built and where everything ended up)
-  const sv = savedWorlds.get(wkey(r.id)); r.build = null; r.snapDyn = undefined; r.snapSee = undefined;
+  const sv = savedWorlds.get(wkey(r.id)); r.build = null; r.snapDyn = undefined; r.snapSee = undefined; r.virgin = !sv; r.seeded = false; r.seedBy = null;
   if (sv) { if (sv.build) r.build = sv.build; r.snapDyn = sv.dyn; r.snapSee = sv.see; }
 }
 function findRoom() {
@@ -243,7 +266,7 @@ function findRoom() {
     const r = rooms.get(id);
     if (r && r.players.size >= MAX_PLAYERS) { full.push(id); continue; }
     if (r) return { room: r, full };
-    const nr = { id, players: new Map(), finishers: [] };
+    const nr = { id, players: new Map(), finishers: [], bornAt: Date.now() };
     loadSaved(nr);   // (a world that was here before comes back as it was)
     rooms.set(id, nr);
     return { room: nr, full };
@@ -278,7 +301,7 @@ function srvGate(w, q) {
 function roomWorld(room) {
   if (room.world) return room.world;
   const m = maps.generate(rslot(room) % maps.count), w = P.makeWorld(m);
-  w.orig = w.grid.slice(); w.closeDelay = 0.3; w.focus = []; w.follow = false;
+  w.orig = w.grid.slice(); w.closeDelay = 0.6; w.focus = []; w.follow = false;
   const B = bstate(room);
   (B.misc || []).forEach(q => { try { srvMisc(w, q); } catch (e) {} });
   (B.gates || []).forEach(q => { try { srvGate(w, q); } catch (e) {} });
@@ -529,7 +552,7 @@ wss.on('connection', (ws, req) => {
         const key = privKey(p.pub), lv = m.host.m | 0;
         if (rooms.has(key)) { send(p, { t: 'jno', why: 'busy' }); return; }
         const props = [], gates = [], misc = [], cps = [], dels = [];   // (what the host built arrives right after, in small pieces)
-        room = { id: key, players: new Map(), finishers: [], priv: { owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
+        room = { id: key, players: new Map(), finishers: [], priv: { at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] };
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
         const hr = rooms.get(privKey(m.join));
@@ -549,7 +572,7 @@ wss.on('connection', (ws, req) => {
         online++; statsDirty = true;
         if (online > peak) { peak = online; peakDirty = true; }
         send(p, {
-          t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full,
+          t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
           build: room.priv ? undefined : bstate(room), priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? 1 : 0 }))
@@ -658,6 +681,30 @@ wss.on('connection', (ws, req) => {
         if (w.see.length && P.plankCross(w, d.x, d.y, q[1], q[2], d.r || Math.max(d.hw, d.hh))) continue;   // (never taken through a teeter-totter: the two devices must have seen the plank differently, and the server's side of it stands)
         d.x = q[1]; d.y = q[2]; d.vx = Math.max(-1400, Math.min(1400, q[3])); d.vy = Math.max(-1400, Math.min(1400, q[4])); d.rot = q[5]; d.av = Math.max(-28, Math.min(28, q[6])); d.ownBy = p.id; d.ownT = 0.25; d.nap = false; d.st = 0;
       }
+    } else if (m.t === 'pseed') {   // the host of a private world says where everything is in it: their device is that world's memory
+      const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || Date.now() - (r.priv.at || 0) > 90000 || !Array.isArray(m.d)) return;
+      const rows = m.d.slice(0, 500).filter(q => Array.isArray(q) && q.length >= 4 && q.slice(0, 4).every(Number.isFinite));
+      const w = roomWorld(r);
+      for (const q of rows) { const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone) continue; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.rot = q[3]; d.burn = 0; } d.vx = d.vy = 0; d.av = 0; d.nap = true; d.rest = 0; d.ver = ++r.verN; }
+      if (Array.isArray(m.s)) for (const q of m.s.slice(0, 200)) { if (!Array.isArray(q) || q.length !== 2 || !q.every(Number.isFinite)) continue; const e = w.see.find(o => o.uid === (q[0] >>> 0)); if (e) { e.ang = Math.max(-0.36, Math.min(0.36, q[1])); e.av = 0; } }
+      for (const q of r.players.values()) q.dver = null;   // (everyone is told where it all is again)
+    } else if (m.t === 'wseed') {   // the server forgot this world (a restart with nothing saved): a player who was here brings back its memory, in parts
+      const r = p.room; if (!r || r.priv || typeof m.k !== 'string' || m.k !== wkey(r.id) || !Number.isFinite(m.n) || !Number.isFinite(m.i) || m.n < 1 || m.n > 40 || typeof m.c !== 'string') return;
+      if (!roomFresh(r) || (r.seedBy && r.seedBy !== p.id)) return;
+      r.seedBy = p.id; if (!r.seedParts || r.seedParts.n !== m.n) r.seedParts = { n: m.n, a: [] };
+      r.seedParts.a[m.i | 0] = m.c;
+      if (r.seedParts.a.filter(x => typeof x === 'string').length < m.n) return;
+      let o = null; try { o = JSON.parse(r.seedParts.a.join('')); } catch (e) {} r.seedParts = null;
+      if (!o || typeof o !== 'object' || !o.b || !o.w) { r.seedBy = null; return; }
+      const B = { props: [], cps: [], gates: [], misc: [], dels: [] }, okAny = q => okMisc(q) || (Array.isArray(q) && ((q.length === 4 && (q[0] === 'see' || q[0] === 'pad')) || (q.length === 5 && q[0] === 'por')) && q.slice(1).every(Number.isFinite) ? [q[0], ...q.slice(1).map(Math.round)] : null);
+      const take = (key, ok, cap) => { for (const q of (Array.isArray(o.b[key]) ? o.b[key] : []).slice(0, cap)) { const c = ok(q); if (c) B[key].push(c); } };
+      take('props', okProp, ROOM_PROPS); take('gates', okGate, ROOM_GATES); take('misc', okAny, ROOM_MISC); take('cps', okCp, ROOM_CPS); take('dels', okDel, ROOM_DELS);
+      const dyn = (Array.isArray(o.w.d) ? o.w.d : []).filter(q => Array.isArray(q) && q.length >= 4 && q.slice(0, 4).every(Number.isFinite)).map(q => [q[1], q[2], q[3], q[0] >>> 0, q[4] ? 1 : 0]);
+      const see = (Array.isArray(o.w.s) ? o.w.s : []).filter(q => Array.isArray(q) && q.length === 2 && q.every(Number.isFinite));
+      r.build = B; r.world = null; r.snapDyn = dyn; r.snapSee = see; r.seeded = true; worldsDirty = true;
+      console.log('World ' + wkey(r.id) + ' brought back by ' + p.name + ': ' + B.props.length + ' things, ' + B.misc.length + ' tiles and gadgets, ' + dyn.length + ' moved');
+      for (const q of r.players.values()) { q.dver = null; q.sbh = q.sdh = null; send(q, { t: 'rebuild', b: B }); }   // (everyone here loads the world again, now as it really was)
+      keepWorlds(false);
     } else if (m.t === 'dseed') {   // this server forgot the world (it was restarted with nothing saved): a player who was here tells it where things had ended up, so a knocked-down tower stays knocked down
       const r = p.room; if (!r || !r.world || !r.seedOk || Date.now() - r.worldAt > 40000 || !Array.isArray(m.d) || m.s !== rslot(r)) return;
       if (r.seedBy && r.seedBy !== p.id) return; r.seedBy = p.id;

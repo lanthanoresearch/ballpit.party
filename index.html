@@ -531,6 +531,8 @@
   @media (max-height:520px) and (min-aspect-ratio:1/1){#settings.only{grid-template-columns:minmax(0,1fr)!important;width:min(560px,calc(100vw - 20px))!important}#settings.only .sbody{grid-column:1!important;grid-row:2!important}}
 .btnrow{display:flex;gap:8px;margin:8px 0}.btnrow .btn{flex:1}.btnrow .btn+.btn{flex:none}
   #editbar{touch-action:none}#editbar input[type=range]{touch-action:none;height:28px}
+  .bkbox{border:2px solid var(--line);border-radius:var(--wob);padding:10px 12px;margin:10px 0}.bkbox h4{margin:0 0 4px;display:flex;align-items:center;gap:6px}.bkbox .small{margin:0 0 8px}
+  .bkrow{display:flex;gap:8px}.bkrow .btn{flex:1;min-width:0;justify-content:center}
   #phraseGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 10px}
   #sayBuild{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;text-align:left}#sayBuild .small{margin:0}
   #sayBuild .csel-btn{min-width:0;padding:9px 10px;font:inherit;font-size:15px;color:inherit;background:#2c2644}#sayBuild .csel-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.saychk{display:flex;align-items:center;gap:7px;font-size:13px;opacity:.85;cursor:pointer}.saychk input{width:17px;height:17px;margin:0;accent-color:var(--accent)}#saySend.ready{box-shadow:0 0 0 3px #fff}
@@ -635,7 +637,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 118; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 119; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -984,6 +986,10 @@
       <button class="btn full" id="btnRefresh"><span data-ic="reset"></span>Refresh the game</button>
       <button class="btn full" id="btnWelcome"><span data-ic="help"></span>How to play</button>
       <button class="btn full hide" id="btnInstall"><span data-ic="install"></span>Install the app</button>
+      <div class="bkbox"><h4><span data-ic="install"></span>Backup</h4>
+        <div class="small">Everything this device keeps, in one file: your profile and friends, settings, coins, and your own worlds with everything in them. Load it here or on another device to get it all back.</div>
+        <div class="bkrow"><button class="btn" id="btnExport" type="button"><span data-ic="down"></span>Save a backup</button><button class="btn" id="btnImport" type="button"><span data-ic="up"></span>Load a backup</button></div>
+        <input type="file" id="importFile" accept=".json,application/json" class="hide"></div>
       <div class="danger"><h4><span data-ic="warn"></span>Reset zone</h4>
         <div class="small">Puts every setting back the way it was on your first visit (name, colours, controls, zoom, everything).</div>
         <button class="btn red full" id="btnReset"><span data-ic="reset"></span>Reset all settings</button></div>
@@ -1156,8 +1162,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=118"></script>
-<script src="physics.js?v=118"></script>
+<script src="maps.js?v=119"></script>
+<script src="physics.js?v=119"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2055,7 +2061,7 @@ function worldEvents() {
   const w = S.world, L = w.ev;
   for (let i = 0; i < L.length; i++) {
     const e = L[i];
-    if (e.k === 'door') { wDirty = true; if (S.b && Math.abs(e.x - S.b.x) < 1100 && Math.abs(e.y - S.b.y) < 800) { sfx(e.open ? 'door' : 'doorClose'); ring(e.x, e.y, '#ffd23d', 8, 70, 0.6); if (e.open) burst(e.x, e.y, ['#ffd23d', '#fff'], 16, 180, 80); S.shake = Math.max(S.shake, 0.15); } }
+    if (e.k === 'door') { wDirty = true; const dk = Math.round(e.x) + ',' + Math.round(e.y), now = performance.now(), dl = (S.doorSfx = S.doorSfx || {}); if (S.b && Math.abs(e.x - S.b.x) < 1100 && Math.abs(e.y - S.b.y) < 800 && now - (dl[dk] || 0) > 700) { dl[dk] = now; sfx(e.open ? 'door' : 'doorClose'); ring(e.x, e.y, '#ffd23d', 8, 70, 0.6); if (e.open) burst(e.x, e.y, ['#ffd23d', '#fff'], 16, 180, 80); S.shake = Math.max(S.shake, 0.15); } }
     else if (e.k === 'plate') { sfx('plate'); ring(e.x, e.y, e.on ? '#58d68d' : '#999', 4, 36, 0.3); }
     else if (e.k === 'portal') { sfx('portal'); ring(e.x, e.y, '#ffd23d', 6, 50, 0.4); ring(e.x2, e.y2, '#3da5ff', 6, 50, 0.4); burst(e.x2, e.y2 - 6, ['#3da5ff', '#fff', '#ffd23d'], 12, 200, 60); }
     else if (e.k === 'pad') { sfx('boost'); ring(e.x, e.y, '#ffd23d', 5, 46, 0.35); }
@@ -2063,9 +2069,10 @@ function worldEvents() {
   }
   L.length = 0;
 }
-const startRect = () => { const s = S.map && S.map.start; if (!s) return null; const sx = Math.floor(s[0] / TS), sy = Math.floor(s[1] / TS); return { tx0: sx - 2, tx1: sx + 2, ty0: sy - 3, ty1: sy + 1 }; };   // the start zone: 5 x 5 blocks around where you appear (nothing can be built in it)
-const startTile = (tx, ty) => { const z = startRect(); return !!z && tx >= z.tx0 && tx <= z.tx1 && ty >= z.ty0 && ty <= z.ty1; };
-const startBlock = (px, py, m) => { const z = startRect(); if (!z) return false; m = m === undefined ? TS * 0.6 : m; return px >= z.tx0 * TS - m && px <= (z.tx1 + 1) * TS + m && py >= z.ty0 * TS - m && py <= (z.ty1 + 1) * TS + m; };   // (a little extra room, so nothing can hang over the edge of it)
+const startRect = () => P.noBuild(S.map)[0] || null;   // the start zone: 5 x 5 blocks around where you appear (nothing can be built in it)
+const zones = () => P.noBuild(S.map);   // the start zone and the zone around the finish flag
+const startTile = (tx, ty) => zones().some(z => tx >= z.tx0 && tx <= z.tx1 && ty >= z.ty0 && ty <= z.ty1);
+const startBlock = (px, py, m) => { m = m === undefined ? TS * 0.6 : m; return zones().some(z => px >= z.tx0 * TS - m && px <= (z.tx1 + 1) * TS + m && py >= z.ty0 * TS - m && py <= (z.ty1 + 1) * TS + m); };   // (a little extra room, so nothing can hang over the edge of it)
 const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && q[0] === 'por' && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
@@ -2149,12 +2156,30 @@ const pkey = (k, q) => k + JSON.stringify(q);
 function pubSync(pv) {   // you arrive in a public world: you get what the room has, and the room gets what you built before that it does not have yet
   if (!pv || !S.world) return;
   const has = new Set(); [['p', pv.props], ['m', pv.misc], ['g', pv.gates], ['c', pv.cps], ['d', pv.dels]].forEach(([k, a]) => (a || []).forEach(q => has.add(pkey(k, q))));
-  applyPubBuild(pv);
-  const seed = S.seed && S.seed.room === S.pubRoom && S.seed.slot === S.slot ? S.seed.d : null; S.seed = null;
-  const srvN = new Map(); (pv.props || []).forEach(q => { const k = pkey('p', q); srvN.set(k, (srvN.get(k) || 0) + 1); });
-  const mineN = new Map(), more = q => { const k = pkey('p', q), n = (mineN.get(k) || 0) + 1; mineN.set(k, n); return n > (srvN.get(k) || 0); };
-  const nb = sendBulk({ props: S.bought.filter(more), gates: S.boughtGates.filter(q => !has.has(pkey('g', q))), misc: S.boughtMisc.filter(q => !has.has(pkey('m', q))), cps: S.boughtCps.filter(q => !has.has(pkey('c', q))), dels: S.dels.filter(q => !has.has(pkey('d', q))) });
-  if (seed) for (let i = 0; i < seed.length; i += 20) { const msg = { t: 'dseed', s: S.slot, d: seed.slice(i, i + 20) }; setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (nb + 1) + 300 + 110 * (i / 20)); }   // (where everything had ended up, sent after what you built, so the server has it all; only taken if the server has no memory of this world)
+  applyPubBuild(pv);   // (the server is the world's only memory: nothing from this device's older copy is ever put back, so nothing comes back that was knocked down, swept away or deleted)
+}
+/* the world's memory, kept on every device that plays in it: if the server is ever restarted with nothing saved, the newest copy brings it back exactly */
+const WSKEY = 'ballrun4_ws';
+function saveSnap(m) {
+  if (typeof m.k !== 'string' || !m.w) return;
+  let all = {}; try { all = JSON.parse(localStorage.getItem(WSKEY) || '{}') || {}; } catch (e) { all = {}; }
+  const e = all[m.k] || {};
+  if (m.b) { e.b = m.b; e.bh = m.bh; } else if (e.bh !== m.bh) return;   // (the build lists come only when they change)
+  e.w = m.w; e.at = m.at; all[m.k] = e;
+  const keys = Object.keys(all).sort((a, b) => (all[b].at || 0) - (all[a].at || 0));
+  for (let n = Math.min(keys.length, 8); n >= 1; n--) { const o = {}; keys.slice(0, n).forEach(k => { o[k] = all[k]; }); try { localStorage.setItem(WSKEY, JSON.stringify(o)); return; } catch (x) {} }   // (the newest few maps; fewer if there is no room)
+}
+function offerSnap(slot, roomId) {   // the server knows nothing of this world: give it this device's copy
+  let all = {}; try { all = JSON.parse(localStorage.getItem(WSKEY) || '{}') || {}; } catch (e) { return; }
+  const k = (slot % BallMaps.count) + ':' + roomId, e = all[k]; if (!e || !e.b || !e.w) return;
+  const str = JSON.stringify({ b: e.b, w: e.w }), CH = 60000, n = Math.ceil(str.length / CH); if (n > 40) return;
+  for (let i = 0; i < n; i++) setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify({ t: 'wseed', k, n, i, c: str.slice(i * CH, (i + 1) * CH) })); } catch (x) {} } }, 150 + i * 80);
+}
+function hostSeed(nb) {   // your own world, opened for friends: the server takes it exactly as your device has it (where everything is), since your device is its memory
+  const w = S.world; if (!w) return;
+  const d = []; for (const o of w.dyn) { if (o.burn === UNK) continue; if (o.burn >= 1e9) d.push([o.uid >>> 0, 0, 0, 0, 1]); else if (!(o.burn > 0) && (Math.abs(o.x - o.hx) > 1 || Math.abs(o.y - o.hy) > 1 || Math.abs(o.rot) > 0.005)) d.push([o.uid >>> 0, Math.round(o.x * 10) / 10, Math.round(o.y * 10) / 10, Math.round(o.rot * 1000) / 1000]); }
+  const s = w.see.filter(q => Math.abs(q.ang) > 0.001).map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]);
+  for (let i = 0; i === 0 || i < d.length; i += 500) { const msg = { t: 'pseed', d: d.slice(i, i + 500), s: i ? [] : s }; setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (nb + 1) + 200 + 100 * (i / 500)); }
 }
 function sendBulk(lists) {   // tell the world what you have built, 25 things at a time (a big build is no big message)
   const out = [];
@@ -2217,21 +2242,20 @@ function restoreWorld(slot) {
     if (!o || (slot < SOLO_BASE && o.slot !== slot)) return;           // a new session (or a level you reset): everything starts fresh
     const w = S.world;
     const own = true, pubW = slot < SOLO_BASE, key = (k, q) => { if (pubW && S.pubKeys) S.pubKeys.add(pkey(k, q)); };   // (what you built is remembered everywhere; in a public world it is also told to the room again when you come back)
-    (own ? o.buys || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { key('p', q.slice(0, 3)); const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); if (startBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
-    (own ? o.gates || [] : []).forEach(q => { if (validGate(q)) { key('g', q.slice(0, 5)); addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
-    (own ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 5 : 4)); addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
-    (own ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
+    (own && !pubW ? o.buys || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { key('p', q.slice(0, 3)); const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); if (startBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
+    (own && !pubW ? o.gates || [] : []).forEach(q => { if (validGate(q)) { key('g', q.slice(0, 5)); addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
+    (own && !pubW ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 5 : 4)); addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
+    (own && !pubW ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
     S.rcvN = o.rcv | 0; S.own = o.own && typeof o.own === 'object' ? o.own : deriveOwn();
     const seedD = [];
-    if (pubW) (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d || d.gone) return; seedD.push(q[3] ? [d.uid >>> 0, -1] : [d.uid >>> 0, q[1], q[2], q[6] || 0]); });   // (a public world is shown exactly as the server has it, never from this device's older memory: that memory is only offered to a server that has forgotten everything)
     if (!pubW) (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } else { d.x = q[1]; d.y = q[2]; d.vx = q[4] || 0; d.vy = q[5] || 0; d.rot = q[6] || 0; d.av = q[7] || 0; if (Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1 || Math.abs(d.av) > 0.05) d.sleep = false; } });
     if (!pubW) (o.see || []).forEach((q, i) => { const e = w.see[i]; if (e && Array.isArray(q)) { e.ang = q[0] || 0; e.av = q[1] || 0; e.tilt = q[2] || 0; } });
     if (!pubW) (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
     if (!pubW) (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
     (o.got || []).forEach(i => { if (i < S.coinGot.length) S.coinGot[i] = 1; });
-    (o.dels || []).forEach(q => { if (validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(q.slice()); } });   // what you deleted stays deleted
+    if (!pubW) (o.dels || []).forEach(q => { if (validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(q.slice()); } });   // what you deleted stays deleted (in a public world the server has all of it: this device only mirrors it)
     S.seed = null;
-    if (pubW && o.room !== undefined && seedD.length) S.seed = { room: o.room, slot, d: seedD };   // (if the server has forgotten this world, this is how it gets it back)
+
     S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; purseP.c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
   } catch (e) {}
 }
@@ -2984,6 +3008,32 @@ $('setFs').onchange = () => setFullscreen($('setFs').checked);
 $('setZoom').oninput = () => setZoom(+$('setZoom').value);
 $('zOut').onclick = () => setZoom(settings.zoom - 0.1);
 $('zIn').onclick = () => setZoom(settings.zoom + 0.1);
+/* ----- a backup of everything on this device, as one file (and loading it back) ----- */
+$('btnExport').onclick = () => {
+  try { if (typeof saveWorld === 'function') saveWorld(true); } catch (e) {}
+  const data = {}; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k !== null) data[k] = localStorage.getItem(k); } } catch (e) {}
+  const d = new Date(), day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const blob = new Blob([JSON.stringify({ app: 'ballpit.party', kind: 'backup', v: window.GAME_V || 0, at: d.toISOString(), name: settings.name || '', data })], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ballpit-backup-' + day + '.json'; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  notice('Backup saved: ' + a.download, '');
+};
+$('btnImport').onclick = () => { $('importFile').value = ''; $('importFile').click(); };
+$('importFile').onchange = () => {
+  const f = $('importFile').files && $('importFile').files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let o = null; try { o = JSON.parse(rd.result); } catch (e) {}
+    if (!o || o.app !== 'ballpit.party' || o.kind !== 'backup' || !o.data || typeof o.data !== 'object') { notice('That file is not a ballpit.party backup', 'urgent'); return; }
+    const when = o.at ? new Date(o.at).toLocaleString() : 'an earlier day';
+    askConfirm('Load this backup?', 'Everything on this device is replaced by the backup' + (o.name ? ' of ' + o.name : '') + ' from ' + when + ': profile, friends, settings, coins and your own worlds. The game then starts again.', 'Load backup', () => {
+      try { localStorage.clear(); for (const k in o.data) if (typeof o.data[k] === 'string') localStorage.setItem(k, o.data[k]); } catch (e) { notice('There was no room to load all of it on this device', 'urgent'); }
+      try { Storage.prototype.setItem = function () {}; } catch (e) {}   // (nothing from the game running now may write over it before it starts again)
+      location.reload();
+    }, { yesClass: 'go' });
+  };
+  rd.readAsText(f);
+};
 $('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every setting back to its default: colours, controls, zoom, bots and the welcome popup. This cannot be undone.', 'Reset everything', () => {
   const wasMp = settings.mp, wasFs = settings.fs, keepName = settings.name;
   settings = defaults(); settings.name = keepName; settings.mp = wasMp; normalize(); save(); bots.length = 0; keysDown.clear(); syncKeys(); syncUI(); applyTouchUI(); auVol(); if (AU.ctx) musicStart();
@@ -3810,7 +3860,7 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (!on) return;
   $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Delete' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Delete' : 'Place');
-  $('placeHint').textContent = g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
+  $('placeHint').textContent = g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
@@ -3824,7 +3874,7 @@ function finishPlacing() {
   const it = g.it; computeGhost();
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); cancelPlacing(true); return; }
   if (atLimit(it)) { notice(limitNote(it), 'urgent'); cancelPlacing(true); return; }
-  if (!g.ok) { notice(g.sb ? 'You cannot build in the start area' : g.pb ? 'Something is in the way' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
+  if (!g.ok) { notice(g.sb ? 'You cannot build at the start or by the finish flag' : g.pb ? 'Something is in the way' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
   if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   if (it.ter === 'dig' && g.del) delThing(g.del.q);
   else if (it.portal) {
@@ -4828,7 +4878,7 @@ function onMsg(m) {
       S.welcomeAt = performance.now(); S.gotDyn = false; S.dynFull = false; S.gateWait = 0;
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
       if (party && !m.priv) { partyOver(''); return; }
-      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host') sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }); }
+      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host') { const nb = sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }); hostSeed(nb); } }
       net.online = m.online; net.peak = m.peak;
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = infoMsg();
@@ -4841,6 +4891,7 @@ function onMsg(m) {
       else if (!m.priv && m.build && m.room !== S.pubRoom && S.pubKeys && S.pubKeys.size && S.slot === m.slot) { S.pubRoom = m.room; loadMap(m.slot, m.next); }   // (a different world than the one you were building in: start from its map)
       else if (m.slot !== S.slot && forced === null) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
       if (!m.priv && m.build) { S.pubRoom = m.room; if (S.slot === m.slot && S.world && S.mode !== 'fade') pubSync(m.build); else S.pendingBuild = { slot: m.slot, b: m.build }; }
+      if (!m.priv && m.fresh) offerSnap(m.slot, m.room);
       if (m.priv) announceEntry({ slot: m.priv.idx, n: m.n }); else if ((m.full || []).length) showWorldPop(m.room, m.full); else announceEntry({ slot: m.slot, next: m.next, n: m.n });
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
@@ -4872,6 +4923,9 @@ function onMsg(m) {
     case 'puid': { const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y); if (d) { adoptUid(w, d, m.u); d.srvU = true; } break; }
     case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
     case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
+    case 'wsnap': if (!party) saveSnap(m); break;
+    case 'rebuild': if (party || inSolo() || !m.b || !S.world) break;   // the server got this world's memory back from a player: load it again, as it really was
+      S.pendingBuild = { slot: S.slot, b: m.b }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; loadMap(S.slot, S.nextAt); break;
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; if (m.build && !party) S.pendingBuild = { slot: m.slot, b: m.build }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; startTransition(m.slot, m.next); break;   // (a map that comes back has everything that was built on it, and is shown once the server has said where it all is)
     case 'fin': {
@@ -5310,7 +5364,7 @@ function drawPad(px, py, tx) {   // bounce pad: a springy cushion with arrows th
 }
 function drawGadgets(camL, camT, vw, vh, dt) {
   const w = S.world, m = S.map;
-  { const z = startRect(); if (z) {   // the start zone: a marked square where nothing can be built
+  for (const z of zones()) {   // the start zone and the finish zone: marked squares where nothing can be built
     const x = z.tx0 * TS, y = z.ty0 * TS, ww = (z.tx1 - z.tx0 + 1) * TS, hh = (z.ty1 - z.ty0 + 1) * TS;
     if (x < camL + vw && x + ww > camL && y < camT + vh && y + hh > camT) {
       const pu = 0.5 + 0.5 * Math.sin(performance.now() / 600);
@@ -5320,7 +5374,7 @@ function drawGadgets(camL, camT, vw, vh, dt) {
       for (const [cx, cy, dx, dy] of [[x, y, 1, 1], [x + ww, y, -1, 1], [x, y + hh, 1, -1], [x + ww, y + hh, -1, -1]]) { ctx.moveTo(cx + dx * 16, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy + dy * 16); }
       ctx.stroke(); ctx.restore();
     }
-  } }
+  }
   ctx.lineJoin = 'round'; ctx.lineWidth = 2.4; ctx.strokeStyle = INK;
   // decorations: treasure chest, signs
   for (let i = 0; i < m.decor.length; i++) {
@@ -6044,7 +6098,7 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();

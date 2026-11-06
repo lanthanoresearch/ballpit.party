@@ -240,11 +240,11 @@
     for (let i = 0; i < w.plates.length; i++) {
       const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = !!(w.follow && q.srvOn);
       for (let k = 0; k < L.length && !on; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true; }
-      const DL = w.cand || w.dyn;   // (on the server: only the things near a player)
+      const DL = w.follow ? [] : w.cand || w.dyn;   // (on the server: only the things near a player. In the shared world the crates on it are the server's to judge: here only your own ball is looked at, so a crate seen a little differently never makes it flicker)
       for (let j = 0; j < DL.length && !on; j++) {
         const o = DL[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 300) continue;
-        const bot = o.y + (o.r || o.hh);
-        if (o.x > x0 && o.x < x1 && bot >= fy - 8 && bot <= fy + 6) on = true;
+        const bot = o.y + (o.r || o.hh), m = q.on ? 4 : 0;   // (a little more room to stay pressed than to get pressed: something resting right at the edge never flickers it)
+        if (o.x > x0 - m && o.x < x1 + m && bot >= fy - 8 - m && bot <= fy + 6 + m) on = true;
       }
       if (on !== q.on) { q.on = on; w.ev.push({ k: 'plate', on, x: (q.x + q.w / 2) * TS, y: fy }); }
       if (on) for (const di of q.to) want[di] = true;
@@ -486,7 +486,16 @@
     for (const o of near) { if (o === d || o.burn > 0) continue; const e = o.r || Math.max(o.hw, o.hh) * 1.42; if (Math.abs(o.x - d.x) < e + ex && o.y > d.y && o.y - e < d.y + ey + 4) return true; }
     return false;
   }
-  function inStart(w, x, y) { const st = w.map && w.map.start; if (!st) return false; const sx = Math.floor(st[0] / TS), sy = Math.floor(st[1] / TS); return x >= (sx - 2) * TS && x <= (sx + 3) * TS && y >= (sy - 3) * TS && y <= (sy + 2) * TS; }   // the start zone (5 x 5 blocks around where everybody appears)
+  function noBuild(map) {   // the places where nothing can be built or left: around where everybody appears (5 x 5 blocks), and around the finish flag (6 x 6), so nobody can block it
+    if (!map) return [];
+    if (map._nb) return map._nb;
+    const z = [], st = map.start, fl = map.flag;
+    if (st) { const sx = Math.floor(st[0] / TS), sy = Math.floor(st[1] / TS); z.push({ tx0: sx - 2, tx1: sx + 2, ty0: sy - 3, ty1: sy + 1, k: 's' }); }
+    if (fl) { const fx = Math.floor(fl[0]), fy = Math.round(fl[1]); z.push({ tx0: fx - 1, tx1: fx + 4, ty0: fy - 5, ty1: fy, k: 'f' }); }
+    try { Object.defineProperty(map, '_nb', { value: z, enumerable: false }); } catch (e) {}
+    return z;
+  }
+  function inStart(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= q.tx0 * TS && x <= (q.tx1 + 1) * TS && y >= q.ty0 * TS && y <= (q.ty1 + 1) * TS) return true; } return false; }   // (a start or finish zone)
   let dynTick = 0; const DYN_BUDGET = 160, CELL = 64;
   function stepDyn(w, dt) {
     dynTick++;
@@ -637,7 +646,12 @@
         if (ny > 0.5 && free && !d.nap) {   // the thing is above you: it is lifted off you (so nothing can pin you down); only a ceiling stops you
           const sh = d.r ? null : shapeOf(d), ex = d.r || sh.ex, ey = d.r || sh.ey;
           if (!boxHits(w, d.x - nx * pen, d.y - ny * pen, ex - 2, ey - 2)) { d.x -= nx * pen; d.y -= ny * pen; } else { b.x += nx * pen; b.y += ny * pen; if (b.vy < 0) b.vy = 0; }
-        } else { b.x += nx * pen; b.y += ny * pen; }
+        } else if (!boxHits(w, b.x + nx * pen, b.y + ny * pen, R - 3, R - 3)) { b.x += nx * pen; b.y += ny * pen; }
+        else {   // pressed against a wall: you are never pushed into it (and so never squeezed out over the top of it). The crate stops against you instead, or you simply stay pressed between them
+          const sh = d.r ? null : shapeOf(d), ex = d.r || sh.ex, ey = d.r || sh.ey;
+          if (free && !boxHits(w, d.x - nx * pen, d.y - ny * pen, ex - 2, ey - 2)) { d.x -= nx * pen; d.y -= ny * pen; }
+          const vd = d.vx * nx + d.vy * ny; if (free && vd > 0) { d.vx -= vd * nx; d.vy -= vd * ny; }
+        }
       }   // (on the server a player only overlapping something, without moving into it, never moves it: their device and the server can differ by a pixel or two, and that must not make things creep)
       if (ny < 0.3) { if (nx < -0.1) sL = 1; else if (nx > 0.1) sR = 1; if (ny < -0.3) sU = 1; }
       if (ny < -0.6) {   // standing on it
@@ -794,7 +808,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 118, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 119, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
