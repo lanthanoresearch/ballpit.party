@@ -1141,8 +1141,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=106"></script>
-<script src="physics.js?v=106"></script>
+<script src="maps.js?v=108"></script>
+<script src="physics.js?v=108"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1857,13 +1857,7 @@ function update(dt) {
   if (!settings.boost) { b.bReq = false; S.bLatch = 0; } else if (S.bLatch > 0 && !bl) { S.bLatch -= dt; b.bReq = true; }
   b.noJm = !settings.powerJump;   // only you have the jump meter (and only if power jump is switched on)
   b.sjSep = !!settings.superBtn;   // a separate power-jump button: the normal jump never uses the full meter
-  let held = null;
-  if (w.follow) { held = []; for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.sv && !(d.burn > 0) && Math.abs(d.x - b.x) < 260 && Math.abs(d.y - b.y) < 260) held.push(d, d.x, d.y); } }
   const ev = P.step(b, w, ax, jheld, dt);
-  if (held) for (let i = 0; i < held.length; i += 3) {   // (what you push moves with you at once, as an offset on top of the server's picture; the server's own movement of it then takes the offset over)
-    const d = held[i], mx = d.x - held[i + 1], my = d.y - held[i + 2];
-    if (mx || my) { d.ox = clamp((d.ox || 0) + mx, -70, 70); d.oy = clamp((d.oy || 0) + my, -70, 70); }
-  }
   P.stepSwitches(w, b, dt);
   if (w.follow) syncDoors();
   if (w.ev.length) worldEvents();
@@ -1963,19 +1957,15 @@ function followWorld(dt) {
     const age = Math.min(Math.max(0.06, Math.min(0.25, (s.iv || 0) * 0.0012)), (t - s.t) / 1000), e0 = d.r || d.hw;   // (when the server's updates come slowly, things carry on a little longer in the direction they were going)
     let tx = s.x + s.vx * age, ty = s.y + s.vy * age;
     if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (never guess a position inside the ground)
-    d.mineT = 0; d.hold = 0; d.errT = 0;   // (one authority: the server decides where everything is)
-    if (d.psx !== undefined) { const dsx = s.x - d.psx, dsy = s.y - d.psy; if (d.ox && dsx * d.ox > 0) d.ox -= Math.sign(d.ox) * Math.min(Math.abs(d.ox), Math.abs(dsx)); if (d.oy && dsy * d.oy > 0) d.oy -= Math.sign(d.oy) * Math.min(Math.abs(d.oy), Math.abs(dsy)); }
-    d.psx = s.x; d.psy = s.y;
-    if (d.ox || d.oy) { const f = Math.exp(-3 * dt); d.ox *= f; d.oy *= f; if (Math.abs(d.ox) < 0.05) d.ox = 0; if (Math.abs(d.oy) < 0.05) d.oy = 0; tx += d.ox || 0; ty += d.oy || 0; }
-    const ex = tx - d.x, ey = ty - d.y, mine = false;
-    if (Math.abs(ex) + Math.abs(ey) > 240) { d.x = tx; d.y = ty; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.mineT = 0; d.tip = null; continue; }
-    if (d.hold > 0) d.hold -= dt;
-    if (mine && Math.abs(ex) + Math.abs(ey) > 4 && S.b && Math.abs(S.b.vx) < 30 && Math.abs(S.b.vy) < 60) { d.errT = (d.errT || 0) + dt; if (d.errT > 0.35) { d.mineT = 0; d.hold = 0.6; d.errT = 0; } } else d.errT = 0;   // you are not pushing it, yet it still disagrees with the server's: take the server's
-    const err = Math.abs(ex) + Math.abs(ey);
-    if (mine && d.mineT > 0) d.relT = 0.3; else if (d.relT > 0) d.relT -= dt;
-    const k = 1 - Math.exp(-(mine && d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : 12) : d.relT > 0 && err < 40 ? 10 : 26) * dt);   // (what you are pushing yourself is only nudged toward the server's picture, and let go of gently; what others move follows at once)
-    d.x += ex * k; d.y += ey * k; d.rot += (s.rot - d.rot) * (1 - Math.exp(-14 * dt));
-    if (!mine) { d.vx = s.vx; d.vy = s.vy; d.tip = null; d.nap = false; d.spin = false; d.av = 0; }
+    if (d.mineT > 0) { d.mineT -= dt; d.keep = 1.5; }
+    else if (d.keep > 0) { d.keep -= dt; if (s.vx === 0 && s.vy === 0 && t - s.t > 120 && Math.abs(s.x - d.x) + Math.abs(s.y - d.y) < 30) d.keep = 0; }   // (what you pushed carries on here until the server has it at rest too, then goes over to the server's picture)
+    const mine = d.mineT > 0 || d.keep > 0;
+    const ex = tx - d.x, ey = ty - d.y, err = Math.abs(ex) + Math.abs(ey);
+    if (err > 240 && !(mine && d.mineT > 0 && err < 400)) { d.x = tx; d.y = ty; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.mineT = 0; d.keep = 0; d.tip = null; d.spin = false; continue; }
+    const k = 1 - Math.exp(-(mine ? (d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : err < 100 ? 12 : 24) : (err < 14 ? 3 : err < 40 ? 7 : 14)) : 26) * dt);
+    d.x += ex * k; d.y += ey * k;
+    if (!mine) { d.rot += (s.rot - d.rot) * (1 - Math.exp(-14 * dt)); d.vx = s.vx; d.vy = s.vy; d.tip = null; d.nap = false; d.spin = false; d.av = 0; }
+    else if (!d.tip && !d.spin && Math.abs(s.rot - d.rot) > 0.01) d.rot += (s.rot - d.rot) * (1 - Math.exp(-6 * dt));
   }
 }
 function adoptUid(w, d, u) {   // the server's name for a crate or ball: whatever else wore that name takes this one's old name

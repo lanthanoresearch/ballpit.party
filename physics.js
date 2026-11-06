@@ -323,7 +323,7 @@
       }
     }
     for (let i = 0; i < L.length; i++) {
-      const o = L[i]; if (o === d || o.k !== 'b' || o.burn > 0 || o.tip || Math.abs(o.rot) > 0.25) continue;
+      const o = L[i]; if (o === d || o.k !== 'b' || o.burn > 0 || o.tip || Math.abs(o.rot - Math.round(o.rot / HALF_PI) * HALF_PI) > 0.25) continue;
       if (Math.abs(o.y - o.hh - bottom) < 3 && Math.abs(o.x - d.x) < o.hw + d.hw - 0.5) iv.push([o.x - o.hw, o.x + o.hw]);
     }
     if (!iv.length) return iv;
@@ -338,8 +338,9 @@
     let best = null, bd = 1e9;
     for (const q of iv) { const dd = d.x < q[0] ? q[0] - d.x : d.x - q[1]; if (dd < bd) { bd = dd; best = q; } }
     const s = d.x > best[1] ? 1 : -1, px = clamp(s > 0 ? best[1] : best[0], d.x - d.hw, d.x + d.hw), py = d.y + d.hh;
+    d.rb = Math.round(d.rot / HALF_PI) * HALF_PI;   // (the way up it was lying stays as it is)
     d.tip = { s, px, py, rx: s * (d.x - px), a: 0, av: clamp(s * d.vx / (d.hh * 3), 0, 3) };
-    d.vx = 0; d.vy = 0; d.rot = 0; d.av = 0;
+    d.vx = 0; d.vy = 0; d.rot = d.rb; d.av = 0;
   }
   function boxTipStep(w, d, dt) {
     const t = d.tip, h = d.hh;
@@ -352,8 +353,8 @@
     const c = Math.cos(t.a), sn = Math.sin(t.a);
     const nx = rx * c - ry * sn, ny = rx * sn + ry * c;        // new centre relative to the pivot (screen coordinates, y down)
     const px = t.px + t.s * nx, py = t.py + ny;
-    if (boxHits(w, px, py, d.hw * 0.55, d.hh * 0.55)) { d.tip = null; d.rot = 0; return; }   // something is in the way: it just settles back
-    d.x = px; d.y = py; d.rot = t.s * t.a;
+    if (boxHits(w, px, py, d.hw * 0.55, d.hh * 0.55)) { d.tip = null; d.rot = d.rb || 0; return; }   // something is in the way: it just settles back
+    d.x = px; d.y = py; d.rot = (d.rb || 0) + t.s * t.a;
     if (t.a >= 0.85 || xr < -1) {   // it is over the edge: let go, carrying the swing as speed and spin
       const w0 = t.av;
       const vtx = -w0 * ny, vty = w0 * nx;                     // velocity of a point swinging about the pivot
@@ -364,13 +365,12 @@
   function boxSettle(w, d, L, dt) {   // after tumbling: spin while in the air, then lie flat again when it lands
     if (d.sr !== undefined) { d.rot += (d.sr - d.rot) * Math.min(1, 14 * dt); d.sr = undefined; d.spin = false; return; }   // on a plank it tilts with it
     if (!d.spin && !d.rot) return;
-    if (w.follow) { d.spin = false; d.av = 0; return; }   // (in the shared world only the server tumbles things; here the turn simply follows what the server says)
     const sup = (boxSupports(w, d, L).length > 0 || d.pc) && d.vy > -20 && Math.abs(d.vy) < 140;   // (resting on a ball counts too)
     if (!sup && d.spin) { d.rot += d.av * dt; d.av *= (1 - 0.4 * dt); return; }
     d.spin = false; d.av = 0;
     const tgt = Math.round(d.rot / HALF_PI) * HALF_PI;
     d.rot += (tgt - d.rot) * Math.min(1, 9 * dt);
-    if (Math.abs(tgt - d.rot) < 0.02) d.rot = 0;
+    if (Math.abs(tgt - d.rot) < 0.02) d.rot = tgt;   // (it lies on whichever face it came down on)
   }
   let dynTick = 0; const DYN_BUDGET = 160;
   function stepDyn(w, dt) {
@@ -388,7 +388,7 @@
       const d = L[i];
       if (d.skip) { d.sleep = true; continue; }
       if (d.burn > 0) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; } continue; }
-      if (fol && d.sv !== undefined) { d.sleep = true; continue; }   // (a thing the server has not told us about yet is still worked out here)   // in the shared world the server moves everything; only what you are pushing right now is also worked out here, so it answers at once
+      if (fol && d.sv !== undefined && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }   // (what you are touching is worked out here at once, with real gravity and ground; everything else is the server's); only what you are pushing right now is also worked out here, so it answers at once
       if (f && !nearF(f, d.x, d.y, FR, FR)) { d.sleep = true; continue; }   // far from you: frozen (saves work)
       d.sleep = false;
       if (d.nap) { if (Math.abs(d.x - d.rx) + Math.abs(d.y - d.ry) > 2) { d.nap = false; d.rest = 0; } else if ((dynTick + i) % 12 !== 0) continue; }   // at rest: it only checks in now and then (so a big pile that has settled costs next to nothing, and anything that changes under it wakes it within a moment)
@@ -422,7 +422,7 @@
         if (tl === 2) burn = true;
         const onPlank = d.sr !== undefined;
         boxSettle(w, d, L, dt); d.pc = false;
-        if (!onPlank && !d.spin && !w.follow && d.kind !== 5 && d.kind !== 6 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
+        if (!onPlank && !d.spin && d.kind !== 5 && d.kind !== 6 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
       }
       if (w.pads.length && (d.gr || d.touch)) { const pd = padAt(w, d.x, d.y + (d.r || d.hh)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; } }
       if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
@@ -433,14 +433,14 @@
       if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
     }
     if (fol) {   // (only the things you are pushing are tested against the others; whatever they touch joins in)
-      const mine = []; for (let i = 0; i < L.length; i++) if ((L[i].mineT > 0 || L[i].sv === undefined) && !(L[i].burn > 0) && !L[i].sleep) mine.push(L[i]);
+      const mine = []; for (let i = 0; i < L.length; i++) if ((L[i].mineT > 0 || L[i].keep > 0 || L[i].sv === undefined) && !(L[i].burn > 0) && !L[i].sleep) mine.push(L[i]);
       for (let pass = 0, hit = true; pass < 3 && hit && mine.length; pass++) {
         hit = false;
         for (let m = 0; m < mine.length; m++) {
           const a = mine[m]; if (a.sleep) continue;
           for (let j = 0; j < L.length; j++) {
             const b = L[j]; if (b === a || b.burn > 0 || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
-            if (pairSep(a, b, 0.15, w)) { hit = true; if (!(b.mineT > 0) && (a.dm === undefined ? Math.abs(a.vx) + Math.abs(a.vy) > 25 : a.dm > 0.4) || !a.sv) { b.mineT = 0.45; b.sleep = false; mine.push(b); } }   // (things that are only resting against each other stay with the server; they do not pull each other into this machine's own physics)
+            if (pairSep(a, b, 0.15, w)) { hit = true; if (!(b.mineT > 0) && (a.dm === undefined ? Math.abs(a.vx) + Math.abs(a.vy) > 25 : a.dm > 0.4) || !a.sv) { b.mineT = 0.45; b.keep = 1.5; b.sleep = false; mine.push(b); } }   // (things that are only resting against each other stay with the server; they do not pull each other into this machine's own physics)
           }
         }
       }
