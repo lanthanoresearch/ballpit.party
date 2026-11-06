@@ -531,6 +531,13 @@
   @media (max-height:520px) and (min-aspect-ratio:1/1){#settings.only{grid-template-columns:minmax(0,1fr)!important;width:min(560px,calc(100vw - 20px))!important}#settings.only .sbody{grid-column:1!important;grid-row:2!important}}
 .btnrow{display:flex;gap:8px;margin:8px 0}.btnrow .btn{flex:1}.btnrow .btn+.btn{flex:none}
   #editbar{touch-action:none}#editbar input[type=range]{touch-action:none;height:28px}
+  #pickPop{z-index:13;background:rgba(10,8,16,.72)}
+  .pickcard{width:min(620px,100%);display:flex;flex-direction:column;padding:16px 18px}
+  .pickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;overflow-y:auto;min-height:0}
+  .pickgrid button{padding:13px 10px;font:inherit;font-size:16px;line-height:1.2;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit;text-align:center}
+  .pickgrid button:hover{background:#3a3355}.pickgrid button:active{transform:scale(.96)}.pickgrid button.on{background:#2f9e61;border-color:#fff}
+  @media (max-width:480px){.pickgrid{grid-template-columns:1fr 1fr}.pickgrid button{padding:12px 6px;font-size:15px}}
+  @media (max-height:520px){.pickcard{padding:10px 14px}.pickgrid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.pickgrid button{padding:8px 6px;font-size:14px}}
   .bkbox{border:2px solid var(--line);border-radius:var(--wob);padding:10px 12px;margin:10px 0}.bkbox h4{margin:0 0 4px;display:flex;align-items:center;gap:6px}.bkbox .small{margin:0 0 8px}
   .bkrow{display:flex;gap:8px}.bkrow .btn{flex:1;min-width:0;justify-content:center}
   #phraseGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 10px}
@@ -637,7 +644,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 119; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 120; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -841,6 +848,10 @@
   <div id="sayBuild"><div class="small dim">Build a message</div><div id="sayTpl"></div><div class="sayrow"><div id="sayArg"></div><button id="saySend" class="chip pri" type="button">Send</button></div><label class="saychk"><input type="checkbox" id="sayAuto" checked> Open the second list right after the first</label></div></div>
   <div id="phraseGrid"></div>
   <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim">Everyone in your world sees it.</span></div>
+</div></div>
+<div id="pickPop" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="pickTitle"><div class="card pickcard">
+  <div class="chead"><h3 id="pickTitle"></h3><button id="pickClose" class="xbtn" type="button" aria-label="Cancel"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div id="pickGrid" class="pickgrid"></div>
 </div></div>
 <div id="shopPop" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="shopTitle"><div class="card shopcard">
   <div class="chead"><h3 id="shopTitle">Shop</h3><button id="shopClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
@@ -1162,8 +1173,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=119"></script>
-<script src="physics.js?v=119"></script>
+<script src="maps.js?v=120"></script>
+<script src="physics.js?v=120"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1987,7 +1998,7 @@ function followWorld(dt) {
     const d = w.dyn[i], s = d.sv;
     if (!s) { if (!d.local && !(d.burn > 0)) d.burn = UNK; continue; }   // (the server has not said where this one is yet: it is not shown at all, rather than shown where it used to be)
     if (d.burn === UNK) { d.burn = 0; s.jump = true; }
-    if (s.burn) { d.lostAt = 0; if (!(d.burn >= 1e9)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } continue; }
+    if (s.burn) { d.lostAt = 0; if (!(d.burn >= 1e9)) { const seen = !s.jump; d.bx = d.x; d.by = d.y; d.bl = seen ? 1 : 0; d.bfx = seen ? 0 : 1; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } s.jump = false; continue; }   // (something lost before you got here is simply not there: no flames where it used to be)
     if (d.burn >= 1e9) { if (!d.lostAt) d.lostAt = t; if (t - d.lostAt < 3000) continue; d.lostAt = 0;   // (lost here first: it stays lost while the server catches up, instead of coming back and burning up all over again; only if the server still has it after a while does it come back)
       d.burn = 0; d.x = s.x; d.y = s.y; d.vx = s.vx; d.vy = s.vy; d.rot = s.rot; d.mineT = 0; d.nap = false; d.rest = 0; continue; }
     if (s.jump) { s.jump = false; if (!(d.mineT > 0 || d.keep > 0) || Math.abs(s.x - d.x) + Math.abs(s.y - d.y) > 60) { d.x = s.x; d.y = s.y; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.mineT = 0; d.keep = 0; d.hold = 0; d.errT = 0; d.nap = false; d.st = 0; continue; } }   // (when you arrive, or come back to a place, everything is simply where the server has it: nothing slides or snaps into place)
@@ -3399,20 +3410,36 @@ function sendSay(a, b) {
   S.myEmo = { i: -1, txt, t: S.t }; addFeedEmo('You', -1, '', txt); sfx('ui'); toggleChat(false);
 }
 {   // the two lists are the game's own drop-downs; with the box ticked, picking the first opens the second, and then it is ready to send
-  let tpl = 0, arg = 0, argSel = null;
+  let tpl = 0, arg = 0;
   const auto = $('sayAuto'), send = $('saySend');
   try { auto.checked = localStorage.getItem('ballrun4_sayAuto') !== '0'; } catch (e) {}
   auto.onchange = () => { try { localStorage.setItem('ballrun4_sayAuto', auto.checked ? '1' : '0'); } catch (e) {} };
   const ready = () => { send.classList.add('ready'); setTimeout(() => send.classList.remove('ready'), 1200); };
-  const fillArg = () => { const el = $('sayArg'); el.innerHTML = ''; arg = 0; argSel = makeSelect(el, SAY_LISTS[SAY[tpl].l].map((v, k) => ({ v: k, label: v })), v => { arg = v; ready(); }); };
-  makeSelect($('sayTpl'), SAY.map((q, k) => ({ v: k, label: q.menu })), v => { tpl = v; fillArg(); if (auto.checked) setTimeout(() => { if (chatOpen) argSel.open(); }, 0); });
-  fillArg(); send.onclick = () => sendSay(tpl, arg);
+  const pickBtn = (el, title, list, get, set) => {   // a button showing the choice; tapping it opens the full list as its own popup (with an X to cancel)
+    el.classList.add('csel'); el.innerHTML = ''; const b = document.createElement('button'); b.type = 'button'; b.className = 'csel-btn'; el.appendChild(b);
+    const label = () => { b.innerHTML = '<span></span>' + ic('chev'); b.firstChild.textContent = list()[get()]; };
+    b.onclick = () => openPick(title(), list(), get(), v => { set(v); label(); });
+    label(); return { label, open: () => b.onclick() };
+  };
+  let argSel = null;
+  const tplSel = pickBtn($('sayTpl'), () => 'Pick a message', () => SAY.map(q => q.menu), () => tpl, v => { tpl = v; arg = 0; argSel.label(); if (auto.checked) setTimeout(() => { if (chatOpen) argSel.open(); }, 0); else ready(); });
+  argSel = pickBtn($('sayArg'), () => SAY[tpl].t.replace('{}', '…'), () => SAY_LISTS[SAY[tpl].l], () => arg, v => { arg = v; ready(); });
+  send.onclick = () => sendSay(tpl, arg);
 }
 const pg = $('phraseGrid');
 PHRASES.forEach((t, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.onclick = () => sendEmo(EMO.length + k); pg.appendChild(b); });
 function setChatMute(on) { chatMuted = on; try { localStorage.setItem(CMKEY, on ? '1' : '0'); } catch (e) {} const c = $('chatMute'); c.classList.toggle('on', on); c.textContent = on ? 'Chat is muted' : 'Mute chat'; }
 $('chatMute').onclick = () => setChatMute(!chatMuted); setChatMute(chatMuted);
 let chatOpen = false;
+function openPick(title, opts, cur, onPick) {   // a full-screen list to choose from: tap one, or the X (or outside) to cancel
+  $('pickTitle').textContent = title; const g = $('pickGrid'); g.innerHTML = '';
+  opts.forEach((t, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; if (k === cur) b.className = 'on'; b.onclick = () => { closePick(); onPick(k); sfx('ui'); }; g.appendChild(b); });
+  $('pickPop').classList.remove('hide'); closeSelectFn = closePick; sfx('ui');
+  const on = g.querySelector('.on'); if (on) setTimeout(() => { try { on.scrollIntoView({ block: 'nearest' }); } catch (e) {} }, 0);
+}
+function closePick() { $('pickPop').classList.add('hide'); if (closeSelectFn === closePick) closeSelectFn = null; }
+$('pickClose').onclick = closePick;
+$('pickPop').addEventListener('pointerdown', e => { if (e.target === $('pickPop')) { e.preventDefault(); closePick(); } });
 function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it
   if (on && inHome) return;
   chatOpen = on; $('emoPop').classList.toggle('hide', !on); if (!on && closeSelectFn) closeSelectFn(); if (on && shopOpen) toggleShop(false);
@@ -4774,8 +4801,8 @@ function otherPred(o, d) {   // where somebody else is d seconds after their las
   pp.x = cx; pp.y = cy; return pp;
 }
 function dynBin(dv, len, ty) {
-  if (!S.gotDyn) S.firstDynAt = performance.now(); S.gotDyn = true;   // where the shared crates, balls (type 4) and planks (type 5) are right now
   const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (S.slot & 0xFFFF)) return;
+  if (!S.gotDyn) S.firstDynAt = performance.now(); S.gotDyn = true;   // where the shared crates, balls (type 4) and planks (type 5) are right now (only once it has really been taken in)
   const n = dv.getUint8(3), t = performance.now();
   if (ty === 4 || ty === 6) {
     const st = ty === 6 ? 23 : 21; S.dynFull = n >= 90;   // (a full packet: more of the world is still on its way)
@@ -4789,7 +4816,7 @@ function dynBin(dv, len, ty) {
     for (let k = 0; k < n; k++) {
       const o = 4 + k * st; if (o + st > len) break;
       const uid = dv.getUint32(o, true), ob = ty === 7 ? dv.getUint32(o + 12, true) : 0;
-      for (let i = 0; i < w.see.length; i++) if (w.see[i].uid === uid) { const s = w.see[i]; s.sa = dv.getFloat32(o + 4, true); s.sav = dv.getFloat32(o + 8, true); s.st = t; s.other = ob !== 0 && ob !== myId; if (s.other) { s.owned = false; s.keepP = 0; } break; }   // (other: somebody else's device is turning it)
+      for (let i = 0; i < w.see.length; i++) if (w.see[i].uid === uid) { const s = w.see[i], first = s.sa === undefined || t - (s.st || 0) > 1500; s.sa = dv.getFloat32(o + 4, true); s.sav = dv.getFloat32(o + 8, true); s.st = t; if (first && !s.owned) { s.ang = s.sa; s.av = 0; } s.other = ob !== 0 && ob !== myId; if (s.other) { s.owned = false; s.keepP = 0; } break; }   // (other: somebody else's device is turning it)
     }
   }
 }
@@ -4974,8 +5001,9 @@ const OWN_NEAR = 90;   // (another player this close to it: the server decides i
 function contested(d) { let c = false; others.forEach(o => { if (!c && o.seen && !o.dead && Math.abs(o.cx - d.x) < OWN_NEAR && Math.abs(o.cy - d.y) < OWN_NEAR) c = true; }); return c; }
 setInterval(() => {
   if (!S.world || !S.world.follow || !online || !ws || ws.readyState !== 1 || S.mode !== 'play') return;
-  const out = [], t = performance.now();
+  const out = [], lost = [], t = performance.now();
   for (const d of S.world.dyn) {
+    if (d.burn < 1e8) d.lostSent = false; else if (d.burn >= 1e9 && !d.lostSent && !d.gone && (d.owned || d.mineT > 0 || d.keep > 0) && d.sv && !d.sv.burn && !(d.sv.other && t - d.sv.t < 700)) { d.lostSent = true; lost.push([d.uid >>> 0, Math.round(d.bx || 0), Math.round(d.by || 0)]); }   // (something this device was moving for everybody was lost here: the server is told at once, so it is gone for everyone, and never comes back)
     if (!(d.mineT > 0 || d.keep > 0) || d.gone || d.burn > 0 || !d.sv || !d.srvOk || d.sv.other) { d.owned = false; continue; }
     d.owned = true; d.ownAt = t; (d.oh = d.oh || []).push([t, d.x, d.y]); if (d.oh.length > 24) d.oh.shift();
     out.push([d.uid >>> 0, Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.vx), Math.round(d.vy), Math.round(d.rot * 1000) / 1000, Math.round(d.av * 100) / 100]);
@@ -4989,8 +5017,8 @@ setInterval(() => {
     if (!want) { if (s.owned) { s.owned = false; s.keepP = 0; } continue; }
     s.owned = true; pl.push([s.uid >>> 0, Math.round(s.ang * 10000) / 10000, Math.round(s.av * 1000) / 1000]);
   }
-  if (!out.length && !pl.length) return;
-  for (let i = 0; i < Math.max(1, out.length) && i < 24; i += 12) { try { ws.send(JSON.stringify(i === 0 && pl.length ? { t: 'own', s: S.slot, b: out.slice(i, i + 12), pl } : { t: 'own', s: S.slot, b: out.slice(i, i + 12) })); } catch (e) {} }
+  if (!out.length && !pl.length && !lost.length) return;
+  for (let i = 0; i < Math.max(1, out.length) && i < 24; i += 12) { const m = { t: 'own', s: S.slot, b: out.slice(i, i + 12) }; if (i === 0 && pl.length) m.pl = pl; if (i === 0 && lost.length) m.lost = lost.slice(0, 12); try { ws.send(JSON.stringify(m)); } catch (e) {} }
 }, 50);
 /* ================= drawing (hand-drawn look, flat colours) ================= */
 const ICE = '#7fdcff', LAVA = '#ff4a1c', INK = 'rgba(22,15,12,.85)';

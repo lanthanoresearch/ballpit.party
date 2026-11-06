@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 119;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 120;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -309,7 +309,7 @@ function roomWorld(room) {
   (B.dels || []).forEach(q => { try { P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
   let restored = false;
   if (room.snapDyn && room.snapDyn.length && Array.isArray(room.snapDyn.find(q => q)) && room.snapDyn.find(q => q).length >= 4) {   // (saved by name: each thing finds its own entry)
-    for (const q of room.snapDyn) { if (!q) continue; const d = w.dynBy.get(q[3] >>> 0); if (!d || d.gone) continue; restored = true; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; continue; } if (Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } }
+    for (const q of room.snapDyn) { if (!q) continue; const d = w.dynBy.get(q[3] >>> 0); if (!d || d.gone) continue; restored = true; if (q[4]) { if (d.m0 && P.nearZone(w, d.hx, d.hy)) continue; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; continue; }   /* (the map's own toys at the start that an older version burned up there come back) */ if (Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } }
   } else if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && !d.gone && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } } }
   if (Array.isArray(room.snapSee)) for (const q of room.snapSee) { const e = Array.isArray(q) && w.see.find(o => o.uid === (q[0] >>> 0)); if (e && Number.isFinite(q[1])) e.ang = q[1]; }
   room.seedOk = !room.priv && !restored && !(room.snapDyn && room.snapDyn.length === w.dyn.length); room.seedBy = null; room.worldAt = Date.now();   // (a world the server has no memory of: the first player who remembers it can tell it where everything was)
@@ -432,6 +432,7 @@ function simTick() {
     const resend = room.tk % 150 === 0;
     for (const p of room.players.values()) {
       if (!p.has || p.ws.readyState !== 1) continue;
+      if (!p.dver) plankSend(room, w.see, p);   // (someone who has just arrived is told how every plank lies, along with everything else)
       if (!p.dver || resend) { p.dver = new Map(); p.more = 1; }
       const full = p.more || room.fullAll || Math.abs(p.x - p.sx) >= 200 || Math.abs(p.y - p.sy) >= 200;
       if (!full && !chg.length) continue;   // nothing new, and they have not moved far
@@ -671,6 +672,11 @@ wss.on('connection', (ws, req) => {
         if (!Array.isArray(q) || q.length !== 3 || !q.every(Number.isFinite)) continue;
         const s = w.see.find(e => e.uid === (q[0] >>> 0) && !e.gone); if (!s || (s.ownT > 0 && s.ownBy !== p.id) || Math.abs(s.cx - p.x) > s.hl + 400 || Math.abs(s.cy - p.y) > s.hl + 400) continue;
         s.ang = Math.max(-0.36, Math.min(0.36, q[1])); s.av = Math.max(-12, Math.min(12, q[2])); s.ownT = 0.25; s.ownBy = p.id; s.moving = 0.5;
+      }
+      if (Array.isArray(m.lost)) for (const q of m.lost.slice(0, 12)) {   // something this player's device was moving fell into lava, off the map or into the start: it is gone for everyone
+        if (!Array.isArray(q) || q.length !== 3 || !q.every(Number.isFinite)) continue;
+        const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone || d.burn > 0 || (d.ownT > 0 && d.ownBy !== p.id) || Math.abs(d.x - q[1]) + Math.abs(d.y - q[2]) > 600) continue;
+        d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.ownT = 0; d.nap = false;
       }
       if (!Array.isArray(m.b)) return;
       for (const q of m.b.slice(0, 12)) {

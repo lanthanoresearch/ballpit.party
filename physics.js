@@ -21,7 +21,7 @@
     (G.plates || []).forEach(p => w.plates.push({ x: p[0], y: p[1], w: p[2], to: p[3], on: false }));
     (G.btns || []).forEach(p => w.btns.push({ x: p[0], y: p[1], to: p[2], on: false }));
     (G.see || []).forEach(p => w.see.push({ cx: p[0] * TS, cy: p[1] * TS, hl: p[2] * TS, tilt: p[3], ang: p[3], av: 0, tq: 0, uid: hash32('s' + Math.round(p[0] * TS) + ',' + Math.round(p[1] * TS)) }));
-    for (const p of (map.props || [])) addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5).nap = true;   /* (the map's own things start out at rest: each one checks it is held up once somebody comes near) */   // pushable yellow things; each player has their own copy (never shared)
+    for (const p of (map.props || [])) { const d = addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5); d.nap = true; d.m0 = true; }   /* (the map's own things start out at rest: each one checks it is held up once somebody comes near) */   // pushable yellow things; each player has their own copy (never shared)
     return w;
   }
 
@@ -134,6 +134,7 @@
     w.seeOwned = false;
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i]; if (s.gone) continue;
+      if (w.follow && s.sa === undefined) { s.kin = true; s.mineT = 0; s.av = 0; continue; }   // (in the shared world, until the server has said how a plank lies, it stays still: it is never guessed at)
       if (w.follow && s.sa !== undefined && s.other) s.mineT = 0;   // (another player's device is working this plank out: it is simply shown the way the server has it)
       if (w.follow && s.sa !== undefined && s.owned) { s.kin = false; if (s.mineT > 0) s.mineT -= dt; w.seeOwned = true; }   // (this device has the plank: it turns here with everything on it, exactly as a plank of its own does, and the server follows)
       else if (w.follow && s.sa !== undefined) {   // in the shared world the server has the plank: it follows the server's (while you are on it, it also reacts to you at once)
@@ -171,6 +172,10 @@
       s.ang = lo;
     }
   }
+  function claimPlanks(w, d) {
+    const e = d.r || Math.max(d.hw, d.hh) * 1.42;
+    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (s.gone || s.other || s.sa === undefined) continue; const rx = d.x - s.cx, ry = d.y - s.cy, c = Math.cos(s.ang), sn = Math.sin(s.ang), al = rx * c + ry * sn, h = rx * sn - ry * c; if (Math.abs(al) < s.hl + e + 6 && Math.abs(h) < e + SEE_TH + 24) s.mineT = Math.max(s.mineT || 0, 0.3); }
+  }
   function onOwnedPlank(w, d) {
     const e = d.r || Math.max(d.hw, d.hh) * 1.42;
     for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (!s.owned || s.gone) continue; const rx = d.x - s.cx, ry = d.y - s.cy, c = Math.cos(s.ang), sn = Math.sin(s.ang), al = rx * c + ry * sn, h = rx * sn - ry * c; if (Math.abs(al) < s.hl + e + 10 && Math.abs(h) < e + SEE_TH + 40) return true; }
@@ -185,7 +190,7 @@
   }
   function seeLimit(s) { if (s.ang > SEE_MAX) { s.ang = SEE_MAX; if (s.av > 0) s.av = 0; } if (s.ang < -SEE_MAX) { s.ang = -SEE_MAX; if (s.av < 0) s.av = 0; } }
   function turnSee(w, dt) {   // each plank turns as it was pushed this step (after the crates and balls on it were worked out, so it never swings into them)
-    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (s.gone || s.kin || (w.follow && s.sa !== undefined && !s.owned)) continue; s.av *= Math.max(0, 1 - 0.6 * dt); s.ang += s.av * dt; seeLimit(s); }
+    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (s.gone || s.kin || (w.follow && !s.owned)) continue; s.av *= Math.max(0, 1 - 0.6 * dt); s.ang += s.av * dt; seeLimit(s); }
   }
   function seeBody(b, w, wt) {   // the player (or a round toy) against every nearby plank
     let on = false;
@@ -205,8 +210,10 @@
       const s = w.see[i], rx = o.x - s.cx, ry = o.y - s.cy;
       if (Math.abs(rx) > s.hl + 80 || Math.abs(ry) > s.hl + 120) { if (o.sg === i) o.sg = -1; continue; }
       const c = Math.cos(s.ang), sn = Math.sin(s.ang), along = rx * c + ry * sn, nrm = rx * sn - ry * c;
+      const pa = o.sgA; o.sgA = along;
       if (Math.abs(along) > s.hl + 4) { if (o.sg === i) o.sg = -1; continue; }
       if (nrm >= 0) { o.sg = i; continue; }
+      if (o.sg === i && (pa === undefined || Math.abs(pa) > s.hl - 6 || Math.abs(along) > s.hl - 6)) { o.sg = -1; continue; }   // (it went round the end of the plank, not through it: it really is underneath now)
       if (o.sg === i && nrm > -(half + SEE_TH + 50)) {
         const need = half + SEE_TH - nrm; o.x += sn * need; o.y -= c * need;
         const vn = o.vx * sn - o.vy * c; if (vn < 0) { o.vx -= vn * sn; o.vy += vn * c; }
@@ -495,6 +502,7 @@
     try { Object.defineProperty(map, '_nb', { value: z, enumerable: false }); } catch (e) {}
     return z;
   }
+  function nearZone(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= (q.tx0 - 14) * TS && x <= (q.tx1 + 15) * TS && y >= (q.ty0 - 10) * TS && y <= (q.ty1 + 10) * TS) return true; } return false; }   // (the map's own toys around the start or the finish belong there: they never burn up in it)
   function inStart(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= q.tx0 * TS && x <= (q.tx1 + 1) * TS && y >= q.ty0 * TS && y <= (q.ty1 + 1) * TS) return true; } return false; }   // (a start or finish zone)
   let dynTick = 0; const DYN_BUDGET = 160, CELL = 64;
   function stepDyn(w, dt) {
@@ -523,7 +531,8 @@
       if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
       if (fol && w.seeOwned && !(d.mineT > 0) && !(d.hold > 0) && onOwnedPlank(w, d)) { d.mineT = 0.3; d.nap = false; }   // (what rides on a plank this device is turning is worked out here too, so they move together)
-      if (fol && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
+      if (fol && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }
+      if (fol && w.see.length) claimPlanks(w, d);   // (and a plank that something this device is moving is touching is turned here too: the two are worked out together, never one here and one on the server)   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
       d.sleep = false;
       if (d.nap && movingP.length && movingP.some(s => Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 80)) { d.nap = false; d.st = 0; }   // (a plank that moves wakes what rests on it)
       if (d.nap) { if (!d._far && (dynTick + i) % 15 === 0) chk.push(d); continue; }
@@ -587,7 +596,7 @@
       const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || ((!d._pl || !plankMoving(w, d)) && !d._pad));
       d.st = still ? (d.st || 0) + dt : 0;
       const burn = lavaOf.has(d);
-      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || (inStart(w, d.x, d.y) && !inStart(w, d.hx, d.hy))) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || inStart(w, d.x, d.y) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
+      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || (inStart(w, d.x, d.y) && !(d.m0 && nearZone(w, d.hx, d.hy)))) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || inStart(w, d.x, d.y) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
     }
     // a pile goes to sleep together, once every piece of it has been still for a moment
     const par = new Map(), root = d => { let r = d; while (par.get(r) !== r) r = par.get(r); return r; };
@@ -808,7 +817,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 119, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 120, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
