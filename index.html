@@ -1141,8 +1141,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=110"></script>
-<script src="physics.js?v=110"></script>
+<script src="maps.js?v=111"></script>
+<script src="physics.js?v=111"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1675,7 +1675,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.own = {}; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.own = {}; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; S.dels = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
   S.orig = S.world.grid.slice(); S.origTg = S.tg.slice(); S.mine = new Set();   /* how every tile began: a block that is put back the way it was needs no record at all */
   restoreWorld(slot);
   if (S.guest && party.priv) applyPartyProps(party.priv);
@@ -1959,13 +1959,18 @@ function followWorld(dt) {
     if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (never guess a position inside the ground)
     if (d.mineT > 0) { d.mineT -= dt; d.keep = 1.5; }
     else if (d.keep > 0) { d.keep -= dt; if (s.vx === 0 && s.vy === 0 && t - s.t > 120 && Math.abs(s.x - d.x) + Math.abs(s.y - d.y) < 30) d.keep = 0; if (!(d.keep > 0)) d.soft = 1.2; }   // (what you pushed carries on here until the server has it at rest too, then goes over to the server's picture)
-    const mine = d.mineT > 0 || d.keep > 0;
+    let mine = d.mineT > 0 || d.keep > 0;
     const ex = tx - d.x, ey = ty - d.y, err = Math.abs(ex) + Math.abs(ey);
+    if (d.hold > 0) { d.hold -= dt; if (err < 2) d.hold = 0; }
+    if (mine) {   // this device and the server have it landing in different places (a tumble can go either way): it gives in to the server at once, gliding there, instead of fighting its way back through everything
+      if (err > (d.mineT > 0 ? 60 : 22)) d.errT = (d.errT || 0) + dt; else d.errT = 0;
+      if (d.errT > (d.mineT > 0 ? 0.35 : 0.25)) { d.mineT = 0; d.keep = 0; d.errT = 0; d.hold = 0.8; mine = false; }
+    }
     const tr = s.rot + (s.av || 0) * age;   // (and how it is turned, carried on the same way)
     if (err > 240 && !(mine && d.mineT > 0 && err < 400)) { d.x = tx; d.y = ty; d.rot = tr; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.mineT = 0; d.keep = 0; continue; }
     const calm = mine && s.vx === 0 && s.vy === 0 && t - s.t > 200 && Math.abs(d.vx) + Math.abs(d.vy) < 40;   // (the server has it at rest and so does this device: they agree on where, quickly)
     if (d.soft > 0) d.soft -= dt;
-    const k = 1 - Math.exp(-(calm ? (err < 10 ? 2.5 : 8) : !mine && d.soft > 0 && err < 15 ? 2.5 : mine ? (d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : err < 100 ? 12 : 24) : (err < 14 ? 3 : err < 40 ? 7 : 14)) : 26) * dt);
+    const k = 1 - Math.exp(-(calm ? (err < 10 ? 2.5 : 8) : !mine && d.soft > 0 && err < 15 ? 2.5 : !mine && d.hold > 0 ? 9 : mine ? (d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : err < 100 ? 12 : 24) : (err < 14 ? 3 : err < 40 ? 7 : 14)) : 26) * dt);
     d.x += ex * k; d.y += ey * k;
     if (!mine) { d.rot += (tr - d.rot) * (1 - Math.exp(-18 * dt)); d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; }
     else if (Math.abs(tr - d.rot) > 0.01) d.rot += (tr - d.rot) * (1 - Math.exp(-(calm ? 8 : err < 14 ? 2 : 5) * dt));
@@ -2032,7 +2037,7 @@ function mmUpdate(tx, r) {   // redo the mini-map block (2 x 2 tiles) that holds
 }
 function setTerrain(w, tx, r, to, anim) {   // lava, ice, water or grey rock, one tile
   if (tx < 0 || tx >= w.W || r < 0 || r >= w.H) return;
-  const i = r * w.W + tx, cur = w.grid[i]; if (cur === 4 || cur === 6 || cur === 9) return;
+  const i = r * w.W + tx, cur = w.grid[i]; if (cur === 4 || cur === 9 || (cur === 6 && to !== 1)) return;   // (a ground spring can only be turned back into plain ground)
   const rock = w.rock && w.rock[i];
   if (to === 1 && S.tg && w === S.world) { for (const j of [i + w.W, i - 1, i + 1, i - w.W]) if (j >= 0 && j < w.grid.length && w.grid[j] === 1) { S.tg[i] = S.tg[j]; break; } }   // new dirt looks like the ground it grows from: same colours and scenery as that part of the map
   if (to === 7) { w.grid[i] = 1; (w.rock = w.rock || new Uint8Array(w.W * w.H))[i] = 1; } else { w.grid[i] = to; if (w.rock) w.rock[i] = 0; }
@@ -2062,6 +2067,27 @@ function addMisc(w, q, anim) {   // ['see', column, ground row, 0]: a teeter-tot
   else if (q[0] === 'por') P.addPortal(w, q);
   else P.addPad(w, [q[1], q[2], q[3]]);
 }
+const validDel = q => Array.isArray(q) && ((['b', 's', 'g'].includes(q[0]) && q.length === 2 && Number.isFinite(q[1])) || (['pad', 'por', 'c'].includes(q[0]) && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2])));
+function applyDelRec(q, anim) {   // something deleted (by you or anyone in this world): gone for good
+  if (!validDel(q) || !S.world) return false;
+  const w = S.world; let x = null, y = null;
+  if (anim) { const t = delWhere(q); if (t) { x = t[0]; y = t[1]; } }
+  let ok;
+  if (q[0] === 'c') { const cps = S.map.checkpoints, i = cps.findIndex(c => c[0] === q[1] && c[1] === q[2]); ok = i >= 0; if (ok) { cps[i] = [-99999, -99999]; if (S.cpArmed === i) S.cpArmed = -1; } }
+  else ok = P.applyDel(w, q);
+  if (ok && anim && x !== null) { burst(x, y, ['#ff5a4a', '#fff', '#ffd23d'], 14, 170, 80); ring(x, y, '#ff5a4a', 5, 44, 0.4); }
+  return ok;
+}
+function delWhere(q) {   // where a deleted thing was (for the little puff)
+  const w = S.world, u = q[1] >>> 0;
+  if (q[0] === 'b') { const d = w.dynBy.get(u); return d && !d.gone ? [d.x, d.y] : null; }
+  if (q[0] === 's') { const e = w.see.find(o => o.uid === u); return e ? [e.cx, e.cy] : null; }
+  if (q[0] === 'pad') return [(q[1] + 1) * TS, q[2] * TS];
+  if (q[0] === 'por') return [(q[1] + 1) * TS, q[2] * TS];
+  if (q[0] === 'g') { const d = w.doors.find(o => o.uid === u); return d ? [(d.x + d.w / 2) * TS, (d.y + d.h / 2) * TS] : null; }
+  if (q[0] === 'c') return [(q[1] + 0.5) * TS, q[2] * TS - 30];
+  return null;
+}
 const validGate = q => Array.isArray(q) && q.length >= 5 && q.slice(0, 5).every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 && !startTile(q[0], q[1]) && !startTile(q[3], q[4]);
 function addGate(w, q, quiet) {   // q = [column, top row, height in tiles, trigger column, trigger row]: a gate (shut), and a 2-wide trigger plate that holds it open while something is on it
   const id = w.doors.length, d = { id, uid: P.hash32('g' + q.slice(0, 5).join(',')), x: q[0], y: q[1], w: 1, h: q[2], open: false, latched: false };
@@ -2073,13 +2099,13 @@ function addGate(w, q, quiet) {   // q = [column, top row, height in tiles, trig
 const pkey = (k, q) => k + JSON.stringify(q);
 function pubSync(pv) {   // you arrive in a public world: you get what the room has, and the room gets what you built before that it does not have yet
   if (!pv || !S.world) return;
-  const has = new Set(); [['p', pv.props], ['m', pv.misc], ['g', pv.gates], ['c', pv.cps]].forEach(([k, a]) => (a || []).forEach(q => has.add(pkey(k, q))));
+  const has = new Set(); [['p', pv.props], ['m', pv.misc], ['g', pv.gates], ['c', pv.cps], ['d', pv.dels]].forEach(([k, a]) => (a || []).forEach(q => has.add(pkey(k, q))));
   applyPubBuild(pv);
-  sendBulk({ props: S.bought.filter(q => !has.has(pkey('p', q))), gates: S.boughtGates.filter(q => !has.has(pkey('g', q))), misc: S.boughtMisc.filter(q => !has.has(pkey('m', q))), cps: S.boughtCps.filter(q => !has.has(pkey('c', q))) });
+  sendBulk({ props: S.bought.filter(q => !has.has(pkey('p', q))), gates: S.boughtGates.filter(q => !has.has(pkey('g', q))), misc: S.boughtMisc.filter(q => !has.has(pkey('m', q))), cps: S.boughtCps.filter(q => !has.has(pkey('c', q))), dels: S.dels.filter(q => !has.has(pkey('d', q))) });
 }
 function sendBulk(lists) {   // tell the world what you have built, 25 things at a time (a big build is no big message)
   const out = [];
-  ['cps', 'gates', 'props', 'misc'].forEach(k => { const a = lists[k] || []; for (let i = 0; i < a.length; i += 25) out.push({ t: 'pb', [k]: a.slice(i, i + 25) }); });
+  ['cps', 'gates', 'props', 'misc', 'dels'].forEach(k => { const a = lists[k] || []; for (let i = 0; i < a.length; i += 25) out.push({ t: 'pb', [k]: a.slice(i, i + 25) }); });
   out.forEach((msg, i) => setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (i + 1)));
 }
 function applyPubBuild(pv) {   // what everyone in a public world has built so far (each thing only once, however often it is told). It becomes part of your world, so it is kept for when you come back
@@ -2088,19 +2114,21 @@ function applyPubBuild(pv) {   // what everyone in a public world has built so f
   (pv.misc || []).forEach(q => { if (validMisc(q) && take('m', q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 5 : 4)); S.rcvN++; } });
   (pv.gates || []).forEach(q => { if (validGate(q) && take('g', q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
   (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1]) && take('c', q)) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
+  (pv.dels || []).forEach(q => { if (validDel(q) && take('d', q)) { applyDelRec(q); S.dels.push(q.slice()); } });
 }
 function applyPartyProps(pv) {   // what the host built is there when you arrive
   (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !startBlock(q[1], q[2])) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });   // (remembered in the lists, so the world can be saved as a copy)
   (pv.misc || []).forEach(q => { if (validMisc(q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 5 : 4)); S.rcvN++; } });
   (pv.gates || []).forEach(q => { if (validGate(q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
   (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
+  (pv.dels || []).forEach(q => { if (validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });
 }
 function deriveOwn() {   // saves from before every item had its own count: work it out from what is there
   const o = {}, add = id => { if (id) o[id] = (o[id] | 0) + 1; };
   S.bought.forEach(r => { const it = SHOP.find(s => s.kind === r[0] && !s.misc && !s.gate && !s.portal); add(it && it.id); });
   S.boughtGates.forEach(q => { const it = SHOP.find(s => s.gate === q[2]); add(it && it.id); });
   S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? 'see' : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'lav' ? 'lava' : k === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
-  S.boughtCps.forEach(() => add('flag')); return o;
+  S.boughtCps.forEach(() => add('flag')); (S.dels || []).forEach(() => add('dig')); return o;
 }
 function worldObj() {   // the world exactly as it is right now: everything built, where everything is and how it is moving
   const w = S.world, dyn = [], r2 = v => Math.round(v * 100) / 100;
@@ -2111,7 +2139,7 @@ function worldObj() {   // the world exactly as it is right now: everything buil
   }
   const see = w.see.map(q => [r2(q.ang), r2(q.av), r2(q.tilt)]);
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
-  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, rcv: S.rcvN | 0, own: S.own, dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
+  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, rcv: S.rcvN | 0, own: S.own, dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
 }
 function saveWorld(force) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
@@ -2141,6 +2169,7 @@ function restoreWorld(slot) {
     (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
     (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
     (o.got || []).forEach(i => { if (i < S.coinGot.length) S.coinGot[i] = 1; });
+    (o.dels || []).forEach(q => { if (validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(q.slice()); } });   // what you deleted stays deleted
     S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; purseP.c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
   } catch (e) {}
 }
@@ -3295,7 +3324,7 @@ const SHOP = [
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns a tile of ground into lava. It burns anything that touches it.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns a tile of ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
   { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water into dirt.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
-  { cat: 'terrain', id: 'dig', max: 300, name: 'Dig', info: 'Clears a tile of dirt, ice or rock. Not lava or water.', c: 600, g: 0, misc: 'ter', ter: 'dig' },
+  { cat: 'terrain', id: 'dig', max: 300, name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal or flag, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first.', c: 600, g: 0, misc: 'ter', ter: 'dig' },
   { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock and melts ice into water. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
 const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
@@ -3306,7 +3335,7 @@ const shopIcon = id => {
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
   if (id === 'gate' || id === 'gateS') { const h = id === 'gate' ? 26 : 13; return '<svg viewBox="0 0 40 40"><rect x="7" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="15" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="23" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="5" y="' + (28 - h) + '" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="29" y="32" width="9" height="4" fill="#e0a93c" ' + st + '/></svg>'; }
-  if (id === 'dig') return '<svg viewBox="0 0 40 40"><rect x="3" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="23" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="9" width="14" height="15" fill="none" stroke="#f3ead6" stroke-width="2.200" stroke-dasharray="3 3"/><path d="M20 12L28 21M28 12L20 21" fill="none" stroke="#ff7a6a" stroke-width="2.400" stroke-linecap="round"/></svg>';
+  if (id === 'dig') return '<svg viewBox="0 0 40 40"><path d="M9 9L31 31M31 9L9 31" fill="none" stroke="#16100c" stroke-width="9" stroke-linecap="round"/><path d="M9 9L31 31M31 9L9 31" fill="none" stroke="#ff4a3d" stroke-width="5" stroke-linecap="round"/></svg>';
   if (id === 'dirt') return '<svg viewBox="0 0 40 40"><rect x="3" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="9" width="14" height="15" fill="#b07a45" ' + st + '/><rect x="17" y="9" width="14" height="5" fill="#d9a064" ' + st + '/><circle cx="22" cy="19" r="1.400" fill="#7a4e28"/><circle cx="27" cy="17" r="1.100" fill="#7a4e28"/><circle cx="8" cy="30" r="1.300" fill="#5a3e22"/><circle cx="24" cy="31" r="1.300" fill="#5a3e22"/><path d="M35 12h4M37 10v4" stroke="#fff" stroke-width="2" fill="none"/></svg>';
   if (id === 'ice') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#bfeeff" ' + st + '/><path d="M18 25l4 4M22 25l-3 6" stroke="#fff" stroke-width="1.6" fill="none"/><path d="M20 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#d4f6ff" ' + st + ' stroke-width="1.4"/></svg>';
   if (id === 'water') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#2e7be6" ' + st + '/><path d="M16 26q2-3 4 0t4 0" fill="none" stroke="#bfe0ff" stroke-width="1.6"/><path d="M20 6c4 6 6 9 6 12a6 6 0 0 1-12 0c0-3 2-6 6-12z" fill="#4a95f0" ' + st + ' stroke-width="1.6"/></svg>';
@@ -3350,7 +3379,7 @@ $('shopClose').onclick = () => toggleShop(false);
 $('chatClose').onclick = () => toggleChat(false);
 const ownCount = it => (S.own && S.own[it.id]) | 0;   // how many of this you have built on this map (what others built does not count)
 const atLimit = it => !!it.max && ownCount(it) >= it.max;
-const limitNote = it => it.ter === 'dig' ? 'You have dug the most you can on this map (' + it.max + ')' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
+const limitNote = it => it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
 // 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
 const pullNow = () => ({ down: !!(tin.down || keysDown.has('ArrowDown') || keysDown.has('KeyS')), up: !!(inp.jump || tin.jump || keysDown.has('ArrowUp') || keysDown.has('KeyW')) });   // what you are pulling on the controls
@@ -3471,6 +3500,40 @@ function terrainSpot(kind, side, pull) {
   }
   return null;
 }
+/* The delete tool: walk up to something and it picks the whole thing (a crate, a ball, a spring, a booster, a teeter-totter, a gate, a portal, a flag).
+   With nothing there it works on the tile in front of you, like digging. Lava and water cannot be deleted: turn them into dirt first. */
+function delTarget(side, pull) {
+  const w = S.world, b = S.b, s = side < 0 ? -1 : 1;
+  if (pull && pull.down) return null;   // (pulling down: the ground under you)
+  const px0 = s > 0 ? b.x : b.x - R - 58, px1 = s > 0 ? b.x + R + 58 : b.x, py0 = b.y - R - 44, py1 = b.y + R + 24;
+  let best = null;
+  const offer = (x0, y0, x1, y1, q, name, extra) => {
+    if (x1 < px0 || x0 > px1 || y1 < py0 || y0 > py1) return;
+    const cx = clamp(b.x, x0, x1), cy = clamp(b.y, y0, y1), dd = Math.hypot(cx - b.x, cy - b.y);
+    if (!best || dd < best.dd) best = Object.assign({ q, name, box: [x0, y0, x1, y1], dd }, extra || {});
+  };
+  for (const d of w.dyn) {
+    if (d.burn > 0 || d.gone) continue;
+    const e = d.r || Math.max(d.hw, d.hh) * 1.2; if (Math.abs(d.x - b.x) > 160 || Math.abs(d.y - b.y) > 160) continue;
+    offer(d.x - e, d.y - e, d.x + e, d.y + e, ['b', d.uid >>> 0], d.k === 'o' ? 'ball' : d.kind === 5 || d.kind === 6 ? 'spring' : 'crate');
+  }
+  for (const q of w.see) if (!q.gone && Math.abs(q.cx - b.x) < 300) offer(q.cx - q.hl, q.cy - 14, q.cx + q.hl, q.cy + 46, ['s', q.uid >>> 0], 'teeter-totter');
+  for (const q of w.pads) if (!q.gone) offer(q.x * TS, q.y * TS - 14, (q.x + q.w) * TS, q.y * TS + 4, ['pad', q.x, q.y], 'floor booster');
+  for (const q of w.portals) if (!q.gone) { const rec = ['por', Math.round(q.a.x / TS) - 1, Math.round(q.a.y / TS)]; for (const e of [q.a, q.b]) offer(e.x - 30, e.y - 24, e.x + 30, e.y + 6, rec, 'pair of portals'); }
+  for (const d of w.doors) if (!d.gone) offer(d.x * TS, d.y * TS, (d.x + d.w) * TS, (d.y + d.h) * TS, ['g', d.uid >>> 0], 'gate');
+  for (const q of w.plates) if (!q.gone && q.to && q.to.length === 1 && w.doors[q.to[0]] && !w.doors[q.to[0]].gone) offer(q.x * TS, q.y * TS - 12, (q.x + q.w) * TS, q.y * TS + 4, ['g', w.doors[q.to[0]].uid >>> 0], 'gate');
+  for (const c of S.map.checkpoints) if (c[0] > -1000) offer((c[0] + 0.5) * TS - 22, c[1] * TS - 66, (c[0] + 0.5) * TS + 22, c[1] * TS, ['c', c[0], c[1]], 'flag');
+  { const fx = Math.floor((b.x + s * (R + 6)) / TS), rows = [Math.floor(b.y / TS), Math.floor((b.y + R + 4) / TS)];   // a ground spring set into the ground just ahead
+    for (const r of rows) for (const tx of [fx, fx + s]) if (P.tile(w, tx, r) === 6) offer(tx * TS, r * TS, (tx + 1) * TS, (r + 1) * TS, null, 'ground spring', { tl: { tx, r } }); }
+  return best;
+}
+function lavaWaterAhead(side) {   // is there lava or water right where the delete tool would work? (it has to be turned into dirt first)
+  const w = S.world, b = S.b, s = side < 0 ? -1 : 1, cx = Math.floor(b.x / TS), cy = Math.floor(b.y / TS);
+  return [[cx + s, cy], [cx + s, cy + 1], [cx, cy + 1]].some(([x, r]) => { const t = P.tile(w, x, r); return t === 2 || t === 5 || t === 7; });
+}
+function delThing(q) {   // delete it here, and for everyone in this world
+  if (applyDelRec(q, true)) { S.dels.push(q.slice()); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); }
+}
 function waterEx(x, r) {   // water never sits on ice or beside lava: the ice under it melts, and any lava it touches turns to rock
   const w = S.world, out = [], T = (a, b) => P.tile(w, a, b);
   const ok = (a, b) => a >= 1 && a < w.W - 1 && b >= 1 && b < w.H - 1 && !startTile(a, b) && !terrainBlocked(a, b, false);
@@ -3531,14 +3594,20 @@ function computeGhost() {
     else if (g.stage === 2 && g.it.gate) { sp = plateSpot(g.side, g.gate); if (sp) { g.ptx = sp.tx; g.prow = sp.row; g.py0 = sp.y0; cx = (sp.tx + 1) * TS; cy = sp.y0; } }
     else if (g.it.portal) { sp = flatSpot(g.side, false, 1, true); if (sp && g.stage === 2 && g.pA && Math.abs(sp.tx - g.pA.tx) < 4 && Math.abs(sp.gr - g.pA.gr) < 3) sp = null; if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - 2; } }
     else if (g.it.misc === 'spr') { sp = bncSpot(g.side); if (sp) { g.mtx = sp.tx; g.mgr = sp.r; g.mr0 = sp.r0; cx = (sp.tx + 0.5) * TS; cy = (sp.r - 0.5) * TS; } }
-    else if (g.it.misc === 'ter') { sp = terrainSpot(g.it.ter, g.side, pullNow()); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; g.mex = sp.ex || []; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } }
+    else if (g.it.misc === 'ter') {
+      g.del = null; g.keepRec = false; g.wl = false; g.tlName = '';
+      const dt = g.it.ter === 'dig' ? delTarget(g.side, pullNow()) : null;
+      if (dt && dt.q) { g.del = dt; sp = { tx: Math.floor((dt.box[0] + dt.box[2]) / 2 / TS), gr: Math.floor(dt.box[3] / TS), row: Math.floor(dt.box[3] / TS) }; cx = (dt.box[0] + dt.box[2]) / 2; cy = (dt.box[1] + dt.box[3]) / 2; }
+      else if (dt && dt.tl) { sp = { tx: dt.tl.tx, row: dt.tl.r, gr: dt.tl.r }; g.mtx = dt.tl.tx; g.mgr = dt.tl.r; g.mto = 1; g.mex = []; g.keepRec = true; g.tlName = dt.name; cx = (dt.tl.tx + 0.5) * TS; cy = (dt.tl.r + 0.5) * TS; }   // (a ground spring goes back to plain ground)
+      else { sp = terrainSpot(g.it.ter, g.side, pullNow()); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; g.mex = sp.ex || []; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } else if (g.it.ter === 'dig' && lavaWaterAhead(g.side)) g.wl = true; }
+    }
     else if (g.it.misc) { sp = flatSpot(g.side, g.it.misc === 'see', g.it.misc === 'see' ? 2 : 1); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; g.mside = sp.side; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - (g.it.misc === 'see' ? 46 : 4); } }
     else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; g.gh = sp.h; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - sp.h / 2) * TS; } }
     g.ok = !!sp; g.sb = false;
     if (sp && (startBlock(cx, cy) || (g.it.misc === 'spr' && startBlock(cx, g.mr0 * TS)) || (g.stage === 2 && g.it.gate && startBlock((sp.tx + 1) * TS, sp.row * TS)))) { g.ok = false; g.sb = true; }
-    if (sp && g.ok && portalClash(g, sp, cx)) { g.ok = false; g.pc = true; } else g.pc = false;
+    if (sp && g.ok && !g.del && portalClash(g, sp, cx)) { g.ok = false; g.pc = true; } else g.pc = false;
     g.pb = false;
-    if (sp && g.ok) {   // nobody can be built on or inside (not even somebody else's ball)
+    if (sp && g.ok && !(g.it.misc === 'ter' && g.del)) {   // nobody can be built on or inside (not even somebody else's ball)
       let rc;
       if (g.it.id === 'flag') rc = [cx - 20, g.frow * TS - 64, cx + 20, g.frow * TS];
       else if (g.stage === 2 && g.it.gate) rc = [g.ptx * TS, Math.min(g.py0, g.prow * TS) - 8, (g.ptx + 2) * TS, g.prow * TS + 8];
@@ -3612,6 +3681,13 @@ function drawTileGhost(g, nowT) {
   if (g.it.portal) {
     if (g.stage === 2 && g.pA) portalShape((g.pA.tx + 1) * TS, g.pA.gr * TS, '#ffd23d', 0.9, nowT);
     portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : (g.stage === 2 ? '#3da5ff' : '#ffd23d'), pulse + 0.2, nowT);
+  } else if (g.it.misc === 'ter' && g.del && !bad) {   // the delete tool on a whole thing: a red outline around it and a big X
+    const bx = g.del.box, x0 = bx[0] + (g.dx - g.tx) - 4, y0 = bx[1] + (g.dy - g.ty) - 4, ww = bx[2] - bx[0] + 8, hh = bx[3] - bx[1] + 8;
+    ctx.globalAlpha = 0.18 + 0.08 * Math.sin(nowT / 170); ctx.fillStyle = '#ff3b2e'; ctx.fillRect(x0, y0, ww, hh);
+    ctx.globalAlpha = 0.95; ctx.strokeStyle = '#ff5a4a'; ctx.lineWidth = 2.4; ctx.setLineDash([6, 4]); ctx.lineDashOffset = -nowT / 45; ctx.strokeRect(x0, y0, ww, hh); ctx.setLineDash([]);
+    const mx = x0 + ww / 2, my = y0 + hh / 2, k = Math.min(16, Math.min(ww, hh) / 2 - 2); ctx.lineCap = 'round';
+    ctx.strokeStyle = '#16100c'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(mx - k, my - k); ctx.lineTo(mx + k, my + k); ctx.moveTo(mx + k, my - k); ctx.lineTo(mx - k, my + k); ctx.stroke();
+    ctx.strokeStyle = '#ff4a3d'; ctx.lineWidth = 4; ctx.stroke();
   } else if (g.it.misc === 'ter') {
     const x = bad ? Math.floor(g.dx / TS) * TS : g.mtx * TS, y = bad ? g.dy - TS / 2 : g.mgr * TS, to = g.mto, dig = g.it.ter === 'dig';
     const RC = (px, py, w, h, r) => { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(px, py, w, h, r); else ctx.rect(px, py, w, h); };
@@ -3660,13 +3736,13 @@ function drawTileGhost(g, nowT) {
 }
 let placeUIKey = null;
 function refreshPlaceUI() {   // the little bar (and, on a phone, the round button) that finish the build
-  const g = placing, on = !!g, key = on ? g.it.id + (g.stage || 0) + (g.ok ? 1 : 0) + (g.sb ? 2 : 0) + (g.pb ? 4 : 0) + (touchActive() ? 1 : 0) : '';
+  const g = placing, on = !!g, key = on ? g.it.id + (g.stage || 0) + (g.ok ? 1 : 0) + (g.sb ? 2 : 0) + (g.pb ? 4 : 0) + (touchActive() ? 1 : 0) + (g.del ? g.del.name : g.tlName || '') + (g.wl ? 'w' : '') : '';
   if (key === placeUIKey) return; placeUIKey = key;
   $('placeBar').classList.toggle('hide', !on); applyTouchUI();
   if (!on) return;
   $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
-  $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Dig' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Dig' : 'Place');
-  $('placeHint').textContent = g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? 'It clears the tile in front of you. Turn around to use the other side' : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? 'Nothing to dig. Face dirt, ice or rock right beside you' : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
+  $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Delete' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Delete' : 'Place');
+  $('placeHint').textContent = g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build in the start area. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
@@ -3682,7 +3758,8 @@ function finishPlacing() {
   if (atLimit(it)) { notice(limitNote(it), 'urgent'); cancelPlacing(true); return; }
   if (!g.ok) { notice(g.sb ? 'You cannot build in the start area' : g.pb ? 'Something is in the way' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
   if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
-  if (it.portal) {
+  if (it.ter === 'dig' && g.del) delThing(g.del.q);
+  else if (it.portal) {
     const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr];
     addMisc(S.world, q); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('portal');
     burst((q[1] + 1) * TS, q[2] * TS - 8, ['#ffd23d', '#fff'], 14, 160, 60); burst((q[3] + 1) * TS, q[4] * TS - 8, ['#3da5ff', '#fff'], 14, 160, 60);
@@ -3701,7 +3778,7 @@ function finishPlacing() {
     }
     if (q[0] === 'tl') {   /* one record per tile, ever. If the tile is back the way the map made it, there is nothing to remember at all, and it does not count */
       const w = S.world, i = q[2] * w.W + q[1], gone = dropTileRecords(q[1], q[2]);
-      if (S.orig && w.grid[i] === S.orig[i] && !(w.rock && w.rock[i])) {
+      if (S.orig && w.grid[i] === S.orig[i] && !(w.rock && w.rock[i]) && !g.keepRec) {
         S.tg[i] = S.origTg[i]; g.cancelled = true;
         if (S.mine.has(i)) for (const o of gone) { const id = { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[o[3]]; if (id && S.own && S.own[id] > 0) S.own[id]--; }
         S.mine.delete(i); partyBuild({ t: 'pobj', g: ['tl', q[1], q[2], -1], ex: exSend });
@@ -3715,14 +3792,14 @@ function finishPlacing() {
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   placing = null; placeUIKey = null; refreshPlaceUI();
   if ((it.misc === 'ter' || it.cat === 'blocks') && settings.terrKeep) {   // keep going with the same shape or terrain until you cancel or the money runs out
-    if (wallet.c < it.c || wallet.g < it.g) notice('Out of ' + (wallet.c < it.c ? 'coins' : 'diamonds') + '. You are done ' + (it.ter === 'dig' ? 'digging' : 'placing'), 'urgent');
-    else if (atLimit(it)) notice('That is the most ' + it.name + ' you can ' + (it.ter === 'dig' ? 'dig' : 'build') + ' here. You are done ' + (it.ter === 'dig' ? 'digging' : 'placing'), 'urgent');
+    if (wallet.c < it.c || wallet.g < it.g) notice('Out of ' + (wallet.c < it.c ? 'coins' : 'diamonds') + '. You are done ' + (it.ter === 'dig' ? 'deleting' : 'placing'), 'urgent');
+    else if (atLimit(it)) notice(it.ter === 'dig' ? 'That is the most you can delete here. You are done deleting' : 'That is the most ' + it.name + ' you can build here. You are done placing', 'urgent');
     else { startPlacing(it); placing.side = g.side; computeGhost(); }
   }
 }
 function pubTake(k, q) { if (!S.pubKeys) return true; const key = pkey(k, q.map(v => (typeof v === "number" ? Math.round(v) : v))); if (S.pubKeys.has(key)) return false; S.pubKeys.add(key); return true; }
 function partyBuild(msg) {
-  if (!party && shared() && S.pubKeys) { const g = msg.g; S.pubKeys.add(msg.t === 'padd' ? pkey('p', [msg.k, msg.x, msg.y]) : msg.t === 'pcp' ? pkey('c', [msg.x, msg.y]) : pkey(msg.t === 'pgate' ? 'g' : 'm', g)); }   // (what you build is already in your world: remember it so it is not added twice)
+  if (!party && shared() && S.pubKeys) { const g = msg.g; S.pubKeys.add(msg.t === 'padd' ? pkey('p', [msg.k, msg.x, msg.y]) : msg.t === 'pcp' ? pkey('c', [msg.x, msg.y]) : pkey(msg.t === 'pgate' ? 'g' : msg.t === 'pdel' ? 'd' : 'm', g)); }   // (what you build is already in your world: remember it so it is not added twice)
   if (shared() && online && ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }
 function placeProp(kind, at) {
   const d = P.addProp(S.world, kind, at[0], at[1]); d.sleep = false; d.bought = true; partyBuild({ t: 'padd', k: kind, x: Math.round(at[0]), y: Math.round(at[1]) });
@@ -4658,7 +4735,7 @@ function onMsg(m) {
       S.welcomeAt = performance.now(); S.gotDyn = false;
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
       if (party && !m.priv) { partyOver(''); return; }
-      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host') sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps }); }
+      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host') sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }); }
       net.online = m.online; net.peak = m.peak;
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = infoMsg();
@@ -4696,8 +4773,9 @@ function onMsg(m) {
       if (m.g[0] === 'tl' && m.g[3] === -1) { addMisc(S.world, m.g, true); dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); wDirty = true; break; }   // somebody put a tile back the way it was: nothing to remember
       if (m.g[0] === 'tl') { dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); }
       addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
+    case 'pdel': { if (!S.world || !shared() || !validDel(m.g) || (!party && !pubTake('d', m.g))) break; if (applyDelRec(m.g, !m.bulk)) { S.dels.push(m.g.slice()); wDirty = true; if (!m.bulk) sfx('pop'); } break; }   // somebody deleted something here
     case 'pgate': { if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
-    case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); sfx('big'); break;
+    case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); (m.dels || []).forEach(q => onMsg({ t: 'pdel', g: q, bulk: 1 })); sfx('big'); break;
     case 'puid': { const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y); if (d) { adoptUid(w, d, m.u); d.srvU = true; } break; }
     case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y) || (!party && !pubTake('p', [m.k | 0, m.x | 0, m.y | 0]))) break; const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
     case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }

@@ -223,7 +223,8 @@
      Every crate is a box that can lie at any angle and every ball rolls. Contacts push with impulses and grip with friction
      (so what sits on a crate rides along with it unless it is yanked out from under), weight adds up through a pile, and
      nothing is ever turned to face a particular way: a crate rests on whatever face, edge or slope it comes to rest on. */
-  const SLOP = 0.6, BAUM = 0.3, VEL_IT = 10, POS_IT = 4, PM = 4, F_PUSH = 7200, A_PUSH = 1000;   // PM: how heavy your ball is when it pushes things (a crate weighs 1, a big crate 4)
+  const PLAYER_WT = 120;   // (on a teeter-totter you weigh as much as two small crates)
+  const SLOP = 0.6, BAUM = 0.3, VEL_IT = 10, POS_IT = 4, PM = 2, PM_PUSH = 4, F_PUSH = 5000;   // PM: how heavy your ball is when it pushes things (a crate weighs 1, a big crate 4)
   const LIN_SLEEP = 8, ANG_SLEEP = 0.1, SLEEP_T = 0.5, MAXSPD = 1400, MAXAV = 28;
   const SK_PX = 1, SK_NX = 2, SK_PY = 4, SK_NY = 8;   // tile faces that are hidden by a neighbouring solid tile (never pushed out through those)
   function shapeOf(d) { const c = Math.cos(d.rot || 0), s = Math.sin(d.rot || 0); return { x: d.x, y: d.y, hw: d.hw, hh: d.hh, c, s, ex: Math.abs(c) * d.hw + Math.abs(s) * d.hh, ey: Math.abs(s) * d.hw + Math.abs(c) * d.hh }; }
@@ -325,7 +326,7 @@
   function matTile(c, d, t) {
     const ice = t === 3;
     if (isBall(d)) { c.mu = ice ? 0.05 : 0.7; if (t === 6) { c.e = 0.85; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 150; } else { c.e = 0.3; c.eT = 250; } }
-    else { c.mu = ice ? 0.04 : 0.55; if (t === 6) { c.e = d.hw > 20 ? 0.5 : 0.68; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 160; } }
+    else { c.mu = ice ? 0.04 : 0.5; if (t === 6) { c.e = d.hw > 20 ? 0.5 : 0.68; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 160; } }
   }
   function tileContacts(w, d, sh) {
     const ex = d.r || sh.ex, ey = d.r || sh.ey;
@@ -550,18 +551,24 @@
       if (free && d.nap) { if (vn < -60 || (ny > -0.6 && vn < -12)) { d.nap = false; d.st = 0; } else free = false; }   // (something resting is only woken by a real knock or push, not by you standing on it)
       if (vn < 0) {
         const im = free ? d.im : 0, ii = free ? d.ii : 0, e = d.k === 'o' && vn < -120 ? 0.15 : 0;
-        const K = 1 / PM + im + ii * rn * rn, jf = -(1 + e) * vn / K;
+        const pm = Math.abs(nx) > 0.5 ? PM_PUSH : PM;   // (you weigh two crates, but you push sideways harder than that: your ball drives itself along)
+        const K = 1 / pm + im + ii * rn * rn, jf = -(1 + e) * vn / K;
         // rolling into something is a push: it gets going over a moment, together with whatever is riding on it (the more there is, the harder it is to get going). Flying into it is a knock
-        const load = Math.max(d.m, (d._N || 0) / GRAV), soft = vn > -330 && !b.boost && free;
+        const load = Math.max(d.m, (d._N || 0) / GRAV), soft = vn > -330 && b.vx * b.vx + b.vy * b.vy < 330 * 330 && free;
         let cap = 1e9;
         if (soft) {
-          cap = Math.min(load * A_PUSH / Math.pow(load, 0.75) + (d._F || 0), F_PUSH) * (b.dt || 1 / 60);
+          cap = F_PUSH * (b.dt || 1 / 60);   // (how hard you can push: about what two crates weigh)
           const vlim = MAXV / (1 + 0.3 * (load - 1)), vb = -(vbx * nx + vby * ny), kb = im + ii * rn * rn;   // (and a heavy load only goes so fast)
           if (Math.abs(nx) > 0.5 && kb > 0) cap = Math.min(cap, Math.max(0, (vlim - vb) / kb));
         }
         const j = Math.min(jf, cap);
         if (free) { d.vx -= j * nx * im; d.vy -= j * ny * im; d.av -= j * rn * ii; d.st = 0; }
-        b.vx += j * nx / PM; b.vy += j * ny / PM;
+        b.vx += j * nx / pm; b.vy += j * ny / pm;
+        if (free && d.k === 'o' && j > 0) {   // your ball grips a ball it pushes, the way two rolling balls do (so one squeezed between you and another never gets spun backwards into you)
+          const tx = ny, ty = -nx, wp = b.vx / R, px = -wp * (-ny * R), py = wp * (-nx * R);   // (your ball rolls: its surface where they touch moves with its spin)
+          const vt = ((d.vx - (d.av || 0) * ry) - (b.vx + px)) * tx + ((d.vy + (d.av || 0) * rx) - (b.vy + py)) * ty, rt = rx * ty - ry * tx, kt = im + ii * rt * rt;
+          if (kt > 0) { const jt = clamp(-vt / kt, -0.4 * j, 0.4 * j); d.vx += jt * tx * im; d.vy += jt * ty * im; d.av += jt * rt * ii; }
+        }
         if (j < jf) { const vn2 = (b.vx - (d.vx - (d.av || 0) * ry)) * nx + (b.vy - (d.vy + (d.av || 0) * rx)) * ny; if (vn2 < 0) { b.vx -= vn2 * nx; b.vy -= vn2 * ny; } }   // (and you are held back to its pace)
       }
       if (!kin) {
@@ -682,7 +689,7 @@
     ev.lava = collide(b, w);
     if (w.portals.length && !b.ghost && !b.pcd && b.vy > -60) { const pt = portalAt(w, b.x, b.y + R); if (pt) { const dir = b.pdir || 1; b.x = pt.to.x + dir * 36; b.y = pt.to.y - R - 2; b.vx = dir * Math.max(300, Math.abs(b.vx)); b.vy = -340; b.ground = false; b.flat = false; b.pcd = 0.6; b.fall = 0; b.launched = true; ev.portal = true; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } }
     b.dt = dt; if (!b.ghost && w.dyn.length) collideDyn(b, w);
-    if (w.see.length) { seeBody(b, w, 60); if (!b.ghost) seeGuard(w, b, R); }
+    if (w.see.length) { seeBody(b, w, PLAYER_WT); if (!b.ghost) seeGuard(w, b, R); }
     const wet = water || tile(w, Math.floor(b.x / TS), Math.floor(b.y / TS)) === 5 || tile(w, Math.floor(b.x / TS), Math.floor((b.y + R * 0.8) / TS)) === 5;   // (checked again after moving: you can land in a shallow pool in the very same step)
     if (b.ground || wet) { if (!wasGround && !wet && !b.bnc && b.fall >= FALL_DIE) ev.splat = true; b.fall = 0; }
     else if (b.vy > 300) b.fall += dt; else if (b.vy < 0) b.fall = 0;
@@ -696,6 +703,25 @@
     for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) continue; const e = d.r || d.hw; if (d.x + e > x0 - (pad || 0) && d.x - e < x1 + (pad || 0) && d.y + e > y0 - (pad || 0) && d.y - e < y1 + (pad || 0)) return true; }
     return false;
   }
+  /* ---------- removing something for good (the delete tool) ----------
+     q: ['b', uid] a crate, ball or spring; ['s', uid] a teeter-totter; ['pad', column, row] a floor booster; ['por', column, row] a pair of portals (by the yellow one);
+     ['g', uid] a gate and its trigger. Nothing is taken out of the lists (everything keeps its place, so saves and the server still line up): it is just gone from the world. */
+  function applyDel(w, q) {
+    if (!Array.isArray(q)) return false;
+    const k = q[0], u = q[1] >>> 0;
+    if (k === 'b') { const d = w.dynBy.get(u); if (!d || d.gone) return false; d.gone = true; d.burn = 1e9; d.bl = 0; d.bx = d.by = -99999; d.x = d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.nap = false; return true; }
+    if (k === 's') { const s = w.see.find(e => e.uid === u && !e.gone); if (!s) return false; s.gone = true; s.cx = s.cy = -1e6; s.av = 0; s.sav = 0; return true; }
+    if (k === 'pad') { const p = w.pads.find(e => !e.gone && e.x === q[1] && e.y === q[2]); if (!p) return false; p.gone = true; p.x = p.y = -100000; return true; }
+    if (k === 'por') { const p = w.portals.find(e => !e.gone && Math.round(e.a.x / TS) - 1 === q[1] && Math.round(e.a.y / TS) === q[2]); if (!p) return false; p.gone = true; p.a.x = p.b.x = -1e7; return true; }
+    if (k === 'g') {
+      const d = w.doors.find(e => e.uid === u && !e.gone); if (!d) return false;
+      for (let yy = d.y; yy < d.y + d.h; yy++) for (let xx = d.x; xx < d.x + d.w; xx++) if (xx >= 0 && xx < w.W && yy >= 0 && yy < w.H && w.grid[yy * w.W + xx] === 9) w.grid[yy * w.W + xx] = 0;
+      d.gone = true; d.open = true; d.latched = true; d.x = d.y = -100000;
+      for (const q2 of w.plates.concat(w.btns)) if (q2.to && q2.to.every(i => !w.doors[i] || w.doors[i].gone)) { q2.gone = true; q2.x = q2.y = -100000; }   // (its trigger goes with it, unless it still works another gate)
+      return true;
+    }
+    return false;
+  }
   function liftOut(w, tx, r) {   // ground has just grown on this tile: whatever was sitting in it is lifted out on top (never left buried)
     const x0 = tx * TS, y0 = r * TS, x1 = x0 + TS;
     for (let i = 0; i < w.dyn.length; i++) {
@@ -706,7 +732,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

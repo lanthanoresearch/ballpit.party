@@ -20,7 +20,7 @@ const P = require('./physics.js');
 
 const PORT = process.env.PORT || 3000;
 // what one world can hold of what people build (shared by everyone in it). Each player has their own, lower limits per item; these keep a full world quick.
-const ROOM_PROPS = 800, ROOM_GATES = 200, ROOM_MISC = 6000, ROOM_CPS = 150;
+const ROOM_PROPS = 800, ROOM_GATES = 200, ROOM_MISC = 6000, ROOM_CPS = 150, ROOM_DELS = 3000;
 const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);   // players per world: few enough that a world full of builds stays smooth for everyone
 const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
@@ -195,7 +195,7 @@ const slotNow = () => maps.slotOf(Date.now() - OFFSET_MS);
 const nextAt = s => maps.slotStart(s + 1) + OFFSET_MS;
 let curSlot = slotNow();
 const PRIV_BASE = 3000000, PRIV_MAX = 12;   // a friend's own world (their solo level, with the things they built) is a private room; its slot is the same number the solo game uses
-const bstate = r => (r ? (r.priv || (r.build = r.build || { props: [], cps: [], gates: [], misc: [] })) : null);   // what has been built in a world: a friend's world keeps it with the game, a public world keeps it until the map changes
+const bstate = r => { if (!r) return null; const b = r.priv || (r.build = r.build || { props: [], cps: [], gates: [], misc: [] }); if (!b.dels) b.dels = []; return b; };   // what has been built in a world: a friend's world keeps it with the game, a public world keeps it until the map changes
 const rslot = r => (r && r.priv ? r.priv.slot : curSlot);
 const privKey = pub => 'p' + pub;
 
@@ -252,7 +252,7 @@ function findRoom() {
 const SIMDT = 1 / 60;
 function srvTerrain(w, tx, r, to) {
   if (tx < 0 || tx >= w.W || r < 0 || r >= w.H) return;
-  const i = r * w.W + tx, cur = w.grid[i]; if (cur === 4 || cur === 6 || cur === 9) return;
+  const i = r * w.W + tx, cur = w.grid[i]; if (cur === 4 || cur === 9 || (cur === 6 && to !== 1)) return;   // (a ground spring can only be turned back into plain ground)
   w.grid[i] = to === 7 ? 1 : to;
   if (w.grid[i] === 1 || w.grid[i] === 3) P.liftOut(w, tx, r);
 }
@@ -278,7 +278,8 @@ function roomWorld(room) {
   (B.misc || []).forEach(q => { try { srvMisc(w, q); } catch (e) {} });
   (B.gates || []).forEach(q => { try { srvGate(w, q); } catch (e) {} });
   (B.props || []).forEach(q => { try { P.addProp(w, q[0], q[1], q[2]); } catch (e) {} });
-  if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = false; d.rest = 0; } } }
+  (B.dels || []).forEach(q => { try { P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
+  if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && !d.gone && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = false; d.rest = 0; } } }
   room.snapDyn = undefined;
   room.world = w; room.verN = 1; room.acc = 0; room.dsig = ''; room.tk = 0;
   w.dyn.forEach(d => { d.ver = 1; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; });
@@ -288,7 +289,8 @@ function roomWorld(room) {
 const worldAdd = {   // somebody built something: it goes into the shared world straight away
   prop: (r, q) => { if (r.world) { const d = P.addProp(r.world, q[0], q[1], q[2]); d.ver = ++r.verN; (r.chg = r.chg || []).push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; return d; } },
   misc: (r, q) => { if (r.world) srvMisc(r.world, q); },
-  gate: (r, q) => { if (r.world) srvGate(r.world, q); }
+  gate: (r, q) => { if (r.world) srvGate(r.world, q); },
+  del: (r, q) => { if (!r.world) return; const d = q[0] === 'b' ? r.world.dynBy.get(q[1] >>> 0) : null; if (P.applyDel(r.world, q) && d) { d.ver = ++r.verN; (r.chg = r.chg || []).push(d); } }
 };
 function doorSig(w) {
   let s = ''; for (const o of w.doors) s += (o.open ? 1 : 0) + (o.latched ? 2 : 0); s += '|'; for (const q of w.btns) s += q.on ? 1 : 0; s += '|'; for (const q of w.plates) s += q.on ? 1 : 0; return s;
@@ -360,7 +362,7 @@ function simTick() {
           }
           list.push({ x: p.qx, y: p.qy, vx: p.vx, vy: p.vy, ground: g });
         }
-        for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground, kin: true, dt: SIMDT }; P.collideDyn(c, w); P.seeBody(c, w, 60); }   // (kin: a player is where they say they are; only the things they touch are moved)
+        for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground, kin: true, dt: SIMDT }; P.collideDyn(c, w); P.seeBody(c, w, P.PLAYER_WT); }   // (kin: a player is where they say they are; only the things they touch are moved)
         if (k === n - 1) P.stepSwitches(w, list, SIMDT * n);   // (the buttons and plates are looked at once per update)
       }
       w.ev.length = 0;
@@ -432,6 +434,7 @@ function simTick() {
 const okProp = q => (Array.isArray(q) && q.length === 3 && (q[0] | 0) >= 0 && (q[0] | 0) <= 7 && Number.isFinite(q[1]) && Number.isFinite(q[2]) ? [q[0] | 0, Math.round(q[1]), Math.round(q[2])] : null);
 const okGate = q => (Array.isArray(q) && q.length === 5 && q.every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 ? q.map(Math.round) : null);
 const okMisc = q => (Array.isArray(q) && q.length === 4 && (q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || q[0] === 'tl') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), Math.round(q[3])] : Array.isArray(q) && q.length === 4 && (q[0] === 'see' || q[0] === 'pad') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[3] < 0 ? -1 : q[3] > 0 ? 1 : 0] : (Array.isArray(q) && q.length === 5 && q[0] === 'por' && q.slice(1).every(Number.isFinite) ? ['por', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])] : null));
+const okDel = q => (Array.isArray(q) && (((q[0] === 'b' || q[0] === 's' || q[0] === 'g') && q.length === 2 && Number.isFinite(q[1]) && q[1] >= 0 && q[1] < 4294967296) || ((q[0] === 'pad' || q[0] === 'por' || q[0] === 'c') && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2]))) ? (q.length === 2 ? [q[0], Math.round(q[1])] : [q[0], Math.round(q[1]), Math.round(q[2])]) : null);   // something removed with the delete tool
 const okCp = q => (Array.isArray(q) && q.length === 2 && Number.isFinite(q[0]) && Number.isFinite(q[1]) ? [Math.round(q[0]), Math.round(q[1])] : null);
 function send(p, obj) { if (p.ws.readyState === 1) p.ws.send(JSON.stringify(obj)); }
 function broadcast(room, obj, except) {
@@ -506,8 +509,8 @@ wss.on('connection', (ws, req) => {
         if (!p.pub) { send(p, { t: 'jno', why: 'nodev' }); return; }
         const key = privKey(p.pub), lv = m.host.m | 0;
         if (rooms.has(key)) { send(p, { t: 'jno', why: 'busy' }); return; }
-        const props = [], gates = [], misc = [], cps = [];   // (what the host built arrives right after, in small pieces)
-        room = { id: key, players: new Map(), finishers: [], priv: { owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, invited: new Set(), keep: new Set(), once: new Set() } };
+        const props = [], gates = [], misc = [], cps = [], dels = [];   // (what the host built arrives right after, in small pieces)
+        room = { id: key, players: new Map(), finishers: [], priv: { owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] };
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
         const hr = rooms.get(privKey(m.join));
@@ -529,7 +532,7 @@ wss.on('connection', (ws, req) => {
         send(p, {
           t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
-          build: room.priv ? undefined : bstate(room), priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
+          build: room.priv ? undefined : bstate(room), priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? 1 : 0 }))
         });
         p.dver = null; if (room.world) { send(p, doorPacket(room)); plankSend(room, room.world.see, p); }
@@ -598,8 +601,8 @@ wss.on('connection', (ws, req) => {
       const now = Date.now(); if (now - (p.lastPb || 0) < 180) return; p.lastPb = now;
       const B = bstate(r), e = {};
       const take = (key, arr, ok, cap) => { if (!Array.isArray(m[key])) return; const out = []; for (const q of m[key].slice(0, 25)) { const c = ok(q); if (c && arr.length < cap) { arr.push(c); out.push(c); } } if (out.length) e[key] = out; };
-      take('props', B.props, okProp, ROOM_PROPS); take('gates', B.gates, okGate, ROOM_GATES); take('misc', B.misc, okMisc, ROOM_MISC); take('cps', B.cps, okCp, ROOM_CPS);
-      (e.props || []).forEach(q => worldAdd.prop(r, q)); (e.gates || []).forEach(q => worldAdd.gate(r, q)); (e.misc || []).forEach(q => worldAdd.misc(r, q));
+      take('props', B.props, okProp, ROOM_PROPS); take('gates', B.gates, okGate, ROOM_GATES); take('misc', B.misc, okMisc, ROOM_MISC); take('cps', B.cps, okCp, ROOM_CPS); take('dels', B.dels, okDel, ROOM_DELS);
+      (e.props || []).forEach(q => worldAdd.prop(r, q)); (e.gates || []).forEach(q => worldAdd.gate(r, q)); (e.misc || []).forEach(q => worldAdd.misc(r, q)); (e.dels || []).forEach(q => worldAdd.del(r, q));
       if (Object.keys(e).length) { e.t = 'pb'; broadcast(r, e, p); }
     } else if (m.t === 'pobj') {   // a teeter-totter or a floor booster, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl')) || (m.g.length === 5 && m.g[0] === 'por')) || !m.g.slice(1).every(Number.isFinite) || bstate(r).misc.length >= ROOM_MISC || ((m.g[0] === 'see' || m.g[0] === 'por') && bstate(r).misc.filter(q => q[0] === m.g[0]).length >= 80)) return;
@@ -618,6 +621,11 @@ wss.on('connection', (ws, req) => {
         return;
       }
       const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
+    } else if (m.t === 'pdel') {   // somebody deleted something: it is gone for everyone in that world
+      const r = p.room, B = bstate(r); if (!B) return;
+      const q = okDel(m.g); if (!q || B.dels.length >= ROOM_DELS || !addOk(p)) return;
+      if (B.dels.some(e => e.length === q.length && e.every((v, i) => v === q[i]))) return;
+      B.dels.push(q); worldAdd.del(r, q); broadcast(r, { t: 'pdel', g: q }, p);
     } else if (m.t === 'pgate') {   // a gate and its trigger, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || m.g.length !== 5 || !m.g.every(Number.isFinite) || m.g[2] < 2 || m.g[2] > 8 || bstate(r).gates.length >= ROOM_GATES) return;
       if (!addOk(p)) return;
