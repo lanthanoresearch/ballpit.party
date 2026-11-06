@@ -1141,8 +1141,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=111"></script>
-<script src="physics.js?v=111"></script>
+<script src="maps.js?v=112"></script>
+<script src="physics.js?v=112"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1659,6 +1659,7 @@ const nowMs = () => Date.now() + clockOff;
 
 const TH_COUNT = THEMES.length;
 function loadMap(slot, next) {
+  S.gateWait = 0;
   S.guest = !!(party && party.role === 'guest');   // visiting a friend's world: nothing here is saved to your own
   const m0 = BallMaps.generate(slot % BallMaps.count), m = Object.assign({}, m0, { checkpoints: (m0.checkpoints || []).slice() });   // (your own copy of the flag list: flags you buy are yours alone)
   S.slot = slot; S.idx = m.idx; S.map = m; S.world = P.makeWorld(m); S.world.nb = { dyn: S.world.dyn.length, doors: S.world.doors.length, btns: S.world.btns.length }; S.pubKeys = new Set(); S.rcvN = 0;
@@ -1821,7 +1822,7 @@ function netGate(dt) {   // the server decides everything in a shared world, so 
   let hold = false;
   if (need) {
     if (!(online && ws && ws.readyState === 1)) hold = true;
-    else if (S.world && S.world.dyn.length && !S.gotDyn && performance.now() - (S.welcomeAt || 0) < 2000) hold = true;
+    else if (S.world && S.world.dyn.length && (S.gateWait = (S.gateWait || 0) + dt) < 5 && (!S.gotDyn || S.world.dyn.some(o => !o.sv && !(o.burn > 0) && Math.abs(o.x - S.b.x) < 1200 && Math.abs(o.y - S.b.y) < 800))) hold = true;   // (until the server has said where everything around you is, so it is all simply there when the game starts)
   }
   if (!hold) { if (gateOn) { gateOn = false; gateT = 0; $('netGate').classList.add('hide'); } if (need) S.wasOnline = true; return false; }
   if (!gateOn) { gateOn = true; gateT = 0; $('netGate').classList.remove('hide'); }
@@ -1948,12 +1949,14 @@ function collectCoins() {
 const followOn = () => !!(S.world && online && ws && ws.readyState === 1 && shared() && S.slot >= 0 && S.slot < SOLO_BASE + 1e6);
 function followWorld(dt) {
   const w = S.world, fol = followOn(); if (w.follow !== fol) { w.follow = fol; if (!fol) { for (const d of w.dyn) { d.mineT = 0; d.sleep = false; } } }
+  w.pubWait = !fol && S.slot >= 0 && S.slot < SOLO_BASE && !!(settings.mp || party) && !offlineOn() && !inSolo();   // (a shared world before the server has spoken: nothing in it moves by itself here)
   if (!fol) return;
   const t = performance.now();
   for (let i = 0; i < w.dyn.length; i++) {
     const d = w.dyn[i], s = d.sv; if (!s) continue;
     if (s.burn) { if (!(d.burn >= 1e9)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } continue; }
     if (d.burn >= 1e9) { d.burn = 0; d.x = s.x; d.y = s.y; d.vx = s.vx; d.vy = s.vy; d.rot = s.rot; d.mineT = 0; d.nap = false; d.rest = 0; continue; }
+    if (s.jump) { s.jump = false; if (!(d.mineT > 0 || d.keep > 0) || Math.abs(s.x - d.x) + Math.abs(s.y - d.y) > 60) { d.x = s.x; d.y = s.y; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.mineT = 0; d.keep = 0; d.hold = 0; d.errT = 0; d.nap = false; d.st = 0; continue; } }   // (when you arrive, or come back to a place, everything is simply where the server has it: nothing slides or snaps into place)
     const age = Math.min(Math.max(0.06, Math.min(0.25, (s.iv || 0) * 0.0012)), (t - s.t) / 1000), e0 = d.r || d.hw;   // (when the server's updates come slowly, things carry on a little longer in the direction they were going)
     let tx = s.x + s.vx * age, ty = s.y + s.vy * age;
     if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (never guess a position inside the ground)
@@ -1967,11 +1970,12 @@ function followWorld(dt) {
       if (d.errT > (d.mineT > 0 ? 0.35 : 0.25)) { d.mineT = 0; d.keep = 0; d.errT = 0; d.hold = 0.8; mine = false; }
     }
     const tr = s.rot + (s.av || 0) * age;   // (and how it is turned, carried on the same way)
-    if (err > 240 && !(mine && d.mineT > 0 && err < 400)) { d.x = tx; d.y = ty; d.rot = tr; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.mineT = 0; d.keep = 0; continue; }
+    if (err > 240 && !(mine && d.mineT > 0 && err < 400)) { d.x = tx; d.y = ty; if (d.k !== 'o') d.rot = tr; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.mineT = 0; d.keep = 0; continue; }
     const calm = mine && s.vx === 0 && s.vy === 0 && t - s.t > 200 && Math.abs(d.vx) + Math.abs(d.vy) < 40;   // (the server has it at rest and so does this device: they agree on where, quickly)
     if (d.soft > 0) d.soft -= dt;
     const k = 1 - Math.exp(-(calm ? (err < 10 ? 2.5 : 8) : !mine && d.soft > 0 && err < 15 ? 2.5 : !mine && d.hold > 0 ? 9 : mine ? (d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : err < 100 ? 12 : 24) : (err < 14 ? 3 : err < 40 ? 7 : 14)) : 26) * dt);
-    d.x += ex * k; d.y += ey * k;
+    const x0 = d.x; d.x += ex * k; d.y += ey * k;
+    if (d.k === 'o') { if (!mine) { d.rot += (d.x - x0) / d.r; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; } continue; }   // (a ball's turning is only how it looks: it always turns the way it is seen to roll, never back toward the server's angle)
     if (!mine) { d.rot += (tr - d.rot) * (1 - Math.exp(-18 * dt)); d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; }
     else if (Math.abs(tr - d.rot) > 0.01) d.rot += (tr - d.rot) * (1 - Math.exp(-(calm ? 8 : err < 14 ? 2 : 5) * dt));
   }
@@ -2101,6 +2105,7 @@ function pubSync(pv) {   // you arrive in a public world: you get what the room 
   if (!pv || !S.world) return;
   const has = new Set(); [['p', pv.props], ['m', pv.misc], ['g', pv.gates], ['c', pv.cps], ['d', pv.dels]].forEach(([k, a]) => (a || []).forEach(q => has.add(pkey(k, q))));
   applyPubBuild(pv);
+  if (S.seed && S.seed.room === S.pubRoom && S.seed.slot === S.slot) { const d = S.seed.d; S.seed = null; for (let i = 0; i < d.length; i += 20) { const msg = { t: "dseed", s: S.slot, d: d.slice(i, i + 20) }; setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 60 + 110 * (i / 20)); } }   // (only taken if the server has no memory of this world)
   sendBulk({ props: S.bought.filter(q => !has.has(pkey('p', q))), gates: S.boughtGates.filter(q => !has.has(pkey('g', q))), misc: S.boughtMisc.filter(q => !has.has(pkey('m', q))), cps: S.boughtCps.filter(q => !has.has(pkey('c', q))), dels: S.dels.filter(q => !has.has(pkey('d', q))) });
 }
 function sendBulk(lists) {   // tell the world what you have built, 25 things at a time (a big build is no big message)
@@ -2139,7 +2144,7 @@ function worldObj() {   // the world exactly as it is right now: everything buil
   }
   const see = w.see.map(q => [r2(q.ang), r2(q.av), r2(q.tilt)]);
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
-  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, rcv: S.rcvN | 0, own: S.own, dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
+  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, room: S.slot < SOLO_BASE ? S.pubRoom : undefined, rcv: S.rcvN | 0, own: S.own, dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
 }
 function saveWorld(force) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
@@ -2164,12 +2169,16 @@ function restoreWorld(slot) {
     (own ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 5 : 4)); addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
     (own ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
     S.rcvN = o.rcv | 0; S.own = o.own && typeof o.own === 'object' ? o.own : deriveOwn();
-    (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } else { d.x = q[1]; d.y = q[2]; d.vx = q[4] || 0; d.vy = q[5] || 0; d.rot = q[6] || 0; d.av = q[7] || 0; if (Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1 || Math.abs(d.av) > 0.05) d.sleep = false; } });
-    (o.see || []).forEach((q, i) => { const e = w.see[i]; if (e && Array.isArray(q)) { e.ang = q[0] || 0; e.av = q[1] || 0; e.tilt = q[2] || 0; } });
-    (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
-    (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
+    const seedD = [];
+    if (pubW) (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d || d.gone) return; seedD.push(q[3] ? [d.uid >>> 0, -1] : [d.uid >>> 0, q[1], q[2], q[6] || 0]); });   // (a public world is shown exactly as the server has it, never from this device's older memory: that memory is only offered to a server that has forgotten everything)
+    if (!pubW) (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } else { d.x = q[1]; d.y = q[2]; d.vx = q[4] || 0; d.vy = q[5] || 0; d.rot = q[6] || 0; d.av = q[7] || 0; if (Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1 || Math.abs(d.av) > 0.05) d.sleep = false; } });
+    if (!pubW) (o.see || []).forEach((q, i) => { const e = w.see[i]; if (e && Array.isArray(q)) { e.ang = q[0] || 0; e.av = q[1] || 0; e.tilt = q[2] || 0; } });
+    if (!pubW) (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
+    if (!pubW) (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
     (o.got || []).forEach(i => { if (i < S.coinGot.length) S.coinGot[i] = 1; });
     (o.dels || []).forEach(q => { if (validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(q.slice()); } });   // what you deleted stays deleted
+    S.seed = null;
+    if (pubW && o.room !== undefined && seedD.length) S.seed = { room: o.room, slot, d: seedD };   // (if the server has forgotten this world, this is how it gets it back)
     S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; purseP.c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
   } catch (e) {}
 }
@@ -3323,7 +3332,7 @@ const SHOP = [
   { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns a tile of ground into lava. It burns anything that touches it.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns a tile of ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
-  { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water into dirt.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
+  { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water and ice into dirt, and lava into rock.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
   { cat: 'terrain', id: 'dig', max: 300, name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal or flag, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first.', c: 600, g: 0, misc: 'ter', ter: 'dig' },
   { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock and melts ice into water. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
@@ -3481,6 +3490,8 @@ function terrainSpot(kind, side, pull) {
     if (x < 1 || x >= w.W - 1 || r < 1 || r >= w.H - 1) return null;
     const t = T(x, r);
     if (kind === 'dig') return (t === 1 || t === 3) && exposed(x, r) ? { row: r, to: 0 } : null;   // dirt, rock and ice only. Lava and water have to be changed first
+    if (kind === 'dirt' && t === 3 && exposed(x, r)) return { row: r, to: 1 };   // dirt over ice: it becomes dirt
+    if (kind === 'dirt' && t === 2 && exposed(x, r)) return { row: r, to: 7 };   // dirt over lava: it cools into rock
     if (kind === 'dirt') return (t === 0 || t === 5) && (T(x, r + 1) === 1 || T(x, r - 1) === 1 || T(x - 1, r) === 1 || T(x + 1, r) === 1) ? { row: r, to: 1 } : null;   // grows out of dirt, side to side (never just a corner)
     if (t === 1 && exposed(x, r)) return { row: r, to: kind === 'lava' ? 2 : kind === 'ice' ? 3 : 5, water: kind === 'water' };
     if (kind === 'lava' && t === 3 && exposed(x, r)) return { row: r, to: 5 };
@@ -4636,11 +4647,11 @@ function dynBin(dv, len, ty) {
   const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (S.slot & 0xFFFF)) return;
   const n = dv.getUint8(3), t = performance.now();
   if (ty === 4 || ty === 6) {
-    const st = ty === 6 ? 23 : 21;
+    const st = ty === 6 ? 23 : 21; S.dynFull = n >= 90;   // (a full packet: more of the world is still on its way)
     for (let k = 0; k < n; k++) {
       const o = 4 + k * st; if (o + st > len) break;
       const d = w.dynBy.get(dv.getUint32(o, true)); if (!d) continue;
-      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0 };
+      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0, jump: !d.sv || t - d.sv.t > 1500 };   // (the first word on something, or the first in a long while: it is simply put there)
     }
   } else {
     for (let k = 0; k < n; k++) {
@@ -4732,7 +4743,7 @@ function onMsg(m) {
       }
       if (inSolo() && !m.priv) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a public world we are no longer going to)
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
-      S.welcomeAt = performance.now(); S.gotDyn = false;
+      S.welcomeAt = performance.now(); S.gotDyn = false; S.dynFull = false; S.gateWait = 0;
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
       if (party && !m.priv) { partyOver(''); return; }
       if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host') sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }); }

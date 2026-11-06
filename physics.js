@@ -21,7 +21,7 @@
     (G.plates || []).forEach(p => w.plates.push({ x: p[0], y: p[1], w: p[2], to: p[3], on: false }));
     (G.btns || []).forEach(p => w.btns.push({ x: p[0], y: p[1], to: p[2], on: false }));
     (G.see || []).forEach(p => w.see.push({ cx: p[0] * TS, cy: p[1] * TS, hl: p[2] * TS, tilt: p[3], ang: p[3], av: 0, tq: 0, uid: hash32('s' + Math.round(p[0] * TS) + ',' + Math.round(p[1] * TS)) }));
-    for (const p of (map.props || [])) addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5);   // pushable yellow things; each player has their own copy (never shared)
+    for (const p of (map.props || [])) addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5).nap = true;   /* (the map's own things start out at rest: each one checks it is held up once somebody comes near) */   // pushable yellow things; each player has their own copy (never shared)
     return w;
   }
 
@@ -223,8 +223,8 @@
      Every crate is a box that can lie at any angle and every ball rolls. Contacts push with impulses and grip with friction
      (so what sits on a crate rides along with it unless it is yanked out from under), weight adds up through a pile, and
      nothing is ever turned to face a particular way: a crate rests on whatever face, edge or slope it comes to rest on. */
-  const PLAYER_WT = 120;   // (on a teeter-totter you weigh as much as two small crates)
-  const SLOP = 0.6, BAUM = 0.3, VEL_IT = 10, POS_IT = 4, PM = 2, PM_PUSH = 4, F_PUSH = 5000;   // PM: how heavy your ball is when it pushes things (a crate weighs 1, a big crate 4)
+  const PLAYER_WT = 240;   // (on a teeter-totter you weigh as much as four small crates)
+  const SLOP = 0.6, BAUM = 0.3, VEL_IT = 10, POS_IT = 4, PM = 4, PM_PUSH = 4, F_PUSH = 6000;   // PM: how heavy your ball is when it pushes things (a crate weighs 1, a big crate 4)
   const LIN_SLEEP = 8, ANG_SLEEP = 0.1, SLEEP_T = 0.5, MAXSPD = 1400, MAXAV = 28;
   const SK_PX = 1, SK_NX = 2, SK_PY = 4, SK_NY = 8;   // tile faces that are hidden by a neighbouring solid tile (never pushed out through those)
   function shapeOf(d) { const c = Math.cos(d.rot || 0), s = Math.sin(d.rot || 0); return { x: d.x, y: d.y, hw: d.hw, hh: d.hh, c, s, ex: Math.abs(c) * d.hw + Math.abs(s) * d.hh, ey: Math.abs(s) * d.hw + Math.abs(c) * d.hh }; }
@@ -314,7 +314,7 @@
     let c = CT[nCT]; if (!c) c = CT[nCT] = {};
     nCT++;
     c.a = a; c.b = b; c.px = h[0]; c.py = h[1]; c.sep = h[2]; c.nx = h[3]; c.ny = h[4]; c.key = key;
-    c.kvx = 0; c.kvy = 0; c.pl = null; c.u = 0; c.mu = 0.5; c.e = 0; c.eT = 1e9; c.eCap = 1e9; c.eMin = 0; c.Pn = 0; c.Pt = 0; c.Pb = 0;
+    c.kvx = 0; c.kvy = 0; c.pl = null; c.u = 0; c.mu = 0.5; c.mk = 0; c.e = 0; c.eT = 1e9; c.eCap = 1e9; c.eMin = 0; c.Pn = 0; c.Pt = 0; c.Pb = 0;
     return c;
   }
   const isBall = d => d.k === 'o';
@@ -325,8 +325,8 @@
   }
   function matTile(c, d, t) {
     const ice = t === 3;
-    if (isBall(d)) { c.mu = ice ? 0.05 : 0.7; if (t === 6) { c.e = 0.85; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 150; } else { c.e = 0.3; c.eT = 250; } }
-    else { c.mu = ice ? 0.04 : 0.5; if (t === 6) { c.e = d.hw > 20 ? 0.5 : 0.68; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 160; } }
+    if (isBall(d)) { c.mu = ice ? 0.02 : 0.7; if (t === 6) { c.e = 0.85; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 150; } else { c.e = 0.3; c.eT = 250; } }
+    else { c.mu = ice ? 0.015 : Math.abs(c.nx) > 0.7 ? 0.8 : 0.55; c.mk = ice ? 0.015 : 0.25; { const h = Math.PI / 2, q = (((d.rot || 0) % h) + h) % h; if (Math.min(q, h - q) > 0.12) c.mk = 0; }   /* (only a crate sliding flat on a face glides; one standing on an edge or corner keeps its grip, so it stays leaning) */ if (t === 6) { c.e = d.hw > 20 ? 0.5 : 0.68; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 160; } }
   }
   function tileContacts(w, d, sh) {
     const ex = d.r || sh.ex, ey = d.r || sh.ey;
@@ -394,6 +394,7 @@
       c.bias = BAUM * inv * Math.max(0, -c.sep - SLOP);
       const vA = a ? velAt(a, c.rax, c.ray) : [c.kvx, c.kvy], vB = velAt(b, c.rbx, c.rby), vn = (vB[0] - vA[0]) * c.nx + (vB[1] - vA[1]) * c.ny;
       const pr = cmPrev.get(c.key);
+      if (c.mk) { const vt0 = (vB[0] - vA[0]) * tx + (vB[1] - vA[1]) * ty; if (Math.abs(vt0) > 40) c.mu = c.mk; }   // (something already sliding slides on more easily than it takes to get it going: a resting crate grips, a pushed one glides)
       c.vb = 0; if (c.e > 0 && !pr && vn < -c.eT) { c.vb = Math.min(c.eCap, -c.e * vn); if (c.vb < c.eMin) c.vb = 0; }   // (a bounce is only for a fresh knock, never for things already pressed together)
       if (pr) { c.Pn = pr[0]; c.Pt = pr[1]; impulse(c, c.Pn * c.nx + c.Pt * tx, c.Pn * c.ny + c.Pt * ty); }
     }
@@ -446,7 +447,7 @@
     stepSee(w, dt);
     for (let i = 0; i < w.pads.length; i++) if (w.pads[i].t > 0) w.pads[i].t = Math.max(0, w.pads[i].t - dt);
     const L = w.dyn; if (!L.length) return;
-    const f = w.focus, FR = 1100, fol = w.follow;
+    const f = w.focus, FR = 1100, fol = w.follow || w.pubWait;
     if (f) {   // a very busy pile near you: only the nearest few dozen things are simulated each moment, so the game stays smooth however much has been built
       const near = [];
       for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0 || d.nap || !nearF(f, d.x, d.y, FR, FR)) continue; near.push(d); }
@@ -460,15 +461,18 @@
       if (d.burn > 0) { if (d.burn < 1e8) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; d.av = 0; d.rot = 0; } } continue; }
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
       if (d.sq > 0) d.sq = Math.max(0, d.sq - dt);
-      if (f && !nearF(f, d.x, d.y, FR + 200, FR + 200)) { d.sleep = true; continue; }   // far from everybody: frozen (saves work)
       put(d);
-      if (d.skip || (f && !nearF(f, d.x, d.y, FR, FR))) { d.sleep = true; continue; }
-      if (fol && d.sv !== undefined && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
+      d._far = !!f && !nearF(f, d.x, d.y, FR, FR);
+      if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if (d.farT > 30) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
+      if (d._far && d.nap) { d.sleep = true; continue; }   // far from everybody and at rest: nothing to work out
+      if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
+      if (fol && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
       d.sleep = false;
-      if (d.nap) { if ((dynTick + i) % 15 === 0) chk.push(d); continue; }
+      if (d.nap) { if (!d._far && (dynTick + i) % 15 === 0) chk.push(d); continue; }
       d._dyn = true; act.push(d);
     }
     for (const d of chk) if (!hasSupport(w, d, H)) { d.nap = false; d.st = 0; d._dyn = true; act.push(d); }   // (something resting checks now and then that it is still held up)
+    w.nAct = act.length;
     if (!act.length) return;
     nCT = 0;
     const shp = new Map(), S = o => { let s = shp.get(o); if (!s) { s = o.r ? { x: o.x, y: o.y } : shapeOf(o); shp.set(o, s); } return s; };
@@ -509,15 +513,16 @@
       if (c.pl && c.Pn > 0) c.pl.tq += (c.Pn / dt) * (60 / GRAV) * c.u;   // (its weight leans the plank: the heavier it is, the harder it presses)
     }
     for (const d of act) {
-      if (isBall(d) && d.gr) {   // rolling friction: a ball coasts, slows down and comes to rest (on ice it keeps sliding)
-        const k = d._ice ? 0.2 : 0.9; d.av *= Math.max(0, 1 - k * dt); if (!d._ice) d.av = approach(d.av, 0, 55 / d.r * dt);
+      if (isBall(d) && d.gr) {   // a ball on the ground rolls: it turns the way it is going (never spun backwards by whatever it touches), coasts, slows down and comes to rest. On ice it slides
+        if (d._ice) d.av *= Math.max(0, 1 - 0.2 * dt);
+        else { d.vx *= Math.max(0, 1 - 0.9 * dt); d.vx = approach(d.vx, 0, 55 * dt); d.av = d.vx / d.r; }
       } else if (!d.gr) d.av *= (1 - 0.05 * dt);
       if (w.see.length) seeGuard(w, d, d.r || shapeOf(d).ey);
       if (w.pads.length && d.gr) { const pd = padAt(w, d.x, d.y + (d.r || shapeOf(d).ey)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; d._pad = pd; } }
       if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
         if (!d.pcd && d.vy > -60 && d.gr) { const ey = d.r || shapeOf(d).ey, pt = portalAt(w, d.x, d.y + ey); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - ey - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
       d.dm = Math.abs(d.x - d._x0) + Math.abs(d.y - d._y0);
-      const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && !d._pl && !d._pad;
+      const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || (!d._pl && !d._pad));
       d.st = still ? (d.st || 0) + dt : 0;
       const burn = lavaOf.has(d);
       if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
@@ -551,14 +556,14 @@
       if (free && d.nap) { if (vn < -60 || (ny > -0.6 && vn < -12)) { d.nap = false; d.st = 0; } else free = false; }   // (something resting is only woken by a real knock or push, not by you standing on it)
       if (vn < 0) {
         const im = free ? d.im : 0, ii = free ? d.ii : 0, e = d.k === 'o' && vn < -120 ? 0.15 : 0;
-        const pm = Math.abs(nx) > 0.5 ? PM_PUSH : PM;   // (you weigh two crates, but you push sideways harder than that: your ball drives itself along)
+        const pm = Math.abs(nx) > 0.5 ? PM_PUSH : PM;   // (you weigh as much as four small crates)
         const K = 1 / pm + im + ii * rn * rn, jf = -(1 + e) * vn / K;
         // rolling into something is a push: it gets going over a moment, together with whatever is riding on it (the more there is, the harder it is to get going). Flying into it is a knock
         const load = Math.max(d.m, (d._N || 0) / GRAV), soft = vn > -330 && b.vx * b.vx + b.vy * b.vy < 330 * 330 && free;
         let cap = 1e9;
         if (soft) {
-          cap = F_PUSH * (b.dt || 1 / 60);   // (how hard you can push: about what two crates weigh)
-          const vlim = MAXV / (1 + 0.3 * (load - 1)), vb = -(vbx * nx + vby * ny), kb = im + ii * rn * rn;   // (and a heavy load only goes so fast)
+          cap = F_PUSH * (b.dt || 1 / 60);   // (how hard you can push)
+          const vlim = MAXV / (1 + 0.2 * (load - 1)), vb = -(vbx * nx + vby * ny), kb = im + ii * rn * rn;   // (and a heavy load only goes so fast)
           if (Math.abs(nx) > 0.5 && kb > 0) cap = Math.min(cap, Math.max(0, (vlim - vb) / kb));
         }
         const j = Math.min(jf, cap);
@@ -569,6 +574,7 @@
           const vt = ((d.vx - (d.av || 0) * ry) - (b.vx + px)) * tx + ((d.vy + (d.av || 0) * rx) - (b.vy + py)) * ty, rt = rx * ty - ry * tx, kt = im + ii * rt * rt;
           if (kt > 0) { const jt = clamp(-vt / kt, -0.4 * j, 0.4 * j); d.vx += jt * tx * im; d.vy += jt * ty * im; d.av += jt * rt * ii; }
         }
+        if (free && d.k === 'o' && d.gr && Math.abs(nx) > 0.5) d.av = d.vx / d.r;   // (a ball you push along the ground rolls the way it is pushed, never skidding on with its old spin)
         if (j < jf) { const vn2 = (b.vx - (d.vx - (d.av || 0) * ry)) * nx + (b.vy - (d.vy + (d.av || 0) * rx)) * ny; if (vn2 < 0) { b.vx -= vn2 * nx; b.vy -= vn2 * ny; } }   // (and you are held back to its pace)
       }
       if (!kin) {

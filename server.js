@@ -279,7 +279,8 @@ function roomWorld(room) {
   (B.gates || []).forEach(q => { try { srvGate(w, q); } catch (e) {} });
   (B.props || []).forEach(q => { try { P.addProp(w, q[0], q[1], q[2]); } catch (e) {} });
   (B.dels || []).forEach(q => { try { P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
-  if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && !d.gone && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = false; d.rest = 0; } } }
+  if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && !d.gone && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } } }
+  room.seedOk = !room.priv && !(room.snapDyn && room.snapDyn.length === w.dyn.length); room.seedBy = null; room.worldAt = Date.now();   // (a world the server has no memory of: the first player who remembers it can tell it where everything was)
   room.snapDyn = undefined;
   room.world = w; room.verN = 1; room.acc = 0; room.dsig = ''; room.tk = 0;
   w.dyn.forEach(d => { d.ver = 1; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; });
@@ -337,16 +338,16 @@ setInterval(() => { const t = Date.now(); for (const [id, r] of rooms) if (r.pla
 function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
   for (const room of rooms.values()) {
-    if (!room.players.size) continue;
     const act = [...room.players.values()].filter(p => p.has && !p.dead && !p.hidden && p.ws.readyState === 1);
-    if (!act.length && !room.world) continue;
+    if (act.length) room.aloneT = 0; else room.aloneT = (room.aloneT || 0) + dtReal;
+    if (!act.length && !(room.world && room.world.nAct > 0 && room.aloneT < 30)) continue;   // (with nobody there, the world still runs until everything that was moving has come to rest, and never more than 30 seconds)
     const w = roomWorld(room), slot = rslot(room) & 0xFFFF;
     room.tk++;
     room.acc += dtReal;
     let n = 0; while (room.acc >= SIMDT && n < 6) { room.acc -= SIMDT; n++; }
     if (room.acc > SIMDT) room.acc = 0;
     for (const p of room.players.values()) if (!act.includes(p)) p.qx = undefined;
-    if (act.length && n) {
+    if (n) {
       w.focus = act.map(p => ({ x: p.x, y: p.y }));
       { const fo = w.focus; w.cand = w.dyn.filter(d => { if (d.burn > 0) return false; for (let i = 0; i < fo.length; i++) if (Math.abs(d.x - fo[i].x) < 420 && Math.abs(d.y - fo[i].y) < 420) return true; return false; }); }
       for (let k = 0; k < n; k++) {
@@ -401,11 +402,15 @@ function simTick() {
       const out = [];
       if (full) {   // (a full look: first time, every few seconds, after moving far, or when more than fit last time)
         p.sv = room.verN; p.sx = p.x; p.sy = p.y; p.more = 0;
-        for (let i = 0; i < w.dyn.length && out.length < 90; i++) {
-          const d = w.dyn[i];
-          if (p.dver.get(d.uid) === d.ver) continue;
-          if (!(d.burn > 0) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue;
-          out.push(d);
+        for (let pass = 0; pass < 2 && out.length < 90; pass++) {   // (what is closest to them first, so the world right around them is there at once)
+          const rx = pass ? 1900 : 800, ry = pass ? 1500 : 600;
+          for (let i = 0; i < w.dyn.length && out.length < 90; i++) {
+            const d = w.dyn[i];
+            if (p.dver.get(d.uid) === d.ver) continue;
+            const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y;   // (something lost is told about where it used to be)
+            if (Math.abs(x - p.x) > rx || Math.abs(y - p.y) > ry) continue;
+            out.push(d); p.dver.set(d.uid, d.ver);
+          }
         }
       } else {   // (otherwise only what changed in this very tick is looked at)
         for (let i = 0; i < chg.length && out.length < 90; i++) {
@@ -621,6 +626,17 @@ wss.on('connection', (ws, req) => {
         return;
       }
       const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
+    } else if (m.t === 'dseed') {   // this server forgot the world (it was restarted with nothing saved): a player who was here tells it where things had ended up, so a knocked-down tower stays knocked down
+      const r = p.room; if (!r || !r.world || !r.seedOk || Date.now() - r.worldAt > 40000 || !Array.isArray(m.d) || m.s !== rslot(r)) return;
+      if (r.seedBy && r.seedBy !== p.id) return; r.seedBy = p.id;
+      const w = r.world;
+      for (const q of m.d.slice(0, 40)) {
+        if (!Array.isArray(q) || !Number.isFinite(q[0])) continue; const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone) continue;
+        if (q[1] === -1) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; }
+        else if (q.length === 4 && q.slice(1).every(Number.isFinite) && q[1] > 0 && q[1] < w.W * P.TS && q[2] > 0 && q[2] < w.H * P.TS) { d.x = q[1]; d.y = q[2]; d.rot = q[3]; d.vx = d.vy = 0; d.av = 0; d.nap = false; d.st = 0; d.burn = 0; }
+        else continue;
+        d.ver = ++r.verN; (r.chg = r.chg || []).push(d); worldsDirty = true;
+      }
     } else if (m.t === 'pdel') {   // somebody deleted something: it is gone for everyone in that world
       const r = p.room, B = bstate(r); if (!B) return;
       const q = okDel(m.g); if (!q || B.dels.length >= ROOM_DELS || !addOk(p)) return;
