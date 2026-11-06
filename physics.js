@@ -135,15 +135,17 @@
       const s = w.see[i]; if (s.gone) continue;
       if (w.follow && s.sa !== undefined) {   // in the shared world the server has the plank: it follows the server's (while you are on it, it also reacts to you at once)
         s.kin = !(s.mineT > 0);
-        const now = typeof performance !== 'undefined' ? performance.now() : Date.now(), age = s.st ? Math.min(0.25, Math.max(0, (now - s.st) / 1000)) : 0.05, ta = s.sa + (s.sav || 0) * age;   // (carried on exactly the way the crates and balls are, so what rests on it moves with it)
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now(), age = s.st ? Math.min(0.25, Math.max(0, (now - s.st) / 1000)) : 0.05, ta = clamp(s.sa + (s.sav || 0) * age, -SEE_MAX, SEE_MAX);   // (carried on exactly the way the crates and balls are, so what rests on it moves with it)
         if (s.mineT > 0) { s.mineT -= dt; s.ang += s.av * dt; s.ang += (ta - s.ang) * Math.min(1, 6 * dt); }
         else { const a0 = s.ang; s.ang += (ta - s.ang) * Math.min(1, 26 * dt); s.av = (s.ang - a0) / dt; }
-      } else { s.kin = false; s.ang += s.av * dt; }
-      s.av *= Math.max(0, 1 - 0.6 * dt);   // (a little friction in the pivot)
-      if (s.ang > SEE_MAX) { s.ang = SEE_MAX; if (s.av > 0) s.av = 0; }
-      if (s.ang < -SEE_MAX) { s.ang = -SEE_MAX; if (s.av < 0) s.av = 0; }
+      } else s.kin = false;   // (a plank of its own turns after the pushing is worked out, together with everything on it: see turnSee)
+      if (s.kin || s.mineT > 0) seeLimit(s);
       if (Math.abs(s.av) > 0.03) s.moving = 0.5; else if (s.moving > 0) s.moving -= dt;   // (while it moves, what rests on it is kept awake)
     }
+  }
+  function seeLimit(s) { if (s.ang > SEE_MAX) { s.ang = SEE_MAX; if (s.av > 0) s.av = 0; } if (s.ang < -SEE_MAX) { s.ang = -SEE_MAX; if (s.av < 0) s.av = 0; } }
+  function turnSee(w, dt) {   // each plank turns as it was pushed this step (after the crates and balls on it were worked out, so it never swings into them)
+    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (s.gone || s.kin || (w.follow && s.sa !== undefined)) continue; s.av *= Math.max(0, 1 - 0.6 * dt); s.ang += s.av * dt; seeLimit(s); }
   }
   function seeBody(b, w, wt) {   // the player (or a round toy) against every nearby plank
     let on = false;
@@ -447,7 +449,7 @@
     dynTick++;
     stepSee(w, dt);
     for (let i = 0; i < w.pads.length; i++) if (w.pads[i].t > 0) w.pads[i].t = Math.max(0, w.pads[i].t - dt);
-    const L = w.dyn; if (!L.length) return;
+    const L = w.dyn; if (!L.length) { turnSee(w, dt); return; }
     const f = w.focus, FR = 1100, fol = w.follow || w.pubWait;
     if (f) {   // a very busy pile near you: only the nearest few dozen things are simulated each moment, so the game stays smooth however much has been built
       const near = [];
@@ -476,7 +478,7 @@
     }
     for (const d of chk) if (!hasSupport(w, d, H)) { d.nap = false; d.st = 0; d._dyn = true; act.push(d); }   // (something resting checks now and then that it is still held up)
     w.nAct = act.length;
-    if (!act.length) return;
+    if (!act.length) { turnSee(w, dt); return; }
     nCT = 0; plankUsed = [];
     const shp = new Map(), S = o => { let s = shp.get(o); if (!s) { s = o.r ? { x: o.x, y: o.y } : shapeOf(o); shp.set(o, s); } return s; };
     const wake = [], lavaOf = new Set();
@@ -541,6 +543,7 @@
     for (const d of act) { if (d.burn > 0) continue; const r = root(d); const q = isl.get(r); const v = d.st || 0; isl.set(r, q === undefined ? v : Math.min(q, v)); }
     for (const d of act) { if (d.burn > 0) continue; if (isl.get(root(d)) >= SLEEP_T) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } }
     for (const o of wake) { o.nap = false; o.st = 0; }
+    turnSee(w, dt);
   }
   // the player's ball against the crates and balls. b.kin: the ball cannot be moved here (the server only follows where each player says they are)
   function collideDyn(b, w) {
@@ -745,7 +748,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 115, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 116, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
