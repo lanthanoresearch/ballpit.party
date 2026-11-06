@@ -1141,8 +1141,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=112"></script>
-<script src="physics.js?v=112"></script>
+<script src="maps.js?v=113"></script>
+<script src="physics.js?v=113"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3843,11 +3843,7 @@ setInterval(() => {
         burst(x, y, ['#ff4d2e', '#ff8a3d', '#ffd23d', '#fff'], 26, 300, 220); ring(x, y, '#ff8a3d', 6, 70, 0.5); ring(x, y, '#ffd23d', 3, 40, 0.35); sfx('lava');
         for (let k = 1; k <= 4; k++) setTimeout(() => { burst(x + (Math.random() - 0.5) * 50, y - Math.random() * 14, ['#ff4d2e', '#ff8a3d', '#ffd23d'], 6, 120, 160); }, 130 * k);   // bubbles
       }
-    }   // anything that falls, rolls or is pushed into the start zone burns up
-    if (d.burn > 0 || !startBlock(d.x, d.y, 0) || (!d.bought && startBlock(d.hx, d.hy, 0))) continue;   // (things the map put there stay)
-    burst(d.x, d.y, ['#fff', '#ff8a3d', '#ffd23d', '#ff4d2e'], 22, 260, 120); ring(d.x, d.y, '#ff8a3d', 6, 64, 0.45); ring(d.x, d.y, '#ffd23d', 3, 36, 0.3); sfx('lava');
-    d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0;
-    wDirty = true;
+    }   // (anything that falls, rolls or is pushed into the start zone burns up: the physics does that, the same here and on the server, and it is shown like lava)
   }
 }, 120);
 addEventListener('storage', e => { if (e.key === WALKEY || e.key === WALKEY_PRIV) { loadPurses(); if (shopOpen) shopRender(); } });   // (another tab of the game spent or earned something)

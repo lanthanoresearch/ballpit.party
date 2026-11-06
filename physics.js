@@ -103,19 +103,25 @@
   }
   /* ---------- seesaws (teeter-totters): a tilting plank that you and the round toys can ride ---------- */
   const SEE_MAX = 0.36, SEE_TH = 6;
-  function seeHit(s, o, r, wt) {   // circle o ({x,y,vx,vy}) vs plank; returns true if standing on it
+  const PLANK_M = 3;   // a teeter-totter's plank is a real lever on its pivot: it weighs as much as three small crates, and only what pushes on it turns it
+  const plankI = s => s.ii || (s.ii = 1 / (PLANK_M * (2 * s.hl) * (2 * s.hl) / 12));
+  function seeHit(s, o, r, m) {   // a round thing o (your ball) against the plank: it stands on it, and its weight and knocks turn it
+    if (s.gone) return false;
     const c = Math.cos(s.ang), sn = Math.sin(s.ang);
     const rx = o.x - s.cx, ry = o.y - s.cy, u = clamp(rx * c + ry * sn, -s.hl, s.hl);
-    const qx = s.cx + u * c, qy = s.cy + u * sn, dx = o.x - qx, dy = o.y - qy, d2 = dx * dx + dy * dy, m = r + SEE_TH;
-    if (d2 >= m * m || (dy > 0 && Math.abs(dy) > m * 0.5 && o.vy < -50)) return false;
+    const qx = s.cx + u * c, qy = s.cy + u * sn, dx = o.x - qx, dy = o.y - qy, d2 = dx * dx + dy * dy, mm = r + SEE_TH;
+    if (d2 >= mm * mm || (dy > 0 && Math.abs(dy) > mm * 0.5 && o.vy < -50)) return false;
     let nx, ny;
     if (d2 < 0.0001) { nx = sn; ny = -c; } else { const d = Math.sqrt(d2); nx = dx / d; ny = dy / d; }
-    if (ny > 0.3) return false;                         // from underneath: pass through (you can jump up through a plank edge case)
-    const pen = m - Math.sqrt(d2); o.x += nx * pen; o.y += ny * pen;
-    const svx = -s.av * (qy - s.cy), svy = s.av * (qx - s.cx);   // the plank's own movement at that spot
-    const vn = (o.vx - svx) * nx + (o.vy - svy) * ny;
-    if (vn < 0) { o.vx -= vn * nx; o.vy -= vn * ny; }
-    if (!o.ghost) s.tq += wt * u;
+    if (ny > 0.3) return false;                         // from underneath: pass through
+    const pen = mm - Math.sqrt(d2); if (!o.kin) { o.x += nx * pen; o.y += ny * pen; }
+    const px = qx - s.cx, py = qy - s.cy, svx = -s.av * py, svy = s.av * px;   // the plank's own movement at that spot
+    const vn = (o.vx - svx) * nx + (o.vy - svy) * ny, rn = px * ny - py * nx, ii = s.kin ? 0 : plankI(s);
+    let j = 0;
+    const g1 = GRAV * (o.dt || 1 / 60);   // (what one step of falling adds)
+    if (ny < -0.35 && vn > -3 * g1) { if (vn < 0 && !o.kin) { o.vx -= vn * nx; o.vy -= vn * ny; } j = m * g1; }   // standing on it: you stay on it, and your whole weight presses on it
+    else if (vn < 0) { j = -vn / (1 / m + ii * rn * rn); if (!o.kin) { o.vx += j * nx / m; o.vy += j * ny / m; } }   // landing on it or knocking it: you and the plank share the knock
+    if (!o.ghost && j > 0 && ii) s.av -= ii * rn * j;
     return ny < -0.35;
   }
   function nearF(f, x, y, rx, ry) {   // is this spot near the point of interest (or any of them: the server watches everybody in a world)?
@@ -124,35 +130,25 @@
     return Math.abs(x - f.x) <= rx && Math.abs(y - f.y) <= ry;
   }
   function distF(f, d) { if (!Array.isArray(f)) return Math.abs(d.x - f.x) + Math.abs(d.y - f.y); let m = 1e9; for (let i = 0; i < f.length; i++) m = Math.min(m, Math.abs(d.x - f[i].x) + Math.abs(d.y - f[i].y)); return m; }
-  function seeTarget(s, dt) {   // where the plank wants to lean: the weight on it, smoothed over a few steps (so a ball that lifts off and lands again every other step cannot make it chatter)
-    s.tqs = (s.tqs || 0) + (s.tq - (s.tqs || 0)) * Math.min(1, 5 * dt);
-    const wgt = Math.min(1, Math.abs(s.tqs) / 80);
-    return s.tilt * (1 - wgt) + clamp(s.tqs / 3600, -1, 1) * SEE_MAX * wgt;
-  }
-  function stepSee(w, dt) {
+  function stepSee(w, dt) {   // each plank turns on its pivot as it was pushed, and stops where it meets the ground
     for (let i = 0; i < w.see.length; i++) {
-      const s = w.see[i], f = w.focus;
-      if (f && !nearF(f, s.cx, s.cy, 900, 700) && !(w.follow && s.sa !== undefined)) continue;
-      if (w.follow && s.sa !== undefined) {   // a plank in the shared world: it follows the server's plank (and while you are on it, it also reacts at once, then agrees with the server)
-        const a0 = s.ang;
-        if (s.mineT > 0) {
-          s.mineT -= dt;
-          const target = seeTarget(s, dt);
-          s.ang += (target - s.ang) * Math.min(1, 3.2 * dt);
-          s.ang += (s.sa - s.ang) * Math.min(1, 16 * dt);
-        } else s.ang += (s.sa + (s.sav || 0) * 0.04 - s.ang) * Math.min(1, 20 * dt);
-        s.av = (s.ang - a0) / dt; s.tq = 0; continue;
-      }
-      const target = seeTarget(s, dt);
-      const a0 = s.ang; s.ang += (target - s.ang) * Math.min(1, 3.2 * dt);
-      s.av = (s.ang - a0) / dt; s.tq = 0;
+      const s = w.see[i]; if (s.gone) continue;
+      if (w.follow && s.sa !== undefined) {   // in the shared world the server has the plank: it follows the server's (while you are on it, it also reacts to you at once)
+        s.kin = !(s.mineT > 0);
+        if (s.mineT > 0) { s.mineT -= dt; s.ang += s.av * dt; s.ang += (s.sa + (s.sav || 0) * 0.05 - s.ang) * Math.min(1, 6 * dt); }
+        else { const a0 = s.ang; s.ang += (s.sa + (s.sav || 0) * 0.05 - s.ang) * Math.min(1, 20 * dt); s.av = (s.ang - a0) / dt; }
+      } else { s.kin = false; s.ang += s.av * dt; }
+      s.av *= Math.max(0, 1 - 0.6 * dt);   // (a little friction in the pivot)
+      if (s.ang > SEE_MAX) { s.ang = SEE_MAX; if (s.av > 0) s.av = 0; }
+      if (s.ang < -SEE_MAX) { s.ang = -SEE_MAX; if (s.av < 0) s.av = 0; }
+      if (Math.abs(s.av) > 0.03) s.moving = 0.5; else if (s.moving > 0) s.moving -= dt;   // (while it moves, what rests on it is kept awake)
     }
   }
   function seeBody(b, w, wt) {   // the player (or a round toy) against every nearby plank
     let on = false;
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i]; if (Math.abs(s.cx - b.x) > s.hl + 40 || Math.abs(s.cy - b.y) > s.hl + 60) continue;
-      if (seeHit(s, b, b.r || R, wt)) {
+      if (seeHit(s, b, b.r || R, wt / 60)) {
         on = true; b.onSee = s; if (w.follow && b.r === undefined && !b.ghost) s.mineT = 0.6;
         const sl = Math.sin(s.ang);
         if (b.r === undefined) b.flat = Math.abs(sl) <= 0.06;   // on a tilted plank you slide; on a level one you grip
@@ -362,8 +358,9 @@
       const s = w.see[i], ext = d.r || Math.max(sh.ex, sh.ey);
       if (Math.abs(s.cx - d.x) > s.hl + ext + 14 || Math.abs(s.cy - d.y) > s.hl + ext + 14) continue;
       const c = Math.cos(s.ang), sn = Math.sin(s.ang), ux = sn, uy = -c;
-      const kv = (x, y) => [-s.av * (y - s.cy), s.av * (x - s.cx)];
-      const add = (h, key, u) => { const q = addC(null, d, h, key); q.pl = s; q.u = clamp(u, -s.hl, s.hl); q.mu = 0.7; const v = kv(h[0], h[1]); q.kvx = v[0]; q.kvy = v[1]; n++; };
+      const pa = s._px || (s._px = { x: 0, y: 0, vx: 0, vy: 0, av: 0, _im: 0, _ii: 0, _bx: 0, _by: 0, _bw: 0, uid: s.uid });
+      if (pa.t !== dynTick) { pa.t = dynTick; pa.x = s.cx; pa.y = s.cy; pa.av = s.av; pa._ii = s.kin || (Math.abs(s.ang) >= SEE_MAX - 1e-6 && !s.leave) ? 0 : plankI(s); pa._bx = pa._by = pa._bw = 0; pa.s = s; plankUsed.push(pa); }   // (the plank takes part in the pushing like any other thing, turning on its pivot)
+      const add = (h, key, u) => { const q = addC(pa, d, h, key); q.pl = s; q.u = clamp(u, -s.hl, s.hl); q.mu = 0.7; n++; };
       const vs = isBall(d) ? [[d.x, d.y, d.r]] : [[sh.x + sh.c * sh.hw - sh.s * sh.hh, sh.y + sh.s * sh.hw + sh.c * sh.hh, 0], [sh.x - sh.c * sh.hw - sh.s * sh.hh, sh.y - sh.s * sh.hw + sh.c * sh.hh, 0], [sh.x + sh.c * sh.hw + sh.s * sh.hh, sh.y + sh.s * sh.hw - sh.c * sh.hh, 0], [sh.x - sh.c * sh.hw + sh.s * sh.hh, sh.y - sh.s * sh.hw - sh.c * sh.hh, 0]];
       if ((d.x - s.cx) * ux + (d.y - s.cy) * uy < 0) continue;   // (only from above: it is a plank to stand on)
       for (let k = 0; k < vs.length; k++) {
@@ -382,6 +379,8 @@
     }
     return n;
   }
+  let plankUsed = [];
+  const plankMoving = (w, d) => w.see.some(s => s.moving > 0 && Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 60);
   function velAt(o, rx, ry) { return [o.vx - o.av * ry, o.vy + o.av * rx]; }
   function solveContacts(dt) {
     const inv = 1 / dt, cm = new Map();
@@ -441,6 +440,7 @@
     for (const o of near) { if (o === d || o.burn > 0) continue; const e = o.r || Math.max(o.hw, o.hh) * 1.42; if (Math.abs(o.x - d.x) < e + ex && o.y > d.y && o.y - e < d.y + ey + 4) return true; }
     return false;
   }
+  function inStart(w, x, y) { const st = w.map && w.map.start; if (!st) return false; const sx = Math.floor(st[0] / TS), sy = Math.floor(st[1] / TS); return x >= (sx - 2) * TS && x <= (sx + 3) * TS && y >= (sy - 3) * TS && y <= (sy + 2) * TS; }   // the start zone (5 x 5 blocks around where everybody appears)
   let dynTick = 0; const DYN_BUDGET = 160, CELL = 64;
   function stepDyn(w, dt) {
     dynTick++;
@@ -453,7 +453,7 @@
       for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0 || d.nap || !nearF(f, d.x, d.y, FR, FR)) continue; near.push(d); }
       if (near.length > DYN_BUDGET) { near.sort((a, b) => distF(f, a) - distF(f, b)); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }
     }
-    const act = [], chk = [], grid = new Map();
+    const act = [], chk = [], grid = new Map(), movingP = w.see.filter(s => s.moving > 0 && !s.gone);
     const put = d => { const e = d.r || Math.max(d.hw, d.hh) * 1.42; for (let cx = Math.floor((d.x - e) / CELL); cx <= Math.floor((d.x + e) / CELL); cx++) for (let cy = Math.floor((d.y - e) / CELL); cy <= Math.floor((d.y + e) / CELL); cy++) { const k = (cx + 4) * 65536 + cy + 4; let g = grid.get(k); if (!g) grid.set(k, g = []); g.push(d); } };
     const H = (x0, y0, x1, y1) => { const r = []; for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) { const g = grid.get((cx + 4) * 65536 + cy + 4); if (g) for (const o of g) if (r.indexOf(o) < 0) r.push(o); } return r; };
     for (let i = 0; i < L.length; i++) {
@@ -468,13 +468,14 @@
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
       if (fol && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
       d.sleep = false;
+      if (d.nap && movingP.length && movingP.some(s => Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 80)) { d.nap = false; d.st = 0; }   // (a plank that moves wakes what rests on it)
       if (d.nap) { if (!d._far && (dynTick + i) % 15 === 0) chk.push(d); continue; }
       d._dyn = true; act.push(d);
     }
     for (const d of chk) if (!hasSupport(w, d, H)) { d.nap = false; d.st = 0; d._dyn = true; act.push(d); }   // (something resting checks now and then that it is still held up)
     w.nAct = act.length;
     if (!act.length) return;
-    nCT = 0;
+    nCT = 0; plankUsed = [];
     const shp = new Map(), S = o => { let s = shp.get(o); if (!s) { s = o.r ? { x: o.x, y: o.y } : shapeOf(o); shp.set(o, s); } return s; };
     const wake = [], lavaOf = new Set();
     for (const d of act) {   // gravity, then every contact
@@ -498,6 +499,10 @@
       }
     }
     solveContacts(dt);
+    for (const pa of plankUsed) { const sp = pa.s; sp._T = 0; if (!sp.kin && pa._ii) sp.av = pa.av; }
+    for (let k = 0; k < nCT; k++) { const c = CT[k]; if (!c.pl) continue; const tx = c.ny, ty = -c.nx, Px = c.Pn * c.nx + c.Pt * tx, Py = c.Pn * c.ny + c.Pt * ty; c.pl._T += -(c.rax * Py - c.ray * Px); }
+    for (const pa of plankUsed) { const sp = pa.s; sp.leave = (sp.ang >= SEE_MAX - 1e-6 && sp._T < -1) || (sp.ang <= -SEE_MAX + 1e-6 && sp._T > 1); }   // (a plank resting at one end only lifts off when what is on it now pushes it the other way)
+    plankUsed = [];
     for (const d of act) {   // move
       if (Math.abs(d.vx) > MAXSPD) d.vx = Math.sign(d.vx) * MAXSPD; if (Math.abs(d.av) > MAXAV) d.av = Math.sign(d.av) * MAXAV;
       d._x0 = d.x; d._y0 = d.y;
@@ -510,7 +515,6 @@
       if (c.a && c.ny > 0.5) { c.a.gr = true; c.a.touch = true; }
       if (c.a && Math.abs(c.nx) > 0.5 && c.Pn > 0) { c.a.touch = true; c.b.touch = true; }
       if (c.ny < -0.5 && c.Pn > 0) { c.b._N += -c.ny * c.Pn / dt; c.b._F += c.mu * c.Pn / dt; }   // (how hard it is pressed onto what is under it, and how much that grips)
-      if (c.pl && c.Pn > 0) c.pl.tq += (c.Pn / dt) * (60 / GRAV) * c.u;   // (its weight leans the plank: the heavier it is, the harder it presses)
     }
     for (const d of act) {
       if (isBall(d) && d.gr) {   // a ball on the ground rolls: it turns the way it is going (never spun backwards by whatever it touches), coasts, slows down and comes to rest. On ice it slides
@@ -522,10 +526,10 @@
       if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
         if (!d.pcd && d.vy > -60 && d.gr) { const ey = d.r || shapeOf(d).ey, pt = portalAt(w, d.x, d.y + ey); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - ey - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
       d.dm = Math.abs(d.x - d._x0) + Math.abs(d.y - d._y0);
-      const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || (!d._pl && !d._pad));
+      const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || ((!d._pl || !plankMoving(w, d)) && !d._pad));
       d.st = still ? (d.st || 0) + dt : 0;
       const burn = lavaOf.has(d);
-      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
+      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || (inStart(w, d.x, d.y) && !inStart(w, d.hx, d.hy))) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || inStart(w, d.x, d.y) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
     }
     // a pile goes to sleep together, once every piece of it has been still for a moment
     const par = new Map(), root = d => { let r = d; while (par.get(r) !== r) r = par.get(r); return r; };
@@ -538,7 +542,7 @@
   }
   // the player's ball against the crates and balls. b.kin: the ball cannot be moved here (the server only follows where each player says they are)
   function collideDyn(b, w) {
-    const L = w.cand || w.dyn, kin = !!b.kin;
+    const L = w.cand || w.dyn, kin = !!b.kin; let sL = 0, sR = 0, sU = 0;   // (held up from the left and from the right at once: sitting in a V)
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
       if (d.burn > 0 || Math.abs(d.x - b.x) > 110 || Math.abs(d.y - b.y) > 110) continue;
@@ -582,15 +586,15 @@
           const sh = d.r ? null : shapeOf(d), ex = d.r || sh.ex, ey = d.r || sh.ey;
           if (!boxHits(w, d.x - nx * pen, d.y - ny * pen, ex - 2, ey - 2)) { d.x -= nx * pen; d.y -= ny * pen; } else { b.x += nx * pen; b.y += ny * pen; if (b.vy < 0) b.vy = 0; }
         } else { b.x += nx * pen; b.y += ny * pen; }
-      } else if (free && !d.nap && pen > 1.5) {   // (here the ball cannot be moved: the thing is eased out of its way instead)
-        const want = Math.min(300, (pen - 1.5) * 12), cur = -(d.vx * nx + d.vy * ny); if (cur < want) { d.vx -= nx * (want - cur); d.vy -= ny * (want - cur); }
-      }
+      }   // (on the server a player only overlapping something, without moving into it, never moves it: their device and the server can differ by a pixel or two, and that must not make things creep)
+      if (ny < 0.3) { if (nx < -0.1) sL = 1; else if (nx > 0.1) sR = 1; if (ny < -0.3) sU = 1; }
       if (ny < -0.6) {   // standing on it
         b.ground = true; if (ny < -0.92) { b.flat = true; b.gType = 1; }
         if (d.k === 'b' && (d.kind === 5 || d.kind === 6) && vy0 >= 0) { b.bnc = true; if (d.kind === 6) b.bncV = SUPER_BOUNCE; d.sq = 0.25; }   // a spring: land on it (or roll onto it) and it throws you up (a super spring: very high)
       }
       d.touch = true;
     }
+    if (sL && sR && sU) { b.ground = true; b.flat = true; b.gType = 1; }   // (resting in a V between two things is as good as level ground: you sit still)
   }
 
   const SUPER_BOUNCE = 1900;   // a super spring throws you about 900px up (more than 20 tiles)

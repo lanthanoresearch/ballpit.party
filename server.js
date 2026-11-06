@@ -239,7 +239,7 @@ function findRoom() {
     if (r && r.players.size >= MAX_PLAYERS) { full.push(id); continue; }
     if (r) return { room: r, full };
     const nr = { id, players: new Map(), finishers: [] };
-    { const sv = savedWorlds.get(id); if (sv) { if (sv.build) nr.build = sv.build; nr.snapDyn = sv.dyn; } }   // (a world that was here before comes back as it was)
+    { const sv = savedWorlds.get(id); if (sv) { if (sv.build) nr.build = sv.build; nr.snapDyn = sv.dyn; nr.snapSee = sv.see; } }   // (a world that was here before comes back as it was)
     rooms.set(id, nr);
     return { room: nr, full };
   }
@@ -279,9 +279,13 @@ function roomWorld(room) {
   (B.gates || []).forEach(q => { try { srvGate(w, q); } catch (e) {} });
   (B.props || []).forEach(q => { try { P.addProp(w, q[0], q[1], q[2]); } catch (e) {} });
   (B.dels || []).forEach(q => { try { P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
-  if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && !d.gone && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } } }
-  room.seedOk = !room.priv && !(room.snapDyn && room.snapDyn.length === w.dyn.length); room.seedBy = null; room.worldAt = Date.now();   // (a world the server has no memory of: the first player who remembers it can tell it where everything was)
-  room.snapDyn = undefined;
+  let restored = false;
+  if (room.snapDyn && room.snapDyn.length && Array.isArray(room.snapDyn.find(q => q)) && room.snapDyn.find(q => q).length >= 4) {   // (saved by name: each thing finds its own entry)
+    for (const q of room.snapDyn) { if (!q) continue; const d = w.dynBy.get(q[3] >>> 0); if (!d || d.gone) continue; restored = true; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; continue; } if (Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } }
+  } else if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && !d.gone && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } } }
+  if (Array.isArray(room.snapSee)) for (const q of room.snapSee) { const e = Array.isArray(q) && w.see.find(o => o.uid === (q[0] >>> 0)); if (e && Number.isFinite(q[1])) e.ang = q[1]; }
+  room.seedOk = !room.priv && !restored && !(room.snapDyn && room.snapDyn.length === w.dyn.length); room.seedBy = null; room.worldAt = Date.now();   // (a world the server has no memory of: the first player who remembers it can tell it where everything was)
+  room.snapDyn = undefined; room.snapSee = undefined;
   room.world = w; room.verN = 1; room.acc = 0; room.dsig = ''; room.tk = 0;
   w.dyn.forEach(d => { d.ver = 1; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; });
   w.see.forEach(s => { s.lang = s.ang; });
@@ -323,8 +327,8 @@ try {
   console.log('Restored ' + savedWorlds.size + ' worlds from ' + WORLD_FILE);
 } catch (e) {}
 function snapRoom(r) {
-  const w = r.world; if (!w) return r.snapDyn !== undefined ? { build: r.build || null, dyn: r.snapDyn } : null;
-  return { build: r.build || null, dyn: w.dyn.map(d => d.burn >= 1e9 ? null : [Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.rot * 1000) / 1000]) };
+  const w = r.world; if (!w) return r.snapDyn !== undefined ? { build: r.build || null, dyn: r.snapDyn, see: r.snapSee } : null;
+  return { build: r.build || null, dyn: w.dyn.map(d => d.burn >= 1e9 ? [0, 0, 0, d.uid >>> 0, 1] : [Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.rot * 1000) / 1000, d.uid >>> 0]), see: w.see.map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]) };   // (each thing by its name, so nothing can ever be put back in another's place; teeter-totters too)
 }
 function keepWorlds(sync) {
   for (const [id, r] of rooms) if (!r.priv && (r.world || r.snapDyn !== undefined)) { savedWorlds.set(id, snapRoom(r)); worldsDirty = true; }
