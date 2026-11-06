@@ -15,7 +15,7 @@
         for (let xx = r[0]; xx < r[0] + r[2]; xx++) if (xx >= 0 && xx < W) grid[yy * W + xx] = r[4];
       }
     }
-    const w = { W, H, grid, map, dyn: [], dynBy: new Map(), follow: false, doors: [], plates: [], btns: [], see: [], pads: [], portals: [], ev: [], focus: null };
+    const w = { W, H, grid, map, dyn: [], dynBy: new Map(), follow: false, doors: [], plates: [], btns: [], see: [], pads: [], portals: [], ropes: [], ev: [], focus: null };
     const G = map.gadgets || {};
     (G.doors || []).forEach((d, i) => { const o = { id: i, uid: hash32('d' + i), x: d[0], y: d[1], w: d[2], h: d[3], open: false, latched: false }; w.doors.push(o); setDoorTiles(w, o, false); });
     (G.plates || []).forEach(p => w.plates.push({ x: p[0], y: p[1], w: p[2], to: p[3], on: false }));
@@ -271,7 +271,7 @@
      nothing is ever turned to face a particular way: a crate rests on whatever face, edge or slope it comes to rest on. */
   const PLAYER_WT = 240;   // (on a teeter-totter you weigh as much as four small crates)
   const SPEC = 24;   // (how far ahead a plank looks for what it is about to hit)
-  const SLOP = 0.6, BAUM = 0.3, VEL_IT = 10, POS_IT = 4, PM = 4, PM_PUSH = 4, F_PUSH = 6000;   // PM: how heavy your ball is when it pushes things (a crate weighs 1, a big crate 4)
+  const SLOP = 0.6, BAUM = 0.3, VEL_IT = 10, POS_IT = 4, PM = 4, PM_PUSH = 4, F_PUSH = 9000;   // PM: how heavy your ball is when it pushes things (a crate weighs 1, a big crate 4)
   const LIN_SLEEP = 8, ANG_SLEEP = 0.1, SLEEP_T = 0.5, MAXSPD = 1400, MAXAV = 28;
   const SK_PX = 1, SK_NX = 2, SK_PY = 4, SK_NY = 8;   // tile faces that are hidden by a neighbouring solid tile (never pushed out through those)
   function shapeOf(d) { const c = Math.cos(d.rot || 0), s = Math.sin(d.rot || 0); return { x: d.x, y: d.y, hw: d.hw, hh: d.hh, c, s, ex: Math.abs(c) * d.hw + Math.abs(s) * d.hh, ey: Math.abs(s) * d.hw + Math.abs(c) * d.hh }; }
@@ -361,17 +361,19 @@
     let c = CT[nCT]; if (!c) c = CT[nCT] = {};
     nCT++;
     c.a = a; c.b = b; c.px = h[0]; c.py = h[1]; c.sep = h[2]; c.nx = h[3]; c.ny = h[4]; c.key = key;
-    c.kvx = 0; c.kvy = 0; c.pl = null; c.u = 0; c.mu = 0.5; c.mk = 0; c.e = 0; c.eT = 1e9; c.eCap = 1e9; c.eMin = 0; c.Pn = 0; c.Pt = 0; c.Pb = 0;
+    c.kvx = 0; c.kvy = 0; c.pl = null; c.rp = null; c.u = 0; c.mu = 0.5; c.mk = 0; c.e = 0; c.eT = 1e9; c.eCap = 1e9; c.eMin = 0; c.Pn = 0; c.Pt = 0; c.Pb = 0;
     return c;
   }
   const isBall = d => d.k === 'o';
   function matPair(c, a, b) {   // what two touching things are like together
     const ba = isBall(a), bb = isBall(b);
+    if (!ba && (a.kind === 5 || a.kind === 6) && c.ny < -0.6) { b._spr = a.kind === 6 ? 2 : 1; a.sq = 0.25; } else if (!bb && (b.kind === 5 || b.kind === 6) && c.ny > 0.6) { a._spr = b.kind === 6 ? 2 : 1; b.sq = 0.25; }   // (a spring crate throws whatever lands or rests on top of it)
     if (ba || bb) { c.mu = (a.kind === 4 || b.kind === 4) ? 0.12 : 0.35; c.e = 0.15; c.eT = 160; }
     else c.mu = 0.6;
   }
   function matTile(c, d, t) {
     const ice = t === 3;
+    if (t === 6 && c.ny < -0.6) d._spr = Math.max(d._spr || 0, 1);   // (a spring in the ground throws whatever is on it)
     if (isBall(d)) { c.mu = ice ? 0.02 : 0.7; if (t === 6) { c.e = 0.85; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 150; } else { c.e = 0.3; c.eT = 250; } }
     else { c.mu = ice ? 0.015 : Math.abs(c.nx) > 0.7 ? 0.8 : 0.55; c.mk = ice ? 0.015 : 0.25; { const h = Math.PI / 2, q = (((d.rot || 0) % h) + h) % h; if (Math.min(q, h - q) > 0.35) c.mk = 0; }   /* (only a crate sliding flat on a face glides; one standing on an edge or corner keeps its grip, so it stays leaning) */ if (t === 6) { c.e = d.hw > 20 ? 0.5 : 0.68; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 160; } }
   }
@@ -485,9 +487,90 @@
     if (a) { a.vx -= Px * a._im; a.vy -= Py * a._im; a.av -= a._ii * (c.rax * Py - c.ray * Px); }
     b.vx += Px * b._im; b.vy += Py * b._im; b.av += b._ii * (c.rbx * Py - c.rby * Px);
   }
+  /* ---------- rope bridges: tied to the edges of two pieces of dirt, sagging, swinging and giving under whatever is on them ---------- */
+  const ROPE_K = 2200, ROPE_C = 10, ROPE_LOAD = 900, ROPE_SEG = 20;
+  function ropeQ(q) { let a = q[1], ra = q[2], b = q[3], rb = q[4]; if (a > b) { const t = a; a = b; b = t; const u = ra; ra = rb; rb = u; } return [a, ra, b, rb]; }
+  function addRope(w, q) {   // ['rope', column, row, column, row]: the two pieces of dirt it is tied to (their top edges, facing each other)
+    const [a, ra, b, rb] = ropeQ(q), ax = (a + 1) * TS, ay = ra * TS, bx = b * TS, by = rb * TS, L = bx - ax; if (L < TS) return null;
+    const n = Math.max(2, Math.round(L / ROPE_SEG));
+    const r = { ax, ay, bx, by, L, n, sag: Math.min(TS * 0.9, L * 0.05), o: new Float64Array(n + 1), v: new Float64Array(n + 1), ld: new Float64Array(n + 1), lf: new Float64Array(n + 1), uid: hash32('r' + a + ',' + ra + ',' + b + ',' + rb), q: [a, ra, b, rb], gone: false, moving: 0 };
+    (w.ropes = w.ropes || []).push(r); return r;
+  }
+  function ropeRest(r, u) { return r.ay + (r.by - r.ay) * u + r.sag * 4 * u * (1 - u); }   // where it hangs with nothing on it
+  function ropeAt(r, x) {   // the walking surface at x: its height, slope, and how fast it is moving there
+    const u = clamp((x - r.ax) / r.L, 0, 1), f = u * r.n, i = Math.min(r.n - 1, Math.floor(f)), t = f - i;
+    const y0 = ropeRest(r, i / r.n) + r.o[i], y1 = ropeRest(r, (i + 1) / r.n) + r.o[i + 1];
+    return { y: y0 + (y1 - y0) * t, s: (y1 - y0) / (r.L / r.n), vy: r.v[i] + (r.v[i + 1] - r.v[i]) * t, i, t };
+  }
+  function ropeLoad(r, x, wt) { const u = clamp((x - r.ax) / r.L, 0, 1), f = u * r.n, i = Math.min(r.n - 1, Math.floor(f)), t = f - i; r.ld[i] += wt * (1 - t); r.ld[i + 1] += wt * t; }
+  function stepRopes(w, dt) {
+    if (!w.ropes || !w.ropes.length) return;
+    for (const r of w.ropes) {
+      if (r.gone) continue;
+      for (const d of w.dyn) {   // whatever rests on it weighs on it (worked out the same way everywhere, from where things are)
+        if (d.burn > 0 || d.gone || d._dyn || d.x < r.ax - 40 || d.x > r.bx + 40) continue;   // (what is moving presses on it through its contacts, see below; what is at rest by where it lies)
+        const e = d.r || Math.max(d.hw, d.hh), bot = d.y + (d.r || shapeOf(d).ey), s = ropeAt(r, d.x);
+        if (d.x > r.ax && d.x < r.bx && bot > s.y - 6 && bot < s.y + 14 && d.y < s.y && d.vy > -150) ropeLoad(r, d.x, d.m || 1);
+      }
+      for (let i = 0; i <= r.n; i++) r.lf[i] += (r.ld[i] - r.lf[i]) * Math.min(1, dt * 12);   // (the weight on it, smoothed over a few steps: it settles under what rests on it instead of trembling)
+      let mv = 0; const h = dt / 2;
+      for (let k = 0; k < 2; k++) for (let i = 1; i < r.n; i++) {
+        const acc = ROPE_K * (r.o[i - 1] + r.o[i + 1] - 2 * r.o[i]) + r.lf[i] * ROPE_LOAD - ROPE_C * r.v[i];
+        r.v[i] = clamp(r.v[i] + acc * h, -400, 400); r.o[i] = clamp(r.o[i] + r.v[i] * h, -30, 90); mv = Math.max(mv, Math.abs(r.v[i]));
+      }
+      if (mv < 12) for (let i = 1; i < r.n; i++) r.v[i] *= mv < 4 ? 0.5 : 0.85;   // (small swaying dies away soon, so a bridge with things on it comes to rest)
+      r.ld.fill(0); r.moving = mv > 10 ? 0.5 : Math.max(0, r.moving - dt);
+    }
+  }
+  function ropeBody(b, w, wt) {   // the player (or a player's point on the server) on a rope bridge: you stand on it from above, and pass up through it from below
+    if (!w.ropes || !w.ropes.length) return false;
+    let on = false;
+    for (const r of w.ropes) {
+      if (r.gone || b.x < r.ax - 2 || b.x > r.bx + 2) continue;
+      const s = ropeAt(r, b.x), foot = b.y + R, py = b._ropeY === undefined ? b.y : b._ropeY;
+      if (foot < s.y - 2 || foot > s.y + 26 || py + R > s.y + 12 || b.vy < s.vy - 60) continue;   // (above it, or coming down through it this moment: never from below)
+      if (!b.kin) { b.y = s.y - R; if (b.vy > s.vy) b.vy = s.vy; b.ground = true; b.gType = 1; b.flat = Math.abs(s.s) < 0.12; if (!b.flat) b.vx += s.s * 380 * (b.dt || 1 / 60); }
+      ropeLoad(r, b.x, wt); on = true;
+    }
+    b._ropeY = b.y;
+    return on;
+  }
+  function ropeContacts(w, d, sh) {   // a crate or ball on a rope bridge: it rests on it and rides it as it swings (only from above)
+    let n = 0;
+    for (const r of w.ropes) {
+      if (r.gone) continue;
+      const e = d.r || sh.ex; if (d.x + e < r.ax || d.x - e > r.bx) continue;
+      const sc = ropeAt(r, d.x); if (d.y > sc.y) continue;   // (its middle is under it: it is not on it)
+      const pts = d.r ? [[d.x, d.y + d.r]] : [[sh.x - sh.c * sh.hw + sh.s * sh.hh, sh.y - sh.s * sh.hw - sh.c * sh.hh], [sh.x + sh.c * sh.hw + sh.s * sh.hh, sh.y + sh.s * sh.hw - sh.c * sh.hh], [sh.x + sh.c * sh.hw - sh.s * sh.hh, sh.y + sh.s * sh.hw + sh.c * sh.hh], [sh.x - sh.c * sh.hw - sh.s * sh.hh, sh.y - sh.s * sh.hw + sh.c * sh.hh]];
+      for (let k = 0; k < pts.length; k++) {
+        const px = pts[k][0], py = pts[k][1]; if (px < r.ax || px > r.bx) continue;
+        const s = ropeAt(r, px), L = Math.sqrt(1 + s.s * s.s), nx = s.s / L, ny = -1 / L, sep = (s.y - py) / L;
+        if (sep > SPEC || sep < -30) continue;
+        const c = addC(null, d, [px, py, sep, nx, ny], 'r' + r.uid + ':' + k); c.mu = 0.75; c.kvy = clamp(s.vy, -120, 120); c.rp = r; n++;   // (it rides the rope as it swings, but is never flung off it)
+      }
+    }
+    return n;
+  }
+  function ropeOk(w, q) {   // can a rope bridge go here? both ends on the edge of dirt, at most 20 blocks across and less than 6 up or down, and nothing at all in the way
+    if (!Array.isArray(q) || q.length !== 5 || !q.slice(1).every(Number.isFinite)) return false;
+    const [a, ra, b, rb] = ropeQ(q), T = (x, y) => tile(w, x, y);
+    if (b - a - 1 < 1 || b - a - 1 > 20 || Math.abs(rb - ra) >= 6) return false;
+    if (T(a, ra) !== 1 || T(a, ra - 1) !== 0 || T(a + 1, ra) !== 0 || T(b, rb) !== 1 || T(b, rb - 1) !== 0 || T(b - 1, rb) !== 0) return false;
+    const r = { ax: (a + 1) * TS, ay: ra * TS, bx: b * TS, by: rb * TS }; r.L = r.bx - r.ax; r.sag = Math.min(TS * 0.9, r.L * 0.05);
+    for (let x = r.ax + 4; x <= r.bx - 4; x += 8) {
+      const y = ropeRest(r, (x - r.ax) / r.L);
+      for (const dy of [-60, -34, -8, 10, 40]) { const t = T(Math.floor(x / TS), Math.floor((y + dy) / TS)); if (t !== 0 && t !== 5) return false; }   // (room above to walk, and below for it to sag and swing)
+      for (const s of w.see) if (!s.gone && Math.abs(x - s.cx) < s.hl + 6 && y > s.cy - 80 && y < s.cy + 60) return false;
+      for (const o of w.ropes) if (!o.gone && x >= o.ax - 10 && x <= o.bx + 10 && Math.abs(ropeAt(o, x).y - y) < 60) return false;
+      for (const p of w.portals) if (!p.gone && [p.a, p.b].some(e => Math.abs(e.x - x) < 40 && Math.abs(e.y - y) < 80)) return false;
+      for (const p of w.pads) if (!p.gone && x > p.x * TS - 4 && x < (p.x + p.w) * TS + 4 && Math.abs(p.y * TS - y) < 50) return false;
+    }
+    return true;
+  }
   function hasSupport(w, d, H) {   // (a resting thing checks now and then that something is still under it)
     const sh = d.r ? null : shapeOf(d), ex = d.r || sh.ex, ey = d.r || sh.ey;
     if (boxHits(w, d.x, d.y + 3, ex - 1, ey)) return true;
+    if (w.ropes) for (const r of w.ropes) if (!r.gone && d.x > r.ax - ex && d.x < r.bx + ex) { const s = ropeAt(r, d.x); if (Math.abs(d.y + ey - s.y) < 10) return true; }
     for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (Math.abs(s.cx - d.x) < s.hl + ex + 10 && Math.abs(s.cy - d.y) < s.hl + ey + 30) return true; }
     const near = H(d.x - ex, d.y, d.x + ex, d.y + ey + 4);
     for (const o of near) { if (o === d || o.burn > 0) continue; const e = o.r || Math.max(o.hw, o.hh) * 1.42; if (Math.abs(o.x - d.x) < e + ex && o.y > d.y && o.y - e < d.y + ey + 4) return true; }
@@ -507,7 +590,7 @@
   let dynTick = 0; const DYN_BUDGET = 160, CELL = 64;
   function stepDyn(w, dt) {
     dynTick++;
-    stepSee(w, dt);
+    stepSee(w, dt); stepRopes(w, dt);
     for (let i = 0; i < w.pads.length; i++) if (w.pads[i].t > 0) w.pads[i].t = Math.max(0, w.pads[i].t - dt);
     const L = w.dyn; if (!L.length) { turnSee(w, dt); return; }
     const f = w.focus, FR = 1100, fol = w.follow || w.pubWait;
@@ -535,6 +618,7 @@
       if (fol && w.see.length) claimPlanks(w, d);   // (and a plank that something this device is moving is touching is turned here too: the two are worked out together, never one here and one on the server)   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
       d.sleep = false;
       if (d.nap && movingP.length && movingP.some(s => Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 80)) { d.nap = false; d.st = 0; }   // (a plank that moves wakes what rests on it)
+      if (d.nap && w.ropes.length && w.ropes.some(r => r.moving > 0 && !r.gone && d.x > r.ax - 40 && d.x < r.bx + 40 && Math.abs(ropeAt(r, d.x).y - d.y) < 90 && Math.abs(ropeAt(r, d.x).vy) > 15)) { d.nap = false; d.st = 0; }   // (and so does a rope bridge that swings)
       if (d.nap) { if (!d._far && (dynTick + i) % 15 === 0) chk.push(d); continue; }
       d._dyn = true; act.push(d);
     }
@@ -544,12 +628,14 @@
     nCT = 0; plankUsed = [];
     const shp = new Map(), S = o => { let s = shp.get(o); if (!s) { s = o.r ? { x: o.x, y: o.y } : shapeOf(o); shp.set(o, s); } return s; };
     const wake = [], lavaOf = new Set();
+    for (const d of act) d._spr = 0;
     for (const d of act) {   // gravity, then every contact
       d.vy = Math.min(900, d.vy + GRAV * dt);
       d._im = d.im; d._ii = d.ii; d._bx = d._by = d._bw = 0; d._pl = false;
       const sh = S(d);
       if (tileContacts(w, d, sh)) lavaOf.add(d);
       if (w.see.length && plankContacts(w, d, sh)) d._pl = true;
+      if (w.ropes.length) ropeContacts(w, d, sh);
       const e = d.r || Math.max(sh.ex, sh.ey);
       for (const o of H(d.x - e - 2, d.y - e - 2, d.x + e + 2, d.y + e + 2)) {
         if (o === d || o.burn > 0) continue;
@@ -566,10 +652,15 @@
     }
     solveContacts(dt);
     for (const pa of plankUsed) { const sp = pa.s; sp._T = 0; if (!sp.kin && pa._ii) sp.av = pa.av; }
+    for (let k = 0; k < nCT; k++) { const c = CT[k]; if (c.rp && c.Pn > 0) ropeLoad(c.rp, c.px, Math.min(8, c.Pn / (dt * GRAV))); }   // (what rests on a rope bridge presses on it exactly as hard as the bridge holds it up)
     for (let k = 0; k < nCT; k++) { const c = CT[k]; if (!c.pl) continue; const tx = c.ny, ty = -c.nx, Px = c.Pn * c.nx + c.Pt * tx, Py = c.Pn * c.ny + c.Pt * ty; c.pl._T += -(c.rax * Py - c.ray * Px); }
     for (const pa of plankUsed) { const sp = pa.s; sp.leave = (sp.ang >= SEE_MAX - 1e-6 && sp._T < -1) || (sp.ang <= -SEE_MAX + 1e-6 && sp._T > 1); }   // (a plank resting at one end only lifts off when what is on it now pushes it the other way)
     plankUsed = [];
     for (const d of act) {   // move
+      if (d._spr && d.vy > -400 && !(d.kind === 5 || d.kind === 6)) {   // on a spring: up it goes, like you do, and always a little to one side or the other (so nothing bounces on the same spot for ever)
+        const n = (d.bnN = (d.bnN || 0) + 1), u = (hash32('j' + (d.uid >>> 0) + ':' + n) % 2001) / 1000 - 1;
+        d.vy = -(d._spr === 2 ? OBJ_SUPER : OBJ_BOUNCE); d.vx += (u < 0 ? -1 : 1) * (18 + 30 * Math.abs(u)); d.av += u * 1.5; d.nap = false; d.st = 0;
+      }
       if (Math.abs(d.vx) > MAXSPD) d.vx = Math.sign(d.vx) * MAXSPD; if (Math.abs(d.av) > MAXAV) d.av = Math.sign(d.av) * MAXAV;
       d._x0 = d.x; d._y0 = d.y;
       d.x += (d.vx + d._bx) * dt; d.y += (d.vy + d._by) * dt; d.rot += (d.av + d._bw) * dt;
@@ -636,7 +727,7 @@
         let cap = 1e9;
         if (soft) {
           cap = F_PUSH * (b.dt || 1 / 60);   // (how hard you can push)
-          const vlim = MAXV / (1 + 0.2 * (load - 1)), vb = -(vbx * nx + vby * ny), kb = im + ii * rn * rn;   // (and a heavy load only goes so fast)
+          const vlim = MAXV / (1 + 0.08 * (d.m - 1) + 0.2 * Math.max(0, load - d.m)), vb = -(vbx * nx + vby * ny), kb = im + ii * rn * rn;   // (and a heavy load only goes so fast)
           if (Math.abs(nx) > 0.5 && kb > 0) cap = Math.min(cap, Math.max(0, (vlim - vb) / kb));
         }
         const j = Math.min(jf, cap);
@@ -672,7 +763,7 @@
     if (sL && sR && sU) { b.ground = true; b.flat = true; b.gType = 1; }   // (resting in a V between two things is as good as level ground: you sit still)
   }
 
-  const SUPER_BOUNCE = 1900;   // a super spring throws you about 900px up (more than 20 tiles)
+  const SUPER_BOUNCE = 1900, OBJ_BOUNCE = 950, OBJ_SUPER = 1500;   // a super spring throws you about 900px up (more than 20 tiles)
   const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
   const SJ_MUL = 1.42, JM_FILL = 0.345, JM_DRAIN = 7, JM_GRACE = 0.13, JM_HOLD = 0.2;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
   const BOOST_T = 1.6, BOOST_V = MAXV * 2;   // seconds of steady rolling to fill the ring, and the boosted top speed (double)
@@ -775,6 +866,7 @@
     if (w.portals.length && !b.ghost && !b.pcd && b.vy > -60) { const pt = portalAt(w, b.x, b.y + R); if (pt) { const dir = b.pdir || 1; b.x = pt.to.x + dir * 36; b.y = pt.to.y - R - 2; b.vx = dir * Math.max(300, Math.abs(b.vx)); b.vy = -340; b.ground = false; b.flat = false; b.pcd = 0.6; b.fall = 0; b.launched = true; ev.portal = true; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } }
     b.dt = dt; if (!b.ghost && w.dyn.length) collideDyn(b, w);
     if (w.see.length) { seeBody(b, w, PLAYER_WT); if (!b.ghost) seeGuard(w, b, R); }
+    if (w.ropes.length && !b.ghost) ropeBody(b, w, PLAYER_WT / 60);
     const wet = water || tile(w, Math.floor(b.x / TS), Math.floor(b.y / TS)) === 5 || tile(w, Math.floor(b.x / TS), Math.floor((b.y + R * 0.8) / TS)) === 5;   // (checked again after moving: you can land in a shallow pool in the very same step)
     if (b.ground || wet) { if (!wasGround && !wet && !b.bnc && b.fall >= FALL_DIE) ev.splat = true; b.fall = 0; }
     else if (b.vy > 300) b.fall += dt; else if (b.vy < 0) b.fall = 0;
@@ -796,6 +888,7 @@
     const k = q[0], u = q[1] >>> 0;
     if (k === 'b') { const d = w.dynBy.get(u); if (!d || d.gone) return false; d.gone = true; d.burn = 1e9; d.bl = 0; d.bx = d.by = -99999; d.x = d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.nap = false; return true; }
     if (k === 's') { const s = w.see.find(e => e.uid === u && !e.gone); if (!s) return false; s.gone = true; s.cx = s.cy = -1e6; s.av = 0; s.sav = 0; return true; }
+    if (k === 'r') { const r = (w.ropes || []).find(e => e.uid === u && !e.gone); if (!r) return false; r.gone = true; return true; }
     if (k === 'pad') { const p = w.pads.find(e => !e.gone && e.x === q[1] && e.y === q[2]); if (!p) return false; p.gone = true; p.x = p.y = -100000; return true; }
     if (k === 'por') { const p = w.portals.find(e => !e.gone && Math.round(e.a.x / TS) - 1 === q[1] && Math.round(e.a.y / TS) === q[2]); if (!p) return false; p.gone = true; p.a.x = p.b.x = -1e7; return true; }
     if (k === 'g') {
@@ -817,7 +910,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 120, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 121, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

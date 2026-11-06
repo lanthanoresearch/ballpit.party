@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 120;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 121;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -150,7 +150,9 @@ try {
   console.log('Restored ' + known.size + ' players, ' + [...links.values()].reduce((a, v) => a + v.size, 0) / 2 + ' friendships, ' + pend.size + ' waiting requests, from ' + LINKS_FILE);
 } catch (e) {}
 { const ev = process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY ? makeVapid(process.env.VAPID_PUBLIC_KEY.trim(), process.env.VAPID_PRIVATE_KEY.trim()) : null;
-  if (ev) vapid = ev; else if (!vapid) { vapid = newVapid(); linksDirty = true; } }   // (keys from the settings win; otherwise they are made once and kept with the saved links)
+  let dv = null; const seed = process.env.VAPID_SEED || process.env.RENDER_SERVICE_ID || process.env.RENDER_EXTERNAL_HOSTNAME;
+  if (seed) { try { const d = crypto.createHash('sha256').update('ballpit-vapid:' + seed).digest(), e = crypto.createECDH('prime256v1'); e.setPrivateKey(d); dv = makeVapid(b64u(e.getPublicKey()), b64u(d)); } catch (x) { dv = null; } }   // (the same keys every time this server starts, even with nothing saved: phones signed up for notifications keep getting them)
+  if (ev) vapid = ev; else if (dv) vapid = dv; else if (!vapid) { vapid = newVapid(); linksDirty = true; } }   // (keys from the settings win; otherwise they are made once and kept with the saved links)
 function saveLinks(sync) {
   if (!linksDirty) return; linksDirty = false;
   // keep only what is needed: people not seen for two months (and not tied to a friend link or a waiting request) are forgotten
@@ -292,6 +294,7 @@ function srvMisc(w, q) {
   else if (k === 'lav') { const i = q[2] * w.W + q[1]; if (q[2] < w.H && q[1] >= 0 && q[1] < w.W && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 2; }
   else if (k === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: 3 * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
   else if (k === 'por') P.addPortal(w, q);
+  else if (k === 'rope') P.addRope(w, q);   // (checked when it was built; it stays even if the ground around it changes later)
   else if (k === 'pad') P.addPad(w, [q[1], q[2], q[3]]);
 }
 function srvGate(w, q) {
@@ -399,7 +402,7 @@ function simTick() {
           }
           list.push({ x: p.qx, y: p.qy, vx: p.vx, vy: p.vy, ground: g, id: p.id, p });
         }
-        for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground, kin: true, dt: SIMDT, own: q.id }; P.collideDyn(c, w); P.seeBody(c, w, P.PLAYER_WT); if (q.p) { q.p.qx = c.x; q.p.qy = c.y; } }   // (kin: a player is where they say they are; only the things they touch are moved)
+        for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground, kin: true, dt: SIMDT, own: q.id }; P.collideDyn(c, w); P.seeBody(c, w, P.PLAYER_WT); P.ropeBody(c, w, P.PLAYER_WT / 60); if (q.p) { q.p.qx = c.x; q.p.qy = c.y; } }   // (kin: a player is where they say they are; only the things they touch are moved)
         if (k === n - 1) P.stepSwitches(w, list, SIMDT * n);   // (the buttons and plates are looked at once per update)
       }
       w.ev.length = 0;
@@ -476,7 +479,7 @@ function simTick() {
 const okProp = q => (Array.isArray(q) && q.length === 3 && (q[0] | 0) >= 0 && (q[0] | 0) <= 7 && Number.isFinite(q[1]) && Number.isFinite(q[2]) ? [q[0] | 0, Math.round(q[1]), Math.round(q[2])] : null);
 const okGate = q => (Array.isArray(q) && q.length === 5 && q.every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 ? q.map(Math.round) : null);
 const okMisc = q => (Array.isArray(q) && q.length === 4 && (q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || q[0] === 'tl') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), Math.round(q[3])] : Array.isArray(q) && q.length === 4 && (q[0] === 'see' || q[0] === 'pad') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[3] < 0 ? -1 : q[3] > 0 ? 1 : 0] : (Array.isArray(q) && q.length === 5 && q[0] === 'por' && q.slice(1).every(Number.isFinite) ? ['por', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])] : null));
-const okDel = q => (Array.isArray(q) && (((q[0] === 'b' || q[0] === 's' || q[0] === 'g') && q.length === 2 && Number.isFinite(q[1]) && q[1] >= 0 && q[1] < 4294967296) || ((q[0] === 'pad' || q[0] === 'por' || q[0] === 'c') && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2]))) ? (q.length === 2 ? [q[0], Math.round(q[1])] : [q[0], Math.round(q[1]), Math.round(q[2])]) : null);   // something removed with the delete tool
+const okDel = q => (Array.isArray(q) && (((q[0] === 'b' || q[0] === 's' || q[0] === 'g' || q[0] === 'r') && q.length === 2 && Number.isFinite(q[1]) && q[1] >= 0 && q[1] < 4294967296) || ((q[0] === 'pad' || q[0] === 'por' || q[0] === 'c') && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2]))) ? (q.length === 2 ? [q[0], Math.round(q[1])] : [q[0], Math.round(q[1]), Math.round(q[2])]) : null);   // something removed with the delete tool
 const okCp = q => (Array.isArray(q) && q.length === 2 && Number.isFinite(q[0]) && Number.isFinite(q[1]) ? [Math.round(q[0]), Math.round(q[1])] : null);
 function send(p, obj) { if (p.ws.readyState === 1) p.ws.send(JSON.stringify(obj)); }
 function broadcast(room, obj, except) {
@@ -649,7 +652,7 @@ wss.on('connection', (ws, req) => {
       (e.props || []).forEach(q => worldAdd.prop(r, q, true)); (e.gates || []).forEach(q => worldAdd.gate(r, q)); (e.misc || []).forEach(q => worldAdd.misc(r, q)); (e.dels || []).forEach(q => worldAdd.del(r, q));
       if (Object.keys(e).length) { e.t = 'pb'; broadcast(r, e, p); }
     } else if (m.t === 'pobj') {   // a teeter-totter or a floor booster, built in a friend's world
-      const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl')) || (m.g.length === 5 && m.g[0] === 'por')) || !m.g.slice(1).every(Number.isFinite) || bstate(r).misc.length >= ROOM_MISC || ((m.g[0] === 'see' || m.g[0] === 'por') && bstate(r).misc.filter(q => q[0] === m.g[0]).length >= 80)) return;
+      const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl')) || (m.g.length === 5 && (m.g[0] === 'por' || m.g[0] === 'rope'))) || !m.g.slice(1).every(Number.isFinite) || bstate(r).misc.length >= ROOM_MISC || ((m.g[0] === 'see' || m.g[0] === 'por' || m.g[0] === 'rope') && bstate(r).misc.filter(q => q[0] === m.g[0]).length >= 80) || (m.g[0] === 'rope' && !P.ropeOk(roomWorld(r), m.g))) return;
       if (!addOk(p)) return;
       if (m.g[0] === 'tl') {   // one record per tile: a newer change replaces the older one, and -1 means the tile is back the way the map made it, so there is nothing to keep
         const put = (tx, ty, to) => {
@@ -664,7 +667,7 @@ wss.on('connection', (ws, req) => {
         if (g0) broadcast(r, { t: 'pobj', g: ['tl', g0[0], g0[1], g0[2]], ex }, p);
         return;
       }
-      const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
+      const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' || m.g[0] === 'rope' ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
     } else if (m.t === 'own') {   // a player's device says where the things it is pushing are: the server takes its word, unless somebody else is right there too
       const r = p.room; if (!r || !r.world || m.s !== rslot(r)) return;
       const w = r.world;   // (the first device to take something has it until it lets go; everyone else sees it as theirs)
@@ -684,6 +687,7 @@ wss.on('connection', (ws, req) => {
         const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone || d.burn > 0) continue;
         if (Math.abs(q[1] - d.x) + Math.abs(q[2] - d.y) > 400 || q[1] < 0 || q[1] > w.W * P.TS || q[2] < 0 || q[2] > w.H * P.TS) continue;
         if (d.ownT > 0 && d.ownBy !== p.id) continue;
+        if (!(d.ownT > 0) && Math.abs(q[1] - d.x) + Math.abs(q[2] - d.y) > 48 + (Math.abs(d.vx) + Math.abs(d.vy)) * 0.35) continue;   // (taking something over starts from where it really is: a device whose picture of it is far off is not believed, and gives in to the server's)
         if (w.see.length && P.plankCross(w, d.x, d.y, q[1], q[2], d.r || Math.max(d.hw, d.hh))) continue;   // (never taken through a teeter-totter: the two devices must have seen the plank differently, and the server's side of it stands)
         d.x = q[1]; d.y = q[2]; d.vx = Math.max(-1400, Math.min(1400, q[3])); d.vy = Math.max(-1400, Math.min(1400, q[4])); d.rot = q[5]; d.av = Math.max(-28, Math.min(28, q[6])); d.ownBy = p.id; d.ownT = 0.25; d.nap = false; d.st = 0;
       }
@@ -702,7 +706,7 @@ wss.on('connection', (ws, req) => {
       if (r.seedParts.a.filter(x => typeof x === 'string').length < m.n) return;
       let o = null; try { o = JSON.parse(r.seedParts.a.join('')); } catch (e) {} r.seedParts = null;
       if (!o || typeof o !== 'object' || !o.b || !o.w) { r.seedBy = null; return; }
-      const B = { props: [], cps: [], gates: [], misc: [], dels: [] }, okAny = q => okMisc(q) || (Array.isArray(q) && ((q.length === 4 && (q[0] === 'see' || q[0] === 'pad')) || (q.length === 5 && q[0] === 'por')) && q.slice(1).every(Number.isFinite) ? [q[0], ...q.slice(1).map(Math.round)] : null);
+      const B = { props: [], cps: [], gates: [], misc: [], dels: [] }, okAny = q => okMisc(q) || (Array.isArray(q) && ((q.length === 4 && (q[0] === 'see' || q[0] === 'pad')) || (q.length === 5 && (q[0] === 'por' || q[0] === 'rope'))) && q.slice(1).every(Number.isFinite) ? [q[0], ...q.slice(1).map(Math.round)] : null);
       const take = (key, ok, cap) => { for (const q of (Array.isArray(o.b[key]) ? o.b[key] : []).slice(0, cap)) { const c = ok(q); if (c) B[key].push(c); } };
       take('props', okProp, ROOM_PROPS); take('gates', okGate, ROOM_GATES); take('misc', okAny, ROOM_MISC); take('cps', okCp, ROOM_CPS); take('dels', okDel, ROOM_DELS);
       const dyn = (Array.isArray(o.w.d) ? o.w.d : []).filter(q => Array.isArray(q) && q.length >= 4 && q.slice(0, 4).every(Number.isFinite)).map(q => [q[1], q[2], q[3], q[0] >>> 0, q[4] ? 1 : 0]);
@@ -796,7 +800,19 @@ wss.on('connection', (ws, req) => {
       const k1 = unb64u(m.sub.keys.p256dh || ''), k2 = unb64u(m.sub.keys.auth || ''); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16) return;
       if (!pushSubs.has(p.pub) && pushSubs.size >= 8000) return;
       const pr = m.prefs && typeof m.prefs === 'object' ? m.prefs : {};
-      pushSubs.set(p.pub, { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 12) : [], t: Date.now() }); linksDirty = true;
+      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 12) : [], t: Date.now() };
+      pushSubs.set(p.pub, ent); linksDirty = true;
+      for (const f of linkSet(p.pub)) { const q = byPub.get(f); if (q && live(q)) send(q, { t: 'fsub', pub: p.pub, s: ent }); }   // (your friends' devices keep where to reach yours: if this server ever forgets, they tell it again)
+      send(p, { t: 'fsubs', l: [...linkSet(p.pub)].filter(f => pushSubs.has(f)).slice(0, 64).map(f => [f, pushSubs.get(f)]) });
+    } else if (m.t === 'fsubs') {   // a player's device says where to reach friends' devices that this server has forgotten (after a restart with nothing saved)
+      if (!p.pub || !Array.isArray(m.l)) return;
+      const mine = linkSet(p.pub), cl = claimsOf.get(p.pub) || new Set();
+      for (const e of m.l.slice(0, 64)) {
+        if (!Array.isArray(e) || e.length !== 2 || typeof e[0] !== 'string' || !PUB.test(e[0]) || pushSubs.has(e[0]) || !(mine.has(e[0]) || cl.has(e[0]))) continue;
+        const s = e[1]; if (!s || typeof s !== 'object' || typeof s.ep !== 'string' || !okPushUrl(s.ep)) continue;
+        const k1 = unb64u(String(s.p || '')), k2 = unb64u(String(s.a || '')); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16 || pushSubs.size >= 8000) continue;
+        pushSubs.set(e[0], { ep: s.ep, p: b64u(k1), a: b64u(k2), f: s.f ? 1 : 0, r: s.r ? 1 : 0, i: s.i ? 1 : 0, m: s.m ? 1 : 0, mu: Array.isArray(s.mu) ? s.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 12) : [], t: Date.now() }); linksDirty = true;
+      }
     } else if (m.t === 'vis') {   // this page is in the background (or back): while it is, the server sends notifications as pushes
       p.hidden = m.h ? 1 : 0;
     } else if (m.t === 'punsub') {
