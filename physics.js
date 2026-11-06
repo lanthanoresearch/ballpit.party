@@ -130,24 +130,28 @@
     return Math.abs(x - f.x) <= rx && Math.abs(y - f.y) <= ry;
   }
   function distF(f, d) { if (!Array.isArray(f)) return Math.abs(d.x - f.x) + Math.abs(d.y - f.y); let m = 1e9; for (let i = 0; i < f.length; i++) m = Math.min(m, Math.abs(d.x - f[i].x) + Math.abs(d.y - f[i].y)); return m; }
-  function stepSee(w, dt) {   // each plank turns on its pivot as it was pushed, and stops where it meets the ground
+  function stepSee(w, dt) {   // each plank turns on its pivot as it was pushed (only crates, balls and players touch it: it goes straight through the ground)
+    w.seeOwned = false;
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i]; if (s.gone) continue;
-      if (w.follow && s.sa !== undefined) {   // in the shared world the server has the plank: it follows the server's (while you are on it, it also reacts to you at once)
+      if (w.follow && s.sa !== undefined && s.other) s.mineT = 0;   // (another player's device is working this plank out: it is simply shown the way the server has it)
+      if (w.follow && s.sa !== undefined && s.owned) { s.kin = false; if (s.mineT > 0) s.mineT -= dt; w.seeOwned = true; }   // (this device has the plank: it turns here with everything on it, exactly as a plank of its own does, and the server follows)
+      else if (w.follow && s.sa !== undefined) {   // in the shared world the server has the plank: it follows the server's (while you are on it, it also reacts to you at once)
         s.kin = !(s.mineT > 0);
         const now = typeof performance !== 'undefined' ? performance.now() : Date.now(), age = s.st ? Math.min(0.25, Math.max(0, (now - s.st) / 1000)) : 0.05, ta = clamp(s.sa + (s.sav || 0) * age, -SEE_MAX, SEE_MAX);   // (carried on exactly the way the crates and balls are, so what rests on it moves with it)
         const a0 = s.ang;
         if (s.mineT > 0) { s.mineT -= dt; s.ang += s.av * dt; s.ang += (ta - s.ang) * Math.min(1, 6 * dt); }
         else { s.ang += (ta - s.ang) * Math.min(1, 26 * dt); s.av = (s.ang - a0) / dt; }
         seeLimit(s); if (Math.abs(s.ang - a0) > 1e-6) seeBlock(w, s, a0);   // (here the crates and balls are where the server has them: the plank stops on them, it never swings into one)
-      } else s.kin = false;   // (a plank of its own turns after the pushing is worked out, together with everything on it: see turnSee)
+      } else if (s.ownT > 0) { s.ownT -= dt; s.kin = true; }   // (on the server: a player's device is turning this plank and says how; here it moves the way they say)
+      else s.kin = false;   // (a plank of its own turns after the pushing is worked out, together with everything on it: see turnSee)
       if (s.kin || s.mineT > 0) seeLimit(s);
       if (Math.abs(s.av) > 0.03) s.moving = 0.5; else if (s.moving > 0) s.moving -= dt;   // (while it moves, what rests on it is kept awake)
     }
   }
-  function plankGap(s, d, ang) {   // how far a plank at this angle is from a crate or ball (below 0: they overlap)
+  function plankGap(s, d, ang, sd) {   // how far a plank at this angle is from a crate or ball (below 0: they overlap); sd: the side of the plank it is on
     const c = Math.cos(ang), sn = Math.sin(ang);
-    const seg = (vx, vy, r) => { const u = clamp((vx - s.cx) * c + (vy - s.cy) * sn, -s.hl, s.hl), dx = vx - s.cx - u * c, dy = vy - s.cy - u * sn; return Math.sqrt(dx * dx + dy * dy) - r - SEE_TH; };
+    const seg = (vx, vy, r) => { const a = (vx - s.cx) * c + (vy - s.cy) * sn, u = clamp(a, -s.hl, s.hl), dx = vx - s.cx - u * c, dy = vy - s.cy - u * sn, dd = Math.sqrt(dx * dx + dy * dy); return r === 0 && Math.abs(a) < s.hl && (dx * sn - dy * c) * sd < 0 ? -dd - SEE_TH : dd - r - SEE_TH; };
     if (isBall(d)) return seg(d.x, d.y, d.r);
     const sh = shapeOf(d); let g = 1e9;
     for (const [lx, ly] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) g = Math.min(g, seg(sh.x + sh.c * lx * sh.hw - sh.s * ly * sh.hh, sh.y + sh.s * lx * sh.hw + sh.c * ly * sh.hh, 0));
@@ -158,24 +162,37 @@
     const reach = s.hl + 80;
     for (let i = 0; i < w.dyn.length; i++) {
       const d = w.dyn[i]; if (d.gone || d.burn > 0 || Math.abs(d.x - s.cx) > reach || Math.abs(d.y - s.cy) > reach) continue;
-      const g0 = plankGap(s, d, a0), g1 = plankGap(s, d, s.ang), lim = Math.min(g0, -0.5);
+      const sd = (d.x - s.cx) * Math.sin(a0) - (d.y - s.cy) * Math.cos(a0) < 0 ? -1 : 1;
+      const g0 = plankGap(s, d, a0, sd), g1 = plankGap(s, d, s.ang, sd), lim = Math.min(g0, -0.5);
       if (g1 >= lim || g1 >= g0) continue;   // (not touching, or it is moving away)
       let lo = a0, hi = s.ang;
-      for (let k = 0; k < 10; k++) { const m = (lo + hi) / 2; if (plankGap(s, d, m) >= lim) lo = m; else hi = m; }
+      for (let k = 0; k < 10; k++) { const m = (lo + hi) / 2; if (plankGap(s, d, m, sd) >= lim) lo = m; else hi = m; }
       if ((s.ang - a0) * s.av > 0) s.av = 0;
       s.ang = lo;
     }
   }
+  function onOwnedPlank(w, d) {
+    const e = d.r || Math.max(d.hw, d.hh) * 1.42;
+    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (!s.owned || s.gone) continue; const rx = d.x - s.cx, ry = d.y - s.cy, c = Math.cos(s.ang), sn = Math.sin(s.ang), al = rx * c + ry * sn, h = rx * sn - ry * c; if (Math.abs(al) < s.hl + e + 10 && Math.abs(h) < e + SEE_TH + 40) return true; }
+    return false;
+  }
+  function plankCross(w, x0, y0, x1, y1, e) {   // would moving a thing from (x0,y0) to (x1,y1) take it through a plank, from one side to the other?
+    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (s.gone) continue; const c = Math.cos(s.ang), sn = Math.sin(s.ang);
+      const a0 = (x0 - s.cx) * c + (y0 - s.cy) * sn, a1 = (x1 - s.cx) * c + (y1 - s.cy) * sn, h0 = (x0 - s.cx) * sn - (y0 - s.cy) * c, h1 = (x1 - s.cx) * sn - (y1 - s.cy) * c;
+      if (Math.abs(a0) > s.hl + e || Math.abs(a1) > s.hl + e) continue;
+      if (Math.sign(h0) !== Math.sign(h1) && Math.abs(h0) > 2 && Math.abs((a0 + a1) / 2) < s.hl - 4) return true; }
+    return false;
+  }
   function seeLimit(s) { if (s.ang > SEE_MAX) { s.ang = SEE_MAX; if (s.av > 0) s.av = 0; } if (s.ang < -SEE_MAX) { s.ang = -SEE_MAX; if (s.av < 0) s.av = 0; } }
   function turnSee(w, dt) {   // each plank turns as it was pushed this step (after the crates and balls on it were worked out, so it never swings into them)
-    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (s.gone || s.kin || (w.follow && s.sa !== undefined)) continue; s.av *= Math.max(0, 1 - 0.6 * dt); s.ang += s.av * dt; seeLimit(s); }
+    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (s.gone || s.kin || (w.follow && s.sa !== undefined && !s.owned)) continue; s.av *= Math.max(0, 1 - 0.6 * dt); s.ang += s.av * dt; seeLimit(s); }
   }
   function seeBody(b, w, wt) {   // the player (or a round toy) against every nearby plank
     let on = false;
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i]; if (Math.abs(s.cx - b.x) > s.hl + 40 || Math.abs(s.cy - b.y) > s.hl + 60) continue;
       if (seeHit(s, b, b.r || R, wt / 60)) {
-        on = true; b.onSee = s; if (w.follow && b.r === undefined && !b.ghost) s.mineT = 0.6;
+        on = true; b.onSee = s; if (w.follow && b.r === undefined && !b.ghost && !b.remote) s.mineT = 0.6;
         const sl = Math.sin(s.ang);
         if (b.r === undefined) b.flat = Math.abs(sl) <= 0.06;   // on a tilted plank you slide; on a level one you grip
         if (b.r === undefined) { b.ground = true; b.gType = 1; }
@@ -393,6 +410,7 @@
       for (let k = 0; k < vs.length; k++) {
         const vx = vs[k][0], vy = vs[k][1], r = vs[k][2], u = clamp((vx - s.cx) * c + (vy - s.cy) * sn, -s.hl, s.hl), qx = s.cx + u * c, qy = s.cy + u * sn;
         const dx = vx - qx, dy = vy - qy, dd = Math.sqrt(dx * dx + dy * dy), m = r + SEE_TH;
+        if (r === 0 && dx * sux + dy * suy < 0 && Math.abs((vx - s.cx) * c + (vy - s.cy) * sn) < s.hl) { add([vx, vy, -(dd + m), sux, suy], 's' + i + ':k' + k, u); continue; }   // (a corner that has got through to the far side: the crate and the plank are pushed apart, back to the side it is mostly on, so nothing ever stays stuck in it)
         if (dd >= m + SPEC) continue;   // (looked at a little before it touches, so a plank swinging fast can never pass through what is under or on it)
         const nx = dd > 0.0001 ? dx / dd : sux, ny = dd > 0.0001 ? dy / dd : suy;
         if (nx * sux + ny * suy < 0.3) continue;
@@ -495,6 +513,7 @@
       if (d._far && d.nap) { d.sleep = true; continue; }   // far from everybody and at rest: nothing to work out
       if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
+      if (fol && w.seeOwned && !(d.mineT > 0) && !(d.hold > 0) && onOwnedPlank(w, d)) { d.mineT = 0.3; d.nap = false; }   // (what rides on a plank this device is turning is worked out here too, so they move together)
       if (fol && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
       d.sleep = false;
       if (d.nap && movingP.length && movingP.some(s => Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 80)) { d.nap = false; d.st = 0; }   // (a plank that moves wakes what rests on it)
@@ -577,13 +596,14 @@
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
       if (d.burn > 0 || Math.abs(d.x - b.x) > 110 || Math.abs(d.y - b.y) > 110) continue;
+      if (b.remote && !(d.mineT > 0 || d.keep > 0)) continue;   // (another player, as this device sees them: they only push what this device is moving for everybody)
       let h;
       if (d.k === 'b') { h = circBox(shapeOf(d), b.x, b.y, R); if (!h) continue; }
       else { const dx = b.x - d.x, dy = b.y - d.y, d2 = dx * dx + dy * dy, rr = R + d.r; if (d2 >= rr * rr) continue; const dd = Math.sqrt(d2) || 0.001; h = [d.x + dx / dd * d.r, d.y + dy / dd * d.r, dd - rr, d2 ? dx / dd : 0, d2 ? dy / dd : -1]; }
       const pen = -h[2], nx = h[3], ny = h[4]; if (pen <= 0) continue;
-      if (w.follow && !(d.hold > 0)) { d.mineT = 0.45; d.sleep = false; }
+      if (w.follow && !(d.hold > 0) && !b.remote) { d.mineT = 0.45; d.sleep = false; }
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
-      const held = (w.follow && d.hold > 0) || (b.own !== undefined && d.ownT > 0 && d.ownBy === b.own);   // (the server's crate and yours disagree: it is a wall until they agree again. On the server: the player's own device is already pushing this one)
+      const held = (w.follow && d.hold > 0) || (b.own !== undefined && d.ownT > 0);   // (the server's crate and yours disagree: it is a wall until they agree again. On the server: the player's own device is already pushing this one)
       const rx = h[0] - d.x, ry = h[1] - d.y, rn = rx * ny - ry * nx, rt = rx * -nx - ry * ny;
       const vbx = d.vx - (d.av || 0) * ry, vby = d.vy + (d.av || 0) * rx, vy0 = b.vy;
       const vn = (b.vx - vbx) * nx + (b.vy - vby) * ny;
@@ -774,7 +794,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 117, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 118, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

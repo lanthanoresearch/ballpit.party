@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 117;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 118;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -316,8 +316,8 @@ function doorPacket(room) {
 }
 function plankSend(room, planks, only) {
   if (!planks.length) return;
-  const buf = Buffer.allocUnsafe(4 + planks.length * 12); buf[0] = 5; buf.writeUInt16LE(rslot(room) & 0xFFFF, 1); buf[3] = planks.length;
-  planks.forEach((s, k) => { const o = 4 + k * 12; buf.writeUInt32LE(s.uid >>> 0, o); buf.writeFloatLE(s.ang, o + 4); buf.writeFloatLE(Number.isFinite(s.av) ? s.av : 0, o + 8); });
+  const buf = Buffer.allocUnsafe(4 + planks.length * 16); buf[0] = 7; buf.writeUInt16LE(rslot(room) & 0xFFFF, 1); buf[3] = planks.length;   // (type 7: as type 5, plus which player's device is turning it right now)
+  planks.forEach((s, k) => { const o = 4 + k * 16; buf.writeUInt32LE(s.uid >>> 0, o); buf.writeFloatLE(s.ang, o + 4); buf.writeFloatLE(Number.isFinite(s.av) ? s.av : 0, o + 8); buf.writeUInt32LE(s.ownT > 0 ? s.ownBy >>> 0 : 0, o + 12); });
   if (only) { if (only.ws.readyState === 1) only.ws.send(buf, { binary: true }); return; }
   for (const p of room.players.values()) if (p.ws.readyState === 1) p.ws.send(buf, { binary: true });
 }
@@ -440,7 +440,7 @@ function simTick() {
         const o = 4 + k * 23, bn = d.burn > 0;
         buf.writeUInt32LE(d.uid >>> 0, o); buf.writeFloatLE(bn ? 0 : d.x, o + 4); buf.writeFloatLE(bn ? 0 : d.y, o + 8);
         const rest = bn || d.lst; buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svx))), o + 12); buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svy))), o + 14);
-        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = bn ? 1 : 0; buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round((bn || d.lst ? 0 : d.av || 0) * 1000))), o + 21);
+        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = (bn ? 1 : 0) | (!bn && d.ownT > 0 && d.ownBy !== p.id ? 2 : 0);   /* (2: another player's device is moving this one right now) */ buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round((bn || d.lst ? 0 : d.av || 0) * 1000))), o + 21);
         p.dver.set(d.uid, d.ver);
       });
       p.ws.send(buf, { binary: true });
@@ -460,7 +460,7 @@ function broadcast(room, obj, except) {
   for (const p of room.players.values()) if (p !== except && p.ws.readyState === 1) p.ws.send(s);
 }
 function addOk(p) {   // building is rate-limited as a bucket (a burst of placements is fine, a flood is not): dropping one would leave this world and the builder's out of step
-  const now = Date.now(); p.tok = Math.min(12, (p.tok === undefined ? 12 : p.tok) + (now - (p.tokT || now)) / 1000 * 8); p.tokT = now;
+  const now = Date.now(); p.tok = Math.min(60, (p.tok === undefined ? 60 : p.tok) + (now - (p.tokT || now)) / 1000 * 25); p.tokT = now;   // (far more than anybody can build by hand: only a flood is ever turned away)
   if (p.tok < 1) return false; p.tok -= 1; return true;
 }
 function leave(p, toLobby) {
@@ -501,6 +501,7 @@ wss.on('connection', (ws, req) => {
   const rate = setInterval(() => { p.msgs = 0; }, 1000);
 
   ws.on('message', (raw, isBinary) => {
+    p.lastMsg = Date.now();
     if (++p.msgs > 100) return;                       // simple flood protection
     if (isBinary) {                                   // a position update: [0x70][slot u16][x/2 u16][y u16 (65535 = dead)][vx/5 i8][vy/20 i8][time u15 | grounded<<15]
       if (!p.room || raw.length !== 11 || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (rslot(p.room) & 0xFFFF)) return;
@@ -559,6 +560,7 @@ wss.on('connection', (ws, req) => {
         send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
       }
       if (p.pub) {
+        { const old = byPub.get(p.pub); if (old && old !== p && Date.now() - (old.lastMsg || 0) > 5000) { try { old.ws.terminate(); } catch (e) {} } }   // (the same player's old connection that went quiet, from a phone that slept or a network that changed: it goes at once, so no frozen copy of them stands about in the world)
         byPub.set(p.pub, p);
         const mine = new Set(Array.isArray(m.claims) ? m.claims.filter(v => typeof v === 'string' && PUB.test(v) && v !== p.pub).slice(0, MAX_LINKS) : []);
         claimsOf.set(p.pub, mine);
@@ -640,14 +642,20 @@ wss.on('connection', (ws, req) => {
       }
       const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
     } else if (m.t === 'own') {   // a player's device says where the things it is pushing are: the server takes its word, unless somebody else is right there too
-      const r = p.room; if (!r || !r.world || m.s !== rslot(r) || !Array.isArray(m.b)) return;
-      const w = r.world, near = [...r.players.values()].filter(o => o !== p && o.has && !o.dead && !o.hidden);
+      const r = p.room; if (!r || !r.world || m.s !== rslot(r)) return;
+      const w = r.world;   // (the first device to take something has it until it lets go; everyone else sees it as theirs)
+      if (Array.isArray(m.pl)) for (const q of m.pl.slice(0, 4)) {   // a teeter-totter this player is on: their device turns it, and the server follows
+        if (!Array.isArray(q) || q.length !== 3 || !q.every(Number.isFinite)) continue;
+        const s = w.see.find(e => e.uid === (q[0] >>> 0) && !e.gone); if (!s || (s.ownT > 0 && s.ownBy !== p.id) || Math.abs(s.cx - p.x) > s.hl + 400 || Math.abs(s.cy - p.y) > s.hl + 400) continue;
+        s.ang = Math.max(-0.36, Math.min(0.36, q[1])); s.av = Math.max(-12, Math.min(12, q[2])); s.ownT = 0.25; s.ownBy = p.id; s.moving = 0.5;
+      }
+      if (!Array.isArray(m.b)) return;
       for (const q of m.b.slice(0, 12)) {
         if (!Array.isArray(q) || q.length !== 7 || !q.every(Number.isFinite)) continue;
         const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone || d.burn > 0) continue;
         if (Math.abs(q[1] - d.x) + Math.abs(q[2] - d.y) > 400 || q[1] < 0 || q[1] > w.W * P.TS || q[2] < 0 || q[2] > w.H * P.TS) continue;
-        if (near.some(o => Math.abs(o.x - d.x) < 75 && Math.abs(o.y - d.y) < 75)) { d.ownT = 0; continue; }   // (somebody else touching it too)   // (two players there: the server decides)
         if (d.ownT > 0 && d.ownBy !== p.id) continue;
+        if (w.see.length && P.plankCross(w, d.x, d.y, q[1], q[2], d.r || Math.max(d.hw, d.hh))) continue;   // (never taken through a teeter-totter: the two devices must have seen the plank differently, and the server's side of it stands)
         d.x = q[1]; d.y = q[2]; d.vx = Math.max(-1400, Math.min(1400, q[3])); d.vy = Math.max(-1400, Math.min(1400, q[4])); d.rot = q[5]; d.av = Math.max(-28, Math.min(28, q[6])); d.ownBy = p.id; d.ownT = 0.25; d.nap = false; d.st = 0;
       }
     } else if (m.t === 'dseed') {   // this server forgot the world (it was restarted with nothing saved): a player who was here tells it where things had ended up, so a knocked-down tower stays knocked down

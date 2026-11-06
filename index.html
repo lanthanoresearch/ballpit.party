@@ -417,7 +417,7 @@
   #emoGrid button:active{transform:scale(.92)}#emoGrid button.cool{opacity:.45}
   #emoGrid svg{width:100%;height:100%}
   .epcard{max-height:96vh;overflow:hidden}
-  @media (max-height:700px) and (max-aspect-ratio:1/1){.epcard{padding:10px 12px}#emoGrid{gap:5px;margin:4px 0 8px}#emoGrid button{aspect-ratio:auto;height:38px;padding:3px}#phraseGrid{gap:4px;margin:0 0 6px}#phraseGrid button{padding:6px 2px;font-size:12px}#sayBuild{gap:4px;margin:0 0 6px}#sayBuild select{padding:6px 8px;font-size:14px}.epcard .cfoot{gap:2px}}
+  @media (max-height:700px) and (max-aspect-ratio:1/1){.epcard{padding:10px 12px}#emoGrid{gap:5px;margin:4px 0 8px}#emoGrid button{aspect-ratio:auto;height:38px;padding:3px}#phraseGrid{gap:4px;margin:0 0 6px}#phraseGrid button{padding:6px 2px;font-size:12px}#sayBuild{gap:4px;margin:0 0 6px}#sayBuild .csel-btn{padding:6px 8px;font-size:14px}.epcard .cfoot{gap:2px}}
   .shopcard{width:min(420px,100%);max-height:92vh;overflow:auto;text-align:center}
   #shopWallet{display:flex;gap:16px;justify-content:center;align-items:center;font-size:18px;margin:2px 0 10px}
   #shopWallet span{display:inline-flex;align-items:center;gap:6px}#shopWallet .ic{width:22px;height:22px}
@@ -441,7 +441,7 @@
     .shopcard{width:min(720px,100%);padding:10px 14px}.shopcard h3{margin:0 0 2px;font-size:19px}#shopWallet{margin:0 0 6px;font-size:16px}
     #shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.shopitem{padding:5px 8px}.shopitem .sico{width:32px;height:32px}.shopitem .sinfo b{font-size:15px}.shopitem .sinfo small{display:none}.shopitem button{min-width:70px;padding:4px 6px}.shopcard .small{margin:0 0 4px;font-size:12px}.shopcard .cfoot{margin-top:2px}.shopcard .cfoot button{padding:5px 18px}
     .epcard{width:min(680px,100%);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start;padding:10px 14px}.epcard h3,.epcard .cfoot{grid-column:1/-1;margin:0 0 4px}
-    #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:4px;margin:4px 0;align-content:start}#phraseGrid button{padding:6px 2px;font-size:12px}#sayBuild{gap:4px;margin:2px 0}#sayBuild select{padding:5px 6px;font-size:13px}#sayBuild .small{display:none}
+    #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:4px;margin:4px 0;align-content:start}#phraseGrid button{padding:6px 2px;font-size:12px}#sayBuild{gap:4px;margin:2px 0}#sayBuild .csel-btn{padding:5px 6px;font-size:13px}#sayBuild .small{display:none}
     #shopKeep{padding:1px 8px;margin:0 0 4px}#shopKeep small{display:none}#shopKeep b{font-size:14px;font-weight:normal}#shopList{grid-template-columns:repeat(5,1fr)}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
     #emoGrid button{aspect-ratio:auto;height:36px;padding:3px}.epcard{padding:8px 12px}.epcard h3{font-size:19px}#phraseGrid button{padding:4px 2px}
     .profcard{padding:8px 14px}.profcard .phead{gap:10px}.profcard .pbeat{padding:5px 10px}
@@ -533,8 +533,8 @@
   #editbar{touch-action:none}#editbar input[type=range]{touch-action:none;height:28px}
   #phraseGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 10px}
   #sayBuild{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;text-align:left}#sayBuild .small{margin:0}
-  #sayBuild select{width:100%;min-width:0;padding:9px 8px;font:inherit;font-size:15px;color:inherit;background:#2c2644;border:2px solid var(--line);border-radius:var(--wob)}
-  .sayrow{display:flex;gap:6px}.sayrow select{flex:1}.sayrow .chip{flex:0 0 auto;padding:0 16px;font-weight:700}#saySend{background:var(--accent);color:#1a1020;border:2px solid #16100c;opacity:1}
+  #sayBuild .csel-btn{min-width:0;padding:9px 10px;font:inherit;font-size:15px;color:inherit;background:#2c2644}#sayBuild .csel-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.saychk{display:flex;align-items:center;gap:7px;font-size:13px;opacity:.85;cursor:pointer}.saychk input{width:17px;height:17px;margin:0;accent-color:var(--accent)}#saySend.ready{box-shadow:0 0 0 3px #fff}
+  .sayrow{display:flex;gap:6px}.sayrow .csel{flex:1;min-width:0}.sayrow .chip{flex:0 0 auto;padding:0 16px;font-weight:700}#saySend{background:var(--accent);color:#1a1020;border:2px solid #16100c;opacity:1}
   #phraseGrid button{padding:8px 2px;font-size:13px;line-height:1.15;border:2px solid var(--line);border-radius:var(--wob);background:#2c2644;color:inherit}
   #phraseGrid button:active,#phraseGrid button:hover{background:#3a3355}#phraseGrid button:active{transform:scale(.95)}
   #emoPop,#shopPop{z-index:11;background:rgba(10,8,16,.55)}
@@ -581,7 +581,7 @@
     #pause .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}#pause .pcard h3{grid-column:1/-1;font-size:22px}#pause .pcard #pauseSub,#pause .pcard #pResume,#pause .pcard #pHome{grid-column:1/-1}#pause .pcard .pbtn{padding:7px;font-size:17px;gap:6px}#pause .pcard #pResume{font-size:20px}#pause .pcard #pauseSub{margin:-2px 0}
   }
   @media (max-height:340px) and (min-aspect-ratio:1/1){
-    #emoGrid button{height:26px;padding:1px}#emoGrid{gap:3px;margin:2px 0}#phraseGrid{gap:3px;margin:2px 0}#phraseGrid button{padding:1px 2px;font-size:11px}#sayBuild select{padding:2px 4px;font-size:12px}.sayrow .chip{padding:0 10px}.epcard{padding:6px 12px;column-gap:10px}.epcard h3{font-size:17px;margin:0 0 2px}
+    #emoGrid button{height:26px;padding:1px}#emoGrid{gap:3px;margin:2px 0}#phraseGrid{gap:3px;margin:2px 0}#phraseGrid button{padding:1px 2px;font-size:11px}#sayBuild .csel-btn{padding:2px 4px;font-size:12px}.sayrow .chip{padding:0 10px}.epcard{padding:6px 12px;column-gap:10px}.epcard h3{font-size:17px;margin:0 0 2px}
     .profcard{padding:6px 12px}.profcard .phead{gap:8px}.profcard .pbeat{padding:3px 8px}.profcard h3,.profcard .small{margin-top:0;margin-bottom:2px}
   }
   .shopcard{display:flex;flex-direction:column;overflow:hidden}.shopcard #shopList{overflow-y:auto;min-height:0;flex:1 1 auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.shopcard h3,.shopcard #shopWallet,.shopcard .small,.shopcard .cfoot{flex:none}
@@ -635,7 +635,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 117; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 118; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -836,7 +836,7 @@
 <div id="emoPop" class="overlay hide"><div class="card epcard">
   <div class="chead"><h3>Say something</h3><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="epl"><div id="emoGrid"></div>
-  <div id="sayBuild"><div class="small dim">Build a message</div><select id="sayTpl" aria-label="Message"></select><div class="sayrow"><select id="sayArg" aria-label="Choose"></select><button id="saySend" class="chip pri" type="button">Send</button></div></div></div>
+  <div id="sayBuild"><div class="small dim">Build a message</div><div id="sayTpl"></div><div class="sayrow"><div id="sayArg"></div><button id="saySend" class="chip pri" type="button">Send</button></div><label class="saychk"><input type="checkbox" id="sayAuto" checked> Open the second list right after the first</label></div></div>
   <div id="phraseGrid"></div>
   <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim">Everyone in your world sees it.</span></div>
 </div></div>
@@ -1156,8 +1156,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=117"></script>
-<script src="physics.js?v=117"></script>
+<script src="maps.js?v=118"></script>
+<script src="physics.js?v=118"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1309,7 +1309,7 @@ function makeSelect(el, opts, onPick) {
   }
   btn.onclick = () => { if (list) close(); else open(); };
   label();
-  return { set(v) { cur = v; label(); }, close };
+  return { set(v) { cur = v; label(); }, close, open };
 }
 
 /* ================= custom colour picker ================= */
@@ -1857,6 +1857,7 @@ function update(dt) {
   w.focus.x = S.b.x; w.focus.y = S.b.y;
   botsTick(dt);
   followWorld(dt);
+  remotePush(dt);
   P.stepDyn(w, dt);
   if (w.drops && w.drops.length) stepDrops(w, dt);
   if (S.spawnT > 0) S.spawnT -= dt;
@@ -1963,6 +1964,14 @@ function collectCoins() {
 /* ---------- one world for everybody: the server works out where every crate, ball, plank and gate is, and this device shows exactly that ---------- */
 const followOn = () => !!(S.world && online && ws && ws.readyState === 1 && shared() && S.slot >= 0 && S.slot < SOLO_BASE + 1e6);
 const UNK = 5e8;   // (a thing in the shared world the server has not told this device about yet)
+function remotePush(dt) {   // what this device is moving for everybody: the other players near it push it here too, just as they do on the server
+  const w = S.world; if (!w.follow || !others.size) return;
+  let any = false, pl = w.see.some(s => s.owned && !s.gone); for (const d of w.dyn) if ((d.mineT > 0 || d.keep > 0) && !(d.burn > 0)) { any = true; break; }
+  if (!any && !pl) return;
+  others.forEach(o => { if (!o.seen || o.dead || o.cx === undefined) return; const c = { x: o.cx, y: o.cy, vx: o.svx || 0, vy: o.svy || 0, ground: !!o.sg, kin: true, remote: true, dt };
+    if (any) P.collideDyn(c, w);
+    if (pl) { c.x = o.cx; c.y = o.cy; for (const s of w.see) if (s.owned && Math.abs(s.cx - c.x) < s.hl + 40 && Math.abs(s.cy - c.y) < s.hl + 60) { P.seeBody(c, w, P.PLAYER_WT); break; } } });   // (and a teeter-totter this device turns feels their weight)
+}
 function followWorld(dt) {
   const w = S.world, fol = followOn(); if (w.follow !== fol) { w.follow = fol; if (!fol) { for (const d of w.dyn) { d.mineT = 0; d.sleep = false; if (d.burn === UNK) d.burn = 0; } } }
   w.pubWait = !fol && S.slot >= 0 && S.slot < SOLO_BASE && !!(settings.mp || party) && !offlineOn() && !inSolo();   // (a shared world before the server has spoken: nothing in it moves by itself here)
@@ -1972,18 +1981,24 @@ function followWorld(dt) {
     const d = w.dyn[i], s = d.sv;
     if (!s) { if (!d.local && !(d.burn > 0)) d.burn = UNK; continue; }   // (the server has not said where this one is yet: it is not shown at all, rather than shown where it used to be)
     if (d.burn === UNK) { d.burn = 0; s.jump = true; }
-    if (s.burn) { if (!(d.burn >= 1e9)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } continue; }
-    if (d.burn >= 1e9) { d.burn = 0; d.x = s.x; d.y = s.y; d.vx = s.vx; d.vy = s.vy; d.rot = s.rot; d.mineT = 0; d.nap = false; d.rest = 0; continue; }
+    if (s.burn) { d.lostAt = 0; if (!(d.burn >= 1e9)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } continue; }
+    if (d.burn >= 1e9) { if (!d.lostAt) d.lostAt = t; if (t - d.lostAt < 3000) continue; d.lostAt = 0;   // (lost here first: it stays lost while the server catches up, instead of coming back and burning up all over again; only if the server still has it after a while does it come back)
+      d.burn = 0; d.x = s.x; d.y = s.y; d.vx = s.vx; d.vy = s.vy; d.rot = s.rot; d.mineT = 0; d.nap = false; d.rest = 0; continue; }
     if (s.jump) { s.jump = false; if (!(d.mineT > 0 || d.keep > 0) || Math.abs(s.x - d.x) + Math.abs(s.y - d.y) > 60) { d.x = s.x; d.y = s.y; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.mineT = 0; d.keep = 0; d.hold = 0; d.errT = 0; d.nap = false; d.st = 0; continue; } }   // (when you arrive, or come back to a place, everything is simply where the server has it: nothing slides or snaps into place)
     const age = Math.min(Math.max(0.06, Math.min(0.25, (s.iv || 0) * 0.0012)), (t - s.t) / 1000), e0 = d.r || d.hw;   // (when the server's updates come slowly, things carry on a little longer in the direction they were going)
     let tx = s.x + s.vx * age, ty = s.y + s.vy * age;
     if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }
     if (age > 0 && (tx !== s.x || ty !== s.y) && w.see.length && intoPlank(w, s.x, s.y, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (nor guess it through a teeter-totter's plank: when the plank stops, so does what rides on it)   // (never guess a position inside the ground)
-    if (d.mineT > 0) { d.mineT -= dt; d.keep = 1.5; }
-    else if (d.keep > 0) { d.keep -= dt; if (s.vx === 0 && s.vy === 0 && t - s.t > 120 && Math.abs(s.x - d.x) + Math.abs(s.y - d.y) < 30) d.keep = 0; if (!(d.keep > 0)) d.soft = 1.2; }   // (what you pushed carries on here until the server has it at rest too, then goes over to the server's picture)
+    if (s.other && t - s.t < 700) { if (d.mineT > 0 || d.keep > 0) { d.mineT = 0; d.keep = 0; d.owned = false; d.errT = 0; } d.hold = Math.max(d.hold || 0, 0.3); }   // (another player's device has this one: theirs is the picture everybody follows, so this device stops guessing at once, and here it is as solid as a wall)   // (another player's device has this one: theirs is the picture everybody follows, so this device stops guessing at once)
+    if (d.mineT > 0) { d.mineT -= dt; d.keep = 1.5; d.ownLong = 0; }
+    else if (d.keep > 0) { d.keep -= dt; if (d.owned && Math.abs(d.vx) + Math.abs(d.vy) + Math.abs(d.av || 0) * 10 > 30 && (d.ownLong = (d.ownLong || 0) + dt) < 8) d.keep = Math.max(d.keep, 0.3);   // (what you set going stays yours until it comes to rest: the server follows it all the way, so it never jumps back to an older picture)
+      if (s.vx === 0 && s.vy === 0 && t - s.t > 120 && Math.abs(s.x - d.x) + Math.abs(s.y - d.y) < 30) d.keep = 0; if (!(d.keep > 0)) d.soft = 1.2; }   // (what you pushed carries on here until the server has it at rest too, then goes over to the server's picture)
     let mine = d.mineT > 0 || d.keep > 0;
+    if (mine) d.wasMine = true; else if (d.wasMine) { d.wasMine = false; d.handAt = t; }
+    if (!mine && d.handAt && s.t < d.handAt) { if (t - d.handAt < 20000) continue; d.handAt = 0; }   // (just let go of: the server has it where this device last said, so it stays put here until the server has something newer to say)
     const ex = tx - d.x, ey = ty - d.y, err = Math.abs(ex) + Math.abs(ey);
-    if (mine && d.owned && t - (d.ownAt || 0) < 300) { if (err > 300) { d.ownBad = (d.ownBad || 0) + dt; if (d.ownBad > 0.6) { d.owned = false; d.mineT = 0; d.keep = 0; d.hold = 0.8; d.ownBad = 0; } } else d.ownBad = 0; continue; }   // (yours: the server is following you, so there is nothing to correct)
+    if (mine && d.owned && t - (d.ownAt || 0) < 300) { let he = err; if (d.oh) { he = 1e9; for (const q of d.oh) he = Math.min(he, Math.abs(q[1] - s.x) + Math.abs(q[2] - s.y)); }   // (the server shows where this device said it was a moment ago: it is behind by the time a message takes, which is no error)
+      if (he > 60 && t - s.t < 400) { d.ownBad = (d.ownBad || 0) + dt; if (d.ownBad > 0.6) { d.owned = false; d.mineT = 0; d.keep = 0; d.hold = 0.8; d.ownBad = 0; } } else d.ownBad = 0; continue; }   // (yours: the server is following you, so there is nothing to correct)
     if (d.hold > 0) { d.hold -= dt; if (err < 2) d.hold = 0; }
     if (mine) {   // this device and the server have it landing in different places (a tumble can go either way): it gives in to the server at once, gliding there, instead of fighting its way back through everything
       if (err > (d.mineT > 0 ? 60 : 22)) d.errT = (d.errT || 0) + dt; else d.errT = 0;
@@ -3333,11 +3348,15 @@ function sendSay(a, b) {
   emoCool = performance.now() + 1000; wsSend({ t: 'say', a, b });
   S.myEmo = { i: -1, txt, t: S.t }; addFeedEmo('You', -1, '', txt); sfx('ui'); toggleChat(false);
 }
-{
-  const st = $('sayTpl'), sa = $('sayArg');
-  SAY.forEach((q, k) => { const o = document.createElement('option'); o.value = k; o.textContent = q.menu; st.appendChild(o); });
-  const fill = () => { sa.innerHTML = ''; SAY_LISTS[SAY[+st.value].l].forEach((v, k) => { const o = document.createElement('option'); o.value = k; o.textContent = v; sa.appendChild(o); }); };
-  st.onchange = fill; fill(); $('saySend').onclick = () => sendSay(+st.value, +sa.value);
+{   // the two lists are the game's own drop-downs; with the box ticked, picking the first opens the second, and then it is ready to send
+  let tpl = 0, arg = 0, argSel = null;
+  const auto = $('sayAuto'), send = $('saySend');
+  try { auto.checked = localStorage.getItem('ballrun4_sayAuto') !== '0'; } catch (e) {}
+  auto.onchange = () => { try { localStorage.setItem('ballrun4_sayAuto', auto.checked ? '1' : '0'); } catch (e) {} };
+  const ready = () => { send.classList.add('ready'); setTimeout(() => send.classList.remove('ready'), 1200); };
+  const fillArg = () => { const el = $('sayArg'); el.innerHTML = ''; arg = 0; argSel = makeSelect(el, SAY_LISTS[SAY[tpl].l].map((v, k) => ({ v: k, label: v })), v => { arg = v; ready(); }); };
+  makeSelect($('sayTpl'), SAY.map((q, k) => ({ v: k, label: q.menu })), v => { tpl = v; fillArg(); if (auto.checked) setTimeout(() => { if (chatOpen) argSel.open(); }, 0); });
+  fillArg(); send.onclick = () => sendSay(tpl, arg);
 }
 const pg = $('phraseGrid');
 PHRASES.forEach((t, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.onclick = () => sendEmo(EMO.length + k); pg.appendChild(b); });
@@ -3346,7 +3365,7 @@ $('chatMute').onclick = () => setChatMute(!chatMuted); setChatMute(chatMuted);
 let chatOpen = false;
 function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it
   if (on && inHome) return;
-  chatOpen = on; $('emoPop').classList.toggle('hide', !on); if (on && shopOpen) toggleShop(false);
+  chatOpen = on; $('emoPop').classList.toggle('hide', !on); if (!on && closeSelectFn) closeSelectFn(); if (on && shopOpen) toggleShop(false);
   if (on) { if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); }
 }
 $('btnChat').onclick = () => toggleChat(!chatOpen);
@@ -4713,13 +4732,14 @@ function dynBin(dv, len, ty) {
     for (let k = 0; k < n; k++) {
       const o = 4 + k * st; if (o + st > len) break;
       const d = w.dynBy.get(dv.getUint32(o, true)); if (!d) continue;
-      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0, jump: !d.sv || t - d.sv.t > 1500 }; d.srvOk = true;   // (the first word on something, or the first in a long while: it is simply put there)
+      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, other: dv.getUint8(o + 20) & 2, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0, jump: !d.sv || (t - d.sv.t > 1500 && !(d.mineT > 0 || d.keep > 0)) }; d.srvOk = true;   // (the first word on something, or the first in a long while: it is simply put there)
     }
   } else {
+    const st = ty === 7 ? 16 : 12;
     for (let k = 0; k < n; k++) {
-      const o = 4 + k * 12; if (o + 12 > len) break;
-      const uid = dv.getUint32(o, true);
-      for (let i = 0; i < w.see.length; i++) if (w.see[i].uid === uid) { w.see[i].sa = dv.getFloat32(o + 4, true); w.see[i].sav = dv.getFloat32(o + 8, true); w.see[i].st = t; break; }
+      const o = 4 + k * st; if (o + st > len) break;
+      const uid = dv.getUint32(o, true), ob = ty === 7 ? dv.getUint32(o + 12, true) : 0;
+      for (let i = 0; i < w.see.length; i++) if (w.see[i].uid === uid) { const s = w.see[i]; s.sa = dv.getFloat32(o + 4, true); s.sav = dv.getFloat32(o + 8, true); s.st = t; s.other = ob !== 0 && ob !== myId; if (s.other) { s.owned = false; s.keepP = 0; } break; }   // (other: somebody else's device is turning it)
     }
   }
 }
@@ -4727,7 +4747,7 @@ function onBin(buf) {   // compact position update: [1][slot u16] then per playe
   const dv = new DataView(buf);
   const ty = buf.byteLength >= 3 ? dv.getUint8(0) : 0;
   if (ty === 2 || ty === 3) { trackBin(dv, buf.byteLength, ty); return; }
-  if (ty === 4 || ty === 5 || ty === 6) { dynBin(dv, buf.byteLength, ty); return; }
+  if (ty === 4 || ty === 5 || ty === 6 || ty === 7) { dynBin(dv, buf.byteLength, ty); return; }
   if (ty !== 1) return;
   const sl = dv.getUint16(1, true);
   const okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;
@@ -4902,12 +4922,21 @@ setInterval(() => {
   if (!S.world || !S.world.follow || !online || !ws || ws.readyState !== 1 || S.mode !== 'play') return;
   const out = [], t = performance.now();
   for (const d of S.world.dyn) {
-    if (!(d.mineT > 0 || d.keep > 0) || d.gone || d.burn > 0 || !d.sv || !d.srvOk) { d.owned = false; continue; }
-    if (contested(d)) { d.owned = false; continue; }
-    d.owned = true; d.ownAt = t;
+    if (!(d.mineT > 0 || d.keep > 0) || d.gone || d.burn > 0 || !d.sv || !d.srvOk || d.sv.other) { d.owned = false; continue; }
+    d.owned = true; d.ownAt = t; (d.oh = d.oh || []).push([t, d.x, d.y]); if (d.oh.length > 24) d.oh.shift();
     out.push([d.uid >>> 0, Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.vx), Math.round(d.vy), Math.round(d.rot * 1000) / 1000, Math.round(d.av * 100) / 100]);
   }
-  for (let i = 0; i < out.length && i < 24; i += 12) { try { ws.send(JSON.stringify({ t: 'own', s: S.slot, b: out.slice(i, i + 12) })); } catch (e) {} }
+  const pl = [];
+  for (const s of S.world.see) {   // a teeter-totter you are on (or just set swinging): this device turns it for everybody
+    if (s.gone || s.sa === undefined) continue;
+    if (s.mineT > 0) s.keepP = 1; else if (s.keepP > 0) { s.keepP -= 0.05; if (Math.abs(s.av) > 0.05 && (s.pLong = (s.pLong || 0) + 0.05) < 4) s.keepP = Math.max(s.keepP, 0.1); }
+    if (s.mineT > 0) s.pLong = 0;
+    const want = (s.mineT > 0 || s.keepP > 0) && !(s.other && t - (s.st || 0) < 700);
+    if (!want) { if (s.owned) { s.owned = false; s.keepP = 0; } continue; }
+    s.owned = true; pl.push([s.uid >>> 0, Math.round(s.ang * 10000) / 10000, Math.round(s.av * 1000) / 1000]);
+  }
+  if (!out.length && !pl.length) return;
+  for (let i = 0; i < Math.max(1, out.length) && i < 24; i += 12) { try { ws.send(JSON.stringify(i === 0 && pl.length ? { t: 'own', s: S.slot, b: out.slice(i, i + 12), pl } : { t: 'own', s: S.slot, b: out.slice(i, i + 12) })); } catch (e) {} }
 }, 50);
 /* ================= drawing (hand-drawn look, flat colours) ================= */
 const ICE = '#7fdcff', LAVA = '#ff4a1c', INK = 'rgba(22,15,12,.85)';
