@@ -1141,8 +1141,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=108"></script>
-<script src="physics.js?v=108"></script>
+<script src="maps.js?v=109"></script>
+<script src="physics.js?v=109"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3325,7 +3325,7 @@ function shopRender() {
   const T = $('shopTabs'); T.innerHTML = '';
   if (unlimitedNow() && shopTab === 'coins') shopTab = 'blocks';   // (nothing to trade for when coins never run out)
   SHOP_TABS.filter(t => !(unlimitedNow() && t[0] === 'coins')).forEach(([id, name]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.className = id === shopTab ? 'on' : ''; b.onclick = () => { shopTab = id; sfx('ui'); shopRender(); const l = $('shopList'); l.scrollTop = 0; }; T.appendChild(b); });
-  $('shopKeep').classList.toggle('hide', shopTab !== 'terrain'); $('setKeep').checked = !!settings.terrKeep;
+  $('shopKeep').classList.toggle('hide', shopTab !== 'terrain' && shopTab !== 'blocks'); $('setKeep').checked = !!settings.terrKeep;
   const L = $('shopList'); L.innerHTML = ''; L.classList.toggle('dense', shopTab === 'terrain');   // (five terrain cards: names and prices only on a narrow phone, so the card never has to scroll)
   SHOP.filter(it => it.cat === shopTab).forEach(it => {
     const row = document.createElement('div'); row.className = 'shopitem';
@@ -3711,7 +3711,7 @@ function finishPlacing() {
   S.own = S.own || {}; if (!g.cancelled) S.own[it.id] = ownCount(it) + 1;   /* (an action that cancels one of your own builds is not counted, and gives the earlier one back) */
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   placing = null; placeUIKey = null; refreshPlaceUI();
-  if (it.misc === 'ter' && settings.terrKeep) {   // keep going with the same terrain until you cancel or the money runs out
+  if ((it.misc === 'ter' || it.cat === 'blocks') && settings.terrKeep) {   // keep going with the same shape or terrain until you cancel or the money runs out
     if (wallet.c < it.c || wallet.g < it.g) notice('Out of ' + (wallet.c < it.c ? 'coins' : 'diamonds') + '. You are done ' + (it.ter === 'dig' ? 'digging' : 'placing'), 'urgent');
     else if (atLimit(it)) notice('That is the most ' + it.name + ' you can ' + (it.ter === 'dig' ? 'dig' : 'build') + ' here. You are done ' + (it.ter === 'dig' ? 'digging' : 'placing'), 'urgent');
     else { startPlacing(it); placing.side = g.side; computeGhost(); }
@@ -4739,7 +4739,6 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
   ws.send(buf);
 }
 setInterval(() => sendPos(false), 30);
-
 /* ================= drawing (hand-drawn look, flat colours) ================= */
 const ICE = '#7fdcff', LAVA = '#ff4a1c', INK = 'rgba(22,15,12,.85)';
 function jx(cx, cy) { return (hsh(cx, cy, 1) - 0.5) * 2.6; }

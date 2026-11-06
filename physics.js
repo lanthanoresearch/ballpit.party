@@ -116,7 +116,7 @@
       d.x += nx * (r - dd); d.y += ny * (r - dd);
       const vn = d.vx * nx + d.vy * ny;
       if (vn < 0) { const e = vn < -250 ? 0.3 : 0; d.vx -= (1 + e) * vn * nx; d.vy -= (1 + e) * vn * ny; }
-      if (t === 6 && ny < -0.5 && vn < -130) { d.vy = -BOUNCE * 0.85; d.gr = false; continue; }   // a bounce pad throws a toy up
+      if (t === 6 && ny < -0.5 && vn < -130) { const v = Math.min(BOUNCE * 0.85, -vn * 0.85); if (v > 150) { d.vy = -v; d.gr = false; continue; } }   // a bounce pad springs a toy back up, a little less each time
       if (ny < -0.5) d.gr = true;
     }
     return burn;
@@ -143,7 +143,11 @@
       pen = cp;
     }
     let tm = a.m + b.m, sa = b.m / tm, sb = a.m / tm;
-    if (!a.r && !b.r && ny !== 0) { if (ny > 0) { sa = 1; sb = 0; } else { sa = 0; sb = 1; } }   // crate on crate: only the upper one is pushed out, so a stack never squeezes its bottom crate into the floor
+    if (!a.r && !b.r && ny !== 0) { if (ny > 0) { sa = 1; sb = 0; } else { sa = 0; sb = 1; } }
+    else if (!a.r && !b.r && nx !== 0) {   // side by side: one that is sitting still on something stays where it is; the one that is moving (sliding, tipping, falling) is the one that gives way
+      const ra = a.gr && !a.tip && Math.abs(a.vx) < 40 && Math.abs(a.vy) < 80, rb = b.gr && !b.tip && Math.abs(b.vx) < 40 && Math.abs(b.vy) < 80;
+      if (ra && !rb) { sa = 0; sb = 1; } else if (rb && !ra) { sa = 1; sb = 0; }
+    }   // crate on crate: only the upper one is pushed out, so a stack never squeezes its bottom crate into the floor
     // a crate that is sitting on the ground never gets pushed down into it: whatever it touches is moved instead
     const free = (o, dx, dy) => o.r || !w || !boxHits(w, o.x + dx, o.y + dy, o.hw, o.hh);
     const ax = -nx * pen * sa, ay = -ny * pen * sa, bx = nx * pen * sb, by = ny * pen * sb;
@@ -365,7 +369,7 @@
   function boxSettle(w, d, L, dt) {   // after tumbling: spin while in the air, then lie flat again when it lands
     if (d.sr !== undefined) { d.rot += (d.sr - d.rot) * Math.min(1, 14 * dt); d.sr = undefined; d.spin = false; return; }   // on a plank it tilts with it
     if (!d.spin && !d.rot) return;
-    const sup = (boxSupports(w, d, L).length > 0 || d.pc) && d.vy > -20 && Math.abs(d.vy) < 140;   // (resting on a ball counts too)
+    const sup = (boxSupports(w, d, L).length > 0 || d.pc || d.gr) && d.vy > -20 && Math.abs(d.vy) < 140;   // (resting on a ball counts too)
     if (!sup && d.spin) { d.rot += d.av * dt; d.av *= (1 - 0.4 * dt); return; }
     d.spin = false; d.av = 0;
     const tgt = Math.round(d.rot / HALF_PI) * HALF_PI;
@@ -410,7 +414,7 @@
         d.y += d.vy * dt;
         if (boxHits(w, d.x, d.y, d.hw, d.hh)) {
           const hit = d.vy; d.y -= d.vy * dt; d.vy = 0;
-          if (hit > 130 && tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh + 2) / TS)) === 6) { d.vy = -BOUNCE * (d.hw > 20 ? 0.55 : 0.75); d.tip = null; }   // a bounce pad throws a crate up too (heavier ones less)
+          if (hit > 130 && tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh + d.vy * 0 + hit * dt + 2) / TS)) === 6) { const v = Math.min(BOUNCE * 0.85, hit * (d.hw > 20 ? 0.5 : 0.68)); if (v > 160) { d.vy = -v; d.tip = null; } }   // a bounce pad springs a crate back up, a little less each time (heavier ones less)
         }
         d.gr = boxHits(w, d.x, d.y + 1, d.hw, d.hh);
         const sp = w.see.length ? seeBox(w, d, dt) : null;
@@ -491,14 +495,14 @@
         let nx, ny, pen;
         if (d2 === 0) {   // the ball's centre is inside the crate (it was pushed in, or lagged behind): leave by the nearest face
           const ox = d.hw + R - Math.abs(b.x - d.x), oy = d.hh + R - Math.abs(b.y - d.y);
-          if (ox < oy) { nx = b.x === d.x ? (b.vx >= 0 ? -1 : 1) : (b.x > d.x ? 1 : -1); ny = 0; pen = ox; } else { nx = 0; ny = b.y > d.y ? 1 : -1; pen = oy; }
+          if (ox < oy * (b.vy > 60 && b.y < d.y ? 2.5 : 1)) { nx = b.x === d.x ? (b.vx >= 0 ? -1 : 1) : (b.x > d.x ? 1 : -1); ny = 0; pen = ox; } else { nx = 0; ny = b.y > d.y ? 1 : -1; pen = oy; }
         } else { const dd = Math.sqrt(d2); nx = dx / dd; ny = dy / dd; pen = R - dd; }
         if (ny < -0.6) {                   // standing on top
           b.y += ny * pen; if (b.vy > 0) b.vy = 0; b.ground = true; if (Math.abs(b.x - d.x) <= d.hw) { b.flat = true; b.gType = 1; }
           d.touch = true;
           if ((d.kind === 5 || d.kind === 6) && b.vy >= 0) { b.bnc = true; if (d.kind === 6) b.bncV = SUPER_BOUNCE; d.sq = 0.25; }   // a spring: land on it (or roll onto it) and it throws you up (a super spring: very high)
         } else if (ny > 0.6) {             // the crate is above you: it gets lifted (so one sitting on your head can never pin you down or stop you jumping); only a ceiling stops you
-          if (!boxHits(w, d.x, d.y - pen, d.hw, d.hh)) { d.y -= pen; if (d.vy > b.vy) d.vy = b.vy; if (d.hw > 20 && b.vy < 0) b.vy *= 0.6; d.touch = true; }
+          if (!boxHits(w, d.x, d.y - pen, d.hw, d.hh)) { d.y -= pen; if (d.vy > b.vy) d.vy = b.vy; if (b.vy < -100 && Math.abs(nx) > 0.15) d.vx = -nx * Math.min(220, -b.vy * 0.35) / (d.hw > 20 ? 1.6 : 1); if (d.hw > 20 && b.vy < 0) b.vy *= 0.6; d.touch = true; d.nap = false; d.rest = 0; }   // it is knocked up, and off to the side if you hit it off-centre
           else { b.y += ny * pen; if (b.vy < 0) b.vy = 0; }
         } else if (w.follow && d.hold > 0) {   // (the server's crate and yours disagree: it is a wall until they agree again)
           b.x += nx * pen; if (b.vx * nx < 0) b.vx = 0; d.mineT = 0;

@@ -352,7 +352,7 @@ function simTick() {
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
           const age = Math.min(0.12, (now - (p.tPos || now)) / 1000 + k * SIMDT), g = !!(p.st & 0x8000);
-          const tx = p.x + p.vx * age, ty = p.y + (g ? 0 : p.vy * age);
+          const tx = p.x + p.vx * age, ty = p.y;   // (sideways it carries on along its path; up and down it is where it was last said to be, so a fall never has it sunk into the crate it is landing on)
           if (p.qx === undefined || Math.abs(tx - p.qx) > 220 || Math.abs(ty - p.qy) > 220) { p.qx = tx; p.qy = ty; }
           else {
             const lx = Math.max(7, Math.abs(p.vx) * SIMDT * 2), ly = Math.max(10, Math.abs(p.vy) * SIMDT * 2);
