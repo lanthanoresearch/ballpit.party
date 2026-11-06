@@ -352,7 +352,7 @@ function simTick() {
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
           const age = Math.min(0.12, (now - (p.tPos || now)) / 1000 + k * SIMDT), g = !!(p.st & 0x8000);
-          const tx = p.x + p.vx * age, ty = p.y;   // (sideways it carries on along its path; up and down it is where it was last said to be, so a fall never has it sunk into the crate it is landing on)
+          const tx = p.x + p.vx * age, ty = p.y + Math.min(0, p.vy) * age;   // (sideways it carries on along its path, and up when it is jumping; a fall is not carried on, so it is never sunk into the crate it is landing on)
           if (p.qx === undefined || Math.abs(tx - p.qx) > 220 || Math.abs(ty - p.qy) > 220) { p.qx = tx; p.qy = ty; }
           else {
             const lx = Math.max(7, Math.abs(p.vx) * SIMDT * 2), ly = Math.max(10, Math.abs(p.vy) * SIMDT * 2);
@@ -360,7 +360,7 @@ function simTick() {
           }
           list.push({ x: p.qx, y: p.qy, vx: p.vx, vy: p.vy, ground: g });
         }
-        for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground }; P.collideDyn(c, w); P.seeBody(c, w, 60); }
+        for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground, kin: true, dt: SIMDT }; P.collideDyn(c, w); P.seeBody(c, w, 60); }   // (kin: a player is where they say they are; only the things they touch are moved)
         if (k === n - 1) P.stepSwitches(w, list, SIMDT * n);   // (the buttons and plates are looked at once per update)
       }
       w.ev.length = 0;
@@ -379,7 +379,7 @@ function simTick() {
       const dm = d.px === undefined ? 99 : Math.abs(d.x - d.px) + Math.abs(d.y - d.py); d.px = d.x; d.py = d.y;
       d.svx = Math.abs(d.vx) > 150 && Math.abs(kx) < Math.abs(d.vx) * 0.2 ? kx : d.vx;   // (a pile held up by what is under it keeps 'falling' in its own sums while not moving at all: what it really did is sent instead)
       d.svy = Math.abs(d.vy) > 150 && Math.abs(ky) < Math.abs(d.vy) * 0.2 ? ky : d.vy;
-      const still = !bn && ((Math.abs(d.svx) < 25 && Math.abs(d.svy) < 25) || dm < 0.5);
+      const still = !bn && ((Math.abs(d.svx) < 25 && Math.abs(d.svy) < 25) || dm < 0.5) && Math.abs(d.av || 0) < 0.3;
       const mv = !bn && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || still !== d.lst || (!still && Math.abs(d.svx - d.lvx) + Math.abs(d.svy - d.lvy) > 60));
       if (bn !== d.lb || mv) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; d.lst = still; d.lvx = d.svx; d.lvy = d.svy; }
     }
@@ -415,12 +415,12 @@ function simTick() {
       }
       if (out.length >= 90) p.more = 1;
       if (!out.length) continue;
-      const buf = Buffer.allocUnsafe(4 + out.length * 21); buf[0] = 4; buf.writeUInt16LE(slot, 1); buf[3] = out.length;
+      const buf = Buffer.allocUnsafe(4 + out.length * 23); buf[0] = 6; buf.writeUInt16LE(slot, 1); buf[3] = out.length;   // (type 6: as type 4, plus how fast each one is turning)
       out.forEach((d, k) => {
-        const o = 4 + k * 21, bn = d.burn > 0;
+        const o = 4 + k * 23, bn = d.burn > 0;
         buf.writeUInt32LE(d.uid >>> 0, o); buf.writeFloatLE(bn ? 0 : d.x, o + 4); buf.writeFloatLE(bn ? 0 : d.y, o + 8);
         const rest = bn || d.lst; buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svx))), o + 12); buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svy))), o + 14);
-        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = bn ? 1 : 0;
+        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = bn ? 1 : 0; buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round((bn || d.lst ? 0 : d.av || 0) * 1000))), o + 21);
         p.dver.set(d.uid, d.ver);
       });
       p.ws.send(buf, { binary: true });

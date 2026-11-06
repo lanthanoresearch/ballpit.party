@@ -1141,8 +1141,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=109"></script>
-<script src="physics.js?v=109"></script>
+<script src="maps.js?v=110"></script>
+<script src="physics.js?v=110"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1958,14 +1958,17 @@ function followWorld(dt) {
     let tx = s.x + s.vx * age, ty = s.y + s.vy * age;
     if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (never guess a position inside the ground)
     if (d.mineT > 0) { d.mineT -= dt; d.keep = 1.5; }
-    else if (d.keep > 0) { d.keep -= dt; if (s.vx === 0 && s.vy === 0 && t - s.t > 120 && Math.abs(s.x - d.x) + Math.abs(s.y - d.y) < 30) d.keep = 0; }   // (what you pushed carries on here until the server has it at rest too, then goes over to the server's picture)
+    else if (d.keep > 0) { d.keep -= dt; if (s.vx === 0 && s.vy === 0 && t - s.t > 120 && Math.abs(s.x - d.x) + Math.abs(s.y - d.y) < 30) d.keep = 0; if (!(d.keep > 0)) d.soft = 1.2; }   // (what you pushed carries on here until the server has it at rest too, then goes over to the server's picture)
     const mine = d.mineT > 0 || d.keep > 0;
     const ex = tx - d.x, ey = ty - d.y, err = Math.abs(ex) + Math.abs(ey);
-    if (err > 240 && !(mine && d.mineT > 0 && err < 400)) { d.x = tx; d.y = ty; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.mineT = 0; d.keep = 0; d.tip = null; d.spin = false; continue; }
-    const k = 1 - Math.exp(-(mine ? (d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : err < 100 ? 12 : 24) : (err < 14 ? 3 : err < 40 ? 7 : 14)) : 26) * dt);
+    const tr = s.rot + (s.av || 0) * age;   // (and how it is turned, carried on the same way)
+    if (err > 240 && !(mine && d.mineT > 0 && err < 400)) { d.x = tx; d.y = ty; d.rot = tr; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.mineT = 0; d.keep = 0; continue; }
+    const calm = mine && s.vx === 0 && s.vy === 0 && t - s.t > 200 && Math.abs(d.vx) + Math.abs(d.vy) < 40;   // (the server has it at rest and so does this device: they agree on where, quickly)
+    if (d.soft > 0) d.soft -= dt;
+    const k = 1 - Math.exp(-(calm ? (err < 10 ? 2.5 : 8) : !mine && d.soft > 0 && err < 15 ? 2.5 : mine ? (d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : err < 100 ? 12 : 24) : (err < 14 ? 3 : err < 40 ? 7 : 14)) : 26) * dt);
     d.x += ex * k; d.y += ey * k;
-    if (!mine) { d.rot += (s.rot - d.rot) * (1 - Math.exp(-14 * dt)); d.vx = s.vx; d.vy = s.vy; d.tip = null; d.nap = false; d.spin = false; d.av = 0; }
-    else if (!d.tip && !d.spin && Math.abs(s.rot - d.rot) > 0.01) d.rot += (s.rot - d.rot) * (1 - Math.exp(-6 * dt));
+    if (!mine) { d.rot += (tr - d.rot) * (1 - Math.exp(-18 * dt)); d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; }
+    else if (Math.abs(tr - d.rot) > 0.01) d.rot += (tr - d.rot) * (1 - Math.exp(-(calm ? 8 : err < 14 ? 2 : 5) * dt));
   }
 }
 function adoptUid(w, d, u) {   // the server's name for a crate or ball: whatever else wore that name takes this one's old name
@@ -4555,11 +4558,12 @@ function dynBin(dv, len, ty) {
   S.gotDyn = true;   // where the shared crates, balls (type 4) and planks (type 5) are right now
   const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (S.slot & 0xFFFF)) return;
   const n = dv.getUint8(3), t = performance.now();
-  if (ty === 4) {
+  if (ty === 4 || ty === 6) {
+    const st = ty === 6 ? 23 : 21;
     for (let k = 0; k < n; k++) {
-      const o = 4 + k * 21; if (o + 21 > len) break;
+      const o = 4 + k * st; if (o + st > len) break;
       const d = w.dynBy.get(dv.getUint32(o, true)); if (!d) continue;
-      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0 };
+      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0 };
     }
   } else {
     for (let k = 0; k < n; k++) {
@@ -4573,7 +4577,7 @@ function onBin(buf) {   // compact position update: [1][slot u16] then per playe
   const dv = new DataView(buf);
   const ty = buf.byteLength >= 3 ? dv.getUint8(0) : 0;
   if (ty === 2 || ty === 3) { trackBin(dv, buf.byteLength, ty); return; }
-  if (ty === 4 || ty === 5) { dynBin(dv, buf.byteLength, ty); return; }
+  if (ty === 4 || ty === 5 || ty === 6) { dynBin(dv, buf.byteLength, ty); return; }
   if (ty !== 1) return;
   const sl = dv.getUint16(1, true);
   const okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;

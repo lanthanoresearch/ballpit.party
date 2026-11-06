@@ -85,7 +85,7 @@
   }
   function addProp(w, kind, x, y) {   // x, y: the centre
     const q = propDims(kind), hw = q.hw, r = q.r;
-    const d = { k: r ? 'o' : 'b', x, y, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, av: 0, tip: null, spin: false, gr: false, touch: false, burn: 0,
+    const d = { k: r ? 'o' : 'b', x, y, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, av: 0, gr: false, touch: false, burn: 0, st: 0,
       m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind };
     d.hx = d.x; d.hy = d.y; d.uid = hash32('p' + kind + ',' + Math.round(x) + ',' + Math.round(y)); if (w.dynBy) { while (w.dynBy.has(d.uid)) d.uid = (d.uid + 1) >>> 0; w.dynBy.set(d.uid, d); }
     w.dyn.push(d); return d;
@@ -100,72 +100,6 @@
     const tx0 = Math.floor((x - hw) / TS), tx1 = Math.floor((x + hw - 0.01) / TS), ty0 = Math.floor((y - hh) / TS), ty1 = Math.floor((y + hh - 0.01) / TS);
     for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) if (isSol(tile(w, tx, ty))) return true;
     return false;
-  }
-  function ballTiles(d, w) {
-    d.gr = false; let burn = false;
-    const r = d.r, tx0 = Math.floor((d.x - r) / TS), tx1 = Math.floor((d.x + r) / TS), ty0 = Math.floor((d.y - r) / TS), ty1 = Math.floor((d.y + r) / TS);
-    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
-      const t = tile(w, tx, ty);
-      if (!t || t === 5) continue;
-      const left = tx * TS, top = ty * TS, cx = clamp(d.x, left, left + TS), cy = clamp(d.y, top, top + TS);
-      const dx = d.x - cx, dy = d.y - cy, d2 = dx * dx + dy * dy;
-      if (t === 2) { if (d2 < (r - 3) * (r - 3)) burn = true; continue; }
-      if (d2 >= r * r) continue;
-      if (d2 === 0) { d.y = top - r; if (d.vy > 0) d.vy = 0; d.gr = true; continue; }
-      const dd = Math.sqrt(d2), nx = dx / dd, ny = dy / dd;
-      d.x += nx * (r - dd); d.y += ny * (r - dd);
-      const vn = d.vx * nx + d.vy * ny;
-      if (vn < 0) { const e = vn < -250 ? 0.3 : 0; d.vx -= (1 + e) * vn * nx; d.vy -= (1 + e) * vn * ny; }
-      if (t === 6 && ny < -0.5 && vn < -130) { const v = Math.min(BOUNCE * 0.85, -vn * 0.85); if (v > 150) { d.vy = -v; d.gr = false; continue; } }   // a bounce pad springs a toy back up, a little less each time
-      if (ny < -0.5) d.gr = true;
-    }
-    return burn;
-  }
-  // generic separation of two pushables (or one pushable and the player: pass player as {x,y,r,vx,vy,m})
-  function pairSep(a, b, e, w) {
-    let nx = 0, ny = 0, pen = 0;
-    if (a.r && b.r) {
-      const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 0.001;
-      pen = a.r + b.r - d; if (pen <= 0) return false; nx = dx / d; ny = dy / d;
-    } else if (!a.r && !b.r) {
-      const dx = b.x - a.x, dy = b.y - a.y, ox = a.hw + b.hw - Math.abs(dx), oy = a.hh + b.hh - Math.abs(dy);
-      if (ox <= 0 || oy <= 0) return false;
-      if (ox < oy) { nx = dx < 0 ? -1 : 1; pen = ox; } else { ny = dy < 0 ? -1 : 1; pen = oy; }
-    } else {
-      const c = a.r ? a : b, bx = a.r ? b : a;
-      const px = clamp(c.x, bx.x - bx.hw, bx.x + bx.hw), py = clamp(c.y, bx.y - bx.hh, bx.y + bx.hh);
-      const dx = c.x - px, dy = c.y - py, d2 = dx * dx + dy * dy;
-      if (d2 >= c.r * c.r) return false;
-      let cnx, cny, cp;
-      if (d2 === 0) { cnx = 0; cny = -1; cp = c.r; } else { const d = Math.sqrt(d2); cnx = dx / d; cny = dy / d; cp = c.r - d; }
-      // normal from a to b
-      if (a.r) { nx = -cnx; ny = -cny; } else { nx = cnx; ny = cny; }
-      pen = cp;
-    }
-    let tm = a.m + b.m, sa = b.m / tm, sb = a.m / tm;
-    if (!a.r && !b.r && ny !== 0) { if (ny > 0) { sa = 1; sb = 0; } else { sa = 0; sb = 1; } }
-    else if (!a.r && !b.r && nx !== 0) {   // side by side: one that is sitting still on something stays where it is; the one that is moving (sliding, tipping, falling) is the one that gives way
-      const ra = a.gr && !a.tip && Math.abs(a.vx) < 40 && Math.abs(a.vy) < 80, rb = b.gr && !b.tip && Math.abs(b.vx) < 40 && Math.abs(b.vy) < 80;
-      if (ra && !rb) { sa = 0; sb = 1; } else if (rb && !ra) { sa = 1; sb = 0; }
-    }   // crate on crate: only the upper one is pushed out, so a stack never squeezes its bottom crate into the floor
-    // a crate that is sitting on the ground never gets pushed down into it: whatever it touches is moved instead
-    const free = (o, dx, dy) => o.r || !w || !boxHits(w, o.x + dx, o.y + dy, o.hw, o.hh);
-    const ax = -nx * pen * sa, ay = -ny * pen * sa, bx = nx * pen * sb, by = ny * pen * sb;
-    const fa = free(a, ax, ay), fb = free(b, bx, by);
-    if (fa && fb) { a.x += ax; a.y += ay; b.x += bx; b.y += by; }
-    else if (fa) { a.x -= nx * pen; a.y -= ny * pen; }          // b is pinned against something: a takes all of it
-    else if (fb) { b.x += nx * pen; b.y += ny * pen; }
-    const vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-    const ee = vn < -160 ? e : 0;                                // only a real knock bounces; resting contact is dead still
-    if (vn < 0) {
-      const ia = fa ? 1 / a.m : 0, ib = fb ? 1 / b.m : 0, im = ia + ib;
-      if (im > 0) { const j = -(1 + ee) * vn / im; a.vx -= j * ia * nx; a.vy -= j * ia * ny; b.vx += j * ib * nx; b.vy += j * ib * ny; }
-      else { const j = -vn * 0.5; a.vx -= j * nx; a.vy -= j * ny; b.vx += j * nx; b.vy += j * ny; }
-    }
-    if (Math.abs(ny) > 0.7) { a.touch = true; b.touch = true; if (!a.r && ny > 0) a.pc = true; if (!b.r && ny < 0) b.pc = true; }   // pc: this crate is sitting on something that is not the ground (a ball, another crate)
-    if (Math.abs(nx) > 0.7) { a.touch = true; b.touch = true; }
-    a._nx = nx; a._ny = ny; b._nx = -nx; b._ny = -ny;
-    return true;
   }
   /* ---------- seesaws (teeter-totters): a tilting plank that you and the round toys can ride ---------- */
   const SEE_MAX = 0.36, SEE_TH = 6;
@@ -227,33 +161,6 @@
     }
     return on;
   }
-  function seeBox(w, d, dt) {   // a crate against every nearby plank: it rides it, and its weight tips it
-    let on = null;
-    for (let i = 0; i < w.see.length; i++) {
-      const s = w.see[i]; if (Math.abs(s.cx - d.x) > s.hl + d.hw + 12 || Math.abs(s.cy - d.y) > s.hl + d.hh + 60) continue;
-      const c = Math.cos(s.ang), sn = Math.sin(s.ang), nx = sn, ny = -c, bottom = d.y + d.hh;
-      let pen = -99;
-      for (const px of [d.x - d.hw + 3, d.x, d.x + d.hw - 3]) {
-        const rx = px - s.cx, ry = bottom - s.cy, along = rx * c + ry * sn;
-        if (along < -s.hl - 2 || along > s.hl + 2) continue;
-        const gap = SEE_TH - (rx * nx + ry * ny);           // how far the corner has sunk below the plank's top face
-        if (gap > -4 && gap < SEE_TH + 18 && d.vy > -80 && gap > pen) pen = gap;   // within a few px counts as resting on it, so the weight doesn't flicker on and off
-      }
-      if (pen === -99) continue;
-      if (pen < 0) pen = 0;
-      const ox = d.x, oy = d.y;
-      d.x += nx * pen; d.y += ny * pen;
-      if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x = ox; d.y = oy; continue; }   // pinned against the ground: leave it
-      const svx = -s.av * (d.y + d.hh - s.cy), svy = s.av * (d.x - s.cx);   // how fast the plank itself is moving there
-      const vn = (d.vx - svx) * nx + (d.vy - svy) * ny;
-      if (vn < 0) { d.vx -= vn * nx; d.vy -= vn * ny; }
-      const vt = (d.vx - svx) * c + (d.vy - svy) * sn, gripK = Math.abs(vt) < 140 ? vt : vt * Math.min(1, 5 * dt);   // wood grips a crate: it stays put on the plank (so a crate can hold one end down), but a firm push still slides it
-      d.vx -= gripK * c; d.vy -= gripK * sn;
-      s.tq += d.m * 60 * clamp((d.x - s.cx) * c + (d.y - s.cy) * sn, -s.hl, s.hl);   // the heavier the crate, the harder it presses
-      on = s;
-    }
-    return on;
-  }
   function seeGuard(w, o, half) {   // whatever was on top of a plank can never end up underneath it: if it did get through (a fast fall, a plank swinging up into it), put it back on top
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i], rx = o.x - s.cx, ry = o.y - s.cy;
@@ -312,71 +219,227 @@
   }
 
 
-  /* ---------- crates that tip over ----------
-     A crate stays put while its centre of mass is over something solid. Once the centre passes the edge it pivots on that corner,
-     swings over, lets go, and tumbles down; it then settles flat again. Everything here depends only on the crate's own state, so it plays out the same on every device. */
-  const HALF_PI = Math.PI / 2;
-  function boxSupports(w, d, L) {   // the stretches of x the crate is resting on (floor tiles and crates underneath), merged
-    const bottom = d.y + d.hh, row = Math.floor((bottom + 1.5) / TS), iv = [];
-    if (Math.abs(row * TS - bottom) < 2.6) {
-      const tx0 = Math.floor((d.x - d.hw) / TS), tx1 = Math.floor((d.x + d.hw - 0.01) / TS);
-      for (let tx = tx0; tx <= tx1; tx++) if (isSol(tile(w, tx, row))) {
-        let a = tx * TS, b = (tx + 1) * TS;
-        if (tx === tx0) a = -1e9; if (tx === tx1) b = 1e9;   // solid ground that carries on past the crate's own edge: that side can never tip
-        iv.push([a, b]);
-      }
+  /* ---------- crates, balls and springs: real rigid-body physics ----------
+     Every crate is a box that can lie at any angle and every ball rolls. Contacts push with impulses and grip with friction
+     (so what sits on a crate rides along with it unless it is yanked out from under), weight adds up through a pile, and
+     nothing is ever turned to face a particular way: a crate rests on whatever face, edge or slope it comes to rest on. */
+  const SLOP = 0.6, BAUM = 0.3, VEL_IT = 10, POS_IT = 4, PM = 4, F_PUSH = 7200, A_PUSH = 1000;   // PM: how heavy your ball is when it pushes things (a crate weighs 1, a big crate 4)
+  const LIN_SLEEP = 8, ANG_SLEEP = 0.1, SLEEP_T = 0.5, MAXSPD = 1400, MAXAV = 28;
+  const SK_PX = 1, SK_NX = 2, SK_PY = 4, SK_NY = 8;   // tile faces that are hidden by a neighbouring solid tile (never pushed out through those)
+  function shapeOf(d) { const c = Math.cos(d.rot || 0), s = Math.sin(d.rot || 0); return { x: d.x, y: d.y, hw: d.hw, hh: d.hh, c, s, ex: Math.abs(c) * d.hw + Math.abs(s) * d.hh, ey: Math.abs(s) * d.hw + Math.abs(c) * d.hh }; }
+  function clipSeg(vIn, nx, ny, off, ce) {
+    const out = [], a = vIn[0], b = vIn[1];
+    const d0 = nx * a[0] + ny * a[1] - off, d1 = nx * b[0] + ny * b[1] - off;
+    if (d0 <= 0) out.push(a);
+    if (d1 <= 0) out.push(b);
+    if (d0 * d1 < 0) {
+      const t = d0 / (d0 - d1); let fp;
+      if (d0 > 0) { fp = a[2].slice(); fp[0] = ce; fp[2] = 0; } else { fp = b[2].slice(); fp[1] = ce; fp[3] = 0; }
+      out.push([a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]), fp]);
     }
-    for (let i = 0; i < L.length; i++) {
-      const o = L[i]; if (o === d || o.k !== 'b' || o.burn > 0 || o.tip || Math.abs(o.rot - Math.round(o.rot / HALF_PI) * HALF_PI) > 0.25) continue;
-      if (Math.abs(o.y - o.hh - bottom) < 3 && Math.abs(o.x - d.x) < o.hw + d.hw - 0.5) iv.push([o.x - o.hw, o.x + o.hw]);
-    }
-    if (!iv.length) return iv;
-    iv.sort((a, b) => a[0] - b[0]);
-    const out = [iv[0].slice()];
-    for (let i = 1; i < iv.length; i++) { const t = out[out.length - 1]; if (iv[i][0] <= t[1] + 5) t[1] = Math.max(t[1], iv[i][1]); else out.push(iv[i].slice()); }
     return out;
   }
-  function boxTipCheck(w, d, L) {   // is the centre of mass hanging past the edge of what it rests on? then start tipping
-    const iv = boxSupports(w, d, L); if (!iv.length) return;
-    for (const q of iv) if (d.x >= q[0] - 0.5 && d.x <= q[1] + 0.5) return;   // stable: the centre is over something
-    let best = null, bd = 1e9;
-    for (const q of iv) { const dd = d.x < q[0] ? q[0] - d.x : d.x - q[1]; if (dd < bd) { bd = dd; best = q; } }
-    const s = d.x > best[1] ? 1 : -1, px = clamp(s > 0 ? best[1] : best[0], d.x - d.hw, d.x + d.hw), py = d.y + d.hh;
-    d.rb = Math.round(d.rot / HALF_PI) * HALF_PI;   // (the way up it was lying stays as it is)
-    d.tip = { s, px, py, rx: s * (d.x - px), a: 0, av: clamp(s * d.vx / (d.hh * 3), 0, 3) };
-    d.vx = 0; d.vy = 0; d.rot = d.rb; d.av = 0;
+  function incEdge(B, nx, ny) {   // the edge of box B that faces most against the normal
+    const lx = -(B.c * nx + B.s * ny), ly = -(-B.s * nx + B.c * ny), hx = B.hw, hy = B.hh;
+    let v;
+    if (Math.abs(lx) > Math.abs(ly)) v = lx >= 0 ? [[hx, -hy, [0, 0, 3, 4]], [hx, hy, [0, 0, 4, 1]]] : [[-hx, hy, [0, 0, 1, 2]], [-hx, -hy, [0, 0, 2, 3]]];
+    else v = ly >= 0 ? [[hx, hy, [0, 0, 4, 1]], [-hx, hy, [0, 0, 1, 2]]] : [[-hx, -hy, [0, 0, 2, 3]], [hx, -hy, [0, 0, 3, 4]]];
+    for (const q of v) { const x = q[0], y = q[1]; q[0] = B.x + B.c * x - B.s * y; q[1] = B.y + B.s * x + B.c * y; }
+    return v;
   }
-  function boxTipStep(w, d, dt) {
-    const t = d.tip, h = d.hh;
-    const rx = t.rx, ry = -h;
-    const ca = Math.cos(t.a), sa = Math.sin(t.a);
-    const xr = rx * ca - ry * sa;                              // the centre's sideways offset from the pivot, in the tipping frame
-    const r2 = rx * rx + ry * ry, I = (d.hw * d.hw + d.hh * d.hh) / 3 + r2;
-    const alpha = GRAV * xr / I;
-    t.av += (alpha - t.av * 0.35) * dt; t.a += t.av * dt;
-    const c = Math.cos(t.a), sn = Math.sin(t.a);
-    const nx = rx * c - ry * sn, ny = rx * sn + ry * c;        // new centre relative to the pivot (screen coordinates, y down)
-    const px = t.px + t.s * nx, py = t.py + ny;
-    if (boxHits(w, px, py, d.hw * 0.55, d.hh * 0.55)) { d.tip = null; d.rot = d.rb || 0; return; }   // something is in the way: it just settles back
-    d.x = px; d.y = py; d.rot = (d.rb || 0) + t.s * t.a;
-    if (t.a >= 0.85 || xr < -1) {   // it is over the edge: let go, carrying the swing as speed and spin
-      const w0 = t.av;
-      const vtx = -w0 * ny, vty = w0 * nx;                     // velocity of a point swinging about the pivot
-      d.vx = t.s * vtx; d.vy = Math.max(0, vty); d.av = t.s * w0; d.tip = null; d.spin = true;
-      for (let k = 0; k < 48 && boxHits(w, d.x, d.y, d.hw, d.hh); k++) d.x += t.s;   // step clear of the corner it pivoted on
+  // box A against box B (both {x,y,hw,hh,c,s}); contacts go into out as [x, y, separation, nx, ny, feature], the normal pointing from A to B
+  function obbHit(A, B, skip, out) {
+    const dpx = B.x - A.x, dpy = B.y - A.y;
+    const dAx = A.c * dpx + A.s * dpy, dAy = -A.s * dpx + A.c * dpy, dBx = B.c * dpx + B.s * dpy, dBy = -B.s * dpx + B.c * dpy;
+    const c11 = A.c * B.c + A.s * B.s, c21 = -A.s * B.c + A.c * B.s, c12 = -A.c * B.s + A.s * B.c, c22 = A.s * B.s + A.c * B.c;
+    const a11 = Math.abs(c11), a12 = Math.abs(c12), a21 = Math.abs(c21), a22 = Math.abs(c22);
+    const fAx = Math.abs(dAx) - A.hw - (a11 * B.hw + a12 * B.hh), fAy = Math.abs(dAy) - A.hh - (a21 * B.hw + a22 * B.hh);
+    if (fAx > 0 || fAy > 0) return;
+    const fBx = Math.abs(dBx) - (a11 * A.hw + a21 * A.hh) - B.hw, fBy = Math.abs(dBy) - (a12 * A.hw + a22 * A.hh) - B.hh;
+    if (fBx > 0 || fBy > 0) return;
+    const hid = (nx, ny) => skip && (((skip & SK_PX) && nx > 0.71) || ((skip & SK_NX) && nx < -0.71) || ((skip & SK_PY) && ny > 0.71) || ((skip & SK_NY) && ny < -0.71));
+    let axis = -1, sep = -1e9, nx = 0, ny = 0;
+    const tryAx = (ax, f, x, y, h) => { if (hid(x, y)) return; if (axis < 0 || f > 0.95 * sep + 0.01 * h) { axis = ax; sep = f; nx = x; ny = y; } };
+    tryAx(0, fAx, dAx > 0 ? A.c : -A.c, dAx > 0 ? A.s : -A.s, A.hw);
+    tryAx(1, fAy, dAy > 0 ? -A.s : A.s, dAy > 0 ? A.c : -A.c, A.hh);
+    tryAx(2, fBx, dBx > 0 ? B.c : -B.c, dBx > 0 ? B.s : -B.s, B.hw);
+    tryAx(3, fBy, dBy > 0 ? -B.s : B.s, dBy > 0 ? B.c : -B.c, B.hh);
+    if (axis < 0) return;
+    let fnx, fny, front, snx, sny, negS, posS, negE, posE, inc;
+    if (axis === 0) { fnx = nx; fny = ny; front = A.x * fnx + A.y * fny + A.hw; snx = -A.s; sny = A.c; const sd = A.x * snx + A.y * sny; negS = -sd + A.hh; posS = sd + A.hh; negE = 3; posE = 1; inc = incEdge(B, fnx, fny); }
+    else if (axis === 1) { fnx = nx; fny = ny; front = A.x * fnx + A.y * fny + A.hh; snx = A.c; sny = A.s; const sd = A.x * snx + A.y * sny; negS = -sd + A.hw; posS = sd + A.hw; negE = 2; posE = 4; inc = incEdge(B, fnx, fny); }
+    else if (axis === 2) { fnx = -nx; fny = -ny; front = B.x * fnx + B.y * fny + B.hw; snx = -B.s; sny = B.c; const sd = B.x * snx + B.y * sny; negS = -sd + B.hh; posS = sd + B.hh; negE = 3; posE = 1; inc = incEdge(A, fnx, fny); }
+    else { fnx = -nx; fny = -ny; front = B.x * fnx + B.y * fny + B.hh; snx = B.c; sny = B.s; const sd = B.x * snx + B.y * sny; negS = -sd + B.hw; posS = sd + B.hw; negE = 2; posE = 4; inc = incEdge(A, fnx, fny); }
+    let cp = clipSeg(inc, -snx, -sny, negS, negE); if (cp.length < 2) return;
+    cp = clipSeg(cp, snx, sny, posS, posE); if (cp.length < 2) return;
+    for (let i = 0; i < 2; i++) {
+      const v = cp[i], s2 = fnx * v[0] + fny * v[1] - front;
+      if (s2 > 0) continue;
+      let fp = v[2]; if (axis >= 2) fp = [fp[2], fp[3], fp[0], fp[1]];
+      out.push([v[0] - s2 * fnx, v[1] - s2 * fny, s2, nx, ny, fp[0] | (fp[1] << 3) | (fp[2] << 6) | (fp[3] << 9)]);
     }
   }
-  function boxSettle(w, d, L, dt) {   // after tumbling: spin while in the air, then lie flat again when it lands
-    if (d.sr !== undefined) { d.rot += (d.sr - d.rot) * Math.min(1, 14 * dt); d.sr = undefined; d.spin = false; return; }   // on a plank it tilts with it
-    if (!d.spin && !d.rot) return;
-    const sup = (boxSupports(w, d, L).length > 0 || d.pc || d.gr) && d.vy > -20 && Math.abs(d.vy) < 140;   // (resting on a ball counts too)
-    if (!sup && d.spin) { d.rot += d.av * dt; d.av *= (1 - 0.4 * dt); return; }
-    d.spin = false; d.av = 0;
-    const tgt = Math.round(d.rot / HALF_PI) * HALF_PI;
-    d.rot += (tgt - d.rot) * Math.min(1, 9 * dt);
-    if (Math.abs(tgt - d.rot) < 0.02) d.rot = tgt;   // (it lies on whichever face it came down on)
+  function circBox(B, cx, cy, r) {   // a circle against a box: [x, y, separation, nx, ny] with the normal from the box to the circle, or null
+    const rx = cx - B.x, ry = cy - B.y, lx = B.c * rx + B.s * ry, ly = -B.s * rx + B.c * ry;
+    const qx = clamp(lx, -B.hw, B.hw), qy = clamp(ly, -B.hh, B.hh);
+    let nlx, nly, sep, px, py;
+    if (qx !== lx || qy !== ly) {
+      const dx = lx - qx, dy = ly - qy, d2 = dx * dx + dy * dy; if (d2 >= r * r) return null;
+      const d = Math.sqrt(d2); nlx = dx / d; nly = dy / d; sep = d - r; px = qx; py = qy;
+    } else {   // the centre is inside: out through the nearest face
+      const ox = B.hw - Math.abs(lx), oy = B.hh - Math.abs(ly);
+      if (ox < oy) { nlx = lx < 0 ? -1 : 1; nly = 0; sep = -ox - r; px = nlx * B.hw; py = ly; }
+      else { nlx = 0; nly = ly < 0 ? -1 : 1; sep = -oy - r; px = lx; py = nly * B.hh; }
+    }
+    return [B.x + B.c * px - B.s * py, B.y + B.s * px + B.c * py, sep, B.c * nlx - B.s * nly, B.s * nlx + B.c * nly];
   }
-  let dynTick = 0; const DYN_BUDGET = 160;
+  function circTile(w, tx, ty, cx, cy, r) {   // a circle against one solid tile; inner seams between two tiles are never touched
+    const left = tx * TS, top = ty * TS, qx = clamp(cx, left, left + TS), qy = clamp(cy, top, top + TS), dx = cx - qx, dy = cy - qy, d2 = dx * dx + dy * dy;
+    if (d2 >= r * r) return null;
+    if (d2 > 0) {
+      if (dx !== 0 && dy !== 0) { const sx = dx > 0 ? 1 : -1, sy = dy > 0 ? 1 : -1; if (isSol(tile(w, tx + sx, ty)) || isSol(tile(w, tx, ty + sy))) return null; }
+      else if (dx === 0 && isSol(tile(w, tx, ty + (dy > 0 ? 1 : -1)))) return null;
+      else if (dy === 0 && isSol(tile(w, tx + (dx > 0 ? 1 : -1), ty))) return null;
+      const d = Math.sqrt(d2); return [qx, qy, d - r, dx / d, dy / d];
+    }
+    let best = null;   // the centre is inside the tile: out through the nearest open face
+    const faces = [[0, -1, cy - top, cx, top, tile(w, tx, ty - 1)], [0, 1, top + TS - cy, cx, top + TS, tile(w, tx, ty + 1)], [-1, 0, cx - left, left, cy, tile(w, tx - 1, ty)], [1, 0, left + TS - cx, left + TS, cy, tile(w, tx + 1, ty)]];
+    for (const f of faces) if (!isSol(f[5]) && (!best || f[2] < best[2])) best = f;
+    if (!best) return null;
+    return [best[3], best[4], -best[2] - r, best[0], best[1]];
+  }
+  const CT = []; let nCT = 0, cmPrev = new Map();
+  function addC(a, b, h, key) {
+    let c = CT[nCT]; if (!c) c = CT[nCT] = {};
+    nCT++;
+    c.a = a; c.b = b; c.px = h[0]; c.py = h[1]; c.sep = h[2]; c.nx = h[3]; c.ny = h[4]; c.key = key;
+    c.kvx = 0; c.kvy = 0; c.pl = null; c.u = 0; c.mu = 0.5; c.e = 0; c.eT = 1e9; c.eCap = 1e9; c.eMin = 0; c.Pn = 0; c.Pt = 0; c.Pb = 0;
+    return c;
+  }
+  const isBall = d => d.k === 'o';
+  function matPair(c, a, b) {   // what two touching things are like together
+    const ba = isBall(a), bb = isBall(b);
+    if (ba || bb) { c.mu = (a.kind === 4 || b.kind === 4) ? 0.12 : 0.35; c.e = 0.15; c.eT = 160; }
+    else c.mu = 0.6;
+  }
+  function matTile(c, d, t) {
+    const ice = t === 3;
+    if (isBall(d)) { c.mu = ice ? 0.05 : 0.7; if (t === 6) { c.e = 0.85; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 150; } else { c.e = 0.3; c.eT = 250; } }
+    else { c.mu = ice ? 0.04 : 0.55; if (t === 6) { c.e = d.hw > 20 ? 0.5 : 0.68; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 160; } }
+  }
+  function tileContacts(w, d, sh) {
+    const ex = d.r || sh.ex, ey = d.r || sh.ey;
+    const tx0 = Math.floor((d.x - ex - 1) / TS), tx1 = Math.floor((d.x + ex + 1) / TS), ty0 = Math.floor((d.y - ey - 1) / TS), ty1 = Math.floor((d.y + ey + 1) / TS);
+    let lava = false;
+    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+      const t = tile(w, tx, ty);
+      if (t === 2) { if (isBall(d)) { const h = circTile(w, tx, ty, d.x, d.y, d.r - 3); if (h && h[2] < 0) lava = true; } else if (d.x > tx * TS - 2 && d.x < tx * TS + TS + 2 && d.y + ey - 5 > ty * TS && d.y < ty * TS + TS) lava = true; continue; }
+      if (!isSol(t)) continue;
+      const key = 't' + (ty * 4096 + tx) + ':';
+      if (isBall(d)) { const h = circTile(w, tx, ty, d.x, d.y, d.r); if (h) matTile(addC(null, d, h, key), d, t); continue; }
+      const skip = (isSol(tile(w, tx + 1, ty)) ? SK_PX : 0) | (isSol(tile(w, tx - 1, ty)) ? SK_NX : 0) | (isSol(tile(w, tx, ty + 1)) ? SK_PY : 0) | (isSol(tile(w, tx, ty - 1)) ? SK_NY : 0);
+      const out = []; obbHit({ x: (tx + 0.5) * TS, y: (ty + 0.5) * TS, hw: TS / 2, hh: TS / 2, c: 1, s: 0 }, sh, skip, out);
+      for (const h of out) matTile(addC(null, d, h, key + h[5]), d, t);
+    }
+    return lava;
+  }
+  function pairContacts(a, b, sa, sb, dynB, w) {   // a is always moved by these contacts; b only if dynB (otherwise it is held where it is)
+    const out = [];
+    const A = dynB ? a : b, B = dynB ? b : a, SA = dynB ? sa : sb, SB = dynB ? sb : sa;   // (a thing that is held still is always the first of the two)
+    if (!isBall(A) && !isBall(B)) obbHit(SA, SB, 0, out);
+    else if (isBall(A) && isBall(B)) {
+      const dx = B.x - A.x, dy = B.y - A.y, d2 = dx * dx + dy * dy, rr = A.r + B.r; if (d2 >= rr * rr) return 0;
+      const d = Math.sqrt(d2) || 0.001, nx = d2 ? dx / d : 0, ny = d2 ? dy / d : -1; out.push([A.x + nx * A.r, A.y + ny * A.r, d - rr, nx, ny, 0]);
+    } else if (isBall(B)) { const h = circBox(SA, B.x, B.y, B.r); if (h) out.push([h[0], h[1], h[2], h[3], h[4], 0]); }
+    else { const h = circBox(SB, A.x, A.y, A.r); if (h) out.push([h[0] + h[3] * h[2], h[1] + h[4] * h[2], h[2], -h[3], -h[4], 0]); }
+    for (const h of out) { const c = addC(dynB ? A : null, B, h, A.uid + ':' + B.uid + ':' + h[5]); matPair(c, A, B); if (!dynB) { const rx = h[0] - A.x, ry = h[1] - A.y; c.kvx = (A.vx || 0) - (A.av || 0) * ry; c.kvy = (A.vy || 0) + (A.av || 0) * rx; } }
+    return out.length;
+  }
+  function plankContacts(w, d, sh) {
+    let n = 0;
+    for (let i = 0; i < w.see.length; i++) {
+      const s = w.see[i], ext = d.r || Math.max(sh.ex, sh.ey);
+      if (Math.abs(s.cx - d.x) > s.hl + ext + 14 || Math.abs(s.cy - d.y) > s.hl + ext + 14) continue;
+      const c = Math.cos(s.ang), sn = Math.sin(s.ang), ux = sn, uy = -c;
+      const kv = (x, y) => [-s.av * (y - s.cy), s.av * (x - s.cx)];
+      const add = (h, key, u) => { const q = addC(null, d, h, key); q.pl = s; q.u = clamp(u, -s.hl, s.hl); q.mu = 0.7; const v = kv(h[0], h[1]); q.kvx = v[0]; q.kvy = v[1]; n++; };
+      const vs = isBall(d) ? [[d.x, d.y, d.r]] : [[sh.x + sh.c * sh.hw - sh.s * sh.hh, sh.y + sh.s * sh.hw + sh.c * sh.hh, 0], [sh.x - sh.c * sh.hw - sh.s * sh.hh, sh.y - sh.s * sh.hw + sh.c * sh.hh, 0], [sh.x + sh.c * sh.hw + sh.s * sh.hh, sh.y + sh.s * sh.hw - sh.c * sh.hh, 0], [sh.x - sh.c * sh.hw + sh.s * sh.hh, sh.y - sh.s * sh.hw - sh.c * sh.hh, 0]];
+      if ((d.x - s.cx) * ux + (d.y - s.cy) * uy < 0) continue;   // (only from above: it is a plank to stand on)
+      for (let k = 0; k < vs.length; k++) {
+        const vx = vs[k][0], vy = vs[k][1], r = vs[k][2], u = clamp((vx - s.cx) * c + (vy - s.cy) * sn, -s.hl, s.hl), qx = s.cx + u * c, qy = s.cy + u * sn;
+        const dx = vx - qx, dy = vy - qy, dd = Math.sqrt(dx * dx + dy * dy), m = r + SEE_TH;
+        if (dd >= m) continue;
+        const nx = dd > 0.0001 ? dx / dd : ux, ny = dd > 0.0001 ? dy / dd : uy;
+        if (nx * ux + ny * uy < 0.3) continue;
+        add([qx + nx * SEE_TH, qy + ny * SEE_TH, dd - m, nx, ny], 's' + i + ':' + k, u);
+      }
+      if (!isBall(d)) for (let k = 0; k < 2; k++) {   // the plank's ends poking into the side or bottom of a crate
+        const e = k ? 1 : -1, qx = s.cx + e * s.hl * c, qy = s.cy + e * s.hl * sn, h = circBox(sh, qx, qy, SEE_TH);
+        if (!h || -h[4] * uy - h[3] * ux < 0.3) continue;
+        add([h[0] + h[3] * h[2], h[1] + h[4] * h[2], h[2], -h[3], -h[4]], 's' + i + ':e' + k, e * s.hl);
+      }
+    }
+    return n;
+  }
+  function velAt(o, rx, ry) { return [o.vx - o.av * ry, o.vy + o.av * rx]; }
+  function solveContacts(dt) {
+    const inv = 1 / dt, cm = new Map();
+    for (let k = 0; k < nCT; k++) {
+      const c = CT[k], a = c.a, b = c.b, ima = a ? a._im : 0, iia = a ? a._ii : 0, imb = b._im, iib = b._ii;
+      c.rax = a ? c.px - a.x : 0; c.ray = a ? c.py - a.y : 0; c.rbx = c.px - b.x; c.rby = c.py - b.y;
+      const rnA = c.rax * c.ny - c.ray * c.nx, rnB = c.rbx * c.ny - c.rby * c.nx, tx = c.ny, ty = -c.nx, rtA = c.rax * ty - c.ray * tx, rtB = c.rbx * ty - c.rby * tx;
+      const kn = ima + imb + iia * rnA * rnA + iib * rnB * rnB, kt = ima + imb + iia * rtA * rtA + iib * rtB * rtB;
+      c.mn = kn > 0 ? 1 / kn : 0; c.mt = kt > 0 ? 1 / kt : 0;
+      c.bias = BAUM * inv * Math.max(0, -c.sep - SLOP);
+      const vA = a ? velAt(a, c.rax, c.ray) : [c.kvx, c.kvy], vB = velAt(b, c.rbx, c.rby), vn = (vB[0] - vA[0]) * c.nx + (vB[1] - vA[1]) * c.ny;
+      const pr = cmPrev.get(c.key);
+      c.vb = 0; if (c.e > 0 && !pr && vn < -c.eT) { c.vb = Math.min(c.eCap, -c.e * vn); if (c.vb < c.eMin) c.vb = 0; }   // (a bounce is only for a fresh knock, never for things already pressed together)
+      if (pr) { c.Pn = pr[0]; c.Pt = pr[1]; impulse(c, c.Pn * c.nx + c.Pt * tx, c.Pn * c.ny + c.Pt * ty); }
+    }
+    for (let it = 0; it < VEL_IT; it++) for (let k = 0; k < nCT; k++) {
+      const c = CT[k], a = c.a, b = c.b, nx = c.nx, ny = c.ny, tx = ny, ty = -nx;
+      let ax = a ? a.vx - a.av * c.ray : c.kvx, ay = a ? a.vy + a.av * c.rax : c.kvy, bx = b.vx - b.av * c.rby, by = b.vy + b.av * c.rbx;
+      let dP = c.mn * (-((bx - ax) * nx + (by - ay) * ny) + c.vb); const P0 = c.Pn; c.Pn = P0 + dP > 0 ? P0 + dP : 0; dP = c.Pn - P0;
+      if (dP) {
+        const Px = dP * nx, Py = dP * ny;
+        if (a) { a.vx -= Px * a._im; a.vy -= Py * a._im; a.av -= a._ii * (c.rax * Py - c.ray * Px); ax = a.vx - a.av * c.ray; ay = a.vy + a.av * c.rax; }
+        b.vx += Px * b._im; b.vy += Py * b._im; b.av += b._ii * (c.rbx * Py - c.rby * Px); bx = b.vx - b.av * c.rby; by = b.vy + b.av * c.rbx;
+      }
+      const mx = c.mu * c.Pn; let dT = -c.mt * ((bx - ax) * tx + (by - ay) * ty); const T0 = c.Pt, T1 = T0 + dT; c.Pt = T1 > mx ? mx : T1 < -mx ? -mx : T1; dT = c.Pt - T0;
+      if (dT) {
+        const Px = dT * tx, Py = dT * ty;
+        if (a) { a.vx -= Px * a._im; a.vy -= Py * a._im; a.av -= a._ii * (c.rax * Py - c.ray * Px); }
+        b.vx += Px * b._im; b.vy += Py * b._im; b.av += b._ii * (c.rbx * Py - c.rby * Px);
+      }
+    }
+    for (let it = 0; it < POS_IT; it++) for (let k = 0; k < nCT; k++) {   // pushing out of overlaps is done apart from the real speeds, so it never adds bounce or jitter
+      const c = CT[k]; if (!(c.bias > 0)) continue;
+      const a = c.a, b = c.b;
+      const vA = a ? [a._bx - a._bw * c.ray, a._by + a._bw * c.rax] : [0, 0], vB = [b._bx - b._bw * c.rby, b._by + b._bw * c.rbx];
+      const vn = (vB[0] - vA[0]) * c.nx + (vB[1] - vA[1]) * c.ny;
+      let dP = c.mn * (-vn + c.bias); const P0 = c.Pb; c.Pb = Math.max(P0 + dP, 0); dP = c.Pb - P0;
+      if (!dP) continue;
+      const Px = dP * c.nx, Py = dP * c.ny;
+      if (a) { a._bx -= Px * a._im; a._by -= Py * a._im; a._bw -= a._ii * (c.rax * Py - c.ray * Px); }
+      b._bx += Px * b._im; b._by += Py * b._im; b._bw += b._ii * (c.rbx * Py - c.rby * Px);
+    }
+    for (let k = 0; k < nCT; k++) { const c = CT[k]; if (c.Pn || c.Pt) cm.set(c.key, [c.Pn, c.Pt]); }
+    cmPrev = cm;
+  }
+  function impulse(c, Px, Py) {
+    const a = c.a, b = c.b;
+    if (a) { a.vx -= Px * a._im; a.vy -= Py * a._im; a.av -= a._ii * (c.rax * Py - c.ray * Px); }
+    b.vx += Px * b._im; b.vy += Py * b._im; b.av += b._ii * (c.rbx * Py - c.rby * Px);
+  }
+  function hasSupport(w, d, H) {   // (a resting thing checks now and then that something is still under it)
+    const sh = d.r ? null : shapeOf(d), ex = d.r || sh.ex, ey = d.r || sh.ey;
+    if (boxHits(w, d.x, d.y + 3, ex - 1, ey)) return true;
+    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (Math.abs(s.cx - d.x) < s.hl + ex + 10 && Math.abs(s.cy - d.y) < s.hl + ey + 30) return true; }
+    const near = H(d.x - ex, d.y, d.x + ex, d.y + ey + 4);
+    for (const o of near) { if (o === d || o.burn > 0) continue; const e = o.r || Math.max(o.hw, o.hh) * 1.42; if (Math.abs(o.x - d.x) < e + ex && o.y > d.y && o.y - e < d.y + ey + 4) return true; }
+    return false;
+  }
+  let dynTick = 0; const DYN_BUDGET = 160, CELL = 64;
   function stepDyn(w, dt) {
     dynTick++;
     stepSee(w, dt);
@@ -388,141 +451,132 @@
       for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0 || d.nap || !nearF(f, d.x, d.y, FR, FR)) continue; near.push(d); }
       if (near.length > DYN_BUDGET) { near.sort((a, b) => distF(f, a) - distF(f, b)); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }
     }
+    const act = [], chk = [], grid = new Map();
+    const put = d => { const e = d.r || Math.max(d.hw, d.hh) * 1.42; for (let cx = Math.floor((d.x - e) / CELL); cx <= Math.floor((d.x + e) / CELL); cx++) for (let cy = Math.floor((d.y - e) / CELL); cy <= Math.floor((d.y + e) / CELL); cy++) { const k = (cx + 4) * 65536 + cy + 4; let g = grid.get(k); if (!g) grid.set(k, g = []); g.push(d); } };
+    const H = (x0, y0, x1, y1) => { const r = []; for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) { const g = grid.get((cx + 4) * 65536 + cy + 4); if (g) for (const o of g) if (r.indexOf(o) < 0) r.push(o); } return r; };
     for (let i = 0; i < L.length; i++) {
-      const d = L[i];
-      if (d.skip) { d.sleep = true; continue; }
-      if (d.burn > 0) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; } continue; }
-      if (fol && d.sv !== undefined && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }   // (what you are touching is worked out here at once, with real gravity and ground; everything else is the server's); only what you are pushing right now is also worked out here, so it answers at once
-      if (f && !nearF(f, d.x, d.y, FR, FR)) { d.sleep = true; continue; }   // far from you: frozen (saves work)
-      d.sleep = false;
-      if (d.nap) { if (Math.abs(d.x - d.rx) + Math.abs(d.y - d.ry) > 2) { d.nap = false; d.rest = 0; } else if ((dynTick + i) % 12 !== 0) continue; }   // at rest: it only checks in now and then (so a big pile that has settled costs next to nothing, and anything that changes under it wakes it within a moment)
-      const nx0 = d.x, ny0 = d.y;
+      const d = L[i]; d._i = i; d._dyn = false;
+      if (d.burn > 0) { if (d.burn < 1e8) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; d.av = 0; d.rot = 0; } } continue; }
+      if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
       if (d.sq > 0) d.sq = Math.max(0, d.sq - dt);
+      if (f && !nearF(f, d.x, d.y, FR + 200, FR + 200)) { d.sleep = true; continue; }   // far from everybody: frozen (saves work)
+      put(d);
+      if (d.skip || (f && !nearF(f, d.x, d.y, FR, FR))) { d.sleep = true; continue; }
+      if (fol && d.sv !== undefined && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
+      d.sleep = false;
+      if (d.nap) { if ((dynTick + i) % 15 === 0) chk.push(d); continue; }
+      d._dyn = true; act.push(d);
+    }
+    for (const d of chk) if (!hasSupport(w, d, H)) { d.nap = false; d.st = 0; d._dyn = true; act.push(d); }   // (something resting checks now and then that it is still held up)
+    if (!act.length) return;
+    nCT = 0;
+    const shp = new Map(), S = o => { let s = shp.get(o); if (!s) { s = o.r ? { x: o.x, y: o.y } : shapeOf(o); shp.set(o, s); } return s; };
+    const wake = [], lavaOf = new Set();
+    for (const d of act) {   // gravity, then every contact
       d.vy = Math.min(900, d.vy + GRAV * dt);
-      let burn = false;
-      if (d.k === 'o') {
-        d.x += d.vx * dt; d.y += d.vy * dt; burn = ballTiles(d, w); d.rot += d.vx * dt / d.r;
-        if (w.see.length) { d.onp = seeBody(d, w, d.m * 60); seeGuard(w, d, d.r); } else d.onp = false;
-        if (d.gr || d.touch) {   // rolling friction: a ball coasts, slows down and comes to rest (on ice it keeps sliding)
-          if (tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.r + 2) / TS)) !== 3) { d.vx *= Math.max(0, 1 - 0.9 * dt); d.vx = approach(d.vx, 0, 55 * dt); }
-          else d.vx *= Math.max(0, 1 - 0.2 * dt);
+      d._im = d.im; d._ii = d.ii; d._bx = d._by = d._bw = 0; d._pl = false;
+      const sh = S(d);
+      if (tileContacts(w, d, sh)) lavaOf.add(d);
+      if (w.see.length && plankContacts(w, d, sh)) d._pl = true;
+      const e = d.r || Math.max(sh.ex, sh.ey);
+      for (const o of H(d.x - e - 2, d.y - e - 2, d.x + e + 2, d.y + e + 2)) {
+        if (o === d || o.burn > 0) continue;
+        if (o._dyn && o._i < d._i) continue;   // (each pair once)
+        const oe = o.r || Math.max(o.hw, o.hh) * 1.42; if (Math.abs(o.x - d.x) > e + oe + 2 || Math.abs(o.y - d.y) > e + oe + 2) continue;
+        if (o._dyn) { pairContacts(d, o, sh, S(o), true, w); continue; }
+        o._im = 0; o._ii = 0;
+        if (pairContacts(d, o, sh, S(o), false, w)) {   // touching something that is resting (or, in the shared world, something the server is moving): it wakes up if this is moving
+          const moving = !((d.st || 0) > 0.25) || Math.abs(d.vx) + Math.abs(d.vy) > 30;
+          if (moving && o.nap) wake.push(o);
+          if (moving && fol && o.sv !== undefined && !(o.mineT > 0 || o.keep > 0)) { o.mineT = 0.45; o.keep = 1.5; }
         }
-      } else if (d.tip) {
-        boxTipStep(w, d, dt);
-      } else {
-        d.x += d.vx * dt; if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x -= d.vx * dt; d.vx = 0; }
-        d.y += d.vy * dt;
-        if (boxHits(w, d.x, d.y, d.hw, d.hh)) {
-          const hit = d.vy; d.y -= d.vy * dt; d.vy = 0;
-          if (hit > 130 && tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh + d.vy * 0 + hit * dt + 2) / TS)) === 6) { const v = Math.min(BOUNCE * 0.85, hit * (d.hw > 20 ? 0.5 : 0.68)); if (v > 160) { d.vy = -v; d.tip = null; } }   // a bounce pad springs a crate back up, a little less each time (heavier ones less)
-        }
-        d.gr = boxHits(w, d.x, d.y + 1, d.hw, d.hh);
-        const sp = w.see.length ? seeBox(w, d, dt) : null;
-        if (w.see.length) seeGuard(w, d, d.hh);
-        d.onp = !!sp; if (sp) { d.sr = sp.ang; if (Math.abs(Math.sin(sp.ang)) <= 0.06) d.gr = true; } else d.sr = undefined;   // (what sits on a plank never dozes off: its weight is what holds the plank where it is)
-        const under = tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh + 2) / TS));
-        if (d.gr || d.touch) d.vx = approach(d.vx, 0, (under === 3 ? 40 : 900) * dt);
-        const tl = tile(w, Math.floor(d.x / TS), Math.floor((d.y + d.hh - 4) / TS));
-        if (tl === 2) burn = true;
-        const onPlank = d.sr !== undefined;
-        boxSettle(w, d, L, dt); d.pc = false;
-        if (!onPlank && !d.spin && d.kind !== 5 && d.kind !== 6 && Math.abs(d.vy) < 120) boxTipCheck(w, d, L);
       }
-      if (w.pads.length && (d.gr || d.touch)) { const pd = padAt(w, d.x, d.y + (d.r || d.hh)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; } }
+    }
+    solveContacts(dt);
+    for (const d of act) {   // move
+      if (Math.abs(d.vx) > MAXSPD) d.vx = Math.sign(d.vx) * MAXSPD; if (Math.abs(d.av) > MAXAV) d.av = Math.sign(d.av) * MAXAV;
+      d._x0 = d.x; d._y0 = d.y;
+      d.x += (d.vx + d._bx) * dt; d.y += (d.vy + d._by) * dt; d.rot += (d.av + d._bw) * dt;
+      d.gr = false; d.touch = false; d.onp = d._pl; d._ice = false; d._pad = null; d._N = 0; d._F = 0;
+    }
+    for (let k = 0; k < nCT; k++) {   // what each thing is resting on
+      const c = CT[k];
+      if (c.ny < -0.5) { c.b.gr = true; if (c.Pn > 0) c.b.touch = true; if (!c.a && !c.pl) { const t = tile(w, Math.floor((c.px - c.nx) / TS), Math.floor((c.py - c.ny * 2) / TS)); if (t === 3) c.b._ice = true; } }
+      if (c.a && c.ny > 0.5) { c.a.gr = true; c.a.touch = true; }
+      if (c.a && Math.abs(c.nx) > 0.5 && c.Pn > 0) { c.a.touch = true; c.b.touch = true; }
+      if (c.ny < -0.5 && c.Pn > 0) { c.b._N += -c.ny * c.Pn / dt; c.b._F += c.mu * c.Pn / dt; }   // (how hard it is pressed onto what is under it, and how much that grips)
+      if (c.pl && c.Pn > 0) c.pl.tq += (c.Pn / dt) * (60 / GRAV) * c.u;   // (its weight leans the plank: the heavier it is, the harder it presses)
+    }
+    for (const d of act) {
+      if (isBall(d) && d.gr) {   // rolling friction: a ball coasts, slows down and comes to rest (on ice it keeps sliding)
+        const k = d._ice ? 0.2 : 0.9; d.av *= Math.max(0, 1 - k * dt); if (!d._ice) d.av = approach(d.av, 0, 55 / d.r * dt);
+      } else if (!d.gr) d.av *= (1 - 0.05 * dt);
+      if (w.see.length) seeGuard(w, d, d.r || shapeOf(d).ey);
+      if (w.pads.length && d.gr) { const pd = padAt(w, d.x, d.y + (d.r || shapeOf(d).ey)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; d._pad = pd; } }
       if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
-        if (!d.pcd && d.vy > -60 && (d.gr || d.touch)) { const pt = portalAt(w, d.x, d.y + (d.r || d.hh)); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - (d.r || d.hh) - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; d.tip = null; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
-      d.dm = Math.abs(d.x - nx0) + Math.abs(d.y - ny0);
-      if (Math.abs(d.x - nx0) + Math.abs(d.y - ny0) < 1.0 && Math.abs(d.vx) < 25 && !burn && !d.onp) { d.rest = (d.rest || 0) + dt; if (d.rest > 0.5) { if (!d.nap) { d.rx = d.x; d.ry = d.y; } d.nap = true; } } else { d.rest = 0; d.nap = false; }
-      d.touch = false;
-      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; }   // lost for good: this map will not give it back
+        if (!d.pcd && d.vy > -60 && d.gr) { const ey = d.r || shapeOf(d).ey, pt = portalAt(w, d.x, d.y + ey); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - ey - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
+      d.dm = Math.abs(d.x - d._x0) + Math.abs(d.y - d._y0);
+      const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && !d._pl && !d._pad;
+      d.st = still ? (d.st || 0) + dt : 0;
+      const burn = lavaOf.has(d);
+      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0) { d.bx = d.x; d.by = d.y; d.bl = burn ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
     }
-    if (fol) {   // (only the things you are pushing are tested against the others; whatever they touch joins in)
-      const mine = []; for (let i = 0; i < L.length; i++) if ((L[i].mineT > 0 || L[i].keep > 0 || L[i].sv === undefined) && !(L[i].burn > 0) && !L[i].sleep) mine.push(L[i]);
-      for (let pass = 0, hit = true; pass < 3 && hit && mine.length; pass++) {
-        hit = false;
-        for (let m = 0; m < mine.length; m++) {
-          const a = mine[m]; if (a.sleep) continue;
-          for (let j = 0; j < L.length; j++) {
-            const b = L[j]; if (b === a || b.burn > 0 || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
-            if (pairSep(a, b, 0.15, w)) { hit = true; if (!(b.mineT > 0) && (a.dm === undefined ? Math.abs(a.vx) + Math.abs(a.vy) > 25 : a.dm > 0.4) || !a.sv) { b.mineT = 0.45; b.keep = 1.5; b.sleep = false; mine.push(b); } }   // (things that are only resting against each other stay with the server; they do not pull each other into this machine's own physics)
-          }
-        }
-      }
-    } else
-    for (let pass = 0, hit = true; pass < 3 && hit; pass++) {   // (a few rounds while things overlap, so a pile settles instead of sinking into itself)
-      hit = false;
-      for (let i = 0; i < L.length; i++) {
-        const a = L[i]; if (a.burn > 0 || a.sleep) continue;
-        for (let j = i + 1; j < L.length; j++) {
-          const b = L[j]; if (b.burn > 0 || b.sleep || (a.nap && b.nap) || Math.abs(a.x - b.x) > 150 || Math.abs(a.y - b.y) > 150) continue;
-          if (pairSep(a, b, 0.15, w)) hit = true;
-        }
-      }
-    }
-    for (let i = 0; i < L.length; i++) {   // nothing is ever left inside the ground: lift a crate that has been pushed into it
-      const d = L[i]; if (d.k !== 'b' || d.burn > 0 || d.sleep || d.nap || d.tip) continue;
-      if (boxHits(w, d.x, d.y, d.hw, d.hh)) { for (let k = 0; k < 24 && boxHits(w, d.x, d.y, d.hw, d.hh); k++) { d.y -= 1; } if (d.vy > 0) d.vy = 0; }
-    }
+    // a pile goes to sleep together, once every piece of it has been still for a moment
+    const par = new Map(), root = d => { let r = d; while (par.get(r) !== r) r = par.get(r); return r; };
+    for (const d of act) par.set(d, d);
+    for (let k = 0; k < nCT; k++) { const c = CT[k]; if (c.a && c.a._dyn) { const ra = root(c.a), rb = root(c.b); if (ra !== rb) par.set(ra, rb); } }
+    const isl = new Map();
+    for (const d of act) { if (d.burn > 0) continue; const r = root(d); const q = isl.get(r); const v = d.st || 0; isl.set(r, q === undefined ? v : Math.min(q, v)); }
+    for (const d of act) { if (d.burn > 0) continue; if (isl.get(root(d)) >= SLEEP_T) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } }
+    for (const o of wake) { o.nap = false; o.st = 0; }
   }
-  // shove a crate sideways by dx, carrying along any crates in front of it (a row of crates moves together, and a jammed row acts as a wall, so nothing is ever squeezed into something else)
-  function shoveBox(w, d, dx, depth, jr) {
-    if (depth > 5) return false;
-    const x0 = d.x; d.x += dx; d.nap = false; d.rest = 0; if (w.follow) d.mineT = 0.45;
-    if (boxHits(w, d.x, d.y, d.hw, d.hh)) { d.x = x0; return false; }
-    jr.push([d, x0]);
-    const L = w.dyn;
-    for (let i = 0; i < L.length; i++) {
-      const e = L[i]; if (e === d || e.k !== 'b' || e.burn > 0 || Math.abs(e.x - d.x) > 90 || Math.abs(e.y - d.y) > 90) continue;
-      const ox = d.hw + e.hw - Math.abs(d.x - e.x), oy = d.hh + e.hh - Math.abs(d.y - e.y);
-      if (ox <= 0 || oy <= 3 || (e.x - d.x) * dx <= 0) continue;   // not in front of it (or only resting on top of it)
-      if (!shoveBox(w, e, Math.sign(dx) * ox, depth + 1, jr)) return false;
-      e.vx = d.vx; e.touch = true;
-    }
-    return true;
-  }
-  // the player (a circle) against the pushables
+  // the player's ball against the crates and balls. b.kin: the ball cannot be moved here (the server only follows where each player says they are)
   function collideDyn(b, w) {
-    const L = w.cand || w.dyn;   // (the server hands over just the things that are anywhere near a player)
+    const L = w.cand || w.dyn, kin = !!b.kin;
     for (let i = 0; i < L.length; i++) {
       const d = L[i];
-      if (d.burn > 0 || Math.abs(d.x - b.x) > 90 || Math.abs(d.y - b.y) > 90) continue;
-      if (!w.follow) { d.sleep = false; d.nap = false; d.rest = 0; }
-      if (d.k === 'b') {
-        const px = clamp(b.x, d.x - d.hw, d.x + d.hw), py = clamp(b.y, d.y - d.hh, d.y + d.hh);
-        let dx = b.x - px, dy = b.y - py, d2 = dx * dx + dy * dy;
-        if (d2 >= R * R) continue;
-        if (w.follow && !(d.hold > 0)) { d.mineT = 0.45; d.sleep = false; d.nap = false; d.rest = 0; }
-        let nx, ny, pen;
-        if (d2 === 0) {   // the ball's centre is inside the crate (it was pushed in, or lagged behind): leave by the nearest face
-          const ox = d.hw + R - Math.abs(b.x - d.x), oy = d.hh + R - Math.abs(b.y - d.y);
-          if (ox < oy * (b.vy > 60 && b.y < d.y ? 2.5 : 1)) { nx = b.x === d.x ? (b.vx >= 0 ? -1 : 1) : (b.x > d.x ? 1 : -1); ny = 0; pen = ox; } else { nx = 0; ny = b.y > d.y ? 1 : -1; pen = oy; }
-        } else { const dd = Math.sqrt(d2); nx = dx / dd; ny = dy / dd; pen = R - dd; }
-        if (ny < -0.6) {                   // standing on top
-          b.y += ny * pen; if (b.vy > 0) b.vy = 0; b.ground = true; if (Math.abs(b.x - d.x) <= d.hw) { b.flat = true; b.gType = 1; }
-          d.touch = true;
-          if ((d.kind === 5 || d.kind === 6) && b.vy >= 0) { b.bnc = true; if (d.kind === 6) b.bncV = SUPER_BOUNCE; d.sq = 0.25; }   // a spring: land on it (or roll onto it) and it throws you up (a super spring: very high)
-        } else if (ny > 0.6) {             // the crate is above you: it gets lifted (so one sitting on your head can never pin you down or stop you jumping); only a ceiling stops you
-          if (!boxHits(w, d.x, d.y - pen, d.hw, d.hh)) { d.y -= pen; if (d.vy > b.vy) d.vy = b.vy; if (b.vy < -100 && Math.abs(nx) > 0.15) d.vx = -nx * Math.min(220, -b.vy * 0.35) / (d.hw > 20 ? 1.6 : 1); if (d.hw > 20 && b.vy < 0) b.vy *= 0.6; d.touch = true; d.nap = false; d.rest = 0; }   // it is knocked up, and off to the side if you hit it off-centre
-          else { b.y += ny * pen; if (b.vy < 0) b.vy = 0; }
-        } else if (w.follow && d.hold > 0) {   // (the server's crate and yours disagree: it is a wall until they agree again)
-          b.x += nx * pen; if (b.vx * nx < 0) b.vx = 0; d.mineT = 0;
-        } else {                           // pushing from the side: the crate is simply carried along; heavier ones slow you a little
-          const mv = nx * pen, jr = [];       // push the crate completely out of the ball's way (and whatever is in front of it)
-          if (!shoveBox(w, d, -mv, 0, jr)) { for (let q = jr.length - 1; q >= 0; q--) jr[q][0].x = jr[q][1]; b.x += nx * pen; if (b.vx * nx < 0) b.vx = 0; }   // it is jammed against something: it acts like a wall
-          else if (b.vx * nx < 0) { let M = 0; for (const q of jr) { q[0].vx = b.vx; M += q[0].m; } b.vx *= 1 / (1 + M * 0.18); }
-          d.touch = true;
+      if (d.burn > 0 || Math.abs(d.x - b.x) > 110 || Math.abs(d.y - b.y) > 110) continue;
+      let h;
+      if (d.k === 'b') { h = circBox(shapeOf(d), b.x, b.y, R); if (!h) continue; }
+      else { const dx = b.x - d.x, dy = b.y - d.y, d2 = dx * dx + dy * dy, rr = R + d.r; if (d2 >= rr * rr) continue; const dd = Math.sqrt(d2) || 0.001; h = [d.x + dx / dd * d.r, d.y + dy / dd * d.r, dd - rr, d2 ? dx / dd : 0, d2 ? dy / dd : -1]; }
+      const pen = -h[2], nx = h[3], ny = h[4]; if (pen <= 0) continue;
+      if (w.follow && !(d.hold > 0)) { d.mineT = 0.45; d.sleep = false; }
+      if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
+      const held = w.follow && d.hold > 0;   // (the server's crate and yours disagree: it is a wall until they agree again)
+      const rx = h[0] - d.x, ry = h[1] - d.y, rn = rx * ny - ry * nx, rt = rx * -nx - ry * ny;
+      const vbx = d.vx - (d.av || 0) * ry, vby = d.vy + (d.av || 0) * rx, vy0 = b.vy;
+      const vn = (b.vx - vbx) * nx + (b.vy - vby) * ny;
+      let free = !held;
+      if (free && d.nap) { if (vn < -60 || (ny > -0.6 && vn < -12)) { d.nap = false; d.st = 0; } else free = false; }   // (something resting is only woken by a real knock or push, not by you standing on it)
+      if (vn < 0) {
+        const im = free ? d.im : 0, ii = free ? d.ii : 0, e = d.k === 'o' && vn < -120 ? 0.15 : 0;
+        const K = 1 / PM + im + ii * rn * rn, jf = -(1 + e) * vn / K;
+        // rolling into something is a push: it gets going over a moment, together with whatever is riding on it (the more there is, the harder it is to get going). Flying into it is a knock
+        const load = Math.max(d.m, (d._N || 0) / GRAV), soft = vn > -330 && !b.boost && free;
+        let cap = 1e9;
+        if (soft) {
+          cap = Math.min(load * A_PUSH / Math.pow(load, 0.75) + (d._F || 0), F_PUSH) * (b.dt || 1 / 60);
+          const vlim = MAXV / (1 + 0.3 * (load - 1)), vb = -(vbx * nx + vby * ny), kb = im + ii * rn * rn;   // (and a heavy load only goes so fast)
+          if (Math.abs(nx) > 0.5 && kb > 0) cap = Math.min(cap, Math.max(0, (vlim - vb) / kb));
         }
-      } else {
-        const dx = d.x - b.x, dy = d.y - b.y, dist = Math.sqrt(dx * dx + dy * dy) || 0.001, pen = R + d.r - dist;
-        if (pen <= 0) continue;
-        if (w.follow) { d.mineT = 0.45; d.sleep = false; d.nap = false; d.rest = 0; }
-        const nx = dx / dist, ny = dy / dist, pm = 1.2, tm = pm + d.m;
-        b.x -= nx * pen * (d.m / tm); b.y -= ny * pen * (d.m / tm); d.x += nx * pen * (pm / tm); d.y += ny * pen * (pm / tm);
-        const vn = (d.vx - b.vx) * nx + (d.vy - b.vy) * ny;
-        if (vn < 0) { const j = -1.15 * vn / (1 / pm + 1 / d.m); d.vx += j / d.m * nx; d.vy += j / d.m * ny; b.vx -= j / pm * nx * 0.5; if (ny > 0.6 && b.vy > 0) b.vy = 0; }
-        if (ny > 0.6) { b.ground = true; b.flat = Math.abs(b.x - d.x) < 6; b.gType = 1; }
-        d.touch = true;
+        const j = Math.min(jf, cap);
+        if (free) { d.vx -= j * nx * im; d.vy -= j * ny * im; d.av -= j * rn * ii; d.st = 0; }
+        b.vx += j * nx / PM; b.vy += j * ny / PM;
+        if (j < jf) { const vn2 = (b.vx - (d.vx - (d.av || 0) * ry)) * nx + (b.vy - (d.vy + (d.av || 0) * rx)) * ny; if (vn2 < 0) { b.vx -= vn2 * nx; b.vy -= vn2 * ny; } }   // (and you are held back to its pace)
       }
+      if (!kin) {
+        if (ny > 0.5 && free && !d.nap) {   // the thing is above you: it is lifted off you (so nothing can pin you down); only a ceiling stops you
+          const sh = d.r ? null : shapeOf(d), ex = d.r || sh.ex, ey = d.r || sh.ey;
+          if (!boxHits(w, d.x - nx * pen, d.y - ny * pen, ex - 2, ey - 2)) { d.x -= nx * pen; d.y -= ny * pen; } else { b.x += nx * pen; b.y += ny * pen; if (b.vy < 0) b.vy = 0; }
+        } else { b.x += nx * pen; b.y += ny * pen; }
+      } else if (free && !d.nap && pen > 1.5) {   // (here the ball cannot be moved: the thing is eased out of its way instead)
+        const want = Math.min(300, (pen - 1.5) * 12), cur = -(d.vx * nx + d.vy * ny); if (cur < want) { d.vx -= nx * (want - cur); d.vy -= ny * (want - cur); }
+      }
+      if (ny < -0.6) {   // standing on it
+        b.ground = true; if (ny < -0.92) { b.flat = true; b.gType = 1; }
+        if (d.k === 'b' && (d.kind === 5 || d.kind === 6) && vy0 >= 0) { b.bnc = true; if (d.kind === 6) b.bncV = SUPER_BOUNCE; d.sq = 0.25; }   // a spring: land on it (or roll onto it) and it throws you up (a super spring: very high)
+      }
+      d.touch = true;
     }
   }
 
@@ -627,7 +681,7 @@
     b.pcd = Math.max(0, (b.pcd || 0) - dt);
     ev.lava = collide(b, w);
     if (w.portals.length && !b.ghost && !b.pcd && b.vy > -60) { const pt = portalAt(w, b.x, b.y + R); if (pt) { const dir = b.pdir || 1; b.x = pt.to.x + dir * 36; b.y = pt.to.y - R - 2; b.vx = dir * Math.max(300, Math.abs(b.vx)); b.vy = -340; b.ground = false; b.flat = false; b.pcd = 0.6; b.fall = 0; b.launched = true; ev.portal = true; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } }
-    if (!b.ghost && w.dyn.length) collideDyn(b, w);
+    b.dt = dt; if (!b.ghost && w.dyn.length) collideDyn(b, w);
     if (w.see.length) { seeBody(b, w, 60); if (!b.ghost) seeGuard(w, b, R); }
     const wet = water || tile(w, Math.floor(b.x / TS), Math.floor(b.y / TS)) === 5 || tile(w, Math.floor(b.x / TS), Math.floor((b.y + R * 0.8) / TS)) === 5;   // (checked again after moving: you can land in a shallow pool in the very same step)
     if (b.ground || wet) { if (!wasGround && !wet && !b.bnc && b.fall >= FALL_DIE) ev.splat = true; b.fall = 0; }
