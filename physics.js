@@ -135,8 +135,9 @@
       const s = w.see[i]; if (s.gone) continue;
       if (w.follow && s.sa !== undefined) {   // in the shared world the server has the plank: it follows the server's (while you are on it, it also reacts to you at once)
         s.kin = !(s.mineT > 0);
-        if (s.mineT > 0) { s.mineT -= dt; s.ang += s.av * dt; s.ang += (s.sa + (s.sav || 0) * 0.05 - s.ang) * Math.min(1, 6 * dt); }
-        else { const a0 = s.ang; s.ang += (s.sa + (s.sav || 0) * 0.05 - s.ang) * Math.min(1, 20 * dt); s.av = (s.ang - a0) / dt; }
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now(), age = s.st ? Math.min(0.25, Math.max(0, (now - s.st) / 1000)) : 0.05, ta = s.sa + (s.sav || 0) * age;   // (carried on exactly the way the crates and balls are, so what rests on it moves with it)
+        if (s.mineT > 0) { s.mineT -= dt; s.ang += s.av * dt; s.ang += (ta - s.ang) * Math.min(1, 6 * dt); }
+        else { const a0 = s.ang; s.ang += (ta - s.ang) * Math.min(1, 26 * dt); s.av = (s.ang - a0) / dt; }
       } else { s.kin = false; s.ang += s.av * dt; }
       s.av *= Math.max(0, 1 - 0.6 * dt);   // (a little friction in the pivot)
       if (s.ang > SEE_MAX) { s.ang = SEE_MAX; if (s.av > 0) s.av = 0; }
@@ -322,7 +323,7 @@
   function matTile(c, d, t) {
     const ice = t === 3;
     if (isBall(d)) { c.mu = ice ? 0.02 : 0.7; if (t === 6) { c.e = 0.85; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 150; } else { c.e = 0.3; c.eT = 250; } }
-    else { c.mu = ice ? 0.015 : Math.abs(c.nx) > 0.7 ? 0.8 : 0.55; c.mk = ice ? 0.015 : 0.25; { const h = Math.PI / 2, q = (((d.rot || 0) % h) + h) % h; if (Math.min(q, h - q) > 0.12) c.mk = 0; }   /* (only a crate sliding flat on a face glides; one standing on an edge or corner keeps its grip, so it stays leaning) */ if (t === 6) { c.e = d.hw > 20 ? 0.5 : 0.68; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 160; } }
+    else { c.mu = ice ? 0.015 : Math.abs(c.nx) > 0.7 ? 0.8 : 0.55; c.mk = ice ? 0.015 : 0.25; { const h = Math.PI / 2, q = (((d.rot || 0) % h) + h) % h; if (Math.min(q, h - q) > 0.35) c.mk = 0; }   /* (only a crate sliding flat on a face glides; one standing on an edge or corner keeps its grip, so it stays leaning) */ if (t === 6) { c.e = d.hw > 20 ? 0.5 : 0.68; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 160; } }
   }
   function tileContacts(w, d, sh) {
     const ex = d.r || sh.ex, ey = d.r || sh.ey;
@@ -465,6 +466,7 @@
       d._far = !!f && !nearF(f, d.x, d.y, FR, FR);
       if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if (d.farT > 30) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
       if (d._far && d.nap) { d.sleep = true; continue; }   // far from everybody and at rest: nothing to work out
+      if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
       if (fol && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
       d.sleep = false;
@@ -552,7 +554,7 @@
       const pen = -h[2], nx = h[3], ny = h[4]; if (pen <= 0) continue;
       if (w.follow && !(d.hold > 0)) { d.mineT = 0.45; d.sleep = false; }
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
-      const held = w.follow && d.hold > 0;   // (the server's crate and yours disagree: it is a wall until they agree again)
+      const held = (w.follow && d.hold > 0) || (b.own !== undefined && d.ownT > 0 && d.ownBy === b.own);   // (the server's crate and yours disagree: it is a wall until they agree again. On the server: the player's own device is already pushing this one)
       const rx = h[0] - d.x, ry = h[1] - d.y, rn = rx * ny - ry * nx, rt = rx * -nx - ry * ny;
       const vbx = d.vx - (d.av || 0) * ry, vby = d.vy + (d.av || 0) * rx, vy0 = b.vy;
       const vn = (b.vx - vbx) * nx + (b.vy - vby) * ny;
@@ -581,7 +583,8 @@
         if (free && d.k === 'o' && d.gr && Math.abs(nx) > 0.5) d.av = d.vx / d.r;   // (a ball you push along the ground rolls the way it is pushed, never skidding on with its old spin)
         if (j < jf) { const vn2 = (b.vx - (d.vx - (d.av || 0) * ry)) * nx + (b.vy - (d.vy + (d.av || 0) * rx)) * ny; if (vn2 < 0) { b.vx -= vn2 * nx; b.vy -= vn2 * ny; } }   // (and you are held back to its pace)
       }
-      if (!kin) {
+      if (kin) { b.x += nx * pen; b.y += ny * pen; }   // (the server's idea of where a player is never goes through a crate: it stays against it, as the player's own ball does)
+      else {
         if (ny > 0.5 && free && !d.nap) {   // the thing is above you: it is lifted off you (so nothing can pin you down); only a ceiling stops you
           const sh = d.r ? null : shapeOf(d), ex = d.r || sh.ex, ey = d.r || sh.ey;
           if (!boxHits(w, d.x - nx * pen, d.y - ny * pen, ex - 2, ey - 2)) { d.x -= nx * pen; d.y -= ny * pen; } else { b.x += nx * pen; b.y += ny * pen; if (b.vy < 0) b.vy = 0; }

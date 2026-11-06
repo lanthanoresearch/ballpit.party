@@ -365,9 +365,9 @@ function simTick() {
             const lx = Math.max(7, Math.abs(p.vx) * SIMDT * 2), ly = Math.max(10, Math.abs(p.vy) * SIMDT * 2);
             p.qx += Math.max(-lx, Math.min(lx, tx - p.qx)); p.qy += Math.max(-ly, Math.min(ly, ty - p.qy));
           }
-          list.push({ x: p.qx, y: p.qy, vx: p.vx, vy: p.vy, ground: g });
+          list.push({ x: p.qx, y: p.qy, vx: p.vx, vy: p.vy, ground: g, id: p.id, p });
         }
-        for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground, kin: true, dt: SIMDT }; P.collideDyn(c, w); P.seeBody(c, w, P.PLAYER_WT); }   // (kin: a player is where they say they are; only the things they touch are moved)
+        for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground, kin: true, dt: SIMDT, own: q.id }; P.collideDyn(c, w); P.seeBody(c, w, P.PLAYER_WT); if (q.p) { q.p.qx = c.x; q.p.qy = c.y; } }   // (kin: a player is where they say they are; only the things they touch are moved)
         if (k === n - 1) P.stepSwitches(w, list, SIMDT * n);   // (the buttons and plates are looked at once per update)
       }
       w.ev.length = 0;
@@ -378,7 +378,7 @@ function simTick() {
     for (let i = 0; stepped && i < w.dyn.length; i++) {
       const d = w.dyn[i];
       if (d.sleep) {   // (a thing that went to sleep in the middle of a move is still told to everybody once, where it stopped)
-        if (!(d.burn > 0) && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || !d.lst)) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; d.lst = true; d.lvx = d.lvy = d.svx = d.svy = 0; d.px = undefined; }
+        if (!(d.burn > 0) && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || !d.lst)) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; if (d.ownT > 0) { d.lst = false; d.lvx = d.svx = d.vx; d.lvy = d.svy = d.vy; } else { d.lst = true; d.lvx = d.lvy = d.svx = d.svy = 0; } d.px = undefined; }
         continue;
       }
       const bn = d.burn > 0;
@@ -630,6 +630,17 @@ wss.on('connection', (ws, req) => {
         return;
       }
       const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' ? ['por', Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])] : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
+    } else if (m.t === 'own') {   // a player's device says where the things it is pushing are: the server takes its word, unless somebody else is right there too
+      const r = p.room; if (!r || !r.world || m.s !== rslot(r) || !Array.isArray(m.b)) return;
+      const w = r.world, near = [...r.players.values()].filter(o => o !== p && o.has && !o.dead && !o.hidden);
+      for (const q of m.b.slice(0, 12)) {
+        if (!Array.isArray(q) || q.length !== 7 || !q.every(Number.isFinite)) continue;
+        const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone || d.burn > 0) continue;
+        if (Math.abs(q[1] - d.x) + Math.abs(q[2] - d.y) > 400 || q[1] < 0 || q[1] > w.W * P.TS || q[2] < 0 || q[2] > w.H * P.TS) continue;
+        if (near.some(o => Math.abs(o.x - d.x) < 75 && Math.abs(o.y - d.y) < 75)) { d.ownT = 0; continue; }   // (somebody else touching it too)   // (two players there: the server decides)
+        if (d.ownT > 0 && d.ownBy !== p.id) continue;
+        d.x = q[1]; d.y = q[2]; d.vx = Math.max(-1400, Math.min(1400, q[3])); d.vy = Math.max(-1400, Math.min(1400, q[4])); d.rot = q[5]; d.av = Math.max(-28, Math.min(28, q[6])); d.ownBy = p.id; d.ownT = 0.25; d.nap = false; d.st = 0;
+      }
     } else if (m.t === 'dseed') {   // this server forgot the world (it was restarted with nothing saved): a player who was here tells it where things had ended up, so a knocked-down tower stays knocked down
       const r = p.room; if (!r || !r.world || !r.seedOk || Date.now() - r.worldAt > 40000 || !Array.isArray(m.d) || m.s !== rslot(r)) return;
       if (r.seedBy && r.seedBy !== p.id) return; r.seedBy = p.id;

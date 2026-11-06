@@ -1141,8 +1141,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=113"></script>
-<script src="physics.js?v=113"></script>
+<script src="maps.js?v=114"></script>
+<script src="physics.js?v=114"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1964,6 +1964,7 @@ function followWorld(dt) {
     else if (d.keep > 0) { d.keep -= dt; if (s.vx === 0 && s.vy === 0 && t - s.t > 120 && Math.abs(s.x - d.x) + Math.abs(s.y - d.y) < 30) d.keep = 0; if (!(d.keep > 0)) d.soft = 1.2; }   // (what you pushed carries on here until the server has it at rest too, then goes over to the server's picture)
     let mine = d.mineT > 0 || d.keep > 0;
     const ex = tx - d.x, ey = ty - d.y, err = Math.abs(ex) + Math.abs(ey);
+    if (mine && d.owned && t - (d.ownAt || 0) < 300) { if (err > 300) { d.ownBad = (d.ownBad || 0) + dt; if (d.ownBad > 0.6) { d.owned = false; d.mineT = 0; d.keep = 0; d.hold = 0.8; d.ownBad = 0; } } else d.ownBad = 0; continue; }   // (yours: the server is following you, so there is nothing to correct)
     if (d.hold > 0) { d.hold -= dt; if (err < 2) d.hold = 0; }
     if (mine) {   // this device and the server have it landing in different places (a tumble can go either way): it gives in to the server at once, gliding there, instead of fighting its way back through everything
       if (err > (d.mineT > 0 ? 60 : 22)) d.errT = (d.errT || 0) + dt; else d.errT = 0;
@@ -2105,13 +2106,15 @@ function pubSync(pv) {   // you arrive in a public world: you get what the room 
   if (!pv || !S.world) return;
   const has = new Set(); [['p', pv.props], ['m', pv.misc], ['g', pv.gates], ['c', pv.cps], ['d', pv.dels]].forEach(([k, a]) => (a || []).forEach(q => has.add(pkey(k, q))));
   applyPubBuild(pv);
-  if (S.seed && S.seed.room === S.pubRoom && S.seed.slot === S.slot) { const d = S.seed.d; S.seed = null; for (let i = 0; i < d.length; i += 20) { const msg = { t: "dseed", s: S.slot, d: d.slice(i, i + 20) }; setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 60 + 110 * (i / 20)); } }   // (only taken if the server has no memory of this world)
-  sendBulk({ props: S.bought.filter(q => !has.has(pkey('p', q))), gates: S.boughtGates.filter(q => !has.has(pkey('g', q))), misc: S.boughtMisc.filter(q => !has.has(pkey('m', q))), cps: S.boughtCps.filter(q => !has.has(pkey('c', q))), dels: S.dels.filter(q => !has.has(pkey('d', q))) });
+  const seed = S.seed && S.seed.room === S.pubRoom && S.seed.slot === S.slot ? S.seed.d : null; S.seed = null;
+  const nb = sendBulk({ props: S.bought.filter(q => !has.has(pkey('p', q))), gates: S.boughtGates.filter(q => !has.has(pkey('g', q))), misc: S.boughtMisc.filter(q => !has.has(pkey('m', q))), cps: S.boughtCps.filter(q => !has.has(pkey('c', q))), dels: S.dels.filter(q => !has.has(pkey('d', q))) });
+  if (seed) for (let i = 0; i < seed.length; i += 20) { const msg = { t: 'dseed', s: S.slot, d: seed.slice(i, i + 20) }; setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (nb + 1) + 300 + 110 * (i / 20)); }   // (where everything had ended up, sent after what you built, so the server has it all; only taken if the server has no memory of this world)
 }
 function sendBulk(lists) {   // tell the world what you have built, 25 things at a time (a big build is no big message)
   const out = [];
   ['cps', 'gates', 'props', 'misc', 'dels'].forEach(k => { const a = lists[k] || []; for (let i = 0; i < a.length; i += 25) out.push({ t: 'pb', [k]: a.slice(i, i + 25) }); });
   out.forEach((msg, i) => setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (i + 1)));
+  return out.length;
 }
 function applyPubBuild(pv) {   // what everyone in a public world has built so far (each thing only once, however often it is told). It becomes part of your world, so it is kept for when you come back
   if (!pv || !S.world) return; const seen = S.pubKeys, take = (k, q) => { const key = pkey(k, q); if (seen.has(key)) return false; seen.add(key); return true; };
@@ -4647,13 +4650,13 @@ function dynBin(dv, len, ty) {
     for (let k = 0; k < n; k++) {
       const o = 4 + k * st; if (o + st > len) break;
       const d = w.dynBy.get(dv.getUint32(o, true)); if (!d) continue;
-      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0, jump: !d.sv || t - d.sv.t > 1500 };   // (the first word on something, or the first in a long while: it is simply put there)
+      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0, jump: !d.sv || t - d.sv.t > 1500 }; d.srvOk = true;   // (the first word on something, or the first in a long while: it is simply put there)
     }
   } else {
     for (let k = 0; k < n; k++) {
       const o = 4 + k * 12; if (o + 12 > len) break;
       const uid = dv.getUint32(o, true);
-      for (let i = 0; i < w.see.length; i++) if (w.see[i].uid === uid) { w.see[i].sa = dv.getFloat32(o + 4, true); w.see[i].sav = dv.getFloat32(o + 8, true); break; }
+      for (let i = 0; i < w.see.length; i++) if (w.see[i].uid === uid) { w.see[i].sa = dv.getFloat32(o + 4, true); w.see[i].sav = dv.getFloat32(o + 8, true); w.see[i].st = t; break; }
     }
   }
 }
@@ -4828,6 +4831,21 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
   ws.send(buf);
 }
 setInterval(() => sendPos(false), 30);
+/* What you are pushing (and what you just pushed, until it comes to rest) is worked out on your own device, at once, and your device tells the server where it is.
+   The server takes your word for it, so it never has a different idea of where your crate landed. If somebody else is right there too, the server decides instead. */
+const OWN_NEAR = 90;   // (another player this close to it: the server decides instead)
+function contested(d) { let c = false; others.forEach(o => { if (!c && o.seen && !o.dead && Math.abs(o.cx - d.x) < OWN_NEAR && Math.abs(o.cy - d.y) < OWN_NEAR) c = true; }); return c; }
+setInterval(() => {
+  if (!S.world || !S.world.follow || !online || !ws || ws.readyState !== 1 || S.mode !== 'play') return;
+  const out = [], t = performance.now();
+  for (const d of S.world.dyn) {
+    if (!(d.mineT > 0 || d.keep > 0) || d.gone || d.burn > 0 || !d.sv || !d.srvOk) { d.owned = false; continue; }
+    if (contested(d)) { d.owned = false; continue; }
+    d.owned = true; d.ownAt = t;
+    out.push([d.uid >>> 0, Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.vx), Math.round(d.vy), Math.round(d.rot * 1000) / 1000, Math.round(d.av * 100) / 100]);
+  }
+  for (let i = 0; i < out.length && i < 24; i += 12) { try { ws.send(JSON.stringify({ t: 'own', s: S.slot, b: out.slice(i, i + 12) })); } catch (e) {} }
+}, 50);
 /* ================= drawing (hand-drawn look, flat colours) ================= */
 const ICE = '#7fdcff', LAVA = '#ff4a1c', INK = 'rgba(22,15,12,.85)';
 function jx(cx, cy) { return (hsh(cx, cy, 1) - 0.5) * 2.6; }
