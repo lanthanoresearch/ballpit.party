@@ -590,6 +590,9 @@
   #homeShare{position:fixed;left:12px;top:12px;top:calc(12px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left));z-index:4;width:42px;height:40px;font-size:20px;cursor:pointer}
   #homeShare{background:#fff4d8;border:2px solid #2b1d12;color:#2b1d12;box-shadow:2px 3px 0 rgba(43,29,18,.3)}
   #homeShare:hover{background:#ffe8b0}#homeShare:active{transform:translateY(1px);box-shadow:1px 2px 0 rgba(43,29,18,.3)}
+  #homeUpd{position:fixed;left:62px;top:12px;top:calc(12px + env(safe-area-inset-top));left:calc(62px + env(safe-area-inset-left));z-index:4;width:42px;height:40px;font-size:20px;cursor:pointer;background:#fff4d8;border:2px solid #2b1d12;color:#2b1d12;box-shadow:2px 3px 0 rgba(43,29,18,.3)}
+  #homeUpd:hover{background:#ffe8b0}#homeUpd:active{transform:translateY(1px);box-shadow:1px 2px 0 rgba(43,29,18,.3)}#homeUpd.new{background:#ffd23d}
+  #cfText.pre{white-space:pre-line}
   #shareTip{position:fixed;left:62px;top:18px;top:calc(18px + env(safe-area-inset-top));z-index:4;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);padding:4px 12px;font-size:15px;color:#2b1d12}
   #shareTip.hide{display:none}
   #home .scene{position:fixed;z-index:0}#home .hbox{z-index:2}#home .sball{z-index:1}
@@ -632,7 +635,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 115; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -714,6 +717,18 @@
   if (!/^https?:$/.test(location.protocol)) return;
   try { var so = JSON.parse(localStorage.getItem('ballrun4') || '{}'); if (so.offline && !so.mp) { fill(40); return; } } catch (e) {}
   var done = false, give = setTimeout(function () { done = true; }, 4000);
+  var wipe = function (why) {   // (throw away every saved copy of the game and load it all again, once a minute at most)
+    var k = 'bp_refresh', last = 0; try { last = +sessionStorage.getItem(k) || 0; } catch (e) {}
+    if (Date.now() - last < 60000) return false;
+    try { sessionStorage.setItem(k, String(Date.now())); } catch (e) {}
+    msg('Updating to the newest version…'); fill(55);
+    var go = function () { location.replace(location.pathname + '?r=' + Date.now() + location.hash); };
+    try { Promise.all([navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0, window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k2) { return caches.delete(k2); })); }) : 0]).then(go, go); } catch (e) { go(); }
+    setTimeout(go, 2500); return true;
+  };
+  try {   // is there a newer copy of the game on the website than the one that just opened? (the page itself says which version it is)
+    fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) { var m = /GAME_V = (\d+)/.exec(t || ''); if (m && +m[1] > GAME_V) wipe('site'); }).catch(function () {});
+  } catch (e) {}
   try {
     fetch('/version?x=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (v) {
       clearTimeout(give); if (!v || !v.build) { fill(40); return; }
@@ -978,7 +993,7 @@
 
 <div id="home" class="hide">
   <div class="scene" id="homeScene"></div>
-  <button id="homeShare" class="ibtn" type="button" title="Share ballpit.party" aria-label="Share the game" data-ic="share"></button><span id="shareTip" class="hide">Link copied</span>
+  <button id="homeShare" class="ibtn" type="button" title="Share ballpit.party" aria-label="Share the game" data-ic="share"></button><button id="homeUpd" class="ibtn" type="button" title="Version and updates" aria-label="Version and updates" data-ic="reset"></button><span id="shareTip" class="hide">Link copied</span>
   <button id="homeWallet" type="button" aria-label="Your coins and diamonds"></button>
   <div class="hbox">
     <h1>BALL<b>PIT</b>.PARTY</h1>
@@ -1141,8 +1156,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=114"></script>
-<script src="physics.js?v=114"></script>
+<script src="maps.js?v=115"></script>
+<script src="physics.js?v=115"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2732,7 +2747,7 @@ function askConfirm(title, text, yes, cb, o) {
   $('confirm').classList.remove('hide');
 }
 function cfClose(yes) {
-  $('confirm').classList.add('hide');
+  $('confirm').classList.add('hide'); $('cfText').classList.remove('pre');
   if (cfOptCb) cfOptCb($('cfOpt').checked);
   const f = yes ? cfCb : null; cfCb = null; cfOptCb = null; if (f) f();
 }
@@ -4032,6 +4047,34 @@ function checkBuild() {
   const B = window.__BUILD; if (offlineOn() || updating || !B || B.charAt(0) === '_' || !/^https?:$/.test(location.protocol)) return;
   try { fetch('/version?x=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(v => { if (v && v.build && v.build !== B) forceUpdate(); }).catch(() => {}); } catch (e) {}
 }
+/* Versions: this game (the page and its physics), the copy on the website, and the game server. All three should match. */
+const GAME_V = window.GAME_V || 0;
+const physV = () => (P && P.VERSION) || 0;
+function siteVersion() { return fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => { const m = /GAME_V = (\d+)/.exec(t || ''); return m ? +m[1] : 0; }).catch(() => 0); }
+function serverVersion() { return fetch(homeBase() + '/version?x=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(v => (v && v.v) || (v ? -1 : 0)).catch(() => 0); }
+function checkSite() {   // a newer copy of the game on the website: update to it (the same as pressing Update)
+  if (offlineOn() || updating || !/^https?:$/.test(location.protocol)) return;
+  siteVersion().then(v => { if (v > GAME_V) { $('homeUpd').classList.add('new'); forceUpdate(); } });
+}
+setInterval(checkSite, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) checkSite(); });
+function openVersion() {
+  const show = (site, srv) => {
+    const lines = ['This game: version ' + GAME_V + (physV() && physV() !== GAME_V ? ' (but its physics file is version ' + physV() + ')' : ''),
+      'On the website: ' + (site ? 'version ' + site : 'could not check'),
+      'Game server: ' + (srv > 0 ? 'version ' + srv : srv < 0 ? 'an older version (before ' + GAME_V + ')' : 'could not reach it')];
+    let note = '';
+    if (site > GAME_V) note = 'A newer version is ready. Update to get it.';
+    else if (physV() !== GAME_V) note = 'Part of the game is an old saved copy. Update to fix it.';
+    else if (srv > GAME_V) note = 'The game server is newer than this game. Update, and if that does not help, upload the new index.html, physics.js and sw.js to the website.';
+    else if (srv !== 0 && srv !== GAME_V) note = 'The game server is running an older version. Upload the new server.js and physics.js to the server.';
+    else if (site && site === GAME_V && srv === GAME_V) note = 'Everything is up to date.';
+    $('cfText').classList.add('pre'); $('cfText').textContent = lines.join('\n') + (note ? '\n\n' + note : '');
+  };
+  askConfirm('Game version', 'Checking…', 'Update everything', () => { $('cfText').classList.remove('pre'); wipeAndReload(); }, { no: 'Close', yesClass: 'go' });
+  $('cfText').classList.add('pre');
+  Promise.all([siteVersion(), serverVersion()]).then(([a, b]) => { if (!$('confirm').classList.contains('hide')) show(a, b); });
+}
+$('homeUpd').onclick = () => { sfx('ui'); openVersion(); };
 setInterval(checkBuild, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) checkBuild(); });
 
 /* ----- names: everyone has one, and it can change once a day ----- */

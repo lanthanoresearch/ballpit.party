@@ -110,19 +110,19 @@
     const c = Math.cos(s.ang), sn = Math.sin(s.ang);
     const rx = o.x - s.cx, ry = o.y - s.cy, u = clamp(rx * c + ry * sn, -s.hl, s.hl);
     const qx = s.cx + u * c, qy = s.cy + u * sn, dx = o.x - qx, dy = o.y - qy, d2 = dx * dx + dy * dy, mm = r + SEE_TH;
-    if (d2 >= mm * mm || (dy > 0 && Math.abs(dy) > mm * 0.5 && o.vy < -50)) return false;
+    if (d2 >= mm * mm) return false;
     let nx, ny;
-    if (d2 < 0.0001) { nx = sn; ny = -c; } else { const d = Math.sqrt(d2); nx = dx / d; ny = dy / d; }
-    if (ny > 0.3) return false;                         // from underneath: pass through
+    const below = rx * sn - ry * c < 0;   // (which side of the plank it is on: the plank is solid from both sides)
+    if (d2 < 0.0001) { nx = below ? -sn : sn; ny = below ? c : -c; } else { const d = Math.sqrt(d2); nx = dx / d; ny = dy / d; }
     const pen = mm - Math.sqrt(d2); if (!o.kin) { o.x += nx * pen; o.y += ny * pen; }
     const px = qx - s.cx, py = qy - s.cy, svx = -s.av * py, svy = s.av * px;   // the plank's own movement at that spot
     const vn = (o.vx - svx) * nx + (o.vy - svy) * ny, rn = px * ny - py * nx, ii = s.kin ? 0 : plankI(s);
     let j = 0;
     const g1 = GRAV * (o.dt || 1 / 60);   // (what one step of falling adds)
-    if (ny < -0.35 && vn > -3 * g1) { if (vn < 0 && !o.kin) { o.vx -= vn * nx; o.vy -= vn * ny; } j = m * g1; }   // standing on it: you stay on it, and your whole weight presses on it
+    if (!below && ny < -0.35 && vn > -3 * g1) { if (vn < 0 && !o.kin) { o.vx -= vn * nx; o.vy -= vn * ny; } j = m * g1; }   // standing on it: you stay on it, and your whole weight presses on it
     else if (vn < 0) { j = -vn / (1 / m + ii * rn * rn); if (!o.kin) { o.vx += j * nx / m; o.vy += j * ny / m; } }   // landing on it or knocking it: you and the plank share the knock
     if (!o.ghost && j > 0 && ii) s.av -= ii * rn * j;
-    return ny < -0.35;
+    return !below && ny < -0.35;
   }
   function nearF(f, x, y, rx, ry) {   // is this spot near the point of interest (or any of them: the server watches everybody in a world)?
     if (!f) return true;
@@ -363,18 +363,18 @@
       if (pa.t !== dynTick) { pa.t = dynTick; pa.x = s.cx; pa.y = s.cy; pa.av = s.av; pa._ii = s.kin || (Math.abs(s.ang) >= SEE_MAX - 1e-6 && !s.leave) ? 0 : plankI(s); pa._bx = pa._by = pa._bw = 0; pa.s = s; plankUsed.push(pa); }   // (the plank takes part in the pushing like any other thing, turning on its pivot)
       const add = (h, key, u) => { const q = addC(pa, d, h, key); q.pl = s; q.u = clamp(u, -s.hl, s.hl); q.mu = 0.7; n++; };
       const vs = isBall(d) ? [[d.x, d.y, d.r]] : [[sh.x + sh.c * sh.hw - sh.s * sh.hh, sh.y + sh.s * sh.hw + sh.c * sh.hh, 0], [sh.x - sh.c * sh.hw - sh.s * sh.hh, sh.y - sh.s * sh.hw + sh.c * sh.hh, 0], [sh.x + sh.c * sh.hw + sh.s * sh.hh, sh.y + sh.s * sh.hw - sh.c * sh.hh, 0], [sh.x - sh.c * sh.hw + sh.s * sh.hh, sh.y - sh.s * sh.hw - sh.c * sh.hh, 0]];
-      if ((d.x - s.cx) * ux + (d.y - s.cy) * uy < 0) continue;   // (only from above: it is a plank to stand on)
+      const sd = (d.x - s.cx) * ux + (d.y - s.cy) * uy < 0 ? -1 : 1, sux = ux * sd, suy = uy * sd;   // (the side it is on: the plank is solid from above and from below)
       for (let k = 0; k < vs.length; k++) {
         const vx = vs[k][0], vy = vs[k][1], r = vs[k][2], u = clamp((vx - s.cx) * c + (vy - s.cy) * sn, -s.hl, s.hl), qx = s.cx + u * c, qy = s.cy + u * sn;
         const dx = vx - qx, dy = vy - qy, dd = Math.sqrt(dx * dx + dy * dy), m = r + SEE_TH;
         if (dd >= m) continue;
-        const nx = dd > 0.0001 ? dx / dd : ux, ny = dd > 0.0001 ? dy / dd : uy;
-        if (nx * ux + ny * uy < 0.3) continue;
+        const nx = dd > 0.0001 ? dx / dd : sux, ny = dd > 0.0001 ? dy / dd : suy;
+        if (nx * sux + ny * suy < 0.3) continue;
         add([qx + nx * SEE_TH, qy + ny * SEE_TH, dd - m, nx, ny], 's' + i + ':' + k, u);
       }
       if (!isBall(d)) for (let k = 0; k < 2; k++) {   // the plank's ends poking into the side or bottom of a crate
         const e = k ? 1 : -1, qx = s.cx + e * s.hl * c, qy = s.cy + e * s.hl * sn, h = circBox(sh, qx, qy, SEE_TH);
-        if (!h || -h[4] * uy - h[3] * ux < 0.3) continue;
+        if (!h || -h[4] * suy - h[3] * sux < 0.3) continue;
         add([h[0] + h[3] * h[2], h[1] + h[4] * h[2], h[2], -h[3], -h[4]], 's' + i + ':e' + k, e * s.hl);
       }
     }
@@ -745,7 +745,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 115, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

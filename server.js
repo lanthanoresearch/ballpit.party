@@ -51,6 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
+const GAME_V = 115;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -214,7 +215,7 @@ const server = http.createServer((req, res) => {
   }
   if (url === '/version') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
-    return res.end(JSON.stringify({ build: BUILD, home: HOME_URL }));
+    return res.end(JSON.stringify({ build: BUILD, home: HOME_URL, v: GAME_V }));
   }
   const f = FILES[url];
   if (!f) { res.writeHead(404); return res.end('Not found'); }
@@ -292,7 +293,9 @@ function roomWorld(room) {
   return w;
 }
 const worldAdd = {   // somebody built something: it goes into the shared world straight away
-  prop: (r, q) => { if (r.world) { const d = P.addProp(r.world, q[0], q[1], q[2]); d.ver = ++r.verN; (r.chg = r.chg || []).push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; return d; } },
+  prop: (r, q, replay) => { if (r.world) { const d = P.addProp(r.world, q[0], q[1], q[2]);
+    if (replay) { const e = d.r || d.hw; for (let k = 0; k < 12 && r.world.dyn.some(o => o !== d && !(o.burn > 0) && Math.abs(o.x - d.x) < e + (o.r || o.hw) - 2 && Math.abs(o.y - d.y) < e + (o.r || o.hh) - 2); k++) d.y -= e * 2 + 1; }   /* (something built long ago, coming back where it was first put: if that spot is taken, it goes on top instead of inside, so nothing ever bursts apart) */
+    d.ver = ++r.verN; (r.chg = r.chg || []).push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; return d; } },
   misc: (r, q) => { if (r.world) srvMisc(r.world, q); },
   gate: (r, q) => { if (r.world) srvGate(r.world, q); },
   del: (r, q) => { if (!r.world) return; const d = q[0] === 'b' ? r.world.dynBy.get(q[1] >>> 0) : null; if (P.applyDel(r.world, q) && d) { d.ver = ++r.verN; (r.chg = r.chg || []).push(d); } }
@@ -611,7 +614,7 @@ wss.on('connection', (ws, req) => {
       const B = bstate(r), e = {};
       const take = (key, arr, ok, cap) => { if (!Array.isArray(m[key])) return; const out = []; for (const q of m[key].slice(0, 25)) { const c = ok(q); if (c && arr.length < cap) { arr.push(c); out.push(c); } } if (out.length) e[key] = out; };
       take('props', B.props, okProp, ROOM_PROPS); take('gates', B.gates, okGate, ROOM_GATES); take('misc', B.misc, okMisc, ROOM_MISC); take('cps', B.cps, okCp, ROOM_CPS); take('dels', B.dels, okDel, ROOM_DELS);
-      (e.props || []).forEach(q => worldAdd.prop(r, q)); (e.gates || []).forEach(q => worldAdd.gate(r, q)); (e.misc || []).forEach(q => worldAdd.misc(r, q)); (e.dels || []).forEach(q => worldAdd.del(r, q));
+      (e.props || []).forEach(q => worldAdd.prop(r, q, true)); (e.gates || []).forEach(q => worldAdd.gate(r, q)); (e.misc || []).forEach(q => worldAdd.misc(r, q)); (e.dels || []).forEach(q => worldAdd.del(r, q));
       if (Object.keys(e).length) { e.t = 'pb'; broadcast(r, e, p); }
     } else if (m.t === 'pobj') {   // a teeter-totter or a floor booster, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || !((m.g.length === 4 && (m.g[0] === 'see' || m.g[0] === 'pad' || m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl')) || (m.g.length === 5 && m.g[0] === 'por')) || !m.g.slice(1).every(Number.isFinite) || bstate(r).misc.length >= ROOM_MISC || ((m.g[0] === 'see' || m.g[0] === 'por') && bstate(r).misc.filter(q => q[0] === m.g[0]).length >= 80)) return;
