@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 116;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 117;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -233,6 +233,10 @@ const server = http.createServer((req, res) => {
 const wss = new WebSocketServer({ server, maxPayload: 1024, perMessageDeflate: false });
 
 // Worlds are numbered 1, 2, 3...  Everyone goes to the lowest-numbered world with space; a new world only opens when the others are full.
+function loadSaved(r) {   // what this map's room had the last time it was played (things built and where everything ended up)
+  const sv = savedWorlds.get(wkey(r.id)); r.build = null; r.snapDyn = undefined; r.snapSee = undefined;
+  if (sv) { if (sv.build) r.build = sv.build; r.snapDyn = sv.dyn; r.snapSee = sv.see; }
+}
 function findRoom() {
   const full = [];
   for (let id = 1; id <= rooms.size + 1; id++) {
@@ -240,7 +244,7 @@ function findRoom() {
     if (r && r.players.size >= MAX_PLAYERS) { full.push(id); continue; }
     if (r) return { room: r, full };
     const nr = { id, players: new Map(), finishers: [] };
-    { const sv = savedWorlds.get(id); if (sv) { if (sv.build) nr.build = sv.build; nr.snapDyn = sv.dyn; nr.snapSee = sv.see; } }   // (a world that was here before comes back as it was)
+    loadSaved(nr);   // (a world that was here before comes back as it was)
     rooms.set(id, nr);
     return { room: nr, full };
   }
@@ -325,23 +329,25 @@ const ROOM_KEEP_MS = 15 * 60 * 1000;
 const WORLD_FILE = process.env.WORLD_FILE || path.join(path.dirname(LINKS_FILE), 'world.json');
 const savedWorlds = new Map(); let worldsDirty = false;
 try {
-  const o = JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8')), cs = slotNow();
-  if (o && o.slot === cs) for (const k in (o.rooms || {})) { const v = o.rooms[k]; if (v && Array.isArray(v.dyn)) savedWorlds.set(+k, v); }
+  const o = JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8'));
+  if (o && o.maps) for (const k in o.maps) { const v = o.maps[k]; if (v && Array.isArray(v.dyn) && /^\d+:\d+$/.test(k)) savedWorlds.set(k, v); }   // (every map keeps what was built on it, for good: it comes back with the map)
+  else if (o && Number.isFinite(o.slot)) for (const k in (o.rooms || {})) { const v = o.rooms[k]; if (v && Array.isArray(v.dyn)) savedWorlds.set((o.slot % maps.count) + ':' + k, v); }   // (the older kind of file: one map only)
   console.log('Restored ' + savedWorlds.size + ' worlds from ' + WORLD_FILE);
 } catch (e) {}
 function snapRoom(r) {
-  const w = r.world; if (!w) return r.snapDyn !== undefined ? { build: r.build || null, dyn: r.snapDyn, see: r.snapSee } : null;
+  const w = r.world; if (!w) return r.snapDyn !== undefined ? { build: r.build || null, dyn: r.snapDyn, see: r.snapSee } : r.build ? { build: r.build, dyn: [], see: [] } : null;
   return { build: r.build || null, dyn: w.dyn.map(d => d.burn >= 1e9 ? [0, 0, 0, d.uid >>> 0, 1] : [Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.rot * 1000) / 1000, d.uid >>> 0]), see: w.see.map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]) };   // (each thing by its name, so nothing can ever be put back in another's place; teeter-totters too)
 }
+const wkey = id => (curSlot % maps.count) + ':' + id;   // a public world is remembered by its map and its room, never by when it was played
 function keepWorlds(sync) {
-  for (const [id, r] of rooms) if (!r.priv && (r.world || r.snapDyn !== undefined)) { savedWorlds.set(id, snapRoom(r)); worldsDirty = true; }
+  for (const [id, r] of rooms) if (!r.priv && (r.world || r.snapDyn !== undefined || r.build)) { savedWorlds.set(wkey(id), snapRoom(r)); worldsDirty = true; }
   if (!worldsDirty) return; worldsDirty = false;
-  const o = { slot: curSlot, rooms: {} }; savedWorlds.forEach((v, k) => { o.rooms[k] = v; });
+  const o = { maps: {} }; savedWorlds.forEach((v, k) => { o.maps[k] = v; });
   const str = JSON.stringify(o), tmp = WORLD_FILE + '.tmp';
   try { if (sync) { fs.writeFileSync(tmp, str); fs.renameSync(tmp, WORLD_FILE); } else fs.writeFile(tmp, str, er => { if (!er) fs.rename(tmp, WORLD_FILE, () => {}); }); } catch (e) {}
 }
 setInterval(() => keepWorlds(false), 20000).unref();
-setInterval(() => { const t = Date.now(); for (const [id, r] of rooms) if (r.players.size === 0 && (!r.emptyAt || t - r.emptyAt > ROOM_KEEP_MS)) { if (!r.priv) { const sn = snapRoom(r); if (sn) { savedWorlds.set(id, sn); worldsDirty = true; } } rooms.delete(id); } }, 30000).unref();
+setInterval(() => { const t = Date.now(); for (const [id, r] of rooms) if (r.players.size === 0 && (!r.emptyAt || t - r.emptyAt > ROOM_KEEP_MS)) { if (!r.priv) { const sn = snapRoom(r); if (sn) { savedWorlds.set(wkey(id), sn); worldsDirty = true; } } rooms.delete(id); } }, 30000).unref();
 function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
   for (const room of rooms.values()) {
@@ -855,15 +861,16 @@ setInterval(() => { savePeak(false); saveLinks(false); const t = Date.now(); pen
 setInterval(() => {
   const s = slotNow();
   if (s === curSlot) return;
+  keepWorlds(false);   // (the map that is ending is kept just as it is, for when it comes round again)
   curSlot = s;
   console.log('New session / map:', maps.names[curSlot % maps.count]);
-  savedWorlds.clear(); worldsDirty = true;
+  worldsDirty = true;
   for (const room of rooms.values()) {
     if (room.priv) continue;
-    room.build = null; room.world = null; room.snapDyn = undefined;
+    room.world = null; loadSaved(room);
     room.finishers = [];
-    for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); }
-    broadcast(room, { t: 'newmap', slot: curSlot, next: nextAt(curSlot), now: Date.now() });
+    for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); p.dver = null; }
+    broadcast(room, { t: 'newmap', slot: curSlot, next: nextAt(curSlot), now: Date.now(), build: bstate(room) });   // (with what was built on this map the last time it was played)
   }
   keepWorlds(false);
   pushSubs.forEach((v, pub) => { if (v.m) pushTo(pub, 'm', ['A new map has started', maps.names[curSlot % maps.count]], 'map-' + curSlot); });   // (only devices that are not in the game right now)

@@ -136,11 +136,34 @@
       if (w.follow && s.sa !== undefined) {   // in the shared world the server has the plank: it follows the server's (while you are on it, it also reacts to you at once)
         s.kin = !(s.mineT > 0);
         const now = typeof performance !== 'undefined' ? performance.now() : Date.now(), age = s.st ? Math.min(0.25, Math.max(0, (now - s.st) / 1000)) : 0.05, ta = clamp(s.sa + (s.sav || 0) * age, -SEE_MAX, SEE_MAX);   // (carried on exactly the way the crates and balls are, so what rests on it moves with it)
+        const a0 = s.ang;
         if (s.mineT > 0) { s.mineT -= dt; s.ang += s.av * dt; s.ang += (ta - s.ang) * Math.min(1, 6 * dt); }
-        else { const a0 = s.ang; s.ang += (ta - s.ang) * Math.min(1, 26 * dt); s.av = (s.ang - a0) / dt; }
+        else { s.ang += (ta - s.ang) * Math.min(1, 26 * dt); s.av = (s.ang - a0) / dt; }
+        seeLimit(s); if (Math.abs(s.ang - a0) > 1e-6) seeBlock(w, s, a0);   // (here the crates and balls are where the server has them: the plank stops on them, it never swings into one)
       } else s.kin = false;   // (a plank of its own turns after the pushing is worked out, together with everything on it: see turnSee)
       if (s.kin || s.mineT > 0) seeLimit(s);
       if (Math.abs(s.av) > 0.03) s.moving = 0.5; else if (s.moving > 0) s.moving -= dt;   // (while it moves, what rests on it is kept awake)
+    }
+  }
+  function plankGap(s, d, ang) {   // how far a plank at this angle is from a crate or ball (below 0: they overlap)
+    const c = Math.cos(ang), sn = Math.sin(ang);
+    const seg = (vx, vy, r) => { const u = clamp((vx - s.cx) * c + (vy - s.cy) * sn, -s.hl, s.hl), dx = vx - s.cx - u * c, dy = vy - s.cy - u * sn; return Math.sqrt(dx * dx + dy * dy) - r - SEE_TH; };
+    if (isBall(d)) return seg(d.x, d.y, d.r);
+    const sh = shapeOf(d); let g = 1e9;
+    for (const [lx, ly] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) g = Math.min(g, seg(sh.x + sh.c * lx * sh.hw - sh.s * ly * sh.hh, sh.y + sh.s * lx * sh.hw + sh.c * ly * sh.hh, 0));
+    for (let k = -1; k <= 1; k += 2) { const h = circBox(sh, s.cx + k * s.hl * c, s.cy + k * s.hl * sn, SEE_TH + 60); if (h) g = Math.min(g, h[2] + 60); }
+    return g;
+  }
+  function seeBlock(w, s, a0) {   // a plank that is turned without the solver (it follows the server, or you just landed on it) stops where it meets a crate or ball
+    const reach = s.hl + 80;
+    for (let i = 0; i < w.dyn.length; i++) {
+      const d = w.dyn[i]; if (d.gone || d.burn > 0 || Math.abs(d.x - s.cx) > reach || Math.abs(d.y - s.cy) > reach) continue;
+      const g0 = plankGap(s, d, a0), g1 = plankGap(s, d, s.ang), lim = Math.min(g0, -0.5);
+      if (g1 >= lim || g1 >= g0) continue;   // (not touching, or it is moving away)
+      let lo = a0, hi = s.ang;
+      for (let k = 0; k < 10; k++) { const m = (lo + hi) / 2; if (plankGap(s, d, m) >= lim) lo = m; else hi = m; }
+      if ((s.ang - a0) * s.av > 0) s.av = 0;
+      s.ang = lo;
     }
   }
   function seeLimit(s) { if (s.ang > SEE_MAX) { s.ang = SEE_MAX; if (s.av > 0) s.av = 0; } if (s.ang < -SEE_MAX) { s.ang = -SEE_MAX; if (s.av < 0) s.av = 0; } }
@@ -223,6 +246,7 @@
      (so what sits on a crate rides along with it unless it is yanked out from under), weight adds up through a pile, and
      nothing is ever turned to face a particular way: a crate rests on whatever face, edge or slope it comes to rest on. */
   const PLAYER_WT = 240;   // (on a teeter-totter you weigh as much as four small crates)
+  const SPEC = 24;   // (how far ahead a plank looks for what it is about to hit)
   const SLOP = 0.6, BAUM = 0.3, VEL_IT = 10, POS_IT = 4, PM = 4, PM_PUSH = 4, F_PUSH = 6000;   // PM: how heavy your ball is when it pushes things (a crate weighs 1, a big crate 4)
   const LIN_SLEEP = 8, ANG_SLEEP = 0.1, SLEEP_T = 0.5, MAXSPD = 1400, MAXAV = 28;
   const SK_PX = 1, SK_NX = 2, SK_PY = 4, SK_NY = 8;   // tile faces that are hidden by a neighbouring solid tile (never pushed out through those)
@@ -369,15 +393,15 @@
       for (let k = 0; k < vs.length; k++) {
         const vx = vs[k][0], vy = vs[k][1], r = vs[k][2], u = clamp((vx - s.cx) * c + (vy - s.cy) * sn, -s.hl, s.hl), qx = s.cx + u * c, qy = s.cy + u * sn;
         const dx = vx - qx, dy = vy - qy, dd = Math.sqrt(dx * dx + dy * dy), m = r + SEE_TH;
-        if (dd >= m) continue;
+        if (dd >= m + SPEC) continue;   // (looked at a little before it touches, so a plank swinging fast can never pass through what is under or on it)
         const nx = dd > 0.0001 ? dx / dd : sux, ny = dd > 0.0001 ? dy / dd : suy;
         if (nx * sux + ny * suy < 0.3) continue;
         add([qx + nx * SEE_TH, qy + ny * SEE_TH, dd - m, nx, ny], 's' + i + ':' + k, u);
       }
       if (!isBall(d)) for (let k = 0; k < 2; k++) {   // the plank's ends poking into the side or bottom of a crate
-        const e = k ? 1 : -1, qx = s.cx + e * s.hl * c, qy = s.cy + e * s.hl * sn, h = circBox(sh, qx, qy, SEE_TH);
+        const e = k ? 1 : -1, qx = s.cx + e * s.hl * c, qy = s.cy + e * s.hl * sn, h = circBox(sh, qx, qy, SEE_TH + SPEC);
         if (!h || -h[4] * suy - h[3] * sux < 0.3) continue;
-        add([h[0] + h[3] * h[2], h[1] + h[4] * h[2], h[2], -h[3], -h[4]], 's' + i + ':e' + k, e * s.hl);
+        add([h[0] + h[3] * h[2], h[1] + h[4] * h[2], h[2] + SPEC, -h[3], -h[4]], 's' + i + ':e' + k, e * s.hl);
       }
     }
     return n;
@@ -397,7 +421,8 @@
       const vA = a ? velAt(a, c.rax, c.ray) : [c.kvx, c.kvy], vB = velAt(b, c.rbx, c.rby), vn = (vB[0] - vA[0]) * c.nx + (vB[1] - vA[1]) * c.ny;
       const pr = cmPrev.get(c.key);
       if (c.mk) { const vt0 = (vB[0] - vA[0]) * tx + (vB[1] - vA[1]) * ty; if (Math.abs(vt0) > 40) c.mu = c.mk; }   // (something already sliding slides on more easily than it takes to get it going: a resting crate grips, a pushed one glides)
-      c.vb = 0; if (c.e > 0 && !pr && vn < -c.eT) { c.vb = Math.min(c.eCap, -c.e * vn); if (c.vb < c.eMin) c.vb = 0; }   // (a bounce is only for a fresh knock, never for things already pressed together)
+      c.vb = 0; if (c.sep > 0) c.vb = -c.sep * inv;   // (not touching yet: it may close the gap this step, but no further)
+      else if (c.e > 0 && !pr && vn < -c.eT) { c.vb = Math.min(c.eCap, -c.e * vn); if (c.vb < c.eMin) c.vb = 0; }   // (a bounce is only for a fresh knock, never for things already pressed together)
       if (pr) { c.Pn = pr[0]; c.Pt = pr[1]; impulse(c, c.Pn * c.nx + c.Pt * tx, c.Pn * c.ny + c.Pt * ty); }
     }
     for (let it = 0; it < VEL_IT; it++) for (let k = 0; k < nCT; k++) {
@@ -515,6 +540,7 @@
     }
     for (let k = 0; k < nCT; k++) {   // what each thing is resting on
       const c = CT[k];
+      if (c.sep > 0.5 && !(c.Pn > 0)) continue;   // (a contact that is only being watched for: nothing rests on it yet)
       if (c.ny < -0.5) { c.b.gr = true; if (c.Pn > 0) c.b.touch = true; if (!c.a && !c.pl) { const t = tile(w, Math.floor((c.px - c.nx) / TS), Math.floor((c.py - c.ny * 2) / TS)); if (t === 3) c.b._ice = true; } }
       if (c.a && c.ny > 0.5) { c.a.gr = true; c.a.touch = true; }
       if (c.a && Math.abs(c.nx) > 0.5 && c.Pn > 0) { c.a.touch = true; c.b.touch = true; }
@@ -748,7 +774,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 116, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 117, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
