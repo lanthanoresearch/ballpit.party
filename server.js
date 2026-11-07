@@ -24,7 +24,7 @@ const ROOM_PROPS = 800, ROOM_GATES = 200, ROOM_MISC = 6000, ROOM_CPS = 150, ROOM
 const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);   // players per world: few enough that a world full of builds stays smooth for everyone
 const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
-const TICK_MS = 33;                                      // up to 30 position updates per second, and only for players who actually sent something new (the client fills in the motion between them)
+const TICK_MS = 16;                                      // up to 60 updates per second (the world steps and is told about every 1/60 s), and only for players who actually sent something new (the client fills in the motion between them)
 const RANGE = 3000;                                       // you only receive players within this many pixels of you (more than a screen)
 const MAX_PER_IP = parseInt(process.env.MAX_PER_IP, 10) || 10;
 const STATS_FILE = process.env.STATS_FILE || path.join(__dirname, 'stats.json');
@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 122;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 124;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -312,7 +312,7 @@ function roomWorld(room) {
   (B.dels || []).forEach(q => { try { P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
   let restored = false;
   if (room.snapDyn && room.snapDyn.length && Array.isArray(room.snapDyn.find(q => q)) && room.snapDyn.find(q => q).length >= 4) {   // (saved by name: each thing finds its own entry)
-    for (const q of room.snapDyn) { if (!q) continue; const d = w.dynBy.get(q[3] >>> 0); if (!d || d.gone) continue; restored = true; if (q[4]) { if (d.m0 && P.nearZone(w, d.hx, d.hy)) continue; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; continue; }   /* (the map's own toys at the start that an older version burned up there come back) */ if (Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } }
+    for (const q of room.snapDyn) { if (!q) continue; const d = w.dynBy.get(q[3] >>> 0); if (!d || d.gone) continue; restored = true; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; continue; }   /* (the map's own toys at the start that an older version burned up there come back) */ if (Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } }
   } else if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && !d.gone && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } } }
   if (Array.isArray(room.snapSee)) for (const q of room.snapSee) { const e = Array.isArray(q) && w.see.find(o => o.uid === (q[0] >>> 0)); if (e && Number.isFinite(q[1])) e.ang = q[1]; }
   room.seedOk = !room.priv && !restored && !(room.snapDyn && room.snapDyn.length === w.dyn.length); room.seedBy = null; room.worldAt = Date.now();   // (a world the server has no memory of: the first player who remembers it can tell it where everything was)
@@ -397,7 +397,7 @@ function simTick() {
         P.stepDyn(w, SIMDT);
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
-          const a0 = (now - (p.tPos || now)) / 1000 + k * SIMDT, age = p.press ? Math.min(0.6, a0 + (p.rtt || 0) / 1000) : Math.min(0.12, a0), g = !!(p.st & 0x8000);   // (pushing something: the point is put where the player will be when they see the result, so a slow connection still pushes steadily)
+          const a0 = (now - (p.tPos || now)) / 1000 + k * SIMDT, age = p.press ? Math.min(0.6, a0 + (p.rtt || 0) / 1000 + 0.025) : Math.min(0.12, a0), g = !!(p.st & 0x8000);   // (pushing something: the point is put where the player will be when they see the result, so a slow connection still pushes steadily)
           const tx = p.x + p.vx * age, ty = p.y + Math.min(0, p.vy) * age;   // (sideways it carries on along its path, and up when it is jumping; a fall is not carried on, so it is never sunk into the crate it is landing on)
           if (p.qx === undefined || Math.abs(tx - p.qx) > 220 || Math.abs(ty - p.qy) > 220) { p.qx = tx; p.qy = ty; }
           else {
@@ -431,12 +431,12 @@ function simTick() {
     }
     // gates and triggers: tell everybody when any of them changes (and now and then anyway)
     const sig = doorSig(w);
-    if (sig !== room.dsig || room.tk % 150 === 0) { room.dsig = sig; broadcast(room, doorPacket(room)); }
+    if (sig !== room.dsig || room.tk % 300 === 0) { room.dsig = sig; broadcast(room, doorPacket(room)); }
     // planks
-    const planks = []; for (const s of w.see) if (Math.abs(s.ang - s.lang) > 0.0004 || room.tk % 150 === 0) { planks.push(s); s.lang = s.ang; }
+    const planks = []; for (const s of w.see) if (Math.abs(s.ang - s.lang) > 0.0004 || room.tk % 300 === 0) { planks.push(s); s.lang = s.ang; }
     if (planks.length) plankSend(room, planks);
     // crates and balls: each player is told about what changed near them
-    const resend = room.tk % 150 === 0;
+    const resend = room.tk % 300 === 0;
     for (const p of room.players.values()) {
       if (!p.has || p.ws.readyState !== 1) continue;
       if (!p.dver) plankSend(room, w.see, p);   // (someone who has just arrived is told how every plank lies, along with everything else)
@@ -535,7 +535,7 @@ wss.on('connection', (ws, req) => {
 
   ws.on('message', (raw, isBinary) => {
     p.lastMsg = Date.now();
-    if (++p.msgs > 100) return;                       // simple flood protection
+    if (++p.msgs > 200) return;                       // simple flood protection (positions alone can be 60 a second)
     if (isBinary) {                                   // a position update: [0x70][slot u16][x/2 u16][y u16 (65535 = dead)][vx/5 i8][vy/20 i8][time u15 | grounded<<15]
       if (!p.room || (raw.length !== 11 && raw.length !== 12) || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (rslot(p.room) & 0xFFFF)) return;
       const x = Math.min(262000, raw.readUInt16LE(3) * 2), yr = raw.readUInt16LE(5), d = yr === 65535 ? 1 : 0;
@@ -880,7 +880,7 @@ let tickN = 0;
 setInterval(() => {
   tickN++;
   // (c) a tiny overview every 2 seconds, so everyone shows up on the map even when they are far away
-  if (tickN % 60 === 0) {
+  if (tickN % 120 === 0) {
     for (const room of rooms.values()) {
       const list = [...room.players.values()];
       if (list.length < 2) continue;
@@ -900,7 +900,7 @@ setInterval(() => {
   for (const r of byPub.values()) {
     if (!r.room || r.ws.readyState !== 1) continue;
     const ls = links.get(r.pub); if (!ls || !ls.size) continue;
-    const arr = []; let fresh = tickN % 30 === 0; for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has && rslot(q.room) === rslot(r.room)) { arr.push(q); if (q.moved) fresh = true; } }
+    const arr = []; let fresh = tickN % 60 === 0; for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has && rslot(q.room) === rslot(r.room)) { arr.push(q); if (q.moved) fresh = true; } }
     if (!arr.length || !fresh) continue;   // (only when somebody moved, plus a heartbeat every second)
     const buf = Buffer.allocUnsafe(3 + arr.length * 12);
     buf[0] = 3; buf.writeUInt16LE(rslot(r.room) & 0xFFFF, 1);

@@ -21,7 +21,10 @@
     (G.plates || []).forEach(p => w.plates.push({ x: p[0], y: p[1], w: p[2], to: p[3], on: false }));
     (G.btns || []).forEach(p => w.btns.push({ x: p[0], y: p[1], to: p[2], on: false }));
     (G.see || []).forEach(p => w.see.push({ cx: p[0] * TS, cy: p[1] * TS, hl: p[2] * TS, tilt: p[3], ang: p[3], av: 0, tq: 0, uid: hash32('s' + Math.round(p[0] * TS) + ',' + Math.round(p[1] * TS)) }));
-    for (const p of (map.props || [])) { const d = addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5); d.nap = true; d.m0 = true; }   /* (the map's own things start out at rest: each one checks it is held up once somebody comes near) */   // pushable yellow things; each player has their own copy (never shared)
+    const nb = noBuild(map), box = p => { const q = propDims(p[0]), h = q.half, x = (p[1] + 0.5) * TS, y = p[2] * TS - h - 0.5; return [x - h, y - h, x + h, y + h]; };
+    const PB = (map.props || []).map(box), cut = PB.map(b => nb.some(z => b[2] > z.tx0 * TS && b[0] < (z.tx1 + 1) * TS && b[3] > z.ty0 * TS && b[1] < (z.ty1 + 1) * TS));
+    for (let more = true; more;) { more = false; for (let i = 0; i < PB.length; i++) if (!cut[i]) for (let j = 0; j < PB.length; j++) if (cut[j] && PB[i][2] > PB[j][0] + 2 && PB[i][0] < PB[j][2] - 2 && Math.abs(PB[i][3] - PB[j][1]) < 6) { cut[i] = more = true; break; } }   // (nothing of the map's own starts in the start zone or by the finish flag, nor anything stacked on such a thing)
+    (map.props || []).forEach((p, i) => { if (cut[i]) return; const d = addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5); d.nap = true; d.m0 = true; });   /* (the map's own things start out at rest: each one checks it is held up once somebody comes near) */   // pushable yellow things; each player has their own copy (never shared)
     return w;
   }
 
@@ -242,6 +245,11 @@
   }
   // bs: a player body, or a list of them (the server passes everybody in the world). In follow mode (a device that is shown the server's world) a gate may only be opened here at once;
   // shutting it is up to the server. dt (optional): with w.closeDelay, a gate waits that long after the last thing left its trigger before it shuts.
+  let colSrc = null, colLen = -1, colMap = null, colStep = -1;
+  function nearCol(L, mx) {   // only what is within a few columns of a plate is looked at (the same things as before, found without going through everything)
+    if (L !== colSrc || L.length !== colLen || colStep !== dynTick) { colSrc = L; colLen = L.length; colStep = dynTick; colMap = new Map(); for (const o of L) { const k = Math.floor(o.x / 300); let a = colMap.get(k); if (!a) colMap.set(k, a = []); a.push(o); } }
+    const k = Math.floor(mx / 300), out = []; for (let c = k - 2; c <= k + 2; c++) { const a = colMap.get(c); if (a) for (const o of a) out.push(o); } return out;
+  }
   function stepSwitches(w, bs, dt) {
     const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [], want = w.doors.map(d => d.latched);
     for (let i = 0; i < w.btns.length; i++) {
@@ -259,7 +267,7 @@
     for (let i = 0; i < w.plates.length; i++) {
       const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = !!(w.follow && q.srvOn);
       for (let k = 0; k < L.length && !on; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true; }
-      const DL = w.follow ? [] : w.cand || w.dyn;   // (on the server: only the things near a player. In the shared world the crates on it are the server's to judge: here only your own ball is looked at, so a crate seen a little differently never makes it flicker)
+      const DL0 = w.follow ? [] : w.cand || w.dyn, DL = DL0.length > 48 ? nearCol(DL0, (x0 + x1) / 2) : DL0;   // (on the server: only the things near a player. In the shared world the crates on it are the server's to judge: here only your own ball is looked at, so a crate seen a little differently never makes it flicker)
       for (let j = 0; j < DL.length && !on; j++) {
         const o = DL[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 300) continue;
         const bot = o.y + (o.r || o.hh), m = q.on ? 4 : 0;   // (a little more room to stay pressed than to get pressed: something resting right at the edge never flickers it)
@@ -699,7 +707,7 @@
       const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || ((!d._pl || !plankMoving(w, d)) && !d._pad));
       d.st = still ? (d.st || 0) + dt : 0;
       const burn = lavaOf.has(d);
-      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || (inStart(w, d.x, d.y) && !(d.m0 && nearZone(w, d.hx, d.hy)))) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || inStart(w, d.x, d.y) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
+      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || inStart(w, d.x, d.y)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || inStart(w, d.x, d.y) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
     }
     // a pile goes to sleep together, once every piece of it has been still for a moment
     const par = new Map(), root = d => { let r = d; while (par.get(r) !== r) r = par.get(r); return r; };
@@ -924,7 +932,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 122, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 124, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
