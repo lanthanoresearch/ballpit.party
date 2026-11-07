@@ -109,10 +109,10 @@
     if (s.gone) return false;
     const c = Math.cos(s.ang), sn = Math.sin(s.ang);
     const rx = o.x - s.cx, ry = o.y - s.cy, u = clamp(rx * c + ry * sn, -s.hl, s.hl);
-    const qx = s.cx + u * c, qy = s.cy + u * sn, dx = o.x - qx, dy = o.y - qy, d2 = dx * dx + dy * dy, mm = r + SEE_TH;
+    const qx = s.cx + u * c, qy = s.cy + u * sn, dx = o.x - qx, dy = o.y - qy, d2 = dx * dx + dy * dy;
+    const below = rx * sn - ry * c < 0, mm = r + SEE_TH + (o.kin ? (o.ground && !below ? 20 : 4) : 0);   // (a player's point on the server, standing on the plank on their own screen, still weighs on it while the plank moves away under it)
     if (d2 >= mm * mm) return false;
-    let nx, ny;
-    const below = rx * sn - ry * c < 0;   // (which side of the plank it is on: the plank is solid from both sides)
+    let nx, ny;   // (which side of the plank it is on: the plank is solid from both sides)
     if (d2 < 0.0001) { nx = below ? -sn : sn; ny = below ? c : -c; } else { const d = Math.sqrt(d2); nx = dx / d; ny = dy / d; }
     const pen = mm - Math.sqrt(d2); if (!o.kin) { o.x += nx * pen; o.y += ny * pen; }
     const px = qx - s.cx, py = qy - s.cy, svx = -s.av * py, svy = s.av * px;   // the plank's own movement at that spot
@@ -159,6 +159,18 @@
     for (let k = -1; k <= 1; k += 2) { const h = circBox(sh, s.cx + k * s.hl * c, s.cy + k * s.hl * sn, SEE_TH + 60); if (h) g = Math.min(g, h[2] + 60); }
     return g;
   }
+  function seeOut(w, skip) {   // shown the server's picture: a crate or ball drawn a few pixels into a plank (the two are carried on a little differently between updates) is drawn resting on it
+    for (let i = 0; i < w.see.length; i++) {
+      const s = w.see[i]; if (s.gone) continue;
+      const c = Math.cos(s.ang), sn = Math.sin(s.ang);
+      for (let j = 0; j < w.dyn.length; j++) {
+        const d = w.dyn[j]; if (d.burn > 0 || Math.abs(d.x - s.cx) > s.hl + 60 || Math.abs(d.y - s.cy) > s.hl + 60 || (skip && skip(d))) continue;
+        const rx = d.x - s.cx, ry = d.y - s.cy; if (Math.abs(rx * c + ry * sn) > s.hl) continue;
+        const sd = rx * sn - ry * c >= 0 ? 1 : -1, g = plankGap(s, d, s.ang, sd);
+        if (g < 0 && g > -16) { d.x += sn * sd * -g; d.y -= c * sd * -g; }
+      }
+    }
+  }
   function seeBlock(w, s, a0) {   // a plank that is turned without the solver (it follows the server, or you just landed on it) stops where it meets a crate or ball
     const reach = s.hl + 80;
     for (let i = 0; i < w.dyn.length; i++) {
@@ -197,7 +209,7 @@
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i]; if (Math.abs(s.cx - b.x) > s.hl + 40 || Math.abs(s.cy - b.y) > s.hl + 60) continue;
       if (seeHit(s, b, b.r || R, wt / 60)) {
-        on = true; b.onSee = s; if (w.follow && b.r === undefined && !b.ghost && !b.remote) s.mineT = 0.6;
+        on = true; b.onSee = s; if (w.follow && !w.srvOnly && b.r === undefined && !b.ghost && !b.remote) s.mineT = 0.6;
         const sl = Math.sin(s.ang);
         if (b.r === undefined) b.flat = Math.abs(sl) <= 0.06;   // on a tilted plank you slide; on a level one you grip
         if (b.r === undefined) { b.ground = true; b.gType = 1; }
@@ -710,9 +722,10 @@
       if (d.k === 'b') { h = circBox(shapeOf(d), b.x, b.y, R); if (!h) continue; }
       else { const dx = b.x - d.x, dy = b.y - d.y, d2 = dx * dx + dy * dy, rr = R + d.r; if (d2 >= rr * rr) continue; const dd = Math.sqrt(d2) || 0.001; h = [d.x + dx / dd * d.r, d.y + dy / dd * d.r, dd - rr, d2 ? dx / dd : 0, d2 ? dy / dd : -1]; }
       const pen = -h[2], nx = h[3], ny = h[4]; if (pen <= 0) continue;
-      if (w.follow && !(d.hold > 0) && !b.remote) { d.mineT = 0.45; d.sleep = false; }
+      if (w.follow && !w.srvOnly && !(d.hold > 0) && !b.remote) { d.mineT = 0.45; d.sleep = false; }
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
-      const held = (w.follow && d.hold > 0) || (b.own !== undefined && d.ownT > 0);   // (the server's crate and yours disagree: it is a wall until they agree again. On the server: the player's own device is already pushing this one)
+      const held = (w.follow && (w.srvOnly || d.hold > 0)) || (b.own !== undefined && d.ownT > 0);   // (in the shared world every crate and ball is the server's: here it is as solid as a wall, and moves the moment the server has moved it, the same for everybody)
+      if (held && w.follow && !kin && !b.remote && Math.abs(nx) > 0.5 && nx * (b.inVx || 0) < 0) b.pressing = true;   // (the server's crate and yours disagree: it is a wall until they agree again. On the server: the player's own device is already pushing this one)
       const rx = h[0] - d.x, ry = h[1] - d.y, rn = rx * ny - ry * nx, rt = rx * -nx - ry * ny;
       const vbx = d.vx - (d.av || 0) * ry, vby = d.vy + (d.av || 0) * rx, vy0 = b.vy;
       const vn = (b.vx - vbx) * nx + (b.vy - vby) * ny;
@@ -786,6 +799,7 @@
   }
   // ax: -1/0/1, jheld: jump button held. Set b.jbuf = 0.12 on a jump press.
   function step(b, w, ax, jheld, dt) {
+    b.inVx = ax * (b.boost ? BOOST_V : MAXV); b.pressing = false;   // (how fast you are trying to go: when a shared crate holds you back, the server is told this, and pushes it for you)
     ev.lava = false; ev.jumped = false; ev.landed = false; ev.bounced = false; ev.splat = false; ev.boosted = false; ev.superJump = false; ev.pad = false; ev.portal = false;
     const tx = Math.floor(b.x / TS), ty = Math.floor(b.y / TS);
     const water = tile(w, tx, ty) === 5;
@@ -910,7 +924,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 121, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 122, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

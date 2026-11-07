@@ -1192,6 +1192,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     const SW = 41;
     /* Every map has its own start (made from its own seed, so everybody gets the same one): the spawn on the left and the lookout with its
        vault on the right stay put, and in between a few play stations are picked, shuffled and filled with different toys. */
+    const c0 = coins.length, rs0 = rects.length;
     const SR = rng(d.seed * 13 + 9001), sri = (a, b) => a + Math.floor(SR() * (b - a + 1)), spick = a => a[Math.floor(SR() * a.length)];
     const toy = (x, y) => { const k = spick([0, 0, 2, 2, 7, 7, 3, 5, 4]); props.push([k, x, y]); };
     addRect([0, 0, 3, 2, 1, sTh, startGid]);                       // where you appear
@@ -1226,9 +1227,12 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       gad.doors.push([37, -6, 1, 6]); decor.push([2, 37, 0]); addRect([37, -7, 4, 1, 1, sTh, startGid]);
       coinRow(38, -1.2, 3, 1, 1); coin(39, -3, 2); props.push([0, 39, 0]); props.push([spick([0, 5, 1]), 40, 0]); props.push([spick([3, 2, 7]), 38.5, 0]); }
     // a coin wave over everything
-    { const amp = 1 + SR() * 1.6, ph = SR() * 2; for (let i = 0; i < 10; i++) coin(3 + i * 3.6, -8.4 - Math.sin(i / 9 * Math.PI + ph) * amp, i === 4 || i === 5 ? 1 : 0); }
+    SR(); SR();   // (no loose coins scattered across the sky: every coin here sits over something to reach it from)
     // a few things to build with near the spawn, and the lower hideout's hoard
     if (SR() < 0.5) cratePyramid(2.6, 0, 3); else { crateColumn(3.4, 0, 2); toy(5, 0); }
+    { const rr = rects.slice(rs0), keep = coins.slice(0, c0);   // (no coin inside or right against a platform of the start, and none on top of another)
+      for (const c of coins.slice(c0)) { if (rr.some(r => c[0] > r[0] - 0.35 && c[0] < r[0] + r[2] + 0.35 && c[1] > r[1] - 0.45 && c[1] < r[1] + Math.max(r[3], 1) + 0.35)) continue; if (keep.slice(c0).some(o => Math.abs(o[0] - c[0]) < 0.7 && Math.abs(o[1] - c[1]) < 0.7)) continue; keep.push(c); }
+      coins.length = 0; keep.forEach(c => coins.push(c)); }
     coinRow(1.5, 5.4, 6, 1, 0); crateColumn(7, 7, sri(2, 3)); props.push([spick([2, 7, 4]), 2, 7]); props.push([spick([3, 2, 5]), 6.2, 7]);
     const startPlat = [0, 0, SW, sTh, 0, startGid, 0, 2, 0, 0, 0];
 

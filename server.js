@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 121;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 122;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -373,6 +373,10 @@ function keepWorlds(sync) {
   try { if (sync) { fs.writeFileSync(tmp, str); fs.renameSync(tmp, WORLD_FILE); } else fs.writeFile(tmp, str, er => { if (!er) fs.rename(tmp, WORLD_FILE, () => {}); }); } catch (e) {}
 }
 setInterval(() => keepWorlds(false), 20000).unref();
+setInterval(() => {   // a private world whose host has not come back in ten minutes closes
+  const t = Date.now();
+  for (const [id, r] of rooms) if (r.priv && r.priv.away && t - r.priv.away > 10 * 60000) { for (const o of [...r.players.values()]) { send(o, { t: 'pclose', name: r.priv.hostName || 'The host' }); leave(o, true); } rooms.delete(id); }
+}, 15000).unref();
 setInterval(() => { const t = Date.now(); for (const [id, r] of rooms) if (r.players.size === 0 && (!r.emptyAt || t - r.emptyAt > ROOM_KEEP_MS)) { if (!r.priv) { const sn = snapRoom(r); if (sn) { savedWorlds.set(wkey(id), sn); worldsDirty = true; } } rooms.delete(id); } }, 30000).unref();
 function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
@@ -393,7 +397,7 @@ function simTick() {
         P.stepDyn(w, SIMDT);
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
-          const age = Math.min(0.12, (now - (p.tPos || now)) / 1000 + k * SIMDT), g = !!(p.st & 0x8000);
+          const a0 = (now - (p.tPos || now)) / 1000 + k * SIMDT, age = p.press ? Math.min(0.6, a0 + (p.rtt || 0) / 1000) : Math.min(0.12, a0), g = !!(p.st & 0x8000);   // (pushing something: the point is put where the player will be when they see the result, so a slow connection still pushes steadily)
           const tx = p.x + p.vx * age, ty = p.y + Math.min(0, p.vy) * age;   // (sideways it carries on along its path, and up when it is jumping; a fall is not carried on, so it is never sunk into the crate it is landing on)
           if (p.qx === undefined || Math.abs(tx - p.qx) > 220 || Math.abs(ty - p.qy) > 220) { p.qx = tx; p.qy = ty; }
           else {
@@ -467,7 +471,7 @@ function simTick() {
         const o = 4 + k * 23, bn = d.burn > 0;
         buf.writeUInt32LE(d.uid >>> 0, o); buf.writeFloatLE(bn ? 0 : d.x, o + 4); buf.writeFloatLE(bn ? 0 : d.y, o + 8);
         const rest = bn || d.lst; buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svx))), o + 12); buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svy))), o + 14);
-        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = (bn ? 1 : 0) | (!bn && d.ownT > 0 && d.ownBy !== p.id ? 2 : 0);   /* (2: another player's device is moving this one right now) */ buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round((bn || d.lst ? 0 : d.av || 0) * 1000))), o + 21);
+        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = (bn ? 1 : 0) | (!bn && d.ownT > 0 && d.ownBy !== p.id && d.ownTouch ? 2 : 0);   /* (2: another player's device is moving this one right now) */ buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round((bn || d.lst ? 0 : d.av || 0) * 1000))), o + 21);
         p.dver.set(d.uid, d.ver);
       });
       p.ws.send(buf, { binary: true });
@@ -493,8 +497,10 @@ function addOk(p) {   // building is rate-limited as a bucket (a burst of placem
 function leave(p, toLobby) {
   const room = p.room;
   if (!room && !p.lobby) return;
-  if (room && room.priv && room.priv.owner === p.id) {   // the host left: the world closes and everyone in it goes back to their own
-    for (const o of [...room.players.values()]) if (o !== p) { send(o, { t: 'pclose', name: p.name }); leave(o, true); }
+  if (room && room.priv && room.priv.owner === p.id) {
+    if (toLobby || p.bye || room.players.size <= 1) {   // the host left the game, or closed it: the world closes and everyone in it goes back to their own
+      for (const o of [...room.players.values()]) if (o !== p) { send(o, { t: 'pclose', name: p.name }); leave(o, true); }
+    } else { room.priv.owner = null; room.priv.away = Date.now(); broadcast(room, { t: 'hostaway', name: p.name }, p); }   // (only their connection dropped: a screen turned off, a network that came and went. The world stays open for a while, and they come straight back into it)
   }
   if (room) {
     p.room = null;
@@ -521,21 +527,21 @@ wss.on('connection', (ws, req) => {
   if (c > MAX_PER_IP) { ws.close(1013, 'busy'); return; }
   ipCount.set(ip, c);
 
-  const p = { id: nextId++, ws, name: '', color: '#ff4d4d', color2: '#ffffff', pat: 0, x: 0, y: 0, vx: 0, vy: 0, st: 0, dead: 0, has: false, moved: false, vis: new Set(), room: null, fin: -1, msgs: 0, pub: '', lastReq: 0, lastFind: 0, lastEmo: 0 };
+  const p = { id: nextId++, ws, name: '', color: '#ff4d4d', color2: '#ffffff', pat: 0, x: 0, y: 0, vx: 0, vy: 0, st: 0, dead: 0, has: false, moved: false, vis: new Set(), room: null, fin: -1, msgs: 0, pub: '', lastReq: 0, lastFind: 0, lastEmo: 0, rtt: 0, pingAt: 0, pn: 0, press: 0 };
   try { ws._socket.setNoDelay(true); } catch (e) {}
   ws.isAlive = true;
-  ws.on('pong', () => { ws.isAlive = true; });
-  const rate = setInterval(() => { p.msgs = 0; }, 1000);
+  ws.on('pong', () => { ws.isAlive = true; if (p.pingAt) { const r = Math.min(1500, Date.now() - p.pingAt); p.rtt = p.rtt ? p.rtt * 0.7 + r * 0.3 : r; p.pingAt = 0; } });
+  const rate = setInterval(() => { p.msgs = 0; if (p.room && !p.pingAt && ++p.pn % 2 === 0) { p.pingAt = Date.now(); try { ws.ping(); } catch (e) {} } else if (p.pingAt && Date.now() - p.pingAt > 3000) p.pingAt = 0; }, 1000);   // (how long a message takes there and back, so what they push is pushed where they really are)
 
   ws.on('message', (raw, isBinary) => {
     p.lastMsg = Date.now();
     if (++p.msgs > 100) return;                       // simple flood protection
     if (isBinary) {                                   // a position update: [0x70][slot u16][x/2 u16][y u16 (65535 = dead)][vx/5 i8][vy/20 i8][time u15 | grounded<<15]
-      if (!p.room || raw.length !== 11 || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (rslot(p.room) & 0xFFFF)) return;
+      if (!p.room || (raw.length !== 11 && raw.length !== 12) || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (rslot(p.room) & 0xFFFF)) return;
       const x = Math.min(262000, raw.readUInt16LE(3) * 2), yr = raw.readUInt16LE(5), d = yr === 65535 ? 1 : 0;
       const y = d ? p.y : Math.min(131000, yr), vx = raw.readInt8(7) * 5, vy = raw.readInt8(8) * 20, st = raw.readUInt16LE(9);
       if (p.x !== x || p.y !== y || p.dead !== d || p.vx !== vx || p.vy !== vy || p.st !== st || !p.has) p.moved = true;
-      p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true; p.tPos = Date.now();
+      p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true; p.tPos = Date.now(); p.press = !d && raw.length === 12 && (raw[11] & 1) ? 1 : 0;
       return;
     }
     let m;
@@ -554,10 +560,14 @@ wss.on('connection', (ws, req) => {
       if (!lobby && m.host && typeof m.host === 'object') {   // open a world of your own for friends: your solo level and what you built on it
         if (!p.pub) { send(p, { t: 'jno', why: 'nodev' }); return; }
         const key = privKey(p.pub), lv = m.host.m | 0;
-        if (rooms.has(key)) { send(p, { t: 'jno', why: 'busy' }); return; }
+        const hr0 = rooms.get(key);
+        if (hr0 && hr0.priv && hr0.priv.away && hr0.priv.hostPub === p.pub) { hr0.priv.owner = p.id; hr0.priv.away = 0; hr0.priv.back = 1; room = hr0; p.room = room; fr = { full: [] }; broadcast(room, { t: 'hostback', name: p.name }); }   // the host is back after their connection dropped: their world was kept open for everyone in it
+        else if (hr0) { send(p, { t: 'jno', why: 'busy' }); return; }
+        else {
         const props = [], gates = [], misc = [], cps = [], dels = [];   // (what the host built arrives right after, in small pieces)
         room = { id: key, players: new Map(), finishers: [], priv: { at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] };
+        }
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
         const hr = rooms.get(privKey(m.join));
         if (!hr || !hr.priv) { send(p, { t: 'jno', why: 'gone' }); return; }
@@ -578,7 +588,7 @@ wss.on('connection', (ws, req) => {
         send(p, {
           t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
-          build: room.priv ? undefined : bstate(room), priv: room.priv ? { host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
+          build: room.priv ? undefined : bstate(room), priv: room.priv ? { back: room.priv.owner === p.id && room.priv.back ? 1 : 0, host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? 1 : 0 }))
         });
         p.dver = null; if (room.world) { send(p, doorPacket(room)); plankSend(room, room.world.see, p); }
@@ -614,7 +624,8 @@ wss.on('connection', (ws, req) => {
       return;
     }
     if (!p.room && !p.lobby) return;
-    if (m.t === 'lobby') { if (p.room) leave(p, true); return; }   // back to the main menu: leave the world, stay connected
+    if (m.t === 'lobby') { if (p.room) leave(p, true); return; }
+    if (m.t === 'bye') { p.bye = true; return; }   // (the page is being closed for good, not just put away)   // back to the main menu: leave the world, stay connected
 
     if (m.t === 'p') {
       if (!p.room) return;
@@ -674,7 +685,7 @@ wss.on('connection', (ws, req) => {
       if (Array.isArray(m.pl)) for (const q of m.pl.slice(0, 4)) {   // a teeter-totter this player is on: their device turns it, and the server follows
         if (!Array.isArray(q) || q.length !== 3 || !q.every(Number.isFinite)) continue;
         const s = w.see.find(e => e.uid === (q[0] >>> 0) && !e.gone); if (!s || (s.ownT > 0 && s.ownBy !== p.id) || Math.abs(s.cx - p.x) > s.hl + 400 || Math.abs(s.cy - p.y) > s.hl + 400) continue;
-        s.ang = Math.max(-0.36, Math.min(0.36, q[1])); s.av = Math.max(-12, Math.min(12, q[2])); s.ownT = 0.25; s.ownBy = p.id; s.moving = 0.5;
+        s.ang = Math.max(-0.36, Math.min(0.36, q[1])); s.av = Math.max(-12, Math.min(12, q[2])); s.ownT = 1.0; s.ownBy = p.id; s.moving = 0.5;
       }
       if (Array.isArray(m.lost)) for (const q of m.lost.slice(0, 12)) {   // something this player's device was moving fell into lava, off the map or into the start: it is gone for everyone
         if (!Array.isArray(q) || q.length !== 3 || !q.every(Number.isFinite)) continue;
@@ -683,13 +694,14 @@ wss.on('connection', (ws, req) => {
       }
       if (!Array.isArray(m.b)) return;
       for (const q of m.b.slice(0, 12)) {
-        if (!Array.isArray(q) || q.length !== 7 || !q.every(Number.isFinite)) continue;
+        if (!Array.isArray(q) || (q.length !== 7 && q.length !== 8) || !q.every(Number.isFinite)) continue;
         const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone || d.burn > 0) continue;
-        if (Math.abs(q[1] - d.x) + Math.abs(q[2] - d.y) > 400 || q[1] < 0 || q[1] > w.W * P.TS || q[2] < 0 || q[2] > w.H * P.TS) continue;
-        if (d.ownT > 0 && d.ownBy !== p.id) continue;
-        if (!(d.ownT > 0) && Math.abs(q[1] - d.x) + Math.abs(q[2] - d.y) > 48 + (Math.abs(d.vx) + Math.abs(d.vy)) * 0.35) continue;   // (taking something over starts from where it really is: a device whose picture of it is far off is not believed, and gives in to the server's)
+        const again = d.ownBy === p.id && !(d.ownT > 0) && d.ownLeft !== undefined && Date.now() - d.ownLeft < 6000;   // (the one who was moving it, back after their connection stalled: their picture is still the right one)
+        if (Math.abs(q[1] - d.x) + Math.abs(q[2] - d.y) > ((d.ownT > 0 && d.ownBy === p.id) || again ? 900 : 400) || q[1] < 0 || q[1] > w.W * P.TS || q[2] < 0 || q[2] > w.H * P.TS) continue;
+        if (d.ownT > 0 && d.ownBy !== p.id && d.ownTouch) continue;   // (somebody else is pushing it right now; once they only set it going, anyone may take it over)
+        if (!(d.ownT > 0) && !again && Math.abs(q[1] - d.x) + Math.abs(q[2] - d.y) > 150 + Math.max(Math.abs(d.vx) + Math.abs(d.vy), Math.abs(q[3]) + Math.abs(q[4])) * 0.45) continue;   // (taking something over starts from where it really is: a device whose picture of it is far off is not believed, and gives in to the server's)
         if (w.see.length && P.plankCross(w, d.x, d.y, q[1], q[2], d.r || Math.max(d.hw, d.hh))) continue;   // (never taken through a teeter-totter: the two devices must have seen the plank differently, and the server's side of it stands)
-        d.x = q[1]; d.y = q[2]; d.vx = Math.max(-1400, Math.min(1400, q[3])); d.vy = Math.max(-1400, Math.min(1400, q[4])); d.rot = q[5]; d.av = Math.max(-28, Math.min(28, q[6])); d.ownBy = p.id; d.ownT = 0.25; d.nap = false; d.st = 0;
+        d.x = q[1]; d.y = q[2]; d.vx = Math.max(-1400, Math.min(1400, q[3])); d.vy = Math.max(-1400, Math.min(1400, q[4])); d.rot = q[5]; d.av = Math.max(-28, Math.min(28, q[6])); d.ownBy = p.id; d.ownT = 1.2; d.ownLeft = Date.now(); d.ownTouch = q.length === 8 ? (q[7] ? 1 : 0) : 1; d.nap = false; d.st = 0;   // (held for a moment longer than the gap between two reports, so a short stall on a bad connection never hands it back half-way)
       }
     } else if (m.t === 'pseed') {   // the host of a private world says where everything is in it: their device is that world's memory
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || Date.now() - (r.priv.at || 0) > 90000 || !Array.isArray(m.d)) return;

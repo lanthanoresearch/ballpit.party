@@ -644,7 +644,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 121; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 122; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1173,8 +1173,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=121"></script>
-<script src="physics.js?v=121"></script>
+<script src="maps.js?v=122"></script>
+<script src="physics.js?v=122"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2000,7 +2000,7 @@ function remotePush(dt) {   // what this device is moving for everybody: the oth
     if (pl) { c.x = o.cx; c.y = o.cy; for (const s of w.see) if (s.owned && Math.abs(s.cx - c.x) < s.hl + 40 && Math.abs(s.cy - c.y) < s.hl + 60) { P.seeBody(c, w, P.PLAYER_WT); break; } } });   // (and a teeter-totter this device turns feels their weight)
 }
 function followWorld(dt) {
-  const w = S.world, fol = followOn(); if (w.follow !== fol) { w.follow = fol; if (!fol) { for (const d of w.dyn) { d.mineT = 0; d.sleep = false; if (d.burn === UNK) d.burn = 0; } } }
+  const w = S.world, fol = followOn(); w.srvOnly = fol; if (w.follow !== fol) { w.follow = fol; if (!fol) { for (const d of w.dyn) { d.mineT = 0; d.sleep = false; if (d.burn === UNK) d.burn = 0; } } }
   w.pubWait = !fol && S.slot >= 0 && S.slot < SOLO_BASE && !!(settings.mp || party) && !offlineOn() && !inSolo();   // (a shared world before the server has spoken: nothing in it moves by itself here)
   if (!fol) return;
   const t = performance.now();
@@ -2041,6 +2041,7 @@ function followWorld(dt) {
     if (!mine) { d.rot += (tr - d.rot) * (1 - Math.exp(-18 * dt)); d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; }
     else if (Math.abs(tr - d.rot) > 0.01) d.rot += (tr - d.rot) * (1 - Math.exp(-(calm ? 8 : err < 14 ? 2 : 5) * dt));
   }
+  if (w.see.length) P.seeOut(w, d => d.mineT > 0 || d.keep > 0);
 }
 function adoptUid(w, d, u) {   // the server's name for a crate or ball: whatever else wore that name takes this one's old name
   u = u >>> 0; if (!d || d.uid === u || !w.dynBy) return;
@@ -2283,7 +2284,7 @@ function restoreWorld(slot) {
   } catch (e) {}
 }
 setInterval(() => { if (S.mode === 'play' && !S.away) saveWorld(); }, 4000);
-addEventListener('beforeunload', () => saveWorld(true));
+addEventListener('beforeunload', () => { saveWorld(true); if (party && ws && ws.readyState === 1) { try { ws.send('{"t":"bye"}'); } catch (e) {} } });   // (closing the page for good ends a private game you host; turning the screen off does not)
 addEventListener('pagehide', () => saveWorld(true)); document.addEventListener('visibilitychange', () => { if (document.hidden) saveWorld(true); });   // (whatever way you leave, the world is kept exactly as it is)
 
 /* leaving the screen = you are gone; coming back = fresh start at the spawn */
@@ -4790,18 +4791,18 @@ function connect() {
     if (online) addFeed('Disconnected, reconnecting…', 'bad', true);
     online = false; lobbyOn = false; others.clear(); lks.forEach(l => { l.on = 0; l.x = null; }); reqs = []; sentTo.clear(); lpRender();
     if (wantLobby()) scheduleRetry();
-    else if (party) partyOver('You were disconnected');
+    else if (party) { setNet('connecting'); scheduleRetry(); }   // (a private game is not ended by a dropped connection: it reconnects, straight back into the same world)
     else if (settings.mp) { setNet('offline'); scheduleRetry(); }
   };
   sock.onerror = () => {};
 }
 function scheduleRetry() {
   if (offlineOn()) return;
-  if (retryTimer || (!settings.mp && !!party)) return;   // (a friend's world does not reconnect by itself: it ends)
+  if (retryTimer) return;
   retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(5000, Math.round(200 * Math.pow(1.45, retry - 1))));   // tries again almost at once, then eases off to every few seconds if the server stays away
 }
 function retryNow() {   // the tab came back, or the network did: don't wait for the next timer
-  if (ws || (!settings.mp && !!party)) return;
+  if (ws) return;
   clearTimeout(retryTimer); retryTimer = 0; retry = 0; connect();
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) retryNow(); });
@@ -4820,11 +4821,24 @@ const solidT = t => t === 1 || t === 3 || t === 4 || t === 6 || t === 9;
 const pp = { x: 0, y: 0 };
 const RING = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7, 0.7], [-0.7, 0.7], [0.7, -0.7], [-0.7, -0.7]];
 function ballFree(x, y) { const w = S.world, r = R - 3; for (let i = 0; i < 8; i++) { if (solidT(P.tile(w, Math.floor((x + RING[i][0] * r) / TS), Math.floor((y + RING[i][1] * r) / TS)))) return false; } return true; }
+function outOfThings(pp) {   // somebody else as drawn here is never inside a crate or a ball: they are shown against it, the way the server has them
+  const w = S.world; if (!w || !w.dyn) return;
+  for (let k = 0; k < 2; k++) for (const d of w.dyn) {
+    if (d.burn > 0 || Math.abs(d.x - pp.x) > 90 || Math.abs(d.y - pp.y) > 90) continue;
+    if (d.r) { const dx = pp.x - d.x, dy = pp.y - d.y, dd = Math.hypot(dx, dy), m = d.r + P.R; if (dd < m && dd > 0.001) { pp.x = d.x + dx / dd * m; pp.y = d.y + dy / dd * m; } continue; }
+    const c = Math.cos(d.rot || 0), sn = Math.sin(d.rot || 0), rx = pp.x - d.x, ry = pp.y - d.y, lx = c * rx + sn * ry, ly = -sn * rx + c * ry;
+    const qx = Math.max(-d.hw, Math.min(d.hw, lx)), qy = Math.max(-d.hh, Math.min(d.hh, ly)), ex = lx - qx, ey = ly - qy, dd = Math.hypot(ex, ey);
+    let nlx, nly;
+    if (dd > 0.001) { if (dd >= P.R) continue; nlx = qx + ex / dd * P.R; nly = qy + ey / dd * P.R; }
+    else { const ox = d.hw - Math.abs(lx), oy = d.hh - Math.abs(ly); if (ox < oy) { nlx = (lx < 0 ? -1 : 1) * (d.hw + P.R); nly = ly; } else { nlx = lx; nly = (ly < 0 ? -1 : 1) * (d.hh + P.R); } }
+    pp.x = d.x + c * nlx - sn * nly; pp.y = d.y + sn * nlx + c * nly;
+  }
+}
 function otherPred(o, d) {   // where somebody else is d seconds after their last update: their speed carries them on, gravity pulls them down in the air, and the ground and walls stop them (the picture never goes through anything)
   const x = o.sx + o.svx * d;
   const y = o.sy + o.svy * d + (o.sg ? 0 : 0.5 * P.GRAV * d * d);
   pp.x = x; pp.y = y;
-  if (!S.world || d < 0.012 || !ballFree(o.sx, o.sy)) return pp;
+  if (!S.world || d < 0.012 || !ballFree(o.sx, o.sy)) { outOfThings(pp); return pp; }
   const n = Math.min(80, Math.ceil(Math.max(Math.abs(x - o.sx), Math.abs(y - o.sy)) / 6));
   let cx = o.sx, cy = o.sy, bx = false, by = false;
   for (let i = 1; i <= n; i++) {
@@ -4833,7 +4847,7 @@ function otherPred(o, d) {   // where somebody else is d seconds after their las
     if (!by) { if (ballFree(cx, ty)) cy = ty; else by = true; }
     if (bx && by) break;
   }
-  pp.x = cx; pp.y = cy; return pp;
+  pp.x = cx; pp.y = cy; outOfThings(pp); return pp;
 }
 function dynBin(dv, len, ty) {
   const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (S.slot & 0xFFFF)) return;
@@ -4941,7 +4955,7 @@ function onMsg(m) {
       S.welcomeAt = performance.now(); S.gotDyn = false; S.dynFull = false; S.gateWait = 0;
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
       if (party && !m.priv) { partyOver(''); return; }
-      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host') { const nb = sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }); hostSeed(nb); } }
+      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host' && !m.priv.back) { const nb = sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }); hostSeed(nb); } }
       net.online = m.online; net.peak = m.peak;
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = infoMsg();
@@ -4973,6 +4987,8 @@ function onMsg(m) {
     case 'stats': net.online = m.online; net.peak = m.peak; break;
     case 'jno': partyOver(m.why === 'full' ? 'That private game is full' : m.why === 'busy' ? 'Your private game is still closing. Try again in a moment' : "You can't join that private game any more"); break;
     case 'pclose': partyOver(who(m.name) + ' closed their private game'); break;
+    case 'hostaway': notice(who(m.name) + "'s connection dropped. Their game stays open while they come back", ''); break;
+    case 'hostback': notice(who(m.name) + ' is back', ''); break;
     case 'inv': partyInvited(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
     case 'pobj': { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1 }); });
@@ -5009,13 +5025,16 @@ function onMsg(m) {
     }
   }
 }
-let lastSend = { x: 0, y: 0, vx: 0, vy: 0, g: 0, d: -1, t: 0 };
+let lastSend = { x: 0, y: 0, vx: 0, vy: 0, g: 0, d: -1, t: 0, pr: 0 };
 function sendPos(force) {   // share my position as a tiny packet, and only when the others could not already guess where I am from my last one
   if (!online || !ws || ws.readyState !== 1 || !S.b || S.mode !== 'play') return;
   const b = S.b, d = (S.dead > 0 || S.away) ? 1 : 0, t = performance.now(), L = lastSend;
   const x = Math.round(b.x), y = Math.round(b.y), g = b.ground ? 1 : 0;
-  const qx = d ? 0 : clamp(Math.round(b.vx / 5), -127, 127) * 5, qy = d ? 0 : clamp(Math.round(b.vy / 20), -127, 127) * 20;
-  if (!force && d === L.d) {
+  const vxs = b.pressing && Math.abs(b.inVx || 0) > Math.abs(b.vx) ? b.inVx : b.vx;   // (pressing against a crate: the speed you are pushing it with)
+  const qx = d ? 0 : clamp(Math.round(vxs / 5), -127, 127) * 5, qy = d ? 0 : clamp(Math.round(b.vy / 20), -127, 127) * 20;
+  if (b.pressing) b.prT = t;
+  const pr = !d && t - (b.prT || -1e9) < 250 ? 1 : 0;   // (still pushing something shared: the server pushes it a little ahead, where you will be)
+  if (!force && d === L.d && pr === L.pr) {
     const dt = (t - L.t) / 1000;
     if (d) { if (dt < 8) return; }
     else {
@@ -5029,10 +5048,10 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
       }
     }
   }
-  lastSend = { x: x, y: y, vx: qx, vy: qy, g: g, d: d, t: t };
-  const buf = new ArrayBuffer(11), dv = new DataView(buf);
+  lastSend = { x: x, y: y, vx: qx, vy: qy, g: g, d: d, t: t, pr: pr };
+  const buf = new ArrayBuffer(12), dv = new DataView(buf);
   dv.setUint8(0, 0x70); dv.setUint16(1, S.slot & 0xFFFF, true); dv.setUint16(3, clamp(x >> 1, 0, 65534), true); dv.setUint16(5, d ? 65535 : clamp(y, 0, 65533), true);
-  dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true);
+  dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true); dv.setUint8(11, pr);
   ws.send(buf);
 }
 setInterval(() => sendPos(false), 30);
@@ -5046,8 +5065,8 @@ setInterval(() => {
   for (const d of S.world.dyn) {
     if (d.burn < 1e8) d.lostSent = false; else if (d.burn >= 1e9 && !d.lostSent && !d.gone && (d.owned || d.mineT > 0 || d.keep > 0) && d.sv && !d.sv.burn && !(d.sv.other && t - d.sv.t < 700)) { d.lostSent = true; lost.push([d.uid >>> 0, Math.round(d.bx || 0), Math.round(d.by || 0)]); }   // (something this device was moving for everybody was lost here: the server is told at once, so it is gone for everyone, and never comes back)
     if (!(d.mineT > 0 || d.keep > 0) || d.gone || d.burn > 0 || !d.sv || !d.srvOk || d.sv.other) { d.owned = false; continue; }
-    d.owned = true; d.ownAt = t; (d.oh = d.oh || []).push([t, d.x, d.y]); if (d.oh.length > 24) d.oh.shift();
-    out.push([d.uid >>> 0, Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.vx), Math.round(d.vy), Math.round(d.rot * 1000) / 1000, Math.round(d.av * 100) / 100]);
+    d.owned = true; d.ownAt = t; (d.oh = d.oh || []).push([t, d.x, d.y]); if (d.oh.length > 80) d.oh.shift();
+    out.push([d.uid >>> 0, Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.vx), Math.round(d.vy), Math.round(d.rot * 1000) / 1000, Math.round(d.av * 100) / 100, d.mineT > 0 ? 1 : 0]);   // (last: you are touching it now, so nobody else takes it from under your hands)
   }
   const pl = [];
   for (const s of S.world.see) {   // a teeter-totter you are on (or just set swinging): this device turns it for everybody
