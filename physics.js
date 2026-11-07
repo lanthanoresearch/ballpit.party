@@ -898,6 +898,18 @@
   }
 
   const SOLIDT = t => t === 1 || t === 3 || t === 4 || t === 6 || t === 9;
+  function maxPen(w, x, y, rad, list) {   // (for checking) the deepest that any two crates or balls near here are into each other
+    const L = (list || w.dyn).filter(d => !(d.burn > 0) && !d.gone && Math.abs(d.x - x) < rad && Math.abs(d.y - y) < rad); let best = [0, 0, 0];
+    for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
+      const A = L[i], B = L[j], e = (A.r || A.hw * 1.42) + (B.r || B.hw * 1.42); if (Math.abs(A.x - B.x) > e || Math.abs(A.y - B.y) > e) continue;
+      const out = [];
+      if (!isBall(A) && !isBall(B)) obbHit(shapeOf(A), shapeOf(B), 0, out);
+      else if (isBall(A) && isBall(B)) { const dd = Math.hypot(B.x - A.x, B.y - A.y) - A.r - B.r; if (dd < 0) out.push([0, 0, dd]); }
+      else { const bx = isBall(A) ? B : A, bl = isBall(A) ? A : B, h = circBox(shapeOf(bx), bl.x, bl.y, bl.r); if (h) out.push(h); }
+      for (const h of out) if (-h[2] > best[0]) best = [-h[2], A.uid >>> 0, B.uid >>> 0];
+    }
+    return best;
+  }
   function bodyOverlaps(w, x0, y0, x1, y1, pad) {   // is any crate or ball on this box?
     for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) continue; const e = d.r || d.hw; if (d.x + e > x0 - (pad || 0) && d.x - e < x1 + (pad || 0) && d.y + e > y0 - (pad || 0) && d.y - e < y1 + (pad || 0)) return true; }
     return false;
@@ -932,7 +944,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 124, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 125, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

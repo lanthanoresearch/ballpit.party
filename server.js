@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 124;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 125;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -279,7 +279,7 @@ function findRoom() {
 /* ---------- the shared world ----------
    Every world (public or private) has ONE set of crates, balls, planks and gates, worked out here with the same physics the game uses (physics.js).
    Players never touch each other, but everybody pushes the same things. Each device is sent where things are and shows exactly that. */
-const SIMDT = 1 / 60;
+const SIMDT = 1 / 120;   // (the same step the players' own devices take, so everything moves exactly as it does there)
 function srvTerrain(w, tx, r, to) {
   if (tx < 0 || tx >= w.W || r < 0 || r >= w.H) return;
   const i = r * w.W + tx, cur = w.grid[i]; if (cur === 4 || cur === 9 || (cur === 6 && to !== 1)) return;   // (a ground spring can only be turned back into plain ground)
@@ -387,7 +387,7 @@ function simTick() {
     const w = roomWorld(room), slot = rslot(room) & 0xFFFF;
     room.tk++;
     room.acc += dtReal;
-    let n = 0; while (room.acc >= SIMDT && n < 6) { room.acc -= SIMDT; n++; }
+    let n = 0; while (room.acc >= SIMDT && n < 12) { room.acc -= SIMDT; n++; }
     if (room.acc > SIMDT) room.acc = 0;
     for (const p of room.players.values()) if (!act.includes(p)) p.qx = undefined;
     if (n) {
@@ -401,7 +401,7 @@ function simTick() {
           const tx = p.x + p.vx * age, ty = p.y + Math.min(0, p.vy) * age;   // (sideways it carries on along its path, and up when it is jumping; a fall is not carried on, so it is never sunk into the crate it is landing on)
           if (p.qx === undefined || Math.abs(tx - p.qx) > 220 || Math.abs(ty - p.qy) > 220) { p.qx = tx; p.qy = ty; }
           else {
-            const lx = Math.max(7, Math.abs(p.vx) * SIMDT * 2), ly = Math.max(10, Math.abs(p.vy) * SIMDT * 2);
+            const lx = Math.max(3.5, Math.abs(p.vx) * SIMDT * 2), ly = Math.max(5, Math.abs(p.vy) * SIMDT * 2);
             p.qx += Math.max(-lx, Math.min(lx, tx - p.qx)); p.qy += Math.max(-ly, Math.min(ly, ty - p.qy));
           }
           list.push({ x: p.qx, y: p.qy, vx: p.vx, vy: p.vy, ground: g, id: p.id, p });
@@ -422,12 +422,14 @@ function simTick() {
       }
       const bn = d.burn > 0;
       const kx = d.px === undefined ? d.vx : (d.x - d.px) / tickDt, ky = d.px === undefined ? d.vy : (d.y - d.py) / tickDt;
-      const dm = d.px === undefined ? 99 : Math.abs(d.x - d.px) + Math.abs(d.y - d.py); d.px = d.x; d.py = d.y;
-      d.svx = Math.abs(d.vx) > 150 && Math.abs(kx) < Math.abs(d.vx) * 0.2 ? kx : d.vx;   // (a pile held up by what is under it keeps 'falling' in its own sums while not moving at all: what it really did is sent instead)
-      d.svy = Math.abs(d.vy) > 150 && Math.abs(ky) < Math.abs(d.vy) * 0.2 ? ky : d.vy;
-      const still = !bn && ((Math.abs(d.svx) < 25 && Math.abs(d.svy) < 25) || dm < 0.5) && Math.abs(d.av || 0) < 0.3;
-      const mv = !bn && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || still !== d.lst || (!still && Math.abs(d.svx - d.lvx) + Math.abs(d.svy - d.lvy) > 60));
-      if (bn !== d.lb || mv) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; d.lst = still; d.lvx = d.svx; d.lvy = d.svy; }
+      const kr = d.pr === undefined ? (d.av || 0) : ((d.rot || 0) - d.pr) / tickDt;
+      const dm = d.px === undefined ? 99 : Math.abs(d.x - d.px) + Math.abs(d.y - d.py); d.px = d.x; d.py = d.y; d.pr = d.rot || 0;
+      d.svx = Math.abs(d.vx - kx) > 30 ? kx : d.vx;   // (what it really did is sent: a pile held up by what is under it, or a crate pinned against another, keeps a speed in its own sums while not moving at all, and the others must not see it carry on)
+      d.svy = Math.abs(d.vy - ky) > 30 ? ky : d.vy;
+      d.sav = Math.abs((d.av || 0) - kr) > 0.5 ? kr : (d.av || 0);
+      const still = !bn && ((Math.abs(d.svx) < 25 && Math.abs(d.svy) < 25) || dm < 0.4) && Math.abs(d.sav) < 0.3;
+      const mv = !bn && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || still !== d.lst || (!still && (Math.abs(d.svx - d.lvx) + Math.abs(d.svy - d.lvy) > 60 || Math.abs(d.sav - (d.lav || 0)) > 0.5)));
+      if (bn !== d.lb || mv) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; d.lst = still; d.lvx = d.svx; d.lvy = d.svy; d.lav = d.sav; }
     }
     // gates and triggers: tell everybody when any of them changes (and now and then anyway)
     const sig = doorSig(w);
@@ -471,7 +473,7 @@ function simTick() {
         const o = 4 + k * 23, bn = d.burn > 0;
         buf.writeUInt32LE(d.uid >>> 0, o); buf.writeFloatLE(bn ? 0 : d.x, o + 4); buf.writeFloatLE(bn ? 0 : d.y, o + 8);
         const rest = bn || d.lst; buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svx))), o + 12); buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svy))), o + 14);
-        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = (bn ? 1 : 0) | (!bn && d.ownT > 0 && d.ownBy !== p.id && d.ownTouch ? 2 : 0);   /* (2: another player's device is moving this one right now) */ buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round((bn || d.lst ? 0 : d.av || 0) * 1000))), o + 21);
+        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = (bn ? 1 : 0) | (!bn && d.ownT > 0 && d.ownBy !== p.id && d.ownTouch ? 2 : 0);   /* (2: another player's device is moving this one right now) */ buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round((bn || d.lst ? 0 : d.sav || 0) * 1000))), o + 21);
         p.dver.set(d.uid, d.ver);
       });
       p.ws.send(buf, { binary: true });

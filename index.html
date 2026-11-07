@@ -644,7 +644,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 124; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 125; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -5774,10 +5774,15 @@ function applyZoomRange() {   // the slider's left end is the farthest you can r
 }
 addEventListener('resize', applyZoomRange);
 let lastFrame = performance.now(), lastDraw = lastFrame, acc = 0, errCount = 0, frameN = 0;
+let rq = 1, ftAvg = 16.7, slowT = 0, fastT = 0, rqWait = 8, rqUp = -1e9;   // (a device that cannot keep up draws the picture with fewer pixels, and goes back to full sharpness once it can)
 function frame(nowT) {
   requestAnimationFrame(frame);
   try {
-    const dt = Math.min(0.1, (nowT - lastFrame) / 1000); lastFrame = nowT;
+    const raw = nowT - lastFrame, dt = Math.min(0.1, raw / 1000); lastFrame = nowT;
+    if (!document.hidden && raw > 0 && raw < 1000 && S.mode === 'play') { ftAvg += (Math.min(200, raw) - ftAvg) * 0.05;
+      if (ftAvg > 24) { slowT += dt; fastT = 0; } else if (ftAvg < 19) { fastT += dt; slowT = 0; } else { slowT = 0; fastT = 0; }
+      if (slowT > 2 && rq > 0.5) { if (nowT - rqUp < 6000) rqWait = Math.min(120, rqWait * 2); rq = Math.max(0.5, rq - 0.25); slowT = 0; fastT = 0; ftAvg = 16.7; }
+      else if (fastT > rqWait && rq < 1) { rq = Math.min(1, rq + 0.25); fastT = 0; rqUp = nowT; } }   // (sharper again only after it has kept up for a while, and if that was too much, it waits longer before trying again)
     acc += dt;
     while (acc >= STEP) { update(STEP); acc -= STEP; }
     if (S.mode === 'fade' && nowT - S.fadeT0 > 2300) loadMap(S.pending, S.pendingNext);
@@ -5794,7 +5799,7 @@ function render(dt, nowT) {   // the ball is drawn between its last two physics 
 }
 function renderInner(dt, nowT) {
   if (!S.map) return;
-  const dpr = settings.low ? 1 : Math.min(2, window.devicePixelRatio || 1), sw = window.innerWidth, sh = window.innerHeight;
+  const dpr = settings.low ? 1 : Math.max(1, Math.min(2, window.devicePixelRatio || 1) * rq), sw = window.innerWidth, sh = window.innerHeight;
   if (cv.width !== Math.round(sw * dpr) || cv.height !== Math.round(sh * dpr)) { cv.width = Math.round(sw * dpr); cv.height = Math.round(sh * dpr); }
   // a comfortable view (about 15 tiles tall on a laptop); the Zoom setting scales it either way
   // Fairness: the view is measured in WORLD units, never screen pixels. Physics runs on a fixed 120 Hz clock in world
@@ -5884,7 +5889,7 @@ function renderInner(dt, nowT) {
   drawWater();
   if (S.mode === 'play' && S.dead <= 0 && !S.away && settings.fallWarn && (S.fallWarn || S.lavaWarn || S.edgeWarn)) drawWarnSign(b.x, b.y - R - 52, !!(S.fallWarn || S.lavaWarn));
   { const sk = skyAt(dph); if (sk[3] > 0.005) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = 'rgba(' + (sk[0] | 0) + ',' + (sk[1] | 0) + ',' + (sk[2] | 0) + ',' + sk[3].toFixed(3) + ')'; ctx.fillRect(0, 0, sw, sh); } }
-  if (!settings.low) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.5; ctx.fillStyle = paperGrain(); ctx.fillRect(0, 0, cv.width, cv.height); ctx.globalAlpha = 1; }
+  if (!settings.low && rq >= 1) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.5; ctx.fillStyle = paperGrain(); ctx.fillRect(0, 0, cv.width, cv.height); ctx.globalAlpha = 1; }
   if (S.mode === 'play' && S.dead <= 0 && !S.away) {   // air streaks: they only show when you have really been falling, start tiny, and grow with your speed
     const spd = Math.hypot(b.vx, b.vy), fl = clamp((spd - 560) / 1500, 0, 1) * clamp((b.fall - 0.25) / 0.6, 0, 1);
     if (!S.airP) { S.airP = []; for (let i = 0; i < 48; i++) S.airP.push({ x: Math.random(), y: Math.random(), z: 0.4 + Math.random() * 0.6 }); }
