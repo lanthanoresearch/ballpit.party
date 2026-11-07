@@ -644,7 +644,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 125; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 126; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1876,6 +1876,8 @@ function update(dt) {
   followWorld(dt);
   remotePush(dt);
   if (w.ropes && w.ropes.length) others.forEach(o => { if (o.seen && !o.dead && o.cx !== undefined) P.ropeBody({ x: o.cx, y: o.cy, vx: o.svx || 0, vy: o.svy || 0, kin: true, dt }, w, 4); });   // (the others weigh on rope bridges here as well)
+  w.pb = S.dead > 0 || S.away ? null : (w._pbA || (w._pbA = [S.b]));   // (your ball is solid to everything: nothing is pushed or squeezed into it)
+  if (w.pb) w.pb[0] = S.b;
   P.stepDyn(w, dt);
   if (w.drops && w.drops.length) stepDrops(w, dt);
   if (S.spawnT > 0) S.spawnT -= dt;
@@ -2042,6 +2044,7 @@ function followWorld(dt) {
     else if (Math.abs(tr - d.rot) > 0.01) d.rot += (tr - d.rot) * (1 - Math.exp(-(calm ? 8 : err < 14 ? 2 : 5) * dt));
   }
   if (w.see.length) P.seeOut(w, d => d.mineT > 0 || d.keep > 0);
+  if (S.b && S.mode === 'play' && !(S.dead > 0)) P.outOfBall(w, S.b, d => d.mineT > 0 || d.keep > 0);
 }
 function adoptUid(w, d, u) {   // the server's name for a crate or ball: whatever else wore that name takes this one's old name
   u = u >>> 0; if (!d || d.uid === u || !w.dynBy) return;

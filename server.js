@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 125;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 126;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -393,7 +393,10 @@ function simTick() {
     if (n) {
       w.focus = act.map(p => ({ x: p.x, y: p.y }));
       { const fo = w.focus; w.cand = w.dyn.filter(d => { if (d.burn > 0) return false; for (let i = 0; i < fo.length; i++) if (Math.abs(d.x - fo[i].x) < 420 && Math.abs(d.y - fo[i].y) < 420) return true; return false; }); }
+      const pbs = w.pbList || (w.pbList = []);
       for (let k = 0; k < n; k++) {
+        pbs.length = 0; for (const p of act) if (p.qx !== undefined) { const o = p.pbo || (p.pbo = { x: 0, y: 0 }); o.x = p.qx; o.y = p.qy; pbs.push(o); }
+        w.pb = pbs;   // (every player's ball is solid to everything in the world: nothing is pushed or squeezed into it)
         P.stepDyn(w, SIMDT);
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)

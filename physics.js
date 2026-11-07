@@ -89,7 +89,11 @@
   function addProp(w, kind, x, y) {   // x, y: the centre
     const q = propDims(kind), hw = q.hw, r = q.r;
     const d = { k: r ? 'o' : 'b', x, y, hw, hh: hw, r, vx: 0, vy: 0, rot: 0, av: 0, gr: false, touch: false, burn: 0, st: 0,
-      m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind };
+      m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind,
+      // (everything the physics keeps on a thing is there from the start, so every crate and ball has the same make-up and the sums over hundreds of them stay fast)
+      im: 0, ii: 0, nap: false, sleep: false, skip: false, sq: 0, _i: 0, _dyn: false, _far: false, farT: 0, _spr: 0, _im: 0, _ii: 0, _bx: 0, _by: 0, _bw: 0, _pl: false, _x0: 0, _y0: 0, onp: false, _ice: false, _pad: null, _N: 0, _F: 0, dm: 0, pcd: 0, pdir: 0,
+      _uf: null, _isl: 0, _wR: 0, _wOk: false, _wP: null, _wN: null, _wT: 0, _sh: null, _shT: 0, _hT: 0, _onP: false, _pri: 0, bnN: 0, mineT: 0, keep: 0, hold: 0 };
+    { const I = r ? 0.5 * d.m * r * r : d.m * (hw * hw + hw * hw) / 3; d.im = 1 / d.m; d.ii = kind === 5 || kind === 6 ? 0 : 1 / I; }
     d.hx = d.x; d.hy = d.y; d.uid = hash32('p' + kind + ',' + Math.round(x) + ',' + Math.round(y)); if (w.dynBy) { while (w.dynBy.has(d.uid)) d.uid = (d.uid + 1) >>> 0; w.dynBy.set(d.uid, d); }
     w.dyn.push(d); return d;
   }
@@ -161,6 +165,16 @@
     for (const [lx, ly] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) g = Math.min(g, seg(sh.x + sh.c * lx * sh.hw - sh.s * ly * sh.hh, sh.y + sh.s * lx * sh.hw + sh.c * ly * sh.hh, 0));
     for (let k = -1; k <= 1; k += 2) { const h = circBox(sh, s.cx + k * s.hl * c, s.cy + k * s.hl * sn, SEE_TH + 60); if (h) g = Math.min(g, h[2] + 60); }
     return g;
+  }
+  function outOfBall(w, b, skip) {   // shown the server's picture: nothing is ever drawn inside your own ball (the server keeps everything out of it too, only a moment later on a slow connection)
+    const L = w.cand || w.dyn;
+    for (let i = 0; i < L.length; i++) {
+      const d = L[i]; if (d.burn > 0 || Math.abs(d.x - b.x) > 70 || Math.abs(d.y - b.y) > 70 || (skip && skip(d))) continue;
+      let h; if (d.k === 'b') { h = circBox(shapeOf(d), b.x, b.y, R); if (!h) continue; } else { const dx = b.x - d.x, dy = b.y - d.y, d2 = dx * dx + dy * dy, rr = R + d.r; if (d2 >= rr * rr) continue; const dd = Math.sqrt(d2) || 0.001; h = [0, 0, dd - rr, d2 ? dx / dd : 0, d2 ? dy / dd : -1]; }
+      const pen = -h[2] - 0.5; if (pen <= 0) continue;
+      const nx = h[3], ny = h[4], qx = d.x - nx * pen, qy = d.y - ny * pen, ex = d.r || shapeOf(d).ex, ey = d.r || shapeOf(d).ey;
+      if (!boxHits(w, qx, qy, ex - 2, ey - 2)) { d.x = qx; d.y = qy; }
+    }
   }
   function seeOut(w, skip) {   // shown the server's picture: a crate or ball drawn a few pixels into a plank (the two are carried on a little differently between updates) is drawn resting on it
     for (let i = 0; i < w.see.length; i++) {
@@ -376,12 +390,12 @@
     if (!best) return null;
     return [best[3], best[4], -best[2] - r, best[0], best[1]];
   }
-  const CT = []; let nCT = 0, cmPrev = new Map();
+  const CT = []; let nCT = 0, wTick = 0;
   function addC(a, b, h, key) {
     let c = CT[nCT]; if (!c) c = CT[nCT] = {};
     nCT++;
     c.a = a; c.b = b; c.px = h[0]; c.py = h[1]; c.sep = h[2]; c.nx = h[3]; c.ny = h[4]; c.key = key;
-    c.kvx = 0; c.kvy = 0; c.pl = null; c.rp = null; c.u = 0; c.mu = 0.5; c.mk = 0; c.e = 0; c.eT = 1e9; c.eCap = 1e9; c.eMin = 0; c.Pn = 0; c.Pt = 0; c.Pb = 0;
+    c.kvx = 0; c.kvy = 0; c.pl = null; c.rp = null; c.pp = false; c.u = 0; c.mu = 0.5; c.mk = 0; c.e = 0; c.eT = 1e9; c.eCap = 1e9; c.eMin = 0; c.Pn = 0; c.Pt = 0; c.Pb = 0;
     return c;
   }
   const isBall = d => d.k === 'o';
@@ -405,7 +419,7 @@
       const t = tile(w, tx, ty);
       if (t === 2) { if (isBall(d)) { const h = circTile(w, tx, ty, d.x, d.y, d.r - 3); if (h && h[2] < 0) lava = true; } else if (d.x > tx * TS - 2 && d.x < tx * TS + TS + 2 && d.y + ey - 5 > ty * TS && d.y < ty * TS + TS) lava = true; continue; }
       if (!isSol(t)) continue;
-      const key = 't' + (ty * 4096 + tx) + ':';
+      const key = 35184372088832 + (ty * 4096 + tx) * 4096;   // (each touch has a number of its own: what it is against, and which corner or edge)
       if (isBall(d)) { const h = circTile(w, tx, ty, d.x, d.y, d.r); if (h) matTile(addC(null, d, h, key), d, t); continue; }
       const skip = (isSol(tile(w, tx + 1, ty)) ? SK_PX : 0) | (isSol(tile(w, tx - 1, ty)) ? SK_NX : 0) | (isSol(tile(w, tx, ty + 1)) ? SK_PY : 0) | (isSol(tile(w, tx, ty - 1)) ? SK_NY : 0);
       const out = []; obbHit({ x: (tx + 0.5) * TS, y: (ty + 0.5) * TS, hw: TS / 2, hh: TS / 2, c: 1, s: 0 }, sh, skip, out);
@@ -422,7 +436,7 @@
       const d = Math.sqrt(d2) || 0.001, nx = d2 ? dx / d : 0, ny = d2 ? dy / d : -1; out.push([A.x + nx * A.r, A.y + ny * A.r, d - rr, nx, ny, 0]);
     } else if (isBall(B)) { const h = circBox(SA, B.x, B.y, B.r); if (h) out.push([h[0], h[1], h[2], h[3], h[4], 0]); }
     else { const h = circBox(SB, A.x, A.y, A.r); if (h) out.push([h[0] + h[3] * h[2], h[1] + h[4] * h[2], h[2], -h[3], -h[4], 0]); }
-    for (const h of out) { const c = addC(dynB ? A : null, B, h, A.uid + ':' + B.uid + ':' + h[5]); matPair(c, A, B); if (!dynB) { const rx = h[0] - A.x, ry = h[1] - A.y; c.kvx = (A.vx || 0) - (A.av || 0) * ry; c.kvy = (A.vy || 0) + (A.av || 0) * rx; } }
+    for (const h of out) { const c = addC(dynB ? A : null, B, h, (A.uid >>> 0) * 4096 + h[5]); matPair(c, A, B); if (!dynB) { const rx = h[0] - A.x, ry = h[1] - A.y; c.kvx = (A.vx || 0) - (A.av || 0) * ry; c.kvy = (A.vy || 0) + (A.av || 0) * rx; } }
     return out.length;
   }
   function plankContacts(w, d, sh) {
@@ -439,16 +453,16 @@
       for (let k = 0; k < vs.length; k++) {
         const vx = vs[k][0], vy = vs[k][1], r = vs[k][2], u = clamp((vx - s.cx) * c + (vy - s.cy) * sn, -s.hl, s.hl), qx = s.cx + u * c, qy = s.cy + u * sn;
         const dx = vx - qx, dy = vy - qy, dd = Math.sqrt(dx * dx + dy * dy), m = r + SEE_TH;
-        if (r === 0 && dx * sux + dy * suy < 0 && Math.abs((vx - s.cx) * c + (vy - s.cy) * sn) < s.hl) { add([vx, vy, -(dd + m), sux, suy], 's' + i + ':k' + k, u); continue; }   // (a corner that has got through to the far side: the crate and the plank are pushed apart, back to the side it is mostly on, so nothing ever stays stuck in it)
+        if (r === 0 && dx * sux + dy * suy < 0 && Math.abs((vx - s.cx) * c + (vy - s.cy) * sn) < s.hl) { add([vx, vy, -(dd + m), sux, suy], 70368744177664 + i * 64 + 32 + k, u); continue; }   // (a corner that has got through to the far side: the crate and the plank are pushed apart, back to the side it is mostly on, so nothing ever stays stuck in it)
         if (dd >= m + SPEC) continue;   // (looked at a little before it touches, so a plank swinging fast can never pass through what is under or on it)
         const nx = dd > 0.0001 ? dx / dd : sux, ny = dd > 0.0001 ? dy / dd : suy;
         if (nx * sux + ny * suy < 0.3) continue;
-        add([qx + nx * SEE_TH, qy + ny * SEE_TH, dd - m, nx, ny], 's' + i + ':' + k, u);
+        add([qx + nx * SEE_TH, qy + ny * SEE_TH, dd - m, nx, ny], 70368744177664 + i * 64 + k, u);
       }
       if (!isBall(d)) for (let k = 0; k < 2; k++) {   // the plank's ends poking into the side or bottom of a crate
         const e = k ? 1 : -1, qx = s.cx + e * s.hl * c, qy = s.cy + e * s.hl * sn, h = circBox(sh, qx, qy, SEE_TH + SPEC);
         if (!h || -h[4] * suy - h[3] * sux < 0.3) continue;
-        add([h[0] + h[3] * h[2], h[1] + h[4] * h[2], h[2] + SPEC, -h[3], -h[4]], 's' + i + ':e' + k, e * s.hl);
+        add([h[0] + h[3] * h[2], h[1] + h[4] * h[2], h[2] + SPEC, -h[3], -h[4]], 70368744177664 + i * 64 + 48 + k, e * s.hl);
       }
     }
     return n;
@@ -457,7 +471,8 @@
   const plankMoving = (w, d) => w.see.some(s => s.moving > 0 && Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 60);
   function velAt(o, rx, ry) { return [o.vx - o.av * ry, o.vy + o.av * rx]; }
   function solveContacts(dt) {
-    const inv = 1 / dt, cm = new Map();
+    const inv = 1 / dt;
+    for (let k = 0; k < nCT; k++) { const b = CT[k].b; if (b._wR !== wTick) { b._wR = wTick; b._wOk = b._wT === wTick - 1; const t = b._wP; b._wP = b._wN || []; b._wN = t || []; b._wN.length = 0; } }   // (how hard each touch pressed last moment, kept on the thing itself, so the next moment starts from there)
     for (let k = 0; k < nCT; k++) {
       const c = CT[k], a = c.a, b = c.b, ima = a ? a._im : 0, iia = a ? a._ii : 0, imb = b._im, iib = b._ii;
       c.rax = a ? c.px - a.x : 0; c.ray = a ? c.py - a.y : 0; c.rbx = c.px - b.x; c.rby = c.py - b.y;
@@ -465,12 +480,12 @@
       const kn = ima + imb + iia * rnA * rnA + iib * rnB * rnB, kt = ima + imb + iia * rtA * rtA + iib * rtB * rtB;
       c.mn = kn > 0 ? 1 / kn : 0; c.mt = kt > 0 ? 1 / kt : 0;
       c.bias = BAUM * inv * Math.max(0, -c.sep - SLOP);
-      const vA = a ? velAt(a, c.rax, c.ray) : [c.kvx, c.kvy], vB = velAt(b, c.rbx, c.rby), vn = (vB[0] - vA[0]) * c.nx + (vB[1] - vA[1]) * c.ny;
-      const pr = cmPrev.get(c.key);
-      if (c.mk) { const vt0 = (vB[0] - vA[0]) * tx + (vB[1] - vA[1]) * ty; if (Math.abs(vt0) > 40) c.mu = c.mk; }   // (something already sliding slides on more easily than it takes to get it going: a resting crate grips, a pushed one glides)
+      const vAx = a ? a.vx - a.av * c.ray : c.kvx, vAy = a ? a.vy + a.av * c.rax : c.kvy, vBx = b.vx - b.av * c.rby, vBy = b.vy + b.av * c.rbx, vn = (vBx - vAx) * c.nx + (vBy - vAy) * c.ny;
+      let pr = -1; if (b._wOk) { const wp = b._wP; for (let q = 0; q < wp.length; q += 3) if (wp[q] === c.key) { pr = q; break; } }
+      if (c.mk) { const vt0 = (vBx - vAx) * tx + (vBy - vAy) * ty; if (Math.abs(vt0) > 40) c.mu = c.mk; }   // (something already sliding slides on more easily than it takes to get it going: a resting crate grips, a pushed one glides)
       c.vb = 0; if (c.sep > 0) c.vb = -c.sep * inv;   // (not touching yet: it may close the gap this step, but no further)
-      else if (c.e > 0 && !pr && vn < -c.eT) { c.vb = Math.min(c.eCap, -c.e * vn); if (c.vb < c.eMin) c.vb = 0; }   // (a bounce is only for a fresh knock, never for things already pressed together)
-      if (pr) { c.Pn = pr[0]; c.Pt = pr[1]; impulse(c, c.Pn * c.nx + c.Pt * tx, c.Pn * c.ny + c.Pt * ty); }
+      else if (c.e > 0 && pr < 0 && vn < -c.eT) { c.vb = Math.min(c.eCap, -c.e * vn); if (c.vb < c.eMin) c.vb = 0; }   // (a bounce is only for a fresh knock, never for things already pressed together)
+      if (pr >= 0) { c.Pn = b._wP[pr + 1]; c.Pt = b._wP[pr + 2]; impulse(c, c.Pn * c.nx + c.Pt * tx, c.Pn * c.ny + c.Pt * ty); }
     }
     for (let it = 0; it < VEL_IT; it++) for (let k = 0; k < nCT; k++) {
       const c = CT[k], a = c.a, b = c.b, nx = c.nx, ny = c.ny, tx = ny, ty = -nx;
@@ -491,16 +506,14 @@
     for (let it = 0; it < POS_IT; it++) for (let k = 0; k < nCT; k++) {   // pushing out of overlaps is done apart from the real speeds, so it never adds bounce or jitter
       const c = CT[k]; if (!(c.bias > 0)) continue;
       const a = c.a, b = c.b;
-      const vA = a ? [a._bx - a._bw * c.ray, a._by + a._bw * c.rax] : [0, 0], vB = [b._bx - b._bw * c.rby, b._by + b._bw * c.rbx];
-      const vn = (vB[0] - vA[0]) * c.nx + (vB[1] - vA[1]) * c.ny;
+      const vn = (b._bx - b._bw * c.rby - (a ? a._bx - a._bw * c.ray : 0)) * c.nx + (b._by + b._bw * c.rbx - (a ? a._by + a._bw * c.rax : 0)) * c.ny;
       let dP = c.mn * (-vn + c.bias); const P0 = c.Pb; c.Pb = Math.max(P0 + dP, 0); dP = c.Pb - P0;
       if (!dP) continue;
       const Px = dP * c.nx, Py = dP * c.ny;
       if (a) { a._bx -= Px * a._im; a._by -= Py * a._im; a._bw -= a._ii * (c.rax * Py - c.ray * Px); }
       b._bx += Px * b._im; b._by += Py * b._im; b._bw += b._ii * (c.rbx * Py - c.rby * Px);
     }
-    for (let k = 0; k < nCT; k++) { const c = CT[k]; if (c.Pn || c.Pt) cm.set(c.key, [c.Pn, c.Pt]); }
-    cmPrev = cm;
+    for (let k = 0; k < nCT; k++) { const c = CT[k]; if (c.Pn || c.Pt) { const b = c.b; b._wN.push(c.key, c.Pn, c.Pt); b._wT = wTick; } }
   }
   function impulse(c, Px, Py) {
     const a = c.a, b = c.b;
@@ -566,7 +579,7 @@
         const px = pts[k][0], py = pts[k][1]; if (px < r.ax || px > r.bx) continue;
         const s = ropeAt(r, px), L = Math.sqrt(1 + s.s * s.s), nx = s.s / L, ny = -1 / L, sep = (s.y - py) / L;
         if (sep > SPEC || sep < -30) continue;
-        const c = addC(null, d, [px, py, sep, nx, ny], 'r' + r.uid + ':' + k); c.mu = 0.75; c.kvy = clamp(s.vy, -120, 120); c.rp = r; n++;   // (it rides the rope as it swings, but is never flung off it)
+        const c = addC(null, d, [px, py, sep, nx, ny], 105553116266496 + ((r.uid >>> 0) % 1000000) * 1024 + k); c.mu = 0.75; c.kvy = clamp(s.vy, -120, 120); c.rp = r; n++;   // (it rides the rope as it swings, but is never flung off it)
       }
     }
     return n;
@@ -592,6 +605,7 @@
     if (boxHits(w, d.x, d.y + 3, ex - 1, ey)) return true;
     if (w.ropes) for (const r of w.ropes) if (!r.gone && d.x > r.ax - ex && d.x < r.bx + ex) { const s = ropeAt(r, d.x); if (Math.abs(d.y + ey - s.y) < 10) return true; }
     for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (Math.abs(s.cx - d.x) < s.hl + ex + 10 && Math.abs(s.cy - d.y) < s.hl + ey + 30) return true; }
+    if (w.pb) for (const p of w.pb) if (Math.abs(p.x - d.x) < ex + R && p.y > d.y && p.y - R < d.y + ey + 4) return true;   // (resting on a player)
     const near = H(d.x - ex, d.y, d.x + ex, d.y + ey + 4);
     for (const o of near) { if (o === d || o.burn > 0) continue; const e = o.r || Math.max(o.hw, o.hh) * 1.42; if (Math.abs(o.x - d.x) < e + ex && o.y > d.y && o.y - e < d.y + ey + 4) return true; }
     return false;
@@ -607,9 +621,9 @@
   }
   function nearZone(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= (q.tx0 - 14) * TS && x <= (q.tx1 + 15) * TS && y >= (q.ty0 - 10) * TS && y <= (q.ty1 + 10) * TS) return true; } return false; }   // (the map's own toys around the start or the finish belong there: they never burn up in it)
   function inStart(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= q.tx0 * TS && x <= (q.tx1 + 1) * TS && y >= q.ty0 * TS && y <= (q.ty1 + 1) * TS) return true; } return false; }   // (a start or finish zone)
-  let dynTick = 0; const DYN_BUDGET = 160, CELL = 64;
+  let dynTick = 0, hStamp = 0; const DYN_BUDGET = 600, CELL = 64, HB = [], NONE = [];
   function stepDyn(w, dt) {
-    dynTick++;
+    dynTick++; wTick = w.tick = (w.tick || 0) + 1;
     stepSee(w, dt); stepRopes(w, dt);
     for (let i = 0; i < w.pads.length; i++) if (w.pads[i].t > 0) w.pads[i].t = Math.max(0, w.pads[i].t - dt);
     const L = w.dyn; if (!L.length) { turnSee(w, dt); return; }
@@ -617,11 +631,14 @@
     if (f) {   // a very busy pile near you: only the nearest few dozen things are simulated each moment, so the game stays smooth however much has been built
       const near = [];
       for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0 || d.nap || !nearF(f, d.x, d.y, FR, FR)) continue; near.push(d); }
-      if (near.length > DYN_BUDGET) { near.sort((a, b) => distF(f, a) - distF(f, b)); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }
+      if (near.length > DYN_BUDGET) { for (const d of near) d._pri = distF(f, d) - (d.gr && Math.abs(d.vx) + Math.abs(d.vy) < 40 ? 0 : 1e6); near.sort((a, b) => a._pri - b._pri); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }   // (only with a truly huge crowd moving at once: what is still falling or flying is always worked out, and the farthest of what is only settling waits a moment)
     }
-    const act = [], chk = [], grid = new Map(), movingP = w.see.filter(s => s.moving > 0 && !s.gone);
-    const put = d => { const e = d.r || Math.max(d.hw, d.hh) * 1.42; for (let cx = Math.floor((d.x - e) / CELL); cx <= Math.floor((d.x + e) / CELL); cx++) for (let cy = Math.floor((d.y - e) / CELL); cy <= Math.floor((d.y + e) / CELL); cy++) { const k = (cx + 4) * 65536 + cy + 4; let g = grid.get(k); if (!g) grid.set(k, g = []); g.push(d); } };
-    const H = (x0, y0, x1, y1) => { const r = []; for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) { const g = grid.get((cx + 4) * 65536 + cy + 4); if (g) for (const o of g) if (r.indexOf(o) < 0) r.push(o); } return r; };
+    let pbMove = null; if (w.pb) for (const p of w.pb) { if (p._lx === undefined || Math.abs(p.x - p._lx) + Math.abs(p.y - p._ly) > 0.3) (pbMove || (pbMove = [])).push(p); p._lx = p.x; p._ly = p.y; }
+    const act = [], chk = [], movingP = w.see.length ? w.see.filter(s => s.moving > 0 && !s.gone) : NONE;
+    if (!w._grid || w._grid.size > 30000) { w._grid = new Map(); w._gUsed = []; }   // (which things are where, in squares of 64px: kept from moment to moment and only emptied, so nothing new has to be made each time)
+    const grid = w._grid, used = w._gUsed; for (let i = 0; i < used.length; i++) used[i].length = 0; used.length = 0;
+    const put = d => { const e = d.r || Math.max(d.hw, d.hh) * 1.42; for (let cx = Math.floor((d.x - e) / CELL); cx <= Math.floor((d.x + e) / CELL); cx++) for (let cy = Math.floor((d.y - e) / CELL); cy <= Math.floor((d.y + e) / CELL); cy++) { const k = (cx + 4) * 65536 + cy + 4; let g = grid.get(k); if (!g) grid.set(k, g = []); if (!g.length) used.push(g); g.push(d); } };
+    const H = (x0, y0, x1, y1) => { const r = HB; r.length = 0; const st = ++hStamp; for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) { const g = grid.get((cx + 4) * 65536 + cy + 4); if (g) for (let j = 0; j < g.length; j++) { const o = g[j]; if (o._hT !== st) { o._hT = st; r.push(o); } } } return r; };
     for (let i = 0; i < L.length; i++) {
       const d = L[i]; d._i = i; d._dyn = false;
       if (d.burn > 0) { if (d.burn < 1e8) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; d.av = 0; d.rot = 0; } } continue; }
@@ -639,6 +656,7 @@
       d.sleep = false;
       if (d.nap && movingP.length && movingP.some(s => Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 80)) { d.nap = false; d.st = 0; }   // (a plank that moves wakes what rests on it)
       if (d.nap && w.ropes.length && w.ropes.some(r => r.moving > 0 && !r.gone && d.x > r.ax - 40 && d.x < r.bx + 40 && Math.abs(ropeAt(r, d.x).y - d.y) < 90 && Math.abs(ropeAt(r, d.x).vy) > 15)) { d.nap = false; d.st = 0; }   // (and so does a rope bridge that swings)
+      if (d.nap && pbMove && pbMove.some(p => Math.abs(p.x - d.x) < (d.r || d.hw * 1.42) + R + 6 && Math.abs(p.y - d.y) < (d.r || d.hw * 1.42) + R + 6)) { d.nap = false; d.st = 0; }   // (a player moving right by something resting on them or against them wakes it: it falls or rolls the moment they move away)
       if (d.nap) { if (!d._far && (dynTick + i) % 15 === 0) chk.push(d); continue; }
       d._dyn = true; act.push(d);
     }
@@ -646,7 +664,7 @@
     w.nAct = act.length;
     if (!act.length) { turnSee(w, dt); return; }
     nCT = 0; plankUsed = [];
-    const shp = new Map(), S = o => { let s = shp.get(o); if (!s) { s = o.r ? { x: o.x, y: o.y } : shapeOf(o); shp.set(o, s); } return s; };
+    const S = o => { if (o._shT !== wTick || o._sh === null) { o._sh = o.r ? { x: o.x, y: o.y } : shapeOf(o); o._shT = wTick; } return o._sh; };
     const wake = [], lavaOf = new Set();
     for (const d of act) d._spr = 0;
     for (const d of act) {   // gravity, then every contact
@@ -657,6 +675,12 @@
       if (w.see.length && plankContacts(w, d, sh)) d._pl = true;
       if (w.ropes.length) ropeContacts(w, d, sh);
       const e = d.r || Math.max(sh.ex, sh.ey);
+      if (w.pb) for (let q = 0; q < w.pb.length; q++) {   // a player's ball is solid to everything: nothing is pushed into it or squeezed into it, however much is piled around (only the player's own moving pushes things, as before)
+        const pb = w.pb[q]; if (Math.abs(pb.x - d.x) > e + R + 4 || Math.abs(pb.y - d.y) > e + R + 4) continue;
+        const px = pb._px || (pb._px = { k: 'o', r: R, x: 0, y: 0, vx: 0, vy: 0, av: 0, kind: -1, uid: (0xFFFFF000 + q) >>> 0, _im: 0, _ii: 0, _bx: 0, _by: 0, _bw: 0, m: PM });
+        px.x = pb.x; px.y = pb.y; const n0 = nCT;
+        if (pairContacts(d, px, sh, px, false, w)) for (let k = n0; k < nCT; k++) { CT[k].pp = true; CT[k].mu = 0; }
+      }
       for (const o of H(d.x - e - 2, d.y - e - 2, d.x + e + 2, d.y + e + 2)) {
         if (o === d || o.burn > 0) continue;
         if (o._dyn && o._i < d._i) continue;   // (each pair once)
@@ -684,7 +708,7 @@
       if (Math.abs(d.vx) > MAXSPD) d.vx = Math.sign(d.vx) * MAXSPD; if (Math.abs(d.av) > MAXAV) d.av = Math.sign(d.av) * MAXAV;
       d._x0 = d.x; d._y0 = d.y;
       d.x += (d.vx + d._bx) * dt; d.y += (d.vy + d._by) * dt; d.rot += (d.av + d._bw) * dt;
-      d.gr = false; d.touch = false; d.onp = d._pl; d._ice = false; d._pad = null; d._N = 0; d._F = 0;
+      d.gr = false; d.touch = false; d._onP = false; d.onp = d._pl; d._ice = false; d._pad = null; d._N = 0; d._F = 0;
     }
     for (let k = 0; k < nCT; k++) {   // what each thing is resting on
       const c = CT[k];
@@ -710,12 +734,11 @@
       if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || inStart(w, d.x, d.y)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || inStart(w, d.x, d.y) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
     }
     // a pile goes to sleep together, once every piece of it has been still for a moment
-    const par = new Map(), root = d => { let r = d; while (par.get(r) !== r) r = par.get(r); return r; };
-    for (const d of act) par.set(d, d);
-    for (let k = 0; k < nCT; k++) { const c = CT[k]; if (c.a && c.a._dyn) { const ra = root(c.a), rb = root(c.b); if (ra !== rb) par.set(ra, rb); } }
-    const isl = new Map();
-    for (const d of act) { if (d.burn > 0) continue; const r = root(d); const q = isl.get(r); const v = d.st || 0; isl.set(r, q === undefined ? v : Math.min(q, v)); }
-    for (const d of act) { if (d.burn > 0) continue; if (isl.get(root(d)) >= SLEEP_T) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } }
+    const root = d => { while (d._uf !== d) { d._uf = d._uf._uf; d = d._uf; } return d; };   // (which pile each thing belongs to: every thing points the way to its pile's first piece)
+    for (const d of act) { d._uf = d; d._isl = 1e9; }
+    for (let k = 0; k < nCT; k++) { const c = CT[k]; if (c.a && c.a._dyn) { const ra = root(c.a), rb = root(c.b); if (ra !== rb) ra._uf = rb; } }
+    for (const d of act) { if (d.burn > 0) continue; const r = root(d), v = d.st || 0; if (v < r._isl) r._isl = v; }
+    for (const d of act) { if (d.burn > 0) continue; if (root(d)._isl >= SLEEP_T) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } }
     for (const o of wake) { o.nap = false; o.st = 0; }
     turnSee(w, dt);
   }
@@ -762,7 +785,7 @@
         if (free && d.k === 'o' && d.gr && Math.abs(nx) > 0.5) d.av = d.vx / d.r;   // (a ball you push along the ground rolls the way it is pushed, never skidding on with its old spin)
         if (j < jf) { const vn2 = (b.vx - (d.vx - (d.av || 0) * ry)) * nx + (b.vy - (d.vy + (d.av || 0) * rx)) * ny; if (vn2 < 0) { b.vx -= vn2 * nx; b.vy -= vn2 * ny; } }   // (and you are held back to its pace)
       }
-      if (kin) { b.x += nx * pen; b.y += ny * pen; }   // (the server's idea of where a player is never goes through a crate: it stays against it, as the player's own ball does)
+      if (kin) { if (vn < -5 || pen > 6) { const qx = b.x + nx * pen, qy = b.y + ny * pen; if (!boxHits(w, qx, qy, R - 3, R - 3)) { b.x = qx; b.y = qy; } } }   // (the server's idea of where a player is never goes through a crate it moves into: it stays against it, as the player's own ball does. What only rests on or leans against the player leaves it where it is, and it is never pushed into the ground)
       else {
         if (ny > 0.5 && free && !d.nap) {   // the thing is above you: it is lifted off you (so nothing can pin you down); only a ceiling stops you
           const sh = d.r ? null : shapeOf(d), ex = d.r || sh.ex, ey = d.r || sh.ey;
@@ -944,7 +967,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 125, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 126, outOfBall, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
