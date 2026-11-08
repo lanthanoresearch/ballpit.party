@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 127;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 128;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -458,7 +458,7 @@ function simTick() {
         P.stepDyn(w, SIMDT);
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
-          const a0 = (now - (p.tPos || now)) / 1000 + k * SIMDT, age = p.press ? Math.min(0.25, a0 + Math.min(0.2, (p.rtt || 0) / 1000) + 0.02) : Math.min(0.12, a0), g = !!(p.st & 0x8000);   // (pushing something: the point is put where the player will be when they see the result, so a slow connection still pushes steadily)
+          const a0 = (now - (p.tPos || now)) / 1000 + k * SIMDT, age = Math.min(0.12, a0), g = !!(p.st & 0x8000);   // (where the player is now, from their last word: their own screen already shows what they push moving, worked out there by the same physics)
           const tx = p.x + p.vx * age, ty = p.y + Math.min(0, p.vy) * age;   // (sideways it carries on along its path, and up when it is jumping; a fall is not carried on, so it is never sunk into the crate it is landing on)
           if (p.qx === undefined || Math.abs(tx - p.qx) > 220 || Math.abs(ty - p.qy) > 220) { p.qx = tx; p.qy = ty; }
           else {
@@ -503,6 +503,7 @@ function simTick() {
     for (const p of room.players.values()) {
       if (!p.has || p.ws.readyState !== 1) continue;
       if (!p.dver) plankSend(room, w.see, p);   // (someone who has just arrived is told how every plank lies, along with everything else)
+      if (!p.dver) { p.looked0 = false; if (p.pend) p.pend.clear(); }   // (a new look: they are told once it has all been sent)
       if (!p.dver || resend) { p.dver = new Map(); p.more = 1; }
       const full = p.more || room.fullAll || Math.abs(p.x - p.sx) >= 200 || Math.abs(p.y - p.sy) >= 200;
       const pend = p.pend || (p.pend = new Set()), lastS = p.lastS || (p.lastS = new Map());
@@ -510,16 +511,17 @@ function simTick() {
         p.sv = room.verN; p.sx = p.x; p.sy = p.y; p.more = 0;
         for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (p.dver.get(d.uid) === d.ver) continue; const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y; if (Math.abs(x - p.x) > 1900 || Math.abs(y - p.y) > 1500) continue; pend.add(d); }
       } else for (let i = 0; i < chg.length; i++) { const d = chg[i]; if (p.dver.get(d.uid) === d.ver) continue; if (!(d.burn > 0) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue; pend.add(d); }
-      if (!pend.size) continue;
-      if (health.level >= 1 && room.tk % 2) continue;   // (a server that cannot keep up tells everybody half as often)
+      if (!pend.size) { if (!p.looked0 && full) { p.looked0 = true; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); } continue; }
+      if (!p.looked0 ? false : room.tk % (health.level >= 1 ? 4 : 2)) continue;   // (30 times a second, which each device fills in smoothly; a server that cannot keep up halves that. A player who has just arrived gets everything as fast as it goes)
       // each moment only so much is sent (a slow connection is never flooded): what has waited longest and what is closest goes first, so nothing is ever left waiting while other things are told again and again. In between, each device carries everything on along its path, falling as it falls
-      const cap = pend.size > 200 ? 100 : SEND_CAP; let out;
+      const cap = !p.looked0 || pend.size > 200 ? 200 : SEND_CAP; let out;
       if (pend.size <= cap) { out = [...pend]; pend.clear(); }
       else {
         const L = []; for (const d of pend) { const dx = Math.abs(d.x - p.x), dy = Math.abs(d.y - p.y), near = dx < 450 && dy < 350 ? 4 : dx < 900 && dy < 700 ? 2 : 1; const ls = lastS.get(d); d._sc = (ls === undefined ? 1e6 : room.tk - ls) * near; L.push(d); }
         L.sort((a, b) => b._sc - a._sc); out = L.slice(0, cap); for (const d of out) pend.delete(d);
       }
       if (out.length >= 90) p.more = 0;   // (a big first look: the device knows more is on its way while it gets 90 or more at a time)
+      if (!p.looked0 && !pend.size) { p.looked0 = true; p.readyDue = true; }   // (everything around them has now been sent: they may come in)
       for (const d of out) lastS.set(d, room.tk);
       if (lastS.size > 4000) { for (const [d] of lastS) if (d.burn > 0 || Math.abs(d.x - p.x) > 2500) lastS.delete(d); }
       if (!out.length) continue;
@@ -532,6 +534,7 @@ function simTick() {
         p.dver.set(d.uid, d.ver);
       });
       p.ws.send(buf, { binary: true });
+      if (p.readyDue) { p.readyDue = false; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); }   // (planks told once more right before, so nothing is shown at an old angle)   // (the whole world around them has been sent: the loading screen can go)
     }
     chg.length = 0; room.fullAll = false;
   }
@@ -769,6 +772,8 @@ wss.on('connection', (ws, req) => {
       for (const q of rows) { const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone) continue; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.rot = q[3]; d.burn = 0; } d.vx = d.vy = 0; d.av = 0; d.nap = true; d.rest = 0; d.ver = ++r.verN; }
       if (Array.isArray(m.s)) for (const q of m.s.slice(0, 200)) { if (!Array.isArray(q) || q.length !== 2 || !q.every(Number.isFinite)) continue; const e = w.see.find(o => o.uid === (q[0] >>> 0)); if (e) { e.ang = Math.max(-0.36, Math.min(0.36, q[1])); e.av = 0; } }
       for (const q of r.players.values()) q.dver = null;   // (everyone is told where it all is again)
+    } else if (m.t === 'ping') {   // (the device measuring how long a message takes there and back)
+      p.ws.send(JSON.stringify({ t: 'pong', c: m.c }));
     } else if (m.t === 'use') {   // a device's copy of this month's counts, from before the server restarted
       if (!p.useGot) { p.useGot = true; useMerge(m.u); }
     } else if (m.t === 'wseed') {   // the server forgot this world (a restart with nothing saved): a player who was here brings back its memory, in parts

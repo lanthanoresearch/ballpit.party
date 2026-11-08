@@ -93,7 +93,7 @@
       // (everything the physics keeps on a thing is there from the start, so every crate and ball has the same make-up and the sums over hundreds of them stay fast)
       im: 0, ii: 0, nap: false, sleep: false, skip: false, sq: 0, _i: 0, _dyn: false, _far: false, farT: 0, _spr: 0, _im: 0, _ii: 0, _bx: 0, _by: 0, _bw: 0, _pl: false, _x0: 0, _y0: 0, onp: false, _ice: false, _pad: null, _N: 0, _F: 0, dm: 0, pcd: 0, pdir: 0,
       _uf: null, _isl: 0, _wR: 0, _wOk: false, _wP: null, _wN: null, _wT: 0, _sh: null, _shT: 0, _hT: 0, _onP: false, _pri: 0, coast: false, _tx: 0, _ty: 0, _tT: 0, rsT: 0, bnN: 0, mineT: 0, keep: 0, hold: 0,
-      uid: undefined, hx: undefined, hy: undefined, ver: undefined, rest: undefined, errT: undefined, brec: undefined, bought: undefined, svx: undefined, svy: undefined, sav: undefined, lav: undefined, owned: undefined, lx: undefined, ly: undefined, lr: undefined, lb: undefined, bl: undefined, bfx: undefined, bx: undefined, by: undefined, ownT: undefined, ownBad: undefined, ownTouch: undefined, ownLeft: undefined, ownBy: undefined, ownAt: undefined, ownLong: undefined, oh: undefined, lvx: undefined, lvy: undefined, lst: undefined, lostAt: undefined, lostSent: undefined, wasMine: undefined, sv: undefined, srvU: undefined, soft: undefined, px: undefined, py: undefined, pr: undefined, handAt: undefined, gone: undefined, m0: undefined, local: undefined, _pv: undefined, dver: undefined, seen: undefined, _sc: 0, _tpx: undefined, _svp: undefined, hb: undefined };   // (and what the server and the players' devices keep on it, left empty until used)
+      uid: undefined, hx: undefined, hy: undefined, ver: undefined, rest: undefined, errT: undefined, brec: undefined, bought: undefined, svx: undefined, svy: undefined, sav: undefined, lav: undefined, owned: undefined, lx: undefined, ly: undefined, lr: undefined, lb: undefined, bl: undefined, bfx: undefined, bx: undefined, by: undefined, ownT: undefined, ownBad: undefined, ownTouch: undefined, ownLeft: undefined, ownBy: undefined, ownAt: undefined, ownLong: undefined, oh: undefined, lvx: undefined, lvy: undefined, lst: undefined, lostAt: undefined, lostSent: undefined, wasMine: undefined, sv: undefined, srvU: undefined, soft: undefined, px: undefined, py: undefined, pr: undefined, handAt: undefined, gone: undefined, m0: undefined, local: undefined, _pv: undefined, dver: undefined, seen: undefined, _sc: 0, _tpx: undefined, _svp: undefined, hb: undefined, pred: 0, predT: 0, predA: 0, _ppN: 0, ph: undefined, pcx: 0, pcy: 0, _lsv: undefined };   // (and what the server and the players' devices keep on it, left empty until used)
     { const I = r ? 0.5 * d.m * r * r : d.m * (hw * hw + hw * hw) / 3; d.im = 1 / d.m; d.ii = kind === 5 || kind === 6 ? 0 : 1 / I; }
     d.hx = d.x; d.hy = d.y; d.uid = hash32('p' + kind + ',' + Math.round(x) + ',' + Math.round(y)); if (w.dynBy) { while (w.dynBy.has(d.uid)) d.uid = (d.uid + 1) >>> 0; w.dynBy.set(d.uid, d); }
     w.dyn.push(d); return d;
@@ -174,6 +174,12 @@
     if (w.ropes) for (const r of w.ropes) if (!r.gone && d.x > r.ax - ex && d.x < r.bx + ex) { const q = ropeAt(r, d.x); if (Math.abs(d.y + ey - q.y) < 12) return true; }
     for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o === d || o.burn > 0 || Math.abs(o.x - d.x) > 80 || o.y <= d.y || o.y - d.y > 80) continue; const e = o.r || Math.max(o.hw, o.hh) * 1.42; if (Math.abs(o.x - d.x) < e + ex && o.y - e < d.y + ey + 4) return true; }
     return false;
+  }
+  function ballOff(w, b, d) {   // your ball is put back outside something the server holds where it is (instead of that thing being pushed into you)
+    let h; if (d.k === 'b') { h = circBox(shapeOf(d), b.x, b.y, R); if (!h) return false; } else { const dx = b.x - d.x, dy = b.y - d.y, d2 = dx * dx + dy * dy, rr = R + d.r; if (d2 >= rr * rr) return false; const dd = Math.sqrt(d2) || 0.001; h = [0, 0, dd - rr, d2 ? dx / dd : 0, d2 ? dy / dd : -1]; }
+    const pen = -h[2]; if (pen <= 0.3) return false; const nx = h[3], ny = h[4];
+    if (!boxHits(w, b.x + nx * pen, b.y + ny * pen, R - 3, R - 3)) { b.x += nx * pen; b.y += ny * pen; }
+    const vn = b.vx * nx + b.vy * ny; if (vn < 0) { b.vx -= vn * nx; b.vy -= vn * ny; } return true;
   }
   function outOfBall(w, b, skip) {   // shown the server's picture: nothing is ever drawn inside your own ball (the server keeps everything out of it too, only a moment later on a slow connection)
     const L = w.cand || w.dyn;
@@ -488,7 +494,7 @@
       const rnA = c.rax * c.ny - c.ray * c.nx, rnB = c.rbx * c.ny - c.rby * c.nx, tx = c.ny, ty = -c.nx, rtA = c.rax * ty - c.ray * tx, rtB = c.rbx * ty - c.rby * tx;
       const kn = ima + imb + iia * rnA * rnA + iib * rnB * rnB, kt = ima + imb + iia * rtA * rtA + iib * rtB * rtB;
       c.mn = kn > 0 ? 1 / kn : 0; c.mt = kt > 0 ? 1 / kt : 0;
-      c.bias = BAUM * inv * Math.max(0, -c.sep - SLOP); if (c.pp && c.bias > 150) c.bias = 150;   // (something found inside a player is eased out of them, never flung away: on a slow connection the server can find a player overlapping things they have not really reached)
+      c.bias = BAUM * inv * Math.max(0, -c.sep - SLOP); if (c.pp && c.bias > 300) c.bias = 300; if (c.pp && c.b._ppN > 1) c.bias = 0;   // (caught between two players: neither shoves it through the other)   // (something found inside a player is eased out of them, never flung away: on a slow connection the server can find a player overlapping things they have not really reached)
       const vAx = a ? a.vx - a.av * c.ray : c.kvx, vAy = a ? a.vy + a.av * c.rax : c.kvy, vBx = b.vx - b.av * c.rby, vBy = b.vy + b.av * c.rbx, vn = (vBx - vAx) * c.nx + (vBy - vAy) * c.ny;
       let pr = -1; if (b._wOk) { const wp = b._wP; for (let q = 0; q < wp.length; q += 3) if (wp[q] === c.key) { pr = q; break; } }
       if (c.mk) { const vt0 = (vBx - vAx) * tx + (vBy - vAy) * ty; if (Math.abs(vt0) > 40) c.mu = c.mk; }   // (something already sliding slides on more easily than it takes to get it going: a resting crate grips, a pushed one glides)
@@ -661,7 +667,7 @@
       if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
       if (fol && w.seeOwned && !(d.mineT > 0) && !(d.hold > 0) && onOwnedPlank(w, d)) { d.mineT = 0.3; d.nap = false; }   // (what rides on a plank this device is turning is worked out here too, so they move together)
-      if (fol && !(d.mineT > 0 || d.keep > 0 || d.coast)) { d.sleep = true; continue; }
+      if (fol && !(d.mineT > 0 || d.keep > 0 || d.coast || d.pred > 0)) { d.sleep = true; continue; }
       if (fol && w.see.length && !d.coast) claimPlanks(w, d);   // (and a plank that something this device is moving is touching is turned here too: the two are worked out together, never one here and one on the server)   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
       d.sleep = false;
       if (d.nap && movingP.length && movingP.some(s => Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 80)) { d.nap = false; d.st = 0; }   // (a plank that moves wakes what rests on it)
@@ -685,12 +691,13 @@
       if (w.see.length && plankContacts(w, d, sh)) d._pl = true;
       if (w.ropes.length) ropeContacts(w, d, sh);
       const e = d.r || Math.max(sh.ex, sh.ey);
+      d._ppN = 0;
       if (w.pb && !d.coast) for (let q = 0; q < w.pb.length; q++) {   // a player's ball is solid to everything: nothing is pushed into it or squeezed into it, however much is piled around (only the player's own moving pushes things, as before)
         const pb = w.pb[q]; if (Math.abs(pb.x - d.x) > e + R + 4 || Math.abs(pb.y - d.y) > e + R + 4) continue;
         const px = pb._px || (pb._px = { k: 'o', r: R, x: 0, y: 0, vx: 0, vy: 0, av: 0, kind: -1, uid: (0xFFFFF000 + q) >>> 0, _im: 0, _ii: 0, _bx: 0, _by: 0, _bw: 0, m: PM });
         px.x = pb.x; px.y = pb.y; const n0 = nCT;
         SPECX = 10; const hit = pairContacts(d, px, sh, px, false, w); SPECX = BSPEC;   // (looked at well before it touches, so even something dropping fast stops on the player instead of sinking in)
-        if (hit) for (let k = n0; k < nCT; k++) { CT[k].pp = true; CT[k].mu = 0; }
+        if (hit) { d._ppN++; for (let k = n0; k < nCT; k++) { CT[k].pp = true; CT[k].mu = 0; } }
       }
       for (const o of H(d.x - e - 2, d.y - e - 2, d.x + e + 2, d.y + e + 2)) {
         if (o === d || o.burn > 0) continue;
@@ -702,6 +709,7 @@
           const moving = Math.abs(d.vx) + Math.abs(d.vy) > 25 || Math.abs(d.av) > 1.5;   // (only something really moving wakes what it touches: a pile that is just settling does not keep waking itself up)
           if (moving && o.nap) wake.push(o);
           if (moving && fol && !w.srvOnly && o.sv !== undefined && !(o.mineT > 0 || o.keep > 0)) { o.mineT = 0.45; o.keep = 1.5; }
+          else if (moving && fol && w.srvOnly && d.pred > 0 && o.sv !== undefined && !(o.hold > 0)) { o.pred = Math.max(o.pred || 0, 0.5); o.sleep = false; }   // (what you push into something else moves that too, right away on your screen)
         }
       }
     }
@@ -761,9 +769,11 @@
       else { const dx = b.x - d.x, dy = b.y - d.y, d2 = dx * dx + dy * dy, rr = R + d.r; if (d2 >= rr * rr) continue; const dd = Math.sqrt(d2) || 0.001; h = [d.x + dx / dd * d.r, d.y + dy / dd * d.r, dd - rr, d2 ? dx / dd : 0, d2 ? dy / dd : -1]; }
       const pen = -h[2], nx = h[3], ny = h[4]; if (pen <= 0) continue;
       if (w.follow && !w.srvOnly && !(d.hold > 0) && !b.remote) { d.mineT = 0.45; d.sleep = false; }
+      if (w.follow && w.srvOnly && !(d.hold > 0) && !b.remote && !kin && d.sv !== undefined) { if (!(d.pred > 0)) { d.nap = false; d.st = 0; d.predA = 0; } d.pred = 0.7; d.predT = 0.25; d.sleep = false; }   // (what you touch reacts on your screen at once, worked out here by the same physics, while the server, which decides, catches up a moment later)
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
-      const held = (w.follow && (w.srvOnly || d.hold > 0)) || (b.own !== undefined && d.ownT > 0);   // (in the shared world every crate and ball is the server's: here it is as solid as a wall, and moves the moment the server has moved it, the same for everybody)
-      if (held && w.follow && !kin && !b.remote && Math.abs(nx) > 0.5 && nx * (b.inVx || 0) < 0) b.pressing = true;   // (the server's crate and yours disagree: it is a wall until they agree again. On the server: the player's own device is already pushing this one)
+      const held = (w.follow && ((w.srvOnly && !(d.pred > 0)) || d.hold > 0)) || (b.own !== undefined && d.ownT > 0);   // (in the shared world every crate and ball is the server's: here it is as solid as a wall, and moves the moment the server has moved it, the same for everybody)
+      if (held && w.follow && !kin && !b.remote && Math.abs(nx) > 0.5 && nx * (b.inVx || 0) < 0) b.pressing = true;
+      else if (!held && d.pred > 0 && w.follow && !kin && !b.remote && Math.abs(nx) > 0.5 && nx * (b.inVx || 0) < 0) b.pushing = true;   // (pushing something your own screen moves: the server is told, so it pushes it just as far)   // (the server's crate and yours disagree: it is a wall until they agree again. On the server: the player's own device is already pushing this one)
       const rx = h[0] - d.x, ry = h[1] - d.y, rn = rx * ny - ry * nx, rt = rx * -nx - ry * ny;
       const vbx = d.vx - (d.av || 0) * ry, vby = d.vy + (d.av || 0) * rx, vy0 = b.vy;
       const vn = (b.vx - vbx) * nx + (b.vy - vby) * ny;
@@ -837,7 +847,7 @@
   }
   // ax: -1/0/1, jheld: jump button held. Set b.jbuf = 0.12 on a jump press.
   function step(b, w, ax, jheld, dt) {
-    b.inVx = ax * (b.boost ? BOOST_V : MAXV); b.pressing = false;   // (how fast you are trying to go: when a shared crate holds you back, the server is told this, and pushes it for you)
+    b.inVx = ax * (b.boost ? BOOST_V : MAXV); b.pressing = false; b.pushing = false;   // (how fast you are trying to go: when a shared crate holds you back, the server is told this, and pushes it for you)
     ev.lava = false; ev.jumped = false; ev.landed = false; ev.bounced = false; ev.splat = false; ev.boosted = false; ev.superJump = false; ev.pad = false; ev.portal = false;
     const tx = Math.floor(b.x / TS), ty = Math.floor(b.y / TS);
     const water = tile(w, tx, ty) === 5;
@@ -974,7 +984,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 127, outOfBall, restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 128, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
