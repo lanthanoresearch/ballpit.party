@@ -602,6 +602,23 @@
   #homeUpd{position:fixed;left:62px;top:12px;top:calc(12px + env(safe-area-inset-top));left:calc(62px + env(safe-area-inset-left));z-index:4;width:42px;height:40px;font-size:20px;cursor:pointer;background:#fff4d8;border:2px solid #2b1d12;color:#2b1d12;box-shadow:2px 3px 0 rgba(43,29,18,.3)}
   #homeUpd:hover{background:#ffe8b0}#homeUpd:active{transform:translateY(1px);box-shadow:1px 2px 0 rgba(43,29,18,.3)}#homeUpd.new{background:#ffd23d}
   #cfText.pre{white-space:pre-line}
+  .cfmid{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px}
+  #srvStat{z-index:31;background:rgba(8,6,16,.8)}
+  .sscard{width:min(480px,100%);text-align:left}
+  .ssrate{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:2px solid var(--line);border-radius:var(--wob);margin:4px 0 10px;background:#262040}
+  .ssrate b{font-size:24px;font-weight:normal;letter-spacing:.5px}.ssrate span{font-size:15px;opacity:.85}
+  .ssrate.r-good{border-color:var(--good)}.ssrate.r-good b{color:var(--good)}
+  .ssrate.r-bad{border-color:var(--accent)}.ssrate.r-bad b{color:var(--accent)}
+  .ssrate.r-really{border-color:#ff8a3d}.ssrate.r-really b{color:#ff8a3d}
+  .ssrate.r-unusable{border-color:var(--bad)}.ssrate.r-unusable b{color:var(--bad)}
+  .ssrate.r-frozen{border-color:#8fb3ff}.ssrate.r-frozen b{color:#8fb3ff}
+  .ssrow{margin:0 0 10px}.sshd{display:flex;justify-content:space-between;gap:10px;font-size:16px}.sshd span{opacity:.8;text-align:right}
+  .ssbar{height:12px;border:2px solid var(--line);border-radius:99px;overflow:hidden;margin:3px 0 2px;background:#14111c}
+  .ssbar i{display:block;height:100%;width:0;background:var(--good);transition:width .4s}
+  .ssbar i.w{background:var(--accent)}.ssbar i.h{background:#ff8a3d}.ssbar i.x{background:var(--bad)}
+  .sssub{font-size:13px;opacity:.7}
+  .ssgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:15px;margin:2px 0 6px}.ssgrid div{display:flex;justify-content:space-between;gap:6px}.ssgrid span{opacity:.7}
+  .ssnote{font-size:13px;opacity:.6;margin:6px 0 0}
   #shareTip{position:fixed;left:62px;top:18px;top:calc(18px + env(safe-area-inset-top));z-index:4;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);padding:4px 12px;font-size:15px;color:#2b1d12}
   #shareTip.hide{display:none}
   #home .scene{position:fixed;z-index:0}#home .hbox{z-index:2}#home .sball{z-index:1}
@@ -644,7 +661,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 126; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 127; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -994,7 +1011,6 @@
     </section>
     <section class="pane" data-pane="more">
       <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small>The how-to-play card</small></span></span><input type="checkbox" id="setIntro"><i></i></label>
-      <button class="btn full" id="btnRefresh"><span data-ic="reset"></span>Refresh the game</button>
       <button class="btn full" id="btnWelcome"><span data-ic="help"></span>How to play</button>
       <button class="btn full hide" id="btnInstall"><span data-ic="install"></span>Install the app</button>
       <div class="bkbox"><h4><span data-ic="install"></span>Backup</h4>
@@ -1134,7 +1150,15 @@
 <div id="confirm" class="overlay hide"><div class="card" style="width:min(420px,100%)">
   <h3 id="cfTitle"></h3><p id="cfText"></p>
   <label class="dont hide" id="cfOptWrap"><input type="checkbox" id="cfOpt"><span id="cfOptText"></span></label>
+  <button id="cfMid" class="btn full cfmid hide" type="button"></button>
   <div class="btns"><button id="cfNo">Cancel</button><button id="cfYes" class="danger">Yes</button></div>
+</div></div>
+
+<div id="srvStat" class="overlay hide"><div class="card sscard">
+  <div class="chead"><h3>Server status</h3><button id="ssClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="ssrate" id="ssRate"><b id="ssWord">Checking…</b><span id="ssWhy"></span></div>
+  <div id="ssBody"></div>
+  <p class="ssnote" id="ssNote">Counted by the game server since the start of the month (UTC). Render's dashboard has the exact figures.</p>
 </div></div>
 
 <div id="cpop" class="hide"><canvas id="cpSV" width="204" height="130"></canvas><canvas id="cpHue" width="204" height="16"></canvas>
@@ -2014,10 +2038,23 @@ function followWorld(dt) {
     if (d.burn >= 1e9) { if (!d.lostAt) d.lostAt = t; if (t - d.lostAt < 3000) continue; d.lostAt = 0;   // (lost here first: it stays lost while the server catches up, instead of coming back and burning up all over again; only if the server still has it after a while does it come back)
       d.burn = 0; d.x = s.x; d.y = s.y; d.vx = s.vx; d.vy = s.vy; d.rot = s.rot; d.mineT = 0; d.nap = false; d.rest = 0; continue; }
     if (s.jump) { s.jump = false; if (!(d.mineT > 0 || d.keep > 0) || Math.abs(s.x - d.x) + Math.abs(s.y - d.y) > 60) { d.x = s.x; d.y = s.y; d.rot = s.rot; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.mineT = 0; d.keep = 0; d.hold = 0; d.errT = 0; d.nap = false; d.st = 0; continue; } }   // (when you arrive, or come back to a place, everything is simply where the server has it: nothing slides or snaps into place)
-    const age = Math.min(Math.max(0.06, Math.min(0.25, (s.iv || 0) * 0.0012)), (t - s.t) / 1000), e0 = d.r || d.hw;   // (when the server's updates come slowly, things carry on a little longer in the direction they were going)
+    const air = Math.abs(s.vy) > 40, age = Math.min(air ? 0.3 : Math.max(0.06, Math.min(0.25, (s.iv || 0) * 0.0012)), (t - s.t) / 1000), e0 = d.r || d.hw;   // (between the server's updates, and when one is late, things carry on the way they were going: what is in the air keeps falling (or rising and slowing) as it really would, so nothing stops in mid-air and then rushes to catch up)
     let tx = s.x + s.vx * age, ty = s.y + s.vy * age;
-    if (age > 0 && (tx !== s.x || ty !== s.y) && inSolidAt(w, tx, ty, e0)) { tx = s.x; ty = s.y; }
-    if (age > 0 && (tx !== s.x || ty !== s.y) && w.see.length && intoPlank(w, s.x, s.y, tx, ty, e0)) { tx = s.x; ty = s.y; }   // (nor guess it through a teeter-totter's plank: when the plank stops, so does what rides on it)   // (never guess a position inside the ground)
+    if (Math.abs(s.vy) > 40 && age > 0 && s.ay > 0) { const g = s.ay, tf = Math.max(0, Math.min(age, (900 - s.vy) / g)); ty = s.y + s.vy * age + 0.5 * g * tf * tf + g * tf * (age - tf); }
+    if (age > 0 && (tx !== s.x || ty !== s.y)) {   // (never guessed into the ground or through a teeter-totter's plank: it is carried only as far as it really can go)
+      const bad = (x, y) => inSolidAt(w, x, y, e0) || (w.see.length && intoPlank(w, s.x, s.y, x, y, e0));
+      if (bad(tx, ty)) { let lo = 0, hi = 1; for (let it = 0; it < 6; it++) { const m = (lo + hi) / 2; if (bad(s.x + (tx - s.x) * m, s.y + (ty - s.y) * m)) hi = m; else lo = m; } tx = s.x + (tx - s.x) * lo; ty = s.y + (ty - s.y) * lo; }
+    }
+    let ip = 0, rI = 0;   // things away from you are replayed a moment in the past, along the very path the server gave them (smooth however patchy the connection); what is right by you is shown as it is now, so pushing and bumping it is immediate
+    const hb = d.hb;
+    if (hb && hb.length > 1 && S.b && !(d.mineT > 0 || d.keep > 0)) { const dist = Math.max(Math.abs(d.x - S.b.x), Math.abs(d.y - S.b.y)); ip = dist < 130 ? 0 : dist > 260 ? 1 : (dist - 130) / 130; }
+    if (ip > 0) {
+      const tr = t - netDelay(), L = hb[hb.length - 1]; let ix, iy;
+      if (tr <= hb[0].ts) { ix = hb[0].x; iy = hb[0].y; rI = hb[0].rot; }
+      else if (tr >= L.ts) { const a = Math.min(0.25, (tr - L.ts) / 1000); ix = L.x + L.vx * a; iy = L.y + L.vy * a; rI = L.rot + (L.av || 0) * a; if (inSolidAt(w, ix, iy, e0)) { ix = L.x; iy = L.y; } }
+      else { let k = hb.length - 2; while (k > 0 && hb[k].ts > tr) k--; const A = hb[k], B = hb[k + 1], f = (tr - A.ts) / Math.max(1, B.ts - A.ts); ix = A.x + (B.x - A.x) * f; iy = A.y + (B.y - A.y) * f; rI = A.rot + (B.rot - A.rot) * f; }
+      tx += (ix - tx) * ip; ty += (iy - ty) * ip;
+    }   // (nor guess it through a teeter-totter's plank: when the plank stops, so does what rides on it)   // (never guess a position inside the ground)
     if (s.other && t - s.t < 700) { if (d.mineT > 0 || d.keep > 0) { d.mineT = 0; d.keep = 0; d.owned = false; d.errT = 0; } d.hold = Math.max(d.hold || 0, 0.3); }   // (another player's device has this one: theirs is the picture everybody follows, so this device stops guessing at once, and here it is as solid as a wall)   // (another player's device has this one: theirs is the picture everybody follows, so this device stops guessing at once)
     if (d.mineT > 0) { d.mineT -= dt; d.keep = 1.5; d.ownLong = 0; }
     else if (d.keep > 0) { d.keep -= dt; if (d.owned && Math.abs(d.vx) + Math.abs(d.vy) + Math.abs(d.av || 0) * 10 > 30 && (d.ownLong = (d.ownLong || 0) + dt) < 8) d.keep = Math.max(d.keep, 0.3);   // (what you set going stays yours until it comes to rest: the server follows it all the way, so it never jumps back to an older picture)
@@ -2025,6 +2062,11 @@ function followWorld(dt) {
     let mine = d.mineT > 0 || d.keep > 0;
     if (mine) d.wasMine = true; else if (d.wasMine) { d.wasMine = false; d.handAt = t; }
     if (!mine && d.handAt && s.t < d.handAt) { if (t - d.handAt < 20000) continue; d.handAt = 0; }   // (just let go of: the server has it where this device last said, so it stays put here until the server has something newer to say)
+    if (!mine && !(d.hold > 0) && t - s.t > 110 + (ip > 0 ? netDelay() : 0) && (d.coast || Math.abs(s.vx) + Math.abs(s.vy) > 15 || Math.abs(s.av || 0) > 0.5)) {   // the server's word on something moving is late (a slow or patchy connection): it carries on here by the same physics, falling, landing and rolling as it really does, instead of stopping in mid-air and then rushing to catch up
+      if (!d.coast) { d.coast = true; d.nap = false; d.st = 0; d.vx = s.vx; d.vy = Math.abs(s.vy) > 40 ? Math.min(900, s.vy + P.GRAV * age) : s.vy; d.av = s.av || 0; }
+      if (t - s.t < 1500) continue;
+    }
+    if (d.coast) { d.coast = false; d._tT = 0; }   // (and once the server speaks again it glides over to the server's picture from wherever it got to)
     const ex = tx - d.x, ey = ty - d.y, err = Math.abs(ex) + Math.abs(ey);
     if (mine && d.owned && t - (d.ownAt || 0) < 300) { let he = err; if (d.oh) { he = 1e9; for (const q of d.oh) he = Math.min(he, Math.abs(q[1] - s.x) + Math.abs(q[2] - s.y)); }   // (the server shows where this device said it was a moment ago: it is behind by the time a message takes, which is no error)
       if (he > 60 && t - s.t < 400) { d.ownBad = (d.ownBad || 0) + dt; if (d.ownBad > 0.6) { d.owned = false; d.mineT = 0; d.keep = 0; d.hold = 0.8; d.ownBad = 0; } } else d.ownBad = 0; continue; }   // (yours: the server is following you, so there is nothing to correct)
@@ -2033,12 +2075,15 @@ function followWorld(dt) {
       if (err > (d.mineT > 0 ? 60 : 22)) d.errT = (d.errT || 0) + dt; else d.errT = 0;
       if (d.errT > (d.mineT > 0 ? 0.35 : 0.25)) { d.mineT = 0; d.keep = 0; d.errT = 0; d.hold = 0.8; mine = false; }
     }
-    const tr = s.rot + (s.av || 0) * age;   // (and how it is turned, carried on the same way)
+    const tr0 = s.rot + (s.av || 0) * age, tr = ip > 0 ? tr0 + (rI - tr0) * ip : tr0;   // (and how it is turned, carried on the same way)
     if (err > 240 && !(mine && d.mineT > 0 && err < 400)) { d.x = tx; d.y = ty; if (d.k !== 'o') d.rot = tr; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.mineT = 0; d.keep = 0; continue; }
     const calm = mine && s.vx === 0 && s.vy === 0 && t - s.t > 200 && Math.abs(d.vx) + Math.abs(d.vy) < 40;   // (the server has it at rest and so does this device: they agree on where, quickly)
     if (d.soft > 0) d.soft -= dt;
     const k = 1 - Math.exp(-(calm ? (err < 10 ? 2.5 : 8) : !mine && d.soft > 0 && err < 15 ? 2.5 : !mine && d.hold > 0 ? 9 : mine ? (d.mineT > 0 ? (err < 14 ? 2 : err < 40 ? 6 : err < 100 ? 12 : 24) : (err < 14 ? 3 : err < 40 ? 7 : 14)) : 26) * dt);
-    const x0 = d.x; d.x += ex * k; d.y += ey * k;
+    const x0 = d.x;
+    if (!mine && (air || ip > 0.5) && d._tT && t - d._tT < 100) { const f = 1 - k; d.x = tx + (d.x - d._tx) * f; d.y = ty + (d.y - d._ty) * f; }   // (in the air it moves exactly as the server says it moves, never trailing behind as it falls or flies: only a correction, when the server's word differs from what was carried on, is blended in gently)
+    else { d.x += ex * k; d.y += ey * k; }
+    d._tx = tx; d._ty = ty; d._tT = t;
     if (d.k === 'o') { if (!mine) { d.rot += (d.x - x0) / d.r; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; } continue; }   // (a ball's turning is only how it looks: it always turns the way it is seen to roll, never back toward the server's angle)
     if (!mine) { d.rot += (tr - d.rot) * (1 - Math.exp(-18 * dt)); d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; }
     else if (Math.abs(tr - d.rot) > 0.01) d.rot += (tr - d.rot) * (1 - Math.exp(-(calm ? 8 : err < 14 ? 2 : 5) * dt));
@@ -2825,11 +2870,13 @@ function releaseInputs() {   // entering or leaving full screen cancels touches 
 
 /* ================= UI: popups, settings tabs, drop-downs, colours ================= */
 let cfCb = null, cfOptCb = null;
+let cfMidCb = null;
 function askConfirm(title, text, yes, cb, o) {
   o = o || {};
   $('cfTitle').textContent = title; $('cfText').textContent = text; $('cfYes').textContent = yes; $('cfNo').textContent = o.no || 'Cancel';
   $('cfYes').className = o.yesClass || 'danger'; cfCb = cb; cfOptCb = o.onCheck || null;
   $('cfOptWrap').classList.toggle('hide', !o.check); $('cfOptText').textContent = o.check || ''; $('cfOpt').checked = false;
+  $('cfMid').classList.toggle('hide', !o.mid); if (o.mid) { $('cfMid').innerHTML = (o.midIc ? '<span data-ic="' + o.midIc + '"></span>' : '') + o.mid; fillIcons($('cfMid')); } cfMidCb = o.onMid || null;
   $('confirm').classList.remove('hide');
 }
 function cfClose(yes) {
@@ -2838,6 +2885,7 @@ function cfClose(yes) {
   const f = yes ? cfCb : null; cfCb = null; cfOptCb = null; if (f) f();
 }
 $('cfNo').onclick = () => cfClose(false);
+$('cfMid').onclick = () => { sfx('ui'); if (cfMidCb) cfMidCb(); };
 $('cfYes').onclick = () => cfClose(true);
 
 function maybeAskBots() {
@@ -2866,10 +2914,6 @@ $('sback').addEventListener('touchstart', e => { e.preventDefault(); closeSettin
 $('btnSettings').onclick = () => togglePause();
 $('btnCloseSet').onclick = closeSettingsNow;
 $('btnWelcome').onclick = () => { $('settings').classList.add('hide'); showIntro(); };
-$('btnRefresh').onclick = () => {   // same as reloading the page: also checks for a newer version of the game
-  try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(r => { if (r) r.update(); }).catch(() => {}); } catch (e) {}
-  setTimeout(() => location.reload(), 250);
-};
 $('btnRespawn').onclick = () => { resetPress(); };
 
 // tabs
@@ -4225,11 +4269,54 @@ function openVersion() {
     else if (site && site === GAME_V && srv === GAME_V) note = 'Everything is up to date.';
     $('cfText').classList.add('pre'); $('cfText').textContent = lines.join('\n') + (note ? '\n\n' + note : '');
   };
-  askConfirm('Game version', 'Checking…', 'Update everything', () => { $('cfText').classList.remove('pre'); wipeAndReload(); }, { no: 'Close', yesClass: 'go' });
+  askConfirm('Game version', 'Checking…', 'Update everything', () => { $('cfText').classList.remove('pre'); wipeAndReload(); }, { no: 'Close', yesClass: 'go', mid: 'Server status', midIc: 'bolt', onMid: openStatus });
   $('cfText').classList.add('pre');
   Promise.all([siteVersion(), serverVersion()]).then(([a, b]) => { if (!$('confirm').classList.contains('hide')) show(a, b); });
 }
 $('homeUpd').onclick = () => { sfx('ui'); openVersion(); };
+
+/* ----- server status: how much of this month's allowance is left, how hard the server is working, and how it is doing overall ----- */
+let ssTimer = 0, ssBusy = false;
+const ssFmtB = b => b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(b >= 104857600 ? 0 : 1) + ' MB' : Math.round(b / 1024) + ' KB';
+const ssFmtD = d => d >= 99 ? 'the rest of the month' : d >= 1 ? Math.floor(d) + (Math.floor(d) === 1 ? ' day' : ' days') : Math.max(1, Math.round(d * 24)) + ' h';
+function ssBar(title, right, frac, sub, warnAt) {   // one row: a name, a figure, a bar that fills up (green, then yellow, orange and red as it gets close)
+  const f = Math.max(0, Math.min(1, frac || 0)), w = warnAt || 0.7, cl = f >= 0.97 ? 'x' : f >= (1 + w) / 2 ? 'h' : f >= w ? 'w' : '';
+  return '<div class="ssrow"><div class="sshd"><b>' + title + '</b><span>' + right + '</span></div><div class="ssbar"><i class="' + cl + '" style="width:' + (f * 100).toFixed(1) + '%"></i></div>' + (sub ? '<div class="sssub">' + sub + '</div>' : '') + '</div>';
+}
+function ssShow(st, err) {
+  const R = { good: ['Good', 'r-good'], bad: ['Bad', 'r-bad'], 'really bad': ['Really bad', 'r-really'], unusable: ['Unusable', 'r-unusable'], frozen: ['Frozen', 'r-frozen'] };
+  const box = $('ssRate');
+  if (!st) { box.className = 'ssrate r-frozen'; $('ssWord').textContent = err === 'slow' ? 'Frozen' : 'Not answering'; $('ssWhy').textContent = err === 'slow' ? 'The server took too long to answer' : 'Could not reach the game server (it may be starting up, which takes about a minute)'; $('ssBody').innerHTML = ''; return; }
+  const r = R[st.rating] || R.good; box.className = 'ssrate ' + r[1]; $('ssWord').textContent = r[0];
+  $('ssWhy').textContent = st.why + (st.level ? (st.level >= 2 ? ' · it is working the world out in bigger steps to keep up' : ' · it is sending updates less often to keep up') : '');
+  const bw = st.bandwidth, h = st.hours, bwF = bw.used / bw.limit, dayShare = bw.perDayLeft;
+  const lasts = bw.lastsDays >= st.daysLeft ? 'At this pace it lasts the month' : 'At this pace it runs out in about ' + ssFmtD(bw.lastsDays);
+  let html = '';
+  html += ssBar('Data this month', ssFmtB(bw.used) + ' of ' + ssFmtB(bw.limit) + ' · ' + Math.round(100 - bwF * 100) + '% left', bwF, lasts + ' · ' + ssFmtB(dayShare) + ' a day left to use over ' + ssFmtD(st.daysLeft));
+  html += ssBar('Data today', ssFmtB(bw.today) + ' of about ' + ssFmtB(Math.max(1, dayShare + bw.today)), bw.today / Math.max(1, dayShare + bw.today), 'Sending ' + ssFmtB(bw.outPerSec) + '/s now · receiving ' + ssFmtB(bw.inPerSec) + '/s');
+  html += ssBar('Server hours this month', h.used.toFixed(1) + ' of ' + h.limit + ' h', h.used / h.limit, 'Running for ' + (h.upSec >= 3600 ? Math.floor(h.upSec / 3600) + ' h ' : '') + Math.floor(h.upSec % 3600 / 60) + ' min since it last started (a free server sleeps 15 min after everyone leaves)');
+  const cpuF = st.cpu.used / st.cpu.limit;
+  html += ssBar('Processor', Math.round(cpuF * 100) + '% of what it may use', cpuF, (st.cpu.limit < 1 ? 'Allowed ' + Math.round(st.cpu.limit * 100) + '% of one processor' : 'Allowed ' + st.cpu.limit + ' processor' + (st.cpu.limit > 1 ? 's' : '')), 0.6);
+  html += ssBar('Memory', ssFmtB(st.mem.used) + ' of ' + ssFmtB(st.mem.limit), st.mem.used / st.mem.limit, '', 0.6);
+  const tF = st.tick.ms / st.tick.budget;
+  html += ssBar('Speed', st.tick.ms.toFixed(1) + ' ms of ' + st.tick.budget + ' ms per update', tF, st.tick.lateMs < 5 ? 'Updates arrive on time (' + (Math.round(1000 / st.tick.budget / 10) * 10) + ' a second, physics ' + st.tick.step + ' steps a second)' : 'Updates are running up to ' + Math.round(st.tick.lateMs) + ' ms late', 0.5);
+  html += '<div class="ssgrid"><div><span>Players online</span><b>' + st.players + '</b></div><div><span>Worlds in use</span><b>' + st.rooms + '</b></div><div><span>Things in the worlds</span><b>' + st.things + '</b></div><div><span>Moving right now</span><b>' + st.moving + '</b></div></div>';
+  $('ssBody').innerHTML = html;
+}
+function ssPoll() {
+  if ($('srvStat').classList.contains('hide')) { clearInterval(ssTimer); ssTimer = 0; return; }
+  if (ssBusy) return; ssBusy = true;
+  const ac = typeof AbortController === 'function' ? new AbortController() : null, to = setTimeout(() => { if (ac) ac.abort(); }, 5000), t0 = performance.now();
+  fetch(homeBase() + '/status?x=' + Date.now(), { cache: 'no-store', signal: ac ? ac.signal : undefined }).then(r => r.ok ? r.json() : null)
+    .then(st => { ssShow(st && st.bandwidth ? st : null, st ? '' : 'down'); }).catch(() => ssShow(null, performance.now() - t0 > 4500 ? 'slow' : 'down'))
+    .finally(() => { clearTimeout(to); ssBusy = false; });
+}
+function openStatus() {
+  $('ssWord').textContent = 'Checking…'; $('ssWhy').textContent = ''; $('ssRate').className = 'ssrate'; $('ssBody').innerHTML = '';
+  $('srvStat').classList.remove('hide'); ssPoll(); if (!ssTimer) ssTimer = setInterval(ssPoll, 2000);
+}
+$('ssClose').onclick = () => { sfx('ui'); $('srvStat').classList.add('hide'); };
+$('srvStat').addEventListener('pointerdown', e => { if (e.target === $('srvStat')) $('srvStat').classList.add('hide'); });
 setInterval(checkBuild, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) checkBuild(); });
 
 /* ----- names: everyone has one, and it can change once a day ----- */
@@ -4852,16 +4939,26 @@ function otherPred(o, d) {   // where somebody else is d seconds after their las
   }
   pp.x = cx; pp.y = cy; outOfThings(pp); return pp;
 }
+const NET = { off: null, jit: 20, jitHi: 40, iv: 30 };   // (the server's clock against this one's, how unevenly packets arrive, and how often each thing is told about)
+function netDelay() { return Math.max(40, Math.min(240, NET.jit * 0.8 + NET.jitHi * 0.5 + NET.iv * 1.3)); }   // (things away from you are shown this far in the past, so their motion is replayed exactly as it happened instead of being guessed at)
 function dynBin(dv, len, ty) {
   const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (S.slot & 0xFFFF)) return;
   if (!S.gotDyn) S.firstDynAt = performance.now(); S.gotDyn = true;   // where the shared crates, balls (type 4) and planks (type 5) are right now (only once it has really been taken in)
   const n = dv.getUint8(3), t = performance.now();
-  if (ty === 4 || ty === 6) {
-    const st = ty === 6 ? 23 : 21; S.dynFull = n >= 90;   // (a full packet: more of the world is still on its way)
+  if (ty === 4 || ty === 6 || ty === 9) {
+    const st = ty === 4 ? 21 : 23, base = ty === 9 ? 8 : 4; S.dynFull = n >= 90;   // (a full packet: more of the world is still on its way)
+    let ts = t;
+    if (ty === 9) {   // (the server's own clock: when this was true there. The quickest packet so far sets how the two clocks line up; how much later the rest arrive is the connection's wobble)
+      const sT = dv.getUint32(4, true), dd = t - sT; let c = NET.off;
+      if (c === null || dd < c - 4.2e9 || dd > c + 4.2e9) c = dd; else if (dd < c) c = dd; else c += 0.02;   // (drifts slowly, so a clock that runs a little differently is followed)
+      NET.off = c; ts = sT + c; const lag = t - ts; NET.jit += (Math.min(400, lag) - NET.jit) * 0.05; NET.jitHi = Math.max(lag, NET.jitHi * 0.995);
+    }
     for (let k = 0; k < n; k++) {
-      const o = 4 + k * st; if (o + st > len) break;
+      const o = base + k * st; if (o + st > len) break;
       const d = w.dynBy.get(dv.getUint32(o, true)); if (!d) continue;
-      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, other: dv.getUint8(o + 20) & 2, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0, jump: !d.sv || (t - d.sv.t > 1500 && !(d.mineT > 0 || d.keep > 0)) }; d.srvOk = true;   // (the first word on something, or the first in a long while: it is simply put there)
+      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, other: dv.getUint8(o + 20) & 2, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0, jump: !d.sv || (t - d.sv.t > 1500 && !(d.mineT > 0 || d.keep > 0)), ay: 0 }; d.srvOk = true;
+      { const o0 = d._svp, n = d.sv; n.ts = ts; if (o0 && t - o0.t > 4 && t - o0.t < 300) { const a = (n.vy - o0.vy) / ((t - o0.t) / 1000); n.ay = Math.max(0, Math.min(P.GRAV, (o0.ay || 0) * 0.4 + a * 0.6)); } d._svp = n;
+        if (ty === 9) { const h = d.hb || (d.hb = []); if (n.jump) h.length = 0; if (h.length && n.ts <= h[h.length - 1].ts) n.ts = h[h.length - 1].ts + 1; h.push(n); if (h.length > 10) h.shift(); if (h.length > 1) { const iv = ts - h[h.length - 2].ts; if (iv > 0 && iv < 400) NET.iv += (iv - NET.iv) * 0.03; } } }   // (the last few words on it, each with its moment, to replay its path smoothly)   // (how fast it is really speeding up as it falls: free in the air, or held back rolling down a slope)   // (the first word on something, or the first in a long while: it is simply put there)
     }
   } else {
     const st = ty === 7 ? 16 : 12;
@@ -4876,7 +4973,7 @@ function onBin(buf) {   // compact position update: [1][slot u16] then per playe
   const dv = new DataView(buf);
   const ty = buf.byteLength >= 3 ? dv.getUint8(0) : 0;
   if (ty === 2 || ty === 3) { trackBin(dv, buf.byteLength, ty); return; }
-  if (ty === 4 || ty === 5 || ty === 6 || ty === 7) { dynBin(dv, buf.byteLength, ty); return; }
+  if (ty === 4 || ty === 5 || ty === 6 || ty === 7 || ty === 9) { dynBin(dv, buf.byteLength, ty); return; }
   if (ty !== 1) return;
   const sl = dv.getUint16(1, true);
   const okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;
@@ -4945,6 +5042,7 @@ function onMsg(m) {
     case 'dr': applyDoors(m); return;
     case 'update': forceUpdate(); return;   // the server only lets people with the same version in
     case 'welcome':
+      { let u = null; try { u = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); } catch (e) {} if (u && u.m) setTimeout(() => wsSend({ t: 'use', u }), 600); }   // (the server's monthly counts, kept here in case it restarted and forgot them)
       { let c = null; try { c = JSON.parse(localStorage.getItem('ballrun4_fsub') || 'null'); } catch (e) {} if (c && typeof c === 'object') { const l = Object.keys(c).slice(0, 64).map(k => [k, c[k]]); if (l.length) setTimeout(() => wsSend({ t: 'fsubs', l }), 400); } }
       if (m.lobby) {   // connected from the main menu: friends work, but you are not in a world
         lobbyOn = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); net.online = m.online; net.peak = m.peak;
@@ -5006,6 +5104,7 @@ function onMsg(m) {
     case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
     case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'wsnap': if (!party) saveSnap(m); break;
+    case 'use': { let o = null; try { o = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); } catch (e) {} const u = m.u; if (u && u.m && (!o || !o.m || u.m > o.m || (u.m === o.m && u.out >= (o.out || 0)))) { try { localStorage.setItem('ballrun4_use', JSON.stringify(u)); } catch (e) {} } break; }
     case 'fsub': case 'fsubs': {   // where the server reaches friends' devices: kept here too, so a server that was restarted can be told again
       let c = {}; try { c = JSON.parse(localStorage.getItem('ballrun4_fsub') || '{}') || {}; } catch (e) { c = {}; }
       if (m.t === 'fsub' && typeof m.pub === 'string') c[m.pub] = m.s; else (m.l || []).forEach(e => { if (Array.isArray(e) && typeof e[0] === 'string') c[e[0]] = e[1]; });
@@ -5063,7 +5162,7 @@ setInterval(() => sendPos(false), 30);
 const OWN_NEAR = 90;   // (another player this close to it: the server decides instead)
 function contested(d) { let c = false; others.forEach(o => { if (!c && o.seen && !o.dead && Math.abs(o.cx - d.x) < OWN_NEAR && Math.abs(o.cy - d.y) < OWN_NEAR) c = true; }); return c; }
 setInterval(() => {
-  if (!S.world || !S.world.follow || !online || !ws || ws.readyState !== 1 || S.mode !== 'play') return;
+  if (!S.world || !S.world.follow || S.world.srvOnly || !online || !ws || ws.readyState !== 1 || S.mode !== 'play') return;   // (in a shared world the server works out every crate and ball: this device never claims one)
   const out = [], lost = [], t = performance.now();
   for (const d of S.world.dyn) {
     if (d.burn < 1e8) d.lostSent = false; else if (d.burn >= 1e9 && !d.lostSent && !d.gone && (d.owned || d.mineT > 0 || d.keep > 0) && d.sv && !d.sv.burn && !(d.sv.other && t - d.sv.t < 700)) { d.lostSent = true; lost.push([d.uid >>> 0, Math.round(d.bx || 0), Math.round(d.by || 0)]); }   // (something this device was moving for everybody was lost here: the server is told at once, so it is gone for everyone, and never comes back)
@@ -5787,7 +5886,7 @@ function frame(nowT) {
       if (slowT > 2 && rq > 0.5) { if (nowT - rqUp < 6000) rqWait = Math.min(120, rqWait * 2); rq = Math.max(0.5, rq - 0.25); slowT = 0; fastT = 0; ftAvg = 16.7; }
       else if (fastT > rqWait && rq < 1) { rq = Math.min(1, rq + 0.25); fastT = 0; rqUp = nowT; } }   // (sharper again only after it has kept up for a while, and if that was too much, it waits longer before trying again)
     acc += dt;
-    while (acc >= STEP) { update(STEP); acc -= STEP; }
+    let nSt = 0; while (acc >= STEP && nSt < 4) { update(STEP); acc -= STEP; nSt++; } if (acc >= STEP) acc = 0;   // (a device that falls behind never tries to catch up all at once, which would only make the next frame slower still)
     if (S.mode === 'fade' && nowT - S.fadeT0 > 2300) loadMap(S.pending, S.pendingNext);
     if (settings.low && nowT - lastDraw < 30) return;       // low-power mode: ~30 fps
     render(Math.min(0.1, (nowT - lastDraw) / 1000), nowT); lastDraw = nowT;

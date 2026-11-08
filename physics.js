@@ -92,7 +92,8 @@
       m: r ? (r * r) / 256 : (4 * hw * hw) / 1296, kind,
       // (everything the physics keeps on a thing is there from the start, so every crate and ball has the same make-up and the sums over hundreds of them stay fast)
       im: 0, ii: 0, nap: false, sleep: false, skip: false, sq: 0, _i: 0, _dyn: false, _far: false, farT: 0, _spr: 0, _im: 0, _ii: 0, _bx: 0, _by: 0, _bw: 0, _pl: false, _x0: 0, _y0: 0, onp: false, _ice: false, _pad: null, _N: 0, _F: 0, dm: 0, pcd: 0, pdir: 0,
-      _uf: null, _isl: 0, _wR: 0, _wOk: false, _wP: null, _wN: null, _wT: 0, _sh: null, _shT: 0, _hT: 0, _onP: false, _pri: 0, bnN: 0, mineT: 0, keep: 0, hold: 0 };
+      _uf: null, _isl: 0, _wR: 0, _wOk: false, _wP: null, _wN: null, _wT: 0, _sh: null, _shT: 0, _hT: 0, _onP: false, _pri: 0, coast: false, _tx: 0, _ty: 0, _tT: 0, rsT: 0, bnN: 0, mineT: 0, keep: 0, hold: 0,
+      uid: undefined, hx: undefined, hy: undefined, ver: undefined, rest: undefined, errT: undefined, brec: undefined, bought: undefined, svx: undefined, svy: undefined, sav: undefined, lav: undefined, owned: undefined, lx: undefined, ly: undefined, lr: undefined, lb: undefined, bl: undefined, bfx: undefined, bx: undefined, by: undefined, ownT: undefined, ownBad: undefined, ownTouch: undefined, ownLeft: undefined, ownBy: undefined, ownAt: undefined, ownLong: undefined, oh: undefined, lvx: undefined, lvy: undefined, lst: undefined, lostAt: undefined, lostSent: undefined, wasMine: undefined, sv: undefined, srvU: undefined, soft: undefined, px: undefined, py: undefined, pr: undefined, handAt: undefined, gone: undefined, m0: undefined, local: undefined, _pv: undefined, dver: undefined, seen: undefined, _sc: 0, _tpx: undefined, _svp: undefined, hb: undefined };   // (and what the server and the players' devices keep on it, left empty until used)
     { const I = r ? 0.5 * d.m * r * r : d.m * (hw * hw + hw * hw) / 3; d.im = 1 / d.m; d.ii = kind === 5 || kind === 6 ? 0 : 1 / I; }
     d.hx = d.x; d.hy = d.y; d.uid = hash32('p' + kind + ',' + Math.round(x) + ',' + Math.round(y)); if (w.dynBy) { while (w.dynBy.has(d.uid)) d.uid = (d.uid + 1) >>> 0; w.dynBy.set(d.uid, d); }
     w.dyn.push(d); return d;
@@ -165,6 +166,14 @@
     for (const [lx, ly] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) g = Math.min(g, seg(sh.x + sh.c * lx * sh.hw - sh.s * ly * sh.hh, sh.y + sh.s * lx * sh.hw + sh.c * ly * sh.hh, 0));
     for (let k = -1; k <= 1; k += 2) { const h = circBox(sh, s.cx + k * s.hl * c, s.cy + k * s.hl * sn, SEE_TH + 60); if (h) g = Math.min(g, h[2] + 60); }
     return g;
+  }
+  function restsOn(w, d) {   // (is anything holding this up: the ground, a plank, a rope bridge or another thing under it)
+    const sh = d.r ? null : shapeOf(d), ex = d.r || sh.ex, ey = d.r || sh.ey;
+    if (boxHits(w, d.x, d.y + 3, ex - 1, ey)) return true;
+    for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (Math.abs(s.cx - d.x) < s.hl + ex + 10 && Math.abs(s.cy - d.y) < s.hl + ey + 30) return true; }
+    if (w.ropes) for (const r of w.ropes) if (!r.gone && d.x > r.ax - ex && d.x < r.bx + ex) { const q = ropeAt(r, d.x); if (Math.abs(d.y + ey - q.y) < 12) return true; }
+    for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o === d || o.burn > 0 || Math.abs(o.x - d.x) > 80 || o.y <= d.y || o.y - d.y > 80) continue; const e = o.r || Math.max(o.hw, o.hh) * 1.42; if (Math.abs(o.x - d.x) < e + ex && o.y - e < d.y + ey + 4) return true; }
+    return false;
   }
   function outOfBall(w, b, skip) {   // shown the server's picture: nothing is ever drawn inside your own ball (the server keeps everything out of it too, only a moment later on a slow connection)
     const L = w.cand || w.dyn;
@@ -304,7 +313,7 @@
      (so what sits on a crate rides along with it unless it is yanked out from under), weight adds up through a pile, and
      nothing is ever turned to face a particular way: a crate rests on whatever face, edge or slope it comes to rest on. */
   const PLAYER_WT = 240;   // (on a teeter-totter you weigh as much as four small crates)
-  const SPEC = 24;   // (how far ahead a plank looks for what it is about to hit)
+  const SPEC = 24, BSPEC = 1.5; let SPECX = BSPEC;   // (how far ahead a plank looks for what it is about to hit)
   const SLOP = 0.6, BAUM = 0.3, VEL_IT = 10, POS_IT = 4, PM = 4, PM_PUSH = 4, F_PUSH = 9000;   // PM: how heavy your ball is when it pushes things (a crate weighs 1, a big crate 4)
   const LIN_SLEEP = 8, ANG_SLEEP = 0.1, SLEEP_T = 0.5, MAXSPD = 1400, MAXAV = 28;
   const SK_PX = 1, SK_NX = 2, SK_PY = 4, SK_NY = 8;   // tile faces that are hidden by a neighbouring solid tile (never pushed out through those)
@@ -401,14 +410,12 @@
   const isBall = d => d.k === 'o';
   function matPair(c, a, b) {   // what two touching things are like together
     const ba = isBall(a), bb = isBall(b);
-    if (!ba && (a.kind === 5 || a.kind === 6) && c.ny < -0.6) { b._spr = a.kind === 6 ? 2 : 1; a.sq = 0.25; } else if (!bb && (b.kind === 5 || b.kind === 6) && c.ny > 0.6) { a._spr = b.kind === 6 ? 2 : 1; b.sq = 0.25; }   // (a spring crate throws whatever lands or rests on top of it)
     if (ba || bb) { c.mu = (a.kind === 4 || b.kind === 4) ? 0.12 : 0.35; c.e = 0.15; c.eT = 160; }
     else c.mu = 0.6;
   }
   function matTile(c, d, t) {
     const ice = t === 3;
-    if (t === 6 && c.ny < -0.6) d._spr = Math.max(d._spr || 0, 1);   // (a spring in the ground throws whatever is on it)
-    if (isBall(d)) { c.mu = ice ? 0.02 : 0.7; if (t === 6) { c.e = 0.85; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 150; } else { c.e = 0.3; c.eT = 250; } }
+    if (isBall(d)) { c.mu = ice ? 0.02 : 0.7; c.e = 0.3; c.eT = 250; }   // (springs only throw players: a crate or ball just sits on one like on the ground)
     else { c.mu = ice ? 0.015 : Math.abs(c.nx) > 0.7 ? 0.8 : 0.55; c.mk = ice ? 0.015 : 0.25; { const h = Math.PI / 2, q = (((d.rot || 0) % h) + h) % h; if (Math.min(q, h - q) > 0.35) c.mk = 0; }   /* (only a crate sliding flat on a face glides; one standing on an edge or corner keeps its grip, so it stays leaning) */ if (t === 6) { c.e = d.hw > 20 ? 0.5 : 0.68; c.eT = 130; c.eCap = BOUNCE * 0.85; c.eMin = 160; } }
   }
   function tileContacts(w, d, sh) {
@@ -428,14 +435,16 @@
     return lava;
   }
   function pairContacts(a, b, sa, sb, dynB, w) {   // a is always moved by these contacts; b only if dynB (otherwise it is held where it is)
-    const out = [];
     const A = dynB ? a : b, B = dynB ? b : a, SA = dynB ? sa : sb, SB = dynB ? sb : sa;   // (a thing that is held still is always the first of the two)
-    if (!isBall(A) && !isBall(B)) obbHit(SA, SB, 0, out);
-    else if (isBall(A) && isBall(B)) {
-      const dx = B.x - A.x, dy = B.y - A.y, d2 = dx * dx + dy * dy, rr = A.r + B.r; if (d2 >= rr * rr) return 0;
-      const d = Math.sqrt(d2) || 0.001, nx = d2 ? dx / d : 0, ny = d2 ? dy / d : -1; out.push([A.x + nx * A.r, A.y + ny * A.r, d - rr, nx, ny, 0]);
-    } else if (isBall(B)) { const h = circBox(SA, B.x, B.y, B.r); if (h) out.push([h[0], h[1], h[2], h[3], h[4], 0]); }
-    else { const h = circBox(SB, A.x, A.y, A.r); if (h) out.push([h[0] + h[3] * h[2], h[1] + h[4] * h[2], h[2], -h[3], -h[4], 0]); }
+    if (isBall(A) && isBall(B)) {   // (two balls: the commonest by far, worked out without making anything new)
+      const dx = B.x - A.x, dy = B.y - A.y, d2 = dx * dx + dy * dy, rr = A.r + B.r, rs = rr + SPECX; if (d2 >= rs * rs) return 0;   // (balls are looked at a hair before they touch, so a pile of them rests still instead of trembling between touching and not)
+      const d = Math.sqrt(d2) || 0.001, nx = d2 ? dx / d : 0, ny = d2 ? dy / d : -1; const h = PCO; h[0] = A.x + nx * A.r; h[1] = A.y + ny * A.r; h[2] = d - rr; h[3] = nx; h[4] = ny; h[5] = 0;
+      const c = addC(dynB ? A : null, B, h, (A.uid >>> 0) * 4096); matPair(c, A, B); if (!dynB) { const rx = h[0] - A.x, ry = h[1] - A.y; c.kvx = (A.vx || 0) - (A.av || 0) * ry; c.kvy = (A.vy || 0) + (A.av || 0) * rx; }
+      return 1;
+    }
+    const out = [];
+    if (!isBall(A) && !isBall(B)) obbHit(SA, SB, 0, out); else if (isBall(B)) { const h = circBox(SA, B.x, B.y, B.r + SPECX); if (h) out.push([h[0], h[1], h[2] + SPECX, h[3], h[4], 0]); }
+    else { const h = circBox(SB, A.x, A.y, A.r + SPECX); if (h) { const sp = h[2] + SPECX; out.push([h[0] + h[3] * sp, h[1] + h[4] * sp, sp, -h[3], -h[4], 0]); } }
     for (const h of out) { const c = addC(dynB ? A : null, B, h, (A.uid >>> 0) * 4096 + h[5]); matPair(c, A, B); if (!dynB) { const rx = h[0] - A.x, ry = h[1] - A.y; c.kvx = (A.vx || 0) - (A.av || 0) * ry; c.kvy = (A.vy || 0) + (A.av || 0) * rx; } }
     return out.length;
   }
@@ -479,7 +488,7 @@
       const rnA = c.rax * c.ny - c.ray * c.nx, rnB = c.rbx * c.ny - c.rby * c.nx, tx = c.ny, ty = -c.nx, rtA = c.rax * ty - c.ray * tx, rtB = c.rbx * ty - c.rby * tx;
       const kn = ima + imb + iia * rnA * rnA + iib * rnB * rnB, kt = ima + imb + iia * rtA * rtA + iib * rtB * rtB;
       c.mn = kn > 0 ? 1 / kn : 0; c.mt = kt > 0 ? 1 / kt : 0;
-      c.bias = BAUM * inv * Math.max(0, -c.sep - SLOP);
+      c.bias = BAUM * inv * Math.max(0, -c.sep - SLOP); if (c.pp && c.bias > 150) c.bias = 150;   // (something found inside a player is eased out of them, never flung away: on a slow connection the server can find a player overlapping things they have not really reached)
       const vAx = a ? a.vx - a.av * c.ray : c.kvx, vAy = a ? a.vy + a.av * c.rax : c.kvy, vBx = b.vx - b.av * c.rby, vBy = b.vy + b.av * c.rbx, vn = (vBx - vAx) * c.nx + (vBy - vAy) * c.ny;
       let pr = -1; if (b._wOk) { const wp = b._wP; for (let q = 0; q < wp.length; q += 3) if (wp[q] === c.key) { pr = q; break; } }
       if (c.mk) { const vt0 = (vBx - vAx) * tx + (vBy - vAy) * ty; if (Math.abs(vt0) > 40) c.mu = c.mk; }   // (something already sliding slides on more easily than it takes to get it going: a resting crate grips, a pushed one glides)
@@ -621,7 +630,7 @@
   }
   function nearZone(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= (q.tx0 - 14) * TS && x <= (q.tx1 + 15) * TS && y >= (q.ty0 - 10) * TS && y <= (q.ty1 + 10) * TS) return true; } return false; }   // (the map's own toys around the start or the finish belong there: they never burn up in it)
   function inStart(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= q.tx0 * TS && x <= (q.tx1 + 1) * TS && y >= q.ty0 * TS && y <= (q.ty1 + 1) * TS) return true; } return false; }   // (a start or finish zone)
-  let dynTick = 0, hStamp = 0; const DYN_BUDGET = 600, CELL = 64, HB = [], NONE = [];
+  let dynTick = 0, hStamp = 0; const DYN_BUDGET = 600, CELL = 64, HB = [], NONE = [], BALLSH = { x: 0, y: 0 }, PCO = [];
   function stepDyn(w, dt) {
     dynTick++; wTick = w.tick = (w.tick || 0) + 1;
     stepSee(w, dt); stepRopes(w, dt);
@@ -633,26 +642,27 @@
       for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0 || d.nap || !nearF(f, d.x, d.y, FR, FR)) continue; near.push(d); }
       if (near.length > DYN_BUDGET) { for (const d of near) d._pri = distF(f, d) - (d.gr && Math.abs(d.vx) + Math.abs(d.vy) < 40 ? 0 : 1e6); near.sort((a, b) => a._pri - b._pri); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }   // (only with a truly huge crowd moving at once: what is still falling or flying is always worked out, and the farthest of what is only settling waits a moment)
     }
-    let pbMove = null; if (w.pb) for (const p of w.pb) { if (p._lx === undefined || Math.abs(p.x - p._lx) + Math.abs(p.y - p._ly) > 0.3) (pbMove || (pbMove = [])).push(p); p._lx = p.x; p._ly = p.y; }
+    let pbMove = null; if (w.pb) for (const p of w.pb) { if (p._lx === undefined || Math.abs(p.x - p._lx) + Math.abs(p.y - p._ly) > 0.5) (pbMove || (pbMove = [])).push(p); p._lx = p.x; p._ly = p.y; }
     const act = [], chk = [], movingP = w.see.length ? w.see.filter(s => s.moving > 0 && !s.gone) : NONE;
     if (!w._grid || w._grid.size > 30000) { w._grid = new Map(); w._gUsed = []; }   // (which things are where, in squares of 64px: kept from moment to moment and only emptied, so nothing new has to be made each time)
     const grid = w._grid, used = w._gUsed; for (let i = 0; i < used.length; i++) used[i].length = 0; used.length = 0;
     const put = d => { const e = d.r || Math.max(d.hw, d.hh) * 1.42; for (let cx = Math.floor((d.x - e) / CELL); cx <= Math.floor((d.x + e) / CELL); cx++) for (let cy = Math.floor((d.y - e) / CELL); cy <= Math.floor((d.y + e) / CELL); cy++) { const k = (cx + 4) * 65536 + cy + 4; let g = grid.get(k); if (!g) grid.set(k, g = []); if (!g.length) used.push(g); g.push(d); } };
     const H = (x0, y0, x1, y1) => { const r = HB; r.length = 0; const st = ++hStamp; for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) { const g = grid.get((cx + 4) * 65536 + cy + 4); if (g) for (let j = 0; j < g.length; j++) { const o = g[j]; if (o._hT !== st) { o._hT = st; r.push(o); } } } return r; };
+    let farAwake = false; if (f) for (let i = 0; i < L.length; i++) { const d = L[i]; if (!d.nap && !(d.burn > 0) && !nearF(f, d.x, d.y, FR, FR)) { farAwake = true; break; } }   // (unless something far away is still moving: then everything is looked at, so it bumps into what is there)
     for (let i = 0; i < L.length; i++) {
       const d = L[i]; d._i = i; d._dyn = false;
       if (d.burn > 0) { if (d.burn < 1e8) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; d.av = 0; d.rot = 0; } } continue; }
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
       if (d.sq > 0) d.sq = Math.max(0, d.sq - dt);
-      put(d);
       d._far = !!f && !nearF(f, d.x, d.y, FR, FR);
+      if (!d._far || !d.nap || farAwake || nearF(f, d.x, d.y, FR + 300, FR + 300)) put(d);   // (what rests far from everybody is not even looked at: nothing near anybody can touch it)
       if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if (d.farT > 30) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
       if (d._far && d.nap) { d.sleep = true; continue; }   // far from everybody and at rest: nothing to work out
       if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
       if (fol && w.seeOwned && !(d.mineT > 0) && !(d.hold > 0) && onOwnedPlank(w, d)) { d.mineT = 0.3; d.nap = false; }   // (what rides on a plank this device is turning is worked out here too, so they move together)
-      if (fol && !(d.mineT > 0 || d.keep > 0)) { d.sleep = true; continue; }
-      if (fol && w.see.length) claimPlanks(w, d);   // (and a plank that something this device is moving is touching is turned here too: the two are worked out together, never one here and one on the server)   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
+      if (fol && !(d.mineT > 0 || d.keep > 0 || d.coast)) { d.sleep = true; continue; }
+      if (fol && w.see.length && !d.coast) claimPlanks(w, d);   // (and a plank that something this device is moving is touching is turned here too: the two are worked out together, never one here and one on the server)   /* (in the shared world nothing moves here by itself, not even before the server has said where it is) */   // (in the shared world: only what you are touching is worked out here, at once; everything else is shown where the server has it)
       d.sleep = false;
       if (d.nap && movingP.length && movingP.some(s => Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 80)) { d.nap = false; d.st = 0; }   // (a plank that moves wakes what rests on it)
       if (d.nap && w.ropes.length && w.ropes.some(r => r.moving > 0 && !r.gone && d.x > r.ax - 40 && d.x < r.bx + 40 && Math.abs(ropeAt(r, d.x).y - d.y) < 90 && Math.abs(ropeAt(r, d.x).vy) > 15)) { d.nap = false; d.st = 0; }   // (and so does a rope bridge that swings)
@@ -664,7 +674,7 @@
     w.nAct = act.length;
     if (!act.length) { turnSee(w, dt); return; }
     nCT = 0; plankUsed = [];
-    const S = o => { if (o._shT !== wTick || o._sh === null) { o._sh = o.r ? { x: o.x, y: o.y } : shapeOf(o); o._shT = wTick; } return o._sh; };
+    const S = o => { if (o.r) return BALLSH; if (o._shT !== wTick || o._sh === null) { o._sh = shapeOf(o); o._shT = wTick; } return o._sh; };   // (a ball needs no shape worked out: it is just its middle and its size)
     const wake = [], lavaOf = new Set();
     for (const d of act) d._spr = 0;
     for (const d of act) {   // gravity, then every contact
@@ -675,11 +685,12 @@
       if (w.see.length && plankContacts(w, d, sh)) d._pl = true;
       if (w.ropes.length) ropeContacts(w, d, sh);
       const e = d.r || Math.max(sh.ex, sh.ey);
-      if (w.pb) for (let q = 0; q < w.pb.length; q++) {   // a player's ball is solid to everything: nothing is pushed into it or squeezed into it, however much is piled around (only the player's own moving pushes things, as before)
+      if (w.pb && !d.coast) for (let q = 0; q < w.pb.length; q++) {   // a player's ball is solid to everything: nothing is pushed into it or squeezed into it, however much is piled around (only the player's own moving pushes things, as before)
         const pb = w.pb[q]; if (Math.abs(pb.x - d.x) > e + R + 4 || Math.abs(pb.y - d.y) > e + R + 4) continue;
         const px = pb._px || (pb._px = { k: 'o', r: R, x: 0, y: 0, vx: 0, vy: 0, av: 0, kind: -1, uid: (0xFFFFF000 + q) >>> 0, _im: 0, _ii: 0, _bx: 0, _by: 0, _bw: 0, m: PM });
         px.x = pb.x; px.y = pb.y; const n0 = nCT;
-        if (pairContacts(d, px, sh, px, false, w)) for (let k = n0; k < nCT; k++) { CT[k].pp = true; CT[k].mu = 0; }
+        SPECX = 10; const hit = pairContacts(d, px, sh, px, false, w); SPECX = BSPEC;   // (looked at well before it touches, so even something dropping fast stops on the player instead of sinking in)
+        if (hit) for (let k = n0; k < nCT; k++) { CT[k].pp = true; CT[k].mu = 0; }
       }
       for (const o of H(d.x - e - 2, d.y - e - 2, d.x + e + 2, d.y + e + 2)) {
         if (o === d || o.burn > 0) continue;
@@ -688,9 +699,9 @@
         if (o._dyn) { pairContacts(d, o, sh, S(o), true, w); continue; }
         o._im = 0; o._ii = 0;
         if (pairContacts(d, o, sh, S(o), false, w)) {   // touching something that is resting (or, in the shared world, something the server is moving): it wakes up if this is moving
-          const moving = !((d.st || 0) > 0.25) || Math.abs(d.vx) + Math.abs(d.vy) > 30;
+          const moving = Math.abs(d.vx) + Math.abs(d.vy) > 25 || Math.abs(d.av) > 1.5;   // (only something really moving wakes what it touches: a pile that is just settling does not keep waking itself up)
           if (moving && o.nap) wake.push(o);
-          if (moving && fol && o.sv !== undefined && !(o.mineT > 0 || o.keep > 0)) { o.mineT = 0.45; o.keep = 1.5; }
+          if (moving && fol && !w.srvOnly && o.sv !== undefined && !(o.mineT > 0 || o.keep > 0)) { o.mineT = 0.45; o.keep = 1.5; }
         }
       }
     }
@@ -701,10 +712,6 @@
     for (const pa of plankUsed) { const sp = pa.s; sp.leave = (sp.ang >= SEE_MAX - 1e-6 && sp._T < -1) || (sp.ang <= -SEE_MAX + 1e-6 && sp._T > 1); }   // (a plank resting at one end only lifts off when what is on it now pushes it the other way)
     plankUsed = [];
     for (const d of act) {   // move
-      if (d._spr && d.vy > -400 && !(d.kind === 5 || d.kind === 6)) {   // on a spring: up it goes, like you do, and always a little to one side or the other (so nothing bounces on the same spot for ever)
-        const n = (d.bnN = (d.bnN || 0) + 1), u = (hash32('j' + (d.uid >>> 0) + ':' + n) % 2001) / 1000 - 1;
-        d.vy = -(d._spr === 2 ? OBJ_SUPER : OBJ_BOUNCE); d.vx += (u < 0 ? -1 : 1) * (18 + 30 * Math.abs(u)); d.av += u * 1.5; d.nap = false; d.st = 0;
-      }
       if (Math.abs(d.vx) > MAXSPD) d.vx = Math.sign(d.vx) * MAXSPD; if (Math.abs(d.av) > MAXAV) d.av = Math.sign(d.av) * MAXAV;
       d._x0 = d.x; d._y0 = d.y;
       d.x += (d.vx + d._bx) * dt; d.y += (d.vy + d._by) * dt; d.rot += (d.av + d._bw) * dt;
@@ -775,7 +782,7 @@
           if (Math.abs(nx) > 0.5 && kb > 0) cap = Math.min(cap, Math.max(0, (vlim - vb) / kb));
         }
         const j = Math.min(jf, cap);
-        if (free) { d.vx -= j * nx * im; d.vy -= j * ny * im; d.av -= j * rn * ii; d.st = 0; }
+        if (free) { d.vx -= j * nx * im; d.vy -= j * ny * im; d.av -= j * rn * ii; if (vn < -40 || (Math.abs(nx) > 0.5 && Math.abs(b.vx) > 20)) d.st = 0; }   // (only a real knock or push keeps it from settling: just standing or leaning on a pile lets it come to rest under you)
         b.vx += j * nx / pm; b.vy += j * ny / pm;
         if (free && d.k === 'o' && j > 0) {   // your ball grips a ball it pushes, the way two rolling balls do (so one squeezed between you and another never gets spun backwards into you)
           const tx = ny, ty = -nx, wp = b.vx / R, px = -wp * (-ny * R), py = wp * (-nx * R);   // (your ball rolls: its surface where they touch moves with its spin)
@@ -967,7 +974,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 126, outOfBall, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 127, outOfBall, restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
