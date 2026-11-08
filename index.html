@@ -622,6 +622,8 @@
   #ssLive{margin-top:8px}
   #codeBox{z-index:32;background:rgba(8,6,16,.8)}.codecard{width:min(360px,100%);text-align:left}.codehint{margin:2px 0 8px;font-size:15px;opacity:.85}
   .codebad{color:var(--bad);font-size:14px;margin:6px 0 0}#codeBox .btns{margin-top:12px}
+  #stLine{display:flex;flex-wrap:wrap;gap:2px 8px;align-self:flex-start;max-width:100%;padding:2px 7px;font-size:12px;line-height:1.3;color:var(--ink);background:rgba(20,17,30,.62);border-radius:7px;font-variant-numeric:tabular-nums;pointer-events:none;white-space:nowrap}
+  #stLine span{opacity:.6;margin-left:3px;font-size:11px}#stLine b{font-weight:normal}#stLine b.q0{color:var(--good)}#stLine b.q1{color:var(--accent)}#stLine b.q2{color:#ff8a3d}#stLine b.q3{color:var(--bad)}
   #liveHud{position:fixed;left:12px;top:72px;z-index:25;width:236px;max-width:calc(100vw - 16px);background:rgba(20,17,30,.92);border:2px solid var(--line);border-radius:12px;color:var(--ink);font-size:13px;line-height:1.35;box-shadow:0 6px 18px rgba(0,0,0,.45);touch-action:none;-webkit-user-select:none;user-select:none}
   .lhhead{display:flex;align-items:center;gap:6px;padding:5px 6px 5px 9px;cursor:grab;border-bottom:1px solid rgba(255,255,255,.12)}.lhhead:active{cursor:grabbing}.lhhead b{font-weight:normal;font-size:14px;flex:1}
   .lhgrip{opacity:.35;letter-spacing:-2px}.lhx{background:none;border:0;padding:2px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--ink);opacity:.8}.lhx .ic{width:16px;height:16px}
@@ -673,7 +675,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 128; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 130; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -860,6 +862,7 @@
     </div>
   </div>
   <canvas id="mm" width="170" height="110"></canvas>
+  <div id="stLine" class="hide" aria-live="off"></div>
 </div>
 <div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
 <div id="hr">
@@ -964,6 +967,7 @@
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div>
       <label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="flag"></span><span><b>Finish arrow in private worlds</b><small>On: an arrow on screen always points to the finish. Off: the finish only shows on the map</small></span></span><input type="checkbox" id="setFinArrow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="search"></span><span><b>Show stats</b><small>Tiny numbers in the corner, under the map</small></span></span><input type="checkbox" id="setStats"><i></i></label><div class="dep sub" data-dep="stats"><div><label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Frame rate</b><small>How many pictures a second your screen draws</small></span></span><input type="checkbox" id="setStFps"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Ping</b><small>How long a message takes to the server and back</small></span></span><input type="checkbox" id="setStPing"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="clock"></span><span><b>Buffer</b><small>How far behind other players and things are shown, to keep them smooth</small></span></span><input type="checkbox" id="setStBuf"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Connection speed</b><small>Data coming in and going out each second</small></span></span><input type="checkbox" id="setStData"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="gear"></span><span><b>Server load</b><small>How hard the game server is working</small></span></span><input type="checkbox" id="setStSrv"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Conflicts</b><small>Times your screen and the server did not match</small></span></span><input type="checkbox" id="setStConf"><i></i></label></div></div>
       <h4><span data-ic="tag"></span> Name icons</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Robot icon on bots</b><small>Over a bot's ball in the game</small></span></span><input type="checkbox" id="setBotMark"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Person icon on players</b><small>Over every real player's ball in the game</small></span></span><input type="checkbox" id="setPeopleMark"><i></i></label>
@@ -1268,6 +1272,7 @@ function defaults() {
     tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
+    stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
     keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
@@ -1294,7 +1299,7 @@ function normalize() {
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -2084,16 +2089,20 @@ function followWorld(dt) {
       tx += (ix - tx) * ip; ty += (iy - ty) * ip;
     }   // (nor guess it through a teeter-totter's plank: when the plank stops, so does what rides on it)   // (never guess a position inside the ground)
     if (d.pred > 0) {   // you are touching it (or pushed it into this one): it moves here at once, by the same physics the server uses, but never gets more than a short way ahead of where the server has it; so what you push answers instantly, and what everybody sees stays the same thing
+      if (!d.predA) d.predS = t; if (d.predT === 0.25) d.touchT = t;   // (when this push began, and when you last touched it)
+      const saw = T => (s.ts || 0) >= T + NET.rtt + 40 || NET.lastTs >= T + NET.rtt + 60 || (NET.pongC >= T + 70 && t - NET.pongAt > 110) || t > T + 2500;   // (has the server's answer to a touch at that moment come back yet? on a good connection it has long before any of this matters; on a slow or patchy one, until it has, the server's picture is from before you touched it and says nothing about the push)
+      if (t - NET.pingAt > 150 && t - d.touchT > NET.rtt && !saw(d.touchT)) netPing();   // (the answer is late: a quick ping tells when the server has had it, since messages keep their order)
       d.pred -= dt; if (d.predT > 0) d.predT -= dt; d.predA = (d.predA || 0) + dt;
-      const ex = d.x - tx, ey = d.y - ty, e = Math.hypot(ex, ey), L = d.predA < 0.45 ? 34 : 8 + Math.min(26, Math.hypot(s.vx, s.vy) * 0.13);   // (right as you start pushing it answers at once; after that it stays only as far ahead as the server's own motion allows, so if the server holds it still (someone pushing back), it stays still here too)
+      const ex = d.x - tx, ey = d.y - ty, e = Math.hypot(ex, ey), L = d.predA < 0.45 || !saw(d.predS) ? 34 : 8 + Math.min(26, Math.hypot(s.vx, s.vy) * 0.13);   // (right as you start pushing it answers at once; after that it stays only as far ahead as the server's own motion allows, so if the server holds it still (someone pushing back), it stays still here too)
       if (s !== d._lsv) { d._lsv = s; if (e > 70) NET.conflict(e, e > 220 ? 'snap' : 'push'); d.vx += (s.vx - d.vx) * 0.4; d.vy += (s.vy - d.vy) * 0.4; d.av += ((s.av || 0) - d.av) * 0.4; }   // (each word from the server also steers how fast it goes here, so the two never drift apart)
       if (e > 220) { d.x = tx; d.y = ty; d.vx = s.vx; d.vy = s.vy; }   // (far apart: the server's picture, at once)
       else if (e > L) {   // (a little ahead of the server is fine; further and it waits for it, and so do you if you are pushing it)
         const k = L / e, nx = tx + ex * k, ny = ty + ey * k;
         if (!inSolidAt(w, nx, ny, e0) && !(w.see.length && intoPlank(w, d.x, d.y, nx, ny, e0))) { d.x = nx; d.y = ny; } else { d.x = tx; d.y = ty; }
         const ux = ex / e, uy = ey / e, va = d.vx * ux + d.vy * uy, vs = s.vx * ux + s.vy * uy; if (va > vs) { d.vx -= (va - vs) * ux; d.vy -= (va - vs) * uy; }
-      } else if (!(d.predT > 0) && e > 1.5) { const f = 1 - Math.exp(-5 * dt); d.x -= ex * f; d.y -= ey * f; }   // (let go: it settles onto the server's picture)
+      } else if (!(d.predT > 0) && e > 1.5 && saw(d.touchT)) { const f = 1 - Math.exp(-5 * dt); d.x -= ex * f; d.y -= ey * f; }   // (let go: it settles onto the server's picture)
       if (S.b && !(S.dead > 0)) P.ballOff(w, S.b, d);   // (and it is never inside your ball: if the server holds it back, so are you)
+      if (d.pred <= 0 && !saw(d.touchT)) d.pred = 0.02;   // (a nudge stays where you put it until the server's answer is back, so it never slides back and then forward again)
       if (d.pred <= 0) { d.pred = 0; d._tT = 0; }
       continue;
     }
@@ -3027,7 +3036,7 @@ function syncUI() {
   nameUI();
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
-    ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg']]
+    ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); $('todDesc').textContent = TODS[settings.tod];
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
@@ -3040,6 +3049,7 @@ function syncUI() {
 function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); sfx($(id).checked ? 'on' : 'off'); if (fn) fn(); }; }
 bindToggle('setTags', 'tags'); bindToggle('setFinArrow', 'finArrow'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
 bindToggle('setBotMark', 'botMark'); bindToggle('setPeopleMark', 'peopleMark'); bindToggle('setBotMsg', 'botMsg'); bindToggle('setPeopleMsg', 'peopleMsg'); bindToggle('setPower', 'powerJump', () => { if (S.b && !settings.powerJump) { S.b.jm = 0; S.b.jfill = false; } applyTouchUI(); applyDeps(); }); bindToggle('setBotAsk', 'botAsk'); bindToggle('setMmPlayers', 'mmPlayers'); bindToggle('setMmBots', 'mmBots');
+bindToggle('setStats', 'stats', () => { applyDeps(); statsKick(); }); ['Fps', 'Ping', 'Buf', 'Data', 'Srv', 'Conf'].forEach(k => bindToggle('setSt' + k, 'st' + k, statsKick));
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
@@ -3162,7 +3172,7 @@ const DEPS = {
   boostbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn') && !settings.boostAuto,
   boost: () => settings.boost, power: () => settings.powerJump, touchgest: () => showTouch() && settings.scheme !== 'buttons',
   mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => settings.bots, '!bots': () => !settings.bots,
-  minimap: () => settings.minimap, sfx: () => settings.sfx, music: () => settings.music !== 'none'
+  minimap: () => settings.minimap, stats: () => settings.stats, sfx: () => settings.sfx, music: () => settings.music !== 'none'
 };
 function applyDeps() {
   const list = document.querySelectorAll('.dep');
@@ -4336,7 +4346,9 @@ function ssShow(st, err) {
   let html = '';
   html += ssBar('Data this month', ssFmtB(bw.used) + ' of ' + ssFmtB(bw.limit) + ' · ' + Math.round(100 - bwF * 100) + '% left', bwF, lasts + ' · ' + ssFmtB(dayShare) + ' a day left to use over ' + ssFmtD(st.daysLeft));
   html += ssBar('Data today', ssFmtB(bw.today) + ' of about ' + ssFmtB(Math.max(1, dayShare + bw.today)), bw.today / Math.max(1, dayShare + bw.today), 'Sending ' + ssFmtB(bw.outPerSec) + '/s now · receiving ' + ssFmtB(bw.inPerSec) + '/s');
-  html += ssBar('Server hours this month', h.used.toFixed(1) + ' of ' + h.limit + ' h', h.used / h.limit, 'Running for ' + (h.upSec >= 3600 ? Math.floor(h.upSec / 3600) + ' h ' : '') + Math.floor(h.upSec % 3600 / 60) + ' min since it last started (a free server sleeps 15 min after everyone leaves)');
+  const upTxt = 'Running for ' + (h.upSec >= 3600 ? Math.floor(h.upSec / 3600) + ' h ' : '') + Math.floor(h.upSec % 3600 / 60) + ' min since it last started';
+  if (h.limit) html += ssBar('Server hours this month', h.used.toFixed(1) + ' of ' + h.limit + ' h', h.used / h.limit, upTxt + ' (a free server sleeps 15 min after everyone leaves)');
+  else html += ssBar('Server hours this month', h.used.toFixed(1) + ' h · no limit', 0, upTxt);   // (a paid server has no hour limit)
   const cpuF = st.cpu.used / st.cpu.limit;
   html += ssBar('Processor', Math.round(cpuF * 100) + '% of what it may use', cpuF, (st.cpu.limit < 1 ? 'Allowed ' + Math.round(st.cpu.limit * 100) + '% of one processor' : 'Allowed ' + st.cpu.limit + ' processor' + (st.cpu.limit > 1 ? 's' : '')), 0.6);
   html += ssBar('Memory', ssFmtB(st.mem.used) + ' of ' + ssFmtB(st.mem.limit), st.mem.used / st.mem.limit, '', 0.6);
@@ -4377,7 +4389,7 @@ const LH = { on: false, st: null, stAt: 0, stBusy: false, fr: [], lastF: 0, wors
 try { const q = JSON.parse(localStorage.getItem('ballrun4_hud') || 'null'); if (q && q.on && makerOk) LH.on = true; if (q && typeof q.x === 'number') { LH.x = q.x; LH.y = q.y; } } catch (e) {}
 function lhSave() { try { localStorage.setItem('ballrun4_hud', JSON.stringify({ on: LH.on, x: LH.x, y: LH.y })); } catch (e) {} }
 function lhPlace() { const el = $('liveHud'), r = el.getBoundingClientRect(), W = innerWidth, H = innerHeight; if (LH.x === null) return; const x = Math.max(4, Math.min(W - r.width - 4, LH.x)), y = Math.max(4, Math.min(H - Math.min(r.height, 60) - 4, LH.y)); el.style.left = x + 'px'; el.style.top = y + 'px'; }
-function showLive() { const was = LH.on; LH.on = true; lhSave(); $('liveHud').classList.remove('hide'); lhPlace(); lhDraw(); if (!was || !LH.lastF) requestAnimationFrame(lhFrame); }
+function showLive() { const was = LH.on; LH.on = true; lhSave(); $('liveHud').classList.remove('hide'); lhPlace(); lhDraw(); statsKick(); }
 $('ssLive').onclick = () => { sfx('ui'); $('srvStat').classList.add('hide'); $('codeBox').classList.add('hide'); if (typeof cfClose === 'function' && !$('confirm').classList.contains('hide')) cfClose(false); showLive(); };
 $('lhClose').onclick = e => { e.stopPropagation(); sfx('ui'); LH.on = false; lhSave(); $('liveHud').classList.add('hide'); };
 { let drag = null; const hd = $('lhHead');
@@ -4385,22 +4397,39 @@ $('lhClose').onclick = e => { e.stopPropagation(); sfx('ui'); LH.on = false; lhS
   hd.addEventListener('pointermove', e => { if (!drag || e.pointerId !== drag.id) return; LH.x = e.clientX - drag.dx; LH.y = e.clientY - drag.dy; lhPlace(); e.preventDefault(); });
   const end = e => { if (!drag) return; drag = null; lhSave(); }; hd.addEventListener('pointerup', end); hd.addEventListener('pointercancel', end);
   window.addEventListener('resize', () => { if (LH.on) lhPlace(); }); }
+const stOn = () => settings.stats && (settings.stFps || settings.stPing || settings.stBuf || settings.stData || settings.stSrv || settings.stConf);
+const statsWanted = () => LH.on || stOn();
+function statsKick() { if (statsWanted() && !LH.loop) { LH.loop = true; LH.lastF = 0; requestAnimationFrame(lhFrame); } if (!stOn()) { $('stLine').classList.add('hide'); LH.stH = ''; } else lhPoll(); }
 function lhFrame(t) {   // (every frame: how long it took, for the frame rate and the worst hitch)
   if (LH.lastF) { const d = t - LH.lastF; if (d > 0 && d < 1000) { LH.fr.push([t, d]); if (d > LH.worstF) LH.worstF = d; } } LH.lastF = t;
   while (LH.fr.length && t - LH.fr[0][0] > 1000) LH.fr.shift();
-  if (LH.on) requestAnimationFrame(lhFrame); else LH.lastF = 0;
+  if (statsWanted()) requestAnimationFrame(lhFrame); else { LH.lastF = 0; LH.loop = false; }
 }
 function lhPoll() {
   const t = performance.now(), dt = (t - (LH.rateT || t)) / 1000;
   if (dt >= 0.9) { LH.down = (NET.inB - LH.inB0) / dt; LH.up = (NET.outB - LH.outB0) / dt; LH.pks = (NET.inPk - LH.pk0) / dt; LH.inB0 = NET.inB; LH.outB0 = NET.outB; LH.pk0 = NET.inPk; LH.rateT = t; }
   else if (!LH.rateT) { LH.rateT = t; LH.inB0 = NET.inB; LH.outB0 = NET.outB; LH.pk0 = NET.inPk; }
-  if (t - LH.stAt > 2000 && !LH.stBusy && !offlineOn()) { LH.stBusy = true; LH.stAt = t; const ac = typeof AbortController === 'function' ? new AbortController() : null, to = setTimeout(() => { if (ac) ac.abort(); }, 4000);
+  if ((LH.on || (stOn() && settings.stSrv)) && t - LH.stAt > 2000 && !LH.stBusy && !offlineOn()) { LH.stBusy = true; LH.stAt = t; const ac = typeof AbortController === 'function' ? new AbortController() : null, to = setTimeout(() => { if (ac) ac.abort(); }, 4000);
     fetch(homeBase() + '/status?x=' + Date.now(), { cache: 'no-store', signal: ac ? ac.signal : undefined }).then(r => r.ok ? r.json() : null).then(st => { LH.st = st && st.bandwidth ? st : null; LH.stOk = !!LH.st; }).catch(() => { LH.st = null; LH.stOk = false; }).finally(() => { clearTimeout(to); LH.stBusy = false; }); }
-  lhDraw();
+  lhDraw(); stDraw();
+}
+function lhFps() { const fr = LH.fr, n = fr.length; return n > 1 ? Math.round((n - 1) * 1000 / Math.max(1, fr[n - 1][0] - fr[0][0])) : 0; }
+function stDraw() {   // (the tiny numbers under the map, picked in Display settings)
+  const el = $('stLine'); if (!stOn()) { el.classList.add('hide'); LH.stH = ''; return; }
+  const t = performance.now(), fps = lhFps(), on = online && ws && ws.readyState === 1, Q = ['q0', 'q1', 'q2', 'q3'], cl = (v, a, b, c) => v <= a ? 0 : v <= b ? 1 : v <= c ? 2 : 3, it = (v, k, c) => '<div><b class="' + Q[c] + '">' + v + '</b><span>' + k + '</span></div>';
+  const kb = b => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB/s' : (b / 1024).toFixed(1) + ' KB/s';
+  let h = '';
+  if (settings.stFps) h += it(fps || '–', 'fps', fps >= (settings.low ? 28 : 57) ? 0 : fps >= (settings.low ? 24 : 45) ? 1 : fps >= 20 ? 2 : 3);
+  if (settings.stPing) h += on ? it(Math.round(NET.rtt) + ' ms', 'ping', cl(NET.rtt, 80, 160, 300)) : it('–', 'ping', 1);
+  if (settings.stBuf) h += on && followOn() ? it(Math.round(netDelay()) + ' ms', 'buffer', cl(netDelay(), 90, 150, 210)) : it('–', 'buffer', 1);
+  if (settings.stData) h += on ? it('↓' + kb(LH.down) + ' ↑' + kb(LH.up), '', 0) : it('–', 'data', 1);
+  if (settings.stSrv) { const st = LH.st; if (on && st) { const load = st.cpu.used / st.cpu.limit; h += it(Math.round(load * 100) + '%', 'server', st.rating === 'good' ? cl(load, 0.6, 0.85, 1) : st.rating === 'bad' ? 1 : st.rating === 'really bad' ? 2 : 3); } else h += it('–', 'server', on && LH.stOk === false ? 3 : 1); }
+  if (settings.stConf) h += it(NET.conf, NET.conf === 1 ? 'conflict' : 'conflicts', NET.conf ? (t - NET.confAt < 2500 ? 3 : 1) : 0);
+  if (LH.stH !== h) { LH.stH = h; el.innerHTML = h; } el.classList.remove('hide');
 }
 function lhDraw() {
   if (!LH.on) return;
-  const t = performance.now(), fr = LH.fr, n = fr.length, fps = n > 1 ? Math.round(n * 1000 / Math.max(1, fr[n - 1][0] - fr[0][0])) : 0, worst = n ? Math.max(...fr.map(q => q[1])) : 0;
+  const t = performance.now(), fr = LH.fr, n = fr.length, fps = lhFps(), worst = n ? Math.max(...fr.map(q => q[1])) : 0;
   const shared = followOn(), w = S.world, rate = LH.st ? LH.st.rating : null;
   const Q = { ok: 'q0', w: 'q1', h: 'q2', x: 'q3' }, cl = (v, a, b, c) => v <= a ? 'ok' : v <= b ? 'w' : v <= c ? 'h' : 'x', row = (k, v, c) => '<div class="lhrow"><span>' + k + '</span><b' + (c ? ' class="' + (Q[c] || '') + '"' : '') + '>' + v + '</b></div>';
   const kb = b => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : b >= 1024 ? (b / 1024).toFixed(1) + ' KB' : Math.round(b) + ' B';
@@ -4427,10 +4456,12 @@ function lhDraw() {
   else { al.classList.add('hide'); LH.conf0 = cf; }
   const dot = $('lhDot'); dot.className = 'lhdot ' + (rate === 'good' && fps >= 50 ? 'g' : rate === 'bad' || (fps && fps < 50) ? 'b' : rate === 'really bad' ? 'r' : rate ? 'x' : online ? '' : 'b');
 }
-setInterval(() => { if (LH.on) lhPoll(); }, 250);
-setInterval(() => { if (online && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'ping', c: performance.now() })); } catch (e) {} } }, 1000);   // (how long a message takes there and back: used to line up what you push here with what the server did)
-{ const o = showLive; window.__showLive = () => { o(); requestAnimationFrame(lhFrame); }; }
-if (LH.on) { $('liveHud').classList.remove('hide'); requestAnimationFrame(() => { lhPlace(); lhFrame(performance.now()); }); }
+setInterval(() => { if (statsWanted()) lhPoll(); }, 250);
+setTimeout(statsKick, 0);   // (after everything else has loaded)
+function netPing() { if (online && ws && ws.readyState === 1) { const c = performance.now(); NET.pingAt = c; try { ws.send(JSON.stringify({ t: 'ping', c })); } catch (e) {} } }
+setInterval(() => { if (performance.now() - NET.pingAt > 900) netPing(); }, 1000);   // (how long a message takes there and back: used to line up what you push here with what the server did)
+window.__showLive = showLive;
+if (LH.on) { $('liveHud').classList.remove('hide'); requestAnimationFrame(lhPlace); }
 $('srvStat').addEventListener('pointerdown', e => { if (e.target === $('srvStat')) $('srvStat').classList.add('hide'); });
 setInterval(checkBuild, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) checkBuild(); });
 
@@ -5055,7 +5086,7 @@ function otherPred(o, d) {   // where somebody else is d seconds after their las
   }
   pp.x = cx; pp.y = cy; outOfThings(pp); return pp;
 }
-const NET = { off: null, jit: 20, jitHi: 40, iv: 30, rtt: 120, rttLo: 1e9, inB: 0, outB: 0, inPk: 0, conf: 0, confAt: 0, confE: 0, confK: '', snaps: 0,
+const NET = { lastTs: 0, pongC: 0, pongAt: 0, pingAt: 0, off: null, jit: 20, jitHi: 40, iv: 30, rtt: 120, rttLo: 1e9, inB: 0, outB: 0, inPk: 0, conf: 0, confAt: 0, confE: 0, confK: '', snaps: 0,
   conflict(e, k) { if (this.log) this.log.push([Math.round(performance.now()), Math.round(e), k]); this.conf++; this.confAt = performance.now(); this.confE = Math.max(this.confAt - this.lastConfE < 2000 ? this.confE : 0, e); this.lastConfE = this.confAt; this.confK = k; if (k === 'snap') this.snaps++; }, lastConfE: 0 };   // (and, for the live stats, how many times your screen and the server disagreed)   // (the server's clock against this one's, how unevenly packets arrive, and how often each thing is told about)
 function netDelay() { return Math.max(40, Math.min(240, NET.jit * 0.8 + NET.jitHi * 0.5 + NET.iv * 1.3)); }   // (things away from you are shown this far in the past, so their motion is replayed exactly as it happened instead of being guessed at)
 function dynBin(dv, len, ty) {
@@ -5068,7 +5099,7 @@ function dynBin(dv, len, ty) {
     if (ty === 9) {   // (the server's own clock: when this was true there. The quickest packet so far sets how the two clocks line up; how much later the rest arrive is the connection's wobble)
       const sT = dv.getUint32(4, true), dd = t - sT; let c = NET.off;
       if (c === null || dd < c - 4.2e9 || dd > c + 4.2e9) c = dd; else if (dd < c) c = dd; else c += 0.02;   // (drifts slowly, so a clock that runs a little differently is followed)
-      NET.off = c; ts = sT + c; const lag = t - ts; NET.jit += (Math.min(400, lag) - NET.jit) * 0.05; NET.jitHi = Math.max(lag, NET.jitHi * 0.995);
+      NET.off = c; ts = sT + c; if (ts > NET.lastTs) NET.lastTs = ts; const lag = t - ts; NET.jit += (Math.min(400, lag) - NET.jit) * 0.05; NET.jitHi = Math.max(lag, NET.jitHi * 0.995);
     }
     for (let k = 0; k < n; k++) {
       const o = base + k * st; if (o + st > len) break;
@@ -5222,7 +5253,7 @@ function onMsg(m) {
     case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'wsnap': if (!party) saveSnap(m); break;
     case 'ready': S.worldReady = true; break;
-    case 'pong': if (typeof m.c === 'number') { const r = performance.now() - m.c; if (r >= 0 && r < 5000) { NET.rtt = NET.rtt * 0.7 + r * 0.3; NET.rttLo = Math.min(NET.rttLo, r); NET.rttLast = r; } } break;   // (how long a message takes to the server and back)   // (the server has sent everything around you: the world is complete)
+    case 'pong': if (typeof m.c === 'number') { const r = performance.now() - m.c; if (r >= 0 && r < 5000) { NET.rtt = NET.rtt * 0.7 + r * 0.3; NET.rttLo = Math.min(NET.rttLo, r); NET.rttLast = r; } if (m.c > NET.pongC) { NET.pongC = m.c; NET.pongAt = performance.now(); } } break;   // (how long a message takes to the server and back)   // (the server has sent everything around you: the world is complete)
     case 'use': { let o = null; try { o = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); } catch (e) {} const u = m.u; if (u && u.m && (!o || !o.m || u.m > o.m || (u.m === o.m && u.out >= (o.out || 0)))) { try { localStorage.setItem('ballrun4_use', JSON.stringify(u)); } catch (e) {} } break; }
     case 'fsub': case 'fsubs': {   // where the server reaches friends' devices: kept here too, so a server that was restarted can be told again
       let c = {}; try { c = JSON.parse(localStorage.getItem('ballrun4_fsub') || '{}') || {}; } catch (e) { c = {}; }
@@ -5251,11 +5282,13 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
   if (!online || !ws || ws.readyState !== 1 || !S.b || S.mode !== 'play') return;
   const b = S.b, d = (S.dead > 0 || S.away) ? 1 : 0, t = performance.now(), L = lastSend;
   const x = Math.round(b.x), y = Math.round(b.y), g = b.ground ? 1 : 0;
-  const vxs = b.pressing && Math.abs(b.inVx || 0) > Math.abs(b.vx) ? b.inVx : b.vx;   // (pressing against a crate: the speed you are pushing it with)
-  const qx = d ? 0 : clamp(Math.round(vxs / 5), -127, 127) * 5, qy = d ? 0 : clamp(Math.round(b.vy / 20), -127, 127) * 20;
+  const VH = S.vh || (S.vh = []); VH.push(t, b.x); while (VH.length > 4 && t - VH[2] > 110) VH.splice(0, 2);   // (where you were a tenth of a second ago)
   if (b.pressing || b.pushing) b.prT = t;
+  const pv = b.pressing && Math.abs(b.inVx || 0) > Math.abs(b.vx), mvx = VH.length > 2 && t - VH[0] > 40 ? (b.x - VH[1]) / ((t - VH[0]) / 1000) : b.vx;
+  const vxs = pv ? b.inVx : t - (b.prT || -1e9) < 250 ? mvx : b.vx;   // (pressing on something that holds you: how hard you push. Pushing something along: how fast you really go, not the jolts of the push itself, so nobody sees you lunge)   // (pressing against a crate: the speed you are pushing it with)
+  const qx = d ? 0 : clamp(Math.round(vxs / 5), -127, 127) * 5, qy = d ? 0 : clamp(Math.round(b.vy / 20), -127, 127) * 20;
   const pr = !d && t - (b.prT || -1e9) < 250 ? 1 : 0;   // (still pushing something shared: the server pushes it a little ahead, where you will be)
-  if (!force && d === L.d && pr === L.pr) {
+  if (!force && d === L.d && pr === L.pr && !!pv === !!L.pv) {
     const dt = (t - L.t) / 1000;
     if (d) { if (dt < 8) return; }
     else {
@@ -5269,10 +5302,10 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
       }
     }
   }
-  lastSend = { x: x, y: y, vx: qx, vy: qy, g: g, d: d, t: t, pr: pr };
+  lastSend = { x: x, y: y, vx: qx, vy: qy, g: g, d: d, t: t, pr: pr, pv: pv };
   const buf = new ArrayBuffer(12), dv = new DataView(buf);
   dv.setUint8(0, 0x70); dv.setUint16(1, S.slot & 0xFFFF, true); dv.setUint16(3, clamp(x >> 1, 0, 65534), true); dv.setUint16(5, d ? 65535 : clamp(y, 0, 65533), true);
-  dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true); dv.setUint8(11, pr);
+  dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true); dv.setUint8(11, pr | (pv && !d ? 2 : 0));   // (2: that speed is how hard you push something that holds you back, not how fast you move: the server pushes with it, everybody else sees you standing against it)
   ws.send(buf);
 }
 setInterval(() => sendPos(false), 30);

@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 128;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 130;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -66,14 +66,17 @@ function savePeak(sync) {
 }
 
 /* ---------- how the server is doing: its monthly allowance (data sent, hours running), how hard it is working, how late it runs ----------
-   Render's free plan (2026): 750 hours a month for all free services, 5 GB of data sent out a month, 0.1 of a processor and 512 MB of memory.
-   Set BANDWIDTH_GB, INSTANCE_HOURS, CPU_LIMIT or MEM_MB if the plan is different. The counts are kept in the stats file and, since a free
+   Render (2026): the free plan has 750 hours a month, 0.1 of a processor and 512 MB; the $7 plan has half a processor, 512 MB and no hour limit.
+   Both include 5 GB of data sent out a month (on a paid plan, more costs about $0.15 a GB). The processor share is read from the system when it can be;
+   set CPU_LIMIT (for example 0.5), BANDWIDTH_GB, INSTANCE_HOURS or MEM_MB if it shows the wrong plan. The counts are kept in the stats file and, since a free
    server forgets its files when it restarts, every player's device keeps a copy too and hands it back (the larger count wins). */
-const BW_GB = +process.env.BANDWIDTH_GB || 5, HOURS_LIMIT = +process.env.INSTANCE_HOURS || 750;
+const BW_GB = +process.env.BANDWIDTH_GB || 5;
+let CPU_KNOWN = true;
 function cgroupNum(files) { for (const fp of files) { try { const t = fs.readFileSync(fp, 'utf8').trim(); if (t) return t; } catch (e) {} } return ''; }
 const CPU_LIMIT = (() => { if (+process.env.CPU_LIMIT) return +process.env.CPU_LIMIT; const v2 = cgroupNum(['/sys/fs/cgroup/cpu.max']); if (v2) { const [q, pd] = v2.split(/\s+/); if (q !== 'max' && +q > 0 && +pd > 0) return +q / +pd; }
   const q1 = +cgroupNum(['/sys/fs/cgroup/cpu/cpu.cfs_quota_us', '/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us']), p1 = +cgroupNum(['/sys/fs/cgroup/cpu/cpu.cfs_period_us', '/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_period_us']); if (q1 > 0 && p1 > 0) return q1 / p1;
-  return process.env.RENDER ? 0.1 : Math.max(1, require('os').cpus().length); })();
+  CPU_KNOWN = false; return process.env.RENDER ? 0.5 : Math.max(1, require('os').cpus().length); })();
+const PAID = CPU_LIMIT > 0.15, HOURS_LIMIT = +process.env.INSTANCE_HOURS || (PAID ? Infinity : 750);   // (a paid server has no monthly hour limit)
 const MEM_LIMIT = (() => { if (+process.env.MEM_MB) return +process.env.MEM_MB * 1048576; const v = +cgroupNum(['/sys/fs/cgroup/memory.max', '/sys/fs/cgroup/memory/memory.limit_in_bytes']); if (v > 0 && v < 1e15) return v; return process.env.RENDER ? 512 * 1048576 : require('os').totalmem(); })();
 const monthKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 7), dayKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 10);
 let usage = { m: monthKey(), out: 0, in: 0, sec: 0, day: dayKey(), dayOut: 0 };
@@ -93,8 +96,8 @@ setInterval(() => {   // once a second: data rates, how much of the processor it
   const t = Date.now(), dt = (t - netNow.t) / 1000; netNow.rOut = netNow.out / dt; netNow.rIn = netNow.in / dt; netNow.out = netNow.in = 0; netNow.t = t;
   const c = process.cpuUsage(health.cpuT), w = (t - health.cpuAt) * 1000; health.cpu = w > 0 ? (c.user + c.system) / w : 0; health.cpuT = process.cpuUsage(); health.cpuAt = t;
   const lateP = pct(health.late, 0.95), load = health.cpu / CPU_LIMIT;
-  if ((load > 0.92 || lateP > 45) && t - health.levelAt > 4000 && health.level < 2) { health.level++; health.levelAt = t; }   // (falling behind: first it tells the players less often, then it works the world out in bigger steps)
-  else if (load < 0.5 && lateP < 20 && t - health.levelAt > 20000 && health.level > 0) { health.level--; health.levelAt = t; }
+  if ((lateP > 45 || (CPU_KNOWN && load > 0.95 && lateP > 15)) && t - health.levelAt > 4000 && health.level < 2) { health.level++; health.levelAt = t; }   // (really falling behind: first it tells the players less often, then it works the world out in bigger steps. Being busy alone is fine as long as it keeps up)
+  else if (lateP < 20 && (!CPU_KNOWN || load < 0.7) && t - health.levelAt > 8000 && health.level > 0) { health.level--; health.levelAt = t; }   // (and back to full speed as soon as it is keeping up again)
   SIMDT = health.level >= 2 ? 1 / 60 : 1 / 120;
 }, 1000).unref();
 function pct(a, q) { if (!a.length) return 0; const b = [...a].sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.floor(b.length * q))]; }
@@ -105,9 +108,10 @@ function statusNow() {
   const tickMs = health.tickMs.length ? health.tickMs.reduce((x, y) => x + y, 0) / health.tickMs.length : 0, lateP = pct(health.late, 0.95), load = health.cpu / CPU_LIMIT, rss = process.memoryUsage().rss;
   const bwPct = usage.out / bwLimit, hrsPct = usage.sec / 3600 / HOURS_LIMIT, stale = t - health.lastTick;
   let rating = 'good', why = 'Running smoothly';
-  if (lateP > 40 || load > 0.9 || rss > MEM_LIMIT * 0.85) { rating = 'bad'; why = load > 0.9 ? 'Working at the edge of what this server is allowed to use' : rss > MEM_LIMIT * 0.85 ? 'Nearly out of memory' : 'Running a little behind'; }
-  if (lateP > 100 || load > 1.2) { rating = 'really bad'; why = 'Falling behind: things in the world can look laggy'; }
-  if (lateP > 300 || bwPct >= 1 || hrsPct >= 1 || rss > MEM_LIMIT * 0.97) { rating = 'unusable'; why = bwPct >= 1 ? 'Out of data for this month: Render stops free servers that go over' : hrsPct >= 1 ? 'Out of server hours for this month' : rss > MEM_LIMIT * 0.97 ? 'Out of memory' : 'Far behind: the game will be very laggy'; }
+  if (lateP > 40 || (CPU_KNOWN && load > 0.9) || rss > MEM_LIMIT * 0.85) { rating = 'bad'; why = load > 0.9 ? 'Working at the edge of what this server is allowed to use' : rss > MEM_LIMIT * 0.85 ? 'Nearly out of memory' : 'Running a little behind'; }
+  if (lateP > 100 || (CPU_KNOWN && load > 1.2)) { rating = 'really bad'; why = 'Falling behind: things in the world can look laggy'; }
+  if (PAID && bwPct >= 1 && rating === 'good') { rating = 'bad'; why = 'Over the 5 GB of data included this month: more costs about $0.15 a GB'; }
+  if (lateP > 300 || (bwPct >= 1 && !PAID) || hrsPct >= 1 || rss > MEM_LIMIT * 0.97) { rating = 'unusable'; why = bwPct >= 1 && !PAID ? 'Out of data for this month: Render stops free servers that go over' : hrsPct >= 1 ? 'Out of server hours for this month' : rss > MEM_LIMIT * 0.97 ? 'Out of memory' : 'Far behind: the game will be very laggy'; }
   if (stale > 2000) { rating = 'frozen'; why = 'The world has not moved for ' + Math.round(stale / 1000) + ' s'; }
   let awake = 0, things = 0; for (const r of rooms.values()) if (r.world) { things += r.world.dyn.length; awake += r.world.nAct || 0; }
   return { v: GAME_V, rating, why, level: health.level, now: t, month: usage.m, daysInMonth: dim, daysLeft: +daysLeft.toFixed(2),
@@ -603,7 +607,7 @@ wss.on('connection', (ws, req) => {
       const x = Math.min(262000, raw.readUInt16LE(3) * 2), yr = raw.readUInt16LE(5), d = yr === 65535 ? 1 : 0;
       const y = d ? p.y : Math.min(131000, yr), vx = raw.readInt8(7) * 5, vy = raw.readInt8(8) * 20, st = raw.readUInt16LE(9);
       if (p.x !== x || p.y !== y || p.dead !== d || p.vx !== vx || p.vy !== vy || p.st !== st || !p.has) p.moved = true;
-      p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true; p.tPos = Date.now(); p.press = !d && raw.length === 12 && (raw[11] & 1) ? 1 : 0;
+      p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true; p.tPos = Date.now(); p.press = !d && raw.length === 12 && (raw[11] & 1) ? 1 : 0; p.pv = !d && raw.length === 12 && (raw[11] & 2) ? 1 : 0;   // (pv: the speed is how hard they push against something that holds them, not how fast they move)
       return;
     }
     let m;
@@ -970,7 +974,7 @@ setInterval(() => {
     if (!arr.length || !fresh) continue;   // (only when somebody moved, plus a heartbeat every second)
     const buf = Buffer.allocUnsafe(3 + arr.length * 12);
     buf[0] = 3; buf.writeUInt16LE(rslot(r.room) & 0xFFFF, 1);
-    arr.forEach((q, k) => { const o = 3 + k * 12; buf.writeUInt32LE(parseInt(q.pub.slice(0, 8), 16) >>> 0, o); buf.writeUInt16LE(q.x >> 2, o + 4); buf.writeUInt16LE(q.dead ? 65535 : (q.y >> 1), o + 6); buf.writeUInt16LE(q.room.id & 0xFFFF, o + 8); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round(q.vx / 5))), o + 10); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round(q.vy / 20))), o + 11); });
+    arr.forEach((q, k) => { const o = 3 + k * 12; buf.writeUInt32LE(parseInt(q.pub.slice(0, 8), 16) >>> 0, o); buf.writeUInt16LE(q.x >> 2, o + 4); buf.writeUInt16LE(q.dead ? 65535 : (q.y >> 1), o + 6); buf.writeUInt16LE(q.room.id & 0xFFFF, o + 8); buf.writeInt8(q.dead || q.pv ? 0 : Math.max(-127, Math.min(127, Math.round(q.vx / 5))), o + 10); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round(q.vy / 20))), o + 11); });
     r.ws.send(buf, { binary: true });
   }
   for (const room of rooms.values()) {
@@ -993,7 +997,8 @@ setInterval(() => {
       for (const h of hits) {   // per player: id u32, x/2 u16, y u16 (65535 = just died, 65534 = out of range), vx/5 i8, vy/20 i8, time+grounded u16
         const p = h[0], o = 3 + k * 12, gone = h[1] || p.dead; k++;
         buf.writeUInt32LE(p.id, o); buf.writeUInt16LE(p.x >> 1, o + 4); buf.writeUInt16LE(h[1] ? 65534 : p.dead ? 65535 : Math.min(65533, p.y), o + 6);
-        buf.writeInt8(gone ? 0 : Math.max(-127, Math.min(127, Math.round(p.vx / 5))), o + 8); buf.writeInt8(gone ? 0 : Math.max(-127, Math.min(127, Math.round(p.vy / 20))), o + 9); buf.writeUInt16LE(p.st & 0xFFFF, o + 10);
+        buf.writeInt8(gone || p.pv ? 0 : Math.max(-127, Math.min(127, Math.round(p.vx / 5))), o + 8);   // (someone pressing against a crate is shown standing against it: never carried on into it)
+        buf.writeInt8(gone ? 0 : Math.max(-127, Math.min(127, Math.round(p.vy / 20))), o + 9); buf.writeUInt16LE(p.st & 0xFFFF, o + 10);
       }
       r.ws.send(buf, { binary: true });
     }
