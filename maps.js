@@ -1771,10 +1771,18 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       maxX = Math.max(maxX, r[0] + r[2]); maxY = Math.max(maxY, r[1] + r[3]);
     }
     const ox = 3 - minX, oy = 14 - minY;
+    // more places the finish can be: wide, flat platforms all along the real route (and on past the first finish). The world picks one of these each round, so nobody can learn where it is
+    const fins = [[fin[0], fin[1], fin[2]]], finPool = [];
+    {
+      const AR = rng(d.seed + 9191), all = mainPath.concat(tailPath), n = all.length;
+      all.forEach((e, i) => { if (i >= n * 0.15 && e[2] >= 6 && e[4] === 0 && !e[12]) finPool.push([e[0], e[1], e[2]]); });
+      for (let k = finPool.length - 1; k > 0; k--) { const j = Math.floor(AR() * (k + 1)); const t = finPool[k]; finPool[k] = finPool[j]; finPool[j] = t; }
+    }
     for (const r of rects) { r[0] += ox; r[1] += oy; }
     for (const q of path) { q[0] += ox; q[1] += oy; }
     const chainsOut = chains.map(c => { const o = c.map(e => [e[0] + ox, e[1] + oy, e[2]]); o.k = c.k; return o; });
     fin[0] += ox; fin[1] += oy;
+    for (const f of fins.concat(finPool)) { f[0] += ox; f[1] += oy; }
     for (const q of props) { q[1] += ox; q[2] += oy; }
     for (const q of coins) { q[0] += ox; q[1] += oy; }
     for (const q of decor) { q[1] += ox; q[2] += oy; }
@@ -1803,6 +1811,21 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     const gridT = new Uint8Array(W * H);
     for (const r of rects) for (let yy = r[1]; yy < r[1] + r[3]; yy++) { if (yy < 0 || yy >= H) continue; for (let xx = r[0]; xx < r[0] + r[2]; xx++) if (xx >= 0 && xx < W) gridT[yy * W + xx] = r[4]; }
     let map_cleaned = 0;
+    // a finish spot must be solid ground all the way across, with clear air above it (the widest such stretch of each platform, and spread out: far from each other and from the start)
+    {
+      const colOk = (xx, y) => { const g = gridT[y * W + xx]; if (!(g === 1 || g === 3)) return false; for (let yy = y - 6; yy < y; yy++) if (yy < 0 || gridT[yy * W + xx]) return false; return true; };
+      const far = (a, b) => Math.abs(a[0] + a[2] / 2 - b[0] - b[2] / 2) + Math.abs(a[1] - b[1]) * 2, st = [ox + 1, oy, 1], good = [];
+      for (const c of finPool) {
+        let best = null, run = 0;
+        for (let xx = c[0]; xx <= c[0] + c[2]; xx++) { if (xx < c[0] + c[2] && xx > 0 && xx < W - 1 && colOk(xx, c[1])) run++; else { if (run >= 5 && (!best || run > best[2])) best = [xx - run, c[1], run]; run = 0; } }
+        if (!best) continue;
+        if (best[2] > 10) { best[0] += Math.floor((best[2] - 10) / 2); best[2] = 10; }
+        if (best[2] > 6) { best[0]++; best[2] -= 2; }   // (not right at the edge)
+        if (far(best, st) < 40) continue;
+        good.push(best);
+      }
+      for (const lim of [70, 40, 22]) for (const c of good) { if (fins.length >= 4) break; if (fins.every(f => far(f, c) > lim)) fins.push(c); }
+    }
 
     /* ---- final clean-up: nothing may be buried in the ground, hang in mid-air, or be impossible to use ---- */
     const SOLT = t => t === 1 || t === 3 || t === 4 || t === 6;
@@ -1891,6 +1914,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       start: [(ox + 1.5) * TS, oy * TS - R - 1],   // the one community spawn point
       finish: fin,
       flag: [fin[0] + fin[2] / 2, fin[1]],
+      fins,   // (every place the finish can be: the first is where it always was)
       killY: (maxBottom + 6) * TS, chains: chainsOut
     };
     cache[idx] = map; cacheOrder.push(idx);
@@ -1912,7 +1936,16 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
   const ZMETA = [["sky","snow","meadow","night","cave","crystal","mushroom","volcano"],["snow","autumn","sky","forest","night","cave","crystal","icecave"],["desert","dunes","jungle","swamp","sky","wasteland","ruins","night"],["snow","jungle","forest","autumn","sky","night","cave","mushroom"],["ruins","wasteland","snow","jungle","sky","forest","autumn","night"],["snow","autumn","forest","sky","night","cave","icecave","crystal"],["forest","autumn","swamp","desert","night","cave","mushroom","volcano"],["snow","autumn","sky","forest","jungle","night","cave","crystal"],["forest","wasteland","jungle","meadow","swamp","sky","autumn","ruins"],["dunes","desert","ashland","meadow","forest","sky","wasteland","night"],["snow","meadow","sky","dunes","desert","forest","night","cave"],["snow","forest","autumn","crystal","cave","mushroom","icecave"],["sky","meadow","wasteland","swamp","forest","desert","ashland","dunes"],["wasteland","jungle","swamp","ashland","desert","sky","ruins","dunes"],["sky","snow","forest","autumn","mushroom","crystal","volcano","cave"],["wasteland","ruins","ashland","desert","dunes","sky","volcano","night"],["forest","snow","autumn","jungle","crystal","cave","mushroom","icecave"],["snow","forest","autumn","ashland","jungle","night","cave","icecave"],["forest","autumn","sky","meadow","swamp","jungle","mushroom","night"],["snow","forest","jungle","wasteland","autumn","swamp","ruins","sky"],["jungle","snow","swamp","sky","dunes","autumn","forest","desert"],["snow","forest","sky","autumn","night","cave","crystal","mushroom"],["forest","snow","autumn","cave","icecave","crystal","mushroom","volcano"],["wasteland","autumn","sky","swamp","ruins","ashland","jungle","forest"],["forest","snow","sky","autumn","swamp","ruins","night","mushroom"],["ruins","wasteland","sky","snow","jungle","swamp","night","crystal"],["autumn","wasteland","forest","ashland","meadow","sky","ruins","night"],["snow","sky","forest","autumn","night","cave","crystal","mushroom"],["snow","forest","sky","autumn","night","cave","crystal","icecave"],["wasteland","sky","desert","dunes","meadow","ruins","ashland","volcano"],["jungle","desert","forest","swamp","ruins","dunes","wasteland","sky"],["autumn","snow","forest","crystal","cave","icecave","mushroom","volcano"],["ashland","desert","wasteland","dunes","sky","ruins","night","cave"],["jungle","dunes","swamp","sky","desert","autumn","night","mushroom"],["wasteland","ashland","dunes","autumn","ruins","desert","sky","forest"],["sky","wasteland","jungle","forest","desert","dunes","ruins","cave"],["snow","autumn","sky","jungle","forest","night","cave","crystal"],["dunes","snow","desert","wasteland","sky","ruins","swamp","jungle"],["meadow","desert","ruins","sky","dunes","forest","wasteland","night"],["snow","forest","autumn","jungle","ashland","icecave","volcano","cave"],["dunes","sky","wasteland","desert","ashland","forest","swamp","night"],["snow","autumn","forest","meadow","sky","night","cave","crystal"],["sky","snow","autumn","forest","jungle","cave","crystal","icecave"],["snow","autumn","sky","forest","jungle","cave","night","crystal"],["sky","wasteland","forest","autumn","ashland","ruins","meadow","night"],["snow","autumn","forest","sky","cave","night","crystal","icecave"],["forest","autumn","snow","sky","night","crystal","cave","mushroom"],["forest","snow","autumn","swamp","icecave","cave","mushroom","crystal"],["forest","sky","snow","wasteland","meadow","ashland","ruins","night"],["snow","forest","autumn","jungle","icecave","cave","crystal","mushroom"]];   /* the grounds each level really has, surface grounds first, then caves and night (worked out from the finished maps, so the level picker shows what you will actually meet) */
   const ROUTE = [395,441,578,740,563,215,325,446,638,741,299,305,412,167,346,647,425,727,298,142,113,377,586,612,772,426,543,260,443,287,417,408,62,257,533,187,556,195,293,681,227,414,677,504,610,231,350,265,468,171];   /* how far the finish is from the start in a straight line, in blocks, worked out from the finished maps (the level picker's Short, Medium, Long and Very long come from this) */
   const meta = DEFS.map((d, i) => ({ len: ROUTE[i] || Math.round(((d.xr || 0) - (d.xl || 0)) || 0), th: ZMETA[i] || [...new Set((d.bands || []).map(b => b.g && b.g.th).filter(Boolean))] }));   // (what the level picker shows: how long, which kinds of ground)
-  const api = { TS, R, count: DEFS.length, names: DEFS.map(d => d.name), meta, themes: THEMES, generate, slotOf, slotStart, SLOT_LEN };
+  // the same map with its finish moved to spot k (0 = where it always was)
+  function withFin(m, k) {
+    const fs = m.fins || [], f = fs[k | 0];
+    if (!k || !f) return m;
+    const f0 = fs[0], rects = m.rects.map(r => (r[4] === 4 && r[3] === 1 && r[0] === f0[0] && r[1] === f0[1]) ? [r[0], r[1], r[2], r[3], 1, r[5], r[6]] : r);
+    const under = m.rects.find(r => (r[4] === 1 || r[4] === 3) && f[0] + 1 >= r[0] && f[0] + 1 < r[0] + r[2] && f[1] >= r[1] && f[1] < r[1] + r[3]);
+    rects.push([f[0], f[1], f[2], 1, 4, under ? under[5] : m.rects[0][5], under ? under[6] : m.rects[0][6]]);
+    return Object.assign({}, m, { rects, finish: [f[0], f[1], f[2]], flag: [f[0] + f[2] / 2, f[1]], fk: k | 0 });
+  }
+  const api = { TS, R, count: DEFS.length, names: DEFS.map(d => d.name), meta, themes: THEMES, generate, withFin, slotOf, slotStart, SLOT_LEN };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallMaps = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>/* your chosen look is set before anything is drawn, so the page never shows another look first */
+(function(){var v="classic";try{var o=JSON.parse(localStorage.getItem("ballrun4")||"null");if(o&&/^(classic|sketch|blocky|neon|film)$/.test(o.vs))v=o.vs;}catch(e){}document.documentElement.setAttribute("data-vs",v);})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#14111c">
 <link rel="manifest" href="manifest.webmanifest">
@@ -30,6 +32,12 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;overflow:hidden;background:#14111c;font-family:var(--font);color:var(--ink);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none;font-size:15px}
   canvas#cv{position:fixed;left:0;top:0;width:100%;height:100%;display:block}
+  /* looks: only how the world is drawn on your screen changes, never how anything plays */
+  html[data-vs=sketch] canvas#cv,html[data-vs=sketch] .scene,html[data-vs=sketch] #mm{filter:grayscale(1) brightness(1.35) contrast(1.4)}
+  html[data-vs=neon] canvas#cv,html[data-vs=neon] .scene,html[data-vs=neon] #mm{filter:invert(1) hue-rotate(180deg) saturate(2.2) contrast(1.2)}
+  html[data-vs=film] canvas#cv,html[data-vs=film] .scene,html[data-vs=film] #mm{filter:sepia(.9) contrast(1.08) brightness(.97)}
+  html[data-vs=blocky] canvas#cv{image-rendering:pixelated}
+  html[data-vs=blocky] .scene{filter:url(#vsPix)}
   .hide{display:none!important}
   svg.ic{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
   button{font:inherit;color:inherit;cursor:pointer}
@@ -661,7 +669,7 @@
   .chead{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:3;background:#1c1830;margin:0 0 6px;flex:none}.chead h3{margin:0!important}.chead .xbtn{flex:none}
   .epcard .chead{grid-column:1/-1}.epcard .chead h3{text-align:left}
   .shoptabs{display:flex;gap:4px;margin:0 0 8px;flex:none}.shoptabs button{flex:1;min-width:0;padding:6px 2px;font-size:14px;background:none;border:2px solid transparent;border-radius:var(--wob);color:var(--ink);opacity:.7}.shoptabs button.on{opacity:1;background:#3a3355;border-color:var(--line)}
-  .lvmode{margin:0}.lvmode .todrow>div{flex:1;min-width:0}.lvmode .row{margin:4px 0}.lvmode .small{margin:0 0 4px}
+  .finroll{margin:0!important;gap:6px;font-size:13px;flex:none!important;white-space:nowrap}.lvmode{margin:0}.lvmode .todrow>div{flex:1;min-width:0}.lvmode .row{margin:4px 0}.lvmode .small{margin:0 0 4px}
   #settings .tabs{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}#settings .sbody{touch-action:pan-y}
   @media (max-height:520px) and (min-aspect-ratio:1/1){.shoptabs{margin:0 0 4px}.shoptabs button{padding:3px 2px;font-size:13px}.chead{margin:0 0 2px}.lvmode .small{display:none}.lvmode .row{margin:2px 0}}
   canvas.pball{border:0!important;border-radius:0!important;box-shadow:none!important;background:none!important}
@@ -680,6 +688,7 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="vsPix" x="0" y="0" width="100%" height="100%"><feFlood x="3" y="3" height="2" width="2"/><feComposite width="8" height="8"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="4"/></filter></svg>
 <div id="boot"><div class="scene" id="bootScene"></div>
   <div class="bwrap"><h1>BALL<b>PIT</b>.PARTY</h1><div id="bootMsg">Checking for the newest version…</div><div id="bootTip"></div></div>
   <div id="bootHint">Tap the ball to make it hop</div>
@@ -687,7 +696,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 136; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 137; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -988,10 +997,11 @@
       </div></div>
     </section>
     <section class="pane" data-pane="display">
+      <div class="row"><span class="lbl"><span data-ic="eye"></span> Look</span><div id="selVs"></div><div class="small dim" id="vsDesc" style="margin-top:4px"></div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="flag"></span><span><b>Finish arrow in private worlds</b><small>On: an arrow on screen always points to the finish. Off: the finish only shows on the map</small></span></span><input type="checkbox" id="setFinArrow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Finish crowns</b><small>Gold, silver, bronze and rock crowns over everyone who has finished</small></span></span><input type="checkbox" id="setCrowns"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="flag"></span><span><b>Finish arrow in private worlds</b><small>On: an arrow on screen always points to the finish. Off: the finish only shows on the map</small></span></span><input type="checkbox" id="setFinArrow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="search"></span><span><b>Show stats</b><small>Tiny numbers in the corner, under the map</small></span></span><input type="checkbox" id="setStats"><i></i></label><div class="dep sub" data-dep="stats"><div><label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Frame rate</b><small>How many pictures a second your screen draws</small></span></span><input type="checkbox" id="setStFps"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Ping</b><small>How long a message takes to the server and back</small></span></span><input type="checkbox" id="setStPing"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="clock"></span><span><b>Buffer</b><small>How far behind other players and things are shown, to keep them smooth</small></span></span><input type="checkbox" id="setStBuf"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Connection speed</b><small>Data coming in and going out each second</small></span></span><input type="checkbox" id="setStData"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="gear"></span><span><b>Server load</b><small>How hard the game server is working</small></span></span><input type="checkbox" id="setStSrv"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Conflicts</b><small>Times your screen and the server did not match</small></span></span><input type="checkbox" id="setStConf"><i></i></label></div></div>
       <h4><span data-ic="tag"></span> Name icons</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Robot icon on bots</b><small>Over a bot's ball in the game</small></span></span><input type="checkbox" id="setBotMark"><i></i></label>
@@ -1162,6 +1172,7 @@
       <div class="lvmode">
         <div class="row todrow"><span data-ic="clock"></span><div id="selTod"></div></div>
         <div class="small dim" id="todDesc"></div>
+        <div class="row todrow"><span data-ic="flag"></span><div id="selFin"></div><label class="sw2 finroll" id="lvRollRow" title="Draw a new finish spot each time you start this level"><span>New each game</span><input type="checkbox" id="lvRoll"><i></i></label></div>
       </div>
     </div>
   </div>
@@ -1295,7 +1306,7 @@ function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight',
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
-    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
+    minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
@@ -1325,7 +1336,7 @@ function normalize() {
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -1718,11 +1729,23 @@ function drawBall(x, y, rot, c1, c2, pat, alpha, me, scale) {
   ctx.drawImage(sprite(c1, c2, pat), -SPW / 2, -SPW / 2, SPW, SPW);
   ctx.restore();
 }
-function drawCrown(x, y) {   // above the head of anyone who finished
-  ctx.save(); ctx.translate(x, y); ctx.lineJoin = 'round';
-  ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-10, -11); ctx.lineTo(-4.5, -5.5); ctx.lineTo(0, -13); ctx.lineTo(4.5, -5.5); ctx.lineTo(10, -11); ctx.lineTo(9, 0); ctx.closePath();
-  ctx.fillStyle = '#ffd23d'; ctx.fill(); ctx.lineWidth = 1.8; ctx.strokeStyle = '#3a2a00'; ctx.stroke();
-  ctx.fillStyle = '#ff5b4a'; ctx.fillRect(-1.5, -4, 3, 3);
+const CROWNS = [null, { k: 1.75, f: '#ffd23d', h: '#fff4b0', e: '#3a2a00', gem: '#ff3d5a' }, { k: 1.4, f: '#d9dee6', h: '#ffffff', e: '#2c3138', gem: '#3da5ff' }, { k: 1.3, f: '#d08a4a', h: '#f2bd8a', e: '#3a1d08', gem: '#3ddc6a' }, { k: 1.05, f: '#8d8a84', h: '#b5b2ab', e: '#2a2826', rock: true }];
+const crownH = c => c ? 14 * (CROWNS[Math.min(4, c === true ? 1 : c)] || CROWNS[4]).k : 0;   // (how much room a crown takes above a head)
+function drawCrown(x, y, rank) {   // above the head of everyone who finished: a big gold crown for the winner, silver for second, bronze for third, and a crown of rock for everybody after that
+  const c = CROWNS[Math.min(4, rank === true ? 1 : rank || 1)] || CROWNS[4];
+  ctx.save(); ctx.translate(x, y); ctx.scale(c.k, c.k); ctx.lineJoin = 'round';
+  if (c.rock) {   // lumpy stones
+    ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-10, -7); ctx.lineTo(-7, -10); ctx.lineTo(-4, -7); ctx.lineTo(-1, -11); ctx.lineTo(3, -8); ctx.lineTo(6, -11); ctx.lineTo(10, -7); ctx.lineTo(9, 0); ctx.closePath();
+    ctx.fillStyle = c.f; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = c.e; ctx.stroke();
+    ctx.fillStyle = c.h; ctx.beginPath(); ctx.arc(-5, -5, 1.6, 0, TAU); ctx.arc(4, -6, 1.3, 0, TAU); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-10, -11); ctx.lineTo(-4.5, -5.5); ctx.lineTo(0, -13); ctx.lineTo(4.5, -5.5); ctx.lineTo(10, -11); ctx.lineTo(9, 0); ctx.closePath();
+    ctx.fillStyle = c.f; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = c.e; ctx.stroke();
+    ctx.fillStyle = c.h; ctx.fillRect(-8, -3.2, 16, 1.6);   // (a shine along the band)
+    ctx.fillStyle = c.gem; ctx.beginPath(); ctx.arc(0, -4.5, 1.9, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(-10, -11, 1.3, 0, TAU); ctx.arc(10, -11, 1.3, 0, TAU); ctx.arc(0, -13, 1.4, 0, TAU); ctx.fillStyle = c.h; ctx.fill();
+    if (c === CROWNS[1]) { const t = performance.now() / 300; ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(6, -9, 1, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }   // (the winner's sparkles)
+  }
   ctx.restore();
 }
 function drawTag(name, x, y) {
@@ -1747,7 +1770,7 @@ function drawPersonMark(x, y) {   // a little person icon (head and shoulders): 
 }
 function drawLabel(name, isBot, crown, x, y, isPerson) {
   let top = y - R - 6;
-  if (crown) { drawCrown(x, top + 2); top -= 14; }
+  if (crown && settings.crowns) { drawCrown(x, top + 2, crown); top -= crownH(crown); }
   if (settings.tags && name) { drawTag(name, x, top); top -= 16; }
   if (isBot && settings.botMark) drawBotMark(x, top - 3);
   else if (isPerson && settings.peopleMark) drawPersonMark(x, top - 2);
@@ -1775,7 +1798,8 @@ const TH_COUNT = THEMES.length;
 function loadMap(slot, next) {
   S.gateWait = 0;
   S.guest = !!(party && party.role === 'guest');   // visiting a friend's world: nothing here is saved to your own
-  const m0 = BallMaps.generate(slot % BallMaps.count), m = Object.assign({}, m0, { checkpoints: (m0.checkpoints || []).slice() });   // (your own copy of the flag list: flags you buy are yours alone)
+  S.fk = finKOf(slot);
+  const m0 = BallMaps.withFin(BallMaps.generate(slot % BallMaps.count), S.fk), m = Object.assign({}, m0, { checkpoints: (m0.checkpoints || []).slice() });   // (your own copy of the flag list: flags you buy are yours alone)
   S.slot = slot; S.idx = m.idx; S.map = m; S.world = P.makeWorld(m); S.world.nb = { dyn: S.world.dyn.length, doors: S.world.doors.length, btns: S.world.btns.length }; S.pubKeys = new Set(); S.rcvN = 0;
   if (next) S.nextAt = next;
   const W = m.W, H = m.H, tg = new Uint8Array(W * H);
@@ -1856,7 +1880,7 @@ function nearEdge(b) {
   return b.y > P.killYAt(S.world, b.x) - 9 * TS;   // (the walls and ceiling are solid now: only the open bottom is a danger)
 }
 function finishRun() {
-  S.finished = true; S.done = true; S.finT = 5; S.crown = true; sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
+  S.finished = true; S.done = true; S.finT = 5; S.crown = S.crown || true; sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
   S.finMs = S.started ? performance.now() - S.runStart : 0;
   $('fbText').textContent = 'Time ' + fmtT(S.finMs);
   $('finishbanner').classList.remove('hide');
@@ -1888,18 +1912,34 @@ function saveCopy() {   // keep this world, as it is right now, as your own priv
 }
 function soloRoll() {}   // (a level of your own never ends by itself)
 function soloSlot() { return SOLO_BASE + soloLevel(); }
+/* Where the finish is. Every map has 4 spots. Public worlds draw one each round (the server says which). On your own levels you pick: spot 1 to 4, or Random,
+   which draws one and keeps it, or draws a new one every game if you want that. */
+const FINKEY = 'ballrun4_fin', FIN_N = 4;
+let finPref = {}; try { finPref = JSON.parse(localStorage.getItem(FINKEY) || '{}') || {}; } catch (e) { finPref = {}; }
+const saveFin = () => { try { localStorage.setItem(FINKEY, JSON.stringify(finPref)); } catch (e) {} };
+const finOf = i => { const p = finPref[i]; return p && typeof p === 'object' ? p : { k: 0 }; };
+function soloFin(i) {   // the spot this level uses right now (0 to 3)
+  const p = finOf(i);
+  if (p.k !== 'r') return Math.max(0, Math.min(FIN_N - 1, p.k | 0));
+  if (!(p.cur >= 0 && p.cur < FIN_N)) { p.cur = Math.floor(Math.random() * FIN_N); finPref[i] = p; saveFin(); }
+  return p.cur;
+}
+function finRoll(i) { const p = finOf(i); if (p.k === 'r' && p.roll) { let n = Math.floor(Math.random() * (FIN_N - 1)); if (n >= (p.cur | 0)) n++; p.cur = n; finPref[i] = p; saveFin(); } }   // (a new game on a level set to a new spot every game: never the same spot twice in a row)
+let netFk = 0; try { const q = (sessionStorage.getItem('ballrun4_fk') || '').split(':'); if (+q[0] === BallMaps.slotOf(Date.now())) netFk = +q[1] | 0; } catch (e) {}
+function setNetFk(slot, k) { netFk = k | 0; try { sessionStorage.setItem('ballrun4_fk', slot + ':' + netFk); } catch (e) {} }
+const finKOf = slot => slot >= SOLO_BASE && !(party && party.role === 'guest') ? soloFin(slot - SOLO_BASE) : netFk;
 function soloNext() { return Date.now() + 3e11; }
 function enterMap(slot, next) {   // going somewhere on purpose: no 'change' screen, you are simply there (the fade is only for a map that swaps while you are in it)
   if (S.map && S.slot >= 0) saveWorld(true);
   S.mode = 'play'; $('fade').classList.remove('on'); loadMap(slot, next);
 }
 function soloGo(announce) {   // your own world: the level you picked, just as you left it
-  clockOff = 0; loadSolo();
+  clockOff = 0; loadSolo(); finRoll(soloLevel());
   enterMap(soloSlot(), soloNext());
   if (announce) announceEntry({ slot: soloSlot() });
 }
 function soloReset(idx) {   // start this level over: everything goes back to how it was at the start
-  delete solo2[idx]; saveSolo();
+  delete solo2[idx]; saveSolo(); finRoll(idx);
   if (S.slot >= SOLO_BASE && S.idx === idx) { const s = S.slot; S.slot = -1; lastWorldStr = ''; loadMap(s, soloNext()); }
 }
 const TH = [60, 30, 10, 5, 1];   // minutes-before-the-end warnings
@@ -2232,6 +2272,7 @@ const startRect = () => P.noBuild(S.map)[0] || null;   // the start zone: 5 x 5 
 const zones = () => P.noBuild(S.map);   // the start zone and the zone around the finish flag
 const startTile = (tx, ty) => zones().some(z => tx >= z.tx0 && tx <= z.tx1 && ty >= z.ty0 && ty <= z.ty1);
 const startBlock = (px, py, m) => { m = m === undefined ? TS * 0.6 : m; return zones().some(z => px >= z.tx0 * TS - m && px <= (z.tx1 + 1) * TS + m && py >= z.ty0 * TS - m && py <= (z.ty1 + 1) * TS + m); };   // (a little extra room, so nothing can hang over the edge of it)
+const PORC = [['#ffd23d', '#3da5ff'], ['#ff4a3d', '#a45cff'], ['#3ddc6a', '#ff6fc8'], ['#ff9a2e', '#2ee6d6']];   // the colours of portal pairs: yellow and blue, then red and purple, then green and pink, then orange and teal
 const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
@@ -2354,14 +2395,14 @@ function applyPubBuild(pv) {   // what everyone in a public world has built so f
   const occ = new Map(), have = propCounts();
   const takeP = q => { const key = pkey('p', q), n = (occ.get(key) || 0) + 1; occ.set(key, n); return n > (have.get(key) || 0); };   // (several crates put down on the very same spot are several crates: each one counts)
   (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !startBlock(q[1], q[2]) && takeP(q)) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });
-  (pv.misc || []).forEach(q => { if (validMisc(q) && take('m', q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' || q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
+  (pv.misc || []).forEach(q => { if (validMisc(q) && take('m', q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
   (pv.gates || []).forEach(q => { if (validGate(q) && take('g', q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
   (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1]) && take('c', q)) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
   (pv.dels || []).forEach(q => { if (validDel(q) && take('d', q)) { applyDelRec(q); S.dels.push(q.slice()); } });
 }
 function applyPartyProps(pv) {   // what the host built is there when you arrive
   (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !startBlock(q[1], q[2])) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });   // (remembered in the lists, so the world can be saved as a copy)
-  (pv.misc || []).forEach(q => { if (validMisc(q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' || q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
+  (pv.misc || []).forEach(q => { if (validMisc(q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
   (pv.gates || []).forEach(q => { if (validGate(q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
   (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
   (pv.dels || []).forEach(q => { if (validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });
@@ -2405,7 +2446,7 @@ function restoreWorld(slot) {
     const own = true, pubW = slot < SOLO_BASE, key = (k, q) => { if (pubW && S.pubKeys) S.pubKeys.add(pkey(k, q)); };   // (what you built is remembered everywhere; in a public world it is also told to the room again when you come back)
     (own && !pubW ? o.buys || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { key('p', q.slice(0, 3)); const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); if (startBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
     (own && !pubW ? o.gates || [] : []).forEach(q => { if (validGate(q)) { key('g', q.slice(0, 5)); addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
-    (own && !pubW ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' || q[0] === 'rope' ? 5 : 4)); addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' || q[0] === 'rope' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
+    (own && !pubW ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
     (own && !pubW ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
     S.rcvN = o.rcv | 0; S.own = o.own && typeof o.own === 'object' ? o.own : deriveOwn();
     const seedD = [];
@@ -3026,6 +3067,10 @@ const selScheme = makeSelect($('selScheme'), Object.keys(SCHEMES).map(k => ({ v:
   v => { settings.scheme = v; save(); $('schemeDesc').textContent = SCHEMES[v].desc; applyTouchUI(); });
 const selPreset = makeSelect($('selPreset'), Object.keys(PRESETS).map(k => ({ v: k, label: PRESETS[k].name })),
   v => { settings[presetK()] = v; if (v !== 'custom') { settings[posK()] = null; } else if (!settings[posK()]) { const c = curLayout(), o = {}; BK.forEach(q => { o[q] = c[q].auto ? (curPts[q] ? toAnchor(curPts[q][0], curPts[q][1]) : { a: 'c', dx: 0, dy: 100 }) : Object.assign({}, c[q]); }); settings[posK()] = o; } save(); applyTouchUI(); });
+const VSS = { classic: ['Classic', 'The game as it is: bright and hand-drawn.'], sketch: ['Sketch', 'Black and white, like a drawing in pencil and ink.'], blocky: ['Blocky', 'Big chunky pixels, like an old video game.'], neon: ['Negative', 'Every colour flipped: a dark sky over bright ground.'], film: ['Old film', 'Warm brown tones, like an old photograph.'] };
+const applyVs = () => { if (!VSS[settings.vs]) settings.vs = 'classic'; document.documentElement.setAttribute('data-vs', settings.vs); };
+applyVs();
+const selVs = makeSelect($('selVs'), Object.keys(VSS).map(k => ({ v: k, label: VSS[k][0] })), v => { settings.vs = v; save(); applyVs(); $('vsDesc').textContent = VSS[v][1]; });
 const TODS = { live: 'Follows the real clock, like the public worlds.', morning: 'It is always morning in your private world.', midday: 'It is always midday in your private world.', night: 'It is always night in your private world.' };
 const selTod = makeSelect($('selTod'), [{ v: 'live', label: 'Time of day: Live' }, { v: 'morning', label: 'Time of day: Morning' }, { v: 'midday', label: 'Time of day: Midday' }, { v: 'night', label: 'Time of day: Night' }],
   v => { settings.tod = v; save(); $('todDesc').textContent = TODS[v]; });
@@ -3076,9 +3121,9 @@ function syncUI() {
   nameUI();
   [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'bots'], ['setBotMark', 'botMark'], ['setBotAsk', 'botAsk'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
-    ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
+    ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
-  selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); $('todDesc').textContent = TODS[settings.tod];
+  selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); selVs.set(settings.vs); $('vsDesc').textContent = (VSS[settings.vs] || VSS.classic)[1]; $('todDesc').textContent = TODS[settings.tod];
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
   $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMax; $('botMaxVal').textContent = settings.botMax;
   buildKeys();
@@ -3087,7 +3132,7 @@ function syncUI() {
   buildLook(); refreshLook(); applyMmVisibility(); try { ntRender(); } catch (e) {}
 }
 function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); sfx($(id).checked ? 'on' : 'off'); if (fn) fn(); }; }
-bindToggle('setTags', 'tags'); bindToggle('setFinArrow', 'finArrow'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
+bindToggle('setTags', 'tags'); bindToggle('setCrowns', 'crowns'); bindToggle('setFinArrow', 'finArrow'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
 bindToggle('setBotMark', 'botMark'); bindToggle('setPeopleMark', 'peopleMark'); bindToggle('setBotMsg', 'botMsg'); bindToggle('setPeopleMsg', 'peopleMsg'); bindToggle('setPower', 'powerJump', () => { if (S.b && !settings.powerJump) { S.b.jm = 0; S.b.jfill = false; } applyTouchUI(); applyDeps(); }); bindToggle('setBotAsk', 'botAsk'); bindToggle('setMmPlayers', 'mmPlayers'); bindToggle('setMmBots', 'mmBots');
 bindToggle('setStats', 'stats', () => { applyDeps(); statsKick(); }); ['Fps', 'Ping', 'Buf', 'Data', 'Srv', 'Conf'].forEach(k => bindToggle('setSt' + k, 'st' + k, statsKick));
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
@@ -3275,6 +3320,15 @@ let mutes = {}; try { mutes = JSON.parse(localStorage.getItem(MUTEKEY) || '{}') 
 let chatMuted = false; try { chatMuted = localStorage.getItem(CMKEY) === '1'; } catch (e) {}
 const saveMutes = () => { try { localStorage.setItem(MUTEKEY, JSON.stringify(mutes)); } catch (e) {} };
 const muteOf = pub => { if (!pub) return 0; const e = lks.find(l => l.pub === pub); return e ? e.mute : mutes[pub] ? 2 : 0; };   // 0 on, 1 no come-and-go, 2 silent
+const reqQ = [];
+function reqPopup(pub) {   // a friend request, shown as a little question the moment you are back (one at a time; any others wait their turn)
+  if (pub && !reqQ.includes(pub)) reqQ.push(pub);
+  if (!$('confirm').classList.contains('hide')) { setTimeout(() => reqPopup(), 1500); return; }
+  while (reqQ.length) { const r = reqs.find(q => q.pub === reqQ[0]); if (r) break; reqQ.shift(); }
+  if (!reqQ.length) return;
+  const r = reqs.find(q => q.pub === reqQ.shift());
+  askConfirm('Friend request', who(r.name) + ' wants to be your friend.', 'Accept', () => { wsSend({ t: 'tacc', to: r.pub }); reqs = reqs.filter(q => q !== r); lpRender(); setTimeout(() => reqPopup(), 400); }, { no: 'Later', yesClass: 'go' });
+}
 function ago(ms) { if (!ms) return 'a while ago'; const s = Math.max(0, (Date.now() - ms) / 1000); return s < 90 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; }
 const lkOf = pub => lks.find(l => l.pub === pub);
 const nameOf = pub => { const a = lkOf(pub) || reqs.find(r => r.pub === pub) || lpFound.find(f => f.pub === pub) || seenEntry(pub); return a ? a.name : ''; };
@@ -3324,7 +3378,7 @@ function linkMsg(m) {
     }
     case 'treq':
       if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, code: m.code || '', name: String(m.name || '').slice(0, 12), color: HEX.test(m.color) ? m.color : '#ccc', color2: m.color2, pat: m.pat | 0 });
-      sfx('ready'); notice('★ ' + who(m.name) + ' wants to be your friend', ''); sysNotify('nRequests', who(m.name) + ' wants to be your friend', 'Open ballpit.party to answer', 'req-' + m.pub); lpRender(); return true;
+      sfx('ready'); if (S.mode === 'play') notice('★ ' + who(m.name) + ' wants to be your friend', ''); else reqPopup(m.pub); sysNotify('nRequests', who(m.name) + ' wants to be your friend', 'Open ballpit.party to answer', 'req-' + m.pub); lpRender(); return true;
     case 'tres': {   // the answer to a request you sent: now, or while you were away
       const list = m.list || []; let yes = 0, no = 0, last = null;
       for (const x of list) {
@@ -3338,7 +3392,7 @@ function linkMsg(m) {
       wsSend({ t: 'rack' }); lpRender(); return true;
     }
     case 'tout': for (const x of (m.list || [])) if (/^[0-9a-f]{16}$/.test(x.pub || '')) { sentTo.add(x.pub); outReq[x.pub] = { name: String(x.name || '').slice(0, 12), code: x.code || '', t: +x.t || 0 }; } lpRender(); return true;
-    case 'tsent': sentTo.add(m.pub); outReq[m.pub] = { name: String(m.name || '').slice(0, 12), code: (outReq[m.pub] || {}).code || '', t: Date.now() }; notice(m.off ? who(m.name) + ' is offline. They will see your request when they are back' : 'Request sent to ' + who(m.name), ''); lpRender(); return true;
+    case 'tsent': sentTo.add(m.pub); outReq[m.pub] = { name: String(m.name || '').slice(0, 12), code: (outReq[m.pub] || {}).code || '', t: Date.now() }; notice(m.off ? who(m.name) + ' is offline. Your request waits 3 days for them to come back' : 'Request sent to ' + who(m.name) + '. It waits 3 days for an answer', ''); lpRender(); return true;
     case 'tno': {
       sentTo.delete(m.pub); delete outReq[m.pub];
       const nm = who(m.name || (lkOf(m.pub) || {}).name || '');
@@ -3604,7 +3658,7 @@ $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop'))
 const SHOP = [
   { cat: 'coins', id: 'coins', name: '250 coins', info: 'Trade one diamond for coins.', c: 0, g: 1, give: 250 },
   { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
-  { cat: 'gadgets', id: 'flag', max: 30, name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot.', c: 400, g: 5 },
+  { cat: 'travel', id: 'flag', max: 1, name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot. You can have one at a time: delete it to put it somewhere else.', c: 400, g: 5 },
   { cat: 'blocks', id: 'box0', max: 150, name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
   { cat: 'blocks', id: 'box1', max: 120, name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
   { cat: 'blocks', id: 'ball0', max: 150, name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
@@ -3615,7 +3669,7 @@ const SHOP = [
   { cat: 'gadgets', id: 'see', max: 25, name: 'Teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
   { cat: 'gadgets', id: 'rope', max: 40, name: 'Rope bridge', info: 'Ties to the edge of the dirt you stand on and stretches to the next dirt, up to 20 blocks across and less than 6 up or down. Nothing may be in its way.', c: 1000, g: 1, misc: 'rope' },
   { cat: 'gadgets', id: 'pad', max: 100, name: 'Floor booster', info: 'Set into the ground. Roll over it and it throws you forward.', c: 100, g: 0, misc: 'pad' },
-  { cat: 'gadgets', id: 'portal', max: 20, name: 'Portals', info: 'A yellow and a blue portal in the ground. Go in one and come out of the other.', c: 1000, g: 20, portal: true },
+  { cat: 'travel', id: 'portal', max: 2, name: 'Portals', info: 'Two holes in the ground: go in one and come out of the other. You can have two pairs: the first is yellow and blue, the second red and purple. Delete a pair to move it.', c: 1000, g: 20, portal: true },
   { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns a tile of ground into lava. It burns anything that touches it.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns a tile of ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
@@ -3623,7 +3677,7 @@ const SHOP = [
   { cat: 'terrain', id: 'dig', name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal or flag, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first. Use it as often as you like.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
   { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock and melts ice into water. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
-const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
+const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['travel', 'Travel'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
 let shopTab = 'blocks';
 const shopIcon = id => {
   const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
@@ -3659,7 +3713,7 @@ function shopRender() {
   SHOP.filter(it => it.cat === shopTab).forEach(it => {
     const row = document.createElement('div'); row.className = 'shopitem';
     const full = atLimit(it), ok = wallet.c >= it.c && wallet.g >= it.g && !full;
-    row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + (it.max ? ' <span class="lim' + (full ? ' full' : '') + '">' + ownCount(it) + '/' + it.max + '</span>' : '') + '</b><small>' + it.info + '</small></div>';
+    row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + (it.max && !noCaps ? ' <span class="lim' + (full ? ' full' : '') + '">' + ownCount(it) + '/' + it.max + '</span>' : '') + '</b><small>' + it.info + '</small></div>';
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.disabled = !ok;
     b.innerHTML = (it.c ? '<span class="pr">' + ico('gcoin') + it.c + '</span>' : '') + (it.g ? '<span class="pr">' + ico('gem') + it.g + '</span>' : '');
     b.onclick = () => buyItem(it); row.appendChild(b); L.appendChild(row);
@@ -3675,8 +3729,9 @@ $('btnShop').onclick = () => toggleShop(!shopOpen);
 $('shopClose').onclick = () => toggleShop(false);
 $('chatClose').onclick = () => toggleChat(false);
 const ownCount = it => (S.own && S.own[it.id]) | 0;   // how many of this you have built on this map (what others built does not count)
-const atLimit = it => !!it.max && ownCount(it) >= it.max;
-const limitNote = it => it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
+let noCaps = false; try { noCaps = localStorage.getItem('ballrun4_nocap') === '1'; } catch (e) {}   // (the code "unlimitedpower": no building limits at all, on this device)
+const atLimit = it => !noCaps && !!it.max && ownCount(it) >= it.max;
+const limitNote = it => it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : it.portal ? 'You have both portal pairs. Delete one to move it' : it.id === 'flag' ? 'You already have a checkpoint flag. Delete it to put one somewhere else' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
 // 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
 const pullNow = () => ({ down: !!(tin.down || keysDown.has('ArrowDown') || keysDown.has('KeyS')), up: !!(inp.jump || tin.jump || keysDown.has('ArrowUp') || keysDown.has('KeyW')) });   // what you are pulling on the controls
@@ -3699,10 +3754,11 @@ function ghostSpot(kind, side, pull) {   // a set distance beside you, on the si
   if (pull.down) { let y = y0; while (y - y0 < MAXUP && fits(y + 2)) y += 2; return [x, y, s]; }
   return [x, y0, s];
 }
+const adjTx = (b, s, n) => s > 0 ? Math.ceil((b.x + R + 6) / TS) : Math.floor((b.x - R - 6) / TS) - n + 1;   // the first column right beside your ball on that side, for a thing n blocks wide (never on top of you)
 function flagSpot(side) {   // a checkpoint flag stands on the ground beside you, like every other thing you place
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
-    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 0.7)) / TS), row = Math.floor((b.y + R + 1) / TS);
+    const s = pass ? -side : side, tx = adjTx(b, s, 1), row = Math.floor((b.y + R + 1) / TS);
     for (let k = -2; k < 2; k++) {
       const t = P.tile(w, tx, row + k);
       if (t === 2) break;
@@ -3715,7 +3771,7 @@ const tileIt = it => it && (it.id === 'flag' || it.gate || it.misc || it.portal)
 function gateSpot(side, hmax) {   // a gate: one tile wide, standing on the ground beside you, with clear air above it
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
-    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 0.9)) / TS), row = Math.floor((b.y + R + 1) / TS);
+    const s = pass ? -side : side, tx = adjTx(b, s, 1), row = Math.floor((b.y + R + 1) / TS);
     let gr = -1;
     for (let k = -2; k < 2; k++) { const t = P.tile(w, tx, row + k); if (t === 2) break; if (solidT(t)) { if (k < 0 && !solidT(P.tile(w, tx, row + k + 1))) continue; gr = row + k; break; } }   // (a solid tile just above your feet with air under it is a ceiling, not ground)
     if (gr < 0) continue;
@@ -3728,7 +3784,7 @@ function gateSpot(side, hmax) {   // a gate: one tile wide, standing on the grou
 function flatSpot(side, centre, need, lavaOk) {   // two tiles of level ground beside you with open air above them (a teeter-totter's centre or a floor booster); returns the left column and the ground row
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
-    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.3)) / TS) - 1, row = Math.floor((b.y + R + 1) / TS);
+    const ext = centre ? 2 : 0, s = pass ? -side : side, tx = s > 0 ? Math.ceil((b.x + R + 6) / TS) + ext : Math.floor((b.x - R - 6) / TS) - 2 - ext, row = Math.floor((b.y + R + 1) / TS);   // (right beside you, never on you)
     for (let k = -2; k < 2; k++) {
       const a = P.tile(w, tx, row + k), c = P.tile(w, tx + 1, row + k);
       if ((a === 2 || c === 2) && !lavaOk) break;
@@ -3746,7 +3802,7 @@ function flatSpot(side, centre, need, lavaOk) {   // two tiles of level ground b
 function plateSpot(side, gate) {   // the trigger: 2 tiles wide. Over open air it will fall until it lands, then stay.
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
-    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.4)) / TS) - 1, r0 = Math.floor((b.y + R - 2) / TS);
+    const s = pass ? -side : side, tx = adjTx(b, s, 2), r0 = Math.floor((b.y + R - 2) / TS);
     if (solidT(P.tile(w, tx, r0)) || solidT(P.tile(w, tx + 1, r0))) continue;
     if (gate && tx + 1 >= gate.tx - 0 && tx <= gate.tx) continue;   // not on the gate itself
     for (let r = r0; r < r0 + 80 && r < w.H; r++) {
@@ -3833,6 +3889,7 @@ function lavaWaterAhead(side) {   // is there lava or water right where the dele
 }
 function delThing(q) {   // delete it here, and for everyone in this world
   let id = { s: 'see', g: 'gate', r: 'rope', por: 'portal', c: 'flag', pad: 'pad' }[q[0]];
+  if (q[0] === 'por' && S.world && S.own && S.own.porC) { const p = S.world.portals.find(e => !e.gone && Math.round(e.a.x / TS) - 1 === q[1] && Math.round(e.a.y / TS) === q[2]); if (p) { const i = S.own.porC.indexOf(p.c | 0); if (i >= 0) S.own.porC.splice(i, 1); else id = null; } }   // (only one of your own pairs gives you a pair back)
   if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), it = d && SHOP.find(s => s.kind === d.kind && !s.misc && !s.gate); if (it) id = it.id; }
   if (applyDelRec(q, true)) { S.dels.push(q.slice()); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); if (id && S.own && S.own[id] > 0) S.own[id]--; }   // (deleting something gives you that one back to build again)
 }
@@ -3846,7 +3903,7 @@ function waterEx(x, r) {   // water never sits on ice or beside lava: the ice un
 function bncSpot(side) {   // a ground spring: one tile wide. Over open air it falls until it reaches the ground, then it sits in it.
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
-    const s = pass ? -side : side, tx = Math.floor((b.x + s * (R + TS * 1.1)) / TS), r0 = Math.floor((b.y + R - 2) / TS);
+    const s = pass ? -side : side, tx = adjTx(b, s, 1), r0 = Math.floor((b.y + R - 2) / TS);
     if (solidT(P.tile(w, tx, r0))) continue;
     for (let r = r0 + 1; r < r0 + 80 && r < w.H; r++) {
       const a = P.tile(w, tx, r);
@@ -3872,11 +3929,17 @@ function ropeSpot(side) {   // a rope bridge: tied to the edge of the dirt you s
   for (let dx = 0; dx <= 2 && !a; dx++) for (const r of [fr, fr + 1]) { const tx = cx + s * dx; if (T(tx, r) === 1 && T(tx, r - 1) === 0 && T(tx + s, r) === 0) { a = [tx, r]; break; } }
   if (!a) return null;
   let f = null;
-  for (let gp = 1; gp <= 20 && !f; gp++) { const col = a[0] + s * (gp + 1); for (const dy of [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5]) { const row = a[1] + dy; if (T(col, row) === 1 && T(col, row - 1) === 0 && T(col - s, row) === 0) { f = [col, row]; break; } } }
+  // straight across first, as far as it reaches: only when nothing level is in reach does it look a little up or down, then a little more. Of the ledges at the same height, the nearest one it can really reach (nothing in the way) is taken
+  let first = null;
+  for (const dy of [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5]) {
+    for (let gp = 1; gp <= 20 && !f; gp++) { const col = a[0] + s * (gp + 1), row = a[1] + dy; if (T(col, row) === 1 && T(col, row - 1) === 0 && T(col - s, row) === 0) { if (!first) first = [col, row]; if (P.ropeOk(w, ['rope', a[0], a[1], col, row])) f = [col, row]; } }
+    if (f) break;
+  }
+  if (!f) f = first;
   if (!f) return null;
   const q = ['rope', a[0], a[1], f[0], f[1]], n = P.ropeQ(q), r = { ax: (n[0] + 1) * TS, ay: n[1] * TS, bx: n[2] * TS, by: n[3] * TS }; r.L = r.bx - r.ax; r.sag = Math.min(TS * 0.9, r.L * 0.05); r.n = Math.max(2, Math.round(r.L / 20));
   let bad = !P.ropeOk(w, q) || startBlock(r.ax, r.ay) || startBlock(r.bx, r.by) || startBlock((r.ax + r.bx) / 2, (r.ay + r.by) / 2 + r.sag);
-  if (!bad) for (let x = r.ax + 10; x < r.bx; x += 24) { const u = (x - r.ax) / r.L, y = r.ay + (r.by - r.ay) * u + r.sag * 4 * u * (1 - u); if (P.bodyOverlaps(w, x - 12, y - 40, x + 12, y + 8, -2)) { bad = true; break; } }   // (and no crate or ball in the way)
+  if (!bad) for (let x = r.ax + 10; x < r.bx; x += 24) { const u = (x - r.ax) / r.L, y = r.ay + (r.by - r.ay) * u + r.sag * 4 * u * (1 - u); if (P.bodyOverlaps(w, x - 12, y - 40, x + 12, y + 8, -2) || playerIn(x - 12, y - 6, x + 12, y + 6)) { bad = true; break; } }   // (and no crate or ball in the way)
   return { q, r, bad };
 }
 function portalClash(g, sp, cx) {   // nothing can be made on top of a portal, and a portal cannot go under anything
@@ -3890,13 +3953,11 @@ function portalClash(g, sp, cx) {   // nothing can be made on top of a portal, a
   if (it.misc === 'ter') return portalHere(cx, 20, sp.gr);
   return false;
 }
-function playerIn(x0, y0, x1, y1) {   // is somebody else's ball (that you can see) on this box?
-  const now = performance.now(); let hit = false;
-  others.forEach(o => {
-    if (hit || !o.seen || o.dead || now - o.seen > 3000) return;
-    const cx = Math.max(x0, Math.min(o.cx, x1)), cy = Math.max(y0, Math.min(o.cy, y1)), dx = o.cx - cx, dy = o.cy - cy;
-    if (dx * dx + dy * dy < (R + 3) * (R + 3)) hit = true;
-  });
+function playerIn(x0, y0, x1, y1, notMe) {   // is anybody's ball on this box: yours, or anybody else's you can see (with a little room around each, so nothing is ever built onto a player)
+  const now = performance.now(), near = (x, y, m) => { const cx = Math.max(x0, Math.min(x, x1)), cy = Math.max(y0, Math.min(y, y1)), dx = x - cx, dy = y - cy; return dx * dx + dy * dy < m * m; };
+  if (!notMe && S.b && !(S.dead > 0) && near(S.b.x, S.b.y, R + 1)) return true;
+  let hit = false;
+  others.forEach(o => { if (hit || !o.seen || o.dead || now - o.seen > 6000 || o.cx === undefined) return; if (near(o.cx, o.cy, R + 6)) hit = true; });
   return hit;
 }
 function computeGhost() {
@@ -3934,7 +3995,8 @@ function computeGhost() {
       else if (g.it.misc === 'pad') rc = [g.mtx * TS, g.mgr * TS - 14, (g.mtx + 2) * TS, g.mgr * TS + 4];
       else if (g.it.misc === 'rope') rc = [-1e7, -1e7, -1e7 + 1, -1e7 + 1];   // (checked along its whole length in ropeSpot)
       else rc = [g.gtx * TS, (g.ggr - g.gh) * TS, (g.gtx + 1) * TS, g.ggr * TS];
-      if (playerIn(rc[0], rc[1], rc[2], rc[3]) || (g.it.misc === 'ter' && (g.mex || []).some(e => playerIn(e[0] * TS, e[1] * TS, (e[0] + 1) * TS, (e[1] + 1) * TS)))) { g.ok = false; g.pb = true; }
+      const nm = g.it.ter === 'dig';   // (deleting the ground right beside you is fine: only building is kept off players)
+      if (playerIn(rc[0], rc[1], rc[2], rc[3], nm) || (g.it.misc === 'ter' && (g.mex || []).some(e => playerIn(e[0] * TS, e[1] * TS, (e[0] + 1) * TS, (e[1] + 1) * TS, nm)))) { g.ok = false; g.pb = true; }
       else if (g.it.ter !== 'dig' && (P.bodyOverlaps(S.world, rc[0], rc[1], rc[2], rc[3], -2) || (g.it.misc === 'ter' && (g.mex || []).some(e => P.bodyOverlaps(S.world, e[0] * TS, e[1] * TS, (e[0] + 1) * TS, (e[1] + 1) * TS, -2))))) { g.ok = false; g.pb = true; }   // (nor on top of a crate or ball: one simple rule, it goes red and will not go down)
     }
     if (sp && sp.bad && g.it.misc === 'rope') { g.ok = false; g.pb = true; }
@@ -3948,7 +4010,7 @@ function computeGhost() {
   g.pc = !!spot && S.world.portals.some(e => [e.a, e.b].some(p => Math.abs(p.x - spot[0]) < q.half + 26 && p.y > spot[1] - q.half - 3 * TS && p.y < spot[1] + q.half + TS));
   if (spot && startBlock(spot[0], spot[1])) { g.sb = true; g.ok = false; g.tx = spot[0]; g.ty = spot[1]; }
   else if (spot && g.pc) { g.ok = false; g.tx = spot[0]; g.ty = spot[1]; }
-  else if (spot) { g.tx = spot[0]; g.ty = spot[1]; g.ok = true; const hh = q.hw || q.r; g.pb = playerIn(spot[0] - hh, spot[1] - q.half, spot[0] + hh, spot[1] + q.half) || P.bodyOverlaps(S.world, spot[0] - hh, spot[1] - q.half, spot[0] + hh, spot[1] + q.half, -2); if (g.pb) g.ok = false; } else { g.tx = b.x + g.side * (R + q.half + 3); g.ty = b.y + R - q.half; g.ok = false; }
+  else if (spot) { g.tx = spot[0]; g.ty = spot[1]; g.ok = true; const hh = q.hw || q.r; g.pb = playerIn(spot[0] - hh, spot[1] - q.half, spot[0] + hh, spot[1] + q.half, true) || (S.b && (() => { const cx = Math.max(spot[0] - hh, Math.min(S.b.x, spot[0] + hh)), cy = Math.max(spot[1] - q.half, Math.min(S.b.y, spot[1] + q.half)); return Math.hypot(S.b.x - cx, S.b.y - cy) < R + 1; })()) || P.bodyOverlaps(S.world, spot[0] - hh, spot[1] - q.half, spot[0] + hh, spot[1] + q.half, -2); if (g.pb) g.ok = false; } else { g.tx = b.x + g.side * (R + q.half + 3); g.ty = b.y + R - q.half; g.ok = false; }
   if (g.dx === undefined || Math.hypot(g.dx - g.tx, g.dy - g.ty) > 200) { g.dx = g.tx; g.dy = g.ty; }
 }
 function drawGhost(dt, nowT) {
@@ -3997,8 +4059,8 @@ function drawTileGhost(g, nowT) {
   const bad = !g.ok, pulse = 0.55 + 0.15 * Math.sin(nowT / 170);
   ctx.save(); ctx.lineJoin = 'round';
   if (g.it.portal) {
-    if (g.stage === 2 && g.pA) portalShape((g.pA.tx + 1) * TS, g.pA.gr * TS, '#ffd23d', 0.9, nowT);
-    portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : (g.stage === 2 ? '#3da5ff' : '#ffd23d'), pulse + 0.2, nowT);
+    if (g.stage === 2 && g.pA) { const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++; portalShape((g.pA.tx + 1) * TS, g.pA.gr * TS, PORC[c][0], 0.9, nowT); }
+    { const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++; portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : PORC[c][g.stage === 2 ? 1 : 0], pulse + 0.2, nowT); }
   } else if (g.it.misc === 'ter' && g.del && !bad) {   // the delete tool on a whole thing: a red outline around it and a big X
     const bx = g.del.box, x0 = bx[0] + (g.dx - g.tx) - 4, y0 = bx[1] + (g.dy - g.ty) - 4, ww = bx[2] - bx[0] + 8, hh = bx[3] - bx[1] + 8;
     ctx.globalAlpha = 0.18 + 0.08 * Math.sin(nowT / 170); ctx.fillStyle = '#ff3b2e'; ctx.fillRect(x0, y0, ww, hh);
@@ -4081,9 +4143,10 @@ function finishPlacing() {
   if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   if (it.ter === 'dig' && g.del) delThing(g.del.q);
   else if (it.portal) {
-    const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr];
+    const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++;   // (your first pair is yellow and blue, your second red and purple: never the same as one you have)
+    const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr, c]; S.own = S.own || {}; S.own.porC = [...used, c];
     addMisc(S.world, q); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('portal');
-    burst((q[1] + 1) * TS, q[2] * TS - 8, ['#ffd23d', '#fff'], 14, 160, 60); burst((q[3] + 1) * TS, q[4] * TS - 8, ['#3da5ff', '#fff'], 14, 160, 60);
+    burst((q[1] + 1) * TS, q[2] * TS - 8, [PORC[c][0], '#fff'], 14, 160, 60); burst((q[3] + 1) * TS, q[4] * TS - 8, [PORC[c][1], '#fff'], 14, 160, 60);
   } else if (it.gate && g.stage === 1) { g.gate = { tx: g.gtx, gr: g.ggr, h: g.gh }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   else if (it.gate) {
     const q = [g.gate.tx, g.gate.gr - g.gate.h, g.gate.h, g.ptx, g.prow, Math.round(g.py0)];
@@ -4940,7 +5003,7 @@ function lvSelect(i) {
   if (mt) { const len = lvLen(i); if (len) { const s = document.createElement('span'); s.textContent = len; tags.appendChild(s); } mt.th.slice(0, 5).map(biomeOf).filter(Boolean).forEach(t => { const s = document.createElement('span'); s.innerHTML = '<i style="background:' + t.top + '"></i>' + t.id.charAt(0).toUpperCase() + t.id.slice(1); tags.appendChild(s); }); }
   $('lvNote').textContent = (isBeaten(i) ? 'You have beaten this level. ' : 'Not beaten yet. ') + (soloFrom(i) ? 'A copy saved from ' + soloFrom(i) + '.' : hasSoloSave(i) ? 'What you built here is saved.' : 'Nothing saved yet.');
   $('lvUnl').checked = unlimitedAt(i); $('lvMoney').textContent = lvMoneyText(i);
-  $('lvReset').classList.toggle('hide', !hasSoloSave(i));
+  $('lvReset').classList.toggle('hide', !hasSoloSave(i)); finRow(i);
   $('lvOk').textContent = inHome ? 'Choose' : (i === soloLevel() ? 'Keep playing' : 'Play');
 }
 $('lvFil').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { sfx('ui'); lvF = b.getAttribute('data-f'); lvFilter(); } });
@@ -4949,7 +5012,17 @@ $('lvUnl').onchange = () => {   // every private map decides for itself: earn co
   lastCoinShown = lastGemShown = -1; homeWalletRender.k = ''; if (shopOpen) shopRender();
 
 };
-function openLevels() {
+/* where the finish is on each of your levels: spot 1 to 4, or Random (drawn once and kept, or drawn again every game) */
+let finChg = false;
+const selFin = makeSelect($('selFin'), [{ v: 's0', label: 'Finish: Spot 1' }, { v: 's1', label: 'Finish: Spot 2' }, { v: 's2', label: 'Finish: Spot 3' }, { v: 's3', label: 'Finish: Spot 4' }, { v: 'r', label: 'Finish: Random' }], v => {
+  const i = lvSel, p = finOf(i), was = soloFin(i);
+  if (v === 'r') { p.k = 'r'; p.cur = Math.floor(Math.random() * FIN_N); } else { p.k = +v.slice(1); delete p.cur; }
+  finPref[i] = p; saveFin(); sfx('ui'); finRow(i);
+  if (soloFin(i) !== was && i === soloLevel()) finChg = true;
+});
+$('lvRoll').onchange = () => { const i = lvSel, p = finOf(i); p.roll = $('lvRoll').checked ? 1 : 0; finPref[i] = p; saveFin(); sfx(p.roll ? 'on' : 'off'); };
+function finRow(i) { const p = finOf(i); selFin.set(p.k === 'r' ? 'r' : 's' + (p.k | 0)); $('lvRoll').checked = !!p.roll; $('lvRollRow').classList.toggle('hide', p.k !== 'r'); }
+function openLevels() { finChg = false;
   loadSolo(); lvBuild(); lvSelect(soloLevel()); $('lvlModal').classList.remove('hide');
   setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }, 30);
 }
@@ -4963,7 +5036,7 @@ $('lvGrid').addEventListener('click', e => { const b = e.target.closest('.lvb');
 $('lvNo').onclick = closeLevels;
 $('lvReset').onclick = () => askResetLevel(lvSel);
 $('lvOk').onclick = () => {
-  const changed = lvSel !== soloLevel(); settings.soloMap = String(lvSel); save(); lvlRender(); closeLevels(); sfx('ui');
+  const changed = lvSel !== soloLevel() || finChg; finChg = false; settings.soloMap = String(lvSel); save(); lvlRender(); closeLevels(); sfx('ui');
   if (!inHome) { if (paused) resumeGame(); if (changed) soloGo(true); }
 };
 $('lvlModal').addEventListener('pointerdown', e => { if (e.target === $('lvlModal')) closeLevels(); });
@@ -4980,6 +5053,7 @@ function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
+  if (v === 'unlimitedpower') { if (noCaps) { $('cdNote').textContent = 'You already build without limits.'; sfx('warn'); return; } noCaps = true; try { localStorage.setItem('ballrun4_nocap', '1'); } catch (e) {} sfx('big'); closeCode(); notice('No building limits: build as much of everything as you like', ''); try { shopRender(); } catch (e) {} return; }
   if (v === 'themaker#1' || v === 'maker' || v === 'zeros') {   // the three money codes. They only ever change your own money on this device, and never a private world whose maker set its money to unlimited
     const done = t => { saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice(t, ''); };
     const setInf = on => { infMoney = on; try { if (on) localStorage.setItem('ballrun4_inf', '1'); else localStorage.removeItem('ballrun4_inf'); } catch (e) {} };
@@ -5048,7 +5122,7 @@ function setMultiplayer(on) {
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
-  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel() }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
+  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), fk: soloFin(soloLevel()) }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   return JSON.stringify(o);
 };
 function joinWorld() {
@@ -5102,7 +5176,7 @@ function sendInfo() {
   if (msg === lastSent) return;
   lastSent = msg; ws.send(msg);
 }
-const newOther = (name, color, color2, pat, crown) => ({ name: name || '', color: HEX.test(color) ? color : '#ccc', color2: HEX.test(color2) ? color2 : '#fff', pat: pat | 0, x: 0, y: 0, cx: 0, cy: 0, px: 0, py: 0, t0: 0, dur: 200, rot: 0, seen: 0, dead: 0, crown: !!crown, morph: 0 });
+const newOther = (name, color, color2, pat, crown) => ({ name: name || '', color: HEX.test(color) ? color : '#ccc', color2: HEX.test(color2) ? color2 : '#fff', pat: pat | 0, x: 0, y: 0, cx: 0, cy: 0, px: 0, py: 0, t0: 0, dur: 200, rot: 0, seen: 0, dead: 0, crown: crown | 0, morph: 0 });
 function nearMe(x, y) { return S.b && Math.abs(x - S.b.x) < 2200 && Math.abs(y - S.b.y) < 1600; }
 const solidT = t => t === 1 || t === 3 || t === 4 || t === 6 || t === 9;
 const pp = { x: 0, y: 0 };
@@ -5264,9 +5338,10 @@ function onMsg(m) {
       setNet('online');
       if (m.priv) addFeed(party.role === 'host' ? 'Your private game is open: invite your friends' : 'You joined ' + who(party.name) + "'s private game", 'join', true); else addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
+      if (!m.priv || (party && party.role === 'guest')) setNetFk(m.slot, m.fk);
       if (party && party.role === 'guest') { loadMap(m.slot, m.next); }
       else if (!m.priv && m.build && m.room !== S.pubRoom && S.pubKeys && S.pubKeys.size && S.slot === m.slot) { S.pubRoom = m.room; loadMap(m.slot, m.next); }   // (a different world than the one you were building in: start from its map)
-      else if (m.slot !== S.slot && forced === null) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
+      else if ((m.slot !== S.slot && forced === null) || (!m.priv && m.slot === S.slot && (m.fk | 0) !== S.fk)) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
       if (!m.priv && m.build) { S.pubRoom = m.room; if (S.slot === m.slot && S.world && S.mode !== 'fade') pubSync(m.build); else S.pendingBuild = { slot: m.slot, b: m.build }; }
       if (!m.priv && m.fresh) offerSnap(m.slot, m.room);
       if (m.priv) announceEntry({ slot: m.priv.idx, n: m.n }); else if ((m.full || []).length) showWorldPop(m.room, m.full); else announceEntry({ slot: m.slot, next: m.next, n: m.n });
@@ -5295,7 +5370,7 @@ function onMsg(m) {
       if (!S.world || !shared() || !validMisc(m.g) || (!party && m.g[0] !== 'tl' && !pubTake('m', m.g))) break;   // (a terrain change is absolute, so applying it twice does no harm)
       if (m.g[0] === 'tl' && m.g[3] === -1) { addMisc(S.world, m.g, true); dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); wDirty = true; break; }   // somebody put a tile back the way it was: nothing to remember
       if (m.g[0] === 'tl') { dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); }
-      addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' || m.g[0] === 'rope' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
+      addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 6 : m.g[0] === 'rope' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
     case 'pdel': { if (!S.world || !shared() || !validDel(m.g) || (!party && !pubTake('d', m.g))) break; if (applyDelRec(m.g, !m.bulk)) { S.dels.push(m.g.slice()); wDirty = true; if (!m.bulk) sfx('pop'); } break; }   // somebody deleted something here
     case 'pgate': { if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
     case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); (m.dels || []).forEach(q => onMsg({ t: 'pdel', g: q, bulk: 1 })); sfx('big'); break;
@@ -5320,11 +5395,11 @@ function onMsg(m) {
     case 'rebuild': if (party || inSolo() || !m.b || !S.world) break;   // the server got this world's memory back from a player: load it again, as it really was
       S.pendingBuild = { slot: S.slot, b: m.b }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break;
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
-      clockOff = m.now - Date.now(); if (forcedLeft === null) S.nextAt = m.next; if (m.build && !party) S.pendingBuild = { slot: m.slot, b: m.build }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; startTransition(m.slot, m.next); break;   // (a map that comes back has everything that was built on it, and is shown once the server has said where it all is)
+      clockOff = m.now - Date.now(); setNetFk(m.slot, m.fk); if (forcedLeft === null) S.nextAt = m.next; if (m.build && !party) S.pendingBuild = { slot: m.slot, b: m.build }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; startTransition(m.slot, m.next); break;   // (a map that comes back has everything that was built on it, and is shown once the server has said where it all is)
     case 'fin': {
       const mine = m.id === myId, o = others.get(m.id);
-      if (mine) { S.crown = true; $('fbText').textContent = 'Place #' + m.rank + ' · Time ' + fmtT(m.ms); }
-      else if (o) { o.crown = true; if (nearMe(o.cx, o.cy)) burst(o.cx, o.cy - 10, ['#ffd23d', '#fff', '#ff5b4a'], 24, 300, 400); }
+      if (mine) { S.crown = m.rank || 1; $('fbText').textContent = 'Place #' + m.rank + ' · Time ' + fmtT(m.ms); }
+      else if (o) { o.crown = m.rank || 1; if (nearMe(o.cx, o.cy)) burst(o.cx, o.cy - 10, ['#ffd23d', '#fff', '#ff5b4a'], 24, 300, 400); }
       if (settings.announce) {
         const nm = mine ? 'You' : who(m.name);
         const text = m.rank === 1 ? (mine ? 'You won the level!' : nm + ' won the level!') : (mine ? 'You finished #' + m.rank + '!' : nm + ' finished the level (#' + m.rank + ')');
@@ -5845,7 +5920,8 @@ function drawGadgets(camL, camT, vw, vh, dt) {
   // portals: glowing holes in the ground, yellow and blue
   for (let i = 0; i < w.portals.length; i++) {
     const q = w.portals[i];
-    for (const [e, col] of [[q.a, '#ffd23d'], [q.b, '#3da5ff']]) {
+    const pc = PORC[q.c | 0] || PORC[0];
+    for (const [e, col] of [[q.a, pc[0]], [q.b, pc[1]]]) {
       if (e.x < camL - 60 || e.x > camL + vw + 60 || e.y < camT - 60 || e.y > camT + vh + 60) continue;
       portalShape(e.x, e.y, col, 1, S.t * 1000);
       if (fxOn() && Math.random() < 0.18) burst(e.x + (Math.random() - 0.5) * 40, e.y - 2, [col, '#fff'], 1, 60, 40);
@@ -6116,7 +6192,7 @@ function render(dt, nowT) {   // the ball is drawn between its last two physics 
 }
 function renderInner(dt, nowT) {
   if (!S.map) return;
-  const dpr = settings.low ? 1 : Math.max(1, Math.min(2, window.devicePixelRatio || 1) * rq), sw = window.innerWidth, sh = window.innerHeight;
+  const dpr = settings.vs === 'blocky' ? 0.3 : settings.low ? 1 : Math.max(1, Math.min(2, window.devicePixelRatio || 1) * rq), sw = window.innerWidth, sh = window.innerHeight;   // (Blocky: the world is drawn with a few big pixels, then shown sharp-edged)
   if (cv.width !== Math.round(sw * dpr) || cv.height !== Math.round(sh * dpr)) { cv.width = Math.round(sw * dpr); cv.height = Math.round(sh * dpr); }
   // a comfortable view (about 15 tiles tall on a laptop); the Zoom setting scales it either way
   // Fairness: the view is measured in WORLD units, never screen pixels. Physics runs on a fixed 120 Hz clock in world
@@ -6183,14 +6259,14 @@ function renderInner(dt, nowT) {
       drawBall(nx, ny, o.rot, o.color, o.color2, o.pat, 0.88, false, sc2);
       const pinned = pinShown(o.pub);
       if (!pinned) drawLabel(o.name, false, o.crown, nx, ny, true);
-      if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 : settings.tags && o.name ? 38 : 22) - (o.crown ? 14 : 0));
+      if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 : settings.tags && o.name ? 38 : 22) - (o.crown && settings.crowns ? crownH(o.crown) : 0));
     });
     for (let i = 0; i < bots.length; i++) {
       const bt = bots[i], bb = bt.b;
       if (bt.dead > 0 || bb.x < camL - m || bb.x > camL + vw + m || bb.y < camT - m * 2 || bb.y > camT + vh + m) continue;
       drawBall(bb.x, bb.y, bb.rot, bt.color, bt.color2, bt.pat, 0.88, false);
       drawLabel(bt.name, true, bt.crown, bb.x, bb.y);
-      if (bt.emo) drawEmoBubble(bt.emo, bb.x, bb.y - R - (settings.tags && bt.name ? 38 : 22) - (bt.crown ? 14 : 0));
+      if (bt.emo) drawEmoBubble(bt.emo, bb.x, bb.y - R - (settings.tags && bt.name ? 38 : 22) - (bt.crown && settings.crowns ? crownH(bt.crown) : 0));
     }
     if (S.dead <= 0 && !S.away) {    // you: always last = always on top
       let s = 1; if (S.spawnT > 0) { const p = 1 - S.spawnT / 0.6; s = 0.25 + 0.75 * Math.min(1, p * 1.25) + 0.12 * Math.sin(p * 3.14); }
@@ -6199,7 +6275,7 @@ function renderInner(dt, nowT) {
       drawSuper(b);
       if (settings.boost) drawBoost(b);
       drawLabel(settings.name, false, S.crown, b.x, b.y);
-      if (S.myEmo) drawEmoBubble(S.myEmo, b.x, b.y - R - (settings.tags && settings.name ? 38 : 22) - (S.crown ? 14 : 0));
+      if (S.myEmo) drawEmoBubble(S.myEmo, b.x, b.y - R - (settings.tags && settings.name ? 38 : 22) - (S.crown && settings.crowns ? crownH(S.crown) : 0));
     }
   }
   drawFx();
@@ -6306,7 +6382,7 @@ function drawThings(g, X, Y, z, L, T, Rr, B) {   // toys and items, on both maps
   g.strokeStyle = '#e8923a'; g.lineWidth = Math.max(2, z * 0.3); g.lineCap = 'round';
   for (const q of w.see) { const cx = q.cx / TS, cy = q.cy / TS; if (cx + 3 < L || cx - 3 > Rr || cy < T - 2 || cy > B + 2) continue; g.beginPath(); g.moveTo(X(cx - 3), Y(cy)); g.lineTo(X(cx + 3), Y(cy)); g.stroke(); }
   g.lineCap = 'butt';
-  for (const p of w.portals) for (const [e, col] of [[p.a, '#ffd23d'], [p.b, '#3da5ff']]) { const tx = e.x / TS, ty = e.y / TS; if (tx < L - 2 || tx > Rr + 2 || ty < T - 2 || ty > B + 2) continue; g.fillStyle = col; g.strokeStyle = '#16100c'; g.lineWidth = 1; g.beginPath(); g.arc(X(tx), Y(ty) - 1, Math.max(2.5, z * 0.45), 0, TAU); g.fill(); g.stroke(); }
+  for (const p of w.portals) for (const [e, col] of [[p.a, (PORC[p.c | 0] || PORC[0])[0]], [p.b, (PORC[p.c | 0] || PORC[0])[1]]]) { const tx = e.x / TS, ty = e.y / TS; if (tx < L - 2 || tx > Rr + 2 || ty < T - 2 || ty > B + 2) continue; g.fillStyle = col; g.strokeStyle = '#16100c'; g.lineWidth = 1; g.beginPath(); g.arc(X(tx), Y(ty) - 1, Math.max(2.5, z * 0.45), 0, TAU); g.fill(); g.stroke(); }
 }
 function drawFinishIcon(g, x, y, sc, now) {   // a little flag on a gold pulse, the same on both maps
   const p = (now / 700) % 1;
