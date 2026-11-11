@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 130;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 131;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -603,11 +603,12 @@ wss.on('connection', (ws, req) => {
     p.lastMsg = Date.now();
     if (++p.msgs > 200) return;                       // simple flood protection (positions alone can be 60 a second)
     if (isBinary) {                                   // a position update: [0x70][slot u16][x/2 u16][y u16 (65535 = dead)][vx/5 i8][vy/20 i8][time u15 | grounded<<15]
-      if (!p.room || (raw.length !== 11 && raw.length !== 12) || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (rslot(p.room) & 0xFFFF)) return;
+      if (!p.room || (raw.length < 11 || raw.length > 13) || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (rslot(p.room) & 0xFFFF)) return;
       const x = Math.min(262000, raw.readUInt16LE(3) * 2), yr = raw.readUInt16LE(5), d = yr === 65535 ? 1 : 0;
       const y = d ? p.y : Math.min(131000, yr), vx = raw.readInt8(7) * 5, vy = raw.readInt8(8) * 20, st = raw.readUInt16LE(9);
       if (p.x !== x || p.y !== y || p.dead !== d || p.vx !== vx || p.vy !== vy || p.st !== st || !p.has) p.moved = true;
-      p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true; p.tPos = Date.now(); p.press = !d && raw.length === 12 && (raw[11] & 1) ? 1 : 0; p.pv = !d && raw.length === 12 && (raw[11] & 2) ? 1 : 0;   // (pv: the speed is how hard they push against something that holds them, not how fast they move)
+      p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true; { const now = Date.now(), c15 = st & 0x7FFF; p.cU = p.cU === undefined ? c15 : p.cU + ((c15 - (p.cU & 0x7FFF)) & 0x7FFF); const off = now - p.cU; if (p.cOff === undefined || off < p.cOff || off > p.cOff + 2000) p.cOff = off; else p.cOff += 0.05; p.tPos = Math.min(now, p.cU + p.cOff); }   // (when this was true on their device, on this clock: an update held up on the way is carried on further, so their point never lurches back when updates come bunched)
+      p.press = !d && raw.length >= 12 && (raw[11] & 1) ? 1 : 0; p.pv = !d && raw.length >= 12 && (raw[11] & 2) ? 1 : 0; p.rvx = d ? 0 : raw.length === 13 ? raw.readInt8(12) * 5 : p.pv ? 0 : vx;   // (rvx: how fast they really move, which is what everybody else is shown)   // (pv: the speed is how hard they push against something that holds them, not how fast they move)
       return;
     }
     let m;
@@ -974,7 +975,7 @@ setInterval(() => {
     if (!arr.length || !fresh) continue;   // (only when somebody moved, plus a heartbeat every second)
     const buf = Buffer.allocUnsafe(3 + arr.length * 12);
     buf[0] = 3; buf.writeUInt16LE(rslot(r.room) & 0xFFFF, 1);
-    arr.forEach((q, k) => { const o = 3 + k * 12; buf.writeUInt32LE(parseInt(q.pub.slice(0, 8), 16) >>> 0, o); buf.writeUInt16LE(q.x >> 2, o + 4); buf.writeUInt16LE(q.dead ? 65535 : (q.y >> 1), o + 6); buf.writeUInt16LE(q.room.id & 0xFFFF, o + 8); buf.writeInt8(q.dead || q.pv ? 0 : Math.max(-127, Math.min(127, Math.round(q.vx / 5))), o + 10); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round(q.vy / 20))), o + 11); });
+    arr.forEach((q, k) => { const o = 3 + k * 12; buf.writeUInt32LE(parseInt(q.pub.slice(0, 8), 16) >>> 0, o); buf.writeUInt16LE(q.x >> 2, o + 4); buf.writeUInt16LE(q.dead ? 65535 : (q.y >> 1), o + 6); buf.writeUInt16LE(q.room.id & 0xFFFF, o + 8); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round((q.rvx === undefined ? q.vx : q.rvx) / 5))), o + 10); buf.writeInt8(q.dead ? 0 : Math.max(-127, Math.min(127, Math.round(q.vy / 20))), o + 11); });
     r.ws.send(buf, { binary: true });
   }
   for (const room of rooms.values()) {
@@ -985,7 +986,7 @@ setInterval(() => {
       let k = 0; const hits = [];
       for (const p of list) {
         if (p === r || !p.has) continue;
-        if (Math.abs(p.x - r.x) > RANGE || Math.abs(p.y - r.y) > RANGE) {
+        if (Math.abs(p.x - r.x) > RANGE || Math.abs(p.y - r.y) > RANGE || p.stale) {
           if (r.vis.delete(p.id)) hits.push([p, 1]);   // they moved out of your range: tell the client to hide them (no stale ghosts)
           continue;
         }
@@ -997,7 +998,7 @@ setInterval(() => {
       for (const h of hits) {   // per player: id u32, x/2 u16, y u16 (65535 = just died, 65534 = out of range), vx/5 i8, vy/20 i8, time+grounded u16
         const p = h[0], o = 3 + k * 12, gone = h[1] || p.dead; k++;
         buf.writeUInt32LE(p.id, o); buf.writeUInt16LE(p.x >> 1, o + 4); buf.writeUInt16LE(h[1] ? 65534 : p.dead ? 65535 : Math.min(65533, p.y), o + 6);
-        buf.writeInt8(gone || p.pv ? 0 : Math.max(-127, Math.min(127, Math.round(p.vx / 5))), o + 8);   // (someone pressing against a crate is shown standing against it: never carried on into it)
+        buf.writeInt8(gone ? 0 : Math.max(-127, Math.min(127, Math.round((p.rvx === undefined ? p.vx : p.rvx) / 5))), o + 8);   // (someone pressing against a crate is shown standing against it: never carried on into it)
         buf.writeInt8(gone ? 0 : Math.max(-127, Math.min(127, Math.round(p.vy / 20))), o + 9); buf.writeUInt16LE(p.st & 0xFFFF, o + 10);
       }
       r.ws.send(buf, { binary: true });
@@ -1040,6 +1041,17 @@ setInterval(() => {
   keepWorlds(false);
   pushSubs.forEach((v, pub) => { if (v.m) pushTo(pub, 'm', ['A new map has started', maps.names[curSlot % maps.count]], 'map-' + curSlot); });   // (only devices that are not in the game right now)
 }, 1000);
+
+// A player whose game has gone quiet (every game in a world says something at least once a second): after 3.5 seconds they are hidden from everybody, so nobody is left looking at them frozen in place; after 10 seconds they are taken out of the world, which tells everybody they left (and their friends that they went offline). If their game wakes up it simply joins again
+setInterval(() => {
+  const now = Date.now();
+  for (const room of rooms.values()) for (const p of room.players.values()) {
+    if (!p.has) continue;   // (only players actually in the game: a connection that has not shown itself yet is left alone)
+    const q = now - (p.lastMsg || now);
+    const st = q > 3500; if (st !== !!p.stale) { p.stale = st; p.moved = true; }
+    if (q > 10000) { try { p.ws.terminate(); } catch (e) {} }
+  }
+}, 500).unref();
 
 // Drop dead connections
 setInterval(() => {

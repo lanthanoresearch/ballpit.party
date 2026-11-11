@@ -675,7 +675,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 130; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 131; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1006,8 +1006,8 @@
       <h4 id="lpNewsH" class="hide"><span data-ic="check"></span> Answers to your requests</h4><div id="lpNews"></div>
       <h4 id="lpOutH" class="hide"><span data-ic="clock"></span> Waiting for an answer</h4><div id="lpOut"></div>
       <button class="btn full prim" id="btnAddF" type="button"><span data-ic="search"></span>Add a friend</button>
-      <h4><span data-ic="bell"></span> Notifications</h4>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="bell"></span><span><b>Notifications</b><small id="ntSub">Reach you here, even when the game is closed</small></span></span><input type="checkbox" id="setNotify"><i></i></label>
+      <h4 class="hide"><span data-ic="bell"></span> Notifications</h4>
+      <label class="sw2 ic2 hide"><span class="ti"><span data-ic="bell"></span><span><b>Notifications</b><small id="ntSub">Reach you here, even when the game is closed</small></span></span><input type="checkbox" id="setNotify"><i></i></label>
       <div id="ntKinds" class="hide">
         <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Friends come online</b><small>A friend you track starts playing</small></span></span><input type="checkbox" id="setNFriends"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Friend requests</b><small>Someone asks you, or answers you</small></span></span><input type="checkbox" id="setNRequests"><i></i></label>
@@ -1295,6 +1295,7 @@ function normalize() {
   if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);
   settings.finArrow = settings.finArrow !== false; delete settings.finMode;
   if (['live', 'morning', 'midday', 'night'].indexOf(settings.tod) < 0) settings.tod = 'live';
+  settings.notify = false;   // (notifications outside the game are switched off for now)
   settings.soloLen = 0;   // your own world never runs out: it stays until you reset that level
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
@@ -2058,6 +2059,16 @@ function remotePush(dt) {   // what this device is moving for everybody: the oth
     if (any) P.collideDyn(c, w);
     if (pl) { c.x = o.cx; c.y = o.cy; for (const s of w.see) if (s.owned && Math.abs(s.cx - c.x) < s.hl + 40 && Math.abs(s.cy - c.y) < s.hl + 60) { P.seeBody(c, w, P.PLAYER_WT); break; } } });   // (and a teeter-totter this device turns feels their weight)
 }
+function predShared(d) {   // is another player right at this thing too?
+  const e = (d.r || Math.max(d.hw, d.hh)) + R + 40;
+  for (const o of others.values()) if (o.seen && !o.dead && o.cx !== undefined && Math.abs(o.cx - d.x) < e && Math.abs(o.cy - d.y) < e) return true;
+  return false;
+}
+function predLead(d, t) {   // how far ahead of the server's picture something you push may be: as far as it went here in the last round trip (the server has not heard of that part yet), but never more than the server's own pace over that time allows. So pushing along goes at an even pace however slow the connection, and when the server holds it still (someone pushing back) it is held here too
+  const H = d.ph || (d.ph = []), sv = d.sv ? Math.hypot(d.sv.vx, d.sv.vy) : 0; H.push(t, d.x, d.y, sv); while (H.length > 8 && t - H[4] > 1500) H.splice(0, 4);
+  const W = NET.rtt * 1.2 + 70; let i = H.length - 4, sum = sv, n = 1; while (i > 0 && t - H[i] < W) { i -= 4; sum += H[i + 3]; n++; }
+  return 8 + Math.min(160, Math.hypot(d.x - H[i + 1], d.y - H[i + 2]), (sum / n + 20) * W / 1000);
+}
 function followWorld(dt) {
   const w = S.world, fol = followOn(); w.srvOnly = fol; if (w.follow !== fol) { w.follow = fol; if (!fol) { for (const d of w.dyn) { d.mineT = 0; d.sleep = false; if (d.burn === UNK) d.burn = 0; } } }
   w.pubWait = !fol && S.slot >= 0 && S.slot < SOLO_BASE && !!(settings.mp || party) && !offlineOn() && !inSolo();   // (a shared world before the server has spoken: nothing in it moves by itself here)
@@ -2089,12 +2100,12 @@ function followWorld(dt) {
       tx += (ix - tx) * ip; ty += (iy - ty) * ip;
     }   // (nor guess it through a teeter-totter's plank: when the plank stops, so does what rides on it)   // (never guess a position inside the ground)
     if (d.pred > 0) {   // you are touching it (or pushed it into this one): it moves here at once, by the same physics the server uses, but never gets more than a short way ahead of where the server has it; so what you push answers instantly, and what everybody sees stays the same thing
-      if (!d.predA) d.predS = t; if (d.predT === 0.25) d.touchT = t;   // (when this push began, and when you last touched it)
+      if (!d.predA) { d.predS = t; if (d.ph) d.ph.length = 0; } if (d.predT === 0.25) d.touchT = t;   // (when this push began, and when you last touched it)
       const saw = T => (s.ts || 0) >= T + NET.rtt + 40 || NET.lastTs >= T + NET.rtt + 60 || (NET.pongC >= T + 70 && t - NET.pongAt > 110) || t > T + 2500;   // (has the server's answer to a touch at that moment come back yet? on a good connection it has long before any of this matters; on a slow or patchy one, until it has, the server's picture is from before you touched it and says nothing about the push)
       if (t - NET.pingAt > 150 && t - d.touchT > NET.rtt && !saw(d.touchT)) netPing();   // (the answer is late: a quick ping tells when the server has had it, since messages keep their order)
       d.pred -= dt; if (d.predT > 0) d.predT -= dt; d.predA = (d.predA || 0) + dt;
-      const ex = d.x - tx, ey = d.y - ty, e = Math.hypot(ex, ey), L = d.predA < 0.45 || !saw(d.predS) ? 34 : 8 + Math.min(26, Math.hypot(s.vx, s.vy) * 0.13);   // (right as you start pushing it answers at once; after that it stays only as far ahead as the server's own motion allows, so if the server holds it still (someone pushing back), it stays still here too)
-      if (s !== d._lsv) { d._lsv = s; if (e > 70) NET.conflict(e, e > 220 ? 'snap' : 'push'); d.vx += (s.vx - d.vx) * 0.4; d.vy += (s.vy - d.vy) * 0.4; d.av += ((s.av || 0) - d.av) * 0.4; }   // (each word from the server also steers how fast it goes here, so the two never drift apart)
+      const ex = d.x - tx, ey = d.y - ty, e = Math.hypot(ex, ey), L = predShared(d) ? (d.predA < 0.45 || !saw(d.predS) ? 34 : 8 + Math.min(26, Math.hypot(s.vx, s.vy) * 0.13)) : saw(d.predS) ? predLead(d, t) : Math.max(34, predLead(d, t));   // (until the server has heard of the push, it may go a little way on its own. With someone else at it too, it stays close to the server's picture, so two players pushing against each other see the same thing)   // (while it moves, the server's picture of it is a round trip behind yours: it may be that much ahead, so pushing it along goes at an even pace instead of being held back again and again)   // (right as you start pushing it answers at once; after that it stays only as far ahead as the server's own motion allows, so if the server holds it still (someone pushing back), it stays still here too)
+      if (s !== d._lsv) { d._lsv = s; if (e > L + 45) NET.conflict(e, e > 220 ? 'snap' : 'push'); d.vx += (s.vx - d.vx) * 0.4; d.vy += (s.vy - d.vy) * 0.4; d.av += ((s.av || 0) - d.av) * 0.4; }   // (each word from the server also steers how fast it goes here, so the two never drift apart)
       if (e > 220) { d.x = tx; d.y = ty; d.vx = s.vx; d.vy = s.vy; }   // (far apart: the server's picture, at once)
       else if (e > L) {   // (a little ahead of the server is fine; further and it waits for it, and so do you if you are pushing it)
         const k = L / e, nx = tx + ex * k, ny = ty + ey * k;
@@ -4774,7 +4785,7 @@ async function pushSync() {   // tell the server where to reach this device, and
   if (!notifOK() || !(online || lobbyOn)) return;
   const reg = await swReg(); if (!reg || !reg.pushManager) { if (settings.notify) { pushState = 'fail'; ntRender(); try { console.warn('push signup failed: no push support'); } catch (x) {} } return; }
   if (!notifOn()) {
-    if (pushSig) { pushSig = ''; wsSend({ t: 'punsub' }); }
+    if (pushSig || pushSock !== ws) { pushSig = ''; pushSock = ws; wsSend({ t: 'punsub' }); }   // (and the server forgets this device, so nothing old reaches it)
     pushState = '';
     try { const s = await reg.pushManager.getSubscription(); if (s) await s.unsubscribe(); } catch (e) {}
     return;
@@ -5282,10 +5293,11 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
   if (!online || !ws || ws.readyState !== 1 || !S.b || S.mode !== 'play') return;
   const b = S.b, d = (S.dead > 0 || S.away) ? 1 : 0, t = performance.now(), L = lastSend;
   const x = Math.round(b.x), y = Math.round(b.y), g = b.ground ? 1 : 0;
-  const VH = S.vh || (S.vh = []); VH.push(t, b.x); while (VH.length > 4 && t - VH[2] > 110) VH.splice(0, 2);   // (where you were a tenth of a second ago)
+  const VH = S.vh || (S.vh = []); VH.push(t, b.x); while (VH.length > 4 && t - VH[2] > 260) VH.splice(0, 2);   // (where you were a quarter of a second ago)
   if (b.pressing || b.pushing) b.prT = t;
-  const pv = b.pressing && Math.abs(b.inVx || 0) > Math.abs(b.vx), mvx = VH.length > 2 && t - VH[0] > 40 ? (b.x - VH[1]) / ((t - VH[0]) / 1000) : b.vx;
-  const vxs = pv ? b.inVx : t - (b.prT || -1e9) < 250 ? mvx : b.vx;   // (pressing on something that holds you: how hard you push. Pushing something along: how fast you really go, not the jolts of the push itself, so nobody sees you lunge)   // (pressing against a crate: the speed you are pushing it with)
+  const pv = b.pressing && Math.abs(b.inVx || 0) > Math.abs(b.vx), mvx = VH.length > 2 && t - VH[0] > 120 ? (b.x - VH[1]) / ((t - VH[0]) / 1000) : b.vx;
+  let crowd = false; if (t - (b.prT || -1e9) < 250) for (const o of others.values()) if (o.seen && !o.dead && o.cx !== undefined && Math.abs(o.cx - b.x) < 130 && Math.abs(o.cy - b.y) < 70) { crowd = true; break; }   // (someone else is right at what you push: the server is told how fast you really go, so two players pushing against each other hold each other still)
+  const rvx = t - (b.prT || -1e9) < 250 ? mvx : b.vx, vxs = pv ? b.inVx : crowd ? mvx : b.vx;   // (pushing on something: the server is told how hard you push, so it moves it as fast as your screen does, at an even pace. Everybody else is shown how fast you really go)   // (pressing on something that holds you: how hard you push. Pushing something along: how fast you really go, not the jolts of the push itself, so nobody sees you lunge)   // (pressing against a crate: the speed you are pushing it with)
   const qx = d ? 0 : clamp(Math.round(vxs / 5), -127, 127) * 5, qy = d ? 0 : clamp(Math.round(b.vy / 20), -127, 127) * 20;
   const pr = !d && t - (b.prT || -1e9) < 250 ? 1 : 0;   // (still pushing something shared: the server pushes it a little ahead, where you will be)
   if (!force && d === L.d && pr === L.pr && !!pv === !!L.pv) {
@@ -5298,14 +5310,14 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
       else {
         const e = Math.min(0.7, dt), px = L.x + L.vx * e, py = L.y + L.vy * e + (L.g ? 0 : 0.5 * P.GRAV * e * e);
         const pvy = L.g ? L.vy : L.vy + P.GRAV * e;
-        if (Math.abs(px - x) < 2 && Math.abs(py - y) < 2 && g === L.g && dt < 0.7 && Math.abs(qx - L.vx) < 70 && Math.abs(qy - pvy) < 140) return;   // they would draw me about right already (a bump or a push changes the speed before the position shows it: that goes out at once)
+        if (Math.abs(px - x) < 2 && Math.abs(py - y) < 2 && g === L.g && dt < 0.1 && Math.abs(qx - L.vx) < 70 && Math.abs(qy - pvy) < 140) return;   // they would draw me about right already (a bump or a push changes the speed before the position shows it: that goes out at once)
       }
     }
   }
   lastSend = { x: x, y: y, vx: qx, vy: qy, g: g, d: d, t: t, pr: pr, pv: pv };
-  const buf = new ArrayBuffer(12), dv = new DataView(buf);
+  const buf = new ArrayBuffer(13), dv = new DataView(buf);
   dv.setUint8(0, 0x70); dv.setUint16(1, S.slot & 0xFFFF, true); dv.setUint16(3, clamp(x >> 1, 0, 65534), true); dv.setUint16(5, d ? 65535 : clamp(y, 0, 65533), true);
-  dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true); dv.setUint8(11, pr | (pv && !d ? 2 : 0));   // (2: that speed is how hard you push something that holds you back, not how fast you move: the server pushes with it, everybody else sees you standing against it)
+  dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true); dv.setUint8(11, pr | (pv && !d ? 2 : 0)); dv.setInt8(12, d ? 0 : clamp(Math.round(rvx / 5), -127, 127));   // (2: that speed is how hard you push something that holds you back, not how fast you move: the server pushes with it, everybody else sees you standing against it)
   ws.send(buf);
 }
 setInterval(() => sendPos(false), 30);
