@@ -51,7 +51,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 131;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 132;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -393,14 +393,14 @@ const worldAdd = {   // somebody built something: it goes into the shared world 
   del: (r, q) => { if (!r.world) return; const d = q[0] === 'b' ? r.world.dynBy.get(q[1] >>> 0) : null; if (P.applyDel(r.world, q) && d) { d.ver = ++r.verN; (r.chg = r.chg || []).push(d); } }
 };
 function doorSig(w) {
-  let s = ''; for (const o of w.doors) s += (o.open ? 1 : 0) + (o.latched ? 2 : 0); s += '|'; for (const q of w.btns) s += q.on ? 1 : 0; s += '|'; for (const q of w.plates) s += q.on ? 1 : 0; return s;
+  let s = ''; for (const o of w.doors) s += (o.open ? 1 : 0) + (o.latched ? 2 : 0); s += '|'; for (const q of w.btns) s += q.on ? 1 + '.' + (q.rf || 0) : 0; s += '|'; for (const q of w.plates) s += q.on ? 1 : 0; return s;
 }
 function doorPacket(room) {
   const w = room.world, d = [], b = [], p = [];
   w.doors.forEach(o => { d.push(o.uid, (o.open ? 1 : 0) | (o.latched ? 2 : 0)); });
-  w.btns.forEach((q, i) => { if (q.on) b.push(i); });
+  const bt = []; w.btns.forEach((q, i) => { if (q.on) { b.push(i); bt.push(Math.round(q.left === undefined ? P.BTN_T : q.left)); } });   // (bt: seconds each pressed button has left)
   w.plates.forEach(q => { if (q.on) p.push(P.hash32('l' + q.x + ',' + q.y)); });
-  return { t: 'dr', d, b, p };
+  return { t: 'dr', d, b, bt, p };
 }
 function plankSend(room, planks, only) {
   if (!planks.length) return;
@@ -570,6 +570,7 @@ function leave(p, toLobby) {
     p.room = null;
     online--; statsDirty = true;
     room.players.delete(p.id);
+    if (!room.priv && room.players.size === 0) { try { keepWorlds(false); } catch (e) {} }   // (the last one out: the world is written down right now, exactly as they left it)
     for (const o of room.players.values()) o.vis.delete(p.id);
     if (room.players.size === 0) { if (room.priv) rooms.delete(room.id); else room.emptyAt = Date.now(); }   // (a public world is kept for a while after the last player leaves, so a dropped connection or a closed tab does not rebuild everything you knocked down)
     else broadcast(room, { t: 'leave', id: p.id, name: p.name, pub: p.pub, n: room.players.size });

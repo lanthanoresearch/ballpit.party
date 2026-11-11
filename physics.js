@@ -265,6 +265,7 @@
     }
   }
   /* ---------- buttons, pressure plates and doors ---------- */
+  const BTN_T = 60;   // seconds a red button keeps its gates open
   function doorBlocked(w, d, bs) {
     const x0 = d.x * TS, x1 = (d.x + d.w) * TS, y0 = (d.y + 1) * TS, y1 = (d.y + d.h) * TS;   // (the beam above is always solid, so only the gap below it can be blocked)
     const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [];
@@ -280,19 +281,22 @@
     const k = Math.floor(mx / 300), out = []; for (let c = k - 2; c <= k + 2; c++) { const a = colMap.get(c); if (a) for (const o of a) out.push(o); } return out;
   }
   function stepSwitches(w, bs, dt) {
-    const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [], want = w.doors.map(d => d.latched);
-    for (let i = 0; i < w.btns.length; i++) {
-      const q = w.btns[i]; if (q.on) continue;
-      const x0 = q.x * TS - R, x1 = (q.x + 1) * TS + R, fy = q.y * TS;
-      for (let k = 0; k < L.length; k++) {
-        const b = L[k]; if (!b || b.ghost) continue;
-        if (b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6) {
-          q.on = true; q.t = 1; q.pT = Date.now(); w.ev.push({ k: 'btn', x: (q.x + 0.5) * TS, y: fy });
-          for (const di of q.to) { w.doors[di].latched = true; want[di] = true; }
-          break;
-        }
+    const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [];
+    for (let i = 0; i < w.doors.length; i++) w.doors[i].latched = false;
+    for (let i = 0; i < w.btns.length; i++) {   // a red button holds its gates open for BTN_T seconds after it was last stood on, then pops back up
+      const q = w.btns[i], x0 = q.x * TS - R, x1 = (q.x + 1) * TS + R, fy = q.y * TS; let hit = false;
+      for (let k = 0; k < L.length && !hit; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6) hit = true; }
+      if (hit) {
+        if (!q.on) { q.on = true; q.t = 1; q.pT = Date.now(); w.ev.push({ k: 'btn', x: (q.x + 0.5) * TS, y: fy }); }
+        if (!(q.left > BTN_T - 1)) q.rf = ((q.rf || 0) + 1) % 1000;   // (wound up again: everybody's little timer starts over)
+        q.left = BTN_T;
+      } else if (q.on) {
+        q.left = (q.left === undefined ? BTN_T : q.left) - (dt || 0);
+        if (q.left <= 0) { q.left = 0; if (!w.follow) { q.on = false; w.ev.push({ k: 'btnup', x: (q.x + 0.5) * TS, y: fy }); } }   // (in the shared world the server says when it is up again)
       }
+      if (q.on) for (const di of q.to) if (w.doors[di]) w.doors[di].latched = true;
     }
+    const want = w.doors.map(d => d.latched);
     for (let i = 0; i < w.plates.length; i++) {
       const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = !!(w.follow && q.srvOn);
       for (let k = 0; k < L.length && !on; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true; }
@@ -769,7 +773,7 @@
       else { const dx = b.x - d.x, dy = b.y - d.y, d2 = dx * dx + dy * dy, rr = R + d.r; if (d2 >= rr * rr) continue; const dd = Math.sqrt(d2) || 0.001; h = [d.x + dx / dd * d.r, d.y + dy / dd * d.r, dd - rr, d2 ? dx / dd : 0, d2 ? dy / dd : -1]; }
       const pen = -h[2], nx = h[3], ny = h[4]; if (pen <= 0) continue;
       if (w.follow && !w.srvOnly && !(d.hold > 0) && !b.remote) { d.mineT = 0.45; d.sleep = false; }
-      if (w.follow && w.srvOnly && !(d.hold > 0) && !b.remote && !kin && d.sv !== undefined) { if (!(d.pred > 0)) { d.nap = false; d.st = 0; d.predA = 0; } d.pred = 0.7; d.predT = 0.25; d.sleep = false; }   // (what you touch reacts on your screen at once, worked out here by the same physics, while the server, which decides, catches up a moment later)
+      if (w.follow && w.srvOnly && !(d.hold > 0) && !b.remote && !kin && d.sv !== undefined && (d.pred > 0 || !(d.r && ny < -0.7))) { if (!(d.pred > 0))   /* (a ball you land on top of is not guessed at here: a hair's difference decides which way it rolls, so the server's word is waited for and it never rolls one way and then the other) */ { d.nap = false; d.st = 0; d.predA = 0; } d.pred = 0.7; d.predT = 0.25; d.sleep = false; }   // (what you touch reacts on your screen at once, worked out here by the same physics, while the server, which decides, catches up a moment later)
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
       const held = (w.follow && ((w.srvOnly && !(d.pred > 0)) || d.hold > 0)) || (b.own !== undefined && d.ownT > 0);   // (in the shared world every crate and ball is the server's: here it is as solid as a wall, and moves the moment the server has moved it, the same for everybody)
       if (held && w.follow && !kin && !b.remote && Math.abs(nx) > 0.5 && nx * (b.inVx || 0) < 0) b.pressing = true;
@@ -984,7 +988,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 131, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 132, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

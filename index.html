@@ -665,6 +665,18 @@
   #settings .tabs{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}#settings .sbody{touch-action:pan-y}
   @media (max-height:520px) and (min-aspect-ratio:1/1){.shoptabs{margin:0 0 4px}.shoptabs button{padding:3px 2px;font-size:13px}.chead{margin:0 0 2px}.lvmode .small{display:none}.lvmode .row{margin:2px 0}}
   canvas.pball{border:0!important;border-radius:0!important;box-shadow:none!important;background:none!important}
+  /* one message at a time, high up and out of the way of the player: the most important one shows, the rest wait their turn */
+  #stack:has(#placeBar:not(.hide))>:not(#placeBar){display:none!important}
+  #stack:has(#finishbanner:not(.hide))>#worldpop,#stack:has(#finishbanner:not(.hide))>#notice,#stack:has(#finishbanner:not(.hide))>#beaconbar{display:none!important}
+  #stack:has(#worldpop:not(.hide))>#notice,#stack:has(#worldpop:not(.hide))>#beaconbar{display:none!important}
+  #stack:has(#notice.show)>#beaconbar{display:none!important}
+  @media (max-height:520px){#worldpop{padding:4px 12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}#worldpop b{display:inline!important;font-size:14px!important;margin:0 8px 0 0!important}#worldpop span{font-size:12px;opacity:.85}}
+  @media (max-aspect-ratio:1/1) and (max-width:700px),(max-width:480px){   /* a phone held upright: the message sits beside the little map, under the buttons, never across the middle of the screen */
+    #top{grid-template-areas:"hl hr" "hl mid"!important;grid-template-rows:auto 1fr}
+    #top>#stack{justify-self:end!important;align-self:start;width:auto!important;max-width:100%!important;align-items:flex-end}
+    #stack>*{font-size:13px!important;padding:4px 10px!important;line-height:1.25!important}
+    #worldpop b{font-size:14px!important;margin:0!important}
+  }
 </style>
 </head>
 <body>
@@ -675,7 +687,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 131; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 132; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -2186,7 +2198,7 @@ function syncDoors() {   // gates open at once for you (when you step on a trigg
 function applyDoors(m) {
   const w = S.world; if (!w || !Array.isArray(m.d)) return;
   w.srvDoors = new Map(); for (let i = 0; i + 1 < m.d.length; i += 2) w.srvDoors.set(m.d[i], m.d[i + 1]);
-  { const bs = new Set(m.b || []); w.btns.forEach((q, i) => { if (bs.has(i)) { if (!q.on) { q.on = true; q.t = 1; } } else if (q.on && Date.now() - (q.pT || 0) > 1200) q.on = false; }); }
+  { const bs = new Set(m.b || []), bl = new Map(); (m.b || []).forEach((i, k) => bl.set(i, m.bt ? m.bt[k] : P.BTN_T)); w.btns.forEach((q, i) => { if (bs.has(i)) { if (!q.on) { q.on = true; q.t = 1; } q.left = bl.get(i); } else if (q.on && Date.now() - (q.pT || 0) > 1200) q.on = false; }); }
   const on = new Set(m.p || []); w.plates.forEach(q => { q.srvOn = on.has(P.hash32('l' + q.x + ',' + q.y)); });
 }
 function worldEvents() {
@@ -2635,6 +2647,7 @@ addEventListener('keydown', e => {
   if (!a) return;
   if (!$('settings').classList.contains('hide')) closeSettingsNow();
   e.preventDefault();
+  if (detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); applyDeps(); }   // (any game key: this is a keyboard, the touch buttons and their settings go away)
   if (a === 'back') { if (!e.repeat && !blocked()) resetPress(); return; }
   if (a === 'boost') { if (!e.repeat) pressBoost(); return; }
   if (a === 'power') { if (!e.repeat) pressSuper(); return; }
@@ -2647,6 +2660,7 @@ cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * 
 document.addEventListener('touchmove', e => { if (!e.target.closest || !e.target.closest('#settings, .card, .csel-list, #editbar')) e.preventDefault(); }, { passive: false });
 document.addEventListener('contextmenu', e => { if (!typing()) e.preventDefault(); });
 document.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', e => { if (!window.PointerEvent || e.pointerType === 'touch') { if (detected !== 'touch') { detected = 'touch'; applyTouchUI(); applyDeps(); } } }, true);
+if (window.PointerEvent) { const mouse = e => { if (e.pointerType === 'mouse' && detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); applyDeps(); } }; document.addEventListener('pointerdown', mouse, true); document.addEventListener('pointermove', mouse, true); }   // (a mouse means a computer: keyboard controls, no touch buttons)
 
 /* ----- on-screen buttons ----- */
 /* Positions are stored as "this many pixels from the left / right edge (or the middle), this many up from the bottom".
@@ -5761,6 +5775,11 @@ function drawGadgets(camL, camT, vw, vh, dt) {
     const h = q.on ? 3 : 11;
     ctx.beginPath(); ctx.moveTo(x - 10, y - 5); ctx.quadraticCurveTo(x, y - 5 - h * 2, x + 10, y - 5); ctx.closePath();
     ctx.fillStyle = q.on ? '#7a3b34' : '#ff5b4a'; ctx.fill(); ctx.stroke();
+    if (q.on) {   // a little red ring above it winds down until it pops back up
+      const f = Math.max(0, Math.min(1, (q.left === undefined ? P.BTN_T : q.left) / P.BTN_T)), cy = y - 22;
+      ctx.save(); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,17,30,.55)'; ctx.beginPath(); ctx.arc(x, cy, 7, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = '#ff5b4a'; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(x, cy, 7, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * f); ctx.stroke(); ctx.restore();
+    }
   }
   // doors (gates): bars slide up when open
   for (let i = 0; i < w.doors.length; i++) {

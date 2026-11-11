@@ -1516,16 +1516,18 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       return { all, end: e, dir };
     }
     const mainDir = d.mirror ? -1 : 1;
-    const up = snake(mainDir, 1, UPN, true);
-    const dn = snake(-mainDir, -1, DNN, false);
-    const mainPath = up.all, decPath = dn.all;
+    const DOWN = DNN >= 3 && rng(d.seed + 4242)() < 0.42;   // on some maps the real route is the one that goes DOWN from the start (into the deep), and the climb is the decoy: the finish can be anywhere, not always up top
+    const up = snake(DOWN ? -mainDir : mainDir, 1, UPN, !DOWN);
+    const dn = snake(DOWN ? mainDir : -mainDir, -1, DNN, DOWN);
+    const mainPath = DOWN ? dn.all : up.all, decPath = DOWN ? up.all : dn.all;
     // the hidden finish: somewhere far from the start, picked at random along the climb (not always in a far corner). The part of the climb beyond it stays as extra world.
     let fin = null; const tailPath = [];
     {
-      const FR = rng(d.seed + 7771), hh = Math.max(40, LS * (UPN - 1));
+      const FR = rng(d.seed + 7771), hh = Math.max(40, LS * (DOWN ? DNN : UPN - 1));
+      const far = FR(), lo = far < 0.22 ? 0.3 : far < 0.48 ? 0.5 : far < 0.78 ? 0.68 : 0.85, hi = lo + 0.3;   // how far from the start this map's finish is: near, middling, far or very far, anywhere along the route
       const nd = e => Math.hypot((e[0] + e[2] / 2) / Math.max(100, xr), e[1] / hh);
-      let cand = []; mainPath.forEach((e, i) => { if (i >= mainPath.length * 0.3 && nd(e) >= 0.75) cand.push(i); });
-      if (cand.length < 6) { const o = mainPath.map((e, i) => i).filter(i => i >= mainPath.length * 0.3).sort((p, q) => nd(mainPath[q]) - nd(mainPath[p])); cand = o.slice(0, Math.max(6, Math.floor(o.length * 0.15))); }
+      let cand = []; mainPath.forEach((e, i) => { if (i >= mainPath.length * 0.2 && nd(e) >= lo && nd(e) <= hi) cand.push(i); });
+      if (cand.length < 6) { const o = mainPath.map((e, i) => i).filter(i => i >= mainPath.length * 0.2).sort((p, q) => Math.abs(nd(mainPath[p]) - lo - 0.15) - Math.abs(nd(mainPath[q]) - lo - 0.15)); cand = o.slice(0, Math.max(6, Math.floor(o.length * 0.15))); }
       for (let k = cand.length - 1; k > 0; k--) { const j = Math.floor(FR() * (k + 1)); const t = cand[k]; cand[k] = cand[j]; cand[j] = t; }
       const direct = FR() < 0.55;   // either build a little finish platform out from a spot on the climb, or put the flag right on a broad platform of it (which can be anywhere, not only at the far ends)
       if (direct) {
@@ -1533,7 +1535,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
         if (plain.length) { const i = plain[Math.floor(FR() * plain.length)], e = mainPath[i]; fin = [e[0], e[1], e[2]]; addRect([e[0], e[1], e[2], 1, 4, e[3], e[5]]); e[9] = 0; e[12] = 1; tailPath.push(...mainPath.splice(i + 1)); }
       }
       for (let ci = 0; ci < Math.min(cand.length, 40) && !fin; ci++) {
-        const i = cand[ci], e = mainPath[i], row = Math.max(0, Math.min(UPN - 1, Math.round(-e[1] / LS))), lt = laneOf(bandAt(e[0]), row);
+        const i = cand[ci], e = mainPath[i], row = Math.max(DOWN ? -DNN : 0, Math.min(UPN - 1, Math.round(-e[1] / LS))), lt = laneOf(bandAt(e[0]), row);
         for (let att = 0; att < 8 && !fin; att++) {
           const dir = att % 2 ? -(e[11] || 1) : (e[11] || 1);
           const mode = att < 4 ? (att < 2 ? 'up' : 'right') : att < 6 ? 'right' : 'up';   // up in the open air between two lanes first, so the finish can be anywhere along a lane
@@ -1543,7 +1545,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       }
     }
     for (let back = 0; back < 12 && !fin && back < mainPath.length; back++) {   // (if that found nothing: the very end of the climb)
-      const e = mainPath[mainPath.length - 1 - back], lt = laneOf(bandAt(e[0]), UPN - 1);
+      const e = mainPath[mainPath.length - 1 - back], lt = laneOf(bandAt(e[0]), DOWN ? -DNN : UPN - 1);
       for (let att = 0; att < 8 && !fin; att++) {
         const dir = att % 2 ? -(e[11] || 1) : (e[11] || 1);
         const pw = growDir(e, [SEG('right', 3, lt.th, lt)], d.seed + 4000 + att * 11 + back * 3, dir, WHOLE, { fin: true, main: true, kind: 'fin' });
@@ -1908,7 +1910,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     return s * SLOT_LEN + 6 * HR;
   }
   const ZMETA = [["sky","snow","meadow","night","cave","crystal","mushroom","volcano"],["snow","autumn","sky","forest","night","cave","crystal","icecave"],["desert","dunes","jungle","swamp","sky","wasteland","ruins","night"],["snow","jungle","forest","autumn","sky","night","cave","mushroom"],["ruins","wasteland","snow","jungle","sky","forest","autumn","night"],["snow","autumn","forest","sky","night","cave","icecave","crystal"],["forest","autumn","swamp","desert","night","cave","mushroom","volcano"],["snow","autumn","sky","forest","jungle","night","cave","crystal"],["forest","wasteland","jungle","meadow","swamp","sky","autumn","ruins"],["dunes","desert","ashland","meadow","forest","sky","wasteland","night"],["snow","meadow","sky","dunes","desert","forest","night","cave"],["snow","forest","autumn","crystal","cave","mushroom","icecave"],["sky","meadow","wasteland","swamp","forest","desert","ashland","dunes"],["wasteland","jungle","swamp","ashland","desert","sky","ruins","dunes"],["sky","snow","forest","autumn","mushroom","crystal","volcano","cave"],["wasteland","ruins","ashland","desert","dunes","sky","volcano","night"],["forest","snow","autumn","jungle","crystal","cave","mushroom","icecave"],["snow","forest","autumn","ashland","jungle","night","cave","icecave"],["forest","autumn","sky","meadow","swamp","jungle","mushroom","night"],["snow","forest","jungle","wasteland","autumn","swamp","ruins","sky"],["jungle","snow","swamp","sky","dunes","autumn","forest","desert"],["snow","forest","sky","autumn","night","cave","crystal","mushroom"],["forest","snow","autumn","cave","icecave","crystal","mushroom","volcano"],["wasteland","autumn","sky","swamp","ruins","ashland","jungle","forest"],["forest","snow","sky","autumn","swamp","ruins","night","mushroom"],["ruins","wasteland","sky","snow","jungle","swamp","night","crystal"],["autumn","wasteland","forest","ashland","meadow","sky","ruins","night"],["snow","sky","forest","autumn","night","cave","crystal","mushroom"],["snow","forest","sky","autumn","night","cave","crystal","icecave"],["wasteland","sky","desert","dunes","meadow","ruins","ashland","volcano"],["jungle","desert","forest","swamp","ruins","dunes","wasteland","sky"],["autumn","snow","forest","crystal","cave","icecave","mushroom","volcano"],["ashland","desert","wasteland","dunes","sky","ruins","night","cave"],["jungle","dunes","swamp","sky","desert","autumn","night","mushroom"],["wasteland","ashland","dunes","autumn","ruins","desert","sky","forest"],["sky","wasteland","jungle","forest","desert","dunes","ruins","cave"],["snow","autumn","sky","jungle","forest","night","cave","crystal"],["dunes","snow","desert","wasteland","sky","ruins","swamp","jungle"],["meadow","desert","ruins","sky","dunes","forest","wasteland","night"],["snow","forest","autumn","jungle","ashland","icecave","volcano","cave"],["dunes","sky","wasteland","desert","ashland","forest","swamp","night"],["snow","autumn","forest","meadow","sky","night","cave","crystal"],["sky","snow","autumn","forest","jungle","cave","crystal","icecave"],["snow","autumn","sky","forest","jungle","cave","night","crystal"],["sky","wasteland","forest","autumn","ashland","ruins","meadow","night"],["snow","autumn","forest","sky","cave","night","crystal","icecave"],["forest","autumn","snow","sky","night","crystal","cave","mushroom"],["forest","snow","autumn","swamp","icecave","cave","mushroom","crystal"],["forest","sky","snow","wasteland","meadow","ashland","ruins","night"],["snow","forest","autumn","jungle","icecave","cave","crystal","mushroom"]];   /* the grounds each level really has, surface grounds first, then caves and night (worked out from the finished maps, so the level picker shows what you will actually meet) */
-  const ROUTE = [478,457,197,576,570,810,440,183,538,757,684,332,408,449,299,655,500,719,500,382,411,479,793,506,350,355,176,445,439,135,338,374,608,150,169,452,515,499,570,145,641,377,700,507,617,585,652,143,442,529];   /* how far the finish is from the start in a straight line, in blocks, worked out from the finished maps (the level picker's Short, Medium, Long and Very long come from this) */
+  const ROUTE = [395,441,578,740,563,215,325,446,638,741,299,305,412,167,346,647,425,727,298,142,113,377,586,612,772,426,543,260,443,287,417,408,62,257,533,187,556,195,293,681,227,414,677,504,610,231,350,265,468,171];   /* how far the finish is from the start in a straight line, in blocks, worked out from the finished maps (the level picker's Short, Medium, Long and Very long come from this) */
   const meta = DEFS.map((d, i) => ({ len: ROUTE[i] || Math.round(((d.xr || 0) - (d.xl || 0)) || 0), th: ZMETA[i] || [...new Set((d.bands || []).map(b => b.g && b.g.th).filter(Boolean))] }));   // (what the level picker shows: how long, which kinds of ground)
   const api = { TS, R, count: DEFS.length, names: DEFS.map(d => d.name), meta, themes: THEMES, generate, slotOf, slotStart, SLOT_LEN };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
