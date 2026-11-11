@@ -25,6 +25,7 @@
     const PB = (map.props || []).map(box), cut = PB.map(b => nb.some(z => b[2] > z.tx0 * TS && b[0] < (z.tx1 + 1) * TS && b[3] > z.ty0 * TS && b[1] < (z.ty1 + 1) * TS));
     for (let more = true; more;) { more = false; for (let i = 0; i < PB.length; i++) if (!cut[i]) for (let j = 0; j < PB.length; j++) if (cut[j] && PB[i][2] > PB[j][0] + 2 && PB[i][0] < PB[j][2] - 2 && Math.abs(PB[i][3] - PB[j][1]) < 6) { cut[i] = more = true; break; } }   // (nothing of the map's own starts in the start zone or by the finish flag, nor anything stacked on such a thing)
     (map.props || []).forEach((p, i) => { if (cut[i]) return; const d = addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5); d.nap = true; d.m0 = true; });   /* (the map's own things start out at rest: each one checks it is held up once somebody comes near) */   // pushable yellow things; each player has their own copy (never shared)
+    natRopes(w, map);
     return w;
   }
 
@@ -298,13 +299,17 @@
     }
     const want = w.doors.map(d => d.latched);
     for (let i = 0; i < w.plates.length; i++) {
-      const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = !!(w.follow && q.srvOn);
+      const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = !!(w.follow && q.srvOn), dynOn = false;
       for (let k = 0; k < L.length && !on; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true; }
       const DL0 = w.follow ? [] : w.cand || w.dyn, DL = DL0.length > 48 ? nearCol(DL0, (x0 + x1) / 2) : DL0;   // (on the server: only the things near a player. In the shared world the crates on it are the server's to judge: here only your own ball is looked at, so a crate seen a little differently never makes it flicker)
       for (let j = 0; j < DL.length && !on; j++) {
         const o = DL[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 300) continue;
         const bot = o.y + (o.r || o.hh), m = q.on ? 4 : 0;   // (a little more room to stay pressed than to get pressed: something resting right at the edge never flickers it)
-        if (o.x > x0 - m && o.x < x1 + m && bot >= fy - 8 - m && bot <= fy + 6 + m) on = true;
+        if (o.x > x0 - m && o.x < x1 + m && bot >= fy - 8 - m && bot <= fy + 6 + m) { on = true; dynOn = true; }
+      }
+      if (w.cand && w.focus && !w.follow) {   // (the server only looks at the things near a player: a plate nobody is near keeps what was last seen resting on it, so the gate stays open when everybody walks away from the crates holding it down)
+        let seen = false; const cx = (x0 + x1) / 2; for (let k = 0; k < w.focus.length && !seen; k++) if (Math.abs(w.focus[k].x - cx) < 360 && Math.abs(w.focus[k].y - fy) < 360) seen = true;
+        if (seen) q.dynOn = dynOn; else if (q.dynOn) on = true;
       }
       if (on !== q.on) { q.on = on; w.ev.push({ k: 'plate', on, x: (q.x + q.w / 2) * TS, y: fy }); }
       if (on) for (const di of q.to) want[di] = true;
@@ -602,6 +607,27 @@
       }
     }
     return n;
+  }
+  // a few rope bridges that are simply part of the map: over real gaps between two ledges at the same height, spread out, never across a place the marked routes climb or drop through. Worked out from the map itself, so the server and every player get the very same ones
+  function natRopes(w, map) {
+    const W = w.W, H = w.H, G = w.grid, T = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? 1 : G[y * W + x]), cand = [];
+    const nodes = []; for (const c of (map.chains || [])) for (const e of c) nodes.push(e);
+    const sx = map.start ? map.start[0] / TS : -99, sy = map.start ? map.start[1] / TS : -99;
+    for (let y = 6; y < H - 8; y++) for (let x = 2; x < W - 22; x++) {
+      if (G[y * W + x] !== 1 || G[y * W + x + 1] !== 0 || G[(y - 1) * W + x] !== 0) continue;
+      let k = 1; while (k <= 17 && T(x + k, y) === 0) k++;
+      if (k < 7 || k > 17 || T(x + k, y) !== 1 || T(x + k, y - 1) !== 0) continue;   // (a gap of 6 to 16 blocks, dirt on both sides)
+      let deep = true; for (let c = x + 2; c < x + k - 1 && deep; c++) for (let r = 1; r <= 4; r++) if (T(c, y + r) !== 0) { deep = false; break; }   // (a real drop under it, not a step down)
+      if (!deep || !ropeOk(w, ['rope', x, y, x + k, y])) continue;
+      if (Math.abs(x - sx) < 14 && Math.abs(y - sy) < 8) continue;
+      let clash = false; for (let i = 0; i < nodes.length && !clash; i++) { const e = nodes[i]; if (e[0] + (e[2] || 1) > x + 1 && e[0] < x + k && e[1] > y - 5 && e[1] < y + 16) clash = true; }
+      if (!clash) cand.push([x, y, x + k, hash32('n' + x + ',' + y)]);
+      x += k - 1;
+    }
+    cand.sort((p, q) => p[3] - q[3]);
+    const out = [], want = Math.max(2, Math.min(5, Math.round(W / 400)));
+    for (const c of cand) { if (out.length >= want) break; if (out.some(o => Math.abs(o[0] - c[0]) < 70 && Math.abs(o[1] - c[1]) < 30)) continue; out.push(c); addRope(w, ['rope', c[0], c[1], c[2], c[1]]).nat = true; }
+    w.natRopes = out.length;
   }
   function ropeOk(w, q) {   // can a rope bridge go here? both ends on the edge of dirt, at most 20 blocks across and less than 6 up or down, and nothing at all in the way
     if (!Array.isArray(q) || q.length !== 5 || !q.slice(1).every(Number.isFinite)) return false;
@@ -988,7 +1014,7 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 132, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 134, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

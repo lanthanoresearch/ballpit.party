@@ -20,8 +20,9 @@ const P = require('./physics.js');
 
 const PORT = process.env.PORT || 3000;
 // what one world can hold of what people build (shared by everyone in it). Each player has their own, lower limits per item; these keep a full world quick.
-const ROOM_PROPS = 800, ROOM_GATES = 200, ROOM_MISC = 6000, ROOM_CPS = 150, ROOM_DELS = 3000;
-const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);   // players per world: few enough that a world full of builds stays smooth for everyone
+const ROOM_PROPS = 1600, ROOM_GATES = 200, ROOM_MISC = 12000, ROOM_CPS = 150, ROOM_DELS = 20000;   // (deleting is not limited for a player: the world just has to remember what was deleted)
+const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);
+const PROP_SHARE = Math.floor(1600 / MAX_PLAYERS);   // crates, balls and springs every player in a world is always sure of (80 with 20 players)   // players per world: few enough that a world full of builds stays smooth for everyone
 const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
 const TICK_MS = 16, SEND_CAP = 36;   // SEND_CAP: crates and balls told to each player per update at most (about 50 KB a second even when hundreds are moving)                                      // up to 60 updates per second (the world steps and is told about every 1/60 s), and only for players who actually sent something new (the client fills in the motion between them)
@@ -51,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 132;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 134;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -370,7 +371,7 @@ function roomWorld(room) {
   const B = bstate(room);
   (B.misc || []).forEach(q => { try { srvMisc(w, q); } catch (e) {} });
   (B.gates || []).forEach(q => { try { srvGate(w, q); } catch (e) {} });
-  (B.props || []).forEach(q => { try { P.addProp(w, q[0], q[1], q[2]); } catch (e) {} });
+  (B.props || []).forEach(q => { try { const d = P.addProp(w, q[0], q[1], q[2]); if (d) d.brec = q; } catch (e) {} });
   (B.dels || []).forEach(q => { try { P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
   let restored = false;
   if (room.snapDyn && room.snapDyn.length && Array.isArray(room.snapDyn.find(q => q)) && room.snapDyn.find(q => q).length >= 4) {   // (saved by name: each thing finds its own entry)
@@ -387,7 +388,7 @@ function roomWorld(room) {
 const worldAdd = {   // somebody built something: it goes into the shared world straight away
   prop: (r, q, replay) => { if (r.world) { const d = P.addProp(r.world, q[0], q[1], q[2]);
     if (replay) { const e = d.r || d.hw; for (let k = 0; k < 12 && r.world.dyn.some(o => o !== d && !(o.burn > 0) && Math.abs(o.x - d.x) < e + (o.r || o.hw) - 2 && Math.abs(o.y - d.y) < e + (o.r || o.hh) - 2); k++) d.y -= e * 2 + 1; }   /* (something built long ago, coming back where it was first put: if that spot is taken, it goes on top instead of inside, so nothing ever bursts apart) */
-    d.ver = ++r.verN; (r.chg = r.chg || []).push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; return d; } },
+    d.ver = ++r.verN; (r.chg = r.chg || []).push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; d.brec = q; return d; } },
   misc: (r, q) => { if (r.world) srvMisc(r.world, q); },
   gate: (r, q) => { if (r.world) srvGate(r.world, q); },
   del: (r, q) => { if (!r.world) return; const d = q[0] === 'b' ? r.world.dynBy.get(q[1] >>> 0) : null; if (P.applyDel(r.world, q) && d) { d.ver = ++r.verN; (r.chg = r.chg || []).push(d); } }
@@ -812,9 +813,15 @@ wss.on('connection', (ws, req) => {
       }
     } else if (m.t === 'pdel') {   // somebody deleted something: it is gone for everyone in that world
       const r = p.room, B = bstate(r); if (!B) return;
-      const q = okDel(m.g); if (!q || B.dels.length >= ROOM_DELS || !addOk(p)) return;
+      const q = okDel(m.g); if (!q || !addOk(p)) return;
+      if (q[0] === 'b' && r.world) {   // deleting a crate, ball or spring somebody built: it is simply taken off the list of built things, as if it had never been put down. Nothing has to be remembered, so this never runs out
+        const d = r.world.dynBy.get(q[1] >>> 0), i = d && d.brec ? B.props.indexOf(d.brec) : -1;
+        if (i >= 0) { B.props.splice(i, 1); d.brec = null; worldAdd.del(r, q); broadcast(r, { t: 'pdel', g: q }, p); if (r.own && r.own.get(p.pub) > 0) r.own.set(p.pub, r.own.get(p.pub) - 1); return; }
+      }
+      if (B.dels.length >= ROOM_DELS) return;
       if (B.dels.some(e => e.length === q.length && e.every((v, i) => v === q[i]))) return;
       B.dels.push(q); worldAdd.del(r, q); broadcast(r, { t: 'pdel', g: q }, p);
+      if (q[0] === 'b' && r.own && r.own.get(p.pub) > 0) r.own.set(p.pub, r.own.get(p.pub) - 1);   // (deleting a crate or ball gives that room back)
     } else if (m.t === 'pgate') {   // a gate and its trigger, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || m.g.length !== 5 || !m.g.every(Number.isFinite) || m.g[2] < 2 || m.g[2] > 8 || bstate(r).gates.length >= ROOM_GATES) return;
       if (!addOk(p)) return;
@@ -823,7 +830,14 @@ wss.on('connection', (ws, req) => {
       const r = p.room; if (!bstate(p.room)) return;
       if (!addOk(p)) return;
       if (m.t === 'padd') {
-        const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).props.length >= ROOM_PROPS) return;
+        const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
+        { // a fair share for everybody: each player in the world always has room for PROP_SHARE crates, balls and springs of their own; past that they may go on building only while that leaves every other player here their share
+          const B = bstate(r), own = r.own || (r.own = new Map()), mine = own.get(p.pub) || 0; let used = B.props.length, keep = 0;
+          for (const e of B.dels) if (e[0] === 'b') used--;
+          for (const q of r.players.values()) if (q !== p) keep += Math.max(0, PROP_SHARE - (own.get(q.pub) || 0));
+          if (B.props.length >= ROOM_PROPS * 2 || used >= ROOM_PROPS || (mine >= PROP_SHARE && used + keep >= ROOM_PROPS)) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y), full: used >= ROOM_PROPS ? 1 : 0 }); return; }
+          own.set(p.pub, mine + 1);
+        }
         const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); const nd = worldAdd.prop(r, e), nu = nd ? nd.uid : undefined; broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2], u: nu }, p); if (nu !== undefined) send(p, { t: 'puid', k: e[0], x: e[1], y: e[2], u: nu });   // (the server's name for it goes to everyone, so two things put down on the very same spot can never be mixed up)
       } else {
         if (!Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).cps.length >= ROOM_CPS) return;

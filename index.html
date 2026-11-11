@@ -687,7 +687,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 132; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 134; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -2006,9 +2006,10 @@ const purseOf = i => purseV[i] || (purseV[i] = { c: 0, g: 0, u: 0 });
 const unlimitedAt = i => !!(purseV[i] && purseV[i].u);
 const unlimitedNow = () => !settings.mp && unlimitedAt(lvKey());
 const purseNow = () => settings.mp ? purseP : purseOf(lvKey());
+let infMoney = false; try { infMoney = localStorage.getItem('ballrun4_inf') === '1'; } catch (e) {}   // (the code "themaker1": coins and diamonds never run out again, on this device)
 const wallet = {
-  get c() { return unlimitedNow() ? 1e9 : purseNow().c; }, set c(v) { if (!unlimitedNow()) purseNow().c = v; },
-  get g() { return unlimitedNow() ? 1e9 : purseNow().g; }, set g(v) { if (!unlimitedNow()) purseNow().g = v; }
+  get c() { return infMoney || unlimitedNow() ? 1e9 : purseNow().c; }, set c(v) { if (!infMoney && !unlimitedNow()) purseNow().c = v; },
+  get g() { return infMoney || unlimitedNow() ? 1e9 : purseNow().g; }, set g(v) { if (!infMoney && !unlimitedNow()) purseNow().g = v; }
 };
 const fmtW = v => v >= 1e9 ? '\u221e' : fmtN(v);   // (unlimited shows as the infinity sign)
 function loadPurses() {
@@ -2124,6 +2125,7 @@ function followWorld(dt) {
         if (!inSolidAt(w, nx, ny, e0) && !(w.see.length && intoPlank(w, d.x, d.y, nx, ny, e0))) { d.x = nx; d.y = ny; } else { d.x = tx; d.y = ty; }
         const ux = ex / e, uy = ey / e, va = d.vx * ux + d.vy * uy, vs = s.vx * ux + s.vy * uy; if (va > vs) { d.vx -= (va - vs) * ux; d.vy -= (va - vs) * uy; }
       } else if (!(d.predT > 0) && e > 1.5 && saw(d.touchT)) { const f = 1 - Math.exp(-5 * dt); d.x -= ex * f; d.y -= ey * f; }   // (let go: it settles onto the server's picture)
+      else if (e > 0.6 && t - s.t > NET.rtt + 220 && Math.abs(s.vx) + Math.abs(s.vy) < 8 && Math.abs(d.vx) + Math.abs(d.vy) < 30) { const f = 1 - Math.exp(-4 * dt); d.x -= ex * f; d.y -= ey * f; }   // (you are still leaning on it, but the server has had it standing still for a while: it eases onto where the server has it, so what you see is exactly what everybody sees)
       if (S.b && !(S.dead > 0)) P.ballOff(w, S.b, d);   // (and it is never inside your ball: if the server holds it back, so are you)
       if (d.pred <= 0 && !saw(d.touchT)) d.pred = 0.02;   // (a nudge stays where you put it until the server's answer is back, so it never slides back and then forward again)
       if (d.pred <= 0) { d.pred = 0; d._tT = 0; }
@@ -3590,11 +3592,11 @@ const SHOP = [
   { cat: 'coins', id: 'coins', name: '250 coins', info: 'Trade one diamond for coins.', c: 0, g: 1, give: 250 },
   { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
   { cat: 'gadgets', id: 'flag', max: 30, name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot.', c: 400, g: 5 },
-  { cat: 'blocks', id: 'box0', max: 100, name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
-  { cat: 'blocks', id: 'box1', max: 80, name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
-  { cat: 'blocks', id: 'ball0', max: 100, name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
-  { cat: 'blocks', id: 'ball1', max: 100, name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
-  { cat: 'blocks', id: 'ball2', max: 80, name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
+  { cat: 'blocks', id: 'box0', max: 150, name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
+  { cat: 'blocks', id: 'box1', max: 120, name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
+  { cat: 'blocks', id: 'ball0', max: 150, name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
+  { cat: 'blocks', id: 'ball1', max: 150, name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
+  { cat: 'blocks', id: 'ball2', max: 120, name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
   { cat: 'gates', id: 'gate', max: 40, name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
   { cat: 'gates', id: 'gateS', max: 40, name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
   { cat: 'gadgets', id: 'see', max: 25, name: 'Teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
@@ -3605,7 +3607,7 @@ const SHOP = [
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns a tile of ground into lava. It burns anything that touches it.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns a tile of ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
   { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water and ice into dirt, and lava into rock.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
-  { cat: 'terrain', id: 'dig', max: 300, name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal or flag, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first.', c: 600, g: 0, misc: 'ter', ter: 'dig' },
+  { cat: 'terrain', id: 'dig', name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal or flag, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first. Use it as often as you like.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
   { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock and melts ice into water. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
 const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
@@ -3817,7 +3819,9 @@ function lavaWaterAhead(side) {   // is there lava or water right where the dele
   return [[cx + s, cy], [cx + s, cy + 1], [cx, cy + 1]].some(([x, r]) => { const t = P.tile(w, x, r); return t === 2 || t === 5 || t === 7; });
 }
 function delThing(q) {   // delete it here, and for everyone in this world
-  if (applyDelRec(q, true)) { S.dels.push(q.slice()); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); }
+  let id = { s: 'see', g: 'gate', r: 'rope', por: 'portal', c: 'flag', pad: 'pad' }[q[0]];
+  if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), it = d && SHOP.find(s => s.kind === d.kind && !s.misc && !s.gate); if (it) id = it.id; }
+  if (applyDelRec(q, true)) { S.dels.push(q.slice()); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); if (id && S.own && S.own[id] > 0) S.own[id]--; }   // (deleting something gives you that one back to build again)
 }
 function waterEx(x, r) {   // water never sits on ice or beside lava: the ice under it melts, and any lava it touches turns to rock
   const w = S.world, out = [], T = (a, b) => P.tile(w, a, b);
@@ -4964,6 +4968,7 @@ function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blu
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
   if (v === 'maker') { wallet.c = Math.max(wallet.c, 10000); wallet.g = Math.max(wallet.g, 500); saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice('Your money is topped up to 10,000 coins and 500 diamonds', ''); return; }
+  if (v === 'themaker1') { infMoney = true; try { localStorage.setItem('ballrun4_inf', '1'); } catch (e) {} homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice('Unlimited coins and diamonds, for good', ''); return; }
   $('cdIn').classList.remove('bad'); void $('cdIn').offsetWidth; $('cdIn').classList.add('bad'); $('cdNote').textContent = v ? "That code doesn't work" : 'Type a code first'; sfx('warn');
 }
 $('cdOk').onclick = submitCode; $('cdNo').onclick = closeCode;
@@ -5096,6 +5101,7 @@ function outOfThings(pp) {   // somebody else as drawn here is never inside a cr
     pp.x = d.x + c * nlx - sn * nly; pp.y = d.y + sn * nlx + c * nly;
   }
 }
+const otherLead = () => Math.min(0.1, NET.rtt * 0.00075);   // (their update took a trip through the server to get here: they are drawn that much further along their path, where they are by now, so two players see each other with next to no delay)
 function otherPred(o, d) {   // where somebody else is d seconds after their last update: their speed carries them on, gravity pulls them down in the air, and the ground and walls stop them (the picture never goes through anything)
   const x = o.sx + o.svx * d;
   const y = o.sy + o.svy * d + (o.sg ? 0 : 0.5 * P.GRAV * d * d);
@@ -5178,7 +5184,7 @@ function onBin(buf) {   // compact position update: [1][slot u16] then per playe
     const sT = Math.min(t, o.tsU + o.off);
     // the path they are on from here: carried on by their speed (and gravity while they are in the air). Whatever the old guess got wrong is blended away, not jumped.
     let curX = 0, curY = 0;
-    if (!fresh) { const q = otherPred(o, clamp((t - o.sT) / 1000, 0, 0.7)); curX = q.x + o.ex; curY = q.y + o.ey; }   // where they are drawn this very moment
+    if (!fresh) { const q = otherPred(o, clamp((t - o.sT) / 1000 + otherLead(), 0, 0.7)); curX = q.x + o.ex; curY = q.y + o.ey; }   // where they are drawn this very moment
     o.sx = x; o.sy = y; o.svx = vx; o.svy = vy; o.sg = (st & 0x8000) ? 1 : 0; o.sT = sT;
     if (!fresh) {
       const q = otherPred(o, Math.min(0.7, (t - sT) / 1000));
@@ -5273,6 +5279,12 @@ function onMsg(m) {
     case 'pdel': { if (!S.world || !shared() || !validDel(m.g) || (!party && !pubTake('d', m.g))) break; if (applyDelRec(m.g, !m.bulk)) { S.dels.push(m.g.slice()); wDirty = true; if (!m.bulk) sfx('pop'); } break; }   // somebody deleted something here
     case 'pgate': { if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
     case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); (m.dels || []).forEach(q => onMsg({ t: 'pdel', g: q, bulk: 1 })); sfx('big'); break;
+    case 'pno': {   // the world has no room for that one: it is taken back and paid back
+      const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.local && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y);
+      if (d) { const i = S.bought.indexOf(d.brec); if (i >= 0) S.bought.splice(i, 1); d.bought = false; d.gone = true; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; const it = SHOP.find(q => q.kind === d.kind && !q.misc); if (it) { wallet.c += it.c; wallet.g += it.g; saveWallet(); } wDirty = true; }
+      if (performance.now() - (S.pnoAt || 0) > 4000) { S.pnoAt = performance.now(); notice(m.full ? 'This world is full of crates and balls. Delete some to build more' : 'You have used your share here. The rest is kept for the other players', 'urgent'); }
+      if (placing) cancelPlacing(true);
+      break; }
     case 'puid': { const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y); if (d) { adoptUid(w, d, m.u); d.srvU = true; } break; }
     case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
     case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
@@ -6142,7 +6154,7 @@ function renderInner(dt, nowT) {
     const m = 60;
     others.forEach(o => {            // other players (drawn first, so everyone goes behind you)
       if (!o.seen || o.dead) return;
-      const ds = clamp((nowT - (o.sT || nowT)) / 1000, 0, 0.7), ek = Math.exp(-dt / 0.07);   // their last known speed carries them on; the small error from the last guess melts away
+      const ds = clamp((nowT - (o.sT || nowT)) / 1000 + otherLead(), 0, 0.7), ek = Math.exp(-dt / 0.07);   // their last known speed carries them on; the small error from the last guess melts away
       o.ex *= ek; o.ey *= ek;
       const q = otherPred(o, ds), nx = q.x + (o.ex || 0), ny = q.y + (o.ey || 0);
       o.rot += (nx - o.cx) / R; o.cx = nx; o.cy = ny;
