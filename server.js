@@ -52,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 139;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 143;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -254,7 +254,7 @@ const rooms = new Map();
 const slotNow = () => maps.slotOf(Date.now() - OFFSET_MS);
 const nextAt = s => maps.slotStart(s + 1) + OFFSET_MS;
 let curSlot = slotNow();
-const PRIV_BASE = 3000000, PRIV_MAX = 12;   // a friend's own world (their solo level, with the things they built) is a private room; its slot is the same number the solo game uses
+const PRIV_BASE = 3000000, PRIV_MAX = MAX_PLAYERS;   // a friend's own world (their solo level, with the things they built) is a private room; its slot is the same number the solo game uses
 const bstate = r => { if (!r) return null; const b = r.priv || (r.build = r.build || { props: [], cps: [], gates: [], misc: [] }); if (!b.dels) b.dels = []; return b; };   // what has been built in a world: a friend's world keeps it with the game, a public world keeps it until the map changes
 const rslot = r => (r && r.priv ? r.priv.slot : curSlot);
 const privKey = pub => 'p' + pub;
@@ -452,6 +452,42 @@ setInterval(() => {   // a private world whose host has not come back in ten min
   for (const [id, r] of rooms) if (r.priv && r.priv.away && t - r.priv.away > 10 * 60000) { for (const o of [...r.players.values()]) { send(o, { t: 'pclose', name: r.priv.hostName || 'The host' }); leave(o, true); } rooms.delete(id); }
 }, 15000).unref();
 setInterval(() => { const t = Date.now(); for (const [id, r] of rooms) if (r.players.size === 0 && (!r.emptyAt || t - r.emptyAt > ROOM_KEEP_MS)) { if (!r.priv) { const sn = snapRoom(r); if (sn) { savedWorlds.set(wkey(id), sn); worldsDirty = true; } } rooms.delete(id); } }, 30000).unref();
+/* ----- bots in private worlds, when the host switches them on. They fill the world to 10 to 20 players in all (real people always come first: with 20 people there are none),
+   come and go now and then, and live here on the server, so they push crates, tip planks, cross bridges and press buttons for everybody, just like a player ----- */
+let botIdN = 0;
+const BOT_GOALS = [10, 12, 14, 15, 16, 18, 20];
+const botInfo = bt => [bt.id, bt.name, bt.color, bt.color2, bt.pat, bt.crown | 0];
+function roomBots(room, w, dtReal) {
+  const bs = room.bots || (room.bots = []);
+  if (!room.priv) { if (bs.length) { for (const bt of bs) broadcast(room, { t: 'bl', id: bt.id }); bs.length = 0; } return; }
+  room.botRe = (room.botRe || 0) - dtReal;
+  if (room.botRe <= 0) { room.botGoal = BOT_GOALS[Math.floor(Math.random() * BOT_GOALS.length)]; room.botRe = 60 + Math.random() * 90; }
+  const want = room.botsOn ? Math.max(0, Math.min(MAX_PLAYERS, room.botGoal || 15) - room.players.size) : 0;
+  room.botT = (room.botT || 0) - dtReal;
+  if (bs.length < want && room.botT <= 0) {
+    const taken = n => bs.some(b => b.name === n) || [...room.players.values()].some(p => p.name === n);
+    const bt = P.botMake(Object.assign({ id: 900000 + (botIdN++ % 90000), name: P.botName(taken) }, P.botLook())); P.botSpawn(bt, w); bs.push(bt);
+    broadcast(room, { t: 'bj', b: [botInfo(bt)], say: 1 });
+    room.botT = bs.length < 4 ? 0.4 + Math.random() * 0.8 : 1 + Math.random() * 3;
+  } else if (bs.length > want && room.botT <= 0) {
+    const i = Math.floor(Math.random() * bs.length), bt = bs[i]; bs.splice(i, 1); broadcast(room, { t: 'bl', id: bt.id, say: 1 });
+    room.botT = room.botsOn ? 1 + Math.random() * 2 : 0.3;
+  }
+}
+function stepRoomBots(room, w, dt) {   // one step for every bot in this world (inside the world's own steps, so they push things exactly like players)
+  const bs = room.bots; if (!bs || !bs.length) return;
+  const B = { n: 8 };
+  for (let i = bs.length - 1; i >= 0; i--) {
+    const bt = bs[i], e = P.botStep(bt, w, dt, B);
+    if (e === 'fin') { room.finishers.push('b' + bt.id); bt.crown = room.finishers.length; broadcast(room, { t: 'fin', id: bt.id, bot: 1, name: bt.name, rank: bt.crown, ms: 0 }); }
+    else if (e === 'leave') { bs.splice(i, 1); broadcast(room, { t: 'bl', id: bt.id, say: 1 }); }
+  }
+}
+function sendBots(room) {   // where every bot is, 20 times a second
+  const bs = room.bots; if (!bs || !bs.length) return;
+  const a = []; for (const bt of bs) { const b = bt.b; a.push(bt.id, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), bt.dead > 0 ? 1 : 0); }
+  broadcast(room, { t: 'bp', a });
+}
 function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
   for (const room of rooms.values()) {
@@ -465,13 +501,16 @@ function simTick() {
     if (room.acc > SIMDT) room.acc = 0;
     for (const p of room.players.values()) if (!act.includes(p)) p.qx = undefined;
     if (n) {
-      w.focus = act.map(p => ({ x: p.x, y: p.y }));
+      roomBots(room, w, dtReal);
+      w.focus = act.map(p => ({ x: p.x, y: p.y })); if (room.bots) for (const bt of room.bots) if (!(bt.dead > 0)) w.focus.push({ x: bt.b.x, y: bt.b.y });
       { const fo = w.focus; w.cand = w.dyn.filter(d => { if (d.burn > 0) return false; for (let i = 0; i < fo.length; i++) if (Math.abs(d.x - fo[i].x) < 420 && Math.abs(d.y - fo[i].y) < 420) return true; return false; }); }
       const pbs = w.pbList || (w.pbList = []);
       for (let k = 0; k < n; k++) {
-        pbs.length = 0; for (const p of act) { const o = p.pbo || (p.pbo = { x: 0, y: 0 }); o.x = p.x; o.y = p.y; pbs.push(o); }   // (where the player really is: never the point carried on ahead for pushing, so nothing is moved by a player who has not reached it)
+        pbs.length = 0; for (const p of act) { const o = p.pbo || (p.pbo = { x: 0, y: 0 }); o.x = p.x; o.y = p.y; pbs.push(o); }
+        if (room.bots) for (const bt of room.bots) if (!(bt.dead > 0)) pbs.push(bt.b);   // (where the player really is: never the point carried on ahead for pushing, so nothing is moved by a player who has not reached it)
         w.pb = pbs;   // (every player's ball is solid to everything in the world: nothing is pushed or squeezed into it)
         P.stepDyn(w, SIMDT);
+        if (room.bots && room.bots.length && (SIMDT > 1 / 100 || (room.tk + k) % 2)) stepRoomBots(room, w, SIMDT > 1 / 100 ? SIMDT : SIMDT * 2);   // (bots think and move 60 times a second)
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
           const a0 = (now - (p.tPos || now)) / 1000 + k * SIMDT, age = Math.min(0.12, a0), g = !!(p.st & 0x8000);   // (where the player is now, from their last word: their own screen already shows what they push moving, worked out there by the same physics)
@@ -484,10 +523,11 @@ function simTick() {
           list.push({ x: p.qx, y: p.qy, vx: p.vx, vy: p.vy, ground: g, id: p.id, p });
         }
         for (const q of list) { const c = { x: q.x, y: q.y, vx: q.vx, vy: q.vy, ground: q.ground, kin: true, dt: SIMDT, own: q.id }; P.collideDyn(c, w); P.seeBody(c, w, P.PLAYER_WT); P.ropeBody(c, w, P.PLAYER_WT / 60); if (q.p) { q.p.qx = c.x; q.p.qy = c.y; } }   // (kin: a player is where they say they are; only the things they touch are moved)
-        if (k === n - 1) P.stepSwitches(w, list, SIMDT * n);   // (the buttons and plates are looked at once per update)
+        if (k === n - 1) P.stepSwitches(w, room.bots && room.bots.length ? list.concat(room.bots.filter(bt => !(bt.dead > 0)).map(bt => bt.b)) : list, SIMDT * n);   // (the buttons and plates are looked at once per update)
       }
       w.ev.length = 0;
     }
+    if (room.tk % 3 === 0) sendBots(room);
     // what changed, for the dyn things
     const stepped = act.length > 0 && n > 0, tickDt = Math.max(1, n) * SIMDT;   // (only after the world really moved on: a tick with no step in it must not report everything as standing still)
     const chg = room.chg = room.chg || []; if (chg.length > 1500) { room.fullAll = true; chg.length = 0; }
@@ -642,11 +682,11 @@ wss.on('connection', (ws, req) => {
         if (!p.pub) { send(p, { t: 'jno', why: 'nodev' }); return; }
         const key = privKey(p.pub), lv = m.host.m | 0;
         const hr0 = rooms.get(key);
-        if (hr0 && hr0.priv && hr0.priv.away && hr0.priv.hostPub === p.pub) { hr0.priv.owner = p.id; hr0.priv.away = 0; hr0.priv.back = 1; room = hr0; p.room = room; fr = { full: [] }; broadcast(room, { t: 'hostback', name: p.name }); }   // the host is back after their connection dropped: their world was kept open for everyone in it
+        if (hr0 && hr0.priv && hr0.priv.away && hr0.priv.hostPub === p.pub) { hr0.priv.owner = p.id; hr0.priv.away = 0; hr0.priv.back = 1; hr0.botsOn = !!m.host.bots; room = hr0; p.room = room; fr = { full: [] }; broadcast(room, { t: 'hostback', name: p.name }); }   // the host is back after their connection dropped: their world was kept open for everyone in it
         else if (hr0) { send(p, { t: 'jno', why: 'busy' }); return; }
         else {
         const props = [], gates = [], misc = [], cps = [], dels = [];   // (what the host built arrives right after, in small pieces)
-        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((maps.generate(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), priv: { at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
+        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((maps.generate(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), botsOn: !!m.host.bots, priv: { at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] };
         }
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
@@ -673,6 +713,7 @@ wss.on('connection', (ws, req) => {
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? Math.max(1, room.finishers.indexOf(o.id) + 1) : 0 }))   // (crown: what place they finished in)
         });
         p.dver = null; if (room.world) { send(p, doorPacket(room)); plankSend(room, room.world.see, p); }
+        if (room.bots && room.bots.length) send(p, { t: 'bj', b: room.bots.map(botInfo) });
         broadcast(room, { t: 'join', id: p.id, pub: p.pub, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
       } else {
         send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
@@ -947,6 +988,9 @@ wss.on('connection', (ws, req) => {
       if (p.pub && known.get(p.pub)) { known.get(p.pub).color = p.color; known.get(p.pub).color2 = p.color2; known.get(p.pub).pat = p.pat | 0; if (m.beat != null) known.get(p.pub).beat = Math.max(0, Math.min(999, m.beat | 0)); linksDirty = true; }
       if (p.pub) for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (q) sendLinks(q); }
       if (p.room) broadcast(p.room, { t: 'info', id: p.id, name: p.name, color: p.color, color2: p.color2, pat: p.pat }, p);
+    } else if (m.t === 'bots') {   // the host switches the bots in their private world on or off
+      const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id) return;
+      r.botsOn = !!m.on;
     } else if (m.t === 'finish') {
       if (!p.room) return;
       const sl = rslot(p.room);

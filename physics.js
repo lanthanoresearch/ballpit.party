@@ -55,7 +55,7 @@
     for (let ty = ty0; ty <= ty1; ty++) {
       for (let tx = tx0; tx <= tx1; tx++) {
         const t = tile(w, tx, ty);
-        if (!t || t === 5 || (t === 9 && b.ghost)) continue;
+        if (!t || t === 5 || (t === 9 && (b.ghost || b.gatePass > 0))) continue;
         const left = tx * TS, top = ty * TS;
         const cx = clamp(b.x, left, left + TS), cy = clamp(b.y, top, top + TS);
         const dx = b.x - cx, dy = b.y - cy, d2 = dx * dx + dy * dy;
@@ -1015,7 +1015,198 @@
       if (ok) { d.y = ny; d.vy = 0; d.nap = false; d.rest = 0; d.sleep = false; }
     }
   }
-  const api = { VERSION: 139, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  /* ----- bots: one brain everywhere (on your own device when you play offline, on the server in a private world). They run the real route, jump the gaps,
+     keep out of lava, and they are solid like anyone: they push crates, tip planks, cross rope bridges, press buttons and stand on plates ----- */
+  const BSOLID = t => t === 1 || t === 3 || t === 4 || t === 6;
+  const brnd = (a, b) => a + Math.random() * (b - a);
+  const botOob = (w, b) => b.x < 0 || b.x > w.W * TS || b.y < 0 || b.y > killYAt(w, b.x);
+  function botRuns(w, A) {
+    const out = []; let s = null;
+    for (let x = A[0]; x < A[0] + A[2]; x++) { if (BSOLID(tile(w, x, A[1]))) { if (s === null) s = x; } else if (s !== null) { out.push([s, x - 1]); s = null; } }
+    if (s !== null) out.push([s, A[0] + A[2] - 1]);
+    if (!out.length) out.push([A[0], A[0] + A[2] - 1]);
+    return out;
+  }
+  const runMid = r => (r[0] + r[1] + 1) / 2 * TS;
+  const inRun = (x, r) => { const t = Math.floor(x / TS); return t >= r[0] && t <= r[1]; };
+  function botPlan(bt, w) {
+    const path = w.map.path, A = path[bt.i], B = path[bt.i + 1];
+    if (!A) { bt.far = null; bt.bRun = null; bt.tcx = w.map.flag[0] * TS; return; }
+    if (!B) { bt.far = null; bt.bRun = botRuns(w, A)[0]; bt.tcx = w.map.flag[0] * TS; return; }
+    const dir = Math.sign((B[0] + B[2] / 2) - (A[0] + A[2] / 2)) || 1, ra = botRuns(w, A), rb = botRuns(w, B);
+    let water = false; for (let x = A[0]; x < A[0] + A[2]; x++) if (tile(w, x, A[1]) === 5) { water = true; break; }
+    bt.far = water ? (dir > 0 ? ra[ra.length - 1] : ra[0]) : null;
+    bt.bRun = dir > 0 ? rb[0] : rb[rb.length - 1];
+  }
+  function botMake(o) {   // a new bot. Most are good runners; now and then one just plays around near the start
+    const wander = Math.random() < (o.wander === undefined ? 0.08 : o.wander), pro = !wander && Math.random() < 0.5;
+    return Object.assign({ type: wander ? 'wander' : 'runner', pro, err: pro ? 0.003 : 0.02, life: wander ? brnd(40, 140) : brnd(700, 1600), age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0,
+      finished: false, leaveT: 0, wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, gT: 0, airT: 0, airAx: null, danger: false, stT: 0, stX: 0, back: 0, crown: 0 }, o);
+  }
+  function botSpawn(bt, w) {   // at the start, or (after a fall) back where it had got to on the route, like a checkpoint
+    const m = w.map;
+    if (bt.i > 0 && m.path[bt.i]) { const A = m.path[bt.i], r = botRuns(w, A)[0]; bt.b = newBody(runMid(r), A[1] * TS - R - 1); }
+    else { bt.i = 0; bt.b = newBody(m.start[0] + brnd(-80, 80), m.start[1]); }
+    bt.b.bot = true; bt.b.noJm = true;
+    botPlan(bt, w); bt.jumpAt = 0; bt.idle = brnd(0.1, 0.6); bt.stT = 0; bt.stX = bt.b.x; bt.back = 0; bt.lostT = 0;
+  }
+  function botLand(bt, w) {
+    const b = bt.b, path = w.map.path, tx = Math.floor(b.x / TS), ty = Math.floor((b.y + R + 2) / TS);
+    for (let j = Math.max(bt.minI || 0, bt.i - 2); j <= Math.min(path.length - 1, bt.i + 8); j++) {
+      const A = path[j];
+      if (ty === A[1] && tx >= A[0] && tx < A[0] + A[2]) { bt.lostT = 0; if (j !== bt.i) { if (j > bt.i) { bt.stT = 0; bt.iT = 0; bt.dI = 0; } bt.i = j; botPlan(bt, w); if (Math.random() < 0.05) bt.idle = brnd(0.2, 0.8); bt.adv = true; } return true; }
+    }
+    return false;
+  }
+  function botSim(bt, w, ax, T, holdFrom, holdTo) {   // a quick pretend-run (it cannot touch anything real)
+    const c = Object.assign({}, bt.b, { ghost: true }), sw = Object.assign({}, w, { see: [], ev: [], portals: [], ropes: [] }), dt = 1 / 30, n = Math.round(T / dt);
+    let h = holdFrom;
+    for (let i = 0; i < n; i++) {
+      const jh = h < holdTo; h += dt;
+      const ev = step(c, sw, ax, jh, dt);
+      if (ev.lava || ev.splat || botOob(sw, c)) return { dead: true, t: i * dt, x: c.x, y: c.y };
+      if (c.ground && i > 1) return { dead: false, land: true, t: i * dt, x: c.x, y: c.y };
+    }
+    return { dead: false, land: false, t: T, x: c.x, y: c.y };
+  }
+  function botAirPick(bt, w, aa) {
+    const nxt = w.map.path[bt.i + 1] || w.map.path[bt.i], ty = nxt ? nxt[1] * TS - R : bt.b.y, opts = aa === 0 ? [0] : [aa, 0, -aa];
+    let best = aa, bs = -1e9;
+    for (let k = 0; k < opts.length; k++) {
+      const r = botSim(bt, w, opts[k], 1.5, bt.hold, bt.tap ? 0.1 : 0.36);
+      const sc = r.dead ? -100000 + r.t * 1000 : (r.land ? 0 : -3000) - Math.abs(r.x - bt.tcx) - 0.4 * Math.abs(r.y - ty) - k * 6;
+      if (sc > bs) { bs = sc; best = opts[k]; }
+    }
+    return best;
+  }
+  function doorAhead(w, b, d, far) {   // a closed gate between the bot and where it is going: which one
+    const tx0 = Math.floor(b.x / TS), r0 = Math.floor((b.y - R + 3) / TS), r1 = Math.floor((b.y + R - 3) / TS), n = Math.min(8, Math.ceil(far / TS) + 1);
+    for (let k = 1; k <= n; k++) {
+      const tx = tx0 + d * k;
+      for (let ty = r0; ty <= r1; ty++) { const t = tile(w, tx, ty); if (t === 9) { for (let i = 0; i < w.doors.length; i++) { const q = w.doors[i]; if (!q.gone && !q.open && tx >= q.x && tx < q.x + q.w && ty >= q.y && ty < q.y + q.h) return i; } } }
+      if (BSOLID(tile(w, tx, Math.floor(b.y / TS)))) return -1;
+    }
+    return -1;
+  }
+  function reachSim(bt, w, gx, gy, ax0, t0, hold) {   // jump now, roll ax0 for t0 seconds, then steer for the spot: does it land there?
+    const c = Object.assign({}, bt.b, { ghost: true, jbuf: 0.12 }), sw = Object.assign({}, w, { see: [], ev: [], portals: [], ropes: [] }), dt = 1 / 30;
+    for (let i = 0, t = 0; i < 54; i++, t += dt) {
+      const dx = gx - c.x, ax = t < t0 ? ax0 : Math.abs(dx) < 0.5 * c.vx * c.vx / 1800 + 4 && Math.sign(c.vx) === Math.sign(dx) ? -Math.sign(c.vx) : Math.sign(dx);
+      const ev = step(c, sw, ax, t < hold, dt);
+      if (ev.lava || ev.splat || botOob(sw, c)) return false;
+      if (c.ground && i > 2) return Math.abs(c.x - gx) < TS * 0.55 && Math.abs(c.y + R - gy) < 10;
+    }
+    return false;
+  }
+  function planReach(bt, w, gx, gy, B) {   // a way up onto a spot above (a red button on a ledge): find a jump that gets there, or back off for a run-up
+    for (const hold of [0.36, 0.22]) for (const ax0 of [Math.sign(gx - bt.b.x) || 1, 0, -(Math.sign(gx - bt.b.x) || 1)]) for (const t0 of [0, 0.25]) {
+      if (B.n <= 0) return null; B.n -= 0.5;
+      if (reachSim(bt, w, gx, gy, ax0, t0, hold)) return { ax0, t0, hold, t: 0 };
+    }
+    return null;
+  }
+  const dynAhead = (w, b, d) => { for (let i = 0; i < w.dyn.length; i++) { const q = w.dyn[i]; if (q.burn > 0) continue; const e = q.r || q.hw || 20; if (Math.abs(q.y - b.y) < e + R && (q.x - b.x) * d > 0 && Math.abs(q.x - b.x) < e + R + 14) return true; } return false; };
+  // one step of one bot. B is the thinking budget shared by all bots this frame (the pretend-runs cost time). Returns what happened: 'died', 'fin', 'leave' or ''
+  function botStep(bt, w, dt, B) {
+    const b = bt.b, m = w.map;
+    bt.age += dt; bt.adv = false;
+    if (bt.dead > 0) { bt.dead -= dt; if (bt.dead <= 0) { botSpawn(bt, w); if (bt.gh) bt.b.ghost = true; } return ''; }
+    if (bt.type === 'runner' && !bt.finished) {   // stuck on one part of the route too long (or it keeps falling there): it comes back a little further on, the way a player would at a checkpoint
+      bt.iT = (bt.iT || 0) + dt;
+      if (bt.iT > 14 || (bt.dI || 0) >= 3) { bt.i = Math.min(m.path.length - 1, bt.i + (bt.iT > 14 ? 2 : 1)); bt.minI = bt.i; bt.iT = 0; bt.dI = 0; bt.goal = null; bt.jplan = null; bt.dead = 0.01; return ''; }
+    }
+    let ax = 0, jheld = false;
+    if (bt.finished) { bt.leaveT -= dt; if (bt.leaveT <= 0) return 'leave'; }
+    else if (bt.idle > 0) bt.idle -= dt;
+    else if (bt.type === 'wander') {
+      bt.wT -= dt;
+      if (bt.wT <= 0) { bt.wT = brnd(0.4, 1.6); const r = Math.random(); bt.wax = r < 0.4 ? -1 : r < 0.8 ? 1 : 0; }
+      const sx = m.start[0]; if (b.x < sx - 300) bt.wax = 1; else if (b.x > sx + 300) bt.wax = -1;
+      ax = bt.wax;
+      if (b.ground && ax) { const below = tile(w, Math.floor((b.x + ax * (R + 6)) / TS), Math.floor((b.y + R + 6) / TS)); if (below === 0 || below === 2 || below === 5) bt.wax = ax = -ax; }
+      if (b.ground && Math.random() < dt * 1.1) { b.jbuf = 0.12; bt.wHigh = Math.random() < 0.5; }
+      jheld = bt.wHigh;
+      if (bt.age > bt.life) return 'leave';
+    } else {
+      if (b.ground && b.flat && !botLand(bt, w)) { bt.lostT += dt; if (bt.lostT > 6) { bt.dead = 0.01; return ''; } }   // (somewhere off the route: back to where it had got to)
+      if (b.ground && b.flat) {
+        if (bt.far && !inRun(b.x, bt.far)) bt.tcx = runMid(bt.far);
+        else if (bt.bRun) bt.tcx = m.path[bt.i + 1] ? runMid(bt.bRun) : m.flag[0] * TS;
+      }
+      // a closed gate in the way: off to press its red button first (it stays open a whole minute). A gate that needs a crate on a plate, or a button it cannot reach, it slips through after a while
+      if (b.gatePass > 0) b.gatePass -= dt;
+      if (!bt.goal && b.ground) { const dg = Math.sign(bt.tcx - b.x) || 1, di = doorAhead(w, b, dg, Math.abs(bt.tcx - b.x)); if (di >= 0) { const q = w.btns.find(q => !q.gone && q.to.indexOf(di) >= 0); bt.goal = { di, t: 0, x: q ? (q.x + 0.5) * TS : null }; } }
+      if (bt.goal) {
+        const g = bt.goal, dd = w.doors[g.di]; g.t += dt;
+        if (!dd || dd.gone || dd.open) bt.goal = null;
+        else if (g.x === null ? g.t > 3 : g.t > 14) { b.gatePass = 4; bt.goal = null; }
+        else if (g.x !== null) {
+          const q = w.btns.find(q => !q.gone && q.to.indexOf(g.di) >= 0), gy = q ? q.y * TS : 0;
+          bt.tcx = g.x;
+          if (q && b.y + R < gy - 30 + 40 && b.y + R > gy - 12 && Math.abs(b.x - g.x) < TS) { /* standing on it */ }
+          else if (q && b.y + R > gy + 12) {   // (it is up on a ledge)
+            if (b.ground) {
+              g.pt = (g.pt || 0) - dt;
+              if (g.pt <= 0) { g.pt = 0.2; const pl = planReach(bt, w, g.x, gy, B); if (pl) { bt.jplan = pl; b.jbuf = 0.12; bt.hold = 0; } else { g.away = g.away || (Math.random() < 0.5 ? -1 : 1); bt.tcx = g.x + g.away * TS * 3; } }
+              else if (g.away) bt.tcx = g.x + g.away * TS * 3;
+            }
+          }
+        }
+      }
+      if (bt.jplan) {   // (in the middle of a planned jump: follow it)
+        const pl = bt.jplan; pl.t += dt;
+        if (b.ground && pl.t > 0.15) bt.jplan = null;
+        else {
+          const dx = bt.tcx - b.x, axp = pl.t < pl.t0 ? pl.ax0 : Math.abs(dx) < 0.5 * b.vx * b.vx / 1800 + 4 && Math.sign(b.vx) === Math.sign(dx) ? -Math.sign(b.vx) : Math.sign(dx);
+          const ev = step(b, w, axp, pl.t < pl.hold, dt);
+          if (ev.lava || ev.splat || botOob(w, b)) { bt.dead = 0.6; bt.jplan = null; bt.dI = (bt.dI || 0) + 1; bt.goal = null; return 'died'; }
+          return '';
+        }
+      }
+      // stuck (a crate, a closed gate, a wall it cannot see): first a jump, then a step back and a run at it, and in the end back to the last good spot
+      if (Math.abs(b.x - bt.stX) > 40) { bt.stX = b.x; bt.stT = 0; } else bt.stT += dt;
+      let d = Math.sign(bt.tcx - b.x) || 1;
+      if (bt.back > 0) { bt.back -= dt; d = -d; }
+      else if (bt.stT > 4 && bt.stT < 4 + dt * 1.5) bt.back = brnd(0.3, 0.7);
+      if (bt.stT > 14) { bt.dead = 0.01; return ''; }
+      ax = d;
+      const onTarget = Math.abs(bt.tcx - b.x) < 6 && bt.back <= 0;
+      if (b.water) jheld = true;
+      else if (b.ground) {
+        const below = tile(w, Math.floor((b.x + d * (R + 4)) / TS), Math.floor((b.y + R + 6) / TS)), ahead = tile(w, Math.floor((b.x + d * (R + 26)) / TS), Math.floor(b.y / TS));
+        bt.airAx = null; bt.gT -= dt;
+        if (bt.gT <= 0 && !onTarget && B.n > 0) { B.n--; bt.gT = 0.1; bt.danger = botSim(bt, w, d, 0.5, 9, 0).dead; }   // (would just rolling on end badly?)
+        const blockedAhead = bt.stT > 1.2 || (Math.abs(b.vx) < 40 && dynAhead(w, b, d));
+        if (!onTarget && bt.back <= 0 && (below === 0 || below === 2 || below === 5 || ahead === 2 || BSOLID(ahead) || bt.danger || blockedAhead)) {
+          if (bt.jumpAt === 0) { bt.jumpAt = bt.age + (Math.random() < bt.err ? brnd(0.06, 0.16) : 0.0001); bt.tap = false; }
+          if (bt.age >= bt.jumpAt) { b.jbuf = 0.12; bt.hold = 0; bt.jumpAt = 0; jheld = true; }
+        } else bt.jumpAt = 0;
+        if (b.flat && b.gType !== 3 && onTarget) ax = 0;
+      } else {
+        bt.hold += dt; jheld = bt.hold < (bt.tap ? 0.1 : 0.36);
+        const dx = bt.tcx - b.x, stop = 0.5 * b.vx * b.vx / 1800 + 6;
+        let aa = ax; if (Math.abs(dx) < stop && Math.sign(b.vx) === Math.sign(dx)) aa = -Math.sign(b.vx);
+        bt.airT -= dt;
+        if (bt.airT <= 0 && B.n > 0) { B.n--; bt.airT = 0.1 + Math.random() * 0.06; bt.airAx = botAirPick(bt, w, aa); }
+        ax = bt.airAx === null ? aa : bt.airAx;
+      }
+      if (bt.age > bt.life && !bt.finished) return 'leave';
+    }
+    const ev = step(b, w, ax, jheld, dt);
+    if (ev.lava || ev.splat || botOob(w, b)) { bt.dead = 0.6; bt.deadX = b.x; bt.deadY = b.y; bt.dI = (bt.dI || 0) + 1; bt.goal = null; return 'died'; }
+    const f = m.finish;
+    if (!bt.finished && bt.type === 'runner' && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) { bt.finished = true; bt.leaveT = brnd(5, 14); return 'fin'; }
+    return '';
+  }
+  const BOT_NAMES = ['Max', 'Luna', 'Kai', 'Zoe', 'Finn', 'Nova', 'Leo', 'Mia', 'Axel', 'Ruby', 'Jax', 'Ivy', 'Otto', 'Eli', 'Sky', 'Dex', 'Remy', 'Tess', 'Bo', 'Nico', 'Pip', 'Gus', 'Vee', 'Cleo', 'Rex', 'Juno', 'Milo', 'Ash', 'Fox', 'Zed'];
+  const BOT_ODD = ['xX_', 'n0pe', 'qwerty', 'zzz', 'a', '...', 'lol', 'asdf', 'TEST', 'uwu', '???', 'x_x', 'ok', 'hi', 'P1ayer', 'bob', '.', '_', '~~', 'No1', 'u8', 'dfgh'];
+  const BOT_COLORS = ['#ff4d4d', '#ff8a3d', '#ffd23d', '#a3e635', '#34d058', '#2ec4b6', '#38bdf8', '#6c7bff', '#8b5cf6', '#d946ef', '#ff6fb5', '#ffffff', '#bfc5d2', '#7a5c3a'];
+  function botName(taken) {
+    for (let k = 0; k < 20; k++) { let n; if (Math.random() < 0.3) n = BOT_ODD[Math.floor(Math.random() * BOT_ODD.length)]; else { n = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)]; if (Math.random() < 0.4) n += Math.floor(Math.random() * 100); } n = n.slice(0, 12); if (!taken || !taken(n)) return n; }
+    return 'Bot' + Math.floor(Math.random() * 1000);
+  }
+  const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
+  const api = { VERSION: 143, botMake, botSpawn, botStep, botName, botLook, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
