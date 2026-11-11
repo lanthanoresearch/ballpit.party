@@ -687,7 +687,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 134; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 135; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -732,7 +732,20 @@
     var c = sc.cv.getContext('2d'), w = 112, spr = window.__sprite ? window.__sprite() : null;
     c.clearRect(0, 0, w, w); c.save(); c.translate(w / 2, w / 2); c.rotate(rot);
     if (spr) c.drawImage(spr, -w / 2, -w / 2, w, w);
-    else { c.beginPath(); c.arc(0, 0, w / 2 - 4, 0, 6.2832); c.fillStyle = sc.col; c.fill(); c.lineWidth = 6; c.strokeStyle = INK; c.stroke(); c.fillStyle = INK; c.globalAlpha = .5; c.fillRect(0, -3, w / 3, 6); }
+    else {   // the game itself has not loaded yet: your ball is drawn right here from what this browser remembers (colours and pattern), so it is yours from the very first moment
+      var st = sc.set || {}, HX = /^#[0-9a-fA-F]{6}$/, c2 = HX.test(st.color2) ? st.color2 : '#ffffff', pat = st.pat | 0, r = 14, T = 6.2832;
+      c.scale((w / 2 - 5) / r, (w / 2 - 5) / r);
+      c.beginPath(); c.arc(0, 0, r - .5, 0, T); c.fillStyle = sc.col; c.fill();
+      c.save(); c.beginPath(); c.arc(0, 0, r - .5, 0, T); c.clip(); c.fillStyle = c2;
+      if (pat === 1) c.fillRect(-r, -3.5, 2 * r, 7);
+      else if (pat === 2) c.fillRect(0, -r, r, 2 * r);
+      else if (pat === 3) [[-5, -4], [5, -4], [0, 6]].forEach(function (q) { c.beginPath(); c.arc(q[0], q[1], 3.2, 0, T); c.fill(); });
+      else if (pat === 4) { c.beginPath(); c.arc(0, 0, 9, 0, T); c.fill(); c.fillStyle = sc.col; c.beginPath(); c.arc(0, 0, 4.5, 0, T); c.fill(); }
+      else if (pat === 5) { c.fillRect(-r, -r, r, r); c.fillRect(0, 0, r, r); }
+      c.fillStyle = 'rgba(255,255,255,.28)'; c.beginPath(); c.arc(-4.5, -5, 4.5, 0, T); c.fill(); c.restore();
+      c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(r * .62, 0, 2.2, 0, T); c.fill();
+      c.strokeStyle = 'rgba(15,10,10,.85)'; c.lineWidth = 1.9; c.beginPath(); c.arc(0, 0, r - .4, 0, T); c.stroke();
+    }
     c.restore();
   }
   var lastT = 0;

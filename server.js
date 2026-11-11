@@ -52,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 134;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 135;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -299,7 +299,8 @@ const wss = new WebSocketServer({ server, maxPayload: 65536, perMessageDeflate: 
 
 // Worlds are numbered 1, 2, 3...  Everyone goes to the lowest-numbered world with space; a new world only opens when the others are full.
 function roomFresh(r) {   // a public world this server knows nothing about (it was restarted and lost its memory): a player who was here may have it
-  if (!r || r.priv || r.seeded || !r.virgin) return false;   // (virgin: there was no memory of it at all when it was opened)
+  if (!r || r.priv || r.seeded || !r.virgin) return false;
+  if (r.snapAt && Date.now() - r.snapAt > 5000) return false;   // (this server has been handing out its own memory of this world for a while: it has not forgotten anything, so nobody's copy is taken over it and the world is never loaded afresh under the players)   // (virgin: there was no memory of it at all when it was opened)
   const b = r.build; return !b || (!b.props.length && !b.misc.length && !b.gates.length && !b.cps.length && !(b.dels || []).length);
 }
 function snapFor(r) {   // a world's memory as the players keep it: what is built, and where everything is that has been moved
@@ -317,7 +318,7 @@ setInterval(() => {   // every few seconds each player is given the world's memo
     for (const p of r.players.values()) {
       if (!p.has || p.ws.readyState !== 1 || (p.sbh === bh && p.sdh === dh)) continue;
       const msg = '{"t":"wsnap","k":"' + wkey(r.id) + '","at":' + now + ',"bh":"' + bh + '"' + (p.sbh === bh ? '' : ',"b":' + bs) + ',"w":' + ds + '}';
-      try { p.ws.send(msg); p.sbh = bh; p.sdh = dh; } catch (e) {}
+      try { p.ws.send(msg); p.sbh = bh; p.sdh = dh; if (!r.snapAt) r.snapAt = now; } catch (e) {}
     }
   }
 }, 10000).unref();
@@ -514,8 +515,8 @@ function simTick() {
       const pend = p.pend || (p.pend = new Set()), lastS = p.lastS || (p.lastS = new Map());
       if (full) {   // (a full look: first time, every few seconds, or after moving far: everything around them that they do not have the latest word on yet)
         p.sv = room.verN; p.sx = p.x; p.sy = p.y; p.more = 0;
-        for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (p.dver.get(d.uid) === d.ver) continue; const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y; if (Math.abs(x - p.x) > 1900 || Math.abs(y - p.y) > 1500) continue; pend.add(d); }
-      } else for (let i = 0; i < chg.length; i++) { const d = chg[i]; if (p.dver.get(d.uid) === d.ver) continue; if (!(d.burn > 0) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue; pend.add(d); }
+        for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (p.dver.get(d.uid) === d.ver) continue; const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y; if (p.looked0 && (Math.abs(x - p.x) > 1900 || Math.abs(y - p.y) > 1500)) continue; pend.add(d); }   // (someone who has just arrived is told where everything in the whole world is, once: their map shows every crate and ball that was ever built, where it really lies, not only what is near them. After that they hear about what is around them)
+      } else for (let i = 0; i < chg.length; i++) { const d = chg[i]; if (p.dver.get(d.uid) === d.ver) continue; if (!(d.burn > 0) && p.dver.has(d.uid) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue; pend.add(d); }   // (what is far away is told only now and then, enough for the map: every few seconds at most)
       if (!pend.size) { if (!p.looked0 && full) { p.looked0 = true; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); } continue; }
       if (!p.looked0 ? false : room.tk % (health.level >= 1 ? 4 : 2)) continue;   // (30 times a second, which each device fills in smoothly; a server that cannot keep up halves that. A player who has just arrived gets everything as fast as it goes)
       // each moment only so much is sent (a slow connection is never flooded): what has waited longest and what is closest goes first, so nothing is ever left waiting while other things are told again and again. In between, each device carries everything on along its path, falling as it falls
