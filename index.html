@@ -687,7 +687,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 135; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 136; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag is hidden somewhere very far away.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -4980,8 +4980,15 @@ function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
-  if (v === 'maker') { wallet.c = Math.max(wallet.c, 10000); wallet.g = Math.max(wallet.g, 500); saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice('Your money is topped up to 10,000 coins and 500 diamonds', ''); return; }
-  if (v === 'themaker1') { infMoney = true; try { localStorage.setItem('ballrun4_inf', '1'); } catch (e) {} homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice('Unlimited coins and diamonds, for good', ''); return; }
+  if (v === 'themaker#1' || v === 'maker' || v === 'zeros') {   // the three money codes. They only ever change your own money on this device, and never a private world whose maker set its money to unlimited
+    const done = t => { saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice(t, ''); };
+    const setInf = on => { infMoney = on; try { if (on) localStorage.setItem('ballrun4_inf', '1'); else localStorage.removeItem('ballrun4_inf'); } catch (e) {} };
+    if (unlimitedNow()) { $('cdNote').textContent = 'This world is already set to unlimited money. The code cannot change that.'; sfx('warn'); return; }
+    if (v === 'themaker#1') { if (infMoney) { $('cdNote').textContent = 'You already have unlimited coins and diamonds.'; sfx('warn'); return; } setInf(true); done('Unlimited coins and diamonds'); return; }
+    setInf(false);
+    if (v === 'maker') { wallet.c = 10000; wallet.g = 500; done('Your money is set to 10,000 coins and 500 diamonds'); return; }
+    wallet.c = 0; wallet.g = 0; done('Your coins and diamonds are back to zero'); return;
+  }
   $('cdIn').classList.remove('bad'); void $('cdIn').offsetWidth; $('cdIn').classList.add('bad'); $('cdNote').textContent = v ? "That code doesn't work" : 'Type a code first'; sfx('warn');
 }
 $('cdOk').onclick = submitCode; $('cdNo').onclick = closeCode;
