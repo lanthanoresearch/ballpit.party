@@ -34,6 +34,15 @@
   canvas#cv{position:fixed;left:0;top:0;width:100%;height:100%;display:block}
   /* looks: only how the world is drawn on your screen changes, never how anything plays */
   html[data-vs=smooth]{--wob:12px;--font:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  html[data-vs=smooth] *{font-size-adjust:0.42}
+  html[data-vs=smooth] .lvb .nm{white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.15}
+  html[data-vs=smooth] #worldpop{white-space:normal}
+  html[data-vs=smooth] #home h1 b,html[data-vs=smooth] #boot h1 b{font-weight:800}
+  html[data-vs=smooth] #home h1{text-shadow:0 2px 0 rgba(255,250,235,.7)}
+  html[data-vs=smooth] .tabs button{font-size:11px;letter-spacing:0}
+  html[data-vs=smooth] #onl{font-size:11px}
+  .btns button.danger{margin-top:0;border:2px solid var(--line)}
+  .epcard{overflow-y:auto!important}
   html[data-vs=smooth] #boot h1,html[data-vs=smooth] #home h1{animation:none;font-weight:800;letter-spacing:1px}
   html[data-vs=smooth] .scene .sun{animation:none}
   .hide{display:none!important}
@@ -206,6 +215,15 @@
   #touch button.edit{border-style:dashed;border-color:var(--accent);background:rgba(255,204,61,.25);cursor:grab}
   #editbar{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);z-index:20;box-sizing:border-box;width:min(520px,calc(100vw - 16px));padding:8px 10px;display:flex;flex-direction:column;gap:8px;font-size:14px;overflow:hidden}
   /* ---- modals ---- */
+  .mpseg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:4px;border:3px solid var(--line);border-radius:20px;background:#2a2442}
+  .mpseg button{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;height:36px;padding:0 4px;border:0;border-radius:15px;background:none;color:var(--ink);font-size:15px;opacity:.6;white-space:nowrap;transition:background .2s,opacity .2s}
+  .mpseg button svg{flex:none}
+  .mpseg button:hover{opacity:.85}
+  .mpseg button.on{opacity:1;color:#fff}
+  .mpseg button[data-m=priv].on{background:#d98a2f}
+  .mpseg button[data-m=pub].on{background:#2f9e61}
+  .mpseg button[data-m=off].on{background:#4f6fd0}
+  body.offl #btnInvite,body.offl #btnInviteF,body.offl #pInvite,body.offl .tabs [data-tab=friends],body.offl #myCode,body.offl #homeOnline{display:none!important}
   .offsw{align-self:center}.offsw.on{background:rgba(120,170,255,.22);border-color:rgba(140,185,255,.7)}
   #netGate{background:rgba(8,10,20,.82)}.ngcard{width:min(320px,100%);display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center}.ngcard h3{margin:0;font-size:24px}.ngspin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#fff;animation:ngs .9s linear infinite}@keyframes ngs{to{transform:rotate(360deg)}}
   .overlay{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:14px}
@@ -693,7 +711,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 138; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 139; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1081,9 +1099,9 @@
     <div class="hsub">Roll through a huge world and find the hidden finish flag.</div>
     <div class="card">
       <div class="ned" id="ned1"></div>
-      <label class="mpbig"><input type="checkbox" id="homeMp"><span class="mptrack"><span class="mpL"><span data-ic="user"></span>Private</span><span class="mpR"><span data-ic="globe"></span>Public</span><i></i></span></label>
+      <input type="checkbox" id="homeMp" hidden>
+      <div class="mpseg" id="homeSeg" role="tablist" aria-label="Where to play"><button type="button" role="tab" data-m="priv"><span data-ic="lock"></span>Private</button><button type="button" role="tab" data-m="pub"><span data-ic="globe"></span>Public</button><button type="button" role="tab" data-m="off"><span data-ic="user"></span>Offline</button></div>
       <div class="small dim" id="homeModeNote"></div>
-      <button id="homeOff" class="btn offsw hide" type="button" aria-pressed="false"><span data-ic="user"></span><span id="homeOffTxt">Offline mode: off</span></button>
       <button id="homeLvl" class="btn lvrow" type="button"></button>
       <button id="homePlay" class="hplay" type="button">Play</button>
       <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
@@ -2641,7 +2659,7 @@ function botsTick(dt) {
   botNextSpawn -= dt;
   const cap = settings.bots ? botCap() : 0;
   botBudget = 14;
-  if (bots.length < botTarget && bots.length < cap && botNextSpawn <= 0) { spawnBot(); botNextSpawn = botTarget > 30 ? rnd(0.1, 0.5) : rnd(1.5, 6); }
+  if (bots.length < botTarget && bots.length < cap && botNextSpawn <= 0) { spawnBot(); botNextSpawn = botTarget > 30 ? rnd(0.1, 0.5) : offlineOn() && bots.length < 4 ? rnd(0.3, 1.2) : rnd(1.5, 6); }   // (offline: the first few bots arrive right away)
   if (bots.length > cap) {                        // fewer allowed now (you lowered the number, or real people arrived): they drift away over about 10 seconds
     const ex = bots.length - cap;
     if (!botDrain || ex > botDrain * 11) botDrain = Math.max(1, ex / 10);
@@ -3263,7 +3281,7 @@ function applyDeps() {
   const list = document.querySelectorAll('.dep');
   for (let i = 0; i < list.length; i++) { const f = DEPS[list[i].getAttribute('data-dep')]; if (f) list[i].classList.toggle('off', !f()); }
   const d = $('inputDesc'); if (d) d.textContent = settings.inputMode === 'auto' ? (showTouch() ? 'Using touch right now. Press a key and it switches to the keyboard.' : 'Using the keyboard right now. Touch the screen and it switches.') : settings.inputMode === 'touch' ? 'Touch controls only.' : 'Keyboard only.';
-  const m = $('mpDesc'); if (m) m.textContent = settings.mp ? 'You are in a public world with everyone online. Private or public is chosen on the main menu.' : 'You are in your private world. Nobody else is here. Private or public is chosen on the main menu.';
+  const m = $('mpDesc'); if (m) m.textContent = (settings.mp ? 'You are in a public world with everyone online.' : settings.offline ? 'You are playing offline: just you and bots, on this device.' : 'You are in your private world. Friends you invite can join you.') + ' Private, Public or Offline is picked on the main menu.';
 }
 const _syncUI = syncUI;
 syncUI = function () { _syncUI(); if (typeof lvlRender === 'function') lvlRender(); applyDeps(); };
@@ -4649,7 +4667,25 @@ function homeStats() {
 }
 window.__sprite = () => sprite(settings.color, settings.color2, settings.pat);   // the loading screen and the main screen show your real ball
 try { window.__scene($('homeScene'), 'home'); } catch (e) {}
-function homeModeText() { netRender(); const pub = $('homeMp').checked; $('homeModeNote').textContent = pub ? 'A public world. Everyone online shares it.' : offlineOn() ? 'Your private world, fully offline. Nothing connects to the server.' : 'Your private world. Nobody else can see you.'; $('homeOff').classList.toggle('hide', pub); $('homeOff').classList.toggle('on', !!settings.offline); $('homeOffTxt').textContent = settings.offline ? 'Offline mode: on' : 'Offline mode: off'; lvlRender(); }
+const curMode = () => settings.mp ? 'pub' : settings.offline ? 'off' : 'priv';
+function segRender() { const m = curMode(); document.querySelectorAll('#homeSeg button').forEach(b => { const on = b.getAttribute('data-m') === m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); }); document.body.classList.toggle('offl', m === 'off'); }
+/* three ways to play, picked on the main menu: Private (your own levels, on the server so friends can join you), Public (everyone online), Offline (your own levels, never online, with bots) */
+function setMode(m) {
+  if (m === curMode()) return;
+  const off = m === 'off', wasOff = !!settings.offline;
+  if (off !== wasOff) {   // offline games keep their own bot settings: on, 6 of them, until you change them
+    const keep = { bots: !!settings.bots, botMax: settings.botMax }, use = off ? (settings.botsOff || { bots: true, botMax: 6 }) : (settings.botsOn || keep);
+    if (off) settings.botsOn = keep; else settings.botsOff = keep;
+    settings.bots = !!use.bots; settings.botMax = Math.max(1, Math.min(200, use.botMax | 0 || 6));
+  }
+  bots.length = 0;
+  settings.mp = m === 'pub'; save(); homeMode = settings.mp; $('homeMp').checked = settings.mp; $('setMp').checked = settings.mp;
+  if (off) setOffline(true); else if (wasOff) setOffline(false); else { retry = 0; connect(); }
+  applyDeps(); syncUI(); segRender(); homeModeText(); lvlRender(); homeStats();
+}
+segRender();
+$('homeSeg').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (!b) return; sfx('ui'); setMode(b.getAttribute('data-m')); });
+function homeModeText() { netRender(); segRender(); const pub = $('homeMp').checked; $('homeModeNote').textContent = pub ? 'A public world. Everyone online shares it.' : offlineOn() ? 'Just you and bots, on this device. Nothing goes online.' : 'Your own world. Invite friends to play in it with you.'; lvlRender(); }
 function showHome() {
   if (S.map && S.slot >= 0 && !inHome) saveWorld(true);
   if (party) leaveParty();   // leaving a private game: if it was yours, it ends and everyone in it goes back to their own world
@@ -4670,7 +4706,7 @@ function enterGame(auto) {
   try { auWake(); } catch (e) {}
   if (settings.mp !== homeMode) setMultiplayer(settings.mp);
   else if (settings.mp) joinWorld();
-  else { setNet('solo'); if (!ws) { retry = 0; connect(); } if (S.slot !== soloSlot()) soloGo(false); }
+  else { setNet('solo'); if (S.slot !== soloSlot()) soloGo(false); if (offlineOn() || !startHosting()) { if (!ws) { retry = 0; connect(); } } }   // (a private game is on the server from the very first moment, so nothing jumps when friends come: the game waits until it is there)
   setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
   if (reenter) backToStart(); reenter = true;
   if (!settings.mp) setTimeout(() => announceEntry({ slot: soloSlot() }), 350);
@@ -4722,7 +4758,7 @@ $('pSave').onclick = () => {   // keep a copy of the world you are in as one of 
 $('pReset').onclick = () => askResetLevel(soloLevel(), () => resumeGame());
 $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
 $('pHome').onclick = () => { sfx('ui'); quitToHome(); };
-$('ngSolo').onclick = () => { sfx('ui'); gateOn = false; $('netGate').classList.add('hide'); setMultiplayer(false); };
+$('ngSolo').onclick = () => { sfx('ui'); gateOn = false; $('netGate').classList.add('hide'); if (party && party.role === 'host') quietUnhost(); else setMultiplayer(false); };
 setInterval(() => { if (gateOn && inHome) { gateOn = false; $('netGate').classList.add('hide'); } }, 400);
 $('pause').addEventListener('pointerdown', e => { if (e.target === $('pause') && $('settings').classList.contains('hide')) { e.preventDefault(); resumeGame(); } });
 /* ----- the Back button (phone or browser) never just throws you out: in a game it asks about the main menu, on the main menu it asks about leaving ----- */
@@ -4747,16 +4783,6 @@ function setOffline(on) {
   else { retry = 0; connect(); }
   netRender.k = ''; homeModeText(); netRender();
 }
-$('homeOff').onclick = () => {
-  sfx('ui');
-  if (settings.offline) { setOffline(false); return; }
-  askConfirm('Play offline?', 'This private game will never connect to the server. You will not be able to invite friends, see friend requests or get invites, and nobody can join you. Your progress stays on this device. You can switch it off here at any time.', 'Go offline', () => setOffline(true), { no: 'Stay online', yesClass: 'go' });
-};
-$('homeMp').onchange = () => {
-  const pub = $('homeMp').checked;
-  if (pub && settings.offline) { askConfirm('Public worlds need the server', 'Offline mode is on. To play in a public world it has to be switched off.', 'Switch it off', () => { settings.offline = false; save(); settings.mp = true; save(); $('setMp').checked = true; $('homeMp').checked = true; retry = 0; applyDeps(); syncUI(); homeModeText(); connect(); }, { no: 'Stay offline', yesClass: 'go' }); $('homeMp').checked = false; return; }
-  settings.mp = pub; save(); $('setMp').checked = settings.mp; applyDeps(); syncUI(); homeModeText();
-};   // two different games: switching is just a switch
 $('homeLook').onclick = () => { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; } showTab('you'); toggleSettings(); };
 $('homeSet').onclick = () => toggleSettings();
 $('homeHelp').onclick = () => showIntro();
@@ -4824,6 +4850,12 @@ function startHosting() {
   party = { role: 'host', invited: new Set() }; saveWorld(true);
   retry = 0; setNet('connecting'); joinWorld(); lvlRender(); return true;
 }
+function quietUnhost() {   // stop being on the server without a fuss (changing level, resetting it, or the server can't be reached)
+  if (!party || party.role !== 'host') return;
+  if (ws && ws.readyState === 1) { try { ws.send('{"t":"lobby"}'); } catch (e) {} }
+  party = null; online = false; others.clear(); toLobby(); setNet('solo');
+}
+function rehost(fn) { const h = party && party.role === 'host'; if (h) quietUnhost(); fn(); if (h) startHosting(); }
 function stopHosting() {
   if (!party || party.role !== 'host') return;
   if (ws && ws.readyState === 1) { try { ws.send('{"t":"lobby"}'); } catch (e) {} }
@@ -4972,7 +5004,7 @@ function lvlRender() {
     else h.innerHTML = ico('map') + '<span class="lvt">' + t + '</span>' + ico('chev');
   }
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
-  const sl = !settings.mp && !party; $('pLevel').classList.toggle('hide', !sl); $('pReset').classList.toggle('hide', !sl);
+  const sl = !settings.mp && !(party && party.role === 'guest'); $('pLevel').classList.toggle('hide', !sl); $('pReset').classList.toggle('hide', !sl);
   $('pSave').classList.toggle('hide', !((settings.mp && !party) || (party && party.role === 'guest')) || !S.world || S.slot < 0);
   const canInv = !settings.mp && !(party && party.role === 'guest'); $('btnInviteF').classList.toggle('hide', !canInv || inHome); $('invT').textContent = party ? 'Invite more friends' : 'Invite friends to play'; $('invS').textContent = party ? 'Your world is open. Send another link' : 'Pick friends and send them a link to this world';
 }
@@ -5029,7 +5061,7 @@ function openLevels() { finChg = false;
 function closeLevels() { $('lvlModal').classList.add('hide'); }
 function askResetLevel(i, after) {
   askConfirm('Reset ' + lvLabelOf(i) + '?', 'Everything you built, moved, opened or collected on this level goes back to the start. Your coins and diamonds stay yours.', 'Reset level', () => {
-    soloReset(i); notice('Level reset', ''); if (!$('lvlModal').classList.contains('hide')) { lvBuild(); lvSelect(lvSel); } if (after) after();
+    rehost(() => soloReset(i)); notice('Level reset', ''); if (!$('lvlModal').classList.contains('hide')) { lvBuild(); lvSelect(lvSel); } if (after) after();
   }, { no: 'Keep it' });
 }
 $('lvGrid').addEventListener('click', e => { const b = e.target.closest('.lvb'); if (b) { sfx('ui'); lvSelect(+b.getAttribute('data-i')); } });
@@ -5037,7 +5069,7 @@ $('lvNo').onclick = closeLevels;
 $('lvReset').onclick = () => askResetLevel(lvSel);
 $('lvOk').onclick = () => {
   const changed = lvSel !== soloLevel() || finChg; finChg = false; settings.soloMap = String(lvSel); save(); lvlRender(); closeLevels(); sfx('ui');
-  if (!inHome) { if (paused) resumeGame(); if (changed) soloGo(true); }
+  if (!inHome) { if (paused) resumeGame(); if (changed) rehost(() => soloGo(true)); }
 };
 $('lvlModal').addEventListener('pointerdown', e => { if (e.target === $('lvlModal')) closeLevels(); });
 $('homeLvl').onclick = () => { sfx('ui'); openLevels(); };
@@ -5336,7 +5368,7 @@ function onMsg(m) {
       others.clear();
       m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; others.set(p.id, o); noteSeen(o.pub, p.name, p.color, p.code, undefined, undefined, p.color2, p.pat); }); saveSeen();
       setNet('online');
-      if (m.priv) addFeed(party.role === 'host' ? 'Your private game is open: invite your friends' : 'You joined ' + who(party.name) + "'s private game", 'join', true); else addFeed('You joined World ' + m.room, 'join', true);
+      if (m.priv) { if (party.role !== 'host') addFeed('You joined ' + who(party.name) + "'s private game", 'join', true); } else addFeed('You joined World ' + m.room, 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
       if (!m.priv || (party && party.role === 'guest')) setNetFk(m.slot, m.fk);
       if (party && party.role === 'guest') { loadMap(m.slot, m.next); }
@@ -6604,7 +6636,7 @@ try { const tb = sessionStorage.getItem('ballrun_tab'); if (tb) showTab(tb); } c
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { NET, ws: () => ws, botsL: () => bots, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();
