@@ -714,7 +714,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 144; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 146; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1292,13 +1292,13 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=122"></script>
-<script src="physics.js?v=122"></script>
+<script src="maps.js?v=146"></script>
+<script src="physics.js?v=146"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
   if (!m) bad.push('maps.js did not load'); else if (!m.themes) bad.push('maps.js is an OLD version');
-  if (!p) bad.push('physics.js did not load'); else if (!p.stepDyn) bad.push('physics.js is an OLD version');
+  if (!p) bad.push('physics.js did not load'); else if (!p.stepDyn || !p.botCtx) bad.push('physics.js is an OLD version');
   if (bad.length && window.__ballFail) { window.__ballFail(bad.join(' and ') + ' on this site. Re-upload maps.js and physics.js from the newest batch (replace the old ones), wait for the redeploy, then refresh.'); window.__ballStop = true; }
 })();
 </script>
@@ -1335,7 +1335,7 @@ fillIcons();
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, botChat: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, botChat: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -1353,6 +1353,7 @@ function normalize() {
   settings.pat = clamp(settings.pat | 0, 0, PATTERNS.length - 1);
   settings.zoom = clamp(+settings.zoom || 1, 0.25, 2);
   settings.botMax = clamp(Math.round(+settings.botMax), 1, 200); if (!isFinite(settings.botMax)) settings.botMax = 8;
+  if (!settings.lookSame) { settings.lookSame = 1; settings.botMsg = false; settings.botMark = false; if (settings.mmBots !== settings.mmPlayers) settings.mmBots = settings.mmPlayers; }   // (once: bots look just like players everywhere, unless you turn the markers back on yourself)
   settings.botMaxOff = clamp(Math.round(+settings.botMaxOff), 1, 19); if (!isFinite(settings.botMaxOff)) settings.botMaxOff = 6;
   settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
   settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
@@ -2526,7 +2527,7 @@ function botVanish() {
   bots[i] = bots[bots.length - 1]; bots.pop();
 }
 let botFinN = 0;
-const LBC = P.botCtx();   // (offline: the bots' shared memory for this game: what was said, what they built, what you asked)
+const LBC = P.botCtx ? P.botCtx() : { balls: [], players: [], asks: [], builds: [], fins: [], st: { cd: 0, recent: [], botTiles: [] } };   // (offline: the bots' shared memory for this game: what was said, what they built, what you asked)
 function localAsk(t, a, b) { if (botMode() !== 'local' || !bots.length) return; const k = P.askKind(t, a, b); if (k) LBC.asks.push({ kind: k, x: S.b.x, y: S.b.y, id: 'me' }); }
 function botTalk(bt, o) {   // a bot says something, or pulls a face: over its head, and in the messages
   if (!settings.botChat) return;
@@ -6445,7 +6446,7 @@ function drawMinimapBig() {
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = X(c[0] + 0.5), y = Y(c[1]); if (x < 0 || y < 0 || x > cw || y > ch) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.8, y - 12, 2, 12); g.beginPath(); g.moveTo(x + 1, y - 12); g.lineTo(x + 10, y - 9); g.lineTo(x + 1, y - 6); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 0.8; g.stroke(); });
   { const dr = tinyR(z), fr = friendsOnMap();   /* everybody else is drawn to scale, tiny when zoomed out */
     const dotAt = (x, y, col, sp, big) => { const rr = big ? Math.max(6, dr * 1.9) : dr; if (rr >= 5 && sp) g.drawImage(sp, X(x / TS) - rr, Y(y / TS) - rr, rr * 2, rr * 2); else { g.fillStyle = col; g.beginPath(); g.arc(X(x / TS), Y(y / TS), rr, 0, TAU); g.fill(); if (rr > 2.4) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 0.8; g.stroke(); } } };
-    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; dotAt(bt.b.x, bt.b.y, bt.color, null, settings.mmBigB); });
+    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; dotAt(bt.b.x, bt.b.y, bt.color, dr >= 5 || settings.mmBigB ? sprite(HEX.test(bt.color) ? bt.color : '#ccc', HEX.test(bt.color2) ? bt.color2 : '#ffffff', (bt.pat | 0) % PATTERNS.length) : null, settings.mmBigB); });   // (drawn exactly like a player)
     if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) dotAt(q.x, q.y, o.color, dr >= 5 || settings.mmBigP ? sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length) : null, settings.mmBigP); });
   }
   drawLinksOnMap(g, X, Y, 9, true, false);
@@ -6503,7 +6504,7 @@ function beaconInfo(t) {   // same answer for everyone, because it only depends 
 let lastGemShown = -1, lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
 const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 function worldText() {
-  if (party && online) return party.role === 'host' ? 'Your private game · ' + room.n + ' here' : who(party.name) + "'s private game · " + room.n + ' here';
+  if (party && online) { const n = room.n + bots.length; return party.role === 'host' ? 'Your private game · ' + n + ' here' : who(party.name) + "'s private game · " + n + ' here'; }   // (bots count as players here too)
   if (inSolo()) return '';
   if (online) return 'World ' + room.id + ' · ' + room.n + ' player' + (room.n === 1 ? '' : 's');
   return '';
