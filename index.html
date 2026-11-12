@@ -714,7 +714,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 150; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 151; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1292,8 +1292,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=150"></script>
-<script src="physics.js?v=150"></script>
+<script src="maps.js?v=151"></script>
+<script src="physics.js?v=151"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2416,11 +2416,16 @@ function offerSnap(slot, roomId) {   // the server knows nothing of this world: 
   const str = JSON.stringify({ b: e.b, w: e.w }), CH = 60000, n = Math.ceil(str.length / CH); if (n > 40) return;
   for (let i = 0; i < n; i++) setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify({ t: 'wseed', k, n, i, c: str.slice(i * CH, (i + 1) * CH) })); } catch (x) {} } }, 150 + i * 80);
 }
+function sendHostBuild() {   // your own world, opened for friends: everything in it goes to the server in one go (a few big parts at most), in order, so nothing can be missed
+  if (!ws || ws.readyState !== 1) return;
+  const str = JSON.stringify({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }), n = Math.max(1, Math.ceil(str.length / 50000));
+  for (let i = 0; i < n; i++) { try { ws.send(JSON.stringify({ t: 'hbuild', n, i, c: str.slice(i * 50000, (i + 1) * 50000) })); } catch (e) {} }
+}
 function hostSeed(nb) {   // your own world, opened for friends: the server takes it exactly as your device has it (where everything is), since your device is its memory
   const w = S.world; if (!w) return;
   const d = []; for (const o of w.dyn) { if (o.burn === UNK) continue; if (o.burn >= 1e9) d.push([o.uid >>> 0, 0, 0, 0, 1]); else if (!(o.burn > 0) && (Math.abs(o.x - o.hx) > 1 || Math.abs(o.y - o.hy) > 1 || Math.abs(o.rot) > 0.005)) d.push([o.uid >>> 0, Math.round(o.x * 10) / 10, Math.round(o.y * 10) / 10, Math.round(o.rot * 1000) / 1000]); }
   const s = w.see.filter(q => Math.abs(q.ang) > 0.001).map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]);
-  for (let i = 0; i === 0 || i < d.length; i += 500) { const msg = { t: 'pseed', d: d.slice(i, i + 500), s: i ? [] : s }; setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (nb + 1) + 200 + 100 * (i / 500)); }
+  for (let i = 0; i === 0 || i < d.length; i += 500) { const msg = { t: 'pseed', d: d.slice(i, i + 500), s: i ? [] : s }; if (nb < 0) { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } } else setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (nb + 1) + 200 + 100 * (i / 500)); }   // (nb < 0: right now, straight after the world itself)
 }
 function sendBulk(lists) {   // tell the world what you have built, 25 things at a time (a big build is no big message)
   const out = [];
@@ -5315,7 +5320,7 @@ function onMsg(m) {
       bots.length = 0; S.welcomeAt = performance.now(); S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false;
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
       if (party && !m.priv) { partyOver(''); return; }
-      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host' && !m.priv.back) { const nb = sendBulk({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }); hostSeed(nb); } }
+      if (m.priv) { party.priv = m.priv; party.name = m.priv.hostName || party.name; party.idx = m.priv.idx; if (party.role === 'host' && !m.priv.back) { sendHostBuild(); hostSeed(-1); } }
       net.online = m.online; net.peak = m.peak;
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = infoMsg();
@@ -5378,7 +5383,8 @@ function onMsg(m) {
       if (m.t === 'fsub' && typeof m.pub === 'string') c[m.pub] = m.s; else (m.l || []).forEach(e => { if (Array.isArray(e) && typeof e[0] === 'string') c[e[0]] = e[1]; });
       const ks = Object.keys(c); if (ks.length > 80) ks.slice(0, ks.length - 80).forEach(k => delete c[k]);
       try { localStorage.setItem('ballrun4_fsub', JSON.stringify(c)); } catch (e) {} break; }
-    case 'rebuild': if (party || inSolo() || !m.b || !S.world) break;   // the server got this world's memory back from a player: load it again, as it really was
+    case 'rebuild': if (m.priv && party && party.role === 'guest' && m.b && S.world) { party.priv = Object.assign({}, party.priv, m.b); S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break; }   // (the host's world has now all arrived: load it again, complete)
+      if (party || inSolo() || !m.b || !S.world) break;   // the server got this world's memory back from a player: load it again, as it really was
       S.pendingBuild = { slot: S.slot, b: m.b }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break;
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); setNetFk(m.slot, m.fk); if (forcedLeft === null) S.nextAt = m.next; if (m.build && !party) S.pendingBuild = { slot: m.slot, b: m.build }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; startTransition(m.slot, m.next); break;   // (a map that comes back has everything that was built on it, and is shown once the server has said where it all is)

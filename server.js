@@ -52,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 150;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 151;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -847,6 +847,19 @@ wss.on('connection', (ws, req) => {
         if (w.see.length && P.plankCross(w, d.x, d.y, q[1], q[2], d.r || Math.max(d.hw, d.hh))) continue;   // (never taken through a teeter-totter: the two devices must have seen the plank differently, and the server's side of it stands)
         d.x = q[1]; d.y = q[2]; d.vx = Math.max(-1400, Math.min(1400, q[3])); d.vy = Math.max(-1400, Math.min(1400, q[4])); d.rot = q[5]; d.av = Math.max(-28, Math.min(28, q[6])); d.ownBy = p.id; d.ownT = 1.2; d.ownLeft = Date.now(); d.ownTouch = q.length === 8 ? (q[7] ? 1 : 0) : 1; d.nap = false; d.st = 0;   // (held for a moment longer than the gap between two reports, so a short stall on a bad connection never hands it back half-way)
       }
+    } else if (m.t === 'hbuild') {   // the host's own world, all of it at once (in parts of up to 50 KB): everything built, dug and deleted in it, so everybody who comes in sees exactly that world
+      const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || !Number.isFinite(m.n) || !Number.isFinite(m.i) || m.n < 1 || m.n > 40 || m.i < 0 || m.i >= m.n || typeof m.c !== 'string') return;
+      if (!r.hb || r.hb.n !== m.n) r.hb = { n: m.n, a: [] };
+      r.hb.a[m.i | 0] = m.c;
+      if (r.hb.a.filter(x => typeof x === 'string').length < m.n) return;
+      let o = null; try { o = JSON.parse(r.hb.a.join('')); } catch (e) {} r.hb = null;
+      if (!o || typeof o !== 'object') return;
+      const B = r.priv; B.props.length = 0; B.gates.length = 0; B.misc.length = 0; B.cps.length = 0; B.dels.length = 0;
+      const take = (key, ok, cap) => { for (const q of (Array.isArray(o[key]) ? o[key] : []).slice(0, cap)) { const c = ok(q); if (c) B[key].push(c); } };
+      take('props', okProp, ROOM_PROPS); take('gates', okGate, ROOM_GATES); take('misc', okMisc, ROOM_MISC); take('cps', okCp, ROOM_CPS); take('dels', okDel, ROOM_DELS);
+      r.world = null; r.priv.ready = true;
+      const b = { props: B.props, gates: B.gates, misc: B.misc, cps: B.cps, dels: B.dels };
+      for (const q of r.players.values()) { q.dver = null; q.sbh = q.sdh = null; if (q !== p) send(q, { t: 'rebuild', priv: 1, b }); }   // (anyone who came in before it had all arrived loads the world again, now complete)
     } else if (m.t === 'pseed') {   // the host of a private world says where everything is in it: their device is that world's memory
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || Date.now() - (r.priv.at || 0) > 90000 || !Array.isArray(m.d)) return;
       const rows = m.d.slice(0, 500).filter(q => Array.isArray(q) && q.length >= 4 && q.slice(0, 4).every(Number.isFinite));
