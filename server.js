@@ -52,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 146;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 147;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -482,8 +482,7 @@ function roomBots(room, w, dtReal) {
 const roomCtx = room => room.botCtx || (room.botCtx = P.botCtx());
 function botOut(room, bt) {   // what a bot said, or a block it put down (or took back): everybody in the world gets it
   for (const o of bt.out) {
-    if (o.k === 'say') broadcast(room, { t: 'bsay', id: bt.id, s: o.s });
-    else if (o.k === 'emo') broadcast(room, { t: 'bsay', id: bt.id, e: o.i });
+    if (o.k === 'msg') broadcast(room, o.a !== undefined ? { t: 'bsay', id: bt.id, a: o.a, b: o.b } : { t: 'bsay', id: bt.id, i: o.i });   // (the same messages a player can send, nothing else)
     else if (o.k === 'tl' && room.world) {   // (bot blocks belong to this world only while it is open: they are never saved into anybody's own world)
       const q = ['tl', o.x, o.y, o.v === -1 ? -1 : 1]; srvMisc(room.world, q);
       const bt2 = room.botTl || (room.botTl = new Map()), key = o.x + ',' + o.y; if (o.v === -1) bt2.delete(key); else bt2.set(key, q);

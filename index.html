@@ -714,7 +714,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 146; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 147; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1292,8 +1292,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=146"></script>
-<script src="physics.js?v=146"></script>
+<script src="maps.js?v=147"></script>
+<script src="physics.js?v=147"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2530,9 +2530,9 @@ let botFinN = 0;
 const LBC = P.botCtx ? P.botCtx() : { balls: [], players: [], asks: [], builds: [], fins: [], st: { cd: 0, recent: [], botTiles: [] } };   // (offline: the bots' shared memory for this game: what was said, what they built, what you asked)
 function localAsk(t, a, b) { if (botMode() !== 'local' || !bots.length) return; const k = P.askKind(t, a, b); if (k) LBC.asks.push({ kind: k, x: S.b.x, y: S.b.y, id: 'me' }); }
 function botTalk(bt, o) {   // a bot says something, or pulls a face: over its head, and in the messages
-  if (!settings.botChat) return;
-  if (o.k === 'say') { bt.emo = { i: -1, txt: o.s, t: S.t }; addFeedEmo(who(bt.name), -1, '', o.s, 'bot'); }
-  else if (o.i >= 0 && o.i < EMO.length) { bt.emo = { i: o.i, t: S.t }; if (isFinite(bt.b.x) && nearMe(bt.b.x, bt.b.y)) addFeedEmo(who(bt.name), o.i, '', '', 'bot'); }
+  if (!settings.botChat || chatMuted || o.k !== 'msg') return;   // (bots can only send what a player can: the faces, the ready-made phrases and the built messages)
+  if (o.a !== undefined) { const txt = sayText(o.a, o.b); if (txt === null) return; bt.emo = { i: -1, txt, t: S.t }; addFeedEmo(who(bt.name), -1, '', txt, 'bot'); }
+  else if (o.i >= 0 && o.i < CHATN) { bt.emo = { i: o.i, t: S.t }; addFeedEmo(who(bt.name), o.i, '', '', 'bot'); }
 }
 function botOutLocal(bt) {
   for (const o of bt.out) {
@@ -5364,7 +5364,7 @@ function onMsg(m) {
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); setNetFk(m.slot, m.fk); if (forcedLeft === null) S.nextAt = m.next; if (m.build && !party) S.pendingBuild = { slot: m.slot, b: m.build }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; startTransition(m.slot, m.next); break;   // (a map that comes back has everything that was built on it, and is shown once the server has said where it all is)
     case 'bj': case 'bl': case 'bp': remoteBotMsg(m); break;
-    case 'bsay': { const bt = bots.find(b => b.id === m.id); if (bt) botTalk(bt, m.s !== undefined ? { k: 'say', s: String(m.s).slice(0, 60) } : { k: 'emo', i: m.e | 0 }); break; }
+    case 'bsay': { const bt = bots.find(b => b.id === m.id); if (bt) botTalk(bt, m.a !== undefined ? { k: 'msg', a: m.a | 0, b: m.b | 0 } : { k: 'msg', i: m.i | 0 }); break; }
     case 'fin': {
       if (m.bot) { const bt = bots.find(b => b.id === m.id); if (bt) { bt.crown = m.rank || 1; if (nearMe(bt.b.x, bt.b.y)) burst(bt.b.x, bt.b.y - 10, ['#ffd23d', '#fff', '#ff5b4a'], 24, 300, 400); } if (settings.announce && bots.length <= 12) addFeed(who(m.name) + ' finished (#' + m.rank + ')', 'fin', true, 'bot'); break; }
       const mine = m.id === myId, o = others.get(m.id);
