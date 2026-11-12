@@ -714,7 +714,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 147; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 148; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -960,12 +960,10 @@
   <div class="shead"><span id="shTitle">Settings</span><button id="btnCloseSet" class="xbtn" title="Close" data-ic="close"></button></div>
   <div class="tabs" id="tabs">
     <button data-tab="controls" class="on"><span data-ic="pad"></span><span>Controls</span></button>
-    <button data-tab="you"><span data-ic="user"></span><span>You</span></button>
     <button data-tab="display"><span data-ic="eye"></span><span>Display</span></button>
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Mode</span></button>
     <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
-    <button data-tab="bots"><span data-ic="bot"></span><span>Bots</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
   </div>
   <div class="sbody">
@@ -1042,16 +1040,33 @@
       <input type="checkbox" id="setMp" hidden>
       <div class="mpdesc" id="mpDesc"></div>
       <div class="small dim" id="mpstats"></div>
-      <div class="dep" data-dep="mp"><div>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="trophy"></span><span><b>Announce winners</b><small>"Someone won the level!" messages</small></span></span><input type="checkbox" id="setAnnounce"><i></i></label>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Join / leave messages</b><small>When people come and go</small></span></span><input type="checkbox" id="setJoinMsg"><i></i></label>
-      </div></div>
       <div class="dep" data-dep="!mp"><div>
-        <h4><span data-ic="map"></span> Your private world</h4>
+        <h4><span data-ic="map"></span> Your level</h4>
         <div class="small dim">Pick any level you like, and set the time of day and the finish there, before you play. What you build, move, open and collect on a level is saved until you reset that level.</div>
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
         <button class="btn full" id="btnInvite" type="button"><span data-ic="users"></span>Invite friends to this level</button>
       </div></div>
+      <div class="dep" data-dep="!mp"><div>
+        <h4><span data-ic="bot"></span> Bots</h4>
+      <div class="dep" data-dep="botsPriv"><div>
+        <label class="sw2 ic2" id="botsPrivRow"><span class="ti"><span data-ic="bot"></span><span><b>Fill my private world with bots</b><small>Bots join until there are 10 to 20 players in all. Real players always come first: with 20 people there are no bots</small></span></span><input type="checkbox" id="setBots"><i></i></label>
+        <div class="small dim" id="botsNote"></div>
+      </div></div>
+      <div class="dep" data-dep="botsOff"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>They run the level, push crates, tip planks and press buttons just like a player</small></span></span><input type="checkbox" id="setBotsOff"><i></i></label>
+        <div class="dep sub" data-dep="botsOffOn"><div>
+          <div class="row"><span class="lbl"><span data-ic="bot"></span> <b id="botMaxVal"></b>&nbsp;bots play with you</span><input type="range" id="setBotMax" min="1" max="19" step="1"></div>
+        </div></div>
+      </div></div>
+      <div class="dep" data-dep="!mp"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Bots chat</b><small>They talk about what is going on, answer you, ask for help, and pull faces</small></span></span><input type="checkbox" id="setBotChat"><i></i></label>
+        <div class="small dim">Bots are all different: racers (some great, some not), explorers, builders who put up little towers, and some who just hang out. Ask them for things in the chat ("Can you open the gate?", "Follow me", "I need dirt") and sometimes one will help.</div>
+      </div></div>
+          </div></div>
+      <div class="dep" data-dep="mp"><div><div class="small dim">Public worlds are only real people. Bots can play in your private world or offline.</div></div></div>
+      <h4><span data-ic="chat"></span> Messages</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="trophy"></span><span><b>Announce winners</b><small>"Someone won the level!" messages</small></span></span><input type="checkbox" id="setAnnounce"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Join / leave messages</b><small>When people come and go</small></span></span><input type="checkbox" id="setJoinMsg"><i></i></label>
     </section>
     <section class="pane" data-pane="friends">
       <div id="myCode" class="mycode"><span>Your code</span><b id="myCodeV">······</b><span class="small dim">Friends can check it matches</span></div>
@@ -1070,23 +1085,6 @@
         <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>New map</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
         <button class="btn full" id="ntTest" type="button"><span data-ic="bell"></span>Send a test notification</button>
       </div>
-    </section>
-    <section class="pane" data-pane="bots">
-      <div class="dep" data-dep="botsPriv"><div>
-        <label class="sw2 ic2" id="botsPrivRow"><span class="ti"><span data-ic="bot"></span><span><b>Fill my private world with bots</b><small>Bots join until there are 10 to 20 players in all. Real players always come first: with 20 people there are no bots</small></span></span><input type="checkbox" id="setBots"><i></i></label>
-        <div class="small dim" id="botsNote"></div>
-      </div></div>
-      <div class="dep" data-dep="botsOff"><div>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>They run the level, push crates, tip planks and press buttons just like a player</small></span></span><input type="checkbox" id="setBotsOff"><i></i></label>
-        <div class="dep sub" data-dep="botsOffOn"><div>
-          <div class="row"><span class="lbl"><span data-ic="bot"></span> <b id="botMaxVal"></b>&nbsp;bots play with you</span><input type="range" id="setBotMax" min="1" max="19" step="1"></div>
-        </div></div>
-      </div></div>
-      <div class="dep" data-dep="!mp"><div>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Bots chat</b><small>They talk about what is going on, answer you, ask for help, and pull faces</small></span></span><input type="checkbox" id="setBotChat"><i></i></label>
-        <div class="small dim">Bots are all different: racers (some great, some not), explorers, builders who put up little towers, and some who just hang out. Ask them for things in the chat ("Can you open the gate?", "Follow me", "I need dirt") and sometimes one will help.</div>
-      </div></div>
-      <div class="dep" data-dep="mp"><div><div class="small dim">Public worlds are only real people. Bots can play in your private world or offline.</div></div></div>
     </section>
     <section class="pane" data-pane="more">
       <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small>The how-to-play card</small></span></span><input type="checkbox" id="setIntro"><i></i></label>
@@ -1292,8 +1290,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=147"></script>
-<script src="physics.js?v=147"></script>
+<script src="maps.js?v=148"></script>
+<script src="physics.js?v=148"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2499,7 +2497,7 @@ addEventListener('pagehide', () => saveWorld(true)); document.addEventListener('
 
 /* leaving the screen = you are gone; coming back = fresh start at the spawn */
 function goAway() { if (S.away || S.mode !== 'play') return; S.away = true; saveWorld(true); windSet(0); sendPos(true); }
-function comeBack() { if (!S.away) return; S.away = false; S.finished = false; S.started = false; $('finishbanner').classList.add('hide'); bots.length = 0; respawn(); sendPos(true); }
+function comeBack() { if (!S.away) return; S.away = false; S.finished = false; S.started = false; $('finishbanner').classList.add('hide'); if (botMode() === 'none') bots.length = 0; respawn(); sendPos(true); }   // (the bots of an open game stay: a moment away changes nothing for them)
 document.addEventListener('visibilitychange', () => { inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; if (document.hidden) goAway(); else comeBack(); });
 addEventListener('pagehide', goAway);
 addEventListener('pageshow', () => { if (!document.hidden) comeBack(); });
@@ -2547,9 +2545,10 @@ function botsTick(dt) {
   if (mode === 'none') { if (bots.length) bots.length = 0; return; }   // (quietly: they were never in this game)
   const cap = botCap(), w = S.world;
   botNextSpawn -= dt;
-  if (bots.length < cap && botNextSpawn <= 0) { spawnBot(); botNextSpawn = bots.length < 4 ? rnd(0.3, 1) : rnd(1.2, 4); }
+  if (bots.length >= cap) LBC.full = true;
+  if (bots.length < cap && botNextSpawn <= 0) { spawnBot(); botNextSpawn = !LBC.full ? (bots.length < 4 ? rnd(0.3, 1) : rnd(1.2, 4)) : rnd(15, 45); }   // (the game fills up at the start; after that one comes now and then, when someone has left)
   if (bots.length > cap && botNextSpawn <= 0) { botVanish(); botNextSpawn = 0.4; }
-  if (LBC.w !== w) { Object.assign(LBC, P.botCtx()); LBC.w = w; }
+  if (LBC.w !== w) { Object.assign(LBC, P.botCtx()); LBC.w = w; LBC.finKnown = true; LBC.full = false; }
   LBC.players = S.dead > 0 || S.away ? [] : [{ id: 'me', x: S.b.x, y: S.b.y }];
   LBC.balls = LBC.players.concat(bots.filter(bt => !(bt.dead > 0)).map(bt => bt.b));
   P.botSocial(bots, w, LBC, dt); LBC.asks.length = 0; LBC.builds.length = 0; LBC.fins.length = 0;
@@ -2971,7 +2970,7 @@ function maybeAskBots() { return;   // (no more popups about bots: Offline alway
 $('btnOk').onclick = () => { auWake(); settings.intro = !$('dontShow').checked; $('setIntro').checked = settings.intro; save(); $('intro').classList.add('hide'); setTimeout(maybeAskBots, 400); };
 function showIntro() { $('dontShow').checked = !settings.intro; $('intro').classList.remove('hide'); }
 function closeSettingsNow() {
-  $('settings').classList.add('hide'); $('settings').classList.remove('only'); $('shTitle').textContent = 'Settings'; $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
+  $('settings').classList.add('hide'); if ($('settings').classList.contains('only') && typeof curTab !== 'undefined' && curTab === 'you') showTab('controls'); $('settings').classList.remove('only'); /* (your look is only changed from the main menu: Settings itself never opens on it) */ $('shTitle').textContent = 'Settings'; $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
   try { const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); } catch (e) {}
   if (typeof lpAfterTab === 'function') lpAfterTab();
 }

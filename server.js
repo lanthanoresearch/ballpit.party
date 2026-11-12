@@ -52,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 147;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 148;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -466,20 +466,20 @@ function roomBots(room, w, dtReal) {
     P.botSocial(bs, w, ctx, dtReal); ctx.asks.length = 0; ctx.builds.length = 0; ctx.fins.length = 0;
   }
   room.botRe = (room.botRe || 0) - dtReal;
-  if (room.botRe <= 0) { room.botGoal = BOT_GOALS[Math.floor(Math.random() * BOT_GOALS.length)]; room.botRe = 60 + Math.random() * 90; }
+  if (room.botRe <= 0) { room.botGoal = room.botGoal ? Math.max(10, Math.min(20, room.botGoal + [-2, -1, 0, 0, 1, 2][Math.floor(Math.random() * 6)])) : BOT_GOALS[Math.floor(Math.random() * BOT_GOALS.length)]; room.botRe = 300 + Math.random() * 420; }   // (the crowd changes slowly: now and then one comes or goes, never a stream of them)
   const want = room.botsOn ? Math.max(0, Math.min(MAX_PLAYERS, room.botGoal || 15) - room.players.size) : 0;
   room.botT = (room.botT || 0) - dtReal;
   if (bs.length < want && room.botT <= 0) {
     const taken = n => bs.some(b => b.name === n) || [...room.players.values()].some(p => p.name === n);
     const bt = P.botMake(Object.assign({ id: 900000 + (botIdN++ % 90000), name: P.botName(taken) }, P.botLook())); P.botSpawn(bt, w); bs.push(bt);
     broadcast(room, { t: 'bj', b: [botInfo(bt)], say: 1 });
-    room.botT = bs.length < 4 ? 0.4 + Math.random() * 0.8 : 1 + Math.random() * 3;
+    room.botT = bs.length < 4 ? 0.4 + Math.random() * 0.8 : bs.length < want - 3 ? 1 + Math.random() * 3 : 20 + Math.random() * 40;
   } else if (bs.length > want && room.botT <= 0) {
     const i = Math.floor(Math.random() * bs.length), bt = bs[i]; bs.splice(i, 1); broadcast(room, { t: 'bl', id: bt.id, say: 1 });
     room.botT = room.botsOn ? 1 + Math.random() * 2 : 0.3;
   }
 }
-const roomCtx = room => room.botCtx || (room.botCtx = P.botCtx());
+const roomCtx = room => room.botCtx || (room.botCtx = Object.assign(P.botCtx(), { finKnown: true }));   // (in a private world the finish is on everybody's map)
 function botOut(room, bt) {   // what a bot said, or a block it put down (or took back): everybody in the world gets it
   for (const o of bt.out) {
     if (o.k === 'msg') broadcast(room, o.a !== undefined ? { t: 'bsay', id: bt.id, a: o.a, b: o.b } : { t: 'bsay', id: bt.id, i: o.i });   // (the same messages a player can send, nothing else)

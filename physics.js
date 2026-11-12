@@ -1046,7 +1046,7 @@
     if (o && o.kind) kind = o.kind;
     const skill = kind === 'racer' ? (Math.random() < 0.35 ? brnd(0.9, 1) : Math.random() < 0.65 ? brnd(0.55, 0.88) : brnd(0.2, 0.55)) : brnd(0.35, 0.9);
     return Object.assign({ type: kind === 'wander' ? 'wander' : 'runner', kind, ex: ['up', 'down', 'side'][Math.floor(Math.random() * 3)], skill, err: (1 - skill) * 0.14, chatty: brnd(0.3, 1.5),
-      life: kind === 'wander' ? brnd(60, 200) : kind === 'racer' ? brnd(900, 2400) : brnd(300, 1100), dir: 1, age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0, finished: false, leaveT: 0,
+      life: kind === 'wander' ? brnd(600, 1800) : kind === 'racer' ? brnd(1500, 4000) : brnd(1200, 3600), careful: kind === 'racer' && Math.random() < 0.3 + skill * 0.6, mapReader: Math.random() < 0.65, dir: 1, age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0, finished: false, leaveT: 0,
       wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, gT: 0, airT: 0, airAx: null, danger: false, stT: 0, stX: 0, back: 0, crown: 0, out: [], chatCd: brnd(2, 10), first: true, built: 0, buildT: brnd(6, 18) }, o || {});
   }
   function botSpawn(bt, w) {   // exactly like a player: at the start, or (once) at the last checkpoint flag it touched
@@ -1055,13 +1055,25 @@
     else bt.b = newBody(m.start[0], m.start[1]);
     bt.b.bot = true; bt.b.noJm = true; bt.anchor = bt.b.x;
     botSync(bt, w);
-    if (bt.kind === 'explorer' || bt.kind === 'builder' || bt.kind === 'chill') exGoal(bt, w); else { bt.dir = 1; botPlan(bt, w); }
+    if (bt.kind === 'explorer' || bt.kind === 'builder' || bt.kind === 'chill') exGoal(bt, w); else { bt.dir = racerDir(bt, w); botPlan(bt, w); }
     bt.jumpAt = 0; bt.idle = brnd(0.1, 0.8); bt.stT = 0; bt.stX = bt.b.x; bt.back = 0; bt.lostT = 0; bt.goal = null; bt.jplan = null; bt.fun = null;
+  }
+  function finI(w) {   // the part of the route nearest the finish flag
+    if (w._finI !== undefined && w._finF === w.map.flag) return w._finI;
+    const path = w.map.path, f = w.map.flag; let best = path.length - 1, bd = 1e9;
+    for (let j = 0; j < path.length; j++) { const A = path[j], dx = f[0] < A[0] ? A[0] - f[0] : f[0] > A[0] + A[2] ? f[0] - A[0] - A[2] : 0, dd = dx + Math.abs(f[1] - A[1]) * 2; if (dd < bd) { bd = dd; best = j; } }
+    w._finI = best; w._finF = w.map.flag; return best;
+  }
+  function racerDir(bt, w) {   // a racer who knows where the finish is heads for it; one who does not explores along the route until it sees it
+    const n = w.map.path.length;
+    if (bt.knowsFin) return Math.sign(finI(w) - bt.i) || 1;
+    if (bt.i >= n - 1) bt.exDir = -1; else if (bt.i <= 0) bt.exDir = 1;
+    return bt.exDir || 1;
   }
   function botSync(bt, w) {   // which part of the route the bot is on (after coming back, or after wandering off it)
     const path = w.map.path, b = bt.b, tx = b.x / TS, ty = (b.y + R + 2) / TS; let best = bt.i | 0, bd = 1e9;
     for (let j = 0; j < path.length; j++) { const A = path[j], dx = tx < A[0] ? A[0] - tx : tx > A[0] + A[2] ? tx - A[0] - A[2] : 0, dd = dx + Math.abs(ty - A[1]) * 2; if (dd < bd) { bd = dd; best = j; } }
-    bt.i = best;
+    bt.i = best; return bd;
   }
   function exGoal(bt, w) {   // an explorer (or a builder looking for a spot) picks somewhere to go: higher up, further down, or along
     const path = w.map.path, n = path.length, rr = bt.kind === 'chill' ? 10 : 45, i0 = Math.max(0, bt.i - rr), i1 = Math.min(n - 1, bt.i + rr), here = path[bt.i] || path[0];
@@ -1079,7 +1091,7 @@
       const A = path[j];
       if (ty === A[1] && tx >= A[0] && tx < A[0] + A[2]) {
         bt.lostT = 0;
-        if (j !== bt.i) { if ((j - bt.i) * (bt.dir || 1) > 0) { bt.stT = 0; bt.iT = 0; bt.dI = 0; } bt.i = j; if (bt.goalI !== undefined && bt.kind !== 'racer') bt.dir = Math.sign(bt.goalI - j) || bt.dir; botPlan(bt, w); }
+        if (j !== bt.i) { if ((j - bt.i) * (bt.dir || 1) > 0) { bt.stT = 0; bt.iT = 0; bt.dI = 0; } bt.i = j; if (bt.goalI !== undefined && bt.kind !== 'racer') bt.dir = Math.sign(bt.goalI - j) || bt.dir; if (bt.kind === 'racer') { bt.dir = racerDir(bt, w); if (bt.careful && Math.random() < 0.25) bt.idle = brnd(0.3, 1.2); } botPlan(bt, w); }   // (a careful racer stops now and then to look at what comes next)
         return true;
       }
     }
@@ -1160,7 +1172,7 @@
   function emote(bt, st, i, force) { if (!force && bt.chatCd > 0) return; bt.out.push({ k: 'msg', i }); bt.chatCd = brnd(6, 20) / bt.chatty; }
   const pickEm = a => a[Math.floor(Math.random() * a.length)];
   /* ----- building: little things only, a few blocks each, and never more than 30 bot blocks in a world (the oldest go first) ----- */
-  const BOT_TILES = 30;
+  const BOT_TILES = 40;
   function tileFree(w, x, y, ctx) {
     if (x < 1 || y < 1 || x >= w.W - 1 || y >= w.H - 1 || tile(w, x, y) !== 0) return false;
     for (const z of noBuild(w.map)) if (x >= z.tx0 && x <= z.tx1 && y >= z.ty0 && y <= z.ty1) return false;
@@ -1170,14 +1182,15 @@
     for (const s of w.see) if (Math.abs(s.cx - cx) < s.hl + TS && Math.abs(s.cy - cy) < TS * 1.5) return false;
     return true;
   }
-  function buildPlan(bt, w, ctx, kind) {   // a tower, some stairs or a bridge over a gap, right next to the bot
-    const b = bt.b, gy = Math.floor((b.y + R + 2) / TS), bx = Math.floor(b.x / TS), s = Math.random() < 0.5 ? -1 : 1, T = [];
+  function buildPlan(bt, w, ctx, kind, sHint) {   // a tower, some stairs or a bridge over a gap, right next to the bot
+    const b = bt.b, gy = Math.floor((b.y + R + 2) / TS), bx = Math.floor(b.x / TS), s = sHint || (Math.random() < 0.5 ? -1 : 1), T = [];
     const solid = (x, y) => BSOLID(tile(w, x, y));
     kind = kind || pickEm(['tower', 'tower', 'stairs', 'stairs', 'bridge', 'bridge', 'wall']);
     if (kind === 'bridge') {
       for (const d of [s, -s]) { let c = bx + d * 1, k = 0; while (k < 6 && solid(c, gy)) { c += d; k++; } const g0 = c; let gap = 0; while (gap < 5 && tile(w, c, gy) === 0) { c += d; gap++; } if (gap >= 1 && gap <= 4 && solid(c, gy)) { for (let x = g0; x !== c; x += d) T.push([x, gy]); return { tiles: T, kind, k: 0, t: 0 }; } }
       kind = 'tower';
     }
+    if (kind === 'climb') { for (let k = 0; k < 5; k++) { const c = bx + s * (k + 1); if (!solid(c, gy)) break; for (let h = 1; h <= k + 1; h++) if (tile(w, c, gy - h) === 0) T.push([c, gy - h]); } return T.length >= 3 ? { tiles: T, kind, k: 0, t: 0 } : null; }   // (steps up, to get over something high: a closed gate, a wall)
     if (kind === 'stairs') { const c0 = bx + s * 2; for (let k = 0; k < 3; k++) { const c = c0 + s * k; if (!solid(c, gy)) return null; for (let h = 1; h <= k + 1; h++) T.push([c, gy - h]); } }
     else if (kind === 'wall') { const c = bx + s * 3; if (!solid(c, gy) || !solid(c + s, gy)) return null; for (let h = 1; h <= 2; h++) { T.push([c, gy - h]); T.push([c + s, gy - h]); } }
     else { const c = bx + s * 2, hh = 2 + Math.floor(Math.random() * 3); if (!solid(c, gy)) return null; for (let h = 1; h <= hh; h++) T.push([c, gy - h]); }
@@ -1208,8 +1221,8 @@
     else if (b.ground) {
       const below = tile(w, Math.floor((b.x + d * (R + 4)) / TS), Math.floor((b.y + R + 6) / TS)), ahead = tile(w, Math.floor((b.x + d * (R + 26)) / TS), Math.floor(b.y / TS));
       bt.airAx = null; bt.gT -= dt;
-      if (bt.gT <= 0 && !onTarget && B.n > 0) { B.n--; bt.gT = 0.1; bt.danger = Math.random() < 0.35 + bt.skill * 0.65 ? botSim(bt, w, d, 0.5, 9, 0).dead : false; }   // (would just rolling on end badly? the less skilled do not always look)
-      const blockedAhead = bt.stT > 1.2 || (Math.abs(b.vx) < 40 && dynAhead(w, b, d));
+      if (bt.gT <= 0 && !onTarget && B.n > 0) { B.n--; bt.gT = 0.1; bt.danger = bt.careful || Math.random() < 0.35 + bt.skill * 0.65 ? botSim(bt, w, d, 0.5, 9, 0).dead : false; }   // (would just rolling on end badly? the less skilled do not always look)
+      const blockedAhead = !bt.pushing && (bt.stT > 1.2 || (Math.abs(b.vx) < 40 && dynAhead(w, b, d)));
       if (!onTarget && bt.back <= 0 && (below === 0 || below === 2 || below === 5 || ahead === 2 || BSOLID(ahead) || bt.danger || blockedAhead)) {
         if (bt.jumpAt === 0) { bt.jumpAt = bt.age + (Math.random() < bt.err ? brnd(0.06, 0.24) : 0.0001); bt.tap = Math.random() < bt.err * 0.6; }   // (now and then a jump is late, or too short: the less skilled miss some)
         if (bt.age >= bt.jumpAt) { b.jbuf = 0.12; bt.hold = 0; bt.jumpAt = 0; jheld = true; }
@@ -1220,7 +1233,7 @@
       const dx = bt.tcx - b.x, stop = 0.5 * b.vx * b.vx / 1800 + 6;
       let aa = ax; if (Math.abs(dx) < stop && Math.sign(b.vx) === Math.sign(dx)) aa = -Math.sign(b.vx);
       bt.airT -= dt;
-      if (bt.airT <= 0 && B.n > 0 && Math.random() < 0.25 + bt.skill * 0.8) { B.n--; bt.airT = 0.1 + Math.random() * 0.06; bt.airAx = botAirPick(bt, w, aa); }
+      if (bt.airT <= 0 && B.n > 0 && (bt.careful || Math.random() < 0.25 + bt.skill * 0.8)) { B.n--; bt.airT = 0.1 + Math.random() * 0.06; bt.airAx = botAirPick(bt, w, aa); }
       ax = bt.airAx === null ? aa : bt.airAx;
     }
     return { ax, jheld };
@@ -1236,8 +1249,13 @@
     if (bt.kind === 'racer' && !bt.finished && !bt.task) {   // stuck on one part of the route for ages (or keeps falling there): like a person, it asks around, then gives up racing and roams instead
       bt.iT = (bt.iT || 0) + dt;
       if (bt.iT > 20 && !bt.askedS) { bt.askedS = true; say(bt, st, 'stuck'); }
+      if (bt.iT > 28 && bt.climbI !== bt.i && bt.age > (bt.climbAt || 0) && b.ground && b.flat && !bt.plan) { bt.climbI = bt.i; bt.climbAt = bt.age + 60; const pl = buildPlan(bt, w, ctx, 'climb', Math.sign(bt.tcx - b.x) || bt.dir || 1); if (pl) { bt.plan = pl; bt.goal = null; if (Math.random() < 0.5) say(bt, st, 'build'); } }   // (stuck a long time: build some steps to get up and over, like a player with dirt would)
       if (bt.iT > 75 || (bt.dI || 0) >= 5) { bt.kind = 'explorer'; bt.iT = 0; bt.dI = 0; bt.askedS = false; if (Math.random() < 0.4) say(bt, st, 'retry', true); exGoal(bt, w); }
     }
+    if (bt.kind === 'racer' && !bt.knowsFin) {   // the finish shows on everyone's map in a private world (ctx.finKnown); otherwise a bot finds it by seeing it
+      const f = m.flag; if ((ctx.finKnown && bt.mapReader) || (Math.abs(f[0] * TS - b.x) < 26 * TS && Math.abs(f[1] * TS - b.y) < 14 * TS)) { bt.knowsFin = true; bt.dir = racerDir(bt, w); botPlan(bt, w); }
+    }
+    if (b.ground && b.flat) { bt.lgX = b.x; bt.lgY = b.y; }
     if ((bt.cpT = (bt.cpT || 0) - dt) <= 0 && w.map.checkpoints) {   // touching a checkpoint flag arms it, the same as for a player
       bt.cpT = 0.2; const cps = w.map.checkpoints;
       for (let i = 0; i < cps.length; i++) { const c = cps[i], dx = (c[0] + 0.5) * TS - b.x, dy = c[1] * TS - b.y; if (dx > 40 || dx < -40 || dy < -2.8 * TS || dy > 0.9 * TS) continue; if (bt.cpArmed !== i && bt.cpUsed !== i) { bt.cpArmed = i; bt.cpUsed = -1; } break; }
@@ -1255,7 +1273,7 @@
       else if (Math.random() < dt * 0.008 * bt.chatty) say(bt, st, bt.kind === 'racer' ? (Math.random() < 0.5 ? 'chill' : 'go') : bt.kind === 'builder' ? 'build' : bt.kind === 'explorer' ? 'explore' : 'chill');
     }
     if (bt.finished) { bt.leaveT -= dt; if (bt.leaveT <= 0) return 'leave'; }
-    else if (bt.idle > 0) bt.idle -= dt;
+    if (bt.idle > 0) bt.idle -= dt;
     else if (bt.fun) {
       const f = bt.fun;
       if (f.k === 'hop') { if (b.ground) { if (f.n-- <= 0) bt.fun = null; else b.jbuf = 0.12; } jheld = Math.random() < 0.5; }
@@ -1290,11 +1308,15 @@
           else { let top = t.y; while (top > 1 && BSOLID(tile(w, t.x, top - 1))) top--; let n = 0; for (let k = 0; k < t.n; k++) if (top - 1 - k > 1 && t.y - (top - 1 - k) < 9 && putTile(bt, w, ctx, t.x, top - 1 - k)) n++; bt.task = null; bt.idle = brnd(1, 3); if (n && Math.random() < 0.4) emote(bt, st, EM.happy); }
         }
       } else {
-        if (b.ground && b.flat && !botLand(bt, w)) { bt.lostT += dt; if (bt.lostT > 2) { bt.lostT = 0; botSync(bt, w); botPlan(bt, w); } }   // (off the route: find it again from where it is)
-        if (b.ground && b.flat) { if (bt.far && !inRun(b.x, bt.far)) bt.tcx = runMid(bt.far); else if (bt.bRun) bt.tcx = path[bt.i + (bt.dir || 1)] ? runMid(bt.bRun) : (bt.dir || 1) > 0 ? m.flag[0] * TS : runMid(bt.bRun); }
+        if (b.ground && b.flat && !botLand(bt, w)) { bt.lostT += dt; if (bt.lostT > 2) { bt.lostT = 0; const far = botSync(bt, w) > 4; botPlan(bt, w); bt.offT = far ? (bt.offT || 0) + 2 : 0; if (bt.offT > 10) { bt.offT = 0; bt.dead = 0.01; if (Math.random() < 0.4) say(bt, st, 'restart'); return ''; } } }   // (off the route: find it again from where it is; somewhere it cannot get back from, it presses reset like a player would)
+        if (b.ground && b.flat && bt.kind === 'racer' && bt.knowsFin && Math.abs(m.flag[0] * TS - b.x) < 12 * TS && Math.abs(m.flag[1] * TS - (b.y + R)) < 2.5 * TS) bt.tcx = (m.flag[0] + 0.5) * TS;   // (the flag is right there)
+        else if (b.ground && b.flat) { if (bt.far && !inRun(b.x, bt.far)) bt.tcx = runMid(bt.far); else if (bt.bRun) bt.tcx = path[bt.i + (bt.dir || 1)] ? runMid(bt.bRun) : (bt.dir || 1) > 0 ? m.flag[0] * TS : runMid(bt.bRun); }
         if (bt.kind !== 'racer' && bt.goalI !== undefined) {   // explorers and builders: got there (or gave up)? stop a while, then somewhere else
           bt.iT = (bt.iT || 0) + dt;
           if (Math.abs(bt.i - bt.goalI) <= 1 || bt.iT > 20) { bt.idle = brnd(1.5, 6); if (Math.random() < 0.25) say(bt, st, bt.kind === 'builder' ? 'build' : 'explore'); if (Math.random() < 0.2) bt.ex = ['up', 'down', 'side'][Math.floor(Math.random() * 3)]; exGoal(bt, w); }
+        }
+        if (bt.kind === 'racer' && bt.fail && bt.fail.n >= 2 && !bt.fail.built && b.ground && b.flat && Math.abs(b.x - bt.fail.x) < 2 * TS && Math.abs(b.y - bt.fail.y) < TS) {   // fell here twice: build a way over (a bridge, or steps up)
+          bt.fail.built = true; const pl = buildPlan(bt, w, ctx, 'bridge', bt.dir || 1) || buildPlan(bt, w, ctx, 'stairs', bt.dir || 1); if (pl) { bt.plan = pl; if (Math.random() < 0.4) say(bt, st, 'build'); }
         }
         if (bt.kind === 'builder' && b.ground && b.flat && !bt.goal) {
           bt.buildT -= dt;
@@ -1308,10 +1330,25 @@
       if (bt.goal) {
         const g = bt.goal, dd = w.doors[g.di]; g.t += dt;
         if (!dd || dd.gone || dd.open) { bt.goal = null; if (g.help) { say(bt, st, 'gateOk', true); bt.task = null; } }
-        else if (g.x === null ? g.t > 25 : g.t > 30) { bt.goal = null; if (g.help) { say(bt, st, 'noBtn', true); bt.task = null; } else { bt.idle = brnd(2, 6); if (bt.kind === 'racer' && Math.random() < 0.5) { bt.kind = 'explorer'; exGoal(bt, w); } else { bt.dir = -(bt.dir || 1); bt.back = brnd(1, 2); } } }
+        else if (g.x === null && g.t > 30 && !g.climbed && bt.age > (bt.climbAt || 0) && b.ground && b.flat) { g.climbed = true; bt.climbAt = bt.age + 60; const pl = buildPlan(bt, w, ctx, 'climb', Math.sign((dd.x + 0.5) * TS - b.x) || 1); if (pl) { bt.plan = pl; bt.goal = null; say(bt, st, 'build'); } }   // (nobody came and there is no crate: build steps to get over the gate)
+        else if (g.x === null ? g.t > 50 : g.t > 30) { bt.goal = null; if (g.help) { say(bt, st, 'noBtn', true); bt.task = null; } else { bt.idle = brnd(2, 6); if (bt.kind === 'racer' && Math.random() < 0.5) { bt.kind = 'explorer'; exGoal(bt, w); } else { bt.dir = -(bt.dir || 1); bt.back = brnd(1, 2); } } }
         else {
           if (!g.asked && g.t > (g.x === null ? 1 : 3) && !g.help) { g.asked = true; if (Math.random() < 0.5) say(bt, st, 'gate'); else if (Math.random() < 0.3) emote(bt, st, EM.q); }
-          if (g.x === null && b.ground) { bt.tcx = b.x; }   // (a gate that needs a crate on a plate: it waits here a while for someone)
+          bt.pushing = false;
+          if (g.x === null) {   // a gate worked by a plate: push a crate onto it, like a player would. With no crate around, stand on the plate so others can get through, and ask for help
+            const pl = g.pl || (g.pl = w.plates.find(q => !q.gone && q.to.indexOf(g.di) >= 0));
+            if (pl) {
+              const pc = (pl.x + pl.w / 2) * TS, py = pl.y * TS;
+              let cr = g.cr ? w.dynBy.get(g.cr) : null;
+              if (!cr || cr.burn > 0 || cr.gone) { cr = null; let bd = 1e9; for (const d of w.dyn) { if (d.burn > 0 || !d.hw || d.hw > 40) continue; const dd = Math.abs(d.x - pc); if (dd < 22 * TS && Math.abs(d.y + d.hw - py) < 1.5 * TS && dd < bd) { bd = dd; cr = d; } } g.cr = cr ? cr.uid : null; }
+              if (cr) {
+                const side = Math.sign(cr.x - pc) || 1, behind = cr.x + side * (cr.hw + R + 4);
+                if (Math.abs(cr.x - pc) < pl.w * TS / 2 - 6) bt.tcx = b.x;   // (on the plate: the gate opens)
+                else if (Math.sign(b.x - cr.x) !== side || Math.abs(b.x - behind) > 40) bt.tcx = behind;
+                else { bt.tcx = pc - side * (cr.hw + R); bt.pushing = true; }
+              } else { bt.tcx = pc; if (!g.held && Math.abs(b.x - pc) < TS) { g.held = true; say(bt, st, 'go', true); } }
+            } else if (b.ground) bt.tcx = b.x;
+          }
           if (g.x !== null) {
             const q = w.btns.find(q => !q.gone && q.to.indexOf(g.di) >= 0), gy = q ? q.y * TS : 0;
             bt.tcx = g.x;
@@ -1348,7 +1385,7 @@
     if (ev.lava || ev.splat || botOob(w, b)) return botDied(bt, w, ctx);
     const f = m.finish;
     if (!bt.finished && bt.type === 'runner' && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) {
-      bt.finished = true; bt.leaveT = brnd(6, 18); bt.task = null;
+      bt.finished = true; bt.leaveT = brnd(40, 150); bt.task = null; bt.type = 'wander'; bt.anchor = b.x;
       if (Math.random() < 0.65) say(bt, st, 'fin', true); else emote(bt, st, pickEm([EM.cool, EM.happy, EM.love, EM.laugh]), true);
       return 'fin';
     }
@@ -1356,7 +1393,8 @@
   }
   function botDied(bt, w, ctx) {   // a fall: back at the last good spot, or (some of the less skilled) all the way back at the start
     const st = ctx.st, b = bt.b;
-    bt.dead = 0.6; bt.deadX = b.x; bt.deadY = b.y; bt.dI = (bt.dI || 0) + 1; bt.goal = null; bt.jplan = null; bt.fun = null; bt.plan = null;
+    bt.dead = 0.6; bt.deadX = b.x; bt.deadY = b.y; bt.dI = (bt.dI || 0) + 1;
+    if (bt.lgX !== undefined) { if (bt.fail && Math.abs(bt.fail.x - bt.lgX) < 3 * TS && Math.abs(bt.fail.y - bt.lgY) < 2 * TS) bt.fail.n++; else bt.fail = { x: bt.lgX, y: bt.lgY, n: 1 }; } bt.goal = null; bt.jplan = null; bt.fun = null; bt.plan = null;
     if (!(bt.cpArmed >= 0)) { if (Math.random() < 0.4) say(bt, st, 'restart'); }   // (no checkpoint flag: back to the start, like anyone)
     else if (Math.random() < 0.3) say(bt, st, bt.dI >= 2 ? 'retry' : 'die');
     else if (Math.random() < 0.25) emote(bt, st, pickEm([EM.cry, EM.angry, EM.laugh, EM.wow]));
@@ -1412,7 +1450,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 147, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 148, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
