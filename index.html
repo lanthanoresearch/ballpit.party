@@ -714,7 +714,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 143; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 144; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1019,7 +1019,9 @@
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Finish crowns</b><small>Gold, silver, bronze and rock crowns over everyone who has finished</small></span></span><input type="checkbox" id="setCrowns"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="flag"></span><span><b>Finish arrow in private worlds</b><small>On: an arrow on screen always points to the finish. Off: the finish only shows on the map</small></span></span><input type="checkbox" id="setFinArrow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Finish crowns</b><small>Gold, silver, bronze and rock crowns over everyone who has finished</small></span></span><input type="checkbox" id="setCrowns"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label>
+      <div class="dep sub" data-dep="mmPlayers"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big player dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigP"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label>
+      <div class="dep sub" data-dep="mmBots"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big bot dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigB"><i></i></label></div></div></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="flag"></span><span><b>Finish arrow in private worlds</b><small>On: an arrow on screen always points to the finish. Off: the finish only shows on the map</small></span></span><input type="checkbox" id="setFinArrow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="search"></span><span><b>Show stats</b><small>Tiny numbers in the corner, under the map</small></span></span><input type="checkbox" id="setStats"><i></i></label><div class="dep sub" data-dep="stats"><div><label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Frame rate</b><small>How many pictures a second your screen draws</small></span></span><input type="checkbox" id="setStFps"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Ping</b><small>How long a message takes to the server and back</small></span></span><input type="checkbox" id="setStPing"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="clock"></span><span><b>Buffer</b><small>How far behind other players and things are shown, to keep them smooth</small></span></span><input type="checkbox" id="setStBuf"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Connection speed</b><small>Data coming in and going out each second</small></span></span><input type="checkbox" id="setStData"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="gear"></span><span><b>Server load</b><small>How hard the game server is working</small></span></span><input type="checkbox" id="setStSrv"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Conflicts</b><small>Times your screen and the server did not match</small></span></span><input type="checkbox" id="setStConf"><i></i></label></div></div>
       <h4><span data-ic="tag"></span> Name icons</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Robot icon on bots</b><small>Over a bot's ball in the game</small></span></span><input type="checkbox" id="setBotMark"><i></i></label>
@@ -1079,6 +1081,10 @@
         <div class="dep sub" data-dep="botsOffOn"><div>
           <div class="row"><span class="lbl"><span data-ic="bot"></span> <b id="botMaxVal"></b>&nbsp;bots play with you</span><input type="range" id="setBotMax" min="1" max="19" step="1"></div>
         </div></div>
+      </div></div>
+      <div class="dep" data-dep="!mp"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Bots chat</b><small>They talk about what is going on, answer you, ask for help, and pull faces</small></span></span><input type="checkbox" id="setBotChat"><i></i></label>
+        <div class="small dim">Bots are all different: racers (some great, some not), explorers, builders who put up little towers, and some who just hang out. Ask them for things in the chat ("Can you open the gate?", "Follow me", "I need dirt") and sometimes one will help.</div>
       </div></div>
       <div class="dep" data-dep="mp"><div><div class="small dim">Public worlds are only real people. Bots can play in your private world or offline.</div></div></div>
     </section>
@@ -1329,7 +1335,7 @@ fillIcons();
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, botChat: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: true, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -1361,7 +1367,7 @@ function normalize() {
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botsPriv', 'botsOff', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botsPriv', 'botsOff', 'botChat', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -1906,7 +1912,7 @@ function nearEdge(b) {
   return b.y > P.killYAt(S.world, b.x) - 9 * TS;   // (the walls and ceiling are solid now: only the open bottom is a danger)
 }
 function finishRun() {
-  S.finished = true; S.done = true; S.finT = 5; S.crown = S.crown || true; sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
+  S.finished = true; S.done = true; S.finT = 5; S.crown = S.crown || true; if (botMode() === 'local') LBC.fins.push({ x: S.b.x, y: S.b.y }); sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
   S.finMs = S.started ? performance.now() - S.runStart : 0;
   $('fbText').textContent = 'Time ' + fmtT(S.finMs);
   $('finishbanner').classList.remove('hide');
@@ -2520,6 +2526,20 @@ function botVanish() {
   bots[i] = bots[bots.length - 1]; bots.pop();
 }
 let botFinN = 0;
+const LBC = P.botCtx();   // (offline: the bots' shared memory for this game: what was said, what they built, what you asked)
+function localAsk(t, a, b) { if (botMode() !== 'local' || !bots.length) return; const k = P.askKind(t, a, b); if (k) LBC.asks.push({ kind: k, x: S.b.x, y: S.b.y, id: 'me' }); }
+function botTalk(bt, o) {   // a bot says something, or pulls a face: over its head, and in the messages
+  if (!settings.botChat) return;
+  if (o.k === 'say') { bt.emo = { i: -1, txt: o.s, t: S.t }; addFeedEmo(who(bt.name), -1, '', o.s, 'bot'); }
+  else if (o.i >= 0 && o.i < EMO.length) { bt.emo = { i: o.i, t: S.t }; if (isFinite(bt.b.x) && nearMe(bt.b.x, bt.b.y)) addFeedEmo(who(bt.name), o.i, '', '', 'bot'); }
+}
+function botOutLocal(bt) {
+  for (const o of bt.out) {
+    if (o.k === 'tl') { const q = ['tl', o.x, o.y, o.v === -1 ? -1 : 1], nm = nearMe((o.x + 0.5) * TS, o.y * TS); addMisc(S.world, q, nm); if (nm) sfx('ui'); }   // (offline, bot blocks are part of this game only: they are not saved into your world)
+    else botTalk(bt, o);
+  }
+  bt.out.length = 0;
+}
 function botsTick(dt) {
   const mode = botMode();
   if (mode === 'remote') { remoteBotsTick(dt); return; }
@@ -2528,14 +2548,19 @@ function botsTick(dt) {
   botNextSpawn -= dt;
   if (bots.length < cap && botNextSpawn <= 0) { spawnBot(); botNextSpawn = bots.length < 4 ? rnd(0.3, 1) : rnd(1.2, 4); }
   if (bots.length > cap && botNextSpawn <= 0) { botVanish(); botNextSpawn = 0.4; }
+  if (LBC.w !== w) { Object.assign(LBC, P.botCtx()); LBC.w = w; }
+  LBC.players = S.dead > 0 || S.away ? [] : [{ id: 'me', x: S.b.x, y: S.b.y }];
+  LBC.balls = LBC.players.concat(bots.filter(bt => !(bt.dead > 0)).map(bt => bt.b));
+  P.botSocial(bots, w, LBC, dt); LBC.asks.length = 0; LBC.builds.length = 0; LBC.fins.length = 0;
   const B = { n: 16 }, px = S.b.x, py = S.b.y;
   for (let i = bots.length - 1; i >= 0; i--) {
     const bt = bots[i], wasDead = bt.dead > 0, far = Math.abs(bt.b.x - px) > 2600 || Math.abs(bt.b.y - py) > 1800;
     let e = '';
-    if (far) { bt.lod = (bt.lod + 1) & 1; if (!bt.lod) e = P.botStep(bt, w, dt * 2, B); } else e = P.botStep(bt, w, dt, B);
+    if (far) { bt.lod = (bt.lod + 1) & 1; if (!bt.lod) e = P.botStep(bt, w, dt * 2, B, LBC); } else e = P.botStep(bt, w, dt, B, LBC);
+    if (bt.out.length) botOutLocal(bt);
     if (e === 'died') botFx(bt, bt.deadX, bt.deadY);
     else if (wasDead && !(bt.dead > 0) && nearMe(bt.b.x, bt.b.y)) ring(bt.b.x, bt.b.y, bt.color, 3, 34, 0.5);
-    if (e === 'fin') { bt.crown = ++botFinN + (S.finished ? 1 : 0); if (settings.announce && bots.length <= 12) addFeed(who(bt.name) + ' finished', 'fin', true, 'bot'); }
+    if (e === 'fin') { LBC.fins.push({ x: bt.b.x, y: bt.b.y }); bt.crown = ++botFinN + (S.finished ? 1 : 0); if (settings.announce && bots.length <= 12) addFeed(who(bt.name) + ' finished', 'fin', true, 'bot'); }
     if (e === 'leave') { bots.splice(i, 1); if (bots.length < 12) addFeed(who(bt.name) + ' left', 'leave', false, 'bot'); }
   }
 }
@@ -3036,7 +3061,7 @@ function buildLook() {
 }
 function syncUI() {
   nameUI();
-  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setBotsOff', 'botsOff'], ['setBotMark', 'botMark'],
+  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
@@ -3050,12 +3075,12 @@ function syncUI() {
 }
 function bindToggle(id, key, fn) { $(id).onchange = () => { settings[key] = $(id).checked; save(); sfx($(id).checked ? 'on' : 'off'); if (fn) fn(); }; }
 bindToggle('setTags', 'tags'); bindToggle('setCrowns', 'crowns'); bindToggle('setFinArrow', 'finArrow'); bindToggle('setLow', 'low'); bindToggle('setFx', 'fx', () => { if (!settings.fx) fx.length = 0; }); bindToggle('setIntro', 'intro');
-bindToggle('setBotMark', 'botMark'); bindToggle('setPeopleMark', 'peopleMark'); bindToggle('setBotMsg', 'botMsg'); bindToggle('setPeopleMsg', 'peopleMsg'); bindToggle('setPower', 'powerJump', () => { if (S.b && !settings.powerJump) { S.b.jm = 0; S.b.jfill = false; } applyTouchUI(); applyDeps(); }); bindToggle('setMmPlayers', 'mmPlayers'); bindToggle('setMmBots', 'mmBots');
+bindToggle('setBotMark', 'botMark'); bindToggle('setPeopleMark', 'peopleMark'); bindToggle('setBotMsg', 'botMsg'); bindToggle('setPeopleMsg', 'peopleMsg'); bindToggle('setPower', 'powerJump', () => { if (S.b && !settings.powerJump) { S.b.jm = 0; S.b.jfill = false; } applyTouchUI(); applyDeps(); }); bindToggle('setMmPlayers', 'mmPlayers', applyDeps); bindToggle('setMmBots', 'mmBots', applyDeps);
 bindToggle('setStats', 'stats', () => { applyDeps(); statsKick(); }); ['Fps', 'Ping', 'Buf', 'Data', 'Srv', 'Conf'].forEach(k => bindToggle('setSt' + k, 'st' + k, statsKick));
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
-bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
+bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setBotChat', 'botChat'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
 bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull'); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
@@ -3174,7 +3199,7 @@ const DEPS = {
   boostbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn') && !settings.boostAuto,
   boost: () => settings.boost, power: () => settings.powerJump, touchgest: () => showTouch() && settings.scheme !== 'buttons',
   mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => false, '!bots': () => true, botsPriv: () => !settings.mp && !settings.offline, botsOff: () => !settings.mp && !!settings.offline, botsOffOn: () => !!settings.botsOff,
-  minimap: () => settings.minimap, stats: () => settings.stats, sfx: () => settings.sfx, music: () => settings.music !== 'none'
+  minimap: () => settings.minimap, mmPlayers: () => !!settings.mmPlayers, mmBots: () => !!settings.mmBots, stats: () => settings.stats, sfx: () => settings.sfx, music: () => settings.music !== 'none'
 };
 function applyDeps() {
   tabLocks();
@@ -3510,8 +3535,8 @@ function drawEmoBubble(em, x, y) {   // a speech bubble with the emoji, floating
   e.op.forEach((o, k) => { const p = emoPaths[em.i][k]; if (o[0] === 'f') { ctx.fillStyle = o[2]; ctx.fill(p); } else { ctx.strokeStyle = o[2]; ctx.lineWidth = o[3]; ctx.lineCap = 'round'; ctx.stroke(p); } });
   ctx.restore();
 }
-function addFeedEmo(name, i, cls, txt) {   // "Name" + the emoji, in the same list as joined / left
-  const d = document.createElement('div'); d.className = 'msg ' + (cls || ''); { const ic = nameIcon('human'); if (ic) d.appendChild(ic); }
+function addFeedEmo(name, i, cls, txt, kind) {   // "Name" + the emoji, in the same list as joined / left
+  const d = document.createElement('div'); d.className = 'msg ' + (cls || ''); { const ic = nameIcon(kind || 'human'); if (ic) d.appendChild(ic); }
   if (txt) d.appendChild(document.createTextNode(name + ': ' + txt));
   else if (isPhrase(i)) d.appendChild(document.createTextNode(name + ': ' + (PHRASES[i - EMO.length] || '')));
   else { d.appendChild(document.createTextNode(name)); const sp = document.createElement('span'); sp.innerHTML = emoSvg(i); d.appendChild(sp.firstChild); }
@@ -3523,7 +3548,7 @@ function addFeedEmo(name, i, cls, txt) {   // "Name" + the emoji, in the same li
 let emoCool = 0; try { localStorage.removeItem('ballrun4_chat'); } catch (e) {}   // there is no chat history: an emoji is shown and gone
 function sendEmo(i) {
   if (performance.now() < emoCool || (!online && !inSolo())) return;   // in your private world it works like an empty room: only you see it
-  emoCool = performance.now() + 1000; wsSend({ t: 'emo', i });
+  emoCool = performance.now() + 1000; wsSend({ t: 'emo', i }); localAsk('emo', i);
   S.myEmo = { i, t: S.t }; addFeedEmo('You', i, ''); sfx('ui'); toggleChat(false);
 }
 const eg = $('emoGrid');
@@ -3531,7 +3556,7 @@ EMO.forEach((e, i) => { const b = document.createElement('button'); b.title = e.
 function sendSay(a, b) {
   const txt = sayText(a, b); if (txt === null) return;
   if (performance.now() < emoCool || (!online && !inSolo())) return;
-  emoCool = performance.now() + 1000; wsSend({ t: 'say', a, b });
+  emoCool = performance.now() + 1000; wsSend({ t: 'say', a, b }); localAsk('say', a, b);
   S.myEmo = { i: -1, txt, t: S.t }; addFeedEmo('You', -1, '', txt); sfx('ui'); toggleChat(false);
 }
 {   // the two lists are the game's own drop-downs; with the box ticked, picking the first opens the second, and then it is ready to send
@@ -4080,6 +4105,7 @@ function finishPlacing() {
       const eq = ['tl', e[0], e[1], e[2]], w2 = S.world, j = e[1] * w2.W + e[0]; addMisc(w2, eq, true); dropTileRecords(e[0], e[1]);
       if (S.orig && w2.grid[j] === S.orig[j] && !(w2.rock && w2.rock[j])) { S.tg[j] = S.origTg[j]; exSend.push([e[0], e[1], -1]); } else { S.boughtMisc.push(eq); S.mine.add(j); exSend.push([e[0], e[1], e[2]]); }
     }
+    if (q[0] === 'tl' && (q[3] === 1 || q[3] === 3) && botMode() === 'local') LBC.builds.push({ x: q[1], y: q[2] });   // (the bots notice what you build)
     if (q[0] === 'tl') {   /* one record per tile, ever. If the tile is back the way the map made it, there is nothing to remember at all, and it does not count */
       const w = S.world, i = q[2] * w.W + q[1], gone = dropTileRecords(q[1], q[2]);
       if (S.orig && w.grid[i] === S.orig[i] && !(w.rock && w.rock[i]) && !g.keepRec) {
@@ -5306,7 +5332,7 @@ function onMsg(m) {
     case 'hostback': notice(who(m.name) + ' is back', ''); break;
     case 'inv': partyInvited(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
-    case 'pobj': { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1 }); });
+    case 'pobj': if (m.bot) { if (S.world && validMisc(m.g) && m.g[0] === 'tl') { addMisc(S.world, m.g, !m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)); if (!m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)) sfx('ui'); } break; } { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1 }); });
       if (!S.world || !shared() || !validMisc(m.g) || (!party && m.g[0] !== 'tl' && !pubTake('m', m.g))) break;   // (a terrain change is absolute, so applying it twice does no harm)
       if (m.g[0] === 'tl' && m.g[3] === -1) { addMisc(S.world, m.g, true); dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); wDirty = true; break; }   // somebody put a tile back the way it was: nothing to remember
       if (m.g[0] === 'tl') { dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); }
@@ -5337,6 +5363,7 @@ function onMsg(m) {
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); setNetFk(m.slot, m.fk); if (forcedLeft === null) S.nextAt = m.next; if (m.build && !party) S.pendingBuild = { slot: m.slot, b: m.build }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; startTransition(m.slot, m.next); break;   // (a map that comes back has everything that was built on it, and is shown once the server has said where it all is)
     case 'bj': case 'bl': case 'bp': remoteBotMsg(m); break;
+    case 'bsay': { const bt = bots.find(b => b.id === m.id); if (bt) botTalk(bt, m.s !== undefined ? { k: 'say', s: String(m.s).slice(0, 60) } : { k: 'emo', i: m.e | 0 }); break; }
     case 'fin': {
       if (m.bot) { const bt = bots.find(b => b.id === m.id); if (bt) { bt.crown = m.rank || 1; if (nearMe(bt.b.x, bt.b.y)) burst(bt.b.x, bt.b.y - 10, ['#ffd23d', '#fff', '#ff5b4a'], 24, 300, 400); } if (settings.announce && bots.length <= 12) addFeed(who(m.name) + ' finished (#' + m.rank + ')', 'fin', true, 'bot'); break; }
       const mine = m.id === myId, o = others.get(m.id);
@@ -6282,14 +6309,14 @@ function drawMinimap() {
     if (now - mmPing > PING_MS) mmPing = now;   // the ring still pulses; the dots themselves are always there
     mmDots.length = 0;
     const fr = friendsOnMap();   /* a tracked friend is drawn once (by the friend marker), never twice */
-    if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) mmDots.push({ x: q.x / TS, y: q.y / TS, c: o.color }); });
-    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; const q = bt.b; mmDots.push({ x: q.x / TS, y: q.y / TS, c: bt.color }); });
+    if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) mmDots.push({ x: q.x / TS, y: q.y / TS, c: o.color, big: settings.mmBigP }); });
+    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; const q = bt.b; mmDots.push({ x: q.x / TS, y: q.y / TS, c: bt.color, big: settings.mmBigB }); });
     const age = (now - mmPing) / PING_MS;
     if (settings.mmPlayers || settings.mmBots) {
       g.strokeStyle = 'rgba(159,232,255,' + (0.5 * (1 - age)) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(w / 2, h / 2, age * Math.max(v.w, v.h) / TS * ppt * 0.6, 0, TAU); g.stroke();
       for (let i = 0; i < mmDots.length; i++) {
         const d = mmDots[i], x = (d.x - left) * ppt, y = (d.y - top) * ppt; if (x < 0 || y < 0 || x > w || y > h) continue;
-        g.globalAlpha = 1; g.fillStyle = d.c; g.beginPath(); g.arc(x, y, tinyR(ppt), 0, TAU); g.fill(); if (tinyR(ppt) > 2.4) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 0.8; g.stroke(); }
+        const rr = d.big ? Math.max(4.2, tinyR(ppt) * 2) : tinyR(ppt); g.globalAlpha = 1; g.fillStyle = d.c; g.beginPath(); g.arc(x, y, rr, 0, TAU); g.fill(); if (rr > 2.4) { g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = d.big ? 1.4 : 0.8; g.stroke(); }
       }
       g.globalAlpha = 1;
     }
@@ -6417,9 +6444,9 @@ function drawMinimapBig() {
   if (z >= 1.5) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = X(c[0] + 0.5), y = Y(c[1]); if (x < 0 || y < 0 || x > cw || y > ch) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.8, y - 12, 2, 12); g.beginPath(); g.moveTo(x + 1, y - 12); g.lineTo(x + 10, y - 9); g.lineTo(x + 1, y - 6); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 0.8; g.stroke(); });
   { const dr = tinyR(z), fr = friendsOnMap();   /* everybody else is drawn to scale, tiny when zoomed out */
-    const dotAt = (x, y, col, sp) => { if (dr >= 5 && sp) g.drawImage(sp, X(x / TS) - dr, Y(y / TS) - dr, dr * 2, dr * 2); else { g.fillStyle = col; g.beginPath(); g.arc(X(x / TS), Y(y / TS), dr, 0, TAU); g.fill(); if (dr > 2.4) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 0.8; g.stroke(); } } };
-    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0) return; dotAt(bt.b.x, bt.b.y, bt.color, null); });
-    if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) dotAt(q.x, q.y, o.color, dr >= 5 ? sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length) : null); });
+    const dotAt = (x, y, col, sp, big) => { const rr = big ? Math.max(6, dr * 1.9) : dr; if (rr >= 5 && sp) g.drawImage(sp, X(x / TS) - rr, Y(y / TS) - rr, rr * 2, rr * 2); else { g.fillStyle = col; g.beginPath(); g.arc(X(x / TS), Y(y / TS), rr, 0, TAU); g.fill(); if (rr > 2.4) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 0.8; g.stroke(); } } };
+    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; dotAt(bt.b.x, bt.b.y, bt.color, null, settings.mmBigB); });
+    if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) dotAt(q.x, q.y, o.color, dr >= 5 || settings.mmBigP ? sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length) : null, settings.mmBigP); });
   }
   drawLinksOnMap(g, X, Y, 9, true, false);
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
@@ -6546,7 +6573,7 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, ws: () => ws, botsL: () => bots, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { NET, ws: () => ws, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();

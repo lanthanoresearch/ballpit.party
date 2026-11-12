@@ -1029,32 +1029,54 @@
   }
   const runMid = r => (r[0] + r[1] + 1) / 2 * TS;
   const inRun = (x, r) => { const t = Math.floor(x / TS); return t >= r[0] && t <= r[1]; };
-  function botPlan(bt, w) {
-    const path = w.map.path, A = path[bt.i], B = path[bt.i + 1];
+  function botPlan(bt, w) {   // where to head on the route: the next part of it (or the one before, for a bot going back the way it came)
+    const path = w.map.path, dir = bt.dir || 1, A = path[bt.i], B = path[bt.i + dir];
     if (!A) { bt.far = null; bt.bRun = null; bt.tcx = w.map.flag[0] * TS; return; }
-    if (!B) { bt.far = null; bt.bRun = botRuns(w, A)[0]; bt.tcx = w.map.flag[0] * TS; return; }
-    const dir = Math.sign((B[0] + B[2] / 2) - (A[0] + A[2] / 2)) || 1, ra = botRuns(w, A), rb = botRuns(w, B);
+    if (!B) { bt.far = null; bt.bRun = botRuns(w, A)[0]; bt.tcx = dir > 0 ? w.map.flag[0] * TS : runMid(bt.bRun); return; }
+    const d = Math.sign((B[0] + B[2] / 2) - (A[0] + A[2] / 2)) || 1, ra = botRuns(w, A), rb = botRuns(w, B);
     let water = false; for (let x = A[0]; x < A[0] + A[2]; x++) if (tile(w, x, A[1]) === 5) { water = true; break; }
-    bt.far = water ? (dir > 0 ? ra[ra.length - 1] : ra[0]) : null;
-    bt.bRun = dir > 0 ? rb[0] : rb[rb.length - 1];
+    bt.far = water ? (d > 0 ? ra[ra.length - 1] : ra[0]) : null;
+    bt.bRun = d > 0 ? rb[0] : rb[rb.length - 1];
   }
-  function botMake(o) {   // a new bot. Most are good runners; now and then one just plays around near the start
-    const wander = Math.random() < (o.wander === undefined ? 0.08 : o.wander), pro = !wander && Math.random() < 0.5;
-    return Object.assign({ type: wander ? 'wander' : 'runner', pro, err: pro ? 0.003 : 0.02, life: wander ? brnd(40, 140) : brnd(700, 1600), age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0,
-      finished: false, leaveT: 0, wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, gT: 0, airT: 0, airAx: null, danger: false, stT: 0, stX: 0, back: 0, crown: 0 }, o);
+  /* who a bot is. Racers try to finish (some are great, some miss jumps); explorers roam up, down or sideways; builders put up little towers, stairs and bridges;
+     chill ones hang around and talk; wanderers just roll about near where they are. Everybody stops for a bit now and then. */
+  const KINDS = [['racer', 0.4], ['explorer', 0.22], ['builder', 0.16], ['chill', 0.14], ['wander', 0.08]];
+  function botMake(o) {
+    let r = Math.random(), kind = 'racer'; for (const k of KINDS) { if (r < k[1]) { kind = k[0]; break; } r -= k[1]; }
+    if (o && o.kind) kind = o.kind;
+    const skill = kind === 'racer' ? (Math.random() < 0.35 ? brnd(0.9, 1) : Math.random() < 0.65 ? brnd(0.55, 0.88) : brnd(0.2, 0.55)) : brnd(0.35, 0.9);
+    return Object.assign({ type: kind === 'wander' ? 'wander' : 'runner', kind, ex: ['up', 'down', 'side'][Math.floor(Math.random() * 3)], skill, err: (1 - skill) * 0.14, chatty: brnd(0.3, 1.5),
+      life: kind === 'wander' ? brnd(60, 200) : kind === 'racer' ? brnd(900, 2400) : brnd(300, 1100), dir: 1, age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0, finished: false, leaveT: 0,
+      wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, gT: 0, airT: 0, airAx: null, danger: false, stT: 0, stX: 0, back: 0, crown: 0, out: [], chatCd: brnd(2, 10), first: true, built: 0, buildT: brnd(6, 18) }, o || {});
   }
   function botSpawn(bt, w) {   // at the start, or (after a fall) back where it had got to on the route, like a checkpoint
-    const m = w.map;
+    const m = w.map, n = m.path.length;
+    if (bt.first && bt.kind !== 'racer' && bt.kind !== 'wander' && n > 20) bt.i = Math.floor(Math.random() * n * 0.45);   // (the ones who are not racing are already somewhere in the level when they arrive)
     if (bt.i > 0 && m.path[bt.i]) { const A = m.path[bt.i], r = botRuns(w, A)[0]; bt.b = newBody(runMid(r), A[1] * TS - R - 1); }
     else { bt.i = 0; bt.b = newBody(m.start[0] + brnd(-80, 80), m.start[1]); }
-    bt.b.bot = true; bt.b.noJm = true;
-    botPlan(bt, w); bt.jumpAt = 0; bt.idle = brnd(0.1, 0.6); bt.stT = 0; bt.stX = bt.b.x; bt.back = 0; bt.lostT = 0;
+    bt.b.bot = true; bt.b.noJm = true; bt.anchor = bt.b.x;
+    if (bt.kind === 'explorer' || bt.kind === 'builder') exGoal(bt, w); else { bt.dir = 1; botPlan(bt, w); }
+    bt.jumpAt = 0; bt.idle = brnd(0.1, 0.8); bt.stT = 0; bt.stX = bt.b.x; bt.back = 0; bt.lostT = 0; bt.goal = null; bt.jplan = null; bt.fun = null;
+  }
+  function exGoal(bt, w) {   // an explorer (or a builder looking for a spot) picks somewhere to go: higher up, further down, or along
+    const path = w.map.path, n = path.length, i0 = Math.max(0, bt.i - 45), i1 = Math.min(n - 1, bt.i + 45), here = path[bt.i] || path[0];
+    let best = Math.min(n - 1, bt.i + 8), bs = -1e9;
+    for (let k = 0; k < 16; k++) {
+      const j = i0 + Math.floor(Math.random() * (i1 - i0 + 1)); if (Math.abs(j - bt.i) < 5) continue;
+      const A = path[j], sc = (bt.kind === 'builder' ? -Math.abs(j - bt.i) : bt.ex === 'up' ? here[1] - A[1] : bt.ex === 'down' ? A[1] - here[1] : -Math.abs(A[1] - here[1]) * 2 + Math.abs(j - bt.i) * 0.4) + Math.random() * 5;
+      if (sc > bs) { bs = sc; best = j; }
+    }
+    bt.goalI = best; bt.dir = Math.sign(best - bt.i) || 1; bt.iT = 0; botPlan(bt, w);
   }
   function botLand(bt, w) {
-    const b = bt.b, path = w.map.path, tx = Math.floor(b.x / TS), ty = Math.floor((b.y + R + 2) / TS);
-    for (let j = Math.max(bt.minI || 0, bt.i - 2); j <= Math.min(path.length - 1, bt.i + 8); j++) {
+    const b = bt.b, path = w.map.path, tx = Math.floor(b.x / TS), ty = Math.floor((b.y + R + 2) / TS), back = bt.kind === 'racer' ? 2 : 8;
+    for (let j = Math.max(bt.kind === 'racer' ? bt.minI || 0 : 0, bt.i - back); j <= Math.min(path.length - 1, bt.i + 8); j++) {
       const A = path[j];
-      if (ty === A[1] && tx >= A[0] && tx < A[0] + A[2]) { bt.lostT = 0; if (j !== bt.i) { if (j > bt.i) { bt.stT = 0; bt.iT = 0; bt.dI = 0; } bt.i = j; botPlan(bt, w); if (Math.random() < 0.05) bt.idle = brnd(0.2, 0.8); bt.adv = true; } return true; }
+      if (ty === A[1] && tx >= A[0] && tx < A[0] + A[2]) {
+        bt.lostT = 0;
+        if (j !== bt.i) { if ((j - bt.i) * (bt.dir || 1) > 0) { bt.stT = 0; bt.iT = 0; bt.dI = 0; } bt.i = j; if (bt.goalI !== undefined && bt.kind !== 'racer') bt.dir = Math.sign(bt.goalI - j) || bt.dir; botPlan(bt, w); }
+        return true;
+      }
     }
     return false;
   }
@@ -1070,7 +1092,7 @@
     return { dead: false, land: false, t: T, x: c.x, y: c.y };
   }
   function botAirPick(bt, w, aa) {
-    const nxt = w.map.path[bt.i + 1] || w.map.path[bt.i], ty = nxt ? nxt[1] * TS - R : bt.b.y, opts = aa === 0 ? [0] : [aa, 0, -aa];
+    const nxt = w.map.path[bt.i + (bt.dir || 1)] || w.map.path[bt.i], ty = nxt ? nxt[1] * TS - R : bt.b.y, opts = aa === 0 ? [0] : [aa, 0, -aa];
     let best = aa, bs = -1e9;
     for (let k = 0; k < opts.length; k++) {
       const r = botSim(bt, w, opts[k], 1.5, bt.hold, bt.tap ? 0.1 : 0.36);
@@ -1106,49 +1128,203 @@
     return null;
   }
   const dynAhead = (w, b, d) => { for (let i = 0; i < w.dyn.length; i++) { const q = w.dyn[i]; if (q.burn > 0) continue; const e = q.r || q.hw || 20; if (Math.abs(q.y - b.y) < e + R && (q.x - b.x) * d > 0 && Math.abs(q.x - b.x) < e + R + 14) return true; } return false; };
-  // one step of one bot. B is the thinking budget shared by all bots this frame (the pretend-runs cost time). Returns what happened: 'died', 'fin', 'leave' or ''
-  function botStep(bt, w, dt, B) {
-    const b = bt.b, m = w.map;
-    bt.age += dt; bt.adv = false;
-    if (bt.dead > 0) { bt.dead -= dt; if (bt.dead <= 0) { botSpawn(bt, w); if (bt.gh) bt.b.ghost = true; } return ''; }
-    if (bt.type === 'runner' && !bt.finished) {   // stuck on one part of the route too long (or it keeps falling there): it comes back a little further on, the way a player would at a checkpoint
-      bt.iT = (bt.iT || 0) + dt;
-      if (bt.iT > 14 || (bt.dI || 0) >= 3) { bt.i = Math.min(m.path.length - 1, bt.i + (bt.iT > 14 ? 2 : 1)); bt.minI = bt.i; bt.iT = 0; bt.dI = 0; bt.goal = null; bt.jplan = null; bt.dead = 0.01; return ''; }
+  /* ----- what bots say. Lots of different lines, picked at random and never the same one twice in a row in a world, so it feels like real people ----- */
+  const L = {
+    hi: ['hi', 'hey', 'hello!', 'yo', 'hey all', 'hii', 'sup', 'hello everyone', 'hi :)', 'heyy', 'wassup', 'o/'],
+    bye: ['cya', 'bye!', 'gtg', 'bye bye', 'later', 'see ya'],
+    die: ['ugh', 'nooo', 'lava again 😭', 'that jump tho', 'oops', 'why is this so hard', 'i slipped', 'rip', 'NOOO', 'so close', 'lol i fell', 'not again', 'my bad', 'ow', 'whyyy'],
+    restart: ['ok starting over', 'restarting lol', 'back to the start i guess', 'one more try', 'from the top', 'round 2'],
+    retry: ['ok trying again', 'again', 'let me try that again', 'hmm another way maybe', 'there has to be a way up'],
+    stuck: ['how do i get up there?', 'im stuck lol', 'anyone know the way?', 'where do i go', 'hmm', 'this part is hard', 'is there a trick here?', 'how did u get past this'],
+    gate: ['can someone open the gate?', 'anyone near a red button?', 'this gate is closed :(', 'gate pls', 'who has the button', 'need someone on the button', 'can u hit the button? the gate is shut'],
+    gateOk: ['gate is open!', 'its open, go go', 'got the button', 'button pressed!', 'there you go', 'open now'],
+    fin: ['gg', 'done!', 'made it!!', 'finally', 'ez', 'yesss', 'GG', 'woo finished', 'that was fun', 'first try (not)', 'lets goo'],
+    finOther: ['gg', 'nice', 'wow fast', 'gg wp', 'how are you so fast', 'congrats!'],
+    build: ['building a tower', 'stairs anyone?', 'made a little bridge', 'look at my tower', 'i like building', 'construction time', 'need more blocks lol', 'tower time', 'check this out'],
+    explore: ['whats up here?', 'going up', 'exploring', 'this map is huge', 'found a secret spot maybe', 'wheee', 'what is down there', 'so many places', 'nice view from here', 'i wonder whats over there'],
+    chill: ['just chilling', 'brb', 'afk for a sec', 'so peaceful', 'this level looks cool', 'anyone here?', 'i like this map', 'hmm', 'ok', 'lol', 'whats everyone doing', 'nice music'],
+    fun: ['wheee', 'boing boing', 'look at me', 'hehe', 'race me!', 'spinnn', 'weee'],
+    seeBuild: ['nice tower!', 'cool build', 'want help with that?', 'i can add blocks', 'need dirt?', 'whoa what is that', 'big tower', 'can i help build?', 'that looks sick'],
+    helpBuild: ['adding a block', 'here u go', 'helping!', 'one more block', 'teamwork'],
+    ok: ['ok', 'sure', 'okay!', 'on it', 'k', 'got it', 'yep', 'ok!'],
+    follow: ['coming!', 'right behind you', 'ok following', 'lead the way', 'im coming'],
+    wait: ['ok ill wait', 'waiting', 'sure, waiting', 'take ur time'],
+    btn: ['on it', 'ill get the button', 'going for the button', 'i got it', 'one sec'],
+    noBtn: ['i dont see a button', 'which button?', 'idk where the button is', 'cant find it sry'],
+    buildFor: ['sure, building', 'ill make you some stairs', 'one bridge coming up', 'ok placing dirt'],
+    nope: ['i cant do that lol', 'i dont have that', 'idk how', 'sorry no'],
+    thanks: ['np', 'anytime', 'no problem', 'ur welcome', ':)'],
+    gl: ['u too', 'thx', 'you too!', 'good luck!'],
+    first: ['ok going!', 'fine ill go first', 'here i go'],
+    go: ['lets go!', 'go go go', 'yeah!']
+  };
+  const EM = { happy: 0, laugh: 1, angry: 2, q: 3, cry: 5, cool: 6, love: 7, wow: 8, sleepy: 9 };
+  function say(bt, st, pool, force) {
+    if (!force && ((bt.chatCd > 0) || (st.cd > 0))) return false;
+    const list = L[pool]; if (!list) return false;
+    let s = list[Math.floor(Math.random() * list.length)];
+    for (let k = 0; k < 4 && st.recent.indexOf(s) >= 0; k++) s = list[Math.floor(Math.random() * list.length)];
+    st.recent.push(s); if (st.recent.length > 14) st.recent.shift();
+    bt.out.push({ k: 'say', s }); bt.chatCd = brnd(16, 50) / bt.chatty; st.cd = brnd(3.5, 9); return true;
+  }
+  function emote(bt, st, i, force) { if (!force && bt.chatCd > 0) return; bt.out.push({ k: 'emo', i }); bt.chatCd = brnd(6, 20) / bt.chatty; }
+  const pickEm = a => a[Math.floor(Math.random() * a.length)];
+  /* ----- building: little things only, a few blocks each, and never more than 30 bot blocks in a world (the oldest go first) ----- */
+  const BOT_TILES = 30;
+  function tileFree(w, x, y, ctx) {
+    if (x < 1 || y < 1 || x >= w.W - 1 || y >= w.H - 1 || tile(w, x, y) !== 0) return false;
+    for (const z of noBuild(w.map)) if (x >= z.tx0 && x <= z.tx1 && y >= z.ty0 && y <= z.ty1) return false;
+    const cx = (x + 0.5) * TS, cy = (y + 0.5) * TS;
+    for (const p of ctx.balls) if (Math.abs(p.x - cx) < TS / 2 + R + 3 && Math.abs(p.y - cy) < TS / 2 + R + 3) return false;
+    for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) continue; const e = d.r || d.hw || 20; if (Math.abs(d.x - cx) < TS / 2 + e + 2 && Math.abs(d.y - cy) < TS / 2 + e + 2) return false; }
+    for (const s of w.see) if (Math.abs(s.cx - cx) < s.hl + TS && Math.abs(s.cy - cy) < TS * 1.5) return false;
+    return true;
+  }
+  function buildPlan(bt, w, ctx, kind) {   // a tower, some stairs or a bridge over a gap, right next to the bot
+    const b = bt.b, gy = Math.floor((b.y + R + 2) / TS), bx = Math.floor(b.x / TS), s = Math.random() < 0.5 ? -1 : 1, T = [];
+    const solid = (x, y) => BSOLID(tile(w, x, y));
+    kind = kind || pickEm(['tower', 'tower', 'stairs', 'stairs', 'bridge', 'bridge', 'wall']);
+    if (kind === 'bridge') {
+      for (const d of [s, -s]) { let c = bx + d * 1, k = 0; while (k < 6 && solid(c, gy)) { c += d; k++; } const g0 = c; let gap = 0; while (gap < 5 && tile(w, c, gy) === 0) { c += d; gap++; } if (gap >= 1 && gap <= 4 && solid(c, gy)) { for (let x = g0; x !== c; x += d) T.push([x, gy]); return { tiles: T, kind, k: 0, t: 0 }; } }
+      kind = 'tower';
     }
+    if (kind === 'stairs') { const c0 = bx + s * 2; for (let k = 0; k < 3; k++) { const c = c0 + s * k; if (!solid(c, gy)) return null; for (let h = 1; h <= k + 1; h++) T.push([c, gy - h]); } }
+    else if (kind === 'wall') { const c = bx + s * 3; if (!solid(c, gy) || !solid(c + s, gy)) return null; for (let h = 1; h <= 2; h++) { T.push([c, gy - h]); T.push([c + s, gy - h]); } }
+    else { const c = bx + s * 2, hh = 2 + Math.floor(Math.random() * 3); if (!solid(c, gy)) return null; for (let h = 1; h <= hh; h++) T.push([c, gy - h]); }
+    for (const q of T) if (tile(w, q[0], q[1]) !== 0) return null;
+    return { tiles: T, kind, k: 0, t: 0 };
+  }
+  function putTile(bt, w, ctx, x, y) {
+    const st = ctx.st; if (!tileFree(w, x, y, ctx)) return false;
+    if (st.botTiles.length >= BOT_TILES) { const o = st.botTiles.shift(); if (o && tile(w, o[0], o[1]) === 1) bt.out.push({ k: 'tl', x: o[0], y: o[1], v: -1 }); }
+    st.botTiles.push([x, y]); bt.out.push({ k: 'tl', x, y, v: 1 }); bt.built++; return true;
+  }
+  const NOCTX = { balls: [], players: [], st: { cd: 0, recent: [], botTiles: [] } };
+  function doReply(bt, w, ctx, r) {   // the bot answers someone (or helps them), a moment after they asked
+    const st = ctx.st;
+    switch (r.k) {
+      case 'hi': case 'bye': case 'thanks': case 'gl': case 'go': case 'first': case 'nope': case 'noBtn': case 'seeBuild': case 'finOther': say(bt, st, r.k, true); if (r.k === 'hi' && Math.random() < 0.3) emote(bt, st, EM.happy, true); break;
+      case 'praise': emote(bt, st, pickEm([EM.happy, EM.love, EM.cool, EM.laugh]), true); break;
+      case 'follow': say(bt, st, Math.random() < 0.5 ? 'follow' : 'ok', true); bt.task = { k: 'follow', id: r.id, until: bt.age + brnd(20, 40) }; bt.idle = 0; bt.plan = null; break;
+      case 'wait': say(bt, st, 'wait', true); bt.idle = brnd(6, 12); break;
+      case 'btn': say(bt, st, 'btn', true); bt.task = { k: 'btn', di: r.di, until: bt.age + 45 }; bt.goal = null; bt.idle = 0; bt.plan = null; break;
+      case 'build': say(bt, st, 'buildFor', true); bt.task = { k: 'buildFor', x: r.x, y: r.y, until: bt.age + 40 }; bt.idle = 0; break;
+      case 'helpB': if (Math.random() < 0.6) say(bt, st, 'helpBuild', true); bt.task = { k: 'helpB', x: r.x, y: r.y, n: 1 + Math.floor(Math.random() * 2), until: bt.age + 35 }; bt.idle = 0; break;
+    }
+  }
+  function drive(bt, w, dt, B, d, onTarget) {   // rolling and jumping toward bt.tcx, the way a player would
+    const b = bt.b; let ax = d, jheld = false;
+    if (b.water) jheld = true;
+    else if (b.ground) {
+      const below = tile(w, Math.floor((b.x + d * (R + 4)) / TS), Math.floor((b.y + R + 6) / TS)), ahead = tile(w, Math.floor((b.x + d * (R + 26)) / TS), Math.floor(b.y / TS));
+      bt.airAx = null; bt.gT -= dt;
+      if (bt.gT <= 0 && !onTarget && B.n > 0) { B.n--; bt.gT = 0.1; bt.danger = Math.random() < 0.35 + bt.skill * 0.65 ? botSim(bt, w, d, 0.5, 9, 0).dead : false; }   // (would just rolling on end badly? the less skilled do not always look)
+      const blockedAhead = bt.stT > 1.2 || (Math.abs(b.vx) < 40 && dynAhead(w, b, d));
+      if (!onTarget && bt.back <= 0 && (below === 0 || below === 2 || below === 5 || ahead === 2 || BSOLID(ahead) || bt.danger || blockedAhead)) {
+        if (bt.jumpAt === 0) { bt.jumpAt = bt.age + (Math.random() < bt.err ? brnd(0.06, 0.24) : 0.0001); bt.tap = Math.random() < bt.err * 0.6; }   // (now and then a jump is late, or too short: the less skilled miss some)
+        if (bt.age >= bt.jumpAt) { b.jbuf = 0.12; bt.hold = 0; bt.jumpAt = 0; jheld = true; }
+      } else bt.jumpAt = 0;
+      if (b.flat && b.gType !== 3 && onTarget) ax = 0;
+    } else {
+      bt.hold += dt; jheld = bt.hold < (bt.tap ? 0.1 : 0.36);
+      const dx = bt.tcx - b.x, stop = 0.5 * b.vx * b.vx / 1800 + 6;
+      let aa = ax; if (Math.abs(dx) < stop && Math.sign(b.vx) === Math.sign(dx)) aa = -Math.sign(b.vx);
+      bt.airT -= dt;
+      if (bt.airT <= 0 && B.n > 0 && Math.random() < 0.25 + bt.skill * 0.8) { B.n--; bt.airT = 0.1 + Math.random() * 0.06; bt.airAx = botAirPick(bt, w, aa); }
+      ax = bt.airAx === null ? aa : bt.airAx;
+    }
+    return { ax, jheld };
+  }
+  // one step of one bot. B is the thinking budget shared by all bots this frame (the pretend-runs cost time). ctx: who is around, and the world's chat memory.
+  // Returns 'died', 'fin', 'leave' or ''; what it says and builds is left in bt.out for the game to show and apply.
+  function botStep(bt, w, dt, B, ctx) {
+    ctx = ctx || NOCTX; const st = ctx.st, b = bt.b, m = w.map, path = m.path;
+    bt.age += dt; bt.adv = false; if (bt.chatCd > 0) bt.chatCd -= dt;
+    if (bt.first) { bt.first = false; if (Math.random() < 0.2) bt.reply = { t: brnd(1, 6), k: 'hi' }; }
+    if (bt.reply) { bt.reply.t -= dt; if (bt.reply.t <= 0) { const r = bt.reply; bt.reply = null; doReply(bt, w, ctx, r); } }
+    if (bt.dead > 0) { bt.dead -= dt; if (bt.dead <= 0) botSpawn(bt, w); return ''; }
+    if (bt.kind === 'racer' && !bt.finished && !bt.task) {   // stuck on one part of the route too long (or keeps falling there): back a little further on, like a checkpoint
+      bt.iT = (bt.iT || 0) + dt;
+      if (bt.iT > 16 || (bt.dI || 0) >= 3) { if (bt.iT > 16) say(bt, st, 'stuck'); bt.i = Math.min(path.length - 1, bt.i + (bt.iT > 16 ? 2 : 1)); bt.minI = bt.i; bt.iT = 0; bt.dI = 0; bt.goal = null; bt.jplan = null; bt.dead = 0.01; return ''; }
+    }
+    const T = bt.task;
+    if (T && (T.until < bt.age || (T.k === 'btn' && (!w.doors[T.di] || w.doors[T.di].gone || w.doors[T.di].open)))) { if (T.k === 'btn' && w.doors[T.di] && w.doors[T.di].open) say(bt, st, 'gateOk', true); bt.task = null; bt.goal = null; botPlan(bt, w); }
+    if (!bt.task && bt.age > bt.life - 2.5 && !bt.byeSaid && !bt.finished) { bt.byeSaid = true; if (Math.random() < 0.3) say(bt, st, 'bye', true); }
+    if (!bt.task && bt.age > bt.life && !bt.finished) return 'leave';
     let ax = 0, jheld = false;
+    const flatG = b.ground && b.flat;
+    if (flatG && !bt.task && !bt.plan && bt.idle <= 0 && !bt.fun) {   // now and then: sit for a bit, say something, or do something silly
+      const sitP = bt.kind === 'chill' ? 0.05 : bt.kind === 'racer' ? 0.006 : 0.018;
+      if (Math.random() < dt * sitP) { bt.idle = brnd(1, bt.kind === 'chill' ? 7 : 4); if (Math.random() < 0.12) emote(bt, st, EM.sleepy); }
+      else if (Math.random() < dt * 0.004 * (bt.kind === 'racer' ? 0.4 : 1)) { bt.fun = Math.random() < 0.6 ? { k: 'hop', n: 2 + Math.floor(Math.random() * 4) } : { k: 'spin', t: brnd(1.2, 2.4) }; if (Math.random() < 0.3) say(bt, st, 'fun'); }
+      else if (Math.random() < dt * 0.008 * bt.chatty) say(bt, st, bt.kind === 'racer' ? (Math.random() < 0.5 ? 'chill' : 'go') : bt.kind === 'builder' ? 'build' : bt.kind === 'explorer' ? 'explore' : 'chill');
+    }
     if (bt.finished) { bt.leaveT -= dt; if (bt.leaveT <= 0) return 'leave'; }
     else if (bt.idle > 0) bt.idle -= dt;
-    else if (bt.type === 'wander') {
+    else if (bt.fun) {
+      const f = bt.fun;
+      if (f.k === 'hop') { if (b.ground) { if (f.n-- <= 0) bt.fun = null; else b.jbuf = 0.12; } jheld = Math.random() < 0.5; }
+      else { f.t -= dt; ax = Math.sin(bt.age * 9) > 0 ? 1 : -1; if (f.t <= 0) bt.fun = null; }
+    } else if (bt.plan) {   // building: one block at a time
+      const p = bt.plan; p.t -= dt;
+      if (p.t <= 0) {
+        p.t = brnd(0.45, 1.1);
+        while (p.k < p.tiles.length && !putTile(bt, w, ctx, p.tiles[p.k][0], p.tiles[p.k][1])) p.k++;
+        p.k++;
+        if (p.k >= p.tiles.length) { bt.plan = null; bt.idle = brnd(1.5, 4); if (Math.random() < 0.5) say(bt, st, 'build'); else if (Math.random() < 0.3) emote(bt, st, pickEm([EM.cool, EM.happy])); if (bt.kind === 'builder') exGoal(bt, w); }
+      }
+    } else if (bt.type === 'wander' || (bt.kind === 'chill' && !bt.task)) {
       bt.wT -= dt;
-      if (bt.wT <= 0) { bt.wT = brnd(0.4, 1.6); const r = Math.random(); bt.wax = r < 0.4 ? -1 : r < 0.8 ? 1 : 0; }
-      const sx = m.start[0]; if (b.x < sx - 300) bt.wax = 1; else if (b.x > sx + 300) bt.wax = -1;
+      if (bt.wT <= 0) { bt.wT = brnd(0.4, 1.8); const r = Math.random(); bt.wax = r < 0.38 ? -1 : r < 0.76 ? 1 : 0; }
+      const sx = bt.anchor, rr = bt.kind === 'chill' ? 220 : 320; if (b.x < sx - rr) bt.wax = 1; else if (b.x > sx + rr) bt.wax = -1;
       ax = bt.wax;
       if (b.ground && ax) { const below = tile(w, Math.floor((b.x + ax * (R + 6)) / TS), Math.floor((b.y + R + 6) / TS)); if (below === 0 || below === 2 || below === 5) bt.wax = ax = -ax; }
-      if (b.ground && Math.random() < dt * 1.1) { b.jbuf = 0.12; bt.wHigh = Math.random() < 0.5; }
+      if (b.ground && Math.random() < dt * (bt.kind === 'chill' ? 0.4 : 1.1)) { b.jbuf = 0.12; bt.wHigh = Math.random() < 0.5; }
       jheld = bt.wHigh;
-      if (bt.age > bt.life) return 'leave';
     } else {
-      if (b.ground && b.flat && !botLand(bt, w)) { bt.lostT += dt; if (bt.lostT > 6) { bt.dead = 0.01; return ''; } }   // (somewhere off the route: back to where it had got to)
-      if (b.ground && b.flat) {
-        if (bt.far && !inRun(b.x, bt.far)) bt.tcx = runMid(bt.far);
-        else if (bt.bRun) bt.tcx = m.path[bt.i + 1] ? runMid(bt.bRun) : m.flag[0] * TS;
+      // where to go: helping someone, or the bot's own plan (the route, or somewhere to explore)
+      let onT = false;
+      if (bt.task && bt.task.k === 'follow') {
+        const p = (ctx.players || []).find(q => q.id === bt.task.id);
+        if (!p) bt.task = null;
+        else { const side = Math.sign(b.x - p.x) || 1; bt.tcx = p.x + side * TS * 1.6; onT = Math.abs(bt.tcx - b.x) < 30 && Math.abs(p.y - b.y) < TS * 2; if (b.ground && p.y < b.y - TS * 2 && Math.abs(p.x - b.x) < TS * 4 && Math.random() < dt * 2) b.jbuf = 0.12; }
+      } else if (bt.task && (bt.task.k === 'buildFor' || bt.task.k === 'helpB')) {
+        const t = bt.task, gx = (t.x + 0.5) * TS + (t.k === 'helpB' ? (b.x < (t.x + 0.5) * TS ? -1.6 : 1.6) * TS : 0); bt.tcx = gx;
+        if (Math.abs(b.x - gx) < TS * 2.5 && b.ground) {
+          if (t.k === 'buildFor') { const pl = buildPlan(bt, w, ctx, Math.random() < 0.5 ? 'bridge' : 'stairs'); bt.task = null; if (pl) bt.plan = pl; else say(bt, st, 'nope', true); }
+          else { let top = t.y; while (top > 1 && BSOLID(tile(w, t.x, top - 1))) top--; let n = 0; for (let k = 0; k < t.n; k++) if (top - 1 - k > 1 && t.y - (top - 1 - k) < 9 && putTile(bt, w, ctx, t.x, top - 1 - k)) n++; bt.task = null; bt.idle = brnd(1, 3); if (n && Math.random() < 0.4) emote(bt, st, EM.happy); }
+        }
+      } else {
+        if (b.ground && b.flat && !botLand(bt, w)) { bt.lostT += dt; if (bt.lostT > 6) { bt.dead = 0.01; return ''; } }
+        if (b.ground && b.flat) { if (bt.far && !inRun(b.x, bt.far)) bt.tcx = runMid(bt.far); else if (bt.bRun) bt.tcx = path[bt.i + (bt.dir || 1)] ? runMid(bt.bRun) : (bt.dir || 1) > 0 ? m.flag[0] * TS : runMid(bt.bRun); }
+        if (bt.kind !== 'racer' && bt.goalI !== undefined) {   // explorers and builders: got there (or gave up)? stop a while, then somewhere else
+          bt.iT = (bt.iT || 0) + dt;
+          if (Math.abs(bt.i - bt.goalI) <= 1 || bt.iT > 20) { bt.idle = brnd(1.5, 6); if (Math.random() < 0.25) say(bt, st, bt.kind === 'builder' ? 'build' : 'explore'); if (Math.random() < 0.2) bt.ex = ['up', 'down', 'side'][Math.floor(Math.random() * 3)]; exGoal(bt, w); }
+        }
+        if (bt.kind === 'builder' && b.ground && b.flat && !bt.goal) {
+          bt.buildT -= dt;
+          if (bt.buildT <= 0) { bt.buildT = brnd(14, 32); if (bt.built < 16) { const pl = buildPlan(bt, w, ctx); if (pl) { bt.plan = pl; if (Math.random() < 0.3) say(bt, st, 'build'); } } }
+        }
       }
-      // a closed gate in the way: off to press its red button first (it stays open a whole minute). A gate that needs a crate on a plate, or a button it cannot reach, it slips through after a while
+      // a closed gate in the way (or the one somebody asked us to open): off to press its red button first. One that needs a crate on a plate, or a button out of reach, it asks about, and slips through after a while
       if (b.gatePass > 0) b.gatePass -= dt;
-      if (!bt.goal && b.ground) { const dg = Math.sign(bt.tcx - b.x) || 1, di = doorAhead(w, b, dg, Math.abs(bt.tcx - b.x)); if (di >= 0) { const q = w.btns.find(q => !q.gone && q.to.indexOf(di) >= 0); bt.goal = { di, t: 0, x: q ? (q.x + 0.5) * TS : null }; } }
+      if (bt.task && bt.task.k === 'btn' && !bt.goal) { const q = w.btns.find(q => !q.gone && q.to.indexOf(bt.task.di) >= 0); bt.goal = { di: bt.task.di, t: 0, x: q ? (q.x + 0.5) * TS : null, help: 1 }; }
+      if (!bt.goal && b.ground && (!bt.task || bt.task.k !== 'follow')) { const dg = Math.sign(bt.tcx - b.x) || 1, di = doorAhead(w, b, dg, Math.abs(bt.tcx - b.x)); if (di >= 0) { const q = w.btns.find(q => !q.gone && q.to.indexOf(di) >= 0); bt.goal = { di, t: 0, x: q ? (q.x + 0.5) * TS : null }; } }
       if (bt.goal) {
         const g = bt.goal, dd = w.doors[g.di]; g.t += dt;
-        if (!dd || dd.gone || dd.open) bt.goal = null;
-        else if (g.x === null ? g.t > 3 : g.t > 14) { b.gatePass = 4; bt.goal = null; }
-        else if (g.x !== null) {
-          const q = w.btns.find(q => !q.gone && q.to.indexOf(g.di) >= 0), gy = q ? q.y * TS : 0;
-          bt.tcx = g.x;
-          if (q && b.y + R < gy - 30 + 40 && b.y + R > gy - 12 && Math.abs(b.x - g.x) < TS) { /* standing on it */ }
-          else if (q && b.y + R > gy + 12) {   // (it is up on a ledge)
-            if (b.ground) {
-              g.pt = (g.pt || 0) - dt;
-              if (g.pt <= 0) { g.pt = 0.2; const pl = planReach(bt, w, g.x, gy, B); if (pl) { bt.jplan = pl; b.jbuf = 0.12; bt.hold = 0; } else { g.away = g.away || (Math.random() < 0.5 ? -1 : 1); bt.tcx = g.x + g.away * TS * 3; } }
-              else if (g.away) bt.tcx = g.x + g.away * TS * 3;
+        if (!dd || dd.gone || dd.open) { bt.goal = null; if (g.help) { say(bt, st, 'gateOk', true); bt.task = null; } }
+        else if (g.x === null ? g.t > 6 : g.t > 16) { if (!g.help) b.gatePass = 4; bt.goal = null; if (g.help) { say(bt, st, 'noBtn', true); bt.task = null; } }
+        else {
+          if (!g.asked && g.t > (g.x === null ? 1 : 3) && !g.help) { g.asked = true; if (Math.random() < 0.5) say(bt, st, 'gate'); else if (Math.random() < 0.3) emote(bt, st, EM.q); }
+          if (g.x !== null) {
+            const q = w.btns.find(q => !q.gone && q.to.indexOf(g.di) >= 0), gy = q ? q.y * TS : 0;
+            bt.tcx = g.x;
+            if (q && b.y + R > gy + 12) {   // (it is up on a ledge)
+              if (b.ground) {
+                g.pt = (g.pt || 0) - dt;
+                if (g.pt <= 0) { g.pt = 0.2; const pl = planReach(bt, w, g.x, gy, B); if (pl) { bt.jplan = pl; b.jbuf = 0.12; bt.hold = 0; } else { g.away = g.away || (Math.random() < 0.5 ? -1 : 1); bt.tcx = g.x + g.away * TS * 3; } }
+                else if (g.away) bt.tcx = g.x + g.away * TS * 3;
+              }
             }
           }
         }
@@ -1159,45 +1335,79 @@
         else {
           const dx = bt.tcx - b.x, axp = pl.t < pl.t0 ? pl.ax0 : Math.abs(dx) < 0.5 * b.vx * b.vx / 1800 + 4 && Math.sign(b.vx) === Math.sign(dx) ? -Math.sign(b.vx) : Math.sign(dx);
           const ev = step(b, w, axp, pl.t < pl.hold, dt);
-          if (ev.lava || ev.splat || botOob(w, b)) { bt.dead = 0.6; bt.jplan = null; bt.dI = (bt.dI || 0) + 1; bt.goal = null; return 'died'; }
+          if (ev.lava || ev.splat || botOob(w, b)) { bt.jplan = null; return botDied(bt, w, ctx); }
           return '';
         }
       }
-      // stuck (a crate, a closed gate, a wall it cannot see): first a jump, then a step back and a run at it, and in the end back to the last good spot
+      // stuck (a crate, a closed gate, a wall it cannot see): first a jump, then a step back and a run at it
       if (Math.abs(b.x - bt.stX) > 40) { bt.stX = b.x; bt.stT = 0; } else bt.stT += dt;
       let d = Math.sign(bt.tcx - b.x) || 1;
       if (bt.back > 0) { bt.back -= dt; d = -d; }
-      else if (bt.stT > 4 && bt.stT < 4 + dt * 1.5) bt.back = brnd(0.3, 0.7);
-      if (bt.stT > 14) { bt.dead = 0.01; return ''; }
-      ax = d;
-      const onTarget = Math.abs(bt.tcx - b.x) < 6 && bt.back <= 0;
-      if (b.water) jheld = true;
-      else if (b.ground) {
-        const below = tile(w, Math.floor((b.x + d * (R + 4)) / TS), Math.floor((b.y + R + 6) / TS)), ahead = tile(w, Math.floor((b.x + d * (R + 26)) / TS), Math.floor(b.y / TS));
-        bt.airAx = null; bt.gT -= dt;
-        if (bt.gT <= 0 && !onTarget && B.n > 0) { B.n--; bt.gT = 0.1; bt.danger = botSim(bt, w, d, 0.5, 9, 0).dead; }   // (would just rolling on end badly?)
-        const blockedAhead = bt.stT > 1.2 || (Math.abs(b.vx) < 40 && dynAhead(w, b, d));
-        if (!onTarget && bt.back <= 0 && (below === 0 || below === 2 || below === 5 || ahead === 2 || BSOLID(ahead) || bt.danger || blockedAhead)) {
-          if (bt.jumpAt === 0) { bt.jumpAt = bt.age + (Math.random() < bt.err ? brnd(0.06, 0.16) : 0.0001); bt.tap = false; }
-          if (bt.age >= bt.jumpAt) { b.jbuf = 0.12; bt.hold = 0; bt.jumpAt = 0; jheld = true; }
-        } else bt.jumpAt = 0;
-        if (b.flat && b.gType !== 3 && onTarget) ax = 0;
-      } else {
-        bt.hold += dt; jheld = bt.hold < (bt.tap ? 0.1 : 0.36);
-        const dx = bt.tcx - b.x, stop = 0.5 * b.vx * b.vx / 1800 + 6;
-        let aa = ax; if (Math.abs(dx) < stop && Math.sign(b.vx) === Math.sign(dx)) aa = -Math.sign(b.vx);
-        bt.airT -= dt;
-        if (bt.airT <= 0 && B.n > 0) { B.n--; bt.airT = 0.1 + Math.random() * 0.06; bt.airAx = botAirPick(bt, w, aa); }
-        ax = bt.airAx === null ? aa : bt.airAx;
-      }
-      if (bt.age > bt.life && !bt.finished) return 'leave';
+      else if (bt.stT > 4 && bt.stT < 4 + dt * 1.5 && !onT) { bt.back = brnd(0.3, 0.7); if (Math.random() < 0.15) say(bt, st, 'stuck'); }
+      if (bt.stT > 14 && bt.kind !== 'racer' && !bt.task) { exGoal(bt, w); bt.stT = 0; }
+      onT = onT || (Math.abs(bt.tcx - b.x) < 6 && bt.back <= 0);
+      const r = drive(bt, w, dt, B, d, onT); ax = r.ax; jheld = r.jheld;
     }
     const ev = step(b, w, ax, jheld, dt);
-    if (ev.lava || ev.splat || botOob(w, b)) { bt.dead = 0.6; bt.deadX = b.x; bt.deadY = b.y; bt.dI = (bt.dI || 0) + 1; bt.goal = null; return 'died'; }
+    if (ev.lava || ev.splat || botOob(w, b)) return botDied(bt, w, ctx);
     const f = m.finish;
-    if (!bt.finished && bt.type === 'runner' && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) { bt.finished = true; bt.leaveT = brnd(5, 14); return 'fin'; }
+    if (!bt.finished && bt.type === 'runner' && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) {
+      bt.finished = true; bt.leaveT = brnd(6, 18); bt.task = null;
+      if (Math.random() < 0.65) say(bt, st, 'fin', true); else emote(bt, st, pickEm([EM.cool, EM.happy, EM.love, EM.laugh]), true);
+      return 'fin';
+    }
     return '';
   }
+  function botDied(bt, w, ctx) {   // a fall: back at the last good spot, or (some of the less skilled) all the way back at the start
+    const st = ctx.st, b = bt.b;
+    bt.dead = 0.6; bt.deadX = b.x; bt.deadY = b.y; bt.dI = (bt.dI || 0) + 1; bt.goal = null; bt.jplan = null; bt.fun = null; bt.plan = null;
+    if (bt.kind === 'racer' && bt.skill < 0.6 && bt.i > 10 && Math.random() < 0.18) { bt.i = 0; bt.minI = 0; bt.iT = 0; bt.dI = 0; say(bt, st, 'restart', true); }
+    else if (Math.random() < 0.3) say(bt, st, bt.dI >= 2 ? 'retry' : 'die');
+    else if (Math.random() < 0.25) emote(bt, st, pickEm([EM.cry, EM.angry, EM.laugh, EM.wow]));
+    if (bt.dI >= 2) bt.err = Math.max(0.003, bt.err * 0.7);   // (trying again, a bit more carefully)
+    return 'died';
+  }
+  /* ----- the bots as a crowd: who answers when a player asks for something, who notices a player building, who says gg ----- */
+  function doorNear(w, x, y) { let best = -1, bd = 1e9; w.doors.forEach((d, i) => { if (d.gone || d.open) return; const dd = Math.abs((d.x + 0.5) * TS - x) + Math.abs((d.y + d.h / 2) * TS - y); if (dd < 30 * TS && dd < bd && w.btns.some(q => !q.gone && q.to.indexOf(i) >= 0)) { bd = dd; best = i; } }); return best; }
+  function botSocial(bots, w, ctx, dt) {   // ctx.asks / ctx.builds / ctx.fins: what happened since last time (the caller clears them)
+    const st = ctx.st; if (st.cd > 0) st.cd -= dt;
+    const alive = bots.filter(bt => bt.b && !(bt.dead > 0) && !bt.finished);
+    const near = (x, y, r) => alive.filter(bt => Math.abs(bt.b.x - x) < r && Math.abs(bt.b.y - y) < r * 0.8).sort(() => Math.random() - 0.5);
+    for (const a of ctx.asks || []) {
+      const ns = near(a.x, a.y, 1800); if (!ns.length) continue;
+      const one = (k, extra, p) => { const bt = ns.find(b => !b.reply && !b.task); if (bt && Math.random() < (p === undefined ? 0.65 : p)) { bt.reply = Object.assign({ t: brnd(0.7, 2.4), k }, extra || {}); return bt; } return null; };
+      switch (a.kind) {
+        case 'hi': for (const bt of ns.slice(0, 3)) if (!bt.reply && Math.random() < 0.45) bt.reply = { t: brnd(0.6, 3), k: 'hi' }; break;
+        case 'wait': for (const bt of ns.slice(0, 2)) if (!bt.reply && Math.random() < 0.55) bt.reply = { t: brnd(0.5, 2), k: 'wait' }; break;
+        case 'follow': one('follow', { id: a.id }); break;
+        case 'build': { const bt = ns.find(b => b.kind === 'builder' && !b.task && !b.reply) || ns.find(b => !b.task && !b.reply); if (bt && Math.random() < 0.6) bt.reply = { t: brnd(0.8, 2.5), k: 'build', x: Math.floor(a.x / TS), y: Math.floor(a.y / TS) }; break; }
+        case 'help': case 'btn': { const di = doorNear(w, a.x, a.y); if (di >= 0) one('btn', { di }); else if (a.kind === 'help') one('follow', { id: a.id }, 0.5); else one('noBtn', null, 0.5); break; }
+        case 'bye': case 'go': case 'first': one(a.kind, null, 0.45); break;
+        case 'thanks': case 'gl': one(a.kind, null, 0.6); break;
+        case 'praise': one('praise', null, 0.45); break;
+        case 'nope': one('nope', null, 0.35); break;
+      }
+    }
+    if (ctx.builds && ctx.builds.length) {   // a player building: someone notices, and now and then a bot comes over to add a block
+      st.bAcc = (st.bAcc || 0) + ctx.builds.length; st.bLast = ctx.builds[ctx.builds.length - 1];
+      if (st.bAcc >= 3) {
+        st.bAcc = 0; const q = st.bLast, ns = near((q.x + 0.5) * TS, q.y * TS, 1400);
+        if (ns.length) {
+          if (!ns[0].reply && Math.random() < 0.55) ns[0].reply = { t: brnd(1, 3), k: 'seeBuild' };
+          const hb = ns.find(b => (b.kind === 'builder' || Math.random() < 0.25) && !b.task && !b.reply);
+          if (hb && Math.random() < 0.4) hb.reply = { t: brnd(2, 5), k: 'helpB', x: q.x, y: q.y };
+        }
+      }
+    }
+    for (const f of ctx.fins || []) { const ns = near(f.x, f.y, 2600), bt = ns.find(b => !b.reply); if (bt && Math.random() < 0.45) bt.reply = { t: brnd(0.8, 2.5), k: 'finOther' }; }
+  }
+  // what a player's chat message asks for, if anything: ('emo', i) for the emojis and ready-made phrases, ('say', a, b) for the built messages
+  function askKind(t, a, b) {
+    if (t === 'emo') { if (a < 10) return a === 0 || a === 1 || a === 7 || a === 6 ? 'praise' : null; return ({ 0: 'hi', 1: 'bye', 4: 'thanks', 6: 'praise', 7: 'praise', 8: 'praise', 9: 'gl', 10: 'follow', 11: 'follow', 12: 'wait', 13: 'help', 17: 'go', 18: 'praise' })[a - 10] || null; }
+    if (t === 'say') { if (a === 0) return ['help', 'wait', 'follow', 'first', 'btn', 'btn', 'nope', 'build', 'build', 'nope', 'nope', 'nope'][b] || null; if (a === 1) return b === 0 ? 'build' : 'nope'; if (a === 8) return 'thanks'; return null; }
+    return null;
+  }
+  const botCtx = () => ({ balls: [], players: [], asks: [], builds: [], fins: [], st: { cd: 0, recent: [], botTiles: [] } });
   const BOT_NAMES = ['Max', 'Luna', 'Kai', 'Zoe', 'Finn', 'Nova', 'Leo', 'Mia', 'Axel', 'Ruby', 'Jax', 'Ivy', 'Otto', 'Eli', 'Sky', 'Dex', 'Remy', 'Tess', 'Bo', 'Nico', 'Pip', 'Gus', 'Vee', 'Cleo', 'Rex', 'Juno', 'Milo', 'Ash', 'Fox', 'Zed'];
   const BOT_ODD = ['xX_', 'n0pe', 'qwerty', 'zzz', 'a', '...', 'lol', 'asdf', 'TEST', 'uwu', '???', 'x_x', 'ok', 'hi', 'P1ayer', 'bob', '.', '_', '~~', 'No1', 'u8', 'dfgh'];
   const BOT_COLORS = ['#ff4d4d', '#ff8a3d', '#ffd23d', '#a3e635', '#34d058', '#2ec4b6', '#38bdf8', '#6c7bff', '#8b5cf6', '#d946ef', '#ff6fb5', '#ffffff', '#bfc5d2', '#7a5c3a'];
@@ -1206,7 +1416,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 143, botMake, botSpawn, botStep, botName, botLook, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 144, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

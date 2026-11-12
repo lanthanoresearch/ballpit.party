@@ -52,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 143;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 144;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -460,6 +460,11 @@ const botInfo = bt => [bt.id, bt.name, bt.color, bt.color2, bt.pat, bt.crown | 0
 function roomBots(room, w, dtReal) {
   const bs = room.bots || (room.bots = []);
   if (!room.priv) { if (bs.length) { for (const bt of bs) broadcast(room, { t: 'bl', id: bt.id }); bs.length = 0; } return; }
+  if (bs.length) {   // the crowd: answers, help, and noticing what people build
+    const ctx = roomCtx(room); ctx.players = [...room.players.values()].filter(p => p.has && !p.dead).map(p => ({ id: p.id, x: p.x, y: p.y }));
+    ctx.balls = ctx.players.concat(bs.filter(bt => !(bt.dead > 0)).map(bt => bt.b));
+    P.botSocial(bs, w, ctx, dtReal); ctx.asks.length = 0; ctx.builds.length = 0; ctx.fins.length = 0;
+  }
   room.botRe = (room.botRe || 0) - dtReal;
   if (room.botRe <= 0) { room.botGoal = BOT_GOALS[Math.floor(Math.random() * BOT_GOALS.length)]; room.botRe = 60 + Math.random() * 90; }
   const want = room.botsOn ? Math.max(0, Math.min(MAX_PLAYERS, room.botGoal || 15) - room.players.size) : 0;
@@ -474,12 +479,25 @@ function roomBots(room, w, dtReal) {
     room.botT = room.botsOn ? 1 + Math.random() * 2 : 0.3;
   }
 }
+const roomCtx = room => room.botCtx || (room.botCtx = P.botCtx());
+function botOut(room, bt) {   // what a bot said, or a block it put down (or took back): everybody in the world gets it
+  for (const o of bt.out) {
+    if (o.k === 'say') broadcast(room, { t: 'bsay', id: bt.id, s: o.s });
+    else if (o.k === 'emo') broadcast(room, { t: 'bsay', id: bt.id, e: o.i });
+    else if (o.k === 'tl' && room.world) {   // (bot blocks belong to this world only while it is open: they are never saved into anybody's own world)
+      const q = ['tl', o.x, o.y, o.v === -1 ? -1 : 1]; srvMisc(room.world, q);
+      const bt2 = room.botTl || (room.botTl = new Map()), key = o.x + ',' + o.y; if (o.v === -1) bt2.delete(key); else bt2.set(key, q);
+      broadcast(room, { t: 'pobj', g: q, bot: 1 });
+    }
+  }
+  bt.out.length = 0;
+}
 function stepRoomBots(room, w, dt) {   // one step for every bot in this world (inside the world's own steps, so they push things exactly like players)
   const bs = room.bots; if (!bs || !bs.length) return;
-  const B = { n: 8 };
+  const B = { n: 8 }, ctx = roomCtx(room);
   for (let i = bs.length - 1; i >= 0; i--) {
-    const bt = bs[i], e = P.botStep(bt, w, dt, B);
-    if (e === 'fin') { room.finishers.push('b' + bt.id); bt.crown = room.finishers.length; broadcast(room, { t: 'fin', id: bt.id, bot: 1, name: bt.name, rank: bt.crown, ms: 0 }); }
+    const bt = bs[i], e = P.botStep(bt, w, dt, B, ctx); if (bt.out.length) botOut(room, bt);
+    if (e === 'fin') { roomCtx(room).fins.push({ x: bt.b.x, y: bt.b.y }); room.finishers.push('b' + bt.id); bt.crown = room.finishers.length; broadcast(room, { t: 'fin', id: bt.id, bot: 1, name: bt.name, rank: bt.crown, ms: 0 }); }
     else if (e === 'leave') { bs.splice(i, 1); broadcast(room, { t: 'bl', id: bt.id, say: 1 }); }
   }
 }
@@ -714,6 +732,7 @@ wss.on('connection', (ws, req) => {
         });
         p.dver = null; if (room.world) { send(p, doorPacket(room)); plankSend(room, room.world.see, p); }
         if (room.bots && room.bots.length) send(p, { t: 'bj', b: room.bots.map(botInfo) });
+        if (room.botTl && room.botTl.size) for (const q of room.botTl.values()) send(p, { t: 'pobj', g: q, bot: 1, bulk: 1 });
         broadcast(room, { t: 'join', id: p.id, pub: p.pub, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
       } else {
         send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
@@ -762,12 +781,14 @@ wss.on('connection', (ws, req) => {
       if (i < 0 || i >= EMOJIS || now - p.lastEmo < 900) return;
       p.lastEmo = now;
       broadcast(p.room, { t: 'emo', id: p.id, pub: p.pub, name: p.name, i }, p);
+      if (p.room.bots && p.room.bots.length) { const k = P.askKind('emo', i); if (k) roomCtx(p.room).asks.push({ kind: k, x: p.x, y: p.y, id: p.id }); }
     } else if (m.t === 'say') {   // a message built from a sentence and a pick-list: two small numbers, so nothing can be typed
       if (!p.room) return;
       const a = m.a | 0, b = m.b | 0, now = Date.now();
       if (a < 0 || a >= 16 || b < 0 || b >= 40 || now - p.lastEmo < 900) return;
       p.lastEmo = now;
       broadcast(p.room, { t: 'say', id: p.id, pub: p.pub, name: p.name, a, b }, p);
+      if (p.room.bots && p.room.bots.length) { const k = P.askKind('say', a, b); if (k) roomCtx(p.room).asks.push({ kind: k, x: p.x, y: p.y, id: p.id }); }
     } else if (m.t === 'inv') {   // the host asks a friend to come to their world
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to)) return;
       const now = Date.now(); if (now - (p.lastInv || 0) < 700) return; p.lastInv = now;
@@ -798,6 +819,7 @@ wss.on('connection', (ws, req) => {
         const g0 = put(Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])), ex = [];
         if (Array.isArray(m.ex)) for (const q of m.ex.slice(0, 6)) if (Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)) { const c = put(Math.round(q[0]), Math.round(q[1]), Math.round(q[2])); if (c) ex.push(c); }
         if (g0) broadcast(r, { t: 'pobj', g: ['tl', g0[0], g0[1], g0[2]], ex }, p);
+        if (g0 && r.bots && r.bots.length && (g0[2] === 1 || g0[2] === 3)) roomCtx(r).builds.push({ x: g0[0], y: g0[1] });
         return;
       }
       const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' || m.g[0] === 'rope' ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])].concat(m.g[0] === 'por' && m.g.length === 6 ? [Math.max(0, Math.min(3, Math.round(m.g[5])))] : []) : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
@@ -1000,7 +1022,7 @@ wss.on('connection', (ws, req) => {
       if (Math.abs(dx) > 14 * maps.TS || dy > 120 || dy < -400) return;   // must really be at the flag
       p.fin = sl;
       const room = p.room;
-      room.finishers.push(p.id);
+      room.finishers.push(p.id); if (room.bots && room.bots.length) roomCtx(room).fins.push({ x: p.x, y: p.y });
       broadcast(room, { t: 'fin', id: p.id, name: p.name, rank: room.finishers.length, ms: Math.max(0, Math.min(1e9, +m.ms || 0)) });
     }
   });
