@@ -130,7 +130,7 @@
     const g1 = GRAV * (o.dt || 1 / 60);   // (what one step of falling adds)
     if (!below && ny < -0.35 && vn > -3 * g1) { if (vn < 0 && !o.kin) { o.vx -= vn * nx; o.vy -= vn * ny; } j = m * g1; }   // standing on it: you stay on it, and your whole weight presses on it
     else if (vn < 0) { j = -vn / (1 / m + ii * rn * rn); if (!o.kin) { o.vx += j * nx / m; o.vy += j * ny / m; } }   // landing on it or knocking it: you and the plank share the knock
-    if (!o.ghost && j > 0 && ii) s.av -= ii * rn * j;
+    if (!o.ghost && !o.noTq && j > 0 && ii) s.av -= ii * rn * j;
     return !below && ny < -0.35;
   }
   function nearF(f, x, y, rx, ry) {   // is this spot near the point of interest (or any of them: the server watches everybody in a world)?
@@ -241,6 +241,7 @@
     let on = false;
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i]; if (Math.abs(s.cx - b.x) > s.hl + 40 || Math.abs(s.cy - b.y) > s.hl + 60) continue;
+      b.noTq = !!b.bot && s.ownT > 0;   // (a bot does not tip a plank a player's device is turning right now)
       if (seeHit(s, b, b.r || R, wt / 60)) {
         on = true; b.onSee = s; if (w.follow && !w.srvOnly && b.r === undefined && !b.ghost && !b.remote) s.mineT = 0.6;
         const sl = Math.sin(s.ang);
@@ -655,6 +656,14 @@
     for (const o of near) { if (o === d || o.burn > 0) continue; const e = o.r || Math.max(o.hw, o.hh) * 1.42; if (Math.abs(o.x - d.x) < e + ex && o.y > d.y && o.y - e < d.y + ey + 4) return true; }
     return false;
   }
+  function gadgetTile(w, x, y) {   // a tile that holds (or carries) a red button, a floor plate, a checkpoint flag, a gate or a portal: no dirt, rock or digging there, so nothing gets buried or left floating
+    for (const q of w.btns) if (!q.gone && x === q.x && (y === q.y || y === q.y - 1)) return true;
+    for (const q of w.plates) if (!q.gone && x >= q.x && x < q.x + (q.w || 1) && (y === q.y || y === q.y - 1)) return true;
+    for (const d of w.doors) if (!d.gone && x >= d.x && x < d.x + d.w && y >= d.y - 1 && y <= d.y + d.h) return true;
+    for (const p of w.portals) if (!p.gone) for (const e of [p.a, p.b]) { const ex = Math.floor(e.x / TS), ey = Math.round(e.y / TS); if (Math.abs(x - ex) <= 1 && (y === ey || y === ey - 1 || y === ey - 2)) return true; }
+    const cps = w.map && w.map.checkpoints; if (cps) for (const c of cps) if (Math.abs(c[0] - x) <= 1 && y >= c[1] - 2 && y <= c[1]) return true;
+    return false;
+  }
   function noBuild(map) {   // the places where nothing can be built or left: around where everybody appears (5 x 5 blocks), and around the finish flag (6 x 6), so nobody can block it
     if (!map) return [];
     if (map._nb) return map._nb;
@@ -801,7 +810,7 @@
       if (w.follow && !w.srvOnly && !(d.hold > 0) && !b.remote) { d.mineT = 0.45; d.sleep = false; }
       if (w.follow && w.srvOnly && !(d.hold > 0) && !b.remote && !kin && d.sv !== undefined && (d.pred > 0 || !(d.r && ny < -0.7))) { if (!(d.pred > 0))   /* (a ball you land on top of is not guessed at here: a hair's difference decides which way it rolls, so the server's word is waited for and it never rolls one way and then the other) */ { d.nap = false; d.st = 0; d.predA = 0; } d.pred = 0.7; d.predT = 0.25; d.sleep = false; }   // (what you touch reacts on your screen at once, worked out here by the same physics, while the server, which decides, catches up a moment later)
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
-      const held = (w.follow && ((w.srvOnly && !(d.pred > 0)) || d.hold > 0)) || (b.own !== undefined && d.ownT > 0);   // (in the shared world every crate and ball is the server's: here it is as solid as a wall, and moves the moment the server has moved it, the same for everybody)
+      const held = (w.follow && ((w.srvOnly && !(d.pred > 0)) || d.hold > 0)) || (b.own !== undefined && d.ownT > 0) || (b.bot && d.ownT > 0);   // (in the shared world every crate and ball is the server's: here it is as solid as a wall, and moves the moment the server has moved it, the same for everybody)
       if (held && w.follow && !kin && !b.remote && Math.abs(nx) > 0.5 && nx * (b.inVx || 0) < 0) b.pressing = true;
       else if (!held && d.pred > 0 && w.follow && !kin && !b.remote && Math.abs(nx) > 0.5 && nx * (b.inVx || 0) < 0) b.pushing = true;   // (pushing something your own screen moves: the server is told, so it pushes it just as far)   // (the server's crate and yours disagree: it is a wall until they agree again. On the server: the player's own device is already pushing this one)
       const rx = h[0] - d.x, ry = h[1] - d.y, rn = rx * ny - ry * nx, rt = rx * -nx - ry * ny;
@@ -1028,6 +1037,7 @@
     return out;
   }
   const runMid = r => (r[0] + r[1] + 1) / 2 * TS;
+  const runPick = (bt, r) => { if (bt.pickI !== bt.i) { bt.pickI = bt.i; bt.pickF = Math.random(); } const wd = r[1] - r[0]; return (r[0] + 0.5 + Math.max(0, wd - 0.4) * (0.2 + 0.6 * bt.pickF) + (wd < 1 ? 0 : 0)) * TS; };   // (somewhere on the platform, not always the middle: no two bots take exactly the same line)
   const inRun = (x, r) => { const t = Math.floor(x / TS); return t >= r[0] && t <= r[1]; };
   function botPlan(bt, w) {   // where to head on the route: the next part of it (or the one before, for a bot going back the way it came)
     const path = w.map.path, dir = bt.dir || 1, A = path[bt.i], B = path[bt.i + dir];
@@ -1046,7 +1056,7 @@
     if (o && o.kind) kind = o.kind;
     const skill = kind === 'racer' ? (Math.random() < 0.35 ? brnd(0.9, 1) : Math.random() < 0.65 ? brnd(0.55, 0.88) : brnd(0.2, 0.55)) : brnd(0.35, 0.9);
     return Object.assign({ type: kind === 'wander' ? 'wander' : 'runner', kind, ex: ['up', 'down', 'side'][Math.floor(Math.random() * 3)], skill, err: (1 - skill) * 0.14, chatty: brnd(0.3, 1.5),
-      life: kind === 'wander' ? brnd(600, 1800) : kind === 'racer' ? brnd(1500, 4000) : brnd(1200, 3600), careful: kind === 'racer' && Math.random() < 0.3 + skill * 0.6, mapReader: Math.random() < 0.65, dir: 1, age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0, finished: false, leaveT: 0,
+      life: kind === 'wander' ? brnd(600, 1800) : kind === 'racer' ? brnd(1500, 4000) : brnd(1200, 3600), careful: kind === 'racer' && Math.random() < 0.3 + skill * 0.6, pace: Math.random() < 0.4 ? 1 : brnd(0.6, 0.95), mapReader: Math.random() < 0.65, dir: 1, age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0, finished: false, leaveT: 0,
       wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, gT: 0, airT: 0, airAx: null, danger: false, stT: 0, stX: 0, back: 0, crown: 0, out: [], chatCd: brnd(2, 10), first: true, built: 0, buildT: brnd(6, 18) }, o || {});
   }
   function botSpawn(bt, w) {   // exactly like a player: at the start, or (once) at the last checkpoint flag it touched
@@ -1172,9 +1182,10 @@
   function emote(bt, st, i, force) { if (!force && bt.chatCd > 0) return; bt.out.push({ k: 'msg', i }); bt.chatCd = brnd(6, 20) / bt.chatty; }
   const pickEm = a => a[Math.floor(Math.random() * a.length)];
   /* ----- building: little things only, a few blocks each, and never more than 30 bot blocks in a world (the oldest go first) ----- */
-  const BOT_TILES = 40;
+  const BOT_TILES = 24;
   function tileFree(w, x, y, ctx) {
-    if (x < 1 || y < 1 || x >= w.W - 1 || y >= w.H - 1 || tile(w, x, y) !== 0) return false;
+    if (x < 1 || y < 1 || x >= w.W - 1 || y >= w.H - 1 || tile(w, x, y) !== 0 || gadgetTile(w, x, y)) return false;
+    if (!(tile(w, x, y + 1) === 1 || tile(w, x, y - 1) === 1 || tile(w, x - 1, y) === 1 || tile(w, x + 1, y) === 1)) return false;   // (the same rule as for a player: dirt only grows out of dirt, side to side)
     for (const z of noBuild(w.map)) if (x >= z.tx0 && x <= z.tx1 && y >= z.ty0 && y <= z.ty1) return false;
     const cx = (x + 0.5) * TS, cy = (y + 0.5) * TS;
     for (const p of ctx.balls) if (Math.abs(p.x - cx) < TS / 2 + R + 3 && Math.abs(p.y - cy) < TS / 2 + R + 3) return false;
@@ -1199,7 +1210,7 @@
   }
   function putTile(bt, w, ctx, x, y) {
     const st = ctx.st; if (!tileFree(w, x, y, ctx)) return false;
-    if (st.botTiles.length >= BOT_TILES) { const o = st.botTiles.shift(); if (o && tile(w, o[0], o[1]) === 1) bt.out.push({ k: 'tl', x: o[0], y: o[1], v: -1 }); }
+    if (st.botTiles.length >= BOT_TILES) return false;   // (the bots' blocks for this world are used up: nothing is ever taken away again)
     st.botTiles.push([x, y]); bt.out.push({ k: 'tl', x, y, v: 1 }); bt.built++; return true;
   }
   const NOCTX = { balls: [], players: [], st: { cd: 0, recent: [], botTiles: [] } };
@@ -1310,7 +1321,7 @@
       } else {
         if (b.ground && b.flat && !botLand(bt, w)) { bt.lostT += dt; if (bt.lostT > 2) { bt.lostT = 0; const far = botSync(bt, w) > 4; botPlan(bt, w); bt.offT = far ? (bt.offT || 0) + 2 : 0; if (bt.offT > 10) { bt.offT = 0; bt.dead = 0.01; if (Math.random() < 0.4) say(bt, st, 'restart'); return ''; } } }   // (off the route: find it again from where it is; somewhere it cannot get back from, it presses reset like a player would)
         if (b.ground && b.flat && bt.kind === 'racer' && bt.knowsFin && Math.abs(m.flag[0] * TS - b.x) < 12 * TS && Math.abs(m.flag[1] * TS - (b.y + R)) < 2.5 * TS) bt.tcx = (m.flag[0] + 0.5) * TS;   // (the flag is right there)
-        else if (b.ground && b.flat) { if (bt.far && !inRun(b.x, bt.far)) bt.tcx = runMid(bt.far); else if (bt.bRun) bt.tcx = path[bt.i + (bt.dir || 1)] ? runMid(bt.bRun) : (bt.dir || 1) > 0 ? m.flag[0] * TS : runMid(bt.bRun); }
+        else if (b.ground && b.flat) { if (bt.far && !inRun(b.x, bt.far)) bt.tcx = runMid(bt.far); else if (bt.bRun) bt.tcx = path[bt.i + (bt.dir || 1)] ? runPick(bt, bt.bRun) : (bt.dir || 1) > 0 ? m.flag[0] * TS : runMid(bt.bRun); }
         if (bt.kind !== 'racer' && bt.goalI !== undefined) {   // explorers and builders: got there (or gave up)? stop a while, then somewhere else
           bt.iT = (bt.iT || 0) + dt;
           if (Math.abs(bt.i - bt.goalI) <= 1 || bt.iT > 20) { bt.idle = brnd(1.5, 6); if (Math.random() < 0.25) say(bt, st, bt.kind === 'builder' ? 'build' : 'explore'); if (Math.random() < 0.2) bt.ex = ['up', 'down', 'side'][Math.floor(Math.random() * 3)]; exGoal(bt, w); }
@@ -1381,6 +1392,7 @@
       onT = onT || (Math.abs(bt.tcx - b.x) < 6 && bt.back <= 0);
       const r = drive(bt, w, dt, B, d, onT); ax = r.ax; jheld = r.jheld;
     }
+    if (b.ground && ax && bt.pace < 1 && !bt.pushing) ax *= bt.pace;   // (some roll along more slowly than others)
     const ev = step(b, w, ax, jheld, dt);
     if (ev.lava || ev.splat || botOob(w, b)) return botDied(bt, w, ctx);
     const f = m.finish;
@@ -1450,7 +1462,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 148, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 149, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

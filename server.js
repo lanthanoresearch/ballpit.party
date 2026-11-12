@@ -52,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 148;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 149;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -482,7 +482,7 @@ function roomBots(room, w, dtReal) {
 const roomCtx = room => room.botCtx || (room.botCtx = Object.assign(P.botCtx(), { finKnown: true }));   // (in a private world the finish is on everybody's map)
 function botOut(room, bt) {   // what a bot said, or a block it put down (or took back): everybody in the world gets it
   for (const o of bt.out) {
-    if (o.k === 'msg') broadcast(room, o.a !== undefined ? { t: 'bsay', id: bt.id, a: o.a, b: o.b } : { t: 'bsay', id: bt.id, i: o.i });   // (the same messages a player can send, nothing else)
+    if (o.k === 'msg' && (o.a !== undefined ? o.a >= 0 && o.a < 11 && o.b >= 0 && o.b < 15 : o.i >= 0 && o.i < EMOJIS)) broadcast(room, o.a !== undefined ? { t: 'bsay', id: bt.id, a: o.a, b: o.b } : { t: 'bsay', id: bt.id, i: o.i });   // (the same messages a player can send, nothing else)
     else if (o.k === 'tl' && room.world) {   // (bot blocks belong to this world only while it is open: they are never saved into anybody's own world)
       const q = ['tl', o.x, o.y, o.v === -1 ? -1 : 1]; srvMisc(room.world, q);
       const bt2 = room.botTl || (room.botTl = new Map()), key = o.x + ',' + o.y; if (o.v === -1) bt2.delete(key); else bt2.set(key, q);
@@ -813,6 +813,7 @@ wss.on('connection', (ws, req) => {
           for (let k = mb.length - 1; k >= 0; k--) if (mb[k][0] === 'tl' && mb[k][1] === tx && mb[k][2] === ty) mb.splice(k, 1);
           if (to === -1) { worldAdd.misc(r, ['tl', tx, ty, -1]); return [tx, ty, -1]; }
           if (![0, 1, 2, 3, 5, 7].includes(to) || mb.length >= ROOM_MISC) return null;
+          if (r.world && P.gadgetTile(r.world, tx, ty)) return null;   // (nothing buried, nothing left floating: the same rule every device uses)
           const e = ['tl', tx, ty, to]; mb.push(e); worldAdd.misc(r, e); return [tx, ty, to];
         };
         const g0 = put(Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])), ex = [];

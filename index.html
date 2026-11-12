@@ -714,7 +714,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 148; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 149; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1060,6 +1060,8 @@
       </div></div>
       <div class="dep" data-dep="!mp"><div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Bots chat</b><small>They talk about what is going on, answer you, ask for help, and pull faces</small></span></span><input type="checkbox" id="setBotChat"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="trophy"></span><span><b>Announce bot winners</b><small>"Max finished (#2)" when a bot reaches the finish</small></span></span><input type="checkbox" id="setBotAnn"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Crowns on bots</b><small>Bots that finish get a crown too, the same as players</small></span></span><input type="checkbox" id="setBotCrown"><i></i></label>
         <div class="small dim">Bots are all different: racers (some great, some not), explorers, builders who put up little towers, and some who just hang out. Ask them for things in the chat ("Can you open the gate?", "Follow me", "I need dirt") and sometimes one will help.</div>
       </div></div>
           </div></div>
@@ -1290,8 +1292,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=148"></script>
-<script src="physics.js?v=148"></script>
+<script src="maps.js?v=149"></script>
+<script src="physics.js?v=149"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1333,7 +1335,7 @@ fillIcons();
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, botChat: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -1366,7 +1368,7 @@ function normalize() {
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botsPriv', 'botsOff', 'botChat', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -1924,23 +1926,29 @@ function finishRun() {
 
 /* ----- session countdown & warnings ----- */
 /* ----- your own world (multiplayer off): you choose the map and how long each one lasts ----- */
-const SOLOKEY = 'ballrun4_solo2', SOLO_BASE = 3000000;
+const SOLOKEY_P = 'ballrun4_solo2', SOLOKEY_O = 'ballrun4_solo2_off', SOLO_BASE = 3000000;   // (your private maps and your offline maps are kept apart: each level can have one of each)
+let SOLOKEY = SOLOKEY_P;
+try { if (localStorage.getItem(SOLOKEY_O) === null) { const was = localStorage.getItem(SOLOKEY_P); if (was) localStorage.setItem(SOLOKEY_O, was); } } catch (e) {}   // (once: the maps you had before are in both, so nothing is lost)
 let solo2 = {};   // one saved world per level, until you reset that level: { levelNumber: what you built, moved, opened and collected }
 let party = null;   // a friend's world: { role: 'host' | 'guest', host: their id, name, priv }
 const inSolo = () => !settings.mp && !party;
 const offlineOn = () => !!settings.offline && !settings.mp && !party;   // a private game that never touches the server: no friends, no invites, nothing online
 const shared = () => !!party || (online && !inSolo() && S.slot >= 0 && S.slot < SOLO_BASE);   // is what you build shown to everyone in the room? (private games and public worlds)
-function loadSolo() { try { const o = JSON.parse(localStorage.getItem(SOLOKEY) || 'null'); if (o && typeof o === 'object') solo2 = o; } catch (e) {} }
+const soloKeyNow = () => settings.offline && !settings.mp ? SOLOKEY_O : SOLOKEY_P;
+const readSolo = key => { try { const o = JSON.parse(localStorage.getItem(key) || 'null'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } };
+function loadSolo() { SOLOKEY = soloKeyNow(); solo2 = readSolo(SOLOKEY); }   // (the maps of the mode you are in: private or offline)
 function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo2)); } catch (e) {} }
 const soloLevel = () => Math.max(0, Math.min(BallMaps.count - 1, +settings.soloMap || 0));
 const hasSoloSave = i => !!solo2[i];
 const soloFrom = i => (solo2[i] && solo2[i].from) || '';   // where a copy saved from someone else's world came from
-function saveCopy() {   // keep this world, as it is right now, as your own private version of this level
+function saveCopy(key) {   // keep this world, as it is right now, as your own version of this level: in your private maps (SOLOKEY_P) or your offline maps (SOLOKEY_O)
   if (!S.world || !S.map || S.slot < 0) return false;
   const o = worldObj(); delete o.slot; o.got = []; o.n = 0; o.rcv = o.buys.length + o.gates.length + o.misc.length; o.own = {};   // (everything in it counts as already there, so you can still build)
   o.from = party ? who(party.name) : 'a public world';
-  solo2[S.idx] = o; saveSolo(); return true;
+  key = key || SOLOKEY; const st = key === SOLOKEY ? solo2 : readSolo(key); st[S.idx] = o;
+  try { localStorage.setItem(key, JSON.stringify(st)); } catch (e) { return false; } return true;
 }
+loadSolo();
 function soloRoll() {}   // (a level of your own never ends by itself)
 function soloSlot() { return SOLO_BASE + soloLevel(); }
 /* Where the finish is. Every map has 4 spots. Public worlds draw one each round (the server says which). On your own levels you pick: spot 1 to 4, or Random,
@@ -2030,7 +2038,7 @@ function update(dt) {
   followWorld(dt);
   remotePush(dt);
   if (w.ropes && w.ropes.length) others.forEach(o => { if (o.seen && !o.dead && o.cx !== undefined) P.ropeBody({ x: o.cx, y: o.cy, vx: o.svx || 0, vy: o.svy || 0, kin: true, dt }, w, 4); });   // (the others weigh on rope bridges here as well)
-  { const L = w._pbA || (w._pbA = []); L.length = 0; if (!(S.dead > 0 || S.away)) L.push(S.b); if (botMode() === 'local') for (const bt of bots) if (!(bt.dead > 0)) L.push(bt.b); w.pb = L.length ? L : null; }   // (your ball, and offline the bots too, are solid to everything: nothing is pushed or squeezed into them)
+  { const L = w._pbA || (w._pbA = []); L.length = 0; if (!(S.dead > 0 || S.away)) L.push(S.b); if (botMode() !== 'none') for (const bt of bots) if (!(bt.dead > 0) && isFinite(bt.b.x)) L.push(bt.b); w.pb = L.length ? L : null; }   // (your ball, and offline the bots too, are solid to everything: nothing is pushed or squeezed into them)
   P.stepDyn(w, dt);
   if (w.drops && w.drops.length) stepDrops(w, dt);
   if (S.spawnT > 0) S.spawnT -= dt;
@@ -2148,16 +2156,18 @@ function gateSync() {   // while the world loads: what the server has said is pu
   }
 }
 function remotePush(dt) {   // what this device is moving for everybody: the other players near it push it here too, just as they do on the server
-  const w = S.world; if (!w.follow || !others.size) return;
+  const w = S.world, rb = bots.length && bots[0].remote; if (!w.follow || (!others.size && !rb)) return;
   let any = false, pl = w.see.some(s => s.owned && !s.gone); for (const d of w.dyn) if ((d.mineT > 0 || d.keep > 0) && !(d.burn > 0)) { any = true; break; }
   if (!any && !pl) return;
   others.forEach(o => { if (!o.seen || o.dead || o.cx === undefined) return; const c = { x: o.cx, y: o.cy, vx: o.svx || 0, vy: o.svy || 0, ground: !!o.sg, kin: true, remote: true, dt };
     if (any) P.collideDyn(c, w);
-    if (pl) { c.x = o.cx; c.y = o.cy; for (const s of w.see) if (s.owned && Math.abs(s.cx - c.x) < s.hl + 40 && Math.abs(s.cy - c.y) < s.hl + 60) { P.seeBody(c, w, P.PLAYER_WT); break; } } });   // (and a teeter-totter this device turns feels their weight)
+    if (pl) { c.x = o.cx; c.y = o.cy; for (const s of w.see) if (s.owned && Math.abs(s.cx - c.x) < s.hl + 40 && Math.abs(s.cy - c.y) < s.hl + 60) { P.seeBody(c, w, P.PLAYER_WT); break; } } });
+  if (rb && any) for (const bt of bots) { if (bt.dead > 0 || !isFinite(bt.b.x)) continue; const c = { x: bt.b.x, y: bt.b.y, vx: bt.tvx || 0, vy: bt.tvy || 0, ground: true, kin: true, remote: true, dt }; P.collideDyn(c, w); }   // (the bots in a private world push here too, just as they do on the server)   // (and a teeter-totter this device turns feels their weight)
 }
 function predShared(d) {   // is another player right at this thing too?
   const e = (d.r || Math.max(d.hw, d.hh)) + R + 40;
   for (const o of others.values()) if (o.seen && !o.dead && o.cx !== undefined && Math.abs(o.cx - d.x) < e && Math.abs(o.cy - d.y) < e) return true;
+  for (const bt of bots) if (bt.remote && !(bt.dead > 0) && Math.abs(bt.b.x - d.x) < e && Math.abs(bt.b.y - d.y) < e) return true;
   return false;
 }
 function predLead(d, t) {   // how far ahead of the server's picture something you push may be: as far as it went here in the last round trip (the server has not heard of that part yet), but never more than the server's own pace over that time allows. So pushing along goes at an even pace however slow the connection, and when the server holds it still (someone pushing back) it is held here too
@@ -2560,7 +2570,7 @@ function botsTick(dt) {
     if (bt.out.length) botOutLocal(bt);
     if (e === 'died') botFx(bt, bt.deadX, bt.deadY);
     else if (wasDead && !(bt.dead > 0) && nearMe(bt.b.x, bt.b.y)) ring(bt.b.x, bt.b.y, bt.color, 3, 34, 0.5);
-    if (e === 'fin') { LBC.fins.push({ x: bt.b.x, y: bt.b.y }); bt.crown = ++botFinN + (S.finished ? 1 : 0); if (settings.announce && bots.length <= 12) addFeed(who(bt.name) + ' finished', 'fin', true, 'bot'); }
+    if (e === 'fin') { LBC.fins.push({ x: bt.b.x, y: bt.b.y }); bt.crown = ++botFinN + (S.finished ? 1 : 0); if (settings.announce && settings.botAnnounce) addFeed(who(bt.name) + ' finished (#' + bt.crown + ')', 'fin', true, 'bot'); }
     if (e === 'leave') { bots.splice(i, 1); if (bots.length < 12) addFeed(who(bt.name) + ' left', 'leave', false, 'bot'); }
   }
 }
@@ -2939,10 +2949,11 @@ function releaseInputs() {   // entering or leaving full screen cancels touches 
 /* ================= UI: popups, settings tabs, drop-downs, colours ================= */
 let cfCb = null, cfOptCb = null;
 let cfMidCb = null;
+let cfNoCb = null;
 function askConfirm(title, text, yes, cb, o) {
   o = o || {};
   $('cfTitle').textContent = title; $('cfText').textContent = text; $('cfYes').textContent = yes; $('cfNo').textContent = o.no || 'Cancel'; $('cfNo').classList.toggle('hide', !!o.single);
-  $('cfYes').className = o.yesClass || 'danger'; cfCb = cb; cfOptCb = o.onCheck || null;
+  $('cfYes').className = o.yesClass || 'danger'; cfCb = cb; cfOptCb = o.onCheck || null; cfNoCb = o.onNo || null;
   $('cfOptWrap').classList.toggle('hide', !o.check); $('cfOptText').textContent = o.check || ''; $('cfOpt').checked = false;
   $('cfMid').classList.toggle('hide', !o.mid); if (o.mid) { $('cfMid').innerHTML = (o.midIc ? '<span data-ic="' + o.midIc + '"></span>' : '') + o.mid; fillIcons($('cfMid')); } cfMidCb = o.onMid || null;
   $('confirm').classList.remove('hide');
@@ -2950,7 +2961,7 @@ function askConfirm(title, text, yes, cb, o) {
 function cfClose(yes) {
   $('confirm').classList.add('hide'); $('cfText').classList.remove('pre');
   if (cfOptCb) cfOptCb($('cfOpt').checked);
-  const f = yes ? cfCb : null; cfCb = null; cfOptCb = null; if (f) f();
+  const f = yes ? cfCb : cfNoCb; cfCb = null; cfOptCb = null; cfNoCb = null; if (f) f();
 }
 $('cfNo').onclick = () => cfClose(false);
 $('cfMid').onclick = () => { sfx('ui'); if (cfMidCb) cfMidCb(); };
@@ -3061,7 +3072,7 @@ function buildLook() {
 }
 function syncUI() {
   nameUI();
-  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
+  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
@@ -3080,7 +3091,7 @@ bindToggle('setStats', 'stats', () => { applyDeps(); statsKick(); }); ['Fps', 'P
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
-bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setBotChat', 'botChat'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
+bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
 bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull'); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
@@ -3761,6 +3772,7 @@ function terrainBlocked(tx, r, tight) {   // something in the way of changing th
   const w = S.world, cx = (tx + 0.5) * TS, cy = (r + 0.5) * TS;
   if (tight ? w.dyn.some(o => o.burn <= 0 && Math.abs(o.x - cx) < (o.r || o.hw) + TS / 2 && Math.abs(o.y - cy) < (o.r || o.hh) + TS / 2) : w.dyn.some(o => o.burn <= 0 && Math.abs(o.x - cx) < (o.r || o.hw) + TS / 2 && o.y + (o.r || o.hh) > (r - 2) * TS && o.y - (o.r || o.hh) < (r + 1) * TS)) return true;
   if (w.pads.some(p => p.y === r && tx >= p.x && tx < p.x + p.w) || w.see.some(q => Math.abs(q.cx - cx) < q.hl + TS / 2 && Math.abs(q.cy - (r * TS - 46)) < 40) || (w.drops || []).some(q => q.tx === tx)) return true;
+  if (P.gadgetTile && P.gadgetTile(w, tx, r)) return true;   // (never on top of a red button, a plate, a gate, a portal or a flag, and never digging out from under one)
   return S.map.checkpoints.some(c => Math.abs(c[0] - tx) <= 1 && Math.abs(c[1] - r) <= 1);
 }
 /* Terrain (lava, ice, water, dirt) and Dig work on the tile IN FRONT of you, the way you are facing, and never farther than one block from you:
@@ -4604,6 +4616,7 @@ function setMode(m) {
   bots.length = 0;
   settings.mp = m === 'pub'; save(); homeMode = settings.mp; $('homeMp').checked = settings.mp; $('setMp').checked = settings.mp;
   if (off) setOffline(true); else if (wasOff) setOffline(false); else { retry = 0; connect(); }
+  loadSolo();   // (private and offline each have their own maps)
   applyDeps(); syncUI(); segRender(); homeModeText(); lvlRender(); homeStats();
 }
 segRender();
@@ -4666,18 +4679,26 @@ function escMenu() {   // Escape: closes whatever is on top, then pauses / resum
 }
 $('pResume').onclick = resumeGame;
 $('pLevel').onclick = () => { sfx('ui'); openLevels(); };
-const soloDesc = i => {   // what is already saved on that private level, in words
-  const o = solo2[i]; if (!o) return '';
+const soloDesc = (i, st) => {   // what is already saved on that level, in words
+  const o = (st || solo2)[i]; if (!o) return '';
   const n = (o.buys ? o.buys.length : 0) + (o.gates ? o.gates.length : 0) + (o.misc ? o.misc.length : 0);
   return (o.from ? 'a copy saved from ' + o.from : 'your own world') + (n ? ' with ' + n + (n === 1 ? ' thing' : ' things') + ' built in it' : ' with nothing built in it yet');
 };
-$('pSave').onclick = () => {   // keep a copy of the world you are in as one of your own private maps: ask, and if something is already saved there, say what and ask again
-  const idx = S.idx, label = lvLabelOf(idx), doIt = () => { if (saveCopy()) { notice('Saved to your private maps', ''); lvlRender(); } };
+$('pSave').onclick = () => {   // keep a copy of the world you are in: in your private maps, your offline maps, or both. Where one is already saved, you are asked about it, one at a time
+  const idx = S.idx, label = lvLabelOf(idx), NAMES = { [SOLOKEY_P]: 'private maps', [SOLOKEY_O]: 'offline maps' };
   sfx('ui');
-  askConfirm('Save this world?', 'A copy of this world, exactly as it is right now, goes into your private maps as ' + label + '.', hasSoloSave(idx) ? 'Continue' : 'Save it', () => {
-    if (!hasSoloSave(idx)) { doIt(); return; }
-    askConfirm('Replace what is saved?', label + ' in your private maps already has ' + soloDesc(idx) + '. Saving replaces all of it with this world, and that cannot be undone. Replace it?', 'Yes, replace it', doIt, { no: 'Keep mine' });
-  }, { no: 'Cancel', yesClass: 'go' });
+  openPick('Save a copy of this world as ' + label, ['In my private maps', 'In my offline maps', 'In both'], -1, k => {
+    const keys = k === 0 ? [SOLOKEY_P] : k === 1 ? [SOLOKEY_O] : [SOLOKEY_P, SOLOKEY_O], done = [];
+    const next = () => {
+      const key = keys.shift();
+      if (!key) { if (done.length) notice('Saved to your ' + done.map(x => NAMES[x]).join(' and '), ''); loadSolo(); lvlRender(); return; }
+      const save = () => { if (saveCopy(key)) done.push(key); next(); };
+      const st = readSolo(key);
+      if (!st[idx]) { save(); return; }
+      askConfirm('Replace your ' + NAMES[key].replace('maps', 'map') + '?', label + ' in your ' + NAMES[key] + ' already has ' + soloDesc(idx, st) + '. Saving replaces all of it with this world, and that cannot be undone.', 'Yes, replace it', save, { no: 'Keep mine', onNo: next });
+    };
+    next();
+  });
 };
 $('pReset').onclick = () => askResetLevel(soloLevel(), () => resumeGame());
 $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
@@ -5365,7 +5386,7 @@ function onMsg(m) {
     case 'bj': case 'bl': case 'bp': remoteBotMsg(m); break;
     case 'bsay': { const bt = bots.find(b => b.id === m.id); if (bt) botTalk(bt, m.a !== undefined ? { k: 'msg', a: m.a | 0, b: m.b | 0 } : { k: 'msg', i: m.i | 0 }); break; }
     case 'fin': {
-      if (m.bot) { const bt = bots.find(b => b.id === m.id); if (bt) { bt.crown = m.rank || 1; if (nearMe(bt.b.x, bt.b.y)) burst(bt.b.x, bt.b.y - 10, ['#ffd23d', '#fff', '#ff5b4a'], 24, 300, 400); } if (settings.announce && bots.length <= 12) addFeed(who(m.name) + ' finished (#' + m.rank + ')', 'fin', true, 'bot'); break; }
+      if (m.bot) { const bt = bots.find(b => b.id === m.id); if (bt) { bt.crown = m.rank || 1; if (nearMe(bt.b.x, bt.b.y)) burst(bt.b.x, bt.b.y - 10, ['#ffd23d', '#fff', '#ff5b4a'], 24, 300, 400); } if (settings.announce && settings.botAnnounce) addFeed(who(m.name) + ' finished (#' + m.rank + ')', 'fin', true, 'bot'); break; }
       const mine = m.id === myId, o = others.get(m.id);
       if (mine) { S.crown = m.rank || 1; $('fbText').textContent = 'Place #' + m.rank + ' · Time ' + fmtT(m.ms); }
       else if (o) { o.crown = m.rank || 1; if (nearMe(o.cx, o.cy)) burst(o.cx, o.cy - 10, ['#ffd23d', '#fff', '#ff5b4a'], 24, 300, 400); }
@@ -6235,8 +6256,8 @@ function renderInner(dt, nowT) {
       const bt = bots[i], bb = bt.b;
       if (bt.dead > 0 || bb.x < camL - m || bb.x > camL + vw + m || bb.y < camT - m * 2 || bb.y > camT + vh + m) continue;
       drawBall(bb.x, bb.y, bb.rot, bt.color, bt.color2, bt.pat, 0.88, false);
-      drawLabel(bt.name, true, bt.crown, bb.x, bb.y);
-      if (bt.emo) drawEmoBubble(bt.emo, bb.x, bb.y - R - (settings.tags && bt.name ? 38 : 22) - (bt.crown && settings.crowns ? crownH(bt.crown) : 0));
+      const bc = settings.botCrowns ? bt.crown : 0; drawLabel(bt.name, true, bc, bb.x, bb.y);
+      if (bt.emo) drawEmoBubble(bt.emo, bb.x, bb.y - R - (settings.tags && bt.name ? 38 : 22) - (bc && settings.crowns ? crownH(bc) : 0));
     }
     if (S.dead <= 0 && !S.away) {    // you: always last = always on top
       let s = 1; if (S.spawnT > 0) { const p = 1 - S.spawnT / 0.6; s = 0.25 + 0.75 * Math.min(1, p * 1.25) + 0.12 * Math.sin(p * 3.14); }
