@@ -714,7 +714,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 149; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 150; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1292,8 +1292,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=149"></script>
-<script src="physics.js?v=149"></script>
+<script src="maps.js?v=150"></script>
+<script src="physics.js?v=150"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2156,13 +2156,12 @@ function gateSync() {   // while the world loads: what the server has said is pu
   }
 }
 function remotePush(dt) {   // what this device is moving for everybody: the other players near it push it here too, just as they do on the server
-  const w = S.world, rb = bots.length && bots[0].remote; if (!w.follow || (!others.size && !rb)) return;
+  const w = S.world; if (!w.follow || !others.size) return;
   let any = false, pl = w.see.some(s => s.owned && !s.gone); for (const d of w.dyn) if ((d.mineT > 0 || d.keep > 0) && !(d.burn > 0)) { any = true; break; }
   if (!any && !pl) return;
   others.forEach(o => { if (!o.seen || o.dead || o.cx === undefined) return; const c = { x: o.cx, y: o.cy, vx: o.svx || 0, vy: o.svy || 0, ground: !!o.sg, kin: true, remote: true, dt };
     if (any) P.collideDyn(c, w);
     if (pl) { c.x = o.cx; c.y = o.cy; for (const s of w.see) if (s.owned && Math.abs(s.cx - c.x) < s.hl + 40 && Math.abs(s.cy - c.y) < s.hl + 60) { P.seeBody(c, w, P.PLAYER_WT); break; } } });
-  if (rb && any) for (const bt of bots) { if (bt.dead > 0 || !isFinite(bt.b.x)) continue; const c = { x: bt.b.x, y: bt.b.y, vx: bt.tvx || 0, vy: bt.tvy || 0, ground: true, kin: true, remote: true, dt }; P.collideDyn(c, w); }   // (the bots in a private world push here too, just as they do on the server)   // (and a teeter-totter this device turns feels their weight)
 }
 function predShared(d) {   // is another player right at this thing too?
   const e = (d.r || Math.max(d.hw, d.hh)) + R + 40;
