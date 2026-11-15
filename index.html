@@ -759,7 +759,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 163; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 164; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1394,8 +1394,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=163"></script>
-<script src="physics.js?v=163"></script>
+<script src="maps.js?v=164"></script>
+<script src="physics.js?v=164"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3127,7 +3127,7 @@ addEventListener('resize', () => layoutCorner());
 try { new MutationObserver(() => layoutCorner()).observe($('btnChat'), { attributes: true, attributeFilter: ['class'] }); new MutationObserver(() => layoutCorner()).observe($('btnShop'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {}
 function applyTouchUI() {
   const on = touchActive() || editMode, sc = settings.scheme;
-  const g = $('gest'); g.classList.toggle('hide', !(on && !editMode && sc !== 'buttons'));
+  const g = $('gest'); g.classList.toggle('hide', !(on && !edSess && sc !== 'buttons'));   // (while editing, touching the screen never moves your ball)
   const showBtns = on && (sc === 'buttons' || sc === 'swipebtn');
   $('touch').classList.toggle('hide', !showBtns);
   $('tl').classList.toggle('hide', sc !== 'buttons'); $('tr').classList.toggle('hide', sc !== 'buttons');
@@ -3156,7 +3156,7 @@ function recomputeTouch() {
 }
 function joyUpdate() {   // the little joystick that appears where you touch (swipe styles only)
   const el = $('joy'); let p = null; gp.forEach(q => { if (!p) p = q; });
-  if (!p || !settings.joy || settings.scheme === 'buttons' || !touchActive() || editMode) { el.classList.add('hide'); return; }
+  if (!p || !settings.joy || settings.scheme === 'buttons' || !touchActive() || edSess) { el.classList.add('hide'); return; }
   const rdy = pullReady(), lim = rdy ? 76 : 32, dx = clamp(p.x - p.ax, -lim, lim);
   el.classList.remove('hide'); el.classList.remove('rdy');   // the stick stays a plain round stick: no gold, no stretching
   el.style.left = p.ax + 'px'; el.style.top = p.sy + 'px';
@@ -3165,8 +3165,8 @@ function joyUpdate() {   // the little joystick that appears where you touch (sw
 }
 function bindBtn(id, key) {
   const b = $(id);
-  const down = e => { if (editMode) return; e.preventDefault(); b.classList.add('on'); if (key === 'J' && !tin.btnJ) pressJump(); if (key === 'B') pressBoost(); tin['btn' + key] = true; recomputeTouch(); };
-  const up = e => { if (editMode) return; e.preventDefault(); b.classList.remove('on'); tin['btn' + key] = false; recomputeTouch(); };
+  const down = e => { if (edSess) return; e.preventDefault(); b.classList.add('on'); if (key === 'J' && !tin.btnJ) pressJump(); if (key === 'B') pressBoost(); tin['btn' + key] = true; recomputeTouch(); };
+  const up = e => { if (edSess) return; e.preventDefault(); b.classList.remove('on'); tin['btn' + key] = false; recomputeTouch(); };
   if (window.PointerEvent) { b.addEventListener('pointerdown', down); ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => b.addEventListener(n, up)); }
   else { b.addEventListener('touchstart', down, { passive: false }); b.addEventListener('touchend', up, { passive: false }); b.addEventListener('touchcancel', up, { passive: false }); }
 }
@@ -3174,7 +3174,7 @@ bindBtn('tl', 'L'); bindBtn('tr', 'R'); bindBtn('tj', 'J'); bindBtn('tb', 'B');
 // power jump, place and cancel: a tap is all they need
 function pressSuper() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0 && (S.b.jm || 0) >= 1) { S.b.sjReq = 0.25; S.b.jbuf = 0.12; } }
 [['tm', () => { if (typeof toggleShop === 'function') toggleShop(!shopOpen); }], ['ts', () => pressSuper()], ['tpl', () => { if (typeof finishPlacing === 'function') finishPlacing(); }], ['tpc', () => { if (typeof cancelPlacing === 'function') cancelPlacing(); }]].forEach(p => {
-  const b = $(p[0]), act = e => { if (editMode) return; e.preventDefault(); b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 140); p[1](); };
+  const b = $(p[0]), act = e => { if (edSess) return; e.preventDefault(); b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 140); p[1](); };
   if (window.PointerEvent) b.addEventListener('pointerdown', act); else b.addEventListener('touchstart', act, { passive: false });
 });
 // ----- editing the buttons: drag one to move it, tap it to pick it and change its size. They can never be put on the interface or on each other. -----
@@ -3234,8 +3234,14 @@ $('ebFlip').onclick = flipEdit;
 function startEdit(ui) {
   ui = ui === true;
   if (!ui && $('btnEditLayout').disabled) return;
-  if (inHome) { const h = $(ui ? 'editUiHint' : 'editHint'); h.classList.remove('hide'); clearTimeout(startEdit.t); startEdit.t = setTimeout(() => h.classList.add('hide'), 5000); return; }   // (the buttons only show while you are in the game)
-  edSess = true; edFrom = ui ? 'ui' : 'btn'; uiEdit = ui; editMode = !ui; edKind = ui ? 'ui' : 'btn'; cbSel = null; if (ui && !uiVis(uiSel)) uiSel = 'info';
+  if (edSess) return;
+  if (inHome) {   // from the home screen: start playing, pause, and open the editor there (the buttons and the info only show in the game)
+    try { closeSettingsNow(); } catch (e) {}
+    enterGame(false); const t0 = Date.now();
+    const iv = setInterval(() => { if (Date.now() - t0 > 20000) { clearInterval(iv); return; } if (inHome || !S.b || S.mode !== 'play' || !$('intro').classList.contains('hide')) return; clearInterval(iv); setTimeout(() => { if (!paused) openPause(); startEdit(ui); }, 350); }, 200);
+    return;
+  }
+  try { releaseInputs(); } catch (e) {} edSess = true; edFrom = ui ? 'ui' : 'btn'; uiEdit = ui; editMode = !ui; edKind = ui ? 'ui' : 'btn'; cbSel = null; if (ui && !uiVis(uiSel)) uiSel = 'info';
   $('pause').classList.add('hide'); $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); $('ebMsg').classList.add('hide'); applyTouchUI(); editRefresh(); layoutTouch(); edZone();
 }
 function endEdit() { editMode = false; edSess = false; ebSwapped = false; $('editbar').classList.remove('ebdown'); uiEdit = false; document.body.classList.remove('uedit'); uiMark(); edZone(); save(); try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} if (flipFs) { flipFs = false; exitFs(); } $('ebMsg').classList.add('hide'); if (paused) $('pause').classList.remove('hide'); $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
@@ -3252,7 +3258,7 @@ addEventListener('resize', onTurn); addEventListener('orientationchange', () => 
 
 /* ----- swipe gestures (floating anchor: the farther you drag from where you started, the faster you roll) ----- */
 const gp = new Map();
-function gDown(id, x, y) { gp.set(id, { ax: x, ay: y, x, y, sx: x, sy: y, t0: performance.now(), moved: false }); recomputeTouch(); }
+function gDown(id, x, y) { if (edSess) return; gp.set(id, { ax: x, ay: y, x, y, sx: x, sy: y, t0: performance.now(), moved: false }); recomputeTouch(); }
 
 function gMove(id, x, y) {
   const p = gp.get(id); if (!p) return;
