@@ -226,7 +226,13 @@
   body.offl #btnInvite,body.offl #btnInviteF,body.offl #pInvite,body.offl #myCode{display:none!important}
   #homeOnline{min-height:1.4em}
   body.offl #homeOnline{visibility:hidden}
-  .tabs button.locked{opacity:.22!important;pointer-events:none;filter:grayscale(1)}
+  .tabs button.locked{display:none!important}
+  .overlay>.card,#settings,#top,#stack,#hr,#home>.card,#home .card,#liveHud,#editbar{zoom:var(--uis,1)}
+  html body #settings{max-height:min(var(--uih,90vh),800px)!important;width:min(580px,var(--uiw,calc(100vw - 20px)))!important}
+  .overlay>.card,#home .card{max-height:var(--uihc,100%);max-width:var(--uiw,100%)}
+  .kbf{outline:3px solid #ffd23d!important;outline-offset:2px;border-radius:8px}.csel-list>.kbf{outline-offset:-3px}
+  .shopitem.kb{outline:3px solid #ffd23d;outline-offset:-2px;border-radius:12px;background:rgba(255,210,61,.08)}
+  #shopKeys{margin:6px 0 0;opacity:.75}
   .offsw{align-self:center}.offsw.on{background:rgba(120,170,255,.22);border-color:rgba(140,185,255,.7)}
   #netGate{background:rgba(8,10,20,.82)}.ngcard{width:min(320px,100%);display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center}.ngcard h3{margin:0;font-size:24px}.ngspin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#fff;animation:ngs .9s linear infinite}@keyframes ngs{to{transform:rotate(360deg)}}
   .overlay{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:14px}
@@ -498,6 +504,7 @@
   #placeBar .btn{padding:7px 14px;min-height:38px}
   #touch2 button{position:fixed;z-index:3;width:68px;height:68px;border-radius:50%;border:3px solid rgba(255,255,255,.55);background:rgba(255,255,255,.18);font-size:28px;padding:0;color:#fff;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;touch-action:none}
   #touch2 button.on{background:rgba(255,255,255,.5)}
+  #touch2 #tm{border-color:#fff;background:rgba(79,111,208,.88)}
   #touch2 #ts{--p:0;border-color:rgba(255,210,61,.7);background:conic-gradient(rgba(255,210,61,.9) calc(var(--p)*1%),rgba(255,255,255,.18) 0)}
   #touch2 #ts.rdy{border-color:#fff;box-shadow:0 0 0 4px rgba(255,210,61,.55),0 0 22px rgba(255,210,61,.9);animation:rdy .55s ease-in-out infinite alternate}
   #touch2 #tpl{border-color:#fff;background:rgba(47,158,97,.92);box-shadow:0 0 0 4px rgba(120,255,170,.4),0 0 20px rgba(80,230,140,.8);animation:rdy .55s ease-in-out infinite alternate}
@@ -680,7 +687,8 @@
   @media (max-width:600px){.scene .sun{top:1.5%;width:60px}}
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
-  #nameModal,#shareModal,#codeModal,#profModal,#lvlModal,#invModal,#addModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}
+  #nameModal,#shareModal,#codeModal,#profModal,#lvlModal,#invModal,#addModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}#descModal{z-index:20;background:rgba(10,8,16,.72)}
+  .nmcard textarea{font:inherit;font-size:17px;width:100%;box-sizing:border-box;resize:none;padding:8px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#120f1c;color:var(--ink);-webkit-user-select:text;user-select:text}.lvdesc{font-size:14px;margin:4px 0;padding:5px 9px;border-left:3px solid #ffd23d;background:rgba(255,255,255,.07);border-radius:4px;overflow-wrap:anywhere}#lvDescBtn{align-self:flex-start;margin-top:4px;font-size:13px}
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
   .nname.dim{opacity:.55}
@@ -714,7 +722,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 153; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 156; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -901,7 +909,7 @@
       <div id="infoTop"><div id="netstat"><i></i><span id="netText">Checking</span></div></div>
       <span id="onl"></span>
       <div id="timer"><span data-ic="clock"></span><span id="nexttimer">--:--</span><span id="tlab">next map</span></div>
-      <div id="infoRow"><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span><span class="clab">coins</span><span class="gemw"><span data-ic="gem"></span><span id="gemN">0</span></span></span><button id="linkpill" class="pill hide"><span data-ic="users"></span><span id="linkN"></span></button></div>
+      <div id="infoRow"><span id="coinpill" class="pill"><span data-ic="gcoin"></span><span id="coinN">0</span><span class="gemw"><span data-ic="gem"></span><span id="gemN">0</span></span></span><button id="linkpill" class="pill hide"><span data-ic="users"></span><span id="linkN"></span></button></div>
     </div>
     <div id="tpop" class="paper hide">
       <h3><span data-ic="map"></span><span id="tpName"></span></h3>
@@ -929,7 +937,7 @@
 <div id="emoPop" class="overlay hide"><div class="card epcard">
   <div class="chead"><h3>Say something</h3><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="epl"><div id="emoGrid"></div>
-  <div id="sayBuild"><div class="small dim">Build a message</div><div id="sayTpl"></div><div class="sayrow"><div id="sayArg"></div><button id="saySend" class="chip pri" type="button">Send</button></div><label class="saychk"><input type="checkbox" id="sayAuto" checked> Open the second list right after the first</label></div></div>
+  <div id="sayBuild"><div class="small dim">Build a message</div><div id="sayTpl"></div><div class="sayrow"><div id="sayArg"></div><button id="saySend" class="chip pri" type="button">Send</button></div><label class="saychk"><input type="checkbox" id="sayAuto" checked> Quick send: open the second list, then send</label></div></div>
   <div id="phraseGrid"></div>
   <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim">Everyone in your world sees it.</span></div>
 </div></div>
@@ -953,7 +961,7 @@
   <div class="eb2"><div id="ebPresets" role="group" aria-label="Layouts"><button type="button" data-p="moveleft">Left hand</button><button type="button" data-p="moveright">Right hand</button></div><button class="btn sm hide" id="ebFlip" type="button"><span data-ic="reset"></span><span class="t">Edit sideways</span></button></div>
   <label class="ebs"><span>Size: <b id="ebSelName">Jump</b></span><input type="range" id="ebSize" min="0.5" max="1.8" step="0.05"><span id="ebSizeVal" class="dim"></span></label>
   <div id="ebMsg" class="hide"></div></div>
-<div id="touch2"><button id="ts" class="hide" type="button" aria-label="Power jump" data-ic="spark"></button><button id="tpl" class="hide" type="button" aria-label="Place" data-ic="check"></button><button id="tpc" class="hide" type="button" aria-label="Cancel" data-ic="close"></button></div>
+<div id="touch2"><button id="ts" class="hide" type="button" aria-label="Power jump" data-ic="spark"></button><button id="tpl" class="hide" type="button" aria-label="Place" data-ic="check"></button><button id="tpc" class="hide" type="button" aria-label="Cancel" data-ic="close"></button><button id="tm" class="hide" type="button" aria-label="Build menu" data-ic="plus"></button></div>
 
 <div id="sback"></div>
 <div id="settings" class="paper hide">
@@ -964,7 +972,6 @@
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Mode</span></button>
     <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
-    <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
   </div>
   <div class="sbody">
     <section class="pane" data-pane="you">
@@ -982,6 +989,7 @@
       <div class="dep" data-dep="touch"><div>
         <h4><span data-ic="pad"></span> Touch screen</h4>
         <div class="row"><span class="lbl">Style</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Build button with my controls</b><small>A second + button next to your other buttons. Move it with "Move buttons"</small></span></span><input type="checkbox" id="setShopBtn"><i></i></label>
         <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Show a joystick</b><small>A little stick shows where you touch</small></span></span><input type="checkbox" id="setJoy"><i></i></label></div></div>
         <div class="dep" data-dep="touchbtn"><div>
           <div class="small dim" id="orientNote"></div>
@@ -1002,7 +1010,7 @@
       <div class="dep sub" data-dep="boost"><div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Launch by itself</b><small>Boost as soon as the ring is full. No button needed.</small></span></span><input type="checkbox" id="setBoostAuto"><i></i></label>
         <div class="dep sub" data-dep="boostbtn"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Boost button</b><small>Tap it when the ring is full</small></span></span><input type="checkbox" id="setBoostBtn"><i></i></label></div></div>
-        <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="right"></span><span><b>Pull to boost</b><small>Pull farther the way you are rolling</small></span></span><input type="checkbox" id="setBoostPull"><i></i></label></div></div>
+        <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="right"></span><span><b>Pull to boost</b><small>Pull farther the way you are rolling (instead of the boost button)</small></span></span><input type="checkbox" id="setBoostPull"><i></i></label></div></div>
       </div></div>
 
       <div class="dep" data-dep="kb"><div>
@@ -1010,13 +1018,18 @@
         <div id="keyrows"></div><div id="keymsg"></div>
         <button class="btn" id="keyReset"><span data-ic="reset"></span>Reset keys</button>
         <p class="small dim">A key can only do one thing. Esc, <kbd>-</kbd> and <kbd>+</kbd> are always settings and zoom.</p>
+        <p class="small dim"><b>Building with the keyboard:</b> open the build menu with its key (B). <kbd>←</kbd> <kbd>→</kbd> change the tab, <kbd>↑</kbd> <kbd>↓</kbd> pick the item, <kbd>1</kbd>–<kbd>9</kbd> pick it straight away, <kbd>Enter</kbd> buys it. Then roll to where it should go: <kbd>Enter</kbd> or <kbd>E</kbd> places it, <kbd>Q</kbd> cancels.</p>
+        <h4><span data-ic="pad"></span> Mouse</h4>
+        <div class="row"><span class="lbl">Move with the mouse</span><div id="selMouse"></div><div class="small dim" id="mouseDesc" style="margin-top:4px"></div></div>
       </div></div>
     </section>
     <section class="pane" data-pane="display">
+      <div class="row"><span class="lbl"><span data-ic="plus"></span> Menu size</span><div id="selUi"></div><div class="small dim" style="margin-top:4px">How big the menus, buttons and messages are. Auto makes them bigger on a computer screen.</div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Look</span><div id="selVs"></div><div class="small dim" id="vsDesc" style="margin-top:4px"></div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Family friendly</b><small>Rude words in player names are starred out on your screen. Anyone can still type any name</small></span></span><input type="checkbox" id="setFamily"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Finish crowns</b><small>Gold, silver, bronze and rock crowns over everyone who has finished</small></span></span><input type="checkbox" id="setCrowns"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label>
       <div class="dep sub" data-dep="mmPlayers"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big player dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigP"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label>
       <div class="dep sub" data-dep="mmBots"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big bot dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigB"><i></i></label></div></div></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="flag"></span><span><b>Finish arrow in private worlds</b><small>On: an arrow on screen always points to the finish. Off: the finish only shows on the map</small></span></span><input type="checkbox" id="setFinArrow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
@@ -1032,8 +1045,8 @@
       <label class="sw2 ic2"><span class="ti"><span data-ic="sound"></span><span><b>Sound effects</b><small>Jumps, coins, doors, splashes and more</small></span></span><input type="checkbox" id="setSfx"><i></i></label>
       <div class="dep sub" data-dep="sfx"><div><div class="row slrow"><span data-ic="sound"></span><input type="range" id="setSfxVol" min="0" max="1" step="0.05"></div></div></div>
       <h4><span data-ic="music"></span> Music</h4>
-      <div class="row"><div id="selMusic"></div><div class="small dim" id="musicDesc" style="margin-top:4px"></div></div>
-      <div class="dep" data-dep="music"><div><div class="row slrow"><span data-ic="music"></span><input type="range" id="setMusicVol" min="0" max="1" step="0.05"></div>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="music"></span><span><b>Music</b><small>Songs that play while you roll</small></span></span><input type="checkbox" id="setMusicOn"><i></i></label>
+      <div class="dep" data-dep="music"><div><div class="row"><div id="selMusic"></div><div class="small dim" id="musicDesc" style="margin-top:4px"></div></div><div class="row slrow"><span data-ic="music"></span><input type="range" id="setMusicVol" min="0" max="1" step="0.05"></div>
       <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnSkip" title="Next song"><span data-ic="skip"></span></button></div></div></div>
     </section>
     <section class="pane" data-pane="online">
@@ -1042,9 +1055,17 @@
       <div class="small dim" id="mpstats"></div>
       <div class="dep" data-dep="!mp"><div>
         <h4><span data-ic="map"></span> Your level</h4>
-        <div class="small dim">Pick any level you like, and set the time of day and the finish there, before you play. What you build, move, open and collect on a level is saved until you reset that level.</div>
+        <div class="small dim">Pick any level you like. The coins, time of day and finish below are for that level. What you build, move, open and collect on a level is saved until you reset that level.</div>
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
-        <button class="btn full" id="btnInvite" type="button"><span data-ic="users"></span>Invite friends to this level</button>
+        <button class="btn full hide" id="btnInvite" type="button" hidden></button>
+        <div id="lvOptBox"><div class="small dim" id="lvOptFor" style="margin:8px 0 2px"></div>
+      <label class="sw2 ic2 lvunl"><span class="ti"><span data-ic="gcoin"></span><span><b>Unlimited coins and diamonds</b><small id="lvMoney"></small></span></span><input type="checkbox" id="lvUnl"><i></i></label>
+      <div class="lvmode">
+        <div class="row todrow"><span data-ic="clock"></span><div id="selTod"></div></div>
+        <div class="small dim" id="todDesc"></div>
+        <div class="row todrow"><span data-ic="flag"></span><div id="selFin"></div><label class="sw2 finroll" id="lvRollRow" title="Draw a new finish spot each time you start this level"><span>New each game</span><input type="checkbox" id="lvRoll"><i></i></label></div>
+      </div>
+        </div>
       </div></div>
       <div class="dep" data-dep="!mp"><div>
         <h4><span data-ic="bot"></span> Bots</h4>
@@ -1105,7 +1126,7 @@
 
 <div id="home" class="hide">
   <div class="scene" id="homeScene"></div>
-  <button id="homeShare" class="ibtn" type="button" title="Share ballpit.party" aria-label="Share the game" data-ic="share"></button><button id="homeUpd" class="ibtn" type="button" title="Version and updates" aria-label="Version and updates" data-ic="reset"></button><span id="shareTip" class="hide">Link copied</span>
+  <button id="homeShare" class="ibtn" type="button" title="Share ballpit.party" aria-label="Share the game" data-ic="share"></button><button id="homeUpd" class="ibtn hide" type="button" title="Version and updates" aria-label="Version and updates" data-ic="reset"></button><span id="shareTip" class="hide">Link copied</span>
   <button id="homeWallet" type="button" aria-label="Your coins and diamonds"></button>
   <div class="hbox">
     <h1>BALL<b>PIT</b>.PARTY</h1>
@@ -1117,7 +1138,7 @@
       <div class="small dim" id="homeModeNote"></div>
       <button id="homeLvl" class="btn lvrow" type="button"></button>
       <button id="homePlay" class="hplay" type="button">Play</button>
-      <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
+      <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeMore" type="button"><span data-ic="more"></span>More</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
       <div class="hbtns"><button class="btn hide" id="homeInstall" type="button"><span data-ic="install"></span>Install the app</button></div>
     </div>
     <div class="small dim" id="homeOnline"></div>
@@ -1195,16 +1216,10 @@
       <div id="lvGrid" role="listbox" aria-label="Levels"></div>
     </div>
     <div class="lvright">
-      <div class="lvsel"><b id="lvName"></b><div class="lvtags" id="lvTags"></div><span class="small dim" id="lvNote"></span></div>
-      <label class="sw2 ic2 lvunl"><span class="ti"><span data-ic="gcoin"></span><span><b>Unlimited coins and diamonds</b><small id="lvMoney"></small></span></span><input type="checkbox" id="lvUnl"><i></i></label>
-      <div class="lvmode">
-        <div class="row todrow"><span data-ic="clock"></span><div id="selTod"></div></div>
-        <div class="small dim" id="todDesc"></div>
-        <div class="row todrow"><span data-ic="flag"></span><div id="selFin"></div><label class="sw2 finroll" id="lvRollRow" title="Draw a new finish spot each time you start this level"><span>New each game</span><input type="checkbox" id="lvRoll"><i></i></label></div>
-      </div>
+      <div class="lvsel"><b id="lvName"></b><div class="lvtags" id="lvTags"></div><span class="small dim" id="lvNote"></span><div class="lvdesc hide" id="lvDesc"></div><button type="button" class="chip" id="lvDescBtn"><span>Add a description</span></button></div>
     </div>
   </div>
-  <div class="btns"><button id="lvReset" type="button" class="danger">Reset level</button><button id="lvNo" type="button">Close</button><button id="lvOk" type="button" class="go">Play</button></div>
+  <div class="btns"><button id="lvReset" type="button" class="danger hide" hidden>Reset level</button><button id="lvNo" type="button">Close</button><button id="lvOk" type="button" class="go">Play</button></div>
 </div></div>
 
 <div id="codeModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="cdTitle"><div class="card nmcard">
@@ -1214,6 +1229,14 @@
   <div class="btns"><button id="cdNo" type="button">Cancel</button><button id="cdOk" type="button" class="go">OK</button></div>
 </div></div>
 
+<div id="descModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="dsTitle"><div class="card nmcard">
+  <h3 id="dsTitle">Describe this level</h3>
+  <div class="small dim" id="dsNote"></div>
+  <textarea id="dsA" maxlength="140" rows="3" placeholder="A few words about this level" autocomplete="off" spellcheck="false"></textarea>
+  <label class="dont hide" id="dsSplitWrap" style="margin:0"><input type="checkbox" id="dsSplit"><span>Write a different one for my offline map</span></label>
+  <textarea id="dsB" class="hide" maxlength="140" rows="3" placeholder="For my offline map" autocomplete="off" spellcheck="false"></textarea>
+  <div class="btns"><button id="dsNo" type="button">Cancel</button><button id="dsOk" type="button" class="go">Save</button></div>
+</div></div>
 <div id="nameModal" class="overlay hide"><div class="card nmcard">
   <h3 id="nmTitle">Your name</h3>
   <input type="text" id="nmIn" maxlength="12" placeholder="Type a name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -1292,8 +1315,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=153"></script>
-<script src="physics.js?v=153"></script>
+<script src="maps.js?v=156"></script>
+<script src="physics.js?v=156"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1332,16 +1355,16 @@ function fillIcons(root) {
 fillIcons();
 
 /* ================= settings (saved in this browser, restored exactly on return) ================= */
-function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'] }; }
+function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiScale: 'auto', musicOn: true, family: true, shopBtn: false, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
-    boost: true, boostAuto: true, boostBtn: true, boostPull: true, joy: true, superBtn: false, btnMul: {},
-    keys: defKeys(), inputMode: 'auto', scheme: 'buttons', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
+    boost: true, boostAuto: false, boostBtn: true, boostPull: false, joy: true, superBtn: true, btnMul: {},
+    keys: defKeys(), inputMode: 'auto', scheme: 'swipebtn', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
 }
 let settings = defaults();
 try { const o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
@@ -1354,10 +1377,16 @@ function normalize() {
   settings.zoom = clamp(+settings.zoom || 1, 0.25, 2);
   settings.botMax = clamp(Math.round(+settings.botMax), 1, 200); if (!isFinite(settings.botMax)) settings.botMax = 8;
   if (!settings.lookSame) { settings.lookSame = 1; settings.botMsg = false; settings.botMark = false; if (settings.mmBots !== settings.mmPlayers) settings.mmBots = settings.mmPlayers; }   // (once: bots look just like players everywhere, unless you turn the markers back on yourself)
+  if (settings.keys) { const dk = defKeys(); for (const a of ['build', 'down', 'chat', 'help', 'map', 'pause']) if (!Array.isArray(settings.keys[a])) settings.keys[a] = dk[a].filter(c => !Object.keys(settings.keys).some(o => Array.isArray(settings.keys[o]) && settings.keys[o].indexOf(c) >= 0)); }   // (new keys: the build menu, down, chat, how to play)
+  if (settings.boostBtn && settings.boostPull) settings.boostPull = false;   // (one way to boost by hand, not both)
+  if (['off', 'hold', 'holdr', 'follow'].indexOf(settings.mouseMove) < 0) settings.mouseMove = 'off';
+  if (['auto', '1', '1.15', '1.3', '1.5'].indexOf(String(settings.uiScale)) < 0) settings.uiScale = 'auto';
   settings.botMaxOff = clamp(Math.round(+settings.botMaxOff), 1, 19); if (!isFinite(settings.botMaxOff)) settings.botMaxOff = 6;
   settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
   settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
-  if (['none', 'peaceful', 'upbeat', 'exciting'].indexOf(settings.music) < 0) settings.music = 'peaceful';
+  if (settings.music === 'none') { settings.music = 'random'; settings.musicOn = false; }   // (no music is a switch now, like sound effects)
+  if (typeof settings.musicOn !== 'boolean') settings.musicOn = true;
+  if (['random', 'peaceful', 'upbeat', 'exciting'].indexOf(settings.music) < 0) settings.music = 'peaceful';
   ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
   settings.keys = cleanKeys(settings.keys);
   if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);
@@ -1368,7 +1397,7 @@ function normalize() {
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'family', 'shopBtn', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -1397,7 +1426,31 @@ const save = () => { try { localStorage.setItem('ballrun4', JSON.stringify(setti
 /* ================= small helpers ================= */
 const fmtT = ms => { ms = Math.max(0, ms); const m = Math.floor(ms / 60000), s = (ms % 60000) / 1000; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
 function fmtClock(ms) { const s = Math.max(0, Math.ceil(ms / 1000)), p = n => (n < 10 ? '0' : '') + n; return s >= 3600 ? Math.floor(s / 3600) + ':' + p(Math.floor(s / 60) % 60) + ':' + p(s % 60) : p(Math.floor(s / 60)) + ':' + p(s % 60); }
-const who = n => n || 'Someone';
+/* Family-friendly names (a setting, on unless you turn it off). Anyone can type any name, and it is kept exactly as typed:
+   it is only what THIS device shows that changes. Swear words, slurs and the like are starred out, also when written with numbers, dots or stretched letters. */
+const BADW = ['fuck', 'fuk', 'fck', 'shit', 'sht', 'bitch', 'biatch', 'cunt', 'dick', 'cock', 'pusy', 'ashole', 'arsehole', 'bastard', 'slut', 'whore', 'hoe', 'niger', 'niga', 'nigr', 'nega', 'fagot', 'fag', 'retard', 'rape', 'rapist', 'hitler', 'nazi', 'penis', 'vagina', 'porn', 'sex', 'pis', 'wank', 'twat', 'tits', 'bob', 'dildo', 'jizz', 'jiz', 'molest', 'pedo', 'kike', 'chink', 'trany', 'dyke', 'heil', 'isis', 'kys', 'suicide'].filter(w => w !== 'bob' && w !== 'hoe' && w !== 'nega');
+const OKW = ['grape', 'drape', 'scrape', 'peacock', 'cockatoo', 'hancock', 'dickens', 'sussex', 'essex', 'middlesex', 'cocktail', 'raccoon', 'racoon', 'cocoon', 'tycoon', 'spice', 'piston', 'pistol', 'pisces', 'epis', 'therapist', 'niger', 'nigeria', 'snigger', 'fagin', 'shitake', 'scunthorpe', 'pencock', 'sextant', 'sextet', 'unisex', 'chinking', 'vinega'].filter(w => w !== 'niger' && w !== 'snigger');
+const LEET = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '9': 'g', '@': 'a', '$': 's', '!': 'i', '|': 'i', '+': 't' };
+function censor(n) {
+  if (!n || typeof n !== 'string' || (typeof settings !== 'undefined' && settings && settings.family === false)) return n;
+  const low = n.toLowerCase(); let norm = '', map = [];
+  for (let i = 0; i < low.length; i++) { let c = LEET[low[i]] || low[i]; if (!/[a-z]/.test(c)) continue; if (norm.length && norm[norm.length - 1] === c) continue; norm += c; map.push(i); }   // (letters only, look-alikes turned back into letters, stretched letters squeezed)
+  if (!norm) return n;
+  const plain = low.replace(/[^a-z]/g, ''); if (OKW.some(w => plain === w)) return n;
+  const hit = new Array(n.length).fill(false); let any = false;
+  for (const w of BADW) { let from = 0, k; while ((k = norm.indexOf(w, from)) >= 0) { from = k + 1; if (OKW.some(o => { const j = norm.indexOf(o.replace(/(.)\1+/g, '$1')); return j >= 0 && j <= k && j + o.length >= k + w.length; })) continue; const a = map[k], b = k + w.length < map.length ? map[k + w.length] - 1 : n.length - 1; for (let i = a; i <= b; i++) hit[i] = true; any = true; } }
+  if (/k\W*k\W*k/i.test(n)) { const m = n.match(/k\W*k\W*k/i); for (let i = m.index; i < m.index + m[0].length; i++) hit[i] = true; any = true; }
+  if (!any) return n;
+  let out = ''; for (let i = 0; i < n.length; i++) out += hit[i] && /\S/.test(n[i]) ? '*' : n[i];
+  return out;
+}
+function censorIn(o, d) {   // every name that comes in from the server is cleaned up for showing, in one place
+  if (!o || typeof o !== 'object' || (d | 0) > 5) return o;
+  if (Array.isArray(o)) { for (let i = 0; i < o.length; i++) if (o[i] && typeof o[i] === 'object') censorIn(o[i], (d | 0) + 1); return o; }
+  for (const k in o) { const v = o[k]; if (typeof v === 'string') { if (k === 'name' || k === 'n' || k === 'from' || k === 'host') o[k] = censor(v); } else if (v && typeof v === 'object') censorIn(v, (d | 0) + 1); }
+  return o;
+}
+const who = n => censor(n) || 'Someone';
 const NIC = { bot: 'bot', human: 'user' };
 function nameIcon(kind) {   // a little robot (bots) or person (players) icon in front of a name in a message, if the player turned that on
   if (!((kind === 'bot' && settings.botMsg) || (kind === 'human' && settings.peopleMsg))) return null;
@@ -1541,7 +1594,7 @@ function auInit() {
 function auVol() {
   if (!AU.ctx) return;
   AU.sfx.gain.value = settings.sfx ? settings.sfxVol * 0.8 : 0;
-  AU.musOut.gain.value = settings.music === 'none' ? 0 : settings.musicVol * 1.1;
+  AU.musOut.gain.value = musOff() ? 0 : settings.musicVol * 1.1;
 }
 function auWake() { auInit(); if (AU.ctx && AU.ctx.state === 'suspended') AU.ctx.resume(); musicStart(); }
 ['pointerdown', 'keydown', 'touchend'].forEach(ev => addEventListener(ev, auWake, true));   // the first tap or key unlocks sound (a browser rule)
@@ -1638,7 +1691,9 @@ const SONGS = {
   ]
 };
 const MOOD = { peaceful: 0, upbeat: 1, exciting: 2 };
-const MUSIC_INFO = { none: 'No music', peaceful: 'Peaceful: soft and dreamy', upbeat: 'Upbeat: bouncy and relaxed', exciting: 'Exciting: fast and driving' };
+const musOff = () => !settings.musicOn;
+const musStyle = () => settings.music === 'random' ? (AU.rnd || (AU.rnd = ['peaceful', 'upbeat', 'exciting'][Math.floor(Math.random() * 3)])) : settings.music;   // (Random: a different kind of music each game, and each time you skip)
+const MUSIC_INFO = { random: 'Random: a different kind each game', none: 'No music', peaceful: 'Peaceful: soft and dreamy', upbeat: 'Upbeat: bouncy and relaxed', exciting: 'Exciting: fast and driving' };
 const RHY = [
   [[[0, 1.5], [1.5, 0.5], [2, 2]], [[0, 1], [1, 1], [2, 1], [3, 1]], [[0.5, 1], [2, 1.5]], [[0, 2], [2, 1], [3, 1]]],
   [[[0, 0.5], [0.5, 0.5], [1, 1], [2, 0.5], [3, 1]], [[0, 1], [1.5, 0.5], [2, 1], [3.5, 0.5]], [[0, 0.5], [1, 0.5], [2, 0.5], [3, 0.5], [3.5, 0.5]]],
@@ -1691,10 +1746,10 @@ function musicPick(avoid) {
   const list = SONGS[AU.style]; let s, tries = 0;
   do { s = list[Math.floor(Math.random() * list.length)]; } while (s === avoid && list.length > 1 && tries++ < 8);
   AU.song = s; AU.melody = genMelody(s, MOOD[AU.style]); AU.bar = 0;
-  const np = $('nowPlaying'); if (np) np.textContent = s.name + ' · ' + settings.music;
+  const np = $('nowPlaying'); if (np) np.textContent = s.name + ' · ' + AU.style;
 }
 function musicTick() {
-  if (!AU.ctx || AU.ctx.state !== 'running' || settings.music === 'none' || !AU.song) return;
+  if (!AU.ctx || AU.ctx.state !== 'running' || musOff() || !AU.song) return;
   const beat = 60 / AU.song.bpm;
   let guard = 0;
   while (AU.nextT < AU.ctx.currentTime + 0.7 && guard++ < 4) {
@@ -1713,12 +1768,12 @@ function musicStart() {
   if (!AU.ctx) return;
   auVol();
   const np = $('nowPlaying');
-  if (settings.music === 'none') { if (AU.style) musicSwap(); AU.style = ''; AU.song = null; if (np) np.textContent = 'Music is off'; return; }
-  if (AU.style === settings.music && AU.song) return;
-  if (AU.style) musicSwap(); AU.style = settings.music; musicPick(null); AU.nextT = AU.ctx.currentTime + 0.25;
+  if (musOff()) { if (AU.style) musicSwap(); AU.style = ''; AU.song = null; if (np) np.textContent = 'Music is off'; return; }
+  if (AU.style === musStyle() && AU.song) return;
+  if (AU.style) musicSwap(); AU.style = musStyle(); musicPick(null); AU.nextT = AU.ctx.currentTime + 0.25;
   if (!AU.timer) AU.timer = setInterval(musicTick, 150);
 }
-function musicSkip() { if (!AU.song || settings.music === 'none') return; musicSwap(); musicPick(AU.song); AU.nextT = AU.ctx.currentTime + 0.25; }
+function musicSkip() { if (!AU.song || musOff()) return; if (settings.music === 'random') { AU.rnd = null; musicSwap(); AU.style = musStyle(); musicPick(null); AU.nextT = AU.ctx.currentTime + 0.25; return; } musicSwap(); musicPick(AU.song); AU.nextT = AU.ctx.currentTime + 0.25; }
 
 /* ================= ball sprites (hand-drawn look, cached so lots of balls stay cheap) ================= */
 const SPN = 96, SPK = (SPN / 2 - 5) / R, SPW = SPN / SPK;
@@ -1940,14 +1995,25 @@ function loadSolo() { SOLOKEY = soloKeyNow(); solo2 = readSolo(SOLOKEY); }   // 
 function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo2)); } catch (e) {} }
 const soloLevel = () => Math.max(0, Math.min(BallMaps.count - 1, +settings.soloMap || 0));
 const hasSoloSave = i => !!solo2[i];
+const soloBuilt = i => { const o = solo2[i], n = k => (o[k] && o[k].length) | 0; return !!o && n('buys') + n('cps') + n('gates') + n('misc') + n('dels') > 0; };   // (playing a level is not building in it)
 const soloFrom = i => (solo2[i] && solo2[i].from) || '';   // where a copy saved from someone else's world came from
-function saveCopy(key) {   // keep this world, as it is right now, as your own version of this level: in your private maps (SOLOKEY_P) or your offline maps (SOLOKEY_O)
-  if (!S.world || !S.map || S.slot < 0) return false;
-  const o = worldObj(); delete o.slot; o.got = []; o.n = 0; o.rcv = o.buys.length + o.gates.length + o.misc.length; o.own = {};   // (everything in it counts as already there, so you can still build)
+function copySnap() {   // this world, as it is right now, as your own version of this level. Taken the moment you ask to save, so it is still whole if the game closes while you decide where it goes
+  if (!S.world || !S.map || S.slot < 0) return null;
+  const o = JSON.parse(JSON.stringify(worldObj())); delete o.slot; o.got = []; o.n = 0; o.rcv = o.buys.length + o.gates.length + o.misc.length; o.own = {};   // (everything in it counts as already there, so you can still build)
   o.from = party ? who(party.name) : 'a public world';
-  key = key || SOLOKEY; const st = key === SOLOKEY ? solo2 : readSolo(key); st[S.idx] = o;
+  return { o, idx: S.idx };
+}
+function saveCopy(key, snap) {   // into your private maps (SOLOKEY_P) or your offline maps (SOLOKEY_O)
+  snap = snap || copySnap(); if (!snap) return false;
+  key = key || SOLOKEY; const st = key === SOLOKEY ? solo2 : readSolo(key); st[snap.idx] = JSON.parse(JSON.stringify(snap.o));
   try { localStorage.setItem(key, JSON.stringify(st)); } catch (e) { return false; } return true;
 }
+/* a few words of your own about a level, so you can tell them apart: one for your private map, one for your offline map */
+const DESCKEY = 'ballrun4_lvdesc', DESC_MAX = 140;
+let lvDescs = {}; try { lvDescs = JSON.parse(localStorage.getItem(DESCKEY) || '{}') || {}; } catch (e) { lvDescs = {}; }
+const descSlot = key => (key === SOLOKEY_O ? 'o' : 'p');
+const lvDescOf = (i, key) => { const d = lvDescs[descSlot(key || soloKeyNow())]; return (d && typeof d[i] === 'string' && d[i]) || ''; };
+function setLvDesc(i, key, txt) { const k = descSlot(key || soloKeyNow()); if (!lvDescs[k] || typeof lvDescs[k] !== 'object') lvDescs[k] = {}; txt = String(txt || '').replace(/\s+/g, ' ').trim().slice(0, DESC_MAX); if (txt) lvDescs[k][i] = txt; else delete lvDescs[k][i]; try { localStorage.setItem(DESCKEY, JSON.stringify(lvDescs)); } catch (e) {} }
 loadSolo();
 function soloRoll() {}   // (a level of your own never ends by itself)
 function soloSlot() { return SOLO_BASE + soloLevel(); }
@@ -2005,7 +2071,7 @@ function startTransition(slot, next) {
 
 let placing = null;   // the item you are building right now (a ghost that follows you until you tap Place)
 let inHome = true, paused = false;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
-const typing = () => { const a = document.activeElement; return a && a.tagName === 'INPUT' && a.type === 'text' && !a.readOnly; };
+const typing = () => { const a = document.activeElement; return a && ((a.tagName === 'INPUT' && a.type === 'text') || a.tagName === 'TEXTAREA') && !a.readOnly; };
 const blocked = () => !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('profModal').classList.contains('hide') || !$('lvlModal').classList.contains('hide') || !$('invModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 const pushC = { x: 0, y: 0, vx: 0, vy: 0, ground: false };
@@ -2047,8 +2113,9 @@ function update(dt) {
   if (S.finished) { S.finT -= dt; if (S.finT <= 0) $('finishbanner').classList.add('hide'); }
   const b = S.b, bl = blocked();
   const kb = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
-  const ax = bl ? 0 : clamp(kb + tin.ax, -1, 1);
-  const jheld = !bl && (inp.jump || tin.jump || tin.btnJ || performance.now() < tin.jumpUntil);
+  const ms = bl ? null : mouseTick();
+  const ax = bl ? 0 : clamp(kb + tin.ax + (ms ? ms.ax : 0), -1, 1);
+  const jheld = !bl && (inp.jump || tin.jump || tin.btnJ || (ms && ms.jump) || performance.now() < tin.jumpUntil);
   if (!S.started && !S.finished && (ax !== 0 || b.jbuf > 0)) { S.started = true; S.runStart = performance.now(); }
   S.pbx = b.x; S.pby = b.y;
   b.bAuto = !bl && settings.boost && settings.boostAuto;
@@ -2657,6 +2724,91 @@ function resetPress() {   // the reset button / key: with a live checkpoint it c
   S.started = false; $('finishbanner').classList.add('hide'); respawn();
 }
 
+/* ----- moving with the mouse (a setting, off unless you choose it): hold and roll toward the pointer, or simply follow it ----- */
+const mouse = { x: 0, y: 0, l: false, r: false, seen: false, jump: false, out: { ax: 0, jump: false } };
+cv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; mouse.seen = true; } });
+cv.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; mouse.x = e.clientX; mouse.y = e.clientY; mouse.seen = true; if (e.button === 0) mouse.l = true; else if (e.button === 2) mouse.r = true; });
+addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') return; if (e.button === 0) mouse.l = false; else if (e.button === 2) mouse.r = false; });
+addEventListener('blur', () => { mouse.l = mouse.r = false; });
+function mouseTick() {
+  const o = mouse.out, md = settings.mouseMove; o.ax = 0; o.jump = false;
+  if (md === 'off' || !mouse.seen || touchActive() || !S.b || !S.view || S.mode !== 'play' || (typeof placing !== 'undefined' && placing) || (typeof mmBigOn !== 'undefined' && mmBigOn)) { mouse.jump = false; return o; }
+  const r = cv.getBoundingClientRect(), v = S.view, sx = r.left + (S.b.x - v.l) / v.w * r.width, sy = r.top + (S.b.y - v.t) / v.h * r.height, dx = mouse.x - sx, up = sy - mouse.y;
+  const roll = Math.abs(dx) < 16 ? 0 : Math.sign(dx) * Math.min(1, 0.35 + Math.abs(dx) / 160);
+  let j = false;
+  if (md === 'hold') { if (mouse.l) { o.ax = roll; j = up > 80; } }
+  else if (md === 'holdr') { if (mouse.l) o.ax = roll; j = mouse.r; }
+  else if (md === 'follow') { o.ax = Math.abs(dx) < 26 ? 0 : roll; j = mouse.l || mouse.r; }
+  if (j && !mouse.jump) pressJump();
+  mouse.jump = j; o.jump = j; return o;
+}
+/* ----- the build menu on the keyboard: its own key opens it; arrows pick the tab and the item, Enter buys ----- */
+let shopSel = -1;
+function shopKb() { const rows = [...document.querySelectorAll('#shopList .shopitem')]; rows.forEach((r, i) => r.classList.toggle('kb', i === shopSel)); if (shopSel >= 0 && rows[shopSel] && rows[shopSel].scrollIntoView) rows[shopSel].scrollIntoView({ block: 'nearest' }); return rows; }
+/* The whole game works from the keyboard: in any menu or pop-up the arrows (or WASD) walk over everything in it, Enter or Space uses what is lit, Esc goes back.
+   A slider that is lit moves with left and right; a text box that is lit is typed in after Enter. */
+let kbBox = null;
+function kbNav(box, e, passGo) {
+  const c = e.code, dir = c === 'ArrowLeft' || c === 'KeyA' ? [-1, 0] : c === 'ArrowRight' || c === 'KeyD' ? [1, 0] : c === 'ArrowUp' || c === 'KeyW' ? [0, -1] : c === 'ArrowDown' || c === 'KeyS' ? [0, 1] : null, go = c === 'Enter' || c === 'Space' || c === 'NumpadEnter';
+  if (!dir && !go) return false;
+  if (kbBox !== box) { document.querySelectorAll('.kbf').forEach(x => x.classList.remove('kbf')); kbBox = box; }
+  const bs = [...box.querySelectorAll('button, label.sw2, label.dont, label.saychk, input[type=range], input[type=text], textarea, #mm')].filter(b => b.offsetParent !== null && !b.disabled && b.getClientRects().length && !(b.tagName === 'LABEL' && !b.querySelector('input')));
+  if (!bs.length) return true;
+  let cur = bs.find(b => b.classList.contains('kbf'));
+  if (go) {
+    if (!cur) { if (passGo) return false; bs[0].classList.add('kbf'); return true; }
+    if (cur.tagName === 'LABEL') { const i = cur.querySelector('input'); if (i && !i.disabled) i.click(); } else if (cur.tagName === 'INPUT' && cur.type === 'range') { /* (left and right move it) */ } else if (cur.tagName === 'INPUT' || cur.tagName === 'TEXTAREA') { try { cur.focus(); } catch (er) {} } else cur.click();
+    return true;
+  }
+  if (!cur) { (box.querySelector('button.go, button.hplay') && bs.indexOf(box.querySelector('button.go, button.hplay')) >= 0 ? box.querySelector('button.go, button.hplay') : bs[0]).classList.add('kbf'); return true; }
+  if (cur.tagName === 'INPUT' && cur.type === 'range' && dir[0]) { const st = +cur.step || 1, v = Math.max(+cur.min, Math.min(+cur.max, +cur.value + dir[0] * st)); if (v !== +cur.value) { cur.value = v; cur.dispatchEvent(new Event('input', { bubbles: true })); cur.dispatchEvent(new Event('change', { bubbles: true })); } return true; }
+  const r0 = cur.getBoundingClientRect(), x0 = r0.left + r0.width / 2, y0 = r0.top + r0.height / 2; let best = null, bd = 1e9;
+  for (const b of bs) { if (b === cur) continue; const r = b.getBoundingClientRect(), dx = r.left + r.width / 2 - x0, dy = r.top + r.height / 2 - y0, along = dx * dir[0] + dy * dir[1]; if (along < 4) continue;
+    const gap = dir[0] ? Math.max(0, r.top - r0.bottom, r0.top - r.bottom) : Math.max(0, r.left - r0.right, r0.left - r.right);   // (how far it is off to the side: nothing when the two overlap that way, so a wide switch under a small button is "straight below" it)
+    const edge = dir[0] > 0 ? r.left - r0.right : dir[0] < 0 ? r0.left - r.right : dir[1] > 0 ? r.top - r0.bottom : r0.top - r.bottom, d = Math.max(0, edge) + gap * 2.5 + (Math.abs(dx * dir[1]) + Math.abs(dy * dir[0])) * 0.05; if (d < bd) { bd = d; best = b; } }
+  if (best) { cur.classList.remove('kbf'); best.classList.add('kbf'); if (best.scrollIntoView) best.scrollIntoView({ block: 'nearest' }); }
+  return true;
+}
+const KB_BOXES = ['pickPop', 'confirm', 'descModal', 'nameModal', 'codeModal', 'shareModal', 'profModal', 'addModal', 'invModal', 'lvlModal', 'emoPop', 'intro', 'settings', 'pause'];
+addEventListener('pointerdown', () => { if (kbBox) { document.querySelectorAll('.kbf').forEach(x => x.classList.remove('kbf')); kbBox = null; } }, true);
+addEventListener('keydown', e => {
+  if (keyCapture || typing() || e.ctrlKey || e.metaKey || e.altKey) return;
+  const has = (a) => (settings.keys[a] || []).indexOf(e.code) >= 0, eat = () => { e.preventDefault(); e.stopPropagation(); };
+  { const L = document.querySelector('body > .csel-list');   // an open drop-down: up and down walk its lines, Enter picks
+    if (L) { const its = [...L.children], c = e.code, up = c === 'ArrowUp' || c === 'KeyW', dn = c === 'ArrowDown' || c === 'KeyS'; let i = its.findIndex(x => x.classList.contains('kbf')); if (i < 0) i = its.findIndex(x => x.classList.contains('on'));
+      if (up || dn) { its.forEach(x => x.classList.remove('kbf')); i = Math.max(0, Math.min(its.length - 1, i + (dn ? 1 : -1))); its[i].classList.add('kbf'); try { its[i].scrollIntoView({ block: 'nearest' }); } catch (er) {} eat(); return; }
+      if (c === 'Enter' || c === 'Space' || c === 'NumpadEnter') { if (i >= 0) its[i].click(); eat(); return; }
+      if (c !== 'Escape') { eat(); } return; } }
+  if (typeof shopOpen === 'undefined' || !shopOpen) {
+    for (const id of KB_BOXES) { const box = $(id); if (!box || box.classList.contains('hide')) continue;
+      if ((id === 'emoPop' && has('chat')) || (id === 'intro' && has('help'))) { if (id === 'emoPop') toggleChat(false); else { const ok = box.querySelector('.ok') || $('btnOk'); if (ok) ok.click(); else box.classList.add('hide'); } eat(); return; }
+      if (id === 'pause' && has('pause') && !e.repeat) { escMenu(); eat(); return; }
+      if (e.code === 'Escape' && id !== 'pickPop' && id !== 'confirm' && id !== 'settings' && id !== 'pause' && id !== 'intro' && id !== 'emoPop') { if (id === 'descModal') dsClose(false); else try { box.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); } catch (er) {} eat(); return; }
+      if (kbNav(box, e)) eat(); return; }
+    if (typeof inHome !== 'undefined' && inHome && !(typeof mmBigOn !== 'undefined' && mmBigOn)) { if (kbNav($('home'), e, true)) eat(); return; }
+  }
+  if (!e.repeat && S.mode === 'play' && !(typeof placing !== 'undefined' && placing)) {
+    if (has('map') && typeof toggleMmBig === 'function' && (mmBigOn || !blocked())) { toggleMmBig(!mmBigOn); eat(); return; }
+    if (!blocked()) {
+      if (has('chat') && typeof toggleChat === 'function') { toggleChat(true); eat(); return; }
+      if (has('help')) { const hb = $('btnWelcome'); if (hb) hb.click(); eat(); return; }
+      if (has('pause')) { escMenu(); eat(); return; }
+    }
+  }
+  const bk = settings.keys.build || [], open = typeof shopOpen !== 'undefined' && shopOpen;
+  if (!open) { if (bk.indexOf(e.code) >= 0 && !e.repeat && !blocked() && S.mode === 'play' && !(typeof placing !== 'undefined' && placing)) { shopSel = 0; toggleShop(true); if (shopOpen) { shopKb(); e.preventDefault(); e.stopPropagation(); } } return; }
+  const tabs = [...document.querySelectorAll('#shopTabs button')], ti = tabs.findIndex(b => b.classList.contains('on')), c = e.code;
+  let used = true;
+  if (c === 'Escape' || bk.indexOf(c) >= 0) toggleShop(false);
+  else if (c === 'ArrowLeft' || c === 'KeyA' || c === 'KeyQ') { if (tabs.length) { tabs[(ti - 1 + tabs.length) % tabs.length].click(); shopSel = 0; shopKb(); } }
+  else if (c === 'ArrowRight' || c === 'KeyD' || c === 'KeyE' || c === 'Tab') { if (tabs.length) { tabs[(ti + 1) % tabs.length].click(); shopSel = 0; shopKb(); } }
+  else if (c === 'ArrowDown' || c === 'KeyS') { const n = shopKb().length; if (n) { shopSel = (Math.max(-1, shopSel) + 1) % n; shopKb(); } }
+  else if (c === 'ArrowUp' || c === 'KeyW') { const n = shopKb().length; if (n) { shopSel = (Math.max(0, shopSel) - 1 + n) % n; shopKb(); } }
+  else if (c === 'Enter' || c === 'Space' || c === 'NumpadEnter') { const rows = shopKb(), b = rows[Math.max(0, shopSel)] && rows[Math.max(0, shopSel)].querySelector('button'); if (b && !b.disabled) b.click(); else sfx('warn'); }
+  else if (/^Digit[1-9]$/.test(c)) { const rows = shopKb(), i = +c.slice(5) - 1; if (rows[i]) { shopSel = i; shopKb(); const b = rows[i].querySelector('button'); if (b && !b.disabled) b.click(); else sfx('warn'); } }
+  else used = false;
+  if (used) { e.preventDefault(); e.stopPropagation(); }
+}, true);
 const keysDown = new Set();
 function actionOf(code) { const k = settings.keys; for (const a in k) if (k[a].indexOf(code) >= 0) return a; return null; }
 function syncKeys() { const k = settings.keys; inp.left = k.left.some(c => keysDown.has(c)); inp.right = k.right.some(c => keysDown.has(c)); const j = k.jump.some(c => keysDown.has(c)); if (j && !inp.jump) pressJump(); inp.jump = j; }
@@ -2710,19 +2862,20 @@ const oSuf = () => isPortrait() ? 'P' : '';
 const presetK = () => 'preset' + oSuf(), posK = () => 'btnPos' + oSuf(), mulK = () => 'btnMul' + oSuf();
 const curPreset = () => settings[presetK()];
 const curMul = () => settings[mulK()] || (settings[mulK()] = {});
-const BK = ['l', 'r', 'j', 'b', 's', 'p', 'c'];   // left, right, jump, boost, power jump, place, cancel
-const BNAME = { l: 'Move left', r: 'Move right', j: 'Jump', b: 'Boost', s: 'Power jump', p: 'Place', c: 'Cancel' };
-const BEL = { l: 'tl', r: 'tr', j: 'tj', b: 'tb', s: 'ts', p: 'tpl', c: 'tpc' };
+const BK = ['l', 'r', 'j', 'b', 's', 'p', 'c', 'm'];   // left, right, jump, boost, power jump, place, cancel
+const BNAME = { l: 'Move left', r: 'Move right', j: 'Jump', b: 'Boost', s: 'Power jump', p: 'Place', c: 'Cancel', m: 'Build menu' };
+const BEL = { l: 'tl', r: 'tr', j: 'tj', b: 'tb', s: 'ts', p: 'tpl', c: 'tpc', m: 'tm' };
 function withB(p) {   // every button has a spot. The boost button sits above jump; power jump, place and cancel are put in the nearest free space unless you moved them
   const o = Object.assign({}, p);
   if (!o.b) o.b = { a: p.j.a, dx: p.j.dx, dy: p.j.dy + 112 };
-  ['s', 'p', 'c'].forEach(k => { if (!o[k]) o[k] = { auto: 1 }; });
+  ['s', 'p', 'c', 'm'].forEach(k => { if (!o[k]) o[k] = { auto: 1 }; });
   return o;
 }
 function autoSpot(k, pts, rs, W, H) {   // the closest place to where a thumb would look for it that is free of the interface and of the other buttons
   const sz = btnSize(k), r = sz / 2, P0 = pts.p, J = pts.j || pts.r || [W / 2, H - 80, 80], Bb = pts.b;
   let ax, ay;
   if (k === 's') { const q = Bb || J; ax = q[0] + (q[0] > W / 2 ? -86 : 86); ay = q[1]; }
+  else if (k === 'm') { ax = J[0] + (J[0] > W / 2 ? -96 : 96); ay = J[1] - 96; }
   else if (k === 'p') { ax = J[0] + (J[0] > W * 0.62 ? -100 : J[0] < W * 0.38 ? 100 : 100); ay = J[1]; }
   else { ax = P0 ? P0[0] : J[0] + 100; ay = P0 ? P0[1] - (P0[2] + sz) / 2 - 8 : J[1] - 80; }
   let best = null, bc = 1e9;
@@ -2744,7 +2897,7 @@ function curLayout() {
   return withB(p);
 }
 const boostBtnOn = () => !!(settings.boost && !settings.boostAuto && settings.boostBtn && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));
-const BASE_SZ = { j: 92, b: 68, s: 68, p: 68, c: 56 };
+const BASE_SZ = { j: 92, b: 68, s: 68, p: 68, c: 56, m: 60 };
 let fitK = 1;   // shrinks every button a little when a screen is too small for the layout
 const screenK = () => clamp(Math.min(window.innerHeight / 400, window.innerWidth / 400), 0.6, 1.1);   // small screens get smaller buttons by themselves
 function btnSize(k) { return Math.round(clamp((BASE_SZ[k] || 78) * (curMul()[k] || 1) * screenK() * fitK, 30, 190)); }
@@ -2758,6 +2911,7 @@ function visK(k) {
     case 'j': return settings.scheme === 'buttons' || settings.scheme === 'swipebtn';
     case 'b': return boostBtnOn();
     case 's': return !!(settings.powerJump && settings.superBtn);
+    case 'm': return !!(settings.shopBtn && !(typeof placing !== 'undefined' && placing) && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));
     default: return !!(typeof placing !== 'undefined' && placing);   // place and cancel only while you are building
   }
 }
@@ -2780,7 +2934,7 @@ function validAt(k, x, y, sz) {   // may button k (this size) sit here? Not off 
 function solveLayout(W, H, L, ks, rs) {
   const pts = {};
   ks.forEach(k => { if (L[k].auto) return; const sz = btnSize(k); pts[k] = btnXY(L[k], W, H, sz).concat(sz); });
-  ['s', 'p', 'c'].forEach(k => { if (ks.indexOf(k) < 0 || !L[k].auto) return; pts[k] = autoSpot(k, pts, rs, W, H) || [W / 2, H / 2, btnSize(k)]; });
+  ['s', 'p', 'c', 'm'].forEach(k => { if (ks.indexOf(k) < 0 || !L[k].auto) return; pts[k] = autoSpot(k, pts, rs, W, H) || [W / 2, H / 2, btnSize(k)]; });
   // never let two buttons sit on top of each other, or on the interface (a narrow screen can squeeze them)
   for (let it = 0; it < 8; it++) {
     for (let a = 0; a < ks.length; a++) for (let b = a + 1; b < ks.length; b++) {
@@ -2820,7 +2974,7 @@ function applyTouchUI() {
   $('touch').classList.toggle('hide', !showBtns);
   $('tl').classList.toggle('hide', sc !== 'buttons'); $('tr').classList.toggle('hide', sc !== 'buttons');
   $('tb').classList.toggle('hide', !visK('b') || !showBtns);
-  ['ts', 'tpl', 'tpc'].forEach(id => { const k = id === 'ts' ? 's' : id === 'tpl' ? 'p' : 'c'; $(id).classList.toggle('hide', !(on && visK(k))); });
+  ['ts', 'tpl', 'tpc', 'tm'].forEach(id => { const k = id === 'ts' ? 's' : id === 'tpl' ? 'p' : id === 'tm' ? 'm' : 'c'; $(id).classList.toggle('hide', !(on && visK(k))); });
   BK.forEach(k => $(BEL[k]).classList.toggle('edit', editMode));
   layoutTouch();
   $('btnEditLayout').disabled = !(sc === 'buttons' || sc === 'swipebtn');
@@ -2859,7 +3013,7 @@ function bindBtn(id, key) {
 bindBtn('tl', 'L'); bindBtn('tr', 'R'); bindBtn('tj', 'J'); bindBtn('tb', 'B');
 // power jump, place and cancel: a tap is all they need
 function pressSuper() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0 && (S.b.jm || 0) >= 1) { S.b.sjReq = 0.25; S.b.jbuf = 0.12; } }
-[['ts', () => pressSuper()], ['tpl', () => { if (typeof finishPlacing === 'function') finishPlacing(); }], ['tpc', () => { if (typeof cancelPlacing === 'function') cancelPlacing(); }]].forEach(p => {
+[['tm', () => { if (typeof toggleShop === 'function') toggleShop(!shopOpen); }], ['ts', () => pressSuper()], ['tpl', () => { if (typeof finishPlacing === 'function') finishPlacing(); }], ['tpc', () => { if (typeof cancelPlacing === 'function') cancelPlacing(); }]].forEach(p => {
   const b = $(p[0]), act = e => { if (editMode) return; e.preventDefault(); b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 140); p[1](); };
   if (window.PointerEvent) b.addEventListener('pointerdown', act); else b.addEventListener('touchstart', act, { passive: false });
 });
@@ -3013,9 +3167,10 @@ function maybeAskBots() { return;   // (no more popups about bots: Offline alway
 $('btnOk').onclick = () => { auWake(); settings.intro = !$('dontShow').checked; $('setIntro').checked = settings.intro; save(); $('intro').classList.add('hide'); setTimeout(maybeAskBots, 400); };
 function showIntro() { $('dontShow').checked = !settings.intro; $('intro').classList.remove('hide'); }
 function closeSettingsNow() {
-  $('settings').classList.add('hide'); if ($('settings').classList.contains('only') && typeof curTab !== 'undefined' && curTab === 'you') showTab('controls'); $('settings').classList.remove('only'); /* (your look is only changed from the main menu: Settings itself never opens on it) */ $('shTitle').textContent = 'Settings'; $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
+  $('settings').classList.add('hide'); if ($('settings').classList.contains('only') && typeof curTab !== 'undefined' && (curTab === 'you' || curTab === 'more')) showTab('controls'); $('settings').classList.remove('only'); /* (your look is only changed from the main menu: Settings itself never opens on it) */ $('shTitle').textContent = 'Settings'; $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
   try { const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); } catch (e) {}
   if (typeof lpAfterTab === 'function') lpAfterTab();
+  if (typeof finApply === 'function') finApply();
 }
 function toggleSettings() { if ($('settings').classList.contains('hide')) { $('settings').classList.remove('hide'); $('pause').classList.add('sopen'); if (typeof lpAfterTab === 'function') lpAfterTab(); } else closeSettingsNow(); }
 // the dimmed backdrop: any tap outside the pop-up closes it (the game keeps running behind it)
@@ -3040,7 +3195,7 @@ function showTab(name) {
   const panes = document.querySelectorAll('.pane');
   for (let i = 0; i < panes.length; i++) panes[i].classList.toggle('on', panes[i].getAttribute('data-pane') === name);
   if (closeSelectFn) closeSelectFn(); closePicker();
-  curTab = name;
+  curTab = name; { const sb = document.querySelector('#settings .sbody'); if (sb) sb.scrollTop = 0; }   // (a new tab always starts at its top)
   if (typeof lpAfterTab === 'function') lpAfterTab();
 }
 for (let i = 0; i < tabBtns.length; i++) tabBtns[i].onclick = (function (b) { return function () { showTab(b.getAttribute('data-tab')); }; })(tabBtns[i]);
@@ -3055,12 +3210,19 @@ const selPreset = makeSelect($('selPreset'), Object.keys(PRESETS).map(k => ({ v:
 const VSS = { classic: ['Classic', 'Hand-drawn: wobbly pencil lines, paper and a handwritten font.'], smooth: ['Smooth', 'The same colours, drawn clean: straight lines, round balls and a plain font.'] };
 const applyVs = () => { if (!VSS[settings.vs]) settings.vs = 'classic'; document.documentElement.setAttribute('data-vs', settings.vs); FONT = settings.vs === 'smooth' ? FONT_SMOOTH : FONT_HAND; sprites.clear(); };
 applyVs();
+/* how big the menus are: bigger on a computer screen by default, and yours to choose */
+const MOUSE = { off: ['Off', 'The mouse only clicks buttons.'], hold: ['Hold to roll', 'Hold the left button: your ball rolls toward the pointer (further away = faster). Hold it well above your ball to jump.'], holdr: ['Hold to roll, right-click jumps', 'Hold the left button to roll toward the pointer. The right button jumps (hold it for a higher jump).'], follow: ['Follow the pointer', 'Your ball always rolls toward the pointer. Click to jump (hold for a higher jump).'] };
+function uiScaleNow() { const s = settings.uiScale; let k = s === 'auto' ? (touchActive() ? 1 : innerWidth >= 1700 && innerHeight >= 900 ? 1.45 : innerWidth >= 1200 && innerHeight >= 700 ? 1.25 : 1) : +s || 1; return Math.max(1, Math.min(k, innerWidth / 700, innerHeight / 520)); }   // (never bigger than the window can hold)
+function applyUi() { const k = Math.round(uiScaleNow() * 100) / 100, st = document.documentElement.style; st.setProperty('--uis', String(k)); st.setProperty('--uih', Math.floor(innerHeight * 0.9 / k) + 'px'); st.setProperty('--uihc', Math.floor((innerHeight - 28) / k) + 'px'); st.setProperty('--uiw', Math.floor((innerWidth - 28) / k) + 'px'); }
+addEventListener('resize', applyUi);
+const selUi = makeSelect($('selUi'), [{ v: 'auto', label: 'Auto' }, { v: '1', label: 'Normal' }, { v: '1.15', label: 'Large' }, { v: '1.3', label: 'Extra large' }, { v: '1.5', label: 'Huge' }], v => { settings.uiScale = v; save(); applyUi(); });
+const selMouse = makeSelect($('selMouse'), Object.keys(MOUSE).map(k => ({ v: k, label: MOUSE[k][0] })), v => { settings.mouseMove = v; save(); $('mouseDesc').textContent = MOUSE[v][1]; });
 const selVs = makeSelect($('selVs'), Object.keys(VSS).map(k => ({ v: k, label: VSS[k][0] })), v => { settings.vs = v; save(); applyVs(); $('vsDesc').textContent = VSS[v][1]; });
 const TODS = { live: 'Follows the real clock, like the public worlds.', morning: 'It is always morning in your private world.', midday: 'It is always midday in your private world.', night: 'It is always night in your private world.' };
 const selTod = makeSelect($('selTod'), [{ v: 'live', label: 'Time of day: Live' }, { v: 'morning', label: 'Time of day: Morning' }, { v: 'midday', label: 'Time of day: Midday' }, { v: 'night', label: 'Time of day: Night' }],
   v => { settings.tod = v; save(); $('todDesc').textContent = TODS[v]; });
-const selMusic = makeSelect($('selMusic'), [{ v: 'none', label: 'No music' }, { v: 'peaceful', label: 'Peaceful' }, { v: 'upbeat', label: 'Upbeat' }, { v: 'exciting', label: 'Exciting' }],
-  v => { settings.music = v; save(); $('musicDesc').textContent = MUSIC_INFO[v]; if (!AU.ctx) auInit(); musicStart(); auVol(); });
+const selMusic = makeSelect($('selMusic'), [{ v: 'random', label: 'Random' }, { v: 'peaceful', label: 'Peaceful' }, { v: 'upbeat', label: 'Upbeat' }, { v: 'exciting', label: 'Exciting' }],
+  v => { settings.music = v; AU.rnd = null; save(); $('musicDesc').textContent = MUSIC_INFO[v]; if (!AU.ctx) auInit(); musicStart(); auVol(); });
 
 // ball look
 const previewCtx = $('preview').getContext('2d');
@@ -3104,10 +3266,11 @@ function buildLook() {
 }
 function syncUI() {
   nameUI();
-  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
+  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setFamily', 'family'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
+  selUi.set(String(settings.uiScale)); selMouse.set(settings.mouseMove); $('mouseDesc').textContent = MOUSE[settings.mouseMove][1]; applyUi();
   selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); selVs.set(settings.vs); $('vsDesc').textContent = (VSS[settings.vs] || VSS.classic)[1]; $('todDesc').textContent = TODS[settings.tod];
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
   $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMaxOff; $('botMaxVal').textContent = settings.botMaxOff;
@@ -3123,8 +3286,8 @@ bindToggle('setStats', 'stats', () => { applyDeps(); statsKick(); }); ['Fps', 'P
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
-bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
-bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull'); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
+bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 'family'); bindToggle('setMusicOn', 'musicOn', () => { applyDeps(); if (!AU.ctx) auInit(); musicStart(); auVol(); }); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
+bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => { settings.boostPull = !settings.boostBtn; $('setBoostPull').checked = settings.boostPull; save(); applyTouchUI(); });   /* (a button, or pull farther: one or the other) */ bindToggle('setShopBtn', 'shopBtn', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull', () => { settings.boostBtn = !settings.boostPull; $('setBoostBtn').checked = settings.boostBtn; save(); applyTouchUI(); }); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
 $('btnSkip').onclick = () => { auWake(); musicSkip(); };
@@ -3145,7 +3308,7 @@ $('setFallWarn').onchange = () => {
   askConfirm('Turn off the warning sign?', 'The sign tells you when you are near lava, near the edge of the world, or falling so fast that the landing could be your last.', 'Turn it off', () => { settings.fallWarn = settings.edge = false; S.edgeWarn = S.fallWarn = S.lavaWarn = false; $('setFallWarn').checked = false; save(); sfx('off'); });
 };
 /* ----- keyboard: pick your own keys (a key can do only one thing) ----- */
-const KEYACT = [['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['boost', 'bolt', 'Boost'], ['power', 'spark', 'Power jump (with its own button)'], ['back', 'flag', 'Back to start']];
+const KEYACT = [['build', 'plus', 'Build menu'], ['chat', 'chat', 'Chat'], ['help', 'help', 'How to play'], ['map', 'map', 'Big map'], ['pause', 'pause', 'Pause menu'], ['down', 'down', 'Down (while building or deleting)'], ['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['boost', 'bolt', 'Boost'], ['power', 'spark', 'Power jump (with its own button)'], ['back', 'flag', 'Back to start']];
 const KEYNAMES = { Space: 'Space', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Enter: 'Enter', ShiftLeft: 'L-Shift', ShiftRight: 'R-Shift', Tab: 'Tab', Backspace: 'Backspace', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`', CapsLock: 'Caps' };
 const keyLabel = c => KEYNAMES[c] || (c.indexOf('Key') === 0 ? c.slice(3) : c.indexOf('Digit') === 0 ? c.slice(5) : c.indexOf('Numpad') === 0 ? 'Num ' + c.slice(6) : c);
 const RESERVED = ['Escape', 'Minus', 'Equal', 'NumpadAdd', 'NumpadSubtract', 'MetaLeft', 'MetaRight', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ContextMenu'];
@@ -3154,7 +3317,7 @@ function buildKeys() {
   KEYACT.forEach(ka => {
     const a = ka[0], row = document.createElement('div'); row.className = 'keyrow';
     row.innerHTML = '<span class="kn">' + ic(ka[1]) + '<span>' + ka[2] + '</span></span>';
-    settings.keys[a].forEach((c, i) => {
+    (settings.keys[a] || (settings.keys[a] = (defKeys()[a] || []).filter(c => !actionOf(c)))).forEach((c, i) => {
       const chip = document.createElement('span'); chip.className = 'kchip'; chip.textContent = keyLabel(c);
       if (settings.keys[a].length > 1) { const x = document.createElement('button'); x.title = 'Remove'; x.innerHTML = ic('close'); x.onclick = () => { settings.keys[a].splice(i, 1); save(); buildKeys(); sfx('off'); }; chip.appendChild(x); }
       row.appendChild(chip);
@@ -3242,7 +3405,7 @@ const DEPS = {
   boostbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn') && !settings.boostAuto,
   boost: () => settings.boost, power: () => settings.powerJump, touchgest: () => showTouch() && settings.scheme !== 'buttons',
   mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => false, '!bots': () => true, botsPriv: () => !settings.mp && !settings.offline, botsOff: () => !settings.mp && !!settings.offline, botsOffOn: () => !!settings.botsOff,
-  minimap: () => settings.minimap, mmPlayers: () => !!settings.mmPlayers, mmBots: () => !!settings.mmBots, stats: () => settings.stats, sfx: () => settings.sfx, music: () => settings.music !== 'none'
+  minimap: () => settings.minimap, mmPlayers: () => !!settings.mmPlayers, mmBots: () => !!settings.mmBots, stats: () => settings.stats, sfx: () => settings.sfx, music: () => !!settings.musicOn
 };
 function applyDeps() {
   tabLocks();
@@ -3480,13 +3643,13 @@ function drawTrack(camL, camT, vw, vh, sc) {
   for (const e of L) {
     trackFollow(e);
     if (!e.arrow) continue;
-    const dx = e.sx - vx, dy = e.sy - vy, name = e.name || 'Friend';
+    const dx = e.sx - vx, dy = e.sy - vy, name = e.name || 'Friend'; let crown = 0; if (settings.crowns) others.forEach(q => { if (q.pub === e.pub && q.crown) crown = q.crown; });   // (a friend who has finished wears their crown on the pin too, on screen and on the arrow at the edge)
     ctx.save();
     if (Math.abs(dx) < vw / 2 - 20 && Math.abs(dy) < vh / 2 - 20) {   // on screen: a pin over their head
       ctx.translate(e.sx, e.sy - R - 30 + bob); ctx.scale(z, z);
       ctx.fillStyle = e.color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(-6, 6); ctx.lineTo(6, 6); ctx.lineTo(0, 17); ctx.closePath(); ctx.fill(); ctx.stroke();
       drawPerson(ctx, 0, -2, 11, e.color);
-      ctx.font = '16px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText(name, 0, -20); ctx.fillStyle = '#fff'; ctx.fillText(name, 0, -20);
+      ctx.font = '16px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText(name, 0, -20); ctx.fillStyle = '#fff'; ctx.fillText(name, 0, -20); if (crown) drawCrown(0, -36, crown);
     } else {
       const mg = 74 / Math.max(0.45, sc), k = Math.min((vw / 2 - mg) / (Math.abs(dx) || 1), (vh / 2 - mg * 0.8) / (Math.abs(dy) || 1)), a = Math.atan2(dy, dx), ax = vx + dx * k, ay = vy + dy * k;
       ctx.translate(ax, ay); ctx.scale(z, z);
@@ -3495,7 +3658,7 @@ function drawTrack(camL, camT, vw, vh, sc) {
       drawPerson(ctx, 0, 0, 14, e.color);
       const d = ft(e.sx - S.b.x, e.sy - S.b.y), tx = 0, ty = Math.sin(a) > 0.2 ? -26 : 30;
       ctx.font = '15px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
-      const txt = name + ' · ' + d + 'b'; ctx.strokeText(txt, tx, ty); ctx.fillStyle = '#fff'; ctx.fillText(txt, tx, ty);
+      const txt = name + ' · ' + d + 'b'; ctx.strokeText(txt, tx, ty); ctx.fillStyle = '#fff'; ctx.fillText(txt, tx, ty); if (crown) drawCrown(0, ty < 0 ? ty - 16 : -18, crown);
     }
     ctx.restore();
   }
@@ -3603,7 +3766,7 @@ function sendSay(a, b) {
   S.myEmo = { i: -1, txt, t: S.t }; addFeedEmo('You', -1, '', txt); sfx('ui'); toggleChat(false);
 }
 {   // the two lists are the game's own drop-downs; with the box ticked, picking the first opens the second, and then it is ready to send
-  let tpl = 0, arg = 0;
+  let tpl = 0, arg = 0, chain = 0;
   const auto = $('sayAuto'), send = $('saySend');
   try { auto.checked = localStorage.getItem('ballrun4_sayAuto') !== '0'; } catch (e) {}
   auto.onchange = () => { try { localStorage.setItem('ballrun4_sayAuto', auto.checked ? '1' : '0'); } catch (e) {} };
@@ -3615,8 +3778,8 @@ function sendSay(a, b) {
     label(); return { label, open: () => b.onclick() };
   };
   let argSel = null;
-  const tplSel = pickBtn($('sayTpl'), () => 'Pick a message', () => SAY.map(q => q.menu), () => tpl, v => { tpl = v; arg = 0; argSel.label(); if (auto.checked) setTimeout(() => { if (chatOpen) argSel.open(); }, 0); else ready(); });
-  argSel = pickBtn($('sayArg'), () => SAY[tpl].t.replace('{}', '…'), () => SAY_LISTS[SAY[tpl].l], () => arg, v => { arg = v; ready(); });
+  const tplSel = pickBtn($('sayTpl'), () => 'Pick a message', () => SAY.map(q => q.menu), () => tpl, v => { tpl = v; arg = 0; argSel.label(); if (auto.checked) { chain = performance.now(); setTimeout(() => { if (chatOpen) argSel.open(); }, 0); } else ready(); });
+  argSel = pickBtn($('sayArg'), () => SAY[tpl].t.replace('{}', '…'), () => SAY_LISTS[SAY[tpl].l], () => arg, v => { arg = v; if (auto.checked && chain && performance.now() - chain < 60000) { chain = 0; sendSay(tpl, arg); } else { chain = 0; ready(); } });
   send.onclick = () => sendSay(tpl, arg);
 }
 const pg = $('phraseGrid');
@@ -3624,13 +3787,15 @@ PHRASES.forEach((t, k) => { const b = document.createElement('button'); b.type =
 function setChatMute(on) { chatMuted = on; try { localStorage.setItem(CMKEY, on ? '1' : '0'); } catch (e) {} const c = $('chatMute'); c.classList.toggle('on', on); c.textContent = on ? 'Chat is muted' : 'Mute chat'; }
 $('chatMute').onclick = () => setChatMute(!chatMuted); setChatMute(chatMuted);
 let chatOpen = false;
-function openPick(title, opts, cur, onPick) {   // a full-screen list to choose from: tap one, or the X (or outside) to cancel
+let pickGone = null;
+function openPick(title, opts, cur, onPick, onGone) {   // (onGone: called whenever the list closes, picked or not)
+  pickGone = onGone || null;   // a full-screen list to choose from: tap one, or the X (or outside) to cancel
   $('pickTitle').textContent = title; const g = $('pickGrid'); g.innerHTML = '';
   opts.forEach((t, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; if (k === cur) b.className = 'on'; b.onclick = () => { closePick(); onPick(k); sfx('ui'); }; g.appendChild(b); });
   $('pickPop').classList.remove('hide'); closeSelectFn = closePick; sfx('ui');
   const on = g.querySelector('.on'); if (on) setTimeout(() => { try { on.scrollIntoView({ block: 'nearest' }); } catch (e) {} }, 0);
 }
-function closePick() { $('pickPop').classList.add('hide'); if (closeSelectFn === closePick) closeSelectFn = null; }
+function closePick() { $('pickPop').classList.add('hide'); if (closeSelectFn === closePick) closeSelectFn = null; const f = pickGone; pickGone = null; if (f) setTimeout(f, 0); }
 $('pickClose').onclick = closePick;
 $('pickPop').addEventListener('pointerdown', e => { if (e.target === $('pickPop')) { e.preventDefault(); closePick(); } });
 function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it
@@ -3651,8 +3816,8 @@ const SHOP = [
   { cat: 'blocks', id: 'ball0', max: 150, name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
   { cat: 'blocks', id: 'ball1', max: 150, name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
   { cat: 'blocks', id: 'ball2', max: 120, name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
-  { cat: 'gates', id: 'gate', max: 40, name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
-  { cat: 'gates', id: 'gateS', max: 40, name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
+  { cat: 'gadgets', id: 'gate', max: 40, name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
+  { cat: 'gadgets', id: 'gateS', max: 40, name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
   { cat: 'gadgets', id: 'see', max: 25, name: 'Small teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
   { cat: 'gadgets', id: 'seeb', max: 25, name: 'Big teeter-totter', info: 'A long plank on a pivot: it reaches further, and flings harder.', c: 500, g: 5, misc: 'see', big: true },
   { cat: 'gadgets', id: 'rope', max: 40, name: 'Rope bridge', info: 'Ties to the edge of the dirt you stand on and stretches to the next dirt, up to 20 blocks across and less than 6 up or down. Nothing may be in its way.', c: 1000, g: 1, misc: 'rope' },
@@ -3662,10 +3827,10 @@ const SHOP = [
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns a tile of ground into lava. It burns anything that touches it.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns a tile of ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
   { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water and ice into dirt, and lava into rock.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
-  { cat: 'terrain', id: 'dig', name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal or flag, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first. Use it as often as you like.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
+  { cat: 'coins', id: 'dig', name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal or flag, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first. Use it as often as you like.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
   { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock and melts ice into water. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
-const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['travel', 'Travel'], ['gates', 'Gates'], ['terrain', 'Terrain'], ['coins', 'Coins']];
+const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['travel', 'Travel'], ['terrain', 'Terrain'], ['coins', 'More']];
 let shopTab = 'blocks';
 const shopIcon = id => {
   const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
@@ -3693,13 +3858,14 @@ const ico = n => '<svg class="ic" viewBox="0 0 24 24"><use href="#i-' + n + '"/>
 const canShop = () => !inHome && !paused && S.mode === 'play' && !!S.b && !S.away && S.dead <= 0;
 let shopOpen = false;
 function shopRender() {
+  { let k = $('shopKeys'); if (!k) { k = document.createElement('div'); k.id = 'shopKeys'; k.className = 'small dim'; k.textContent = '← → tab   ↑ ↓ item   1–9 or Enter: buy   B or Esc: close'; $('shopList').parentNode.appendChild(k); } k.classList.toggle('hide', touchActive()); }
   $('shopWallet').innerHTML = '<span>' + ico('gcoin') + fmtW(wallet.c) + '</span><span>' + ico('gem') + fmtW(wallet.g) + '</span>';
   const T = $('shopTabs'); T.innerHTML = '';
-  if (unlimitedNow() && shopTab === 'coins') shopTab = 'blocks';   // (nothing to trade for when coins never run out)
-  SHOP_TABS.filter(t => !(unlimitedNow() && t[0] === 'coins')).forEach(([id, name]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.className = id === shopTab ? 'on' : ''; b.onclick = () => { shopTab = id; sfx('ui'); shopRender(); const l = $('shopList'); l.scrollTop = 0; }; T.appendChild(b); });
-  $('shopKeep').classList.toggle('hide', shopTab !== 'terrain' && shopTab !== 'blocks'); $('setKeep').checked = !!settings.terrKeep;
+  if (shopTab === 'gates') shopTab = 'gadgets';
+  SHOP_TABS.forEach(([id, name]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.className = id === shopTab ? 'on' : ''; b.onclick = () => { shopTab = id; sfx('ui'); shopRender(); const l = $('shopList'); l.scrollTop = 0; }; T.appendChild(b); });
+  $('shopKeep').classList.remove('hide'); $('setKeep').checked = !!settings.terrKeep;
   const L = $('shopList'); L.innerHTML = ''; L.classList.toggle('dense', shopTab === 'terrain');   // (five terrain cards: names and prices only on a narrow phone, so the card never has to scroll)
-  SHOP.filter(it => it.cat === shopTab).forEach(it => {
+  SHOP.filter(it => it.cat === shopTab && !(it.give && unlimitedNow())).forEach(it => {   // (nothing to trade for when coins never run out)
     const row = document.createElement('div'); row.className = 'shopitem';
     const full = atLimit(it), ok = wallet.c >= it.c && wallet.g >= it.g && !full;
     row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + (it.max && !noCaps ? ' <span class="lim' + (full ? ' full' : '') + '">' + ownCount(it) + '/' + it.max + '</span>' : '') + '</b><small>' + it.info + '</small></div>';
@@ -3723,7 +3889,7 @@ const atLimit = it => !noCaps && !!it.max && ownCount(it) >= it.max;
 const limitNote = it => it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : it.portal ? 'You have both portal pairs. Delete one to move it' : it.id === 'flag' ? 'You already have a checkpoint flag. Delete it to put one somewhere else' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
 // 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
-const pullNow = () => ({ down: !!(tin.down || keysDown.has('ArrowDown') || keysDown.has('KeyS')), up: !!(inp.jump || tin.jump || keysDown.has('ArrowUp') || keysDown.has('KeyW')) });   // what you are pulling on the controls
+const pullNow = () => ({ down: !!(tin.down || (settings.keys.down || []).some(c => keysDown.has(c))), up: !!(inp.jump || tin.jump || keysDown.has('ArrowUp') || keysDown.has('KeyW')) });   // what you are pulling on the controls
 function ghostSpot(kind, side, pull) {   // a set distance beside you, on the side you point to, at your feet. Nothing is swapped for you: if it does not fit it goes red. Pull up and it climbs a wall (up to 5 blocks); pull down and it goes down as far as there is room (up to 5 blocks)
   pull = pull || {};
   const w = S.world, b = S.b, q = P.propDims(kind), half = q.half, hw = q.hw || q.r, MAXUP = 5 * TS, s = side < 0 ? -1 : 1;
@@ -3943,8 +4109,9 @@ function portalClash(g, sp, cx) {   // nothing can be made on top of a portal, a
   if (it.portal) return underSomething(cx, TS, sp.gr) || (g.stage === 2 && g.pA ? false : false);
   if (it.id === 'flag') return portalHere(cx, 20, sp.row);
   if (it.gate) return g.stage === 2 ? portalHere(cx, TS, sp.row) : portalHere(cx, 20, sp.gr);
-  if (it.misc === 'see') return portalHere(cx, (it.big ? 5 : 3) * TS, sp.gr);
-  if (it.misc === 'pad') return portalHere(cx, TS, sp.gr);
+  const w = S.world, seeAt = (half) => w.see.some(s => !s.gone && Math.abs(s.cx - cx) < s.hl + half && Math.abs(s.cy - (sp.gr * TS - 46)) < 90), padAt = (half) => w.pads.some(p => !p.gone && p.y === sp.gr && Math.abs((p.x + 1) * TS - cx) < half + TS);
+  if (it.misc === 'see') return portalHere(cx, (it.big ? 5 : 3) * TS, sp.gr) || seeAt((it.big ? 5 : 3) * TS) || padAt(TS);   // (never a teeter-totter on a teeter-totter, or over a booster)
+  if (it.misc === 'pad') return portalHere(cx, TS, sp.gr) || padAt(TS * 0.9) || w.see.some(s => !s.gone && Math.abs(s.cx - cx) < TS * 1.6 && Math.abs(s.cy - (sp.gr * TS - 46)) < 90);
   if (it.misc === 'spr') return portalHere((sp.tx + 0.5) * TS, 20, sp.r);
   if (it.misc === 'ter') return portalHere(cx, 20, sp.gr);
   return false;
@@ -4121,7 +4288,7 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (!on) return;
   $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; if (g.it.max && !noCaps) $('placeName').textContent += ' · ' + ownCount(g.it) + ' of ' + g.it.max + ' placed'; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Delete' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Delete' : 'Place');
-  $('placeHint').textContent = g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
+  $('placeHint').textContent = g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space');
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
@@ -4135,7 +4302,7 @@ function finishPlacing() {
   const it = g.it; computeGhost();
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); cancelPlacing(true); return; }
   if (atLimit(it)) { notice(limitNote(it), 'urgent'); cancelPlacing(true); return; }
-  if (!g.ok) { notice(g.sb ? 'You cannot build at the start or by the finish flag' : g.pb ? 'Something is in the way' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
+  if (!g.ok) { notice(g.sb ? 'You cannot build at the start or by the finish flag' : g.pb ? 'Something is in the way' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
   if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   if (it.ter === 'dig' && g.del) delThing(g.del.q);
   else if (it.portal) {
@@ -4173,7 +4340,7 @@ function finishPlacing() {
   S.own = S.own || {}; if (!g.cancelled) S.own[it.id] = ownCount(it) + 1;   /* (an action that cancels one of your own builds is not counted, and gives the earlier one back) */
   wallet.c -= it.c; wallet.g -= it.g; saveWallet(); sfx('big'); saveWorld(true);
   placing = null; placeUIKey = null; refreshPlaceUI();
-  if ((it.misc === 'ter' || it.cat === 'blocks') && settings.terrKeep) {   // keep going with the same shape or terrain until you cancel or the money runs out
+  if (settings.terrKeep && it.id !== 'flag') {   // (Keep placing works for everything)   // keep going with the same shape or terrain until you cancel or the money runs out
     if (wallet.c < it.c || wallet.g < it.g) notice('Out of ' + (wallet.c < it.c ? 'coins' : 'diamonds') + '. You are done ' + (it.ter === 'dig' ? 'deleting' : 'placing'), 'urgent');
     else if (atLimit(it)) notice(it.ter === 'dig' ? 'That is the most you can delete here. You are done deleting' : 'That is the most ' + it.name + ' you can build here. You are done placing', 'urgent');
     else { startPlacing(it); placing.side = g.side; computeGhost(); }
@@ -4725,23 +4892,40 @@ const soloDesc = (i, st) => {   // what is already saved on that level, in words
   const n = (o.buys ? o.buys.length : 0) + (o.gates ? o.gates.length : 0) + (o.misc ? o.misc.length : 0);
   return (o.from ? 'a copy saved from ' + o.from : 'your own world') + (n ? ' with ' + n + (n === 1 ? ' thing' : ' things') + ' built in it' : ' with nothing built in it yet');
 };
-$('pSave').onclick = () => {   // keep a copy of the world you are in: in your private maps, your offline maps, or both. Where one is already saved, you are asked about it, one at a time
-  const idx = S.idx, label = lvLabelOf(idx), NAMES = { [SOLOKEY_P]: 'private maps', [SOLOKEY_O]: 'offline maps' };
-  sfx('ui');
+/* writing a description: one box, or two when it goes to both your private and your offline maps and you want them different */
+let dsCb = null, saveBusy = false, saveAfter = null;
+function askDesc(o, cb) {
+  $('dsTitle').textContent = o.title || 'Describe this level'; $('dsNote').textContent = o.note || ''; $('dsA').value = o.a || ''; $('dsB').value = o.b || '';
+  $('dsSplitWrap').classList.toggle('hide', !o.both); $('dsSplit').checked = !!(o.both && o.b && o.b !== o.a); $('dsB').classList.toggle('hide', !$('dsSplit').checked); $('dsA').placeholder = o.both && $('dsSplit').checked ? 'For my private map' : 'A few words about this level';
+  $('dsNo').textContent = o.no || 'Cancel'; $('dsOk').textContent = o.ok || 'Save'; dsCb = cb; $('descModal').classList.remove('hide');
+}
+function dsClose(ok) { $('descModal').classList.add('hide'); try { $('dsA').blur(); $('dsB').blur(); } catch (e) {} const f = dsCb; dsCb = null; if (f) f(ok ? { a: $('dsA').value, b: $('dsSplit').checked ? $('dsB').value : $('dsA').value } : null); }
+$('dsSplit').onchange = () => { const on = $('dsSplit').checked; $('dsB').classList.toggle('hide', !on); $('dsA').placeholder = on ? 'For my private map' : 'A few words about this level'; sfx(on ? 'on' : 'off'); };
+$('dsOk').onclick = () => { sfx('ui'); dsClose(true); }; $('dsNo').onclick = () => { sfx('ui'); dsClose(false); };
+$('lvDescBtn').onclick = () => { const i = lvSel; sfx('ui'); askDesc({ title: 'Describe ' + lvLabelOf(i), note: 'Only you see this. It is for your ' + (soloKeyNow() === SOLOKEY_O ? 'offline' : 'private') + ' map of this level.', a: lvDescOf(i) }, r => { if (r) { setLvDesc(i, null, r.a); lvSelect(i); } }); };
+function saveDone() { saveBusy = false; const f = saveAfter; saveAfter = null; if (f) setTimeout(f, 250); }
+$('pSave').onclick = () => {   // keep a copy of the world you are in: in your private maps, your offline maps, or both. The copy is taken right now, so it is safe even if the game closes while you choose and write
+  const snap = copySnap(); if (!snap) return;
+  const idx = snap.idx, label = lvLabelOf(idx), NAMES = { [SOLOKEY_P]: 'private maps', [SOLOKEY_O]: 'offline maps' };
+  sfx('ui'); saveBusy = true; let picked = false;
   openPick('Save a copy of this world as ' + label, ['In my private maps', 'In my offline maps', 'In both'], -1, k => {
-    const keys = k === 0 ? [SOLOKEY_P] : k === 1 ? [SOLOKEY_O] : [SOLOKEY_P, SOLOKEY_O], done = [];
-    const next = () => {
-      const key = keys.shift();
-      if (!key) { if (done.length) notice('Saved to your ' + done.map(x => NAMES[x]).join(' and '), ''); loadSolo(); lvlRender(); return; }
-      const save = () => { if (saveCopy(key)) done.push(key); next(); };
-      const st = readSolo(key);
-      if (!st[idx]) { save(); return; }
-      askConfirm('Replace your ' + NAMES[key].replace('maps', 'map') + '?', label + ' in your ' + NAMES[key] + ' already has ' + soloDesc(idx, st) + '. Saving replaces all of it with this world, and that cannot be undone.', 'Yes, replace it', save, { no: 'Keep mine', onNo: next });
-    };
-    next();
-  });
+    picked = true;
+    const keys = k === 0 ? [SOLOKEY_P] : k === 1 ? [SOLOKEY_O] : [SOLOKEY_P, SOLOKEY_O], done = [], all = keys.slice();
+    askDesc({ title: 'Add a description?', note: 'A few words so you know this level later. Only you see it.' + (k === 2 ? ' It can be the same for both maps, or different.' : ''), both: k === 2, a: lvDescOf(idx, all[0]), b: k === 2 ? lvDescOf(idx, SOLOKEY_O) : '', no: 'No description', ok: 'Save' }, r => {
+      const next = () => {
+        const key = keys.shift();
+        if (!key) { if (done.length) notice('Saved to your ' + done.map(x => NAMES[x]).join(' and '), ''); loadSolo(); lvlRender(); saveDone(); return; }
+        const save = () => { if (saveCopy(key, snap)) { done.push(key); if (r) setLvDesc(idx, key, key === SOLOKEY_O && all.length === 2 ? r.b : r.a); } next(); };
+        const st = readSolo(key);
+        if (!st[idx]) { save(); return; }
+        askConfirm('Replace your ' + NAMES[key].replace('maps', 'map') + '?', label + ' in your ' + NAMES[key] + ' already has ' + soloDesc(idx, st) + '. Saving replaces all of it with this world, and that cannot be undone.', 'Yes, replace it', save, { no: 'Keep mine', onNo: next });
+      };
+      next();
+    });
+  }, () => { if (!picked) saveDone(); });
+  closeSelectFn = null;   // (leaving the world does not close this list: the copy is already taken)
 };
-$('pReset').onclick = () => askResetLevel(soloLevel(), () => resumeGame());
+$('pReset').onclick = () => askResetLevel(soloLevel(), () => resumeGame(), true);
 $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
 const guestsHere = () => party && party.role === 'host' ? others.size : 0;
 function hostLeaveWarn(go, what) {   // you made this private game and friends are in it: leaving (or starting it over) closes it for them, so ask first
@@ -4760,6 +4944,7 @@ addEventListener('popstate', () => {
   if (leavingPage) return;
   try { history.pushState({ bp: 1 }, ''); } catch (e) {}   // keep something to go back to, so the next Back is caught too
   if (!$('confirm').classList.contains('hide')) { $('cfNo').click(); return; }
+  if (!$('descModal').classList.contains('hide')) { dsClose(false); return; }
   if (!$('settings').classList.contains('hide')) { closeSettingsNow(); return; }
   if (chatOpen) { toggleChat(false); return; }
   for (const id of ['profModal', 'addModal', 'invModal', 'lvlModal', 'codeModal', 'nameModal', 'shareModal', 'shopPop', 'mmbig', 'intro']) {
@@ -4778,6 +4963,9 @@ function setOffline(on) {
 }
 $('homeLook').onclick = () => { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; } showTab('you'); toggleSettings(); };
 $('homeSet').onclick = () => toggleSettings();
+$('homeMore').onclick = () => { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'More'; } showTab('more'); toggleSettings(); };   // (backups, install, reset: only from the main menu)
+const updShown = () => { try { return localStorage.getItem('ballrun4_updbtn') === '1'; } catch (e) { return false; } };
+$('homeUpd').classList.toggle('hide', !updShown());
 $('homeHelp').onclick = () => showIntro();
 /* Share: 1) the system share sheet, 2) copy the link automatically, 3) a pop-up with the link to copy by hand, 4) say we can't. The first one that works stops the chain. */
 const shareUrl = () => (/onrender\.com$|^localhost$|^127\./.test(location.hostname) ? 'https://ballpit.party' : location.origin) + '/';
@@ -4999,6 +5187,7 @@ function lvlRender() {
     else h.innerHTML = ico('map') + '<span class="lvt">' + t + '</span>' + ico('chev');
   }
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
+  lvOptRender();
   const sl = !settings.mp && !(party && party.role === 'guest'); $('pLevel').classList.toggle('hide', !sl); $('pReset').classList.toggle('hide', !sl);
   $('pSave').classList.toggle('hide', !((settings.mp && !party) || (party && party.role === 'guest')) || !S.world || S.slot < 0);
   const canInv = !settings.mp && !(party && party.role === 'guest'); $('btnInviteF').classList.toggle('hide', !canInv || inHome); $('invT').textContent = party ? 'Invite more friends' : 'Invite friends to play'; $('invS').textContent = party ? 'Your world is open. Send another link' : 'Pick friends and send them a link to this world';
@@ -5010,10 +5199,10 @@ function lvBuild() {
   const g = $('lvGrid'); g.innerHTML = '';
   for (let i = 0; i < BallMaps.count; i++) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lvb' + (i === soloLevel() ? ' cur' : ''); b.setAttribute('data-i', i); b.setAttribute('role', 'option');
-    if (hasSoloSave(i)) b.classList.add(soloFrom(i) ? 'got' : 'mine');
+    const kind = !hasSoloSave(i) ? '' : soloFrom(i) ? 'got' : soloBuilt(i) ? 'mine' : ''; if (kind) b.classList.add(kind);
     const th = (BallMaps.meta && BallMaps.meta[i] ? BallMaps.meta[i].th : []).map(biomeOf).filter(Boolean).slice(0, 5);
     b.innerHTML = '<span class="n">Level ' + (i + 1) + '</span><span class="nm">' + BallMaps.names[i] + '</span><span class="dots">' + th.map(t => '<i style="background:' + t.top + '"></i>').join('') + '</span>' + (isBeaten(i) ? '<i class="lvk">' + ico('crown') + '</i>' : '');
-    b.setAttribute('data-k', (hasSoloSave(i) ? (soloFrom(i) ? 'got' : 'mine') : '') + (isBeaten(i) ? ' beat' : '')); g.appendChild(b);
+    b.setAttribute('data-k', kind + (isBeaten(i) ? ' beat' : '')); g.appendChild(b);
   }
   lvFilter();
 }
@@ -5028,33 +5217,38 @@ function lvSelect(i) {
   $('lvName').textContent = lvLabelOf(i);
   const mt = BallMaps.meta && BallMaps.meta[i], tags = $('lvTags'); tags.innerHTML = '';
   if (mt) { const len = lvLen(i); if (len) { const s = document.createElement('span'); s.textContent = len; tags.appendChild(s); } mt.th.slice(0, 5).map(biomeOf).filter(Boolean).forEach(t => { const s = document.createElement('span'); s.innerHTML = '<i style="background:' + t.top + '"></i>' + t.id.charAt(0).toUpperCase() + t.id.slice(1); tags.appendChild(s); }); }
-  $('lvNote').textContent = (isBeaten(i) ? 'You have beaten this level. ' : 'Not beaten yet. ') + (soloFrom(i) ? 'A copy saved from ' + soloFrom(i) + '.' : hasSoloSave(i) ? 'What you built here is saved.' : 'Nothing saved yet.');
-  $('lvUnl').checked = unlimitedAt(i); $('lvMoney').textContent = lvMoneyText(i);
-  $('lvReset').classList.toggle('hide', !hasSoloSave(i)); finRow(i);
+  $('lvNote').textContent = (isBeaten(i) ? 'You have beaten this level. ' : 'Not beaten yet. ') + (soloFrom(i) ? 'A copy saved from ' + soloFrom(i) + '.' : soloBuilt(i) ? 'What you built here is saved.' : hasSoloSave(i) ? 'Your progress here is saved. Nothing built yet.' : 'Nothing saved yet.') ; { const t = lvDescOf(i), de = $('lvDesc'); de.textContent = t; de.classList.toggle('hide', !t); $('lvDescBtn').lastChild.textContent = t ? 'Edit description' : 'Add a description'; }
   $('lvOk').textContent = inHome ? 'Choose' : (i === soloLevel() ? 'Keep playing' : 'Play');
 }
 $('lvFil').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { sfx('ui'); lvF = b.getAttribute('data-f'); lvFilter(); } });
 $('lvUnl').onchange = () => {   // every private map decides for itself: earn coins and diamonds there, or have them without limit
-  const i = lvSel, on = $('lvUnl').checked; purseOf(i).u = on ? 1 : 0; saveWallet(); sfx(on ? 'on' : 'off'); $('lvMoney').textContent = lvMoneyText(i);
+  const i = soloLevel(), on = $('lvUnl').checked; purseOf(i).u = on ? 1 : 0; saveWallet(); sfx(on ? 'on' : 'off'); $('lvMoney').textContent = lvMoneyText(i);
   lastCoinShown = lastGemShown = -1; homeWalletRender.k = ''; if (shopOpen) shopRender();
 
 };
 /* where the finish is on each of your levels: spot 1 to 4, or Random (drawn once and kept, or drawn again every game) */
 let finChg = false;
 const selFin = makeSelect($('selFin'), [{ v: 's0', label: 'Finish: Spot 1' }, { v: 's1', label: 'Finish: Spot 2' }, { v: 's2', label: 'Finish: Spot 3' }, { v: 's3', label: 'Finish: Spot 4' }, { v: 'r', label: 'Finish: Random' }], v => {
-  const i = lvSel, p = finOf(i), was = soloFin(i);
+  const i = soloLevel(), p = finOf(i), was = soloFin(i);
   if (v === 'r') { p.k = 'r'; p.cur = Math.floor(Math.random() * FIN_N); } else { p.k = +v.slice(1); delete p.cur; }
   finPref[i] = p; saveFin(); sfx('ui'); finRow(i);
   if (soloFin(i) !== was && i === soloLevel()) finChg = true;
 });
-$('lvRoll').onchange = () => { const i = lvSel, p = finOf(i); p.roll = $('lvRoll').checked ? 1 : 0; finPref[i] = p; saveFin(); sfx(p.roll ? 'on' : 'off'); };
+$('lvRoll').onchange = () => { const i = soloLevel(), p = finOf(i); p.roll = $('lvRoll').checked ? 1 : 0; finPref[i] = p; saveFin(); sfx(p.roll ? 'on' : 'off'); };
 function finRow(i) { const p = finOf(i); selFin.set(p.k === 'r' ? 'r' : 's' + (p.k | 0)); $('lvRoll').checked = !!p.roll; $('lvRollRow').classList.toggle('hide', p.k !== 'r'); }
-function openLevels() { finChg = false;
+function lvOptRender() {   // the options of the level you picked live in the Mode tab: the picker itself only picks
+  const i = soloLevel(), g = !!(party && party.role === 'guest'); $('lvOptBox').classList.toggle('hide', g); if (g) return;
+  const q = purseV[i], p = finOf(i), k = i + '|' + (q ? q.u + ',' + q.c + ',' + q.g : '') + '|' + p.k + '|' + p.roll; if (lvOptRender.k === k) return; lvOptRender.k = k;
+  $('lvOptFor').textContent = 'For ' + lvLabelOf(i) + ':'; $('lvUnl').checked = unlimitedAt(i); $('lvMoney').textContent = lvMoneyText(i); finRow(i);
+}
+function finApply() { if (!finChg) return; finChg = false; if (inHome || settings.mp || (party && party.role === 'guest')) return; hostLeaveWarn(() => rehost(() => soloGo(true)), 'move the finish'); }
+function openLevels() {
   loadSolo(); lvBuild(); lvSelect(soloLevel()); $('lvlModal').classList.remove('hide');
   setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }, 30);
 }
 function closeLevels() { $('lvlModal').classList.add('hide'); }
-function askResetLevel(i, after) {
+function askResetLevel(i, after, twice) {
+  if (twice) { askConfirm('Reset ' + lvLabelOf(i) + '?', 'This starts the level over from nothing. You will be asked once more before anything is removed.', 'Continue', () => setTimeout(() => askResetLevel(i, after), 60), { no: 'Keep it', yesClass: 'go' }); return; }
   askConfirm('Reset ' + lvLabelOf(i) + '?', 'Everything you built, moved, opened or collected on this level goes back to the start. Your coins and diamonds stay yours.', 'Reset level', () => {
     const cur = i === soloLevel() && !inHome, go = () => { if (cur) rehost(() => soloReset(i)); else soloReset(i); notice('Level reset', ''); if (!$('lvlModal').classList.contains('hide')) { lvBuild(); lvSelect(lvSel); } if (after) after(); };
     if (cur) { hostLeaveWarn(go, 'start the level over'); return; } go();
@@ -5064,7 +5258,7 @@ $('lvGrid').addEventListener('click', e => { const b = e.target.closest('.lvb');
 $('lvNo').onclick = closeLevels;
 $('lvReset').onclick = () => askResetLevel(lvSel);
 $('lvOk').onclick = () => {
-  const changed = lvSel !== soloLevel() || finChg; finChg = false; settings.soloMap = String(lvSel); save(); lvlRender(); closeLevels(); sfx('ui');
+  const changed = lvSel !== soloLevel(); settings.soloMap = String(lvSel); save(); lvlRender(); closeLevels(); sfx('ui');
   if (!inHome) { if (paused) resumeGame(); if (changed) hostLeaveWarn(() => rehost(() => soloGo(true)), 'change the level'); }
 };
 $('lvlModal').addEventListener('pointerdown', e => { if (e.target === $('lvlModal')) closeLevels(); });
@@ -5081,6 +5275,7 @@ function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
+  if (v === 'updates') { const on = !updShown(); try { if (on) localStorage.setItem('ballrun4_updbtn', '1'); else localStorage.removeItem('ballrun4_updbtn'); } catch (e) {} $('homeUpd').classList.toggle('hide', !on); sfx('big'); closeCode(); notice(on ? 'The update button is on the main menu now. Enter the code again to hide it.' : 'The update button is hidden again.', ''); return; }
   if (v === 'unlimitedpower') { if (noCaps) { $('cdNote').textContent = 'You already build without limits.'; sfx('warn'); return; } noCaps = true; try { localStorage.setItem('ballrun4_nocap', '1'); } catch (e) {} sfx('big'); closeCode(); notice('No building limits: build as much of everything as you like', ''); try { shopRender(); } catch (e) {} return; }
   if (v === 'themaker#1' || v === 'maker' || v === 'zeros') {   // the three money codes. They only ever change your own money on this device, and never a private world whose maker set its money to unlimited
     const done = t => { saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice(t, ''); };
@@ -5173,7 +5368,7 @@ function connect() {
   setTimeout(() => { if (sock === ws && sock.readyState === 0) { try { sock.close(); } catch (e) {} } }, 6000);   // a connection that is stuck gets dropped and tried again
   if (!lobby && netState !== 'online') setNet('connecting');
   sock.onopen = () => { if (sock === ws) sock.send(helloMsg(wantLobby())); };
-  sock.onmessage = e => { if (sock !== ws) return; NET.inB += (typeof e.data === 'string' ? e.data.length : e.data.byteLength) + 4; NET.inPk++; if (typeof e.data !== 'string') { onBin(e.data); return; } let m; try { m = JSON.parse(e.data); } catch (x) { return; } onMsg(m); };
+  sock.onmessage = e => { if (sock !== ws) return; NET.inB += (typeof e.data === 'string' ? e.data.length : e.data.byteLength) + 4; NET.inPk++; if (typeof e.data !== 'string') { onBin(e.data); return; } let m; try { m = JSON.parse(e.data); } catch (x) { return; } { const rawN = m && m.name; censorIn(m); if (typeof rawN === 'string' && rawN === settings.name) m.name = rawN; } onMsg(m); };
   sock.onclose = () => {
     if (sock !== ws) return;
     ws = null;
@@ -5230,6 +5425,7 @@ const otherLead = () => Math.min(0.1, NET.rtt * 0.00075);   // (their update too
 function otherAt(o, nowT) {
   const D = o.D || 0, T = nowT - D + otherLead() * 1000 * Math.max(0, 1 - D / 60) - (o.off || 0), b = o.buf, n = b ? b.length : 0;   // (T: the moment to show, on their clock)
   if (!n || T >= b[n - 1].t) return otherPred(o, clamp(n ? (T - b[n - 1].t) / 1000 : 0, 0, D > 0 ? 0.22 : 0.7));   // (past the newest update: carried on, but on a bad connection only briefly, then they wait there)
+  if (n < 2 || T <= b[0].t) { pp.x = b[0].x; pp.y = b[0].y; return pp; }   // (only one update so far, or a moment before the oldest one kept)
   let i = n - 2; while (i > 0 && b[i].t > T) i--;
   const a = b[i], c = b[i + 1];
   if (T <= a.t) { pp.x = a.x; pp.y = a.y; return pp; }
@@ -5413,8 +5609,9 @@ function onMsg(m) {
       break;
     }
     case 'stats': net.online = m.online; net.peak = m.peak; break;
-    case 'jno': partyOver(m.why === 'full' ? 'That private game is full' : m.why === 'busy' ? 'Your private game is still closing. Try again in a moment' : "You can't join that private game any more"); break;
-    case 'pclose': { const was = party; partyOver(''); if (was && was.role === 'guest' && !inHome) quitToHome(); askConfirm('This game has closed', who(m.name) + ' made this private game and left it, so it closed for everyone. You are back on the main menu.', 'OK', null, { single: true, yesClass: 'go' }); break; }
+    case 'jno': if (m.why === 'load') { partyOver(''); askConfirm('The server is very busy', 'A lot of private games are open right now, so a new one cannot start. You can play in the public world, or switch to an offline game, and try a private game again a little later.', 'OK', null, { single: true, yesClass: 'go' }); break; }
+      partyOver(m.why === 'full' ? 'That private game is full' : m.why === 'busy' ? 'Your private game is still closing. Try again in a moment' : "You can't join that private game any more"); break;
+    case 'pclose': { const was = party; partyOver(''); if (was && was.role === 'guest' && !inHome) quitToHome(); { const nm = who(m.name), tell = () => askConfirm('This game has closed', nm + ' made this private game and left it, so it closed for everyone. You are back on the main menu.', 'OK', null, { single: true, yesClass: 'go' }); if (typeof saveBusy !== 'undefined' && saveBusy) { saveAfter = tell; notice('The game closed. Your copy is safe: finish saving it', ''); } else tell(); } break; }
     case 'hostaway': notice(who(m.name) + "'s connection dropped. Their game stays open while they come back", ''); break;
     case 'hostback': notice(who(m.name) + ' is back', ''); break;
     case 'inv': partyInvited(m); break;
@@ -5908,8 +6105,10 @@ function drawGadgets(camL, camT, vw, vh, dt) {
   for (const z of zones()) {   // the no-build circles around the start and the finish: faint, but there
     if (z.cx - z.r < camL + vw && z.cx + z.r > camL && z.cy - z.r < camT + vh && z.cy + z.r > camT) {
       const pu = 0.5 + 0.5 * Math.sin(performance.now() / 900);
-      ctx.save(); ctx.beginPath(); ctx.arc(z.cx, z.cy, z.r, 0, TAU); ctx.fillStyle = 'rgba(255,120,70,' + (0.028 + 0.012 * pu) + ')'; ctx.fill();
-      ctx.strokeStyle = 'rgba(255,150,80,' + (0.2 + 0.08 * pu) + ')'; ctx.lineWidth = 2; ctx.setLineDash([10, 12]); ctx.lineDashOffset = -performance.now() / 90; ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.arc(z.cx, z.cy, z.r, 0, TAU); ctx.fillStyle = 'rgba(200,70,30,' + (0.05 + 0.015 * pu) + ')'; ctx.fill();
+      ctx.setLineDash([10, 12]); ctx.lineDashOffset = -performance.now() / 90;   // (a dark line under a bright one: it shows on a night sky and on a pale one)
+      ctx.strokeStyle = 'rgba(30,18,40,' + (0.34 + 0.08 * pu) + ')'; ctx.lineWidth = 5; ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,140,60,' + (0.55 + 0.15 * pu) + ')'; ctx.lineWidth = 2.2; ctx.stroke(); ctx.restore();
     }
   }
   ctx.lineJoin = 'round'; ctx.lineWidth = 2.4; ctx.strokeStyle = INK;
@@ -6322,7 +6521,7 @@ function renderInner(dt, nowT) {
       drawBall(nx, ny, o.rot, o.color, o.color2, o.pat, 0.88, false, sc2);
       const pinned = pinShown(o.pub);
       if (!pinned) drawLabel(o.name, false, o.crown, nx, ny, true);
-      if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 : settings.tags && o.name ? 38 : 22) - (o.crown && settings.crowns ? crownH(o.crown) : 0));
+      if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 + (o.crown && settings.crowns ? 26 : 0) : settings.tags && o.name ? 38 : 22) - (o.crown && settings.crowns ? crownH(o.crown) : 0));
     });
     for (let i = 0; i < bots.length; i++) {
       const bt = bots[i], bb = bt.b;
@@ -6337,7 +6536,7 @@ function renderInner(dt, nowT) {
       drawBall(b.x, b.y, b.rot, settings.color, settings.color2, settings.pat, 1, true, s);
       drawSuper(b);
       if (settings.boost) drawBoost(b);
-      drawLabel(settings.name, false, S.crown, b.x, b.y);
+      drawLabel(censor(settings.name), false, S.crown, b.x, b.y);
       if (S.myEmo) drawEmoBubble(S.myEmo, b.x, b.y - R - (settings.tags && settings.name ? 38 : 22) - (S.crown && settings.crowns ? crownH(S.crown) : 0));
     }
   }
@@ -6601,7 +6800,7 @@ function beaconInfo(t) {   // same answer for everyone, because it only depends 
 let lastGemShown = -1, lastCoinShown = -1, lastTickSec = -1, lastBeaconSfx = 0;
 const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 function worldText() {
-  if (party && online) { const n = room.n + bots.length; return party.role === 'host' ? 'Your private game · ' + n + ' here' : who(party.name) + "'s private game · " + n + ' here'; }   // (bots count as players here too)
+  if (party && online) { const n = room.n + bots.length; return party.role === 'host' ? 'Private game · ' + n + ' here' : who(party.name) + "'s private game · " + n + ' here'; }   // (bots count as players here too)
   if (inSolo()) return '';
   if (online) return 'World ' + room.id + ' · ' + room.n + ' player' + (room.n === 1 ? '' : 's');
   return '';

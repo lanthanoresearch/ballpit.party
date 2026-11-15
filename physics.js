@@ -288,14 +288,13 @@
     for (let i = 0; i < w.btns.length; i++) {   // a red button holds its gates open for BTN_T seconds after it was last stood on, then pops back up
       const q = w.btns[i], x0 = q.x * TS - R, x1 = (q.x + 1) * TS + R, fy = q.y * TS; let hit = false;
       for (let k = 0; k < L.length && !hit; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6) hit = true; }
-      if (hit) {
-        if (!q.on) { q.on = true; q.t = 1; q.pT = Date.now(); w.ev.push({ k: 'btn', x: (q.x + 0.5) * TS, y: fy }); }
-        if (!(q.left > BTN_T - 1)) q.rf = ((q.rf || 0) + 1) % 1000;   // (wound up again: everybody's little timer starts over)
-        q.left = BTN_T;
-      } else if (q.on) {
+      if (q._was && !q.on && !(q.cool > 0)) q.cool = 1.5;   // (it has just popped back up: it cannot be pressed again for a moment)
+      if (q.on) {   // pressed: it counts all the way down, whoever stands on it. Nobody can keep winding it up
         q.left = (q.left === undefined ? BTN_T : q.left) - (dt || 0);
-        if (q.left <= 0) { q.left = 0; if (!w.follow) { q.on = false; w.ev.push({ k: 'btnup', x: (q.x + 0.5) * TS, y: fy }); } }   // (in the shared world the server says when it is up again)
-      }
+        if (q.left <= 0) { q.left = 0; if (!w.follow) { q.on = false; q.cool = 1.5; w.ev.push({ k: 'btnup', x: (q.x + 0.5) * TS, y: fy }); } }   // (in the shared world the server says when it is up again)
+      } else if (q.cool > 0) q.cool -= (dt || 0);
+      else if (hit) { q.on = true; q.t = 1; q.pT = Date.now(); q.left = BTN_T; q.rf = ((q.rf || 0) + 1) % 1000; w.ev.push({ k: 'btn', x: (q.x + 0.5) * TS, y: fy }); }
+      q._was = q.on;
       if (q.on) for (const di of q.to) if (w.doors[di]) w.doors[di].latched = true;
     }
     const want = w.doors.map(d => d.latched);
@@ -671,6 +670,17 @@
     for (const p of w.pads) if (!p.gone && p.y === gr && Math.abs(p.x - tx) < 2) return false;
     return true;
   }
+  function miscClash(w, q) {   // never a teeter-totter on a teeter-totter or over a booster, and never a booster on a booster or under a teeter-totter (the rule every device checks before building; the server checks it too)
+    if (!q || (q[0] !== 'see' && q[0] !== 'pad')) return false;
+    const cx = (q[1] + 1) * TS, gr = q[2], sy = gr * TS - 46, SL = 6;
+    if (q[0] === 'see') { const half = (q[3] === 1 ? 5 : 3) * TS;
+      for (const s of w.see) if (!s.gone && Math.abs(s.cx - cx) < s.hl + half - SL && Math.abs(s.cy - sy) < 90) return true;
+      for (const p of w.pads) if (!p.gone && p.y === gr && Math.abs((p.x + 1) * TS - cx) < 2 * TS - SL) return true;
+      return false; }
+    for (const p of w.pads) if (!p.gone && p.y === gr && Math.abs((p.x + 1) * TS - cx) < 1.9 * TS - SL) return true;
+    for (const s of w.see) if (!s.gone && Math.abs(s.cx - cx) < 1.6 * TS - SL && Math.abs(s.cy - sy) < 90) return true;
+    return false;
+  }
   function noBuild(map) {   // the places where nothing can be built or left: around where everybody appears (5 x 5 blocks), and around the finish flag (6 x 6), so nobody can block it
     if (!map) return [];
     if (map._nb) return map._nb;
@@ -795,7 +805,7 @@
       const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || ((!d._pl || !plankMoving(w, d)) && !d._pad));
       d.st = still ? (d.st || 0) + dt : 0;
       const burn = lavaOf.has(d);
-      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || inStart(w, d.x, d.y)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || inStart(w, d.x, d.y) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); }   // lost for good: this map will not give it back
+      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || zoneP(w.map, d.x, d.y, 0)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || zoneP(w.map, d.x, d.y, 0) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); }   // lost for good: this map will not give it back
     }
     // a pile goes to sleep together, once every piece of it has been still for a moment
     const root = d => { while (d._uf !== d) { d._uf = d._uf._uf; d = d._uf; } return d; };   // (which pile each thing belongs to: every thing points the way to its pile's first piece)
@@ -1085,6 +1095,7 @@
       life: kind === 'wander' ? brnd(600, 1800) : kind === 'racer' ? brnd(1500, 4000) : brnd(1200, 3600), careful: kind === 'racer' && Math.random() < 0.3 + skill * 0.6, pace: Math.random() < 0.4 ? 1 : brnd(0.6, 0.95), mapReader: Math.random() < 0.65, dir: 1, age: 0, i: 0, dead: 0, idle: 0, tcx: 0, tap: false, hold: 0, jumpAt: 0, finished: false, leaveT: 0,
       wT: 0, wax: 0, wHigh: false, lostT: 0, far: null, bRun: null, b: null, gT: 0, airT: 0, airAx: null, danger: false, stT: 0, stX: 0, back: 0, crown: 0, out: [], chatCd: brnd(2, 10), first: true, built: 0, buildT: brnd(6, 18) }, o || {});
   }
+  function zoneEdge(w, x) { return x < TS || x > (w.W - 1) * TS; }
   function botSpawn(bt, w) {   // exactly like a player: at the start, or (once) at the last checkpoint flag it touched
     const m = w.map, cps = m.checkpoints, cp = bt.cpArmed >= 0 && cps && cps[bt.cpArmed] && cps[bt.cpArmed][0] > -9999 ? cps[bt.cpArmed] : null;
     if (cp) { let y = cp[1] * TS - R - 1; for (let k = 0; k < 6 && BSOLID(tile(w, cp[0], Math.floor(y / TS))); k++) y -= TS; bt.b = newBody((cp[0] + 0.5) * TS, y); bt.cpUsed = bt.cpArmed; bt.cpArmed = -1; }
@@ -1093,6 +1104,15 @@
     botSync(bt, w);
     if (bt.kind === 'explorer' || bt.kind === 'builder' || bt.kind === 'chill') exGoal(bt, w); else { bt.dir = racerDir(bt, w); botPlan(bt, w); }
     bt.jumpAt = 0; bt.idle = brnd(0.1, 0.8); bt.stT = 0; bt.stX = bt.b.x; bt.back = 0; bt.lostT = 0; bt.goal = null; bt.jplan = null; bt.fun = null;
+    { /* nobody sets off the same way: some go at once, some look around first, hop, wiggle, or wander the wrong way for a moment */
+      const again = bt.spawns = (bt.spawns || 0) + 1, r = Math.random() / (again > 1 ? 0.45 : 1), sd = Math.random() < 0.5 ? -1 : 1;
+      if (r < 0.2) bt.idle = brnd(1, 4.5);
+      else if (r < 0.34) bt.fun = { k: 'hop', n: 1 + Math.floor(Math.random() * 3) };
+      else if (r < 0.52) bt.fun = { k: 'walk', ax: sd, t: brnd(0.5, 2), n: 0, hop: Math.random() < 0.4 };
+      else if (r < 0.62) bt.fun = { k: 'walk', ax: sd, t: brnd(0.4, 1), n: 1 + Math.floor(Math.random() * 2), hop: Math.random() < 0.3 };
+      else if (r < 0.7) bt.fun = { k: 'spin', t: brnd(0.7, 1.6) };
+      else if (r < 0.8) bt.idle = brnd(0.8, 2.2);
+    }
   }
   function finI(w) {   // the part of the route nearest the finish flag
     if (w._finI !== undefined && w._finF === w.map.flag) return w._finI;
@@ -1307,6 +1327,14 @@
       const sitP = bt.kind === 'chill' ? 0.07 : bt.kind === 'racer' ? 0.016 : 0.035;
       if (Math.random() < dt * sitP) { bt.idle = brnd(1.2, bt.kind === 'chill' ? 9 : bt.kind === 'racer' ? 4 : 6); if (Math.random() < 0.12) emote(bt, st, EM.sleepy); }
       else if (Math.random() < dt * 0.004 * (bt.kind === 'racer' ? 0.4 : 1)) { bt.fun = Math.random() < 0.6 ? { k: 'hop', n: 2 + Math.floor(Math.random() * 4) } : { k: 'spin', t: brnd(1.2, 2.4) }; if (Math.random() < 0.3) say(bt, st, 'fun'); }
+      else if (Math.random() < dt * (bt.kind === 'racer' ? 0.004 : 0.012)) {   // something of its own: a stroll, a visit to somebody near, or a shove at a crate or ball
+        const r = Math.random(), sd = Math.random() < 0.5 ? -1 : 1; let done = false;
+        if (r < 0.35) { const ps = ctx.players || []; let best = null, bd = 12 * TS; for (const q of ps) { const dx = Math.abs(q.x - b.x); if (q.id !== bt.id && dx > TS * 2 && dx < bd && Math.abs(q.y - b.y) < TS * 2.5) { bd = dx; best = q; } }
+          if (best) { bt.fun = { k: 'visit', id: best.id, t: brnd(2.5, 6), n: 1 + Math.floor(Math.random() * 3) }; done = true; } }
+        else if (r < 0.65) { let best = null, bd = 7 * TS; for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn >= 1e9 || d.gone) continue; const dx = Math.abs(d.x - b.x); if (dx > TS && dx < bd && Math.abs(d.y - b.y) < TS * 1.2) { bd = dx; best = d; } }
+          if (best) { bt.fun = { k: 'walk', ax: Math.sign(best.x - b.x) || 1, t: bd / 200 + brnd(0.8, 2.4), n: Math.random() < 0.3 ? 1 : 0, hop: false }; done = true; } }
+        if (!done) bt.fun = { k: 'walk', ax: sd, t: brnd(0.5, 1.8), n: Math.floor(Math.random() * 3), hop: Math.random() < 0.35 };
+      }
       else if (Math.random() < dt * 0.008 * bt.chatty) say(bt, st, bt.kind === 'racer' ? (Math.random() < 0.5 ? 'chill' : 'go') : bt.kind === 'builder' ? 'build' : bt.kind === 'explorer' ? 'explore' : 'chill');
     }
     if (bt.finished) { bt.leaveT -= dt; if (bt.leaveT <= 0) return 'leave'; }
@@ -1314,6 +1342,17 @@
     else if (bt.fun) {
       const f = bt.fun;
       if (f.k === 'hop') { if (b.ground) { if (f.n-- <= 0) bt.fun = null; else b.jbuf = 0.12; } jheld = Math.random() < 0.5; }
+      else if (f.k === 'visit') {   // over to somebody near, a few hops beside them, maybe a wave
+        const q = (ctx.players || []).find(o => o.id === f.id); f.t -= dt;
+        if (!q || f.t <= 0 || Math.abs(q.y - b.y) > TS * 4) bt.fun = null;
+        else if (Math.abs(q.x - b.x) > TS * 1.5) { ax = Math.sign(q.x - b.x); if (b.ground) { const below = tile(w, Math.floor((b.x + ax * (R + 8)) / TS), Math.floor((b.y + R + 6) / TS)); if (below === 0 || below === 2 || below === 5) { ax = 0; bt.fun = null; } } }
+        else if (b.ground) { if (!f.said) { f.said = true; if (Math.random() < 0.5) emote(bt, st, pickEm([EM.happy, EM.cool])); else if (Math.random() < 0.5) say(bt, st, 'hi'); } if (f.n-- <= 0) bt.fun = null; else b.jbuf = 0.12; }
+      }
+      else if (f.k === 'walk') {   // a little stroll (never off an edge, never into lava), maybe there and back
+        f.t -= dt; ax = f.ax;
+        if (b.ground) { const below = tile(w, Math.floor((b.x + ax * (R + 8)) / TS), Math.floor((b.y + R + 6) / TS)), ahead = tile(w, Math.floor((b.x + ax * (R + 8)) / TS), Math.floor(b.y / TS)); if (below === 0 || below === 2 || below === 5 || BSOLID(ahead) || zoneEdge(w, b.x + ax * TS * 2)) f.ax = ax = -ax; if (f.hop && Math.random() < dt * 1.3) b.jbuf = 0.12; }
+        if (f.t <= 0) { if (f.n-- > 0) { f.ax = -f.ax; f.t = brnd(0.4, 1.3); } else bt.fun = null; }
+      }
       else { f.t -= dt; ax = Math.sin(bt.age * 9) > 0 ? 1 : -1; if (f.t <= 0) bt.fun = null; }
     } else if (bt.plan) {   // building: one block at a time
       const p = bt.plan; p.t -= dt;
@@ -1489,7 +1528,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 153, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 156, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
