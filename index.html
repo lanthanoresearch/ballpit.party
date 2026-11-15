@@ -150,6 +150,8 @@
   .tabs button.on{opacity:1;background:#3a3355;border-color:var(--line)}
   #settings.paper{background:#1a1626}
   #pause.sopen .pcard{display:none}
+  #pause .pcard .pbtn.wide{grid-column:1/-1}
+  body:not(.kbmode) .kbonly{display:none!important}body.kbmode .tonly{display:none!important}
   .sbody{overflow-y:auto;padding:8px 14px 14px;-webkit-overflow-scrolling:touch;flex:1;min-height:0}
   .pane{display:none}.pane.on{display:block}
   .pane h4{margin:12px 0 4px;font-size:13px;letter-spacing:1px;text-transform:uppercase;opacity:.6;font-weight:400}
@@ -412,7 +414,7 @@
   .mycode b{font:700 20px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:3px;color:var(--accent)}
   .cpane h4{margin:12px 0 4px;font-size:13px;letter-spacing:1px;text-transform:uppercase;opacity:.65;font-weight:400}
   .code{font:12px ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px;color:var(--accent);background:rgba(255,204,61,.12);border-radius:5px;padding:0 5px;margin-left:5px}
-  #lpQ{margin-bottom:4px}#lpConn{margin:-2px 0 6px}#lpRes{max-height:320px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  #lpQ{margin-bottom:4px}#lpConn{margin:-2px 0 6px}#lpRes{}
   @media (max-aspect-ratio:1/1) and (max-width:700px),(max-width:480px){
     #hl{--hlw:138px}
     #top{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"hl hr" "mid mid"}
@@ -688,6 +690,7 @@
   .scene .prop{position:absolute;bottom:auto;display:block;width:auto;transform:translateX(-50%)}.scene .prop svg{height:100%;width:auto;display:block}
   #touch #tj.edit{background:rgba(255,204,61,.25)}
   #nameModal,#shareModal,#codeModal,#profModal,#lvlModal,#invModal,#addModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}#descModal{z-index:20;background:rgba(10,8,16,.72)}
+  #descModal .nmcard{width:min(440px,100%);gap:12px}.dsnote{font-size:14px;line-height:1.4;opacity:.8}.dshad{font-size:14px;line-height:1.4;padding:8px 10px;border-radius:8px;background:rgba(255,120,70,.12);border:1.5px solid rgba(255,150,80,.55)}.dslab{font-size:14px;margin:0 0 -6px}#descModal .btns{display:flex;gap:10px}#descModal .btns button{flex:1}
   .nmcard textarea{font:inherit;font-size:17px;width:100%;box-sizing:border-box;resize:none;padding:8px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#120f1c;color:var(--ink);-webkit-user-select:text;user-select:text}.lvdesc{font-size:14px;margin:4px 0;padding:5px 9px;border-left:3px solid #ffd23d;background:rgba(255,255,255,.07);border-radius:4px;overflow-wrap:anywhere}#lvDescBtn{align-self:flex-start;margin-top:4px;font-size:13px}
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
@@ -722,7 +725,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 156; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 157; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -972,6 +975,7 @@
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Mode</span></button>
     <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
+    <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
   </div>
   <div class="sbody">
     <section class="pane" data-pane="you">
@@ -1019,16 +1023,17 @@
         <button class="btn" id="keyReset"><span data-ic="reset"></span>Reset keys</button>
         <p class="small dim">A key can only do one thing. Esc, <kbd>-</kbd> and <kbd>+</kbd> are always settings and zoom.</p>
         <p class="small dim"><b>Building with the keyboard:</b> open the build menu with its key (B). <kbd>←</kbd> <kbd>→</kbd> change the tab, <kbd>↑</kbd> <kbd>↓</kbd> pick the item, <kbd>1</kbd>–<kbd>9</kbd> pick it straight away, <kbd>Enter</kbd> buys it. Then roll to where it should go: <kbd>Enter</kbd> or <kbd>E</kbd> places it, <kbd>Q</kbd> cancels.</p>
+        <p class="small dim"><b>Menus with the keyboard:</b> every menu and pop-up works with the arrows (or the keys you move with), <kbd>Enter</kbd> or <kbd>Space</kbd> picks what is lit, <kbd>Esc</kbd> goes back. The keys above open the chat, the big map, how to play and the pause menu.</p>
         <h4><span data-ic="pad"></span> Mouse</h4>
         <div class="row"><span class="lbl">Move with the mouse</span><div id="selMouse"></div><div class="small dim" id="mouseDesc" style="margin-top:4px"></div></div>
       </div></div>
     </section>
     <section class="pane" data-pane="display">
-      <div class="row"><span class="lbl"><span data-ic="plus"></span> Menu size</span><div id="selUi"></div><div class="small dim" style="margin-top:4px">How big the menus, buttons and messages are. Auto makes them bigger on a computer screen.</div></div>
+      <div class="dep" data-dep="desk"><div><div class="row"><span class="lbl"><span data-ic="plus"></span> Menu size</span><div id="selUi"></div><div class="small dim" style="margin-top:4px">How big the menus, buttons and messages are. Auto makes them bigger on a computer screen.</div></div></div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Look</span><div id="selVs"></div><div class="small dim" id="vsDesc" style="margin-top:4px"></div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
-        <div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div>
+        <div class="dep" data-dep="kb"><div><div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div></div></div>
       <label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Family friendly</b><small>Rude words in player names are starred out on your screen. Anyone can still type any name</small></span></span><input type="checkbox" id="setFamily"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Finish crowns</b><small>Gold, silver, bronze and rock crowns over everyone who has finished</small></span></span><input type="checkbox" id="setCrowns"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label>
       <div class="dep sub" data-dep="mmPlayers"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big player dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigP"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label>
@@ -1057,7 +1062,7 @@
         <h4><span data-ic="map"></span> Your level</h4>
         <div class="small dim">Pick any level you like. The coins, time of day and finish below are for that level. What you build, move, open and collect on a level is saved until you reset that level.</div>
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
-        <button class="btn full hide" id="btnInvite" type="button" hidden></button>
+        <button class="btn full danger hide" id="btnResetLvl" type="button"><span data-ic="reset"></span>Reset this level</button>
         <div id="lvOptBox"><div class="small dim" id="lvOptFor" style="margin:8px 0 2px"></div>
       <label class="sw2 ic2 lvunl"><span class="ti"><span data-ic="gcoin"></span><span><b>Unlimited coins and diamonds</b><small id="lvMoney"></small></span></span><input type="checkbox" id="lvUnl"><i></i></label>
       <div class="lvmode">
@@ -1138,7 +1143,7 @@
       <div class="small dim" id="homeModeNote"></div>
       <button id="homeLvl" class="btn lvrow" type="button"></button>
       <button id="homePlay" class="hplay" type="button">Play</button>
-      <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeMore" type="button"><span data-ic="more"></span>More</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
+      <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
       <div class="hbtns"><button class="btn hide" id="homeInstall" type="button"><span data-ic="install"></span>Install the app</button></div>
     </div>
     <div class="small dim" id="homeOnline"></div>
@@ -1155,9 +1160,8 @@
   <div class="small dim" id="pauseSub"></div>
   <button id="pResume" class="pbtn go" type="button"><span data-ic="play"></span>Resume</button>
   <button id="pInvite" class="pbtn" type="button"><span data-ic="users"></span>Friends</button>
-  <button id="pSave" class="pbtn hide" type="button"><span data-ic="map"></span>Save to my private maps</button>
-  <button id="pLevel" class="pbtn hide" type="button"><span data-ic="map"></span>Change level</button>
-  <button id="pReset" class="pbtn hide" type="button"><span data-ic="reset"></span>Reset this level</button>
+  <button id="pSave" class="pbtn hide" type="button"><span data-ic="map"></span>Save this map</button>
+  <button id="pLevel" class="pbtn" type="button"><span data-ic="globe"></span>Mode</button>
   <button id="pSettings" class="pbtn" type="button"><span data-ic="gear"></span>Settings</button>
   <button id="pHome" class="pbtn" type="button"><span data-ic="back"></span>Main menu</button>
 </div></div>
@@ -1174,7 +1178,7 @@
     <span><i class="lg" style="background:#ffd23d;border-radius:50%"></i>Coins: just for fun</span>
     <span><i class="lg" style="background:#ff8a1f"></i>Checkpoint flag: your next fall brings you back</span>
   </div>
-  <p>Move with <kbd>A</kbd><kbd>D</kbd> or the arrows, jump with <kbd>W</kbd> or <kbd>Space</kbd>: tap for a hop, hold for a big jump. On a phone, use the on-screen controls (you can pick swipe styles in settings). Get the <i>middle</i> of your ball onto a block or you'll roll off.</p>
+  <p><span class="kbonly">Move with <kbd>A</kbd><kbd>D</kbd> or the arrows, jump with <kbd>W</kbd> or <kbd>Space</kbd>: tap for a hop, hold for a big jump. <kbd>B</kbd> builds, <kbd>C</kbd> chats, <kbd>M</kbd> shows the map, <kbd>P</kbd> pauses; in any menu the arrows and Enter pick things.</span><span class="tonly">Swipe left and right to roll, and use the buttons to jump and boost: tap for a hop, hold for a big jump. You can change the controls in Settings.</span> Get the <i>middle</i> of your ball onto a block or you'll roll off.</p>
   <p>The map changes every 3 hours (12, 3, 6, 9 o'clock) and everyone moves together. Roll one way long enough and a ring fills above your ball: then boost! Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump. Touch a checkpoint flag and your next fall brings you back to it once. Tap the chat button to send an emoji or a quick message, and add friends in Settings to see where they are. Collect coins for fun, push things, bounce on pads, and look for the secrets. Open the gear for your name, colours, sounds, music, bots and more.</p>
   </div>
   <div class="ifoot"><label class="dont"><input type="checkbox" id="dontShow"> Don't show this again</label>
@@ -1231,7 +1235,9 @@
 
 <div id="descModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="dsTitle"><div class="card nmcard">
   <h3 id="dsTitle">Describe this level</h3>
-  <div class="small dim" id="dsNote"></div>
+  <div class="dsnote" id="dsNote"></div>
+  <div class="dshad hide" id="dsHad"></div>
+  <label class="dslab hide" id="dsLab" for="dsA">Description <span class="dim">(optional)</span></label>
   <textarea id="dsA" maxlength="140" rows="3" placeholder="A few words about this level" autocomplete="off" spellcheck="false"></textarea>
   <label class="dont hide" id="dsSplitWrap" style="margin:0"><input type="checkbox" id="dsSplit"><span>Write a different one for my offline map</span></label>
   <textarea id="dsB" class="hide" maxlength="140" rows="3" placeholder="For my offline map" autocomplete="off" spellcheck="false"></textarea>
@@ -1315,8 +1321,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=156"></script>
-<script src="physics.js?v=156"></script>
+<script src="maps.js?v=157"></script>
+<script src="physics.js?v=157"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1983,13 +1989,18 @@ function finishRun() {
 /* ----- your own world (multiplayer off): you choose the map and how long each one lasts ----- */
 const SOLOKEY_P = 'ballrun4_solo2', SOLOKEY_O = 'ballrun4_solo2_off', SOLO_BASE = 3000000;   // (your private maps and your offline maps are kept apart: each level can have one of each)
 let SOLOKEY = SOLOKEY_P;
-try { if (localStorage.getItem(SOLOKEY_O) === null) { const was = localStorage.getItem(SOLOKEY_P); if (was) localStorage.setItem(SOLOKEY_O, was); } } catch (e) {}   // (once: the maps you had before are in both, so nothing is lost)
+/* Your private maps and your offline maps are one and the same now: a level you built with friends is there when you play it offline, and the other way round.
+   (Once: anything that was only in the old offline maps moves into the one list, and the old list goes. Where both had the level, the one with more built in it is kept.) */
+try { const off = localStorage.getItem(SOLOKEY_O); if (off !== null) { const P0 = JSON.parse(localStorage.getItem(SOLOKEY_P) || '{}') || {}, O = JSON.parse(off || '{}') || {};
+  const size = o => !o ? -1 : ['buys', 'cps', 'gates', 'misc', 'dels'].reduce((n, k) => n + ((o[k] && o[k].length) | 0), 0);
+  for (const k in O) if (size(O[k]) > size(P0[k])) P0[k] = O[k];
+  localStorage.setItem(SOLOKEY_P, JSON.stringify(P0)); localStorage.removeItem(SOLOKEY_O); } } catch (e) {}
 let solo2 = {};   // one saved world per level, until you reset that level: { levelNumber: what you built, moved, opened and collected }
 let party = null;   // a friend's world: { role: 'host' | 'guest', host: their id, name, priv }
 const inSolo = () => !settings.mp && !party;
 const offlineOn = () => !!settings.offline && !settings.mp && !party;   // a private game that never touches the server: no friends, no invites, nothing online
 const shared = () => !!party || (online && !inSolo() && S.slot >= 0 && S.slot < SOLO_BASE);   // is what you build shown to everyone in the room? (private games and public worlds)
-const soloKeyNow = () => settings.offline && !settings.mp ? SOLOKEY_O : SOLOKEY_P;
+const soloKeyNow = () => SOLOKEY_P;   // (one list of your maps, for private and offline games alike)
 const readSolo = key => { try { const o = JSON.parse(localStorage.getItem(key) || 'null'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } };
 function loadSolo() { SOLOKEY = soloKeyNow(); solo2 = readSolo(SOLOKEY); }   // (the maps of the mode you are in: private or offline)
 function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo2)); } catch (e) {} }
@@ -2011,7 +2022,8 @@ function saveCopy(key, snap) {   // into your private maps (SOLOKEY_P) or your o
 /* a few words of your own about a level, so you can tell them apart: one for your private map, one for your offline map */
 const DESCKEY = 'ballrun4_lvdesc', DESC_MAX = 140;
 let lvDescs = {}; try { lvDescs = JSON.parse(localStorage.getItem(DESCKEY) || '{}') || {}; } catch (e) { lvDescs = {}; }
-const descSlot = key => (key === SOLOKEY_O ? 'o' : 'p');
+try { if (lvDescs.o) { lvDescs.p = Object.assign({}, lvDescs.o, lvDescs.p || {}); delete lvDescs.o; localStorage.setItem(DESCKEY, JSON.stringify(lvDescs)); } } catch (e) {}   // (one description per level, like the maps)
+const descSlot = key => 'p';
 const lvDescOf = (i, key) => { const d = lvDescs[descSlot(key || soloKeyNow())]; return (d && typeof d[i] === 'string' && d[i]) || ''; };
 function setLvDesc(i, key, txt) { const k = descSlot(key || soloKeyNow()); if (!lvDescs[k] || typeof lvDescs[k] !== 'object') lvDescs[k] = {}; txt = String(txt || '').replace(/\s+/g, ' ').trim().slice(0, DESC_MAX); if (txt) lvDescs[k][i] = txt; else delete lvDescs[k][i]; try { localStorage.setItem(DESCKEY, JSON.stringify(lvDescs)); } catch (e) {} }
 loadSolo();
@@ -2843,7 +2855,9 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { if (e.code && keysDown.delete(e.code)) syncKeys(); });
 addEventListener('blur', () => { keysDown.clear(); inp.left = inp.right = inp.jump = false; });
 cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
-document.addEventListener('touchmove', e => { if (!e.target.closest || !e.target.closest('#settings, .card, .csel-list, #editbar')) e.preventDefault(); }, { passive: false });
+let touchUi = false;   // (decided when the finger goes down: a list being rebuilt under a moving finger must not stop it scrolling)
+document.addEventListener('touchstart', e => { const t = e.target; touchUi = !!(t && t.closest && t.closest('#settings, .card, .csel-list, #editbar')); }, { passive: true, capture: true });
+document.addEventListener('touchmove', e => { const t = e.target; if (touchUi || (t && t.isConnected === false)) return; if (!t.closest || !t.closest('#settings, .card, .csel-list, #editbar')) e.preventDefault(); }, { passive: false });
 document.addEventListener('contextmenu', e => { if (!typing()) e.preventDefault(); });
 document.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', e => { if (!window.PointerEvent || e.pointerType === 'touch') { if (detected !== 'touch') { detected = 'touch'; applyTouchUI(); applyDeps(); } } }, true);
 if (window.PointerEvent) { const mouse = e => { if (e.pointerType === 'mouse' && detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); applyDeps(); } }; document.addEventListener('pointerdown', mouse, true); document.addEventListener('pointermove', mouse, true); }   // (a mouse means a computer: keyboard controls, no touch buttons)
@@ -2911,7 +2925,7 @@ function visK(k) {
     case 'j': return settings.scheme === 'buttons' || settings.scheme === 'swipebtn';
     case 'b': return boostBtnOn();
     case 's': return !!(settings.powerJump && settings.superBtn);
-    case 'm': return !!(settings.shopBtn && !(typeof placing !== 'undefined' && placing) && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));
+    case 'm': return !!(settings.shopBtn && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'));   // (it stays while you place something too, just like the + at the top did)
     default: return !!(typeof placing !== 'undefined' && placing);   // place and cancel only while you are building
   }
 }
@@ -2975,6 +2989,7 @@ function applyTouchUI() {
   $('tl').classList.toggle('hide', sc !== 'buttons'); $('tr').classList.toggle('hide', sc !== 'buttons');
   $('tb').classList.toggle('hide', !visK('b') || !showBtns);
   ['ts', 'tpl', 'tpc', 'tm'].forEach(id => { const k = id === 'ts' ? 's' : id === 'tpl' ? 'p' : id === 'tm' ? 'm' : 'c'; $(id).classList.toggle('hide', !(on && visK(k))); });
+  $('btnShop').classList.toggle('hide', !!(on && visK('m')));   // (the build button is with your controls now: no second one in the corner)
   BK.forEach(k => $(BEL[k]).classList.toggle('edit', editMode));
   layoutTouch();
   $('btnEditLayout').disabled = !(sc === 'buttons' || sc === 'swipebtn');
@@ -3167,7 +3182,7 @@ function maybeAskBots() { return;   // (no more popups about bots: Offline alway
 $('btnOk').onclick = () => { auWake(); settings.intro = !$('dontShow').checked; $('setIntro').checked = settings.intro; save(); $('intro').classList.add('hide'); setTimeout(maybeAskBots, 400); };
 function showIntro() { $('dontShow').checked = !settings.intro; $('intro').classList.remove('hide'); }
 function closeSettingsNow() {
-  $('settings').classList.add('hide'); if ($('settings').classList.contains('only') && typeof curTab !== 'undefined' && (curTab === 'you' || curTab === 'more')) showTab('controls'); $('settings').classList.remove('only'); /* (your look is only changed from the main menu: Settings itself never opens on it) */ $('shTitle').textContent = 'Settings'; $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
+  $('settings').classList.add('hide'); if ($('settings').classList.contains('only') && typeof curTab !== 'undefined' && (curTab === 'you' || tabLocked(curTab))) showTab(firstTab()); $('settings').classList.remove('only'); /* (your look is only changed from the main menu: Settings itself never opens on it) */ $('shTitle').textContent = 'Settings'; $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
   try { const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); } catch (e) {}
   if (typeof lpAfterTab === 'function') lpAfterTab();
   if (typeof finApply === 'function') finApply();
@@ -3186,11 +3201,13 @@ $('btnRespawn').onclick = () => { resetPress(); };
 // tabs
 const tabBtns = $('tabs').querySelectorAll('button');
 let curTab = 'controls';
-const tabLocked = n => (n === 'friends' && !!settings.offline && !settings.mp) || (n === 'bots' && !!settings.mp);   // (Offline has no friends, Public has no bots: those tabs stay in their place, greyed out)
-function tabLocks() { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'), L = tabLocked(n); tabBtns[i].classList.toggle('locked', L); tabBtns[i].disabled = L; tabBtns[i].setAttribute('aria-disabled', L ? 'true' : 'false'); } if (tabLocked(curTab)) showTab('controls'); }
-function resetTab() { showTab('controls'); }   // (each new game opens the settings on the first tab; inside one game they stay where you left them)
+const HOME_TABS = ['sound', 'online', 'more'];   // (on the main menu: sound, mode and more. Controls, display and friends are for when you are playing; more is only on the main menu)
+const tabLocked = n => (n === 'you' ? false : (typeof inHome !== 'undefined' && inHome) ? HOME_TABS.indexOf(n) < 0 : n === 'more') || (n === 'friends' && !!settings.offline && !settings.mp) || (n === 'bots' && !!settings.mp);
+const firstTab = () => { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'); if (!tabLocked(n)) return n; } return 'controls'; };   // (Offline has no friends, Public has no bots: those tabs stay in their place, greyed out)
+function tabLocks() { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'), L = tabLocked(n); tabBtns[i].classList.toggle('locked', L); tabBtns[i].disabled = L; tabBtns[i].setAttribute('aria-disabled', L ? 'true' : 'false'); } if (tabLocked(curTab)) showTab(firstTab()); }
+function resetTab() { tabLocks(); showTab(firstTab()); }   // (each new game opens the settings on the first tab; inside one game they stay where you left them)
 function showTab(name) {
-  if (tabLocked(name)) name = 'controls';
+  if (tabLocked(name)) name = firstTab();
   for (let i = 0; i < tabBtns.length; i++) tabBtns[i].classList.toggle('on', tabBtns[i].getAttribute('data-tab') === name);
   const panes = document.querySelectorAll('.pane');
   for (let i = 0; i < panes.length; i++) panes[i].classList.toggle('on', panes[i].getAttribute('data-pane') === name);
@@ -3212,7 +3229,7 @@ const applyVs = () => { if (!VSS[settings.vs]) settings.vs = 'classic'; document
 applyVs();
 /* how big the menus are: bigger on a computer screen by default, and yours to choose */
 const MOUSE = { off: ['Off', 'The mouse only clicks buttons.'], hold: ['Hold to roll', 'Hold the left button: your ball rolls toward the pointer (further away = faster). Hold it well above your ball to jump.'], holdr: ['Hold to roll, right-click jumps', 'Hold the left button to roll toward the pointer. The right button jumps (hold it for a higher jump).'], follow: ['Follow the pointer', 'Your ball always rolls toward the pointer. Click to jump (hold for a higher jump).'] };
-function uiScaleNow() { const s = settings.uiScale; let k = s === 'auto' ? (touchActive() ? 1 : innerWidth >= 1700 && innerHeight >= 900 ? 1.45 : innerWidth >= 1200 && innerHeight >= 700 ? 1.25 : 1) : +s || 1; return Math.max(1, Math.min(k, innerWidth / 700, innerHeight / 520)); }   // (never bigger than the window can hold)
+function uiScaleNow() { const s = settings.uiScale; if (touchActive()) return 1; let k = s === 'auto' ? (touchActive() ? 1 : innerWidth >= 1700 && innerHeight >= 900 ? 1.45 : innerWidth >= 1200 && innerHeight >= 700 ? 1.25 : 1) : +s || 1; return Math.max(1, Math.min(k, innerWidth / 700, innerHeight / 520)); }   // (never bigger than the window can hold)
 function applyUi() { const k = Math.round(uiScaleNow() * 100) / 100, st = document.documentElement.style; st.setProperty('--uis', String(k)); st.setProperty('--uih', Math.floor(innerHeight * 0.9 / k) + 'px'); st.setProperty('--uihc', Math.floor((innerHeight - 28) / k) + 'px'); st.setProperty('--uiw', Math.floor((innerWidth - 28) / k) + 'px'); }
 addEventListener('resize', applyUi);
 const selUi = makeSelect($('selUi'), [{ v: 'auto', label: 'Auto' }, { v: '1', label: 'Normal' }, { v: '1.15', label: 'Large' }, { v: '1.3', label: 'Extra large' }, { v: '1.5', label: 'Huge' }], v => { settings.uiScale = v; save(); applyUi(); });
@@ -3401,7 +3418,7 @@ $('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every
 const showKb = () => settings.inputMode === 'keyboard' || (settings.inputMode === 'auto' && !touchActive());
 const showTouch = () => settings.inputMode === 'touch' || (settings.inputMode === 'auto' && touchActive());
 const DEPS = {
-  kb: showKb, touch: showTouch, touchbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'),
+  kb: showKb, desk: () => showKb() && !(matchMedia && matchMedia('(pointer:coarse)').matches && !matchMedia('(pointer:fine)').matches), touch: showTouch, touchbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'),
   boostbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn') && !settings.boostAuto,
   boost: () => settings.boost, power: () => settings.powerJump, touchgest: () => showTouch() && settings.scheme !== 'buttons',
   mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => false, '!bots': () => true, botsPriv: () => !settings.mp && !settings.offline, botsOff: () => !settings.mp && !!settings.offline, botsOffOn: () => !!settings.botsOff,
@@ -3410,6 +3427,7 @@ const DEPS = {
 function applyDeps() {
   tabLocks();
   { const g = party && party.role === 'guest', n = $('botsNote'), c = $('setBots'); if (c) c.disabled = !!g; if (n) n.textContent = g ? 'This is a friend\'s world: they decide about bots here.' : ''; }
+  document.body.classList.toggle('kbmode', !!showKb());
   const list = document.querySelectorAll('.dep');
   for (let i = 0; i < list.length; i++) { const f = DEPS[list[i].getAttribute('data-dep')]; if (f) list[i].classList.toggle('off', !f()); }
   const d = $('inputDesc'); if (d) d.textContent = settings.inputMode === 'auto' ? (showTouch() ? 'Using touch right now. Press a key and it switches to the keyboard.' : 'Using the keyboard right now. Touch the screen and it switches.') : settings.inputMode === 'touch' ? 'Touch controls only.' : 'Keyboard only.';
@@ -4489,10 +4507,11 @@ function lpRender() {
   trackVis();
   if (!friendsShown()) return;
   showMyCode();
-  const list = $('lpList'); list.textContent = '';
+  const list = $('lpList'), lk = JSON.stringify(lks.map(l => [l.pub, l.name, l.code, l.ok, l.on, l.w, l.last && Math.floor(l.last / 60000), l.color])) + (online || lobbyOn);   // (only rebuilt when something in it changed, so it never jumps while you scroll)
   $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
+  if (list._k !== lk) { list._k = lk; list.textContent = '';
   if (!lks.length) list.appendChild(el('div', 'small dim', 'No friends yet. Tap Add a friend to find players.'));
-  for (const l of lks) list.appendChild(friendCard(l));
+  for (const l of lks) list.appendChild(friendCard(l)); }
   const rl = $('lpReqs'); rl.textContent = '';
   reqs.forEach(r => rl.appendChild(reqCard(r))); $('lpReqH').classList.toggle('hide', !reqs.length);
   { const nw = $('lpNews'); nw.textContent = ''; $('lpNewsH').classList.toggle('hide', !friendNews.length);
@@ -4506,8 +4525,8 @@ function lpRender() {
   $('lpResH').textContent = (lpQ ? 'Search results' : 'Everyone who has played') + '. Tap a name to see their profile.';
   $('lpConn').textContent = (online || lobbyOn) ? '' : 'Connecting to the server…';
   $('lpConn').classList.toggle('hide', !$('lpConn').textContent);
-  const res = $('lpRes'); res.textContent = '';
-  const shown = foundList().filter(f => !reqs.some(r => r.pub === f.pub));
+  const res = $('lpRes'), shown = foundList().filter(f => !reqs.some(r => r.pub === f.pub)), rk = JSON.stringify(shown.map(f => [f.pub, f.name, f.code, f.color, f.on, f.w, f.l, f.last && Math.floor(f.last / 60000), sentTo.has(f.pub), !!mutes[f.pub], !!lkOf(f.pub)])) + lpQ + lks.length;
+  if (res._k !== rk) { res._k = rk; res.textContent = '';
   if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody found. You can also type someone\'s code.' : 'Nobody else has played yet.'));
   for (const f of shown) {
     const linked = f.l || lkOf(f.pub), sent = sentTo.has(f.pub), muted = !!mutes[f.pub];
@@ -4516,6 +4535,7 @@ function lpRender() {
     if (you || linked || sent || lks.length >= MAXLINK) b.disabled = true;
     b.onclick = () => { wsSend({ t: 'treq', to: f.pub, nm: f.name }); b.disabled = true; b.textContent = 'Sent'; };
     d.appendChild(b); res.appendChild(d);
+  }
   }
   const ml = $('mutedList'); ml.textContent = ''; const mk = Object.keys(mutes);
   $('mutedH').classList.toggle('hide', !mk.length);
@@ -4848,6 +4868,7 @@ function enterGame(auto) {
   const v = settings.name || typed || randomName();   // everyone has a name
   if (v !== settings.name) { settings.name = v; save(); }   // the very first name is free
   inHome = false; document.body.classList.remove('home'); $('home').classList.add('hide');
+  resetTab();
   try { auWake(); } catch (e) {}
   if (settings.mp !== homeMode) setMultiplayer(settings.mp);
   else if (settings.mp) joinWorld();
@@ -4865,6 +4886,10 @@ function quitToHome() {
 }
 /* pause: your ball waits, the menu has Resume, Settings and Main menu */
 function clearInput() { keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0; }
+function pauseLayout() {   // the two-across buttons of the pause menu: one left on its own takes the whole row, so there is never a gap
+  const mid = ['pInvite', 'pSave', 'pLevel', 'pSettings'].map($).filter(b => b && !b.classList.contains('hide'));
+  mid.forEach((b, i) => b.classList.toggle('wide', i === mid.length - 1 && mid.length % 2 === 1));
+}
 function openPause() {
   if (inHome || paused) return;
   toggleChat(false); toggleShop(false); paused = true; clearInput();
@@ -4886,7 +4911,8 @@ function escMenu() {   // Escape: closes whatever is on top, then pauses / resum
   togglePause();
 }
 $('pResume').onclick = resumeGame;
-$('pLevel').onclick = () => { sfx('ui'); openLevels(); };
+$('pLevel').onclick = () => { sfx('ui'); openModePage(); };
+function openModePage() { if (chatOpen) toggleChat(false); if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Mode'; toggleSettings(); } showTab('online'); }   // (just the Mode page on its own, like Friends)
 const soloDesc = (i, st) => {   // what is already saved on that level, in words
   const o = (st || solo2)[i]; if (!o) return '';
   const n = (o.buys ? o.buys.length : 0) + (o.gates ? o.gates.length : 0) + (o.misc ? o.misc.length : 0);
@@ -4895,37 +4921,27 @@ const soloDesc = (i, st) => {   // what is already saved on that level, in words
 /* writing a description: one box, or two when it goes to both your private and your offline maps and you want them different */
 let dsCb = null, saveBusy = false, saveAfter = null;
 function askDesc(o, cb) {
-  $('dsTitle').textContent = o.title || 'Describe this level'; $('dsNote').textContent = o.note || ''; $('dsA').value = o.a || ''; $('dsB').value = o.b || '';
+  $('dsTitle').textContent = o.title || 'Describe this level'; $('dsNote').textContent = o.note || (o.save ? 'Your copy keeps everything built, moved and opened here. It shows up for this level in your private and offline games.' : '');
+  $('dsHad').textContent = o.had || ''; $('dsHad').classList.toggle('hide', !o.had); $('dsLab').classList.toggle('hide', !o.save); $('dsOk').className = o.okClass || 'go'; $('dsA').value = o.a || ''; $('dsB').value = o.b || '';
   $('dsSplitWrap').classList.toggle('hide', !o.both); $('dsSplit').checked = !!(o.both && o.b && o.b !== o.a); $('dsB').classList.toggle('hide', !$('dsSplit').checked); $('dsA').placeholder = o.both && $('dsSplit').checked ? 'For my private map' : 'A few words about this level';
   $('dsNo').textContent = o.no || 'Cancel'; $('dsOk').textContent = o.ok || 'Save'; dsCb = cb; $('descModal').classList.remove('hide');
 }
 function dsClose(ok) { $('descModal').classList.add('hide'); try { $('dsA').blur(); $('dsB').blur(); } catch (e) {} const f = dsCb; dsCb = null; if (f) f(ok ? { a: $('dsA').value, b: $('dsSplit').checked ? $('dsB').value : $('dsA').value } : null); }
 $('dsSplit').onchange = () => { const on = $('dsSplit').checked; $('dsB').classList.toggle('hide', !on); $('dsA').placeholder = on ? 'For my private map' : 'A few words about this level'; sfx(on ? 'on' : 'off'); };
 $('dsOk').onclick = () => { sfx('ui'); dsClose(true); }; $('dsNo').onclick = () => { sfx('ui'); dsClose(false); };
-$('lvDescBtn').onclick = () => { const i = lvSel; sfx('ui'); askDesc({ title: 'Describe ' + lvLabelOf(i), note: 'Only you see this. It is for your ' + (soloKeyNow() === SOLOKEY_O ? 'offline' : 'private') + ' map of this level.', a: lvDescOf(i) }, r => { if (r) { setLvDesc(i, null, r.a); lvSelect(i); } }); };
+$('lvDescBtn').onclick = () => { const i = lvSel; sfx('ui'); askDesc({ title: 'Describe ' + lvLabelOf(i), note: 'Only you see this. It shows for this level in private and offline games.', a: lvDescOf(i) }, r => { if (r) { setLvDesc(i, null, r.a); lvSelect(i); } }); };
 function saveDone() { saveBusy = false; const f = saveAfter; saveAfter = null; if (f) setTimeout(f, 250); }
-$('pSave').onclick = () => {   // keep a copy of the world you are in: in your private maps, your offline maps, or both. The copy is taken right now, so it is safe even if the game closes while you choose and write
+$('pSave').onclick = () => {   // keep a copy of the world you are in as your own map of this level (private and offline games share it). The copy is taken right now, so it is safe even if the game closes while you write
   const snap = copySnap(); if (!snap) return;
-  const idx = snap.idx, label = lvLabelOf(idx), NAMES = { [SOLOKEY_P]: 'private maps', [SOLOKEY_O]: 'offline maps' };
-  sfx('ui'); saveBusy = true; let picked = false;
-  openPick('Save a copy of this world as ' + label, ['In my private maps', 'In my offline maps', 'In both'], -1, k => {
-    picked = true;
-    const keys = k === 0 ? [SOLOKEY_P] : k === 1 ? [SOLOKEY_O] : [SOLOKEY_P, SOLOKEY_O], done = [], all = keys.slice();
-    askDesc({ title: 'Add a description?', note: 'A few words so you know this level later. Only you see it.' + (k === 2 ? ' It can be the same for both maps, or different.' : ''), both: k === 2, a: lvDescOf(idx, all[0]), b: k === 2 ? lvDescOf(idx, SOLOKEY_O) : '', no: 'No description', ok: 'Save' }, r => {
-      const next = () => {
-        const key = keys.shift();
-        if (!key) { if (done.length) notice('Saved to your ' + done.map(x => NAMES[x]).join(' and '), ''); loadSolo(); lvlRender(); saveDone(); return; }
-        const save = () => { if (saveCopy(key, snap)) { done.push(key); if (r) setLvDesc(idx, key, key === SOLOKEY_O && all.length === 2 ? r.b : r.a); } next(); };
-        const st = readSolo(key);
-        if (!st[idx]) { save(); return; }
-        askConfirm('Replace your ' + NAMES[key].replace('maps', 'map') + '?', label + ' in your ' + NAMES[key] + ' already has ' + soloDesc(idx, st) + '. Saving replaces all of it with this world, and that cannot be undone.', 'Yes, replace it', save, { no: 'Keep mine', onNo: next });
-      };
-      next();
-    });
-  }, () => { if (!picked) saveDone(); });
-  closeSelectFn = null;   // (leaving the world does not close this list: the copy is already taken)
+  const idx = snap.idx, label = lvLabelOf(idx), st = readSolo(SOLOKEY_P), had = st[idx];
+  sfx('ui'); saveBusy = true;
+  askDesc({ title: 'Save ' + label, save: true, had: had ? 'You already have your own ' + label + ' (' + soloDesc(idx, st) + '). Saving replaces it with this world.' : '', a: lvDescOf(idx), ok: had ? 'Replace and save' : 'Save', okClass: had ? 'danger' : 'go', no: 'Cancel' }, r => {
+    if (!r) { saveDone(); return; }
+    if (saveCopy(SOLOKEY_P, snap)) { setLvDesc(idx, SOLOKEY_P, r.a); notice('Saved to your maps. Play it in a private or offline game', ''); } else notice('Could not save on this device', 'urgent');
+    loadSolo(); lvlRender(); saveDone();
+  });
 };
-$('pReset').onclick = () => askResetLevel(soloLevel(), () => resumeGame(), true);
+$('btnResetLvl').onclick = () => { sfx('ui'); askResetLevel(soloLevel(), () => { if (paused) resumeGame(); }, true); };
 $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
 const guestsHere = () => party && party.role === 'host' ? others.size : 0;
 function hostLeaveWarn(go, what) {   // you made this private game and friends are in it: leaving (or starting it over) closes it for them, so ask first
@@ -4963,8 +4979,8 @@ function setOffline(on) {
 }
 $('homeLook').onclick = () => { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; } showTab('you'); toggleSettings(); };
 $('homeSet').onclick = () => toggleSettings();
-$('homeMore').onclick = () => { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'More'; } showTab('more'); toggleSettings(); };   // (backups, install, reset: only from the main menu)
-const updShown = () => { try { return localStorage.getItem('ballrun4_updbtn') === '1'; } catch (e) { return false; } };
+try { localStorage.removeItem('ballrun4_updbtn'); } catch (e) {}
+const updShown = () => { try { return sessionStorage.getItem('ballrun4_updbtn') === '1'; } catch (e) { return false; } };   // (only until the game is closed: opened again, the button is hidden)
 $('homeUpd').classList.toggle('hide', !updShown());
 $('homeHelp').onclick = () => showIntro();
 /* Share: 1) the system share sheet, 2) copy the link automatically, 3) a pop-up with the link to copy by hand, 4) say we can't. The first one that works stops the chain. */
@@ -5048,7 +5064,7 @@ function joinParty(hp, name) {
   if (ws && ws.readyState === 1 && (online || party)) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; others.clear(); lastSent = ''; }
   if (party && party.role === 'guest') S.slot = -1;
   party = { role: 'guest', host: hp, name };
-  if (inHome) { inHome = false; document.body.classList.remove('home'); $('home').classList.add('hide'); try { auWake(); } catch (e) {} reenter = true; firstEntry = false; nameUI(); }
+  if (inHome) { inHome = false; document.body.classList.remove('home'); $('home').classList.add('hide'); try { auWake(); } catch (e) {} reenter = true; firstEntry = false; nameUI(); resetTab(); }
   if (paused) { paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); }
   closeLevels(); closeInvites(); toggleChat(false); toggleShop(false);
   retry = 0; setNet('connecting'); joinWorld(); lvlRender();
@@ -5170,7 +5186,7 @@ $('ivStop').onclick = () => { stopHosting(); closeInvites(); };
 $('invModal').addEventListener('pointerdown', e => { if (e.target === $('invModal')) closeInvites(); });
 $('pInvite').onclick = () => { sfx('ui'); openFriends(); };
 $('btnInviteF').onclick = () => { sfx('ui'); openInvites(); };
-$('btnInvite').onclick = () => { if (inHome) { notice('Start playing first, then invite friends from the pause menu', ''); return; } sfx('ui'); openInvites(); };
+
 
 /* ----- your own world: pick any of the levels. Each one keeps what you did on it until you reset it ----- */
 let lvSel = 0;
@@ -5178,7 +5194,7 @@ const lvLabelOf = i => 'Level ' + (i + 1) + ': ' + BallMaps.names[i];
 function lvlLabel() { return lvLabelOf(soloLevel()); }
 const pubIdx = () => { const s = BallMaps.slotOf(nowMs()); return { i: ((s % BallMaps.count) + BallMaps.count) % BallMaps.count, next: BallMaps.slotStart(s + 1) }; };
 function lvlRender() {
-  { const g = !!(party && party.role === 'guest'), pk = $('btnPickLvl'), bi = $('btnInvite'); if (pk) pk.classList.toggle('hide', g); if (bi) bi.classList.toggle('hide', g); }   // (in a friend's game only they change the level, the finish, the time of day and the bots)
+  { const g = !!(party && party.role === 'guest'), pk = $('btnPickLvl'); if (pk) pk.classList.toggle('hide', g); }   // (in a friend's game only they change the level, the finish, the time of day and the bots)
   const pub = $('homeMp').checked, h = $('homeLvl');
   let t = lvlLabel();
   if (h) {   // private: your level, tap to change. Public: the map everyone is on right now, and how long until the next one.
@@ -5188,9 +5204,10 @@ function lvlRender() {
   }
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
   lvOptRender();
-  const sl = !settings.mp && !(party && party.role === 'guest'); $('pLevel').classList.toggle('hide', !sl); $('pReset').classList.toggle('hide', !sl);
+  const sl = !settings.mp && !(party && party.role === 'guest'); $('btnResetLvl').classList.toggle('hide', !sl || !hasSoloSave(soloLevel()));
   $('pSave').classList.toggle('hide', !((settings.mp && !party) || (party && party.role === 'guest')) || !S.world || S.slot < 0);
   const canInv = !settings.mp && !(party && party.role === 'guest'); $('btnInviteF').classList.toggle('hide', !canInv || inHome); $('invT').textContent = party ? 'Invite more friends' : 'Invite friends to play'; $('invS').textContent = party ? 'Your world is open. Send another link' : 'Pick friends and send them a link to this world';
+  $('pInvite').classList.toggle('hide', offlineOn()); pauseLayout();
 }
 let lvF = 'all';   // which kind of levels the picker shows
 const biomeOf = id => THEMES.find(t => t.id === id);
@@ -5275,7 +5292,7 @@ function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
-  if (v === 'updates') { const on = !updShown(); try { if (on) localStorage.setItem('ballrun4_updbtn', '1'); else localStorage.removeItem('ballrun4_updbtn'); } catch (e) {} $('homeUpd').classList.toggle('hide', !on); sfx('big'); closeCode(); notice(on ? 'The update button is on the main menu now. Enter the code again to hide it.' : 'The update button is hidden again.', ''); return; }
+  if (v === 'updates') { const on = !updShown(); try { if (on) sessionStorage.setItem('ballrun4_updbtn', '1'); else sessionStorage.removeItem('ballrun4_updbtn'); } catch (e) {} $('homeUpd').classList.toggle('hide', !on); sfx('big'); closeCode(); notice(on ? 'The update button is on the main menu until you close the game.' : 'The update button is hidden again.', ''); return; }
   if (v === 'unlimitedpower') { if (noCaps) { $('cdNote').textContent = 'You already build without limits.'; sfx('warn'); return; } noCaps = true; try { localStorage.setItem('ballrun4_nocap', '1'); } catch (e) {} sfx('big'); closeCode(); notice('No building limits: build as much of everything as you like', ''); try { shopRender(); } catch (e) {} return; }
   if (v === 'themaker#1' || v === 'maker' || v === 'zeros') {   // the three money codes. They only ever change your own money on this device, and never a private world whose maker set its money to unlimited
     const done = t => { saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice(t, ''); };
