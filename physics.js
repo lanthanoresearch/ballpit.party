@@ -275,6 +275,16 @@
     for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const e = o.r || o.hw; if (o.x + e > x0 && o.x - e < x1 && o.y + e > y0 && o.y - e < y1) return true; }
     return false;
   }
+  function doorShut(w, d, bs) {   // a gate always shuts when it should: whatever is under it (a crate, a ball, a player) is pushed out to the nearer open side first, so nothing can ever hold one open
+    const x0 = d.x * TS, x1 = (d.x + d.w) * TS, y0 = (d.y + 1) * TS, y1 = (d.y + d.h) * TS, cx = (x0 + x1) / 2;
+    const sideOk = (sx, y) => { const tx = Math.floor(sx / TS), ty = Math.floor(y / TS); return !BSOLID(tile(w, tx, ty)); };
+    const out = (o, e) => { let dir = o.x < cx ? -1 : 1; if (!sideOk(dir < 0 ? x0 - e - 2 : x1 + e + 2, o.y)) dir = -dir; o.x = dir < 0 ? x0 - e - 1 : x1 + e + 1; if (o.vx * dir < 0) o.vx = 0; o.vx += dir * 40; };
+    const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [];
+    for (let k = 0; k < L.length; k++) { const b = L[k]; if (b && !b.ghost && b.x + R > x0 && b.x - R < x1 && b.y + R > y0 && b.y - R < y1) out(b, R); }
+    for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0) continue; const e = o.r || Math.max(o.hw, o.hh || o.hw);
+      if (o.x + e > x0 && o.x - e < x1 && o.y + e > y0 && o.y - e < y1) { out(o, e); o.nap = false; o.st = 0; o.sleep = false; } }
+    setDoorTiles(w, d, false);
+  }
   // bs: a player body, or a list of them (the server passes everybody in the world). In follow mode (a device that is shown the server's world) a gate may only be opened here at once;
   // shutting it is up to the server. dt (optional): with w.closeDelay, a gate waits that long after the last thing left its trigger before it shuts.
   let colSrc = null, colLen = -1, colMap = null, colStep = -1;
@@ -318,7 +328,7 @@
       const d = w.doors[i];
       if (want[i]) d.offT = 0; else d.offT = (d.offT || 0) + (dt || 0);
       if (want[i] && !d.open) { setDoorTiles(w, d, true); d.predT = Date.now(); w.ev.push({ k: 'door', open: true, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
-      else if (!want[i] && d.open && !w.follow && !(w.closeDelay && d.offT < w.closeDelay) && !doorBlocked(w, d, L)) { setDoorTiles(w, d, false); w.ev.push({ k: 'door', open: false, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
+      else if (!want[i] && d.open && !w.follow && !(w.closeDelay && d.offT < w.closeDelay)) { doorShut(w, d, L); w.ev.push({ k: 'door', open: false, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
     }
   }
 
@@ -1534,7 +1544,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 158, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 159, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
