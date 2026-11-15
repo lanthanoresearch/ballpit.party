@@ -531,6 +531,7 @@
   #editbar .eb1,#editbar .eb2{display:flex;gap:8px;align-items:center;min-width:0}
   #editbar .eb1{justify-content:space-between}#editbar .eb1 b{font-weight:normal;font-size:14px;line-height:1.25;min-width:0}#editbar .ebb{display:flex;gap:6px;flex:none}
   #editbar .eb2{flex-wrap:wrap}
+  #editbar .eb2:not(:has(>:not(.hide))){display:none}#editbar .eb1{flex-wrap:wrap;row-gap:6px}#editbar .eb1 b{flex:1 1 240px}#editbar .ebb{margin-left:auto;flex-wrap:wrap;justify-content:flex-end}   /* (on a narrow screen the words get their own line instead of a tall thin column) */
   #ebPresets{display:flex;gap:4px;flex:none}
   #ebPresets button{padding:5px 10px;font-size:13px;white-space:nowrap;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;color:var(--ink)}#ebPresets button.on{background:#2f9e61}
   #ebFlip{flex:none;margin-left:auto;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}#ebFlip .ic{width:16px;height:16px}
@@ -579,6 +580,8 @@
 .btnrow{display:flex;gap:8px;margin:8px 0}.btnrow .btn{flex:1}.btnrow .btn+.btn{flex:none}
   #edZone{position:fixed;inset:0;z-index:4;pointer-events:none}
   #edZone .zr{position:fixed;box-sizing:border-box;border:2px dashed rgba(255,90,90,.95);border-radius:10px;background:repeating-linear-gradient(135deg,rgba(220,40,40,.22) 0 10px,rgba(220,40,40,.36) 10px 20px)}
+  #msgDemo{padding:7px 16px;font-size:15px;background:rgba(255,210,61,.18);border:2px dashed #ffd23d;color:#fff;border-radius:var(--wob)}
+  body.uedit #stack{pointer-events:auto!important;cursor:move;touch-action:none;min-width:180px}body.uedit #stack *{pointer-events:none!important}
   body.uedit #infoWrap,body.uedit #mm,body.uedit #corner,body.uedit #stLine{pointer-events:auto!important;outline:2px dashed #ffd23d;outline-offset:3px;cursor:move;touch-action:none}
   body.uedit #infoWrap *,body.uedit #corner *,body.uedit #stLine *{pointer-events:none!important}
   body.uedit .usel{outline:3px solid #ffd23d!important}body.uedit #corner .ibtn{outline:1px dashed rgba(255,210,61,.6);outline-offset:2px}body.uedit #corner .ibtn.usel{outline:3px solid #7ff0ff!important;outline-offset:3px}body.uedit .ubad{outline-color:#ff4d4d!important}
@@ -743,7 +746,7 @@
     #worldpop b{font-size:14px!important;margin:0!important}
   }
   /* messages (world news, what you are building, the beacon, notices) pop up over everything near the top middle, like the last-30-seconds timer: they never take room from the info panel or the buttons */
-  #top>#stack{position:fixed!important;left:50%!important;right:auto!important;top:max(10px,env(safe-area-inset-top))!important;transform:translateX(-50%)!important;z-index:30!important;width:max-content!important;max-width:min(94vw,560px)!important;align-items:center!important;justify-self:auto!important}
+  #top>#stack{position:fixed!important;left:50%!important;right:auto!important;top:max(10px,env(safe-area-inset-top))!important;transform:translate(calc(-50% + var(--mx,0px)),var(--my,0px)) scale(var(--ms,1))!important;transform-origin:top center;z-index:30!important;width:max-content!important;max-width:min(94vw,560px)!important;align-items:center!important;justify-self:auto!important}
   #top>#stack>#worldpop,#top>#stack>#notice,#top>#stack>#beaconbar{position:static!important;transform:none!important;left:auto!important;top:auto!important;box-shadow:0 6px 18px rgba(0,0,0,.45)}
   #top>#stack>#notice.show{animation:popin .28s cubic-bezier(.2,1.5,.4,1)}#top>#stack>#worldpop:not(.hide){animation:popin .28s cubic-bezier(.2,1.5,.4,1)}
   @keyframes popin{0%{opacity:0;scale:.7}100%{opacity:1;scale:1}}
@@ -759,7 +762,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 164; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 165; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -961,7 +964,7 @@
   <canvas id="mm" width="170" height="110"></canvas>
   <div id="stLine" class="hide" aria-live="off"></div>
 </div>
-<div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
+<div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="msgDemo" class="paper hide">Messages pop up here</div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
 <div id="hr">
   <div id="corner">
     <button id="btnRespawn" class="ibtn" title="Reset: back to your checkpoint, or the start (R)" data-ic="reset"></button>
@@ -1081,7 +1084,7 @@
       </div></div>
     </section>
     <section class="pane" data-pane="display">
-      <div class="row"><span class="lbl"><span data-ic="pad"></span> Screen layout</span><div class="btnrow"><button class="btn" id="btnEditUi" type="button"><span data-ic="pad"></span>Edit UI</button><button class="btn" id="btnResetUi" type="button" title="Put the screen info back"><span data-ic="reset"></span>Reset</button></div><div class="small dim" style="margin-top:4px">Move and resize the info panel, the mini map and the corner buttons. Tap the corner buttons, then tap one of them to move or resize it on its own. Screen info and your touch buttons never cover each other.</div><div class="small dim hide" id="editUiHint">Start playing first, then come back here to move things.</div></div>
+      <div class="row"><span class="lbl"><span data-ic="pad"></span> Screen layout</span><div class="btnrow"><button class="btn" id="btnEditUi" type="button"><span data-ic="pad"></span>Edit UI</button><button class="btn" id="btnResetUi" type="button" title="Put the screen info back"><span data-ic="reset"></span>Reset</button></div><div class="small dim" style="margin-top:4px">Move and resize the info panel, the mini map, the stats, the corner buttons and where messages pop up. Tap the corner buttons, then tap one of them to move or resize it on its own. Screen info and your touch buttons never cover each other.</div><div class="small dim hide" id="editUiHint">Start playing first, then come back here to move things.</div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Look</span><div id="selVs"></div><div class="small dim" id="vsDesc" style="margin-top:4px"></div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
@@ -1394,8 +1397,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=164"></script>
-<script src="physics.js?v=164"></script>
+<script src="maps.js?v=165"></script>
+<script src="physics.js?v=165"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3217,9 +3220,9 @@ const coarse = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matc
 let flipFs = false, ebMsgT = 0;
 function ebMsg(t) { const m = $('ebMsg'); m.textContent = t; m.classList.remove('hide'); clearTimeout(ebMsgT); ebMsgT = setTimeout(() => m.classList.add('hide'), 5000); }
 function editRefresh() {
-  $('ebTitle').textContent = !editMode ? 'Drag the info panel, map, stats or corner buttons. Tap one to resize it. Tap a corner button twice to move it on its own.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize. Red is screen info.';
+  $('ebTitle').textContent = !editMode ? 'Drag a piece to move it, tap it to resize. Tap a corner button twice to move it alone. The yellow box is where messages pop up.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize. Red is screen info.';
   $('ebPresets').classList.toggle('hide', !editMode);
-  document.body.classList.toggle('uedit', uiEdit);
+  document.body.classList.toggle('uedit', uiEdit); $('msgDemo').classList.toggle('hide', !uiEdit);
   const f = $('ebFlip'); f.classList.toggle('hide', !coarse() || !editMode); f.querySelector('.t').textContent = isPortrait() ? 'Edit sideways' : 'Edit upright';
   editChips(); if (uiEdit) uiSelect(uiSel, cbSel); else selectBtn(editSel);
 }
@@ -3244,7 +3247,7 @@ function startEdit(ui) {
   try { releaseInputs(); } catch (e) {} edSess = true; edFrom = ui ? 'ui' : 'btn'; uiEdit = ui; editMode = !ui; edKind = ui ? 'ui' : 'btn'; cbSel = null; if (ui && !uiVis(uiSel)) uiSel = 'info';
   $('pause').classList.add('hide'); $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); $('ebMsg').classList.add('hide'); applyTouchUI(); editRefresh(); layoutTouch(); edZone();
 }
-function endEdit() { editMode = false; edSess = false; ebSwapped = false; $('editbar').classList.remove('ebdown'); uiEdit = false; document.body.classList.remove('uedit'); uiMark(); edZone(); save(); try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} if (flipFs) { flipFs = false; exitFs(); } $('ebMsg').classList.add('hide'); if (paused) $('pause').classList.remove('hide'); $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
+function endEdit() { $('msgDemo').classList.add('hide'); editMode = false; edSess = false; ebSwapped = false; $('editbar').classList.remove('ebdown'); uiEdit = false; document.body.classList.remove('uedit'); uiMark(); edZone(); save(); try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} if (flipFs) { flipFs = false; exitFs(); } $('ebMsg').classList.add('hide'); if (paused) $('pause').classList.remove('hide'); $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
 $('editDone').onclick = endEdit;
 function resetLayout() { settings[posK()] = null; settings[mulK()] = {}; if (curPreset() === 'custom') settings[presetK()] = 'moveleft'; selPreset.set(curPreset()); save(); applyTouchUI(); if (editMode) { editChips(); selectBtn(editSel); } }
 const askReset = () => { if (!(settings[posK()] || Object.keys(curMul()).length)) { return; } askConfirm('Reset your buttons?', 'Your moved buttons and sizes go back to the layout you picked. This only changes the layout for how you hold your phone right now.', 'Reset', resetLayout, { no: 'Keep them' }); };
@@ -3305,7 +3308,7 @@ function releaseInputs() {   // entering or leaving full screen cancels touches 
 
 // ----- moving and resizing the screen info: the info panel, the mini map, the stats line and the corner buttons (as a group, or each button on its own).
 // Every piece has a box of room a little bigger than itself; the touch buttons have a square of room each. Neither may go on the other's room, anywhere on the screen -----
-const UIP = { info: 'infoWrap', mm: 'mm', stats: 'stLine', corner: 'corner' }, UIN = { info: 'Info panel', mm: 'Mini map', stats: 'Stats', corner: 'Corner buttons' };
+const UIP = { info: 'infoWrap', mm: 'mm', stats: 'stLine', corner: 'corner', msgs: 'stack' }, UIN = { info: 'Info panel', mm: 'Mini map', stats: 'Stats', corner: 'Corner buttons', msgs: 'Messages' };
 const CBN = { reset: 'Reset button', pause: 'Pause button', build: 'Build button', chat: 'Chat button' };
 const UI_M = 8, BTN_M = 8;   // (the extra room around each piece, and around each touch button)
 const uiZ = () => { try { return parseFloat(getComputedStyle($('top')).zoom) || 1; } catch (e) { return 1; } };
@@ -3321,7 +3324,7 @@ function pieceRects(k) {   // what a piece really covers on the screen (the corn
   if (k === 'stats') { const o = uiLay().stats, full = 80 * uiZ() * ((o && o.s) || 1); if (r[3] - r[1] < full) r[3] = r[1] + full; }   // (room for every stat at once, so turning more on never needs more room)
   return [r];
 }
-function uiReserved() { const out = []; for (const k in UIP) for (const r of pieceRects(k)) out.push({ k, r: [r[0] - UI_M, r[1] - UI_M, r[2] + UI_M, r[3] + UI_M] }); return out; }
+function uiReserved() { const out = []; for (const k in UIP) if (k !== 'msgs') for (const r of pieceRects(k)) out.push({ k, r: [r[0] - UI_M, r[1] - UI_M, r[2] + UI_M, r[3] + UI_M] }); return out; }
 function btnSquares() {   // the room each touch button has, while they are on the screen
   const out = []; if (!(touchActive() || editMode) || $('touch').classList.contains('hide') && $('touch2').querySelectorAll('button:not(.hide)').length === 0) return out;
   for (const kk in curPts) { const el = $(BEL[kk]); if (!el || el.classList.contains('hide') || el.offsetParent === null && getComputedStyle(el).position !== 'fixed') continue; const q = curPts[kk], h = q[2] / 2 + BTN_M; out.push([q[0] - h, q[1] - h, q[0] + h, q[1] + h]); }
@@ -3333,8 +3336,9 @@ function applyUiL() {
   { const rb = $('btnResetUi'); if (rb) rb.disabled = !Object.keys(L).some(k => k !== 'cb' || Object.keys(L.cb || {}).length); }
   for (const k in UIP) {
     const e = $(UIP[k]); if (!e) continue; const o = L[k];
-    if (!o) { e.style.transform = ''; continue; }
-    const put = () => { e.style.transform = 'translate(' + (o.x / z) + 'px,' + (o.y / z) + 'px) scale(' + (o.s || 1) + ')'; };
+    const put = k === 'msgs' ? () => { const st = e.style; st.setProperty('--mx', ((o ? o.x : 0) / z) + 'px'); st.setProperty('--my', ((o ? o.y : 0) / z) + 'px'); st.setProperty('--ms', String((o && o.s) || 1)); }   // (the message zone is placed by the page's own rule: it only gets nudged)
+      : () => { e.style.transform = 'translate(' + (o.x / z) + 'px,' + (o.y / z) + 'px) scale(' + (o.s || 1) + ')'; };
+    if (!o) { if (k === 'msgs') put(); else e.style.transform = ''; continue; }
     put(); const r = e.getBoundingClientRect(); if (r.width < 2) continue;
     let dx = 0, dy = 0; if (r.left < 2) dx = 2 - r.left; else if (r.right > W - 2) dx = W - 2 - r.right; if (r.top < 2) dy = 2 - r.top; else if (r.bottom > H - 2) dy = H - 2 - r.bottom;   // (never off the screen, even after turning the phone)
     if (dx || dy) { o.x = Math.round(o.x + dx); o.y = Math.round(o.y + dy); put(); }
@@ -3345,8 +3349,9 @@ function applyUiL() {
 function uiOk(k) {   // on the screen, never on a touch button's room, never on another piece
   const mine = pieceRects(k); if (!mine.length) return true; const W = innerWidth, H = innerHeight;
   for (const r of mine) if (r[0] < 0 || r[1] < 0 || r[2] > W || r[3] > H) return false;
+  if (k === 'msgs') return true;   // (messages pop up over everything else, so they only need to stay on the screen)
   const sq = btnSquares(); for (const r of mine) for (const q of sq) if (rHit(r, q)) return false;   // (the red squares: a button and its room)
-  for (const kk in UIP) { if (kk === k) continue; for (const q of pieceRects(kk)) for (const r of mine) if (rHit(r, q)) return false; }
+  for (const kk in UIP) { if (kk === k || kk === 'msgs') continue; for (const q of pieceRects(kk)) for (const r of mine) if (rHit(r, q)) return false; }
   if (k === 'corner') for (let a = 0; a < mine.length; a++) for (let b = a + 1; b < mine.length; b++) if (rHit(mine[a], mine[b])) return false;   // (the corner buttons never sit on each other)
   return true;
 }
@@ -3410,7 +3415,7 @@ Object.keys(UIP).forEach(k => {
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   }, true);
 });
-addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#infoWrap,#mm,#corner,#stLine')) { e.stopPropagation(); e.preventDefault(); } }, true);
+addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#infoWrap,#mm,#corner,#stLine,#stack')) { e.stopPropagation(); e.preventDefault(); } }, true);
 // with a keyboard: Tab picks the next piece, the arrows move it (hold Shift for big steps), + and - resize it, Enter or Esc is done
 addEventListener('keydown', e => {
   if (!edSess || !uiEdit) return;
