@@ -1189,14 +1189,14 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     /* --- the start platform --- */
     const sTh = TH[laneOf(bandAt(0), 0).th];
     // A roomy, harmless playground: a little of everything and nothing that kills you.
-    const SW = 41;
+    const SO = 6, SW = 41 + SO;   // (the first 12 blocks are an open plaza: nothing can be built or left in the wide circle around the spawn, so the playground starts right at its edge)
     /* Every map has its own start (made from its own seed, so everybody gets the same one): the spawn on the left and the lookout with its
        vault on the right stay put, and in between a few play stations are picked, shuffled and filled with different toys. */
     const c0 = coins.length, rs0 = rects.length;
     const SR = rng(d.seed * 13 + 9001), sri = (a, b) => a + Math.floor(SR() * (b - a + 1)), spick = a => a[Math.floor(SR() * a.length)];
     const toy = (x, y) => { const k = spick([0, 0, 2, 2, 7, 7, 3, 5, 4]); props.push([k, x, y]); };
     addRect([0, 0, 3, 2, 1, sTh, startGid]);                       // where you appear
-    addRect([3, 0, 3, 2, 1, sTh, startGid]);
+    addRect([3, 0, 3 + SO, 2, 1, sTh, startGid]); coinRow(4.5, -1.4, 5, 1, 0);
     const ST = {
       pad: w => [6, x => { addRect([x, 0, 6, 2, 1, sTh, startGid]); addRect([x + 3, 0, 2, 1, 6, sTh, startGid]); coin(x + 3.5, -3.2, 0); coin(x + 3.5, -5.2, 0); coin(x + 3.5, -7.6, 1); toy(x + 1, 0); }],
       basin: w => [8, x => { addRect([x, 1, 8, 1, 1, sTh, startGid]); const v = sri(0, 2); if (v === 0) { cratePyramid(x + 1.2, 1, 3); jenga(x + 5.2, 1, 5); } else if (v === 1) { for (let k = 0; k < 7; k++) props.push([spick([2, 7, 4]), x + 0.6 + k * 1.05, 1]); crateColumn(x + 6.6, 1, 3); } else { props.push([1, x + 1.6, 1]); props.push([0, x + 1.6, -0.9]); props.push([3, x + 5.4, 1]); toy(x + 3.6, 1); } coinRow(x + 2, -0.4, 5, 1, 0); }],
@@ -1207,33 +1207,33 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       tower: w => [5, x => { addRect([x, 0, 5, 2, 1, sTh, startGid]); if (SR() < 0.5) jenga(x + 1.6, 0, sri(4, 7)); else { cratePyramid(x + 0.6, 0, 3); props.push([1, x + 1.5, -2.7]); } coin(x + 2.5, -7, 1); }],
       pit: w => [7, x => { addRect([x, 2, 7, 2, 1, sTh, startGid]); for (let i = 0; i < 12; i++) props.push([spick([2, 7, 7, 4, 3]), x + 0.7 + (i % 6) * 1.05, 2 - Math.floor(i / 6) * 0.9]); coinRow(x + 1, -0.6, 5, 1, 0); }]
     };
-    { let x = 6; const pool = Object.keys(ST); for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(SR() * (i + 1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
-      for (const k of pool) { const [wd, draw] = ST[k](); if (x + wd > 34) continue; draw(x); x += wd; if (x >= 31) break; }
-      if (x < 34) { addRect([x, 0, 34 - x, 2, 1, sTh, startGid]); coinRow(x + 0.5, -1.4, 34 - x, 1, 0); } }
-    addRect([34, 0, 7, 2, 1, sTh, startGid]);                      // a little lookout
-    crateColumn(35.2, 0, sri(2, 4)); coinRow(36, -1.4, 4, 1, 0); coin(38, -3.4, 1);
+    { let x = 6 + SO; const pool = Object.keys(ST); for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(SR() * (i + 1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+      for (const k of pool) { const [wd, draw] = ST[k](); if (x + wd > 34 + SO) continue; draw(x); x += wd; if (x >= 31 + SO) break; }
+      if (x < 34 + SO) { addRect([x, 0, 34 + SO - x, 2, 1, sTh, startGid]); coinRow(x + 0.5, -1.4, 34 + SO - x, 1, 0); } }
+    addRect([34 + SO, 0, 7, 2, 1, sTh, startGid]);                      // a little lookout
+    crateColumn(35.2 + SO, 0, sri(2, 4)); coinRow(36 + SO, -1.4, 4, 1, 0); coin(38 + SO, -3.4, 1);
     occ.add(-1, -9, SW + 1, 3); occ.add(-1, -6, SW + 1, 8);
     addRect([0, 7, 9, 2, 1, sTh, startGid]); addRect([4, 7, 1, 1, 6, sTh, startGid]);
     occ.add(-1, 5, 11, 12); occB.add(-1, 5, 11, 12); occB.add(-1, -9, SW + 1, 12);
     coinRow(0.5, 5.4, 3, 1, 0); coinRow(6.5, 5.4, 3, 1, 0); coinRow(4, 3.2, 1, 1, 1);
     // ---- up in the sky: ledges to climb, at different places on every map ----
     occ.add(-1, -14, SW + 1, -9); occB.add(-1, -14, SW + 1, -9);
-    const L1 = sri(11, 15), L2 = sri(18, 22), L3 = sri(26, 29), H1 = -sri(4, 6), H2 = -sri(8, 9), H3 = -sri(11, 12);
+    const L1 = sri(11, 15) + SO, L2 = sri(18, 22) + SO, L3 = sri(26, 29) + SO, H1 = -sri(4, 6), H2 = -sri(8, 9), H3 = -sri(11, 12);
     addRect([L1, H1, 5, 1, 1, sTh, startGid]); addRect([L2, H2, 5, 1, 1, sTh, startGid]); addRect([L3, H3, 6, 1, 1, sTh, startGid]);
     coinRow(L1 + 0.5, H1 - 1.2, 4, 1, 0); coinRow(L2 + 0.5, H2 - 1.2, 4, 1, 0); coinRow(L3 + 0.5, H3 - 1.2, 5, 1, 0); coin(L3 + 3, H3 - 2.8, 2); coin(L2 + 2, H2 - 2.8, 1);
     if (SR() < 0.6) props.push([spick([0, 2, 7]), L2 + 2, H2]);
     // a switch on the first ledge opens a little vault at the lookout: crates and coins inside
     { const id = gad.doors.length; gad.btns.push([L1 + 2, H1, [id]]); decor.push([1, L1 + 2, H1]);
-      gad.doors.push([37, -6, 1, 6]); decor.push([2, 37, 0]); addRect([37, -7, 4, 1, 1, sTh, startGid]);
-      coinRow(38, -1.2, 3, 1, 1); coin(39, -3, 2); props.push([0, 39, 0]); props.push([spick([0, 5, 1]), 40, 0]); props.push([spick([3, 2, 7]), 38.5, 0]); }
+      gad.doors.push([37 + SO, -6, 1, 6]); decor.push([2, 37 + SO, 0]); addRect([37 + SO, -7, 4, 1, 1, sTh, startGid]);
+      coinRow(38 + SO, -1.2, 3, 1, 1); coin(39 + SO, -3, 2); props.push([0, 39 + SO, 0]); props.push([spick([0, 5, 1]), 40 + SO, 0]); props.push([spick([3, 2, 7]), 38.5 + SO, 0]); }
     // a coin wave over everything
     SR(); SR();   // (no loose coins scattered across the sky: every coin here sits over something to reach it from)
     // a few things to build with near the spawn, and the lower hideout's hoard
-    if (SR() < 0.5) cratePyramid(2.6, 0, 3); else { crateColumn(3.4, 0, 2); toy(5, 0); }
+    if (SR() < 0.5) SR(); else { SR(); SR(); }   // (the things to build with wait in the playground now, just past the plaza)
     { const rr = rects.slice(rs0), keep = coins.slice(0, c0);   // (no coin inside or right against a platform of the start, and none on top of another)
       for (const c of coins.slice(c0)) { if (rr.some(r => c[0] > r[0] - 0.35 && c[0] < r[0] + r[2] + 0.35 && c[1] > r[1] - 0.45 && c[1] < r[1] + Math.max(r[3], 1) + 0.35)) continue; if (keep.slice(c0).some(o => Math.abs(o[0] - c[0]) < 0.7 && Math.abs(o[1] - c[1]) < 0.7)) continue; keep.push(c); }
       coins.length = 0; keep.forEach(c => coins.push(c)); }
-    coinRow(1.5, 5.4, 6, 1, 0); crateColumn(7, 7, sri(2, 3)); props.push([spick([2, 7, 4]), 2, 7]); props.push([spick([3, 2, 5]), 6.2, 7]);
+    coinRow(1.5, 5.4, 6, 1, 0); crateColumn(7, 7, sri(2, 3)); props.push([spick([2, 7, 4]), 8.1, 7]); props.push([spick([3, 2, 5]), 6.2, 7]);
     const startPlat = [0, 0, SW, sTh, 0, startGid, 0, 2, 0, 0, 0];
 
     /* --- lanes --- */
@@ -1828,6 +1828,9 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     }
 
     /* ---- final clean-up: nothing may be buried in the ground, hang in mid-air, or be impossible to use ---- */
+    const zS = startZone([(ox + 1.5) * TS, oy * TS - R - 1]);
+    { const n0 = props.length; for (let i = props.length - 1; i >= 0; i--) if (inZone(zS, props[i][1] + 0.5, props[i][2] - 0.4, 2)) props.splice(i, 1);   // (nothing of the map's own stands in the circle around the spawn)
+      const s0 = gad.see.length; for (let i = gad.see.length - 1; i >= 0; i--) if (inZone(zS, gad.see[i][0], gad.see[i][1], gad.see[i][2])) gad.see.splice(i, 1); void n0; void s0; }
     const SOLT = t => t === 1 || t === 3 || t === 4 || t === 6;
     const gt = (x, y) => (x < 0 || x >= W || y < 0 || y >= H) ? 0 : gridT[y * W + x];
     const gtn = (x, y) => (x < 0 || x >= W || y < 0 || y >= H) ? 1 : gridT[y * W + x];
@@ -1861,14 +1864,14 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     {
       // doors must stand on something and be free of solid; each needs at least one working button or plate
       const okCtl = (x, y, w) => { for (let tx = x; tx < x + w; tx++) { if (!SOLT(gt(tx, y))) return false; if (SOLT(gt(tx, y - 1)) || SOLT(gt(tx, y - 2))) return false; } return true; };
-      const doors = gad.doors, plates = gad.plates.filter(q => okCtl(q[0], q[1], q[2])), btns = gad.btns.filter(q => okCtl(q[0], q[1], 1));
+      const doors = gad.doors, plates = gad.plates.filter(q => okCtl(q[0], q[1], q[2]) && !inZone(zS, q[0] + q[2] / 2, q[1], q[2] / 2)), btns = gad.btns.filter(q => okCtl(q[0], q[1], 1) && !inZone(zS, q[0] + 0.5, q[1], 0.5));
       cleaned += (gad.plates.length - plates.length) + (gad.btns.length - btns.length);
       const has = new Set(); plates.forEach(q => q[3].forEach(i => has.add(i))); btns.forEach(q => q[2].forEach(i => has.add(i)));
       const map2 = new Map(), nd = [];
       doors.forEach((d, i) => {
         let buried = false, floor = true;
         for (let tx = d[0]; tx < d[0] + d[2]; tx++) { for (let ty = d[1]; ty < d[1] + d[3]; ty++) if (SOLT(gt(tx, ty))) buried = true; if (!SOLT(gt(tx, d[1] + d[3]))) floor = false; }
-        if (buried || !floor || !has.has(i)) { cleaned++; return; }
+        if (buried || !floor || !has.has(i) || doorIn(zS, d)) { cleaned++; return; }
         map2.set(i, nd.length); nd.push(d);
       });
       const remap = a => a.map(i => map2.get(i)).filter(i => i !== undefined);
@@ -1917,13 +1920,37 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       fins,   // (every place the finish can be: the first is where it always was)
       killY: (maxBottom + 6) * TS, chains: chainsOut
     };
-    cache[idx] = map; cacheOrder.push(idx);
+    try { Object.defineProperty(map, '_raw', { value: map, enumerable: false }); } catch (e) {}
+    cache[idx] = finClean(map); cacheOrder.push(idx);
     while (cacheOrder.length > 3) delete cache[cacheOrder.shift()];   // (50 big maps would add up: only the latest few are kept)
-    return map;
+    return cache[idx];
   }
 
   /* The public maps change every 3 hours on the clock in US Central time (12, 3, 6, 9, 12, 3, 6, 9), summer time included. */
   const SLOT_LEN = 3 * 3600 * 1000, HR = 3600000;
+  /* Nothing at all stands in the wide no-build circles: around the spawn (7.5 blocks) and around the finish flag (9 blocks), wherever the finish is this round.
+     (The same circles physics.js uses: noBuild there. In blocks here.) */
+  function startZone(st) { const sx = Math.floor(st[0] / TS), sy = Math.floor(st[1] / TS); return { cx: sx + 0.5, cy: sy - 0.5, r: 7.5 }; }
+  function finZone(flag) { const fx = Math.floor(flag[0]), fy = Math.round(flag[1]); return { cx: fx + 2, cy: fy - 2, r: 9 }; }
+  function inZone(z, x, y, m) { const dx = x - z.cx, dy = y - z.cy, rr = z.r + (m || 0); return dx * dx + dy * dy <= rr * rr; }
+  function doorIn(z, d) { for (let ty = d[1]; ty <= d[1] + d[3]; ty++) if (inZone(z, d[0] + d[2] / 2, ty, 0.6)) return true; return false; }
+  function finClean(m) {   // the map with everything of its own taken out of the circle around this round's finish
+    const z = finZone(m.flag), G = m.gadgets || {};
+    const props = (m.props || []).filter(p => !inZone(z, p[1] + 0.5, p[2] - 0.4, 0.6)), see = (G.see || []).filter(q => !inZone(z, q[0], q[1], q[2]));
+    const keepD = (G.doors || []).map(d => !doorIn(z, d)), re = new Map(); let n = 0; keepD.forEach((k, i) => { if (k) re.set(i, n++); });
+    const remap = a => a.map(i => re.get(i)).filter(i => i !== undefined);
+    const plates = [], btns = [];
+    (G.plates || []).forEach(q => { if (inZone(z, q[0] + q[2] / 2, q[1], q[2] / 2)) return; const r = remap(q[3]); if (r.length) plates.push([q[0], q[1], q[2], r]); });
+    (G.btns || []).forEach(q => { if (inZone(z, q[0] + 0.5, q[1], 0.5)) return; const r = remap(q[2]); if (r.length) btns.push([q[0], q[1], r]); });
+    const has = new Set(); plates.forEach(q => q[3].forEach(i => has.add(i))); btns.forEach(q => q[2].forEach(i => has.add(i)));
+    const doors = (G.doors || []).filter((d, i) => keepD[i]);   // (a gate whose only switch went stays: it is simply shut, as a wall)
+    if (props.length === (m.props || []).length && see.length === (G.see || []).length && doors.length === (G.doors || []).length && plates.length === (G.plates || []).length && btns.length === (G.btns || []).length) return m;
+    const dk = new Set(doors.map(d => d[0] + ',' + (d[1] + d[3]))), bk = new Set(btns.map(q => q[0] + ',' + q[1]));
+    const decor = (m.decor || []).filter(q => q[0] === 2 ? dk.has(q[1] + ',' + q[2]) : q[0] === 1 ? bk.has(q[1] + ',' + q[2]) : true);
+    const out = Object.assign({}, m, { props, decor, gadgets: Object.assign({}, G, { see, doors, plates, btns }) });
+    try { Object.defineProperty(out, '_raw', { value: m._raw || m, enumerable: false }); } catch (e) {}
+    return out;
+  }
   function centralOff(t) {   // what to add to UTC to get Central time: -6h in winter, -5h in summer
     const y = new Date(t).getUTCFullYear(), nthSun = (m, n) => { const first = (7 - new Date(Date.UTC(y, m, 1)).getUTCDay()) % 7 + 1; return first + (n - 1) * 7; };
     return t >= Date.UTC(y, 2, nthSun(2, 2), 8) && t < Date.UTC(y, 10, nthSun(10, 1), 7) ? -5 * HR : -6 * HR;
@@ -1940,10 +1967,14 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
   function withFin(m, k) {
     const fs = m.fins || [], f = fs[k | 0];
     if (!k || !f) return m;
+    const fc = m._fc || {}; if (fc[k | 0]) return fc[k | 0];
+    const cooked = m; m = m._raw || m;
     const f0 = fs[0], rects = m.rects.map(r => (r[4] === 4 && r[3] === 1 && r[0] === f0[0] && r[1] === f0[1]) ? [r[0], r[1], r[2], r[3], 1, r[5], r[6]] : r);
     const under = m.rects.find(r => (r[4] === 1 || r[4] === 3) && f[0] + 1 >= r[0] && f[0] + 1 < r[0] + r[2] && f[1] >= r[1] && f[1] < r[1] + r[3]);
     rects.push([f[0], f[1], f[2], 1, 4, under ? under[5] : m.rects[0][5], under ? under[6] : m.rects[0][6]]);
-    return Object.assign({}, m, { rects, finish: [f[0], f[1], f[2]], flag: [f[0] + f[2] / 2, f[1]], fk: k | 0 });
+    const res = finClean(Object.assign({}, m, { rects, finish: [f[0], f[1], f[2]], flag: [f[0] + f[2] / 2, f[1]], fk: k | 0 }));
+    try { if (!cooked._fc) Object.defineProperty(cooked, '_fc', { value: fc, enumerable: false }); fc[k | 0] = res; } catch (e) {}
+    return res;
   }
   const api = { TS, R, count: DEFS.length, names: DEFS.map(d => d.name), meta, themes: THEMES, generate, withFin, slotOf, slotStart, SLOT_LEN };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
