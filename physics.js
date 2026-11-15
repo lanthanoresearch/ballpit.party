@@ -664,15 +664,25 @@
     const cps = w.map && w.map.checkpoints; if (cps) for (const c of cps) if (Math.abs(c[0] - x) <= 1 && y >= c[1] - 2 && y <= c[1]) return true;
     return false;
   }
+  function portalSpotOk(w, tx, gr) {   // a portal stands on two blocks of dirt or ice with clear air above: never on water or lava, another portal, a button, a plate, a gate or a flag
+    for (let x = tx; x <= tx + 1; x++) { const t = tile(w, x, gr); if (t !== 1 && t !== 3) return false; if (tile(w, x, gr - 1) !== 0 || tile(w, x, gr - 2) !== 0) return false; if (gadgetTile(w, x, gr - 1)) return false; }
+    const cx = (tx + 1) * TS, cy = gr * TS;
+    for (const p of w.portals) if (!p.gone) for (const e of [p.a, p.b]) if (Math.abs(e.x - cx) < 3 * TS && Math.abs(e.y - cy) < 3 * TS) return false;
+    for (const p of w.pads) if (!p.gone && p.y === gr && Math.abs(p.x - tx) < 2) return false;
+    return true;
+  }
   function noBuild(map) {   // the places where nothing can be built or left: around where everybody appears (5 x 5 blocks), and around the finish flag (6 x 6), so nobody can block it
     if (!map) return [];
     if (map._nb) return map._nb;
     const z = [], st = map.start, fl = map.flag;
-    if (st) { const sx = Math.floor(st[0] / TS), sy = Math.floor(st[1] / TS); z.push({ tx0: sx - 2, tx1: sx + 2, ty0: sy - 3, ty1: sy + 1, k: 's' }); }
-    if (fl) { const fx = Math.floor(fl[0]), fy = Math.round(fl[1]); z.push({ tx0: fx - 1, tx1: fx + 4, ty0: fy - 5, ty1: fy, k: 'f' }); }
+    if (st) { const sx = Math.floor(st[0] / TS), sy = Math.floor(st[1] / TS); z.push({ tx0: sx - 2, tx1: sx + 2, ty0: sy - 3, ty1: sy + 1, k: 's', cx: (sx + 0.5) * TS, cy: (sy - 0.5) * TS, r: 7.5 * TS }); }
+    if (fl) { const fx = Math.floor(fl[0]), fy = Math.round(fl[1]); z.push({ tx0: fx - 1, tx1: fx + 4, ty0: fy - 5, ty1: fy, k: 'f', cx: (fx + 2) * TS, cy: (fy - 2) * TS, r: 9 * TS }); }
     try { Object.defineProperty(map, '_nb', { value: z, enumerable: false }); } catch (e) {}
     return z;
   }
+  // nothing can be built in a wide circle around the start and around the finish (three times as wide as the small square in the middle, where nothing can even be left lying)
+  function zoneP(map, px, py, m) { const z = noBuild(map); for (let i = 0; i < z.length; i++) { const q = z[i], dx = px - q.cx, dy = py - q.cy, rr = q.r + (m || 0); if (dx * dx + dy * dy <= rr * rr) return true; } return false; }
+  const zoneT = (map, tx, ty) => zoneP(map, (tx + 0.5) * TS, (ty + 0.5) * TS, 0);
   function nearZone(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= (q.tx0 - 14) * TS && x <= (q.tx1 + 15) * TS && y >= (q.ty0 - 10) * TS && y <= (q.ty1 + 10) * TS) return true; } return false; }   // (the map's own toys around the start or the finish belong there: they never burn up in it)
   function inStart(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= q.tx0 * TS && x <= (q.tx1 + 1) * TS && y >= q.ty0 * TS && y <= (q.ty1 + 1) * TS) return true; } return false; }   // (a start or finish zone)
   let dynTick = 0, hStamp = 0; const DYN_BUDGET = 600, CELL = 64, HB = [], NONE = [], BALLSH = { x: 0, y: 0 }, PCO = [];
@@ -701,7 +711,7 @@
       if (d.sq > 0) d.sq = Math.max(0, d.sq - dt);
       d._far = !!f && !nearF(f, d.x, d.y, FR, FR);
       if (!d._far || !d.nap || farAwake || nearF(f, d.x, d.y, FR + 300, FR + 300)) put(d);   // (what rests far from everybody is not even looked at: nothing near anybody can touch it)
-      if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if (d.farT > 30) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
+      if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if (d.farT > 30 && (d.gr || d.farT > 90)) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (only something that is on the ground: nothing is ever stopped in mid-air) */   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
       if (d._far && d.nap) { d.sleep = true; continue; }   // far from everybody and at rest: nothing to work out
       if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
@@ -785,7 +795,7 @@
       const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || ((!d._pl || !plankMoving(w, d)) && !d._pad));
       d.st = still ? (d.st || 0) + dt : 0;
       const burn = lavaOf.has(d);
-      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || inStart(w, d.x, d.y)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || inStart(w, d.x, d.y) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; }   // lost for good: this map will not give it back
+      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || inStart(w, d.x, d.y)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || inStart(w, d.x, d.y) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); }   // lost for good: this map will not give it back
     }
     // a pile goes to sleep together, once every piece of it has been still for a moment
     const root = d => { while (d._uf !== d) { d._uf = d._uf._uf; d = d._uf; } return d; };   // (which pile each thing belongs to: every thing points the way to its pile's first piece)
@@ -997,6 +1007,21 @@
   /* ---------- removing something for good (the delete tool) ----------
      q: ['b', uid] a crate, ball or spring; ['s', uid] a teeter-totter; ['pad', column, row] a floor booster; ['por', column, row] a pair of portals (by the yellow one);
      ['g', uid] a gate and its trigger. Nothing is taken out of the lists (everything keeps its place, so saves and the server still line up): it is just gone from the world. */
+  /* One world, the same on every device. Things with no name of their own (portals, boosters, checkpoint flags) are deleted by where they stand:
+     deleting one that somebody built simply takes it off the list of built things (so a new one can go in the same place, and be deleted again);
+     only deleting one of the map's own leaves a note, and those notes are applied before anything built is put in. */
+  const coordDel = q => q[0] === 'por' || q[0] === 'pad' || q[0] === 'c';
+  function delCancel(L, q) {
+    if (q[0] === 'por' || q[0] === 'pad') { const a = L.misc || [], i = a.findIndex(m => m[0] === q[0] && m[1] === q[1] && m[2] === q[2]); if (i >= 0) { a.splice(i, 1); return true; } }
+    else if (q[0] === 'c') { const a = L.cps || [], i = a.findIndex(c => c[0] === q[1] && c[1] === q[2]); if (i >= 0) { a.splice(i, 1); return true; } }
+    return false;
+  }
+  function normBuild(L) { const d = L.dels; if (!d) return L; for (let i = d.length - 1; i >= 0; i--) if (Array.isArray(d[i]) && coordDel(d[i]) && delCancel(L, d[i])) d.splice(i, 1); return L; }
+  function buildHash(L) {   // a fingerprint of everything built and deleted in a world (the order does not matter): two devices with the same number have the same world
+    let h = 0; const one = (k, q, n) => { let s = k; for (let i = 0; i < n; i++) s += ',' + (typeof q[i] === 'number' ? Math.round(q[i]) : q[i]); let f = 2166136261; for (let i = 0; i < s.length; i++) { f ^= s.charCodeAt(i); f = Math.imul(f, 16777619); } h = (h + (f >>> 0)) >>> 0; };
+    (L.props || []).forEach(q => one('p', q, 3)); (L.gates || []).forEach(q => one('g', q, 5)); (L.misc || []).forEach(q => one('m', q, q[0] === 'por' || q[0] === 'rope' ? 5 : 4)); (L.cps || []).forEach(q => one('c', q, 2)); (L.dels || []).forEach(q => one('d', q, q.length));
+    return h;
+  }
   function applyDel(w, q) {
     if (!Array.isArray(q)) return false;
     const k = q[0], u = q[1] >>> 0;
@@ -1186,7 +1211,7 @@
   function tileFree(w, x, y, ctx) {
     if (x < 1 || y < 1 || x >= w.W - 1 || y >= w.H - 1 || tile(w, x, y) !== 0 || gadgetTile(w, x, y)) return false;
     if (!(tile(w, x, y + 1) === 1 || tile(w, x, y - 1) === 1 || tile(w, x - 1, y) === 1 || tile(w, x + 1, y) === 1)) return false;   // (the same rule as for a player: dirt only grows out of dirt, side to side)
-    for (const z of noBuild(w.map)) if (x >= z.tx0 && x <= z.tx1 && y >= z.ty0 && y <= z.ty1) return false;
+    if (zoneT(w.map, x, y)) return false;
     const cx = (x + 0.5) * TS, cy = (y + 0.5) * TS;
     for (const p of ctx.balls) if (Math.abs(p.x - cx) < TS / 2 + R + 3 && Math.abs(p.y - cy) < TS / 2 + R + 3) return false;
     for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) continue; const e = d.r || d.hw || 20; if (Math.abs(d.x - cx) < TS / 2 + e + 2 && Math.abs(d.y - cy) < TS / 2 + e + 2) return false; }
@@ -1463,7 +1488,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 151, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 152, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -52,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 151;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 152;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -214,7 +214,7 @@ function saveLinks(sync) {
   if (!linksDirty) return; linksDirty = false;
   // keep only what is needed: people not seen for two months (and not tied to a friend link or a waiting request) are forgotten
   { const old = Date.now() - STALE_MS, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); }); news.forEach((v, k) => { need.add(k); v.forEach(x => need.add(x.p)); });
-    known.forEach((v, k) => { if (!v.played && v.last < Date.now() - DAY && !need.has(k) && !byPub.has(k)) known.delete(k); }); }   // (everybody who has really played is kept for good; somebody who only opened the page for a moment is forgotten after a day)
+    known.forEach((v, k) => { if ((v.last < old || (!v.played && v.last < Date.now() - DAY)) && !need.has(k) && !byPub.has(k)) known.delete(k); }); }   // (not seen for a month: forgotten, unless somebody has them as a friend or is waiting on a request with them. Their friends keep them)   // (everybody who has really played is kept for good; somebody who only opened the page for a moment is forgotten after a day)
   if (known.size > 50000) [...known.entries()].sort((a, b) => a[1].last - b[1].last).slice(0, known.size - 50000).forEach(e => known.delete(e[0]));
   const o = { links: {}, gone: {}, known: {}, pend: [...pend.entries()].map(e => [e[0], e[1].t]), news: [...news.entries()].filter(e => e[1].length), vapid: vapid ? { pub: vapid.pub, priv: vapid.priv } : undefined, push: Object.fromEntries(pushSubs) };
   links.forEach((v, k) => { if (v.size) o.links[k] = [...v]; }); gone.forEach((v, k) => { if (v.size) o.gone[k] = [...v]; }); known.forEach((v, k) => { o.known[k] = v; });
@@ -227,7 +227,7 @@ function saveLinks(sync) {
 const linkSet = pub => { let s = links.get(pub); if (!s) links.set(pub, s = new Set()); return s; };
 function addLink(a, b) { linkSet(a).add(b); linkSet(b).add(a); linksDirty = true; }
 function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; }
-const STALE_MS = 90 * 86400000;   // everybody who has played is listed; anybody gone for three months (and not a friend or in a waiting request) is forgotten
+const STALE_MS = 30 * 86400000;   // everybody who has played is listed; anybody gone for three months (and not a friend or in a waiting request) is forgotten
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
 const peerInfo = pub => { const k = known.get(pub) || {}, q = byPub.get(pub); return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), color2: q ? q.color2 : (k.color2 || '#ffffff'), pat: q ? q.pat | 0 : (k.pat | 0), on: live(q) ? 1 : 0, w: q && q.room ? (q.room.priv ? -1 : q.room.id) : 0, last: q ? Date.now() : (k.last || 0), b: k.beat | 0 }; };
 function sendLinks(p) {   // everyone this player is linked to, with their short code, whether they are online, and when they were last here
@@ -308,6 +308,9 @@ function snapFor(r) {   // a world's memory as the players keep it: what is buil
   const d = []; for (const o of w.dyn) { if (o.burn >= 1e9) d.push([o.uid >>> 0, 0, 0, 0, 1]); else if (!(o.burn > 0) && (Math.abs(o.x - o.hx) > 1 || Math.abs(o.y - o.hy) > 1 || Math.abs(o.rot) > 0.005)) d.push([o.uid >>> 0, Math.round(o.x * 10) / 10, Math.round(o.y * 10) / 10, Math.round(o.rot * 1000) / 1000]); }
   return { d, s: w.see.filter(q => Math.abs(q.ang) > 0.001).map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]) };
 }
+setInterval(() => {   // every few seconds everyone is told the fingerprint of their world: a device that has something else asks for the whole of it again
+  for (const r of rooms.values()) { if (!r.players.size) continue; const B = bstate(r); if (!B) continue; const msg = '{"t":"bh","h":' + P.buildHash(B) + '}'; for (const p of r.players.values()) if (p.has && p.ws.readyState === 1) { try { p.ws.send(msg); } catch (e) {} } }
+}, 5000).unref();
 const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
 setInterval(() => {   // every few seconds each player is given the world's memory (only when it changed): if this server ever forgets, the last one here brings it back
   const now = Date.now();
@@ -356,7 +359,7 @@ function srvMisc(w, q) {
   if (k === 'bnc' || k === 'spr') srvBounce(w, q[1], q[2], k === 'spr' ? 1 : 2);
   else if (k === 'tl') { if (q[3] === -1) { const i = q[2] * w.W + q[1]; if (q[1] >= 0 && q[1] < w.W && q[2] >= 0 && q[2] < w.H) srvTerrain(w, q[1], q[2], w.orig[i]); } else srvTerrain(w, q[1], q[2], q[3]); }
   else if (k === 'lav') { const i = q[2] * w.W + q[1]; if (q[2] < w.H && q[1] >= 0 && q[1] < w.W && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 2; }
-  else if (k === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: 3 * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
+  else if (k === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: (q[3] === 1 ? 5 : 3) * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
   else if (k === 'por') P.addPortal(w, q);
   else if (k === 'rope') P.addRope(w, q);   // (checked when it was built; it stays even if the ground around it changes later)
   else if (k === 'pad') P.addPad(w, [q[1], q[2], q[3]]);
@@ -369,7 +372,7 @@ function srvGate(w, q) {
 function finCount() { const m = maps.generate(curSlot % maps.count); return (m.fins || [1]).length; }
 function pickFin() { return Math.floor(Math.random() * finCount()); }
 function roomMap(room) { return maps.withFin(maps.generate(rslot(room) % maps.count), room.fk | 0); }
-const inZoneT = (w, tx, ty) => P.noBuild(w.map).some(z => tx >= z.tx0 && tx <= z.tx1 && ty >= z.ty0 && ty <= z.ty1);
+const inZoneT = (w, tx, ty) => P.zoneT(w.map, tx, ty);
 function miscOkZ(w, q) {   // (the same rule every device uses: nothing built in the start zone or around the finish, wherever the finish is this round)
   if (!Array.isArray(q)) return false;
   if (q[0] === 'por' || q[0] === 'rope') return !inZoneT(w, q[1], q[2]) && !inZoneT(w, q[3], q[4]);
@@ -380,10 +383,13 @@ function roomWorld(room) {
   const m = roomMap(room), w = P.makeWorld(m);
   w.orig = w.grid.slice(); w.closeDelay = 0.6; w.focus = []; w.follow = false;
   const B = bstate(room);
+  P.normBuild(B);
+  if (B.props) for (let i = B.props.length - 1; i >= 0; i--) if (P.zoneP(m, B.props[i][1], B.props[i][2], P.TS * 0.6)) B.props.splice(i, 1);   // (nothing built stands in the no-build circles: the same rule every device uses)
+  (B.dels || []).forEach(q => { try { if (P.coordDel(q)) P.applyDel(w, q); } catch (e) {} });   // (the map's own portals and boosters that were deleted: before anything built goes in)
   (B.misc || []).forEach(q => { try { if (miscOkZ(w, q)) srvMisc(w, q); } catch (e) {} });
   (B.gates || []).forEach(q => { try { srvGate(w, q); } catch (e) {} });
   (B.props || []).forEach(q => { try { const d = P.addProp(w, q[0], q[1], q[2]); if (d) d.brec = q; } catch (e) {} });
-  (B.dels || []).forEach(q => { try { P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
+  (B.dels || []).forEach(q => { try { if (!P.coordDel(q)) P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
   let restored = false;
   if (room.snapDyn && room.snapDyn.length && Array.isArray(room.snapDyn.find(q => q)) && room.snapDyn.find(q => q).length >= 4) {   // (saved by name: each thing finds its own entry)
     for (const q of room.snapDyn) { if (!q) continue; const d = w.dynBy.get(q[3] >>> 0); if (!d || d.gone) continue; restored = true; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; continue; }   /* (the map's own toys at the start that an older version burned up there come back) */ if (Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } }
@@ -505,6 +511,11 @@ function sendBots(room) {   // where every bot is, 20 times a second
   const a = []; for (const bt of bs) { const b = bt.b; a.push(bt.id, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), bt.dead > 0 ? 1 : 0); }
   broadcast(room, { t: 'bp', a });
 }
+function giveBack(r, d, by) {   // a built thing is gone (deleted by anyone, or lost): its builder gets that room back
+  const pub = d.ownPub || (by && by.pub); if (!pub) return;
+  if (r.own && r.own.get(pub) > 0) r.own.set(pub, r.own.get(pub) - 1);
+  if (!by || by.pub !== pub) for (const q of r.players.values()) if (q.pub === pub) send(q, { t: 'pback', k: d.kind | 0 });
+}
 function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
   for (const room of rooms.values()) {
@@ -543,6 +554,11 @@ function simTick() {
         if (k === n - 1) P.stepSwitches(w, room.bots && room.bots.length ? list.concat(room.bots.filter(bt => !(bt.dead > 0)).map(bt => bt.b)) : list, SIMDT * n);   // (the buttons and plates are looked at once per update)
       }
       w.ev.length = 0;
+    }
+    if (w.lost && w.lost.length) {   // something a player built burned up in lava or fell out of the world: it is off the books, and whoever built it can build it again
+      const B = bstate(room);
+      for (const d of w.lost) { const i = B && d.brec ? B.props.indexOf(d.brec) : -1; if (i < 0) continue; B.props.splice(i, 1); d.brec = null; broadcast(room, { t: 'pdel', g: ['b', d.uid], lost: 1 }); giveBack(room, d, null); }
+      w.lost.length = 0;
     }
     if (room.tk % 3 === 0) sendBots(room);
     // what changed, for the dyn things
@@ -676,6 +692,7 @@ wss.on('connection', (ws, req) => {
       if (!p.room || (raw.length < 11 || raw.length > 13) || raw[0] !== 0x70 || raw.readUInt16LE(1) !== (rslot(p.room) & 0xFFFF)) return;
       const x = Math.min(262000, raw.readUInt16LE(3) * 2), yr = raw.readUInt16LE(5), d = yr === 65535 ? 1 : 0;
       const y = d ? p.y : Math.min(131000, yr), vx = raw.readInt8(7) * 5, vy = raw.readInt8(8) * 20, st = raw.readUInt16LE(9);
+      if (p.moved && p.has && !p.dead && !d && p.st !== st) { const h = p.hist || (p.hist = []); if (h.length < 16) h.push([p.x, p.y, p.vx, p.vy, p.st]); }   // (several updates came in at once, after a hiccup on their connection: the ones in between are passed on too, so everyone still sees the whole path of a jump)
       if (p.x !== x || p.y !== y || p.dead !== d || p.vx !== vx || p.vy !== vy || p.st !== st || !p.has) p.moved = true;
       p.x = x; p.y = y; p.dead = d; p.vx = d ? 0 : vx; p.vy = d ? 0 : vy; p.st = st; p.has = true; if (p.pub && !p.playedMark) { if (!p.firstPos) p.firstPos = Date.now(); else if (Date.now() - p.firstPos > 1500) { p.playedMark = true; const k = known.get(p.pub); if (k && !k.played) { k.played = 1; linksDirty = true; } } }   // (in the game for a moment or two: from now on they can always be found and invited)
       { const now = Date.now(), c15 = st & 0x7FFF; p.cU = p.cU === undefined ? c15 : p.cU + ((c15 - (p.cU & 0x7FFF)) & 0x7FFF); const off = now - p.cU; if (p.cOff === undefined || off < p.cOff || off > p.cOff + 2000) p.cOff = off; else p.cOff += 0.05; p.tPos = Math.min(now, p.cU + p.cOff); }   // (when this was true on their device, on this clock: an update held up on the way is carried on further, so their point never lurches back when updates come bunched)
@@ -817,12 +834,14 @@ wss.on('connection', (ws, req) => {
           const e = ['tl', tx, ty, to]; mb.push(e); worldAdd.misc(r, e); return [tx, ty, to];
         };
         const g0 = put(Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])), ex = [];
-        if (Array.isArray(m.ex)) for (const q of m.ex.slice(0, 6)) if (Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)) { const c = put(Math.round(q[0]), Math.round(q[1]), Math.round(q[2])); if (c) ex.push(c); }
+        if (Array.isArray(m.ex)) for (const q of m.ex.slice(0, 48)) if (Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)) { const c = put(Math.round(q[0]), Math.round(q[1]), Math.round(q[2])); if (c) ex.push(c); }
         if (g0) broadcast(r, { t: 'pobj', g: ['tl', g0[0], g0[1], g0[2]], ex }, p);
         if (g0 && r.bots && r.bots.length && (g0[2] === 1 || g0[2] === 3)) roomCtx(r).builds.push({ x: g0[0], y: g0[1] });
         return;
       }
-      const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' || m.g[0] === 'rope' ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])].concat(m.g[0] === 'por' && m.g.length === 6 ? [Math.max(0, Math.min(3, Math.round(m.g[5])))] : []) : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0]; bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
+      const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' || m.g[0] === 'rope' ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])].concat(m.g[0] === 'por' && m.g.length === 6 ? [Math.max(0, Math.min(3, Math.round(m.g[5])))] : []) : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0];
+      if (e[0] === 'por' && roomWorld(r) && (!P.portalSpotOk(r.world, e[1], e[2]) || !P.portalSpotOk(r.world, e[3], e[4]))) return;   // (never on another portal, on water or lava, or on a button: the device that tried gets the real world back at the next check)
+      bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
     } else if (m.t === 'own') {   // a player's device says where the things it is pushing are: the server takes its word, unless somebody else is right there too
       const r = p.room; if (!r || !r.world || m.s !== rslot(r)) return;
       const w = r.world;   // (the first device to take something has it until it lets go; everyone else sees it as theirs)
@@ -847,6 +866,9 @@ wss.on('connection', (ws, req) => {
         if (w.see.length && P.plankCross(w, d.x, d.y, q[1], q[2], d.r || Math.max(d.hw, d.hh))) continue;   // (never taken through a teeter-totter: the two devices must have seen the plank differently, and the server's side of it stands)
         d.x = q[1]; d.y = q[2]; d.vx = Math.max(-1400, Math.min(1400, q[3])); d.vy = Math.max(-1400, Math.min(1400, q[4])); d.rot = q[5]; d.av = Math.max(-28, Math.min(28, q[6])); d.ownBy = p.id; d.ownT = 1.2; d.ownLeft = Date.now(); d.ownTouch = q.length === 8 ? (q[7] ? 1 : 0) : 1; d.nap = false; d.st = 0;   // (held for a moment longer than the gap between two reports, so a short stall on a bad connection never hands it back half-way)
       }
+    } else if (m.t === 'resync') {   // this device noticed its world is not the same as the server's: it gets the whole of it again
+      const r = p.room, B = r && bstate(r); if (!B) return; const now = Date.now(); if (now - (p.rsAt || 0) < 15000) return; p.rsAt = now;
+      p.dver = null; p.sbh = p.sdh = null; send(p, { t: 'rebuild', rs: 1, priv: r.priv ? 1 : 0, b: { props: B.props, gates: B.gates, misc: B.misc, cps: B.cps, dels: B.dels } });
     } else if (m.t === 'hbuild') {   // the host's own world, all of it at once (in parts of up to 50 KB): everything built, dug and deleted in it, so everybody who comes in sees exactly that world
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || !Number.isFinite(m.n) || !Number.isFinite(m.i) || m.n < 1 || m.n > 40 || m.i < 0 || m.i >= m.n || typeof m.c !== 'string') return;
       if (!r.hb || r.hb.n !== m.n) r.hb = { n: m.n, a: [] };
@@ -904,8 +926,9 @@ wss.on('connection', (ws, req) => {
       const q = okDel(m.g); if (!q || !addOk(p)) return;
       if (q[0] === 'b' && r.world) {   // deleting a crate, ball or spring somebody built: it is simply taken off the list of built things, as if it had never been put down. Nothing has to be remembered, so this never runs out
         const d = r.world.dynBy.get(q[1] >>> 0), i = d && d.brec ? B.props.indexOf(d.brec) : -1;
-        if (i >= 0) { B.props.splice(i, 1); d.brec = null; worldAdd.del(r, q); broadcast(r, { t: 'pdel', g: q }, p); if (r.own && r.own.get(p.pub) > 0) r.own.set(p.pub, r.own.get(p.pub) - 1); return; }
+        if (i >= 0) { B.props.splice(i, 1); d.brec = null; worldAdd.del(r, q); broadcast(r, { t: 'pdel', g: q }, p); giveBack(r, d, p); return; }
       }
+      if (P.coordDel(q) && P.delCancel(B, q)) { worldAdd.del(r, q); broadcast(r, { t: 'pdel', g: q }, p); worldsDirty = true; return; }   // (a built portal, booster or flag: simply off the list, so the same spot can be built on and deleted again)
       if (B.dels.length >= ROOM_DELS) return;
       if (B.dels.some(e => e.length === q.length && e.every((v, i) => v === q[i]))) return;
       B.dels.push(q); worldAdd.del(r, q); broadcast(r, { t: 'pdel', g: q }, p);
@@ -919,6 +942,7 @@ wss.on('connection', (ws, req) => {
       if (!addOk(p)) return;
       if (m.t === 'padd') {
         const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
+        if (roomWorld(r) && P.zoneP(r.world.map, m.x, m.y, P.TS * 0.6)) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y) }); return; }
         { // a fair share for everybody: each player in the world always has room for PROP_SHARE crates, balls and springs of their own; past that they may go on building only while that leaves every other player here their share
           const B = bstate(r), own = r.own || (r.own = new Map()), mine = own.get(p.pub) || 0; let used = B.props.length, keep = 0;
           for (const e of B.dels) if (e[0] === 'b') used--;
@@ -926,7 +950,7 @@ wss.on('connection', (ws, req) => {
           if (B.props.length >= ROOM_PROPS * 2 || used >= ROOM_PROPS || (mine >= PROP_SHARE && used + keep >= ROOM_PROPS)) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y), full: used >= ROOM_PROPS ? 1 : 0 }); return; }
           own.set(p.pub, mine + 1);
         }
-        const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); const nd = worldAdd.prop(r, e), nu = nd ? nd.uid : undefined; broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2], u: nu }, p); if (nu !== undefined) send(p, { t: 'puid', k: e[0], x: e[1], y: e[2], u: nu });   // (the server's name for it goes to everyone, so two things put down on the very same spot can never be mixed up)
+        const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); const nd = worldAdd.prop(r, e), nu = nd ? nd.uid : undefined; if (nd) nd.ownPub = p.pub; broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2], u: nu }, p); if (nu !== undefined) send(p, { t: 'puid', k: e[0], x: e[1], y: e[2], u: nu });   // (the server's name for it goes to everyone, so two things put down on the very same spot can never be mixed up)
       } else {
         if (!Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).cps.length >= ROOM_CPS) return;
         const e = [Math.round(m.x), Math.round(m.y)]; bstate(r).cps.push(e); broadcast(r, { t: 'pcp', x: e[0], y: e[1] }, p);
@@ -938,7 +962,7 @@ wss.on('connection', (ws, req) => {
       known.forEach((k, pub) => {
         if (pub === p.pub) return;
         const code = codeOf(pub), q2 = byPub.get(pub), on = live(q2) ? (q2.room || true) : null, nm = q2 ? q2.name : k.name, last = on ? now : k.last;
-        if (!nm || (!k.played && !on)) return;   // (only people who have really played: somebody who opened the page for a moment is not listed)
+        if (!nm || (!k.played && !on) || (!on && k.last < Date.now() - STALE_MS)) return;   // (and nobody who has been away for a month: they are only still there for their friends)   // (only people who have really played: somebody who opened the page for a moment is not listed)
         const linked = !!(mine && mine.has(pub));
         if (!browse && !(nm.toLowerCase().indexOf(q) >= 0 || code === qc || code.indexOf(qc) === 0 && qc.length >= 3)) return;
         out.push({ pub, code, name: nm, color: q2 ? q2.color : k.color, color2: q2 ? q2.color2 : (k.color2 || '#ffffff'), pat: q2 ? q2.pat | 0 : (k.pat | 0), b: k.beat | 0, on: on ? 1 : 0, w: on && on !== true ? on.id : 0, last, here: on && on !== true && on === p.room ? 1 : 0, l: linked ? 1 : 0 });
@@ -1086,7 +1110,7 @@ setInterval(() => {
   }
   for (const room of rooms.values()) {
     const list = [...room.players.values()];
-    if (list.length < 2) { for (const p of list) p.moved = false; continue; }
+    if (list.length < 2) { for (const p of list) { p.moved = false; if (p.hist) p.hist.length = 0; } continue; }
     for (const r of list) {
       if (!r.has || r.ws.readyState !== 1) continue;
       let k = 0; const hits = [];
@@ -1099,9 +1123,11 @@ setInterval(() => {
         if (p.moved || !r.vis.has(p.id)) { hits.push([p, 0]); r.vis.add(p.id); }
       }
       if (!hits.length) continue;
-      const buf = Buffer.allocUnsafe(3 + hits.length * 12);
+      let extra = 0; for (const h of hits) if (!h[1] && !h[0].dead && h[0].hist) extra += h[0].hist.length;
+      const buf = Buffer.allocUnsafe(3 + (hits.length + extra) * 12);
       buf[0] = 1; buf.writeUInt16LE(rslot(room) & 0xFFFF, 1);
-      for (const h of hits) {   // per player: id u32, x/2 u16, y u16 (65535 = just died, 65534 = out of range), vx/5 i8, vy/20 i8, time+grounded u16
+      for (const h of hits) {
+        if (!h[1] && !h[0].dead && h[0].hist) for (const q of h[0].hist) { const o = 3 + k * 12; k++; buf.writeUInt32LE(h[0].id, o); buf.writeUInt16LE(q[0] >> 1, o + 4); buf.writeUInt16LE(Math.min(65533, q[1]), o + 6); buf.writeInt8(Math.max(-127, Math.min(127, Math.round(q[2] / 5))), o + 8); buf.writeInt8(Math.max(-127, Math.min(127, Math.round(q[3] / 20))), o + 9); buf.writeUInt16LE(q[4] & 0xFFFF, o + 10); }   // per player: id u32, x/2 u16, y u16 (65535 = just died, 65534 = out of range), vx/5 i8, vy/20 i8, time+grounded u16
         const p = h[0], o = 3 + k * 12, gone = h[1] || p.dead; k++;
         buf.writeUInt32LE(p.id, o); buf.writeUInt16LE(p.x >> 1, o + 4); buf.writeUInt16LE(h[1] ? 65534 : p.dead ? 65535 : Math.min(65533, p.y), o + 6);
         buf.writeInt8(gone ? 0 : Math.max(-127, Math.min(127, Math.round((p.rvx === undefined ? p.vx : p.rvx) / 5))), o + 8);   // (someone pressing against a crate is shown standing against it: never carried on into it)
@@ -1109,7 +1135,7 @@ setInterval(() => {
       }
       r.ws.send(buf, { binary: true });
     }
-    for (const p of list) p.moved = false;
+    for (const p of list) { p.moved = false; if (p.hist) p.hist.length = 0; }
   }
 }, TICK_MS);
 setInterval(() => { useRoll(); const msg = JSON.stringify({ t: 'use', u: usage }); for (const r of rooms.values()) for (const p of r.players.values()) if (p.ws.readyState === 1) p.ws.send(msg); }, 30000).unref();   // (every player's device keeps a copy of the month's counts)

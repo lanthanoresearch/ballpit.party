@@ -714,7 +714,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 151; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 152; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1292,8 +1292,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=151"></script>
-<script src="physics.js?v=151"></script>
+<script src="maps.js?v=152"></script>
+<script src="physics.js?v=152"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1831,7 +1831,7 @@ const TH_COUNT = THEMES.length;
 function loadMap(slot, next) {
   S.gateWait = 0;
   S.guest = !!(party && party.role === 'guest');   // visiting a friend's world: nothing here is saved to your own
-  S.fk = finKOf(slot);
+  S.fk = finKOf(slot); S.bhBase = undefined; S.bhLast = null; S.bhBad = 0;
   const m0 = BallMaps.withFin(BallMaps.generate(slot % BallMaps.count), S.fk), m = Object.assign({}, m0, { checkpoints: (m0.checkpoints || []).slice() });   // (your own copy of the flag list: flags you buy are yours alone)
   S.slot = slot; S.idx = m.idx; S.map = m; S.world = P.makeWorld(m); S.world.nb = { dyn: S.world.dyn.length, doors: S.world.doors.length, btns: S.world.btns.length }; S.pubKeys = new Set(); S.rcvN = 0;
   if (next) S.nextAt = next;
@@ -2309,8 +2309,8 @@ function worldEvents() {
 }
 const startRect = () => P.noBuild(S.map)[0] || null;   // the start zone: 5 x 5 blocks around where you appear (nothing can be built in it)
 const zones = () => P.noBuild(S.map);   // the start zone and the zone around the finish flag
-const startTile = (tx, ty) => zones().some(z => tx >= z.tx0 && tx <= z.tx1 && ty >= z.ty0 && ty <= z.ty1);
-const startBlock = (px, py, m) => { m = m === undefined ? TS * 0.6 : m; return zones().some(z => px >= z.tx0 * TS - m && px <= (z.tx1 + 1) * TS + m && py >= z.ty0 * TS - m && py <= (z.ty1 + 1) * TS + m); };   // (a little extra room, so nothing can hang over the edge of it)
+const startTile = (tx, ty) => P.zoneT(S.map, tx, ty);   // (in the wide no-build circle around the start or the finish)
+const startBlock = (px, py, m) => { m = m === undefined ? TS * 0.6 : m; return P.zoneP(S.map, px, py, m); };   // (a little extra room, so nothing can hang over the edge of it)
 const PORC = [['#ffd23d', '#3da5ff'], ['#ff4a3d', '#a45cff'], ['#3ddc6a', '#ff6fc8'], ['#ff9a2e', '#2ee6d6']];   // the colours of portal pairs: yellow and blue, then red and purple, then green and pink, then orange and teal
 const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
@@ -2358,7 +2358,7 @@ function addMisc(w, q, anim) {   // ['see', column, ground row, 0]: a teeter-tot
   if (q[0] === 'bnc' || q[0] === 'spr') { const n = q[0] === 'spr' ? 1 : 2; if (anim && q[2] - q[3] > 1) (w.drops = w.drops || []).push({ tx: q[1], r: q[2], y: q[3] * TS, v: 0, n }); else setBouncePad(w, q[1], q[2], n); }
   else if (q[0] === 'tl') { if (q[3] === -1) restoreTile(w, q[1], q[2], anim); else setTerrain(w, q[1], q[2], q[3], anim); }
   else if (q[0] === 'lav') { { const i = q[2] * w.W + q[1]; if (q[2] < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 2; } if (anim) { burst((q[1] + 0.5) * TS, q[2] * TS - 6, ['#ff4d2e', '#ff8a3d', '#ffd23d'], 16, 200, 160); ring((q[1] + 0.5) * TS, q[2] * TS, '#ff8a3d', 5, 50, 0.4); sfx('lava'); } }
-  else if (q[0] === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: 3 * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
+  else if (q[0] === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: (q[3] === 1 ? 5 : 3) * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
   else if (q[0] === 'por') P.addPortal(w, q);
   else if (q[0] === 'rope') P.addRope(w, q);
   else P.addPad(w, [q[1], q[2], q[3]]);
@@ -2373,6 +2373,30 @@ function applyDelRec(q, anim) {   // something deleted (by you or anyone in this
   else ok = P.applyDel(w, q);
   if (ok && anim && x !== null) { burst(x, y, ['#ff5a4a', '#fff', '#ffd23d'], 14, 170, 80); ring(x, y, '#ff5a4a', 5, 44, 0.4); }
   return ok;
+}
+function delBook(q) {   // keep the books after something was deleted: a built portal, booster or flag just comes off the list of built things; anything else is noted as deleted
+  if (P.coordDel(q)) {
+    const rec = q[0] === 'c' ? S.boughtCps.find(c => c[0] === q[1] && c[1] === q[2]) : S.boughtMisc.find(m => m[0] === q[0] && m[1] === q[1] && m[2] === q[2]);
+    if (rec && P.delCancel({ misc: S.boughtMisc, cps: S.boughtCps }, q)) { if (S.pubKeys) { const k = q[0] === 'c' ? 'c' : 'm'; S.pubKeys.delete(pkey(k, rec)); S.pubKeys.delete(pkey(k, rec.slice(0, 5))); S.pubKeys.delete(pkey('d', q)); } return; }
+  }
+  if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), i = d && d.brec ? S.bought.indexOf(d.brec) : -1; if (i >= 0) { S.bought.splice(i, 1); d.brec = null; return; } }   // (a crate or ball somebody built: off the list, as if it had never been put down)
+  S.dels.push(q.slice());
+}
+const normPv = pv => P.normBuild({ props: pv.props, gates: pv.gates, misc: (pv.misc || []).slice(), cps: (pv.cps || []).slice(), dels: (pv.dels || []).slice() });
+/* is this device's world the same as the server's? The server tells its fingerprint every few seconds. If this one stays different (and nobody is building right now), the whole world is fetched again. */
+function syncCheck(h) {
+  if (!S.world || !shared() || S.mode !== 'play' || !S.worldReady) return;
+  const mine = P.buildHash({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }), d = (h - mine) >>> 0, now = performance.now();
+  if (S.bhBase === undefined) { if (S.bhLast === d) S.bhBase = d; S.bhLast = d; return; }   // (right after arriving: this is what 'the same' looks like here)
+  if (d === S.bhBase) { S.bhBad = 0; return; }
+  if (now - (S.buildAt || 0) < 6000) return;
+  S.bhBad = (S.bhBad | 0) + 1;
+  if (S.bhBad >= 2 && now - (S.rsAt || 0) > 30000) { S.rsAt = now; S.bhBad = 0; NET.resyncs = (NET.resyncs | 0) + 1; if (ws && ws.readyState === 1) { try { ws.send('{"t":"resync"}'); } catch (e) {} } }
+}
+function reloadKeep(fn) {   // load the world again without moving you: you stay where you are, with your run as it was
+  const b0 = S.b, keep = { started: S.started, finished: S.finished, done: S.done, crown: S.crown, runStart: S.runStart, cpArmed: S.cpArmed, cpUsed: S.cpUsed, camx: S.camx, camy: S.camy, dead: S.dead }, hb = $('finishbanner').classList.contains('hide');
+  fn();
+  if (b0 && S.world) { S.b = b0; Object.assign(S, keep); $('finishbanner').classList.toggle('hide', hb); }
 }
 function delWhere(q) {   // where a deleted thing was (for the little puff)
   const w = S.world, u = q[1] >>> 0;
@@ -2439,23 +2463,25 @@ function applyPubBuild(pv) {   // what everyone in a public world has built so f
   const occ = new Map(), have = propCounts();
   const takeP = q => { const key = pkey('p', q), n = (occ.get(key) || 0) + 1; occ.set(key, n); return n > (have.get(key) || 0); };   // (several crates put down on the very same spot are several crates: each one counts)
   (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !startBlock(q[1], q[2]) && takeP(q)) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });
+  pv = normPv(pv); (pv.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q) && take('d', q)) { applyDelRec(q); S.dels.push(q.slice()); } });
   (pv.misc || []).forEach(q => { if (validMisc(q) && take('m', q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
   (pv.gates || []).forEach(q => { if (validGate(q) && take('g', q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
   (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1]) && take('c', q)) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
-  (pv.dels || []).forEach(q => { if (validDel(q) && take('d', q)) { applyDelRec(q); S.dels.push(q.slice()); } });
+  (pv.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q) && take('d', q)) { applyDelRec(q); S.dels.push(q.slice()); } });
 }
 function applyPartyProps(pv) {   // what the host built is there when you arrive
   (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !startBlock(q[1], q[2])) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });   // (remembered in the lists, so the world can be saved as a copy)
+  pv = normPv(pv); (pv.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });
   (pv.misc || []).forEach(q => { if (validMisc(q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
   (pv.gates || []).forEach(q => { if (validGate(q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
   (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
-  (pv.dels || []).forEach(q => { if (validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });
+  (pv.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });
 }
 function deriveOwn() {   // saves from before every item had its own count: work it out from what is there
   const o = {}, add = id => { if (id) o[id] = (o[id] | 0) + 1; };
   S.bought.forEach(r => { const it = SHOP.find(s => s.kind === r[0] && !s.misc && !s.gate && !s.portal); add(it && it.id); });
   S.boughtGates.forEach(q => { const it = SHOP.find(s => s.gate === q[2]); add(it && it.id); });
-  S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? 'see' : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'lav' ? 'lava' : k === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
+  S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'lav' ? 'lava' : k === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
   S.boughtCps.forEach(() => add('flag')); (S.dels || []).forEach(() => add('dig')); return o;
 }
 function worldObj() {   // the world exactly as it is right now: everything built, where everything is and how it is moving
@@ -2486,7 +2512,8 @@ function restoreWorld(slot) {
   try {
     const o = slot >= SOLO_BASE ? solo2[S.idx] : JSON.parse(localStorage.getItem(WKEY) || 'null');
     if (!o || (slot < SOLO_BASE && o.slot !== slot)) return;           // a new session (or a level you reset): everything starts fresh
-    const w = S.world;
+    const w = S.world; { const n = normPv({ misc: o.misc, cps: o.cps, dels: o.dels }); o.misc = n.misc; o.cps = n.cps; o.dels = n.dels; }
+    if (slot >= SOLO_BASE) (o.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });   // (the map's own portals and boosters that were deleted: before anything built goes in)
     const own = true, pubW = slot < SOLO_BASE, key = (k, q) => { if (pubW && S.pubKeys) S.pubKeys.add(pkey(k, q)); };   // (what you built is remembered everywhere; in a public world it is also told to the room again when you come back)
     (own && !pubW ? o.buys || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { key('p', q.slice(0, 3)); const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); if (startBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
     (own && !pubW ? o.gates || [] : []).forEach(q => { if (validGate(q)) { key('g', q.slice(0, 5)); addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
@@ -2499,7 +2526,7 @@ function restoreWorld(slot) {
     if (!pubW) (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
     if (!pubW) (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
     (o.got || []).forEach(i => { if (i < S.coinGot.length) S.coinGot[i] = 1; });
-    if (!pubW) (o.dels || []).forEach(q => { if (validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(q.slice()); } });   // what you deleted stays deleted (in a public world the server has all of it: this device only mirrors it)
+    if (!pubW) (o.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(q.slice()); } });   // what you deleted stays deleted (in a public world the server has all of it: this device only mirrors it)
     S.seed = null;
 
     S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; purseP.c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
@@ -3625,7 +3652,8 @@ const SHOP = [
   { cat: 'blocks', id: 'ball2', max: 120, name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
   { cat: 'gates', id: 'gate', max: 40, name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
   { cat: 'gates', id: 'gateS', max: 40, name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
-  { cat: 'gadgets', id: 'see', max: 25, name: 'Teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
+  { cat: 'gadgets', id: 'see', max: 25, name: 'Small teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
+  { cat: 'gadgets', id: 'seeb', max: 25, name: 'Big teeter-totter', info: 'A long plank on a pivot: it reaches further, and flings harder.', c: 500, g: 5, misc: 'see', big: true },
   { cat: 'gadgets', id: 'rope', max: 40, name: 'Rope bridge', info: 'Ties to the edge of the dirt you stand on and stretches to the next dirt, up to 20 blocks across and less than 6 up or down. Nothing may be in its way.', c: 1000, g: 1, misc: 'rope' },
   { cat: 'gadgets', id: 'pad', max: 100, name: 'Floor booster', info: 'Set into the ground. Roll over it and it throws you forward.', c: 100, g: 0, misc: 'pad' },
   { cat: 'travel', id: 'portal', max: 2, name: 'Portals', info: 'Two holes in the ground: go in one and come out of the other. You can have two pairs: the first is yellow and blue, the second red and purple. Delete a pair to move it.', c: 1000, g: 20, portal: true },
@@ -3651,7 +3679,8 @@ const shopIcon = id => {
   if (id === 'lava') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#ff4a1c" ' + st + '/><circle cx="20" cy="19" r="2.4" fill="#ffb02e"/><circle cx="17" cy="14" r="1.6" fill="#ff8a3d"/><circle cx="23" cy="11" r="1.3" fill="#ffd23d"/></svg>';
   if (id === 'bnc') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="32" height="12" fill="#8a6a46" ' + st + '/><rect x="8" y="22" width="24" height="7" fill="#1c7f78" ' + st + '/><rect x="5" y="17" width="30" height="6" fill="#35e0c2" ' + st + '/><path d="M15 21l5-4 5 4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/></svg>';
   if (id === 'portal') return '<svg viewBox="0 0 40 40"><ellipse cx="12" cy="30" rx="10" ry="4" fill="#ffd23d" ' + st + '/><ellipse cx="12" cy="30" rx="5" ry="1.8" fill="#7a5a00"/><ellipse cx="29" cy="30" rx="10" ry="4" fill="#3da5ff" ' + st + '/><ellipse cx="29" cy="30" rx="5" ry="1.8" fill="#0b2f6b"/><path d="M12 24c0-9 17-9 17 0" fill="none" stroke="#16100c" stroke-width="2" stroke-dasharray="3 3"/></svg>';
-  if (id === 'see') return '<svg viewBox="0 0 40 40"><polygon points="20,22 11,35 29,35" fill="#6b6b78" ' + st + '/><rect x="3" y="17" width="34" height="5" fill="#e8923a" transform="rotate(-12 20 20)" ' + st + '/></svg>';
+  if (id === 'seeb') return '<svg viewBox="0 0 40 40"><polygon points="20,23 14,35 26,35" fill="#6b6b78" ' + st + '/><rect x="0.5" y="18" width="39" height="4.5" fill="#e8923a" transform="rotate(-9 20 20)" ' + st + '/></svg>';
+  if (id === 'see') return '<svg viewBox="0 0 40 40"><polygon points="20,22 11,35 29,35" fill="#6b6b78" ' + st + '/><rect x="8" y="17" width="24" height="5" fill="#e8923a" transform="rotate(-12 20 20)" ' + st + '/></svg>';
   if (id === 'rope') return '<svg viewBox="0 0 40 40"><rect x="2" y="12" width="4" height="20" fill="#8a5a2b" ' + st + '/><rect x="34" y="12" width="4" height="20" fill="#8a5a2b" ' + st + '/><path d="M4 14Q20 22 36 14" fill="none" stroke="#c9a46a" stroke-width="2.5"/><path d="M4 30Q20 38 36 30" fill="none" ' + st + '/><path d="M10 32V19M16 34V20M24 34V20M30 32V19" fill="none" stroke="#5a3a1a" stroke-width="1.8"/></svg>';
   if (id === 'pad') return '<svg viewBox="0 0 40 40"><rect x="3" y="22" width="34" height="12" fill="#8a6a46" ' + st + '/><rect x="6" y="19" width="28" height="6" fill="#ffd23d" ' + st + '/><path d="M14 22h9M20 19l4 3-4 3" fill="none" stroke="#16100c" stroke-width="2.2" stroke-linejoin="round"/></svg>';
   if (id === 'box0') return '<svg viewBox="0 0 40 40"><rect x="9" y="9" width="22" height="22" rx="2" fill="#ffc233" ' + st + '/><path d="M13 13L27 27M27 13L13 27" fill="none" ' + st + ' stroke-width="1.800"/></svg>';
@@ -3740,10 +3769,10 @@ function gateSpot(side, hmax) {   // a gate: one tile wide, standing on the grou
   }
   return null;
 }
-function flatSpot(side, centre, need, lavaOk) {   // two tiles of level ground beside you with open air above them (a teeter-totter's centre or a floor booster); returns the left column and the ground row
+function flatSpot(side, centre, need, lavaOk, extN) {   // two tiles of level ground beside you with open air above them (a teeter-totter's centre or a floor booster); returns the left column and the ground row
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
-    const ext = centre ? 2 : 0, s = pass ? -side : side, tx = s > 0 ? Math.ceil((b.x + R + 6) / TS) + ext : Math.floor((b.x - R - 6) / TS) - 2 - ext, row = Math.floor((b.y + R + 1) / TS);   // (right beside you, never on you)
+    const ext = centre ? (extN || 2) : 0, s = pass ? -side : side, tx = s > 0 ? Math.ceil((b.x + R + 6) / TS) + ext : Math.floor((b.x - R - 6) / TS) - 2 - ext, row = Math.floor((b.y + R + 1) / TS);   // (right beside you, never on you)
     for (let k = -2; k < 2; k++) {
       const a = P.tile(w, tx, row + k), c = P.tile(w, tx + 1, row + k);
       if ((a === 2 || c === 2) && !lavaOk) break;
@@ -3811,7 +3840,7 @@ function terrainSpot(kind, side, pull) {
   for (const [x, r] of probes) {
     const a = act(x, r); if (!a) continue;
     if (terrainBlocked(x, a.row, kind === 'dirt')) continue;
-    return { tx: x, gr: a.row, row: a.row, to: a.to, side: s, ex: a.to === 5 ? waterEx(x, a.row) : [] };
+    return { tx: x, gr: a.row, row: a.row, to: a.to, side: s, ex: a.to === 5 ? waterEx(x, a.row) : a.to === 7 ? lavaDown(x, a.row) : [] };
   }
   return null;
 }
@@ -3850,14 +3879,20 @@ function lavaWaterAhead(side) {   // is there lava or water right where the dele
 function delThing(q) {   // delete it here, and for everyone in this world
   let id = { s: 'see', g: 'gate', r: 'rope', por: 'portal', c: 'flag', pad: 'pad' }[q[0]];
   if (q[0] === 'por' && S.world && S.own && S.own.porC) { const p = S.world.portals.find(e => !e.gone && Math.round(e.a.x / TS) - 1 === q[1] && Math.round(e.a.y / TS) === q[2]); if (p) { const i = S.own.porC.indexOf(p.c | 0); if (i >= 0) S.own.porC.splice(i, 1); else id = null; } }   // (only one of your own pairs gives you a pair back)
-  if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), it = d && SHOP.find(s => s.kind === d.kind && !s.misc && !s.gate); if (it) id = it.id; }
-  if (applyDelRec(q, true)) { S.dels.push(q.slice()); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); if (id && S.own && S.own[id] > 0) S.own[id]--; }   // (deleting something gives you that one back to build again)
+  if (q[0] === 's' && S.world) { const e = S.world.see.find(o => o.uid === (q[1] >>> 0)); if (e && e.hl > 3 * TS + 1) id = 'seeb'; }
+  if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), it = d && SHOP.find(s => s.kind === d.kind && !s.misc && !s.gate); if (it) id = it.id; if (d && d.bought && !d.local && shared()) id = null; }   // (somebody else's: they get it back, not you)
+  if (applyDelRec(q, true)) { delBook(q); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); if (id && S.own && S.own[id] > 0) S.own[id]--; }   // (deleting something gives you that one back to build again)
 }
 function waterEx(x, r) {   // water never sits on ice or beside lava: the ice under it melts, and any lava it touches turns to rock
   const w = S.world, out = [], T = (a, b) => P.tile(w, a, b);
   const ok = (a, b) => a >= 1 && a < w.W - 1 && b >= 1 && b < w.H - 1 && !startTile(a, b) && !terrainBlocked(a, b, false);
   if (T(x, r + 1) === 3 && ok(x, r + 1)) out.push([x, r + 1, 5]);
-  for (const [a, b] of [[x - 1, r], [x + 1, r], [x, r - 1], [x, r + 1]]) if (T(a, b) === 2 && ok(a, b)) out.push([a, b, 7]);
+  for (const [a, b] of [[x - 1, r], [x + 1, r], [x, r - 1], [x, r + 1]]) if (T(a, b) === 2 && ok(a, b)) { out.push([a, b, 7]); lavaDown(a, b, out); }
+  return out;
+}
+function lavaDown(x, r, out) {   // lava that is turned to rock turns to rock all the way down: no pool of lava is left hidden underneath
+  const w = S.world; out = out || [];
+  for (let b = r + 1, n = 0; n < 14 && b < w.H - 1 && P.tile(w, x, b) === 2 && !startTile(x, b) && !terrainBlocked(x, b, false); b++, n++) if (!out.some(e => e[0] === x && e[1] === b)) out.push([x, b, 7]);
   return out;
 }
 function bncSpot(side) {   // a ground spring: one tile wide. Over open air it falls until it reaches the ground, then it sits in it.
@@ -3907,7 +3942,7 @@ function portalClash(g, sp, cx) {   // nothing can be made on top of a portal, a
   if (it.portal) return underSomething(cx, TS, sp.gr) || (g.stage === 2 && g.pA ? false : false);
   if (it.id === 'flag') return portalHere(cx, 20, sp.row);
   if (it.gate) return g.stage === 2 ? portalHere(cx, TS, sp.row) : portalHere(cx, 20, sp.gr);
-  if (it.misc === 'see') return portalHere(cx, 3 * TS, sp.gr);
+  if (it.misc === 'see') return portalHere(cx, (it.big ? 5 : 3) * TS, sp.gr);
   if (it.misc === 'pad') return portalHere(cx, TS, sp.gr);
   if (it.misc === 'spr') return portalHere((sp.tx + 0.5) * TS, 20, sp.r);
   if (it.misc === 'ter') return portalHere(cx, 20, sp.gr);
@@ -3928,7 +3963,7 @@ function computeGhost() {
     let sp = null, cx, cy;
     if (g.it.id === 'flag') { sp = flagSpot(g.side); if (sp) { g.ftx = sp.tx; g.frow = sp.row; cx = (sp.tx + 0.5) * TS; cy = sp.row * TS - 30; } }
     else if (g.stage === 2 && g.it.gate) { sp = plateSpot(g.side, g.gate); if (sp) { g.ptx = sp.tx; g.prow = sp.row; g.py0 = sp.y0; cx = (sp.tx + 1) * TS; cy = sp.y0; } }
-    else if (g.it.portal) { sp = flatSpot(g.side, false, 1, true); if (sp && g.stage === 2 && g.pA && Math.abs(sp.tx - g.pA.tx) < 4 && Math.abs(sp.gr - g.pA.gr) < 3) sp = null; if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - 2; } }
+    else if (g.it.portal) { sp = flatSpot(g.side, false, 2, false); if (sp && (!P.portalSpotOk(S.world, sp.tx, sp.gr) || playerIn(sp.tx * TS, sp.gr * TS - 76, (sp.tx + 2) * TS, sp.gr * TS))) sp = null;   /* (only on dirt or ice, with nothing there already: no other portal, no player, no button) */ if (sp && g.stage === 2 && g.pA && Math.abs(sp.tx - g.pA.tx) < 4 && Math.abs(sp.gr - g.pA.gr) < 3) sp = null; if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - 2; } }
     else if (g.it.misc === 'spr') { sp = bncSpot(g.side); if (sp) { g.mtx = sp.tx; g.mgr = sp.r; g.mr0 = sp.r0; cx = (sp.tx + 0.5) * TS; cy = (sp.r - 0.5) * TS; } }
     else if (g.it.misc === 'ter') {
       g.del = null; g.keepRec = false; g.wl = false; g.tlName = '';
@@ -3938,7 +3973,7 @@ function computeGhost() {
       else { sp = terrainSpot(g.it.ter, g.side, pullNow()); if (sp) { g.mtx = sp.tx; g.mgr = sp.row; g.mto = sp.to; g.mex = sp.ex || []; cx = (sp.tx + 0.5) * TS; cy = (sp.row + 0.5) * TS; } else if (g.it.ter === 'dig' && lavaWaterAhead(g.side)) g.wl = true; }
     }
     else if (g.it.misc === 'rope') { sp = ropeSpot(g.side); g.rq = sp ? sp.q : null; g.rr = sp ? sp.r : null; if (sp) { cx = (sp.r.ax + sp.r.bx) / 2; cy = (sp.r.ay + sp.r.by) / 2; } }
-    else if (g.it.misc) { sp = flatSpot(g.side, g.it.misc === 'see', g.it.misc === 'see' ? 2 : 1); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; g.mside = sp.side; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - (g.it.misc === 'see' ? 46 : 4); } }
+    else if (g.it.misc) { sp = flatSpot(g.side, g.it.misc === 'see', g.it.misc === 'see' ? 2 : 1, false, g.it.big ? 4 : 2); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; g.mside = sp.side; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - (g.it.misc === 'see' ? 46 : 4); } }
     else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; g.gh = sp.h; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - sp.h / 2) * TS; } }
     g.ok = !!sp; g.sb = false;
     if (sp && (startBlock(cx, cy) || (g.it.misc === 'spr' && startBlock(cx, g.mr0 * TS)) || (g.stage === 2 && g.it.gate && startBlock((sp.tx + 1) * TS, sp.row * TS)))) { g.ok = false; g.sb = true; }
@@ -3951,7 +3986,7 @@ function computeGhost() {
       else if (g.it.portal) rc = [g.mtx * TS, g.mgr * TS - 70, (g.mtx + 2) * TS, g.mgr * TS];
       else if (g.it.misc === 'spr') rc = [g.mtx * TS, g.mr0 * TS, (g.mtx + 1) * TS, (g.mgr + 1) * TS];
       else if (g.it.misc === 'ter') { rc = [g.mtx * TS, g.mgr * TS, (g.mtx + 1) * TS, (g.mgr + 1) * TS]; }
-      else if (g.it.misc === 'see') rc = [(g.mtx + 1 - 3) * TS, g.mgr * TS - 100, (g.mtx + 1 + 3) * TS, g.mgr * TS];
+      else if (g.it.misc === 'see') rc = [(g.mtx + 1 - (g.it.big ? 5 : 3)) * TS, g.mgr * TS - 100, (g.mtx + 1 + (g.it.big ? 5 : 3)) * TS, g.mgr * TS];
       else if (g.it.misc === 'pad') rc = [g.mtx * TS, g.mgr * TS - 14, (g.mtx + 2) * TS, g.mgr * TS + 4];
       else if (g.it.misc === 'rope') rc = [-1e7, -1e7, -1e7 + 1, -1e7 + 1];   // (checked along its whole length in ropeSpot)
       else rc = [g.gtx * TS, (g.ggr - g.gh) * TS, (g.gtx + 1) * TS, g.ggr * TS];
@@ -4052,7 +4087,7 @@ function drawTileGhost(g, nowT) {
   } else if (g.it.misc === 'see') {
     const cx = g.dx, cy = g.dy; ctx.globalAlpha = pulse; ctx.lineWidth = 2.4; ctx.strokeStyle = '#16100c';
     ctx.fillStyle = bad ? '#ff7a6a' : '#6b6b78'; ctx.beginPath(); ctx.moveTo(cx, cy + 4); ctx.lineTo(cx - 24, cy + 46); ctx.lineTo(cx + 24, cy + 46); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = bad ? '#ff7a6a' : '#e8923a'; ctx.fillRect(cx - 3 * TS, cy - 6, 6 * TS, 12); ctx.strokeRect(cx - 3 * TS, cy - 6, 6 * TS, 12);
+    ctx.fillStyle = bad ? '#ff7a6a' : '#e8923a'; { const hl = (g.it.big ? 5 : 3) * TS; ctx.fillRect(cx - hl, cy - 6, 2 * hl, 12); ctx.strokeRect(cx - hl, cy - 6, 2 * hl, 12); }
   } else if (g.it.misc === 'rope') {
     if (g.rr) drawRope(g.rr, -1e9, -1e9, 2e9, 2e9, bad ? 'bad' : 'ok');
     else { ctx.globalAlpha = pulse; ctx.strokeStyle = '#ff5a4a'; ctx.setLineDash([6, 5]); ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(g.dx - 30, g.dy); ctx.lineTo(g.dx + 30, g.dy); ctx.stroke(); ctx.setLineDash([]); }
@@ -4079,11 +4114,11 @@ function drawTileGhost(g, nowT) {
 }
 let placeUIKey = null;
 function refreshPlaceUI() {   // the little bar (and, on a phone, the round button) that finish the build
-  const g = placing, on = !!g, key = on ? g.it.id + (g.stage || 0) + (g.ok ? 1 : 0) + (g.sb ? 2 : 0) + (g.pb ? 4 : 0) + (touchActive() ? 1 : 0) + (g.del ? g.del.name : g.tlName || '') + (g.wl ? 'w' : '') : '';
+  const g = placing, on = !!g, key = on ? g.it.id + (g.stage || 0) + (g.ok ? 1 : 0) + (g.sb ? 2 : 0) + (g.pb ? 4 : 0) + (touchActive() ? 1 : 0) + (g.del ? g.del.name : g.tlName || '') + (g.wl ? 'w' : '') + ':' + ownCount(g.it) : '';
   if (key === placeUIKey) return; placeUIKey = key;
   $('placeBar').classList.toggle('hide', !on); applyTouchUI();
   if (!on) return;
-  $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
+  $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; if (g.it.max && !noCaps) $('placeName').textContent += ' · ' + ownCount(g.it) + ' of ' + g.it.max + ' placed'; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Delete' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Delete' : 'Place');
   $('placeHint').textContent = g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Nothing can go on a portal, and a portal cannot go under anything' : 'No room here. Move somewhere with space');
 }
@@ -4114,7 +4149,7 @@ function finishPlacing() {
     burst((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, '#fff', 4, 40, 0.4);
   } else if (it.misc === 'rope') { const q = g.rq.slice(); addMisc(S.world, q); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('big');
   } else if (it.misc) {
-    const q = [it.misc === 'ter' ? 'tl' : it.misc, g.mtx, g.mgr, it.misc === 'ter' ? g.mto : it.misc === 'pad' ? ((g.mside || g.side) < 0 ? -1 : 1) : it.misc === 'spr' ? g.mr0 : 0];
+    const q = [it.misc === 'ter' ? 'tl' : it.misc, g.mtx, g.mgr, it.misc === 'ter' ? g.mto : it.misc === 'pad' ? ((g.mside || g.side) < 0 ? -1 : 1) : it.misc === 'spr' ? g.mr0 : it.big ? 1 : 0];
     addMisc(S.world, q, true);
     const exSend = [];
     if (q[0] === 'tl') for (const e of (g.mex || [])) {   // what the water did to its neighbours (melted ice, lava turned to rock)
@@ -4145,6 +4180,7 @@ function finishPlacing() {
 }
 function pubTake(k, q) { if (!S.pubKeys) return true; const key = pkey(k, q.map(v => (typeof v === "number" ? Math.round(v) : v))); if (S.pubKeys.has(key)) return false; S.pubKeys.add(key); return true; }
 function partyBuild(msg) {
+  S.buildAt = performance.now();
   if (!party && shared() && S.pubKeys) { const g = msg.g; S.pubKeys.add(msg.t === 'padd' ? pkey('p', [msg.k, msg.x, msg.y]) : msg.t === 'pcp' ? pkey('c', [msg.x, msg.y]) : pkey(msg.t === 'pgate' ? 'g' : msg.t === 'pdel' ? 'd' : 'm', g)); }   // (what you build is already in your world: remember it so it is not added twice)
   if (shared() && online && ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }
 function placeProp(kind, at) {
@@ -5187,6 +5223,22 @@ function outOfThings(pp) {   // somebody else as drawn here is never inside a cr
   }
 }
 const otherLead = () => Math.min(0.1, NET.rtt * 0.00075);   // (their update took a trip through the server to get here: they are drawn that much further along their path, where they are by now, so two players see each other with next to no delay)
+/* Where to draw another player right now. Their updates come with their own clock on them, so however late or bunched-up they arrive, the path they really took is known.
+   On a good connection they are drawn where they are by now (their last update carried on a moment). On a bad one (updates arriving late, or in bursts) they are drawn a little
+   in the past instead, moving along the path they really took: as far back as the connection is uneven, and no further. So a jump is one smooth arc, never a guess that has to be undone. */
+function otherAt(o, nowT) {
+  const D = o.D || 0, T = nowT - D + otherLead() * 1000 * Math.max(0, 1 - D / 60) - (o.off || 0), b = o.buf, n = b ? b.length : 0;   // (T: the moment to show, on their clock)
+  if (!n || T >= b[n - 1].t) return otherPred(o, clamp(n ? (T - b[n - 1].t) / 1000 : 0, 0, D > 0 ? 0.22 : 0.7));   // (past the newest update: carried on, but on a bad connection only briefly, then they wait there)
+  let i = n - 2; while (i > 0 && b[i].t > T) i--;
+  const a = b[i], c = b[i + 1];
+  if (T <= a.t) { pp.x = a.x; pp.y = a.y; return pp; }
+  const hms = c.t - a.t, u = (T - a.t) / hms, h = hms / 1000, lx = a.x + (c.x - a.x) * u, ly = a.y + (c.y - a.y) * u;
+  if (h > 0.45 || Math.abs(c.x - a.x) > 500 || Math.abs(c.y - a.y) > 500) { pp.x = lx; pp.y = ly; return pp; }
+  const u2 = u * u, u3 = u2 * u, h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
+  const x = h00 * a.x + h10 * h * a.vx + h01 * c.x + h11 * h * c.vx, y = h00 * a.y + h10 * h * a.vy + h01 * c.y + h11 * h * c.vy;   // (a curve through both updates that also leaves and arrives at their speeds: a jump keeps its arc)
+  if (S.world && !ballFree(x, y)) { pp.x = lx; pp.y = ly; if (!ballFree(lx, ly)) outOfThings(pp); return pp; }
+  pp.x = x; pp.y = y; return pp;
+}
 function otherPred(o, d) {   // where somebody else is d seconds after their last update: their speed carries them on, gravity pulls them down in the air, and the ground and walls stop them (the picture never goes through anything)
   const x = o.sx + o.svx * d;
   const y = o.sy + o.svy * d + (o.sg ? 0 : 0.5 * P.GRAV * d * d);
@@ -5263,16 +5315,25 @@ function onBin(buf) {   // compact position update: [1][slot u16] then per playe
     o.dead = 0;
     // when was this sample taken (their clock), and what is that on mine? Their clock only moves forward in whole steps, and the quickest delivery seen so far is the baseline.
     const ts = st & 0x7FFF;
-    o.tsU = o.ts15 < 0 ? ts : o.tsU + ((ts - o.ts15) & 0x7FFF); o.ts15 = ts;
+    if (o.ts15 >= 0) { const dts = ((ts - o.ts15 + 16384) & 0x7FFF) - 16384; if (dts < 0) { o.seen = t; continue; } o.tsU += dts; } else o.tsU = ts;   // (an update older than one already here is of no use)
+    o.ts15 = ts;
     const lat = t - o.tsU;
-    if (o.off == null || lat < o.off) o.off = lat; else o.off += (lat - o.off) * 0.03;
+    if (fresh) { o.buf = []; o.jit = 0; o.D = 0; }
+    if (o.off != null && lat - o.off > (o.jit || 0)) o.jit = Math.min(700, lat - o.off);   // (how late updates run on this connection: the worst of the last while)
+    { const off0 = o.off; if (o.off == null || lat < o.off) o.off = lat; else o.off += (lat - o.off) * 0.01; if (off0 != null && o.D > 0) o.D = Math.max(0, o.D + off0 - o.off); }   // (the clocks are matched a little better: what is on screen does not move for it)
+    { const want = (o.jit || 0) < 30 ? 0 : Math.min(600, o.jit * 1.1 + 30); if (want > (o.D || 0)) o.D = want; }
+    if (!fresh && o.buf && o.buf.length && (o.jit || 0) >= 30) {   // their updates ran dry and they were left waiting on screen: carry on from that very moment (a little further in the past), never skip ahead
+      const last = o.buf[o.buf.length - 1], Tc = t - (o.D || 0) - o.off;
+      if (Tc > last.t + 40) o.D = Math.min(900, Math.max(o.D || 0, t - o.off - (last.t + Math.min(Tc - last.t, 220))));
+    }   // (a late update: from now on they are drawn that much further back, so the next late one changes nothing on screen)
     const sT = Math.min(t, o.tsU + o.off);
     // the path they are on from here: carried on by their speed (and gravity while they are in the air). Whatever the old guess got wrong is blended away, not jumped.
     let curX = 0, curY = 0;
-    if (!fresh) { const q = otherPred(o, clamp((t - o.sT) / 1000 + otherLead(), 0, 0.7)); curX = q.x + o.ex; curY = q.y + o.ey; }   // where they are drawn this very moment
+    if (!fresh) { const q = otherAt(o, t); curX = q.x + o.ex; curY = q.y + o.ey; }   // where they are drawn this very moment
     o.sx = x; o.sy = y; o.svx = vx; o.svy = vy; o.sg = (st & 0x8000) ? 1 : 0; o.sT = sT;
+    { const bf = o.buf || (o.buf = []), ts2 = o.tsU, l = bf[bf.length - 1]; if (!l || ts2 > l.t + 1) bf.push({ t: ts2, x, y, vx, vy }); else { l.x = x; l.y = y; l.vx = vx; l.vy = vy; } while (bf.length > 2 && bf[1].t < ts2 - 1600) bf.shift(); }
     if (!fresh) {
-      const q = otherPred(o, Math.min(0.7, (t - sT) / 1000));
+      const q = otherAt(o, t);
       o.ex = curX - q.x; o.ey = curY - q.y;
       if (Math.abs(o.ex) > 260 || Math.abs(o.ey) > 260) { o.ex = o.ey = 0; }
     }
@@ -5357,14 +5418,14 @@ function onMsg(m) {
     case 'hostback': notice(who(m.name) + ' is back', ''); break;
     case 'inv': partyInvited(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
-    case 'pobj': if (m.bot) { if (S.world && validMisc(m.g) && m.g[0] === 'tl') { addMisc(S.world, m.g, !m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)); if (!m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)) sfx('ui'); } break; } { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1 }); });
+    case 'pobj': S.buildAt = performance.now(); if (m.bot) { if (S.world && validMisc(m.g) && m.g[0] === 'tl') { addMisc(S.world, m.g, !m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)); if (!m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)) sfx('ui'); } break; } { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1 }); });
       if (!S.world || !shared() || !validMisc(m.g) || (!party && m.g[0] !== 'tl' && !pubTake('m', m.g))) break;   // (a terrain change is absolute, so applying it twice does no harm)
       if (m.g[0] === 'tl' && m.g[3] === -1) { addMisc(S.world, m.g, true); dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); wDirty = true; break; }   // somebody put a tile back the way it was: nothing to remember
       if (m.g[0] === 'tl') { dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); }
       addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 6 : m.g[0] === 'rope' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
-    case 'pdel': { if (!S.world || !shared() || !validDel(m.g) || (!party && !pubTake('d', m.g))) break; if (applyDelRec(m.g, !m.bulk)) { S.dels.push(m.g.slice()); wDirty = true; if (!m.bulk) sfx('pop'); } break; }   // somebody deleted something here
-    case 'pgate': { if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
-    case 'pb': (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); (m.dels || []).forEach(q => onMsg({ t: 'pdel', g: q, bulk: 1 })); sfx('big'); break;
+    case 'pdel': { if (!S.world || !shared() || !validDel(m.g) || (!party && !P.coordDel(m.g) && !pubTake('d', m.g))) break; S.buildAt = performance.now(); if (applyDelRec(m.g, !m.bulk && !m.lost) || m.lost) { delBook(m.g); wDirty = true; if (!m.bulk) sfx('pop'); } break; }   // somebody deleted something here
+    case 'pgate': { S.buildAt = performance.now(); if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
+    case 'pb': S.buildAt = performance.now(); (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); (m.dels || []).forEach(q => onMsg({ t: 'pdel', g: q, bulk: 1 })); sfx('big'); break;
     case 'pno': {   // the world has no room for that one: it is taken back and paid back
       const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.local && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y);
       if (d) { const i = S.bought.indexOf(d.brec); if (i >= 0) S.bought.splice(i, 1); d.bought = false; d.gone = true; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; const it = SHOP.find(q => q.kind === d.kind && !q.misc); if (it) { wallet.c += it.c; wallet.g += it.g; saveWallet(); } wDirty = true; }
@@ -5372,8 +5433,8 @@ function onMsg(m) {
       if (placing) cancelPlacing(true);
       break; }
     case 'puid': { const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y); if (d) { adoptUid(w, d, m.u); d.srvU = true; } break; }
-    case 'padd': { if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
-    case 'pcp': { if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
+    case 'padd': { S.buildAt = performance.now(); if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
+    case 'pcp': { S.buildAt = performance.now(); if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'wsnap': if (!party) saveSnap(m); break;
     case 'ready': S.worldReady = true; break;
     case 'pong': if (typeof m.c === 'number') { const r = performance.now() - m.c; if (r >= 0 && r < 5000) { NET.rtt = NET.rtt * 0.7 + r * 0.3; NET.rttLo = Math.min(NET.rttLo, r); NET.rttLast = r; } if (m.c > NET.pongC) { NET.pongC = m.c; NET.pongAt = performance.now(); } } break;   // (how long a message takes to the server and back)   // (the server has sent everything around you: the world is complete)
@@ -5383,7 +5444,15 @@ function onMsg(m) {
       if (m.t === 'fsub' && typeof m.pub === 'string') c[m.pub] = m.s; else (m.l || []).forEach(e => { if (Array.isArray(e) && typeof e[0] === 'string') c[e[0]] = e[1]; });
       const ks = Object.keys(c); if (ks.length > 80) ks.slice(0, ks.length - 80).forEach(k => delete c[k]);
       try { localStorage.setItem('ballrun4_fsub', JSON.stringify(c)); } catch (e) {} break; }
-    case 'rebuild': if (m.priv && party && party.role === 'guest' && m.b && S.world) { party.priv = Object.assign({}, party.priv, m.b); S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break; }   // (the host's world has now all arrived: load it again, complete)
+    case 'bh': syncCheck(+m.h); break;
+    case 'pback': { const it = SHOP.find(q => q.kind === (m.k | 0) && !q.misc && !q.gate && !q.portal && q.id !== 'flag'); if (it && S.own && S.own[it.id] > 0) { S.own[it.id]--; wDirty = true; } break; }   // (something you built was deleted by somebody, or was lost in lava: you can build it again)
+    case 'rebuild': if (m.rs && m.b && S.world && S.mode === 'play') {   // this device's world had drifted from the server's: here is the real one, put in place without moving you
+        const fresh = () => { S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; };
+        if (party && party.role === 'guest') { if (!m.priv) break; party.priv = Object.assign({}, party.priv, m.b); reloadKeep(() => { fresh(); loadMap(S.slot, S.nextAt); }); }
+        else if (party && party.role === 'host') { if (!m.priv) break; S.bought = m.b.props || []; S.boughtGates = m.b.gates || []; S.boughtMisc = m.b.misc || []; S.boughtCps = m.b.cps || []; S.dels = m.b.dels || []; saveWorld(true); reloadKeep(() => { fresh(); loadMap(S.slot, S.nextAt); }); }
+        else if (!party && !inSolo() && !m.priv) reloadKeep(() => { S.pendingBuild = { slot: S.slot, b: m.b }; fresh(); loadMap(S.slot, S.nextAt); });
+        break; }
+      if (m.priv && party && party.role === 'guest' && m.b && S.world) { party.priv = Object.assign({}, party.priv, m.b); S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break; }   // (the host's world has now all arrived: load it again, complete)
       if (party || inSolo() || !m.b || !S.world) break;   // the server got this world's memory back from a player: load it again, as it really was
       S.pendingBuild = { slot: S.slot, b: m.b }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break;
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
@@ -5835,15 +5904,11 @@ function drawPad(px, py, tx) {   // bounce pad: a springy cushion with arrows th
 }
 function drawGadgets(camL, camT, vw, vh, dt) {
   const w = S.world, m = S.map;
-  for (const z of zones()) {   // the start zone and the finish zone: marked squares where nothing can be built
-    const x = z.tx0 * TS, y = z.ty0 * TS, ww = (z.tx1 - z.tx0 + 1) * TS, hh = (z.ty1 - z.ty0 + 1) * TS;
-    if (x < camL + vw && x + ww > camL && y < camT + vh && y + hh > camT) {
-      const pu = 0.5 + 0.5 * Math.sin(performance.now() / 600);
-      ctx.save(); ctx.fillStyle = 'rgba(255,110,60,' + (0.07 + 0.03 * pu) + ')'; ctx.fillRect(x, y, ww, hh);
-      ctx.strokeStyle = 'rgba(255,150,80,' + (0.55 + 0.25 * pu) + ')'; ctx.lineWidth = 2.5; ctx.setLineDash([12, 9]); ctx.lineDashOffset = -performance.now() / 60; ctx.strokeRect(x + 1.5, y + 1.5, ww - 3, hh - 3);
-      ctx.setLineDash([]); ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(255,170,90,.9)'; ctx.beginPath();
-      for (const [cx, cy, dx, dy] of [[x, y, 1, 1], [x + ww, y, -1, 1], [x, y + hh, 1, -1], [x + ww, y + hh, -1, -1]]) { ctx.moveTo(cx + dx * 16, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy + dy * 16); }
-      ctx.stroke(); ctx.restore();
+  for (const z of zones()) {   // the no-build circles around the start and the finish: faint, but there
+    if (z.cx - z.r < camL + vw && z.cx + z.r > camL && z.cy - z.r < camT + vh && z.cy + z.r > camT) {
+      const pu = 0.5 + 0.5 * Math.sin(performance.now() / 900);
+      ctx.save(); ctx.beginPath(); ctx.arc(z.cx, z.cy, z.r, 0, TAU); ctx.fillStyle = 'rgba(255,120,70,' + (0.028 + 0.012 * pu) + ')'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,150,80,' + (0.2 + 0.08 * pu) + ')'; ctx.lineWidth = 2; ctx.setLineDash([10, 12]); ctx.lineDashOffset = -performance.now() / 90; ctx.stroke(); ctx.restore();
     }
   }
   ctx.lineJoin = 'round'; ctx.lineWidth = 2.4; ctx.strokeStyle = INK;
@@ -6246,9 +6311,10 @@ function renderInner(dt, nowT) {
     const m = 60;
     others.forEach(o => {            // other players (drawn first, so everyone goes behind you)
       if (!o.seen || o.dead) return;
-      const ds = clamp((nowT - (o.sT || nowT)) / 1000 + otherLead(), 0, 0.7), ek = Math.exp(-dt / 0.07);   // their last known speed carries them on; the small error from the last guess melts away
+      const ek = Math.exp(-dt / (o.D > 0 ? 0.12 : 0.07));   // (the small error from the last guess melts away)
       o.ex *= ek; o.ey *= ek;
-      const q = otherPred(o, ds), nx = q.x + (o.ex || 0), ny = q.y + (o.ey || 0);
+      { o.jit = (o.jit || 0) * Math.exp(-dt / 8); const want = o.jit < 30 ? 0 : Math.min(600, o.jit * 1.1 + 30), D0 = o.D || 0; o.D = want > D0 ? Math.min(want, D0 + dt * 500) : Math.max(want, D0 - dt * 110); }   // (how far in the past they are drawn: grows at once when the connection turns uneven, shrinks slowly when it settles)
+      const q = otherAt(o, nowT), nx = q.x + (o.ex || 0), ny = q.y + (o.ey || 0);
       o.rot += (nx - o.cx) / R; o.cx = nx; o.cy = ny;
       if (nx < camL - m || nx > camL + vw + m || ny < camT - m * 2 || ny > camT + vh + m) return;
       let sc2 = 1; if (o.morph > 0) { o.morph = Math.max(0, o.morph - dt * 1.6); sc2 = 1 + 0.35 * Math.sin(o.morph * 3.14); }
@@ -6372,6 +6438,11 @@ function drawThings(g, X, Y, z, L, T, Rr, B) {   // toys and items, on both maps
     const x = X(tx), y = Y(ty), s = Math.max(3, (d.r || d.hw) * 2 / TS * z);
     if (d.k === 'b') { g.fillStyle = d.kind === 6 ? '#7a3dd6' : d.kind === 5 ? '#3fa66b' : '#ffc233'; g.fillRect(x - s / 2, y - s / 2, s, s); if (z >= 6) { g.strokeStyle = '#16100c'; g.lineWidth = 1; g.strokeRect(x - s / 2, y - s / 2, s, s); } }
     else { g.fillStyle = '#ff8a1f'; g.beginPath(); g.arc(x, y, s / 2, 0, TAU); g.fill(); if (z >= 6) { g.strokeStyle = '#16100c'; g.lineWidth = 1; g.stroke(); } }
+  }
+  if (w.ropes && w.ropes.length) {   // rope bridges: a brown line from end to end, sagging a little
+    g.strokeStyle = '#b07a3c'; g.lineWidth = Math.max(1.5, z * 0.22); g.lineCap = 'round';
+    for (const r of w.ropes) { if (r.gone) continue; const ax = r.ax / TS, ay = r.ay / TS, bx = r.bx / TS, by = r.by / TS; if (Math.max(ax, bx) < L || Math.min(ax, bx) > Rr || Math.max(ay, by) < T - 2 || Math.min(ay, by) > B + 2) continue;
+      g.beginPath(); g.moveTo(X(ax), Y(ay)); g.quadraticCurveTo(X((ax + bx) / 2), Y((ay + by) / 2 + Math.min(1.2, Math.abs(bx - ax) * 0.08)), X(bx), Y(by)); g.stroke(); }
   }
   g.fillStyle = '#ffd23d';
   for (const p of w.pads) { if (p.x > Rr || p.x + p.w < L || p.y > B + 1 || p.y < T - 1) continue; g.fillRect(X(p.x), Y(p.y) - Math.max(2, z * 0.3), Math.max(3, p.w * z), Math.max(2, z * 0.3)); }
@@ -6599,7 +6670,7 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, ws: () => ws, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { NET, ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();
