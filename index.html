@@ -28,7 +28,7 @@
 <meta name="twitter:image" content="__ORIGIN__/share.png">
 <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
 <style>
-  :root{--ink:#f3ead6;--paper:rgba(26,22,38,.9);--line:#e8dcc0;--accent:#ffcc3d;--good:#58d68d;--bad:#ff5b4a;--font:"Patrick Hand","Segoe Print","Bradley Hand","Chalkboard SE","Comic Sans MS","Marker Felt",cursive,sans-serif;--wob:14px 10px 16px 9px/10px 15px 9px 16px}
+  :root{--ink:#f3ead6;--paper:rgba(26,22,38,.9);--line:#e8dcc0;--accent:#ffcc3d;--good:#58d68d;--bad:#ff5b4a;--font:"Patrick Hand","Chalkboard SE","Comic Sans MS","Marker Felt",cursive,sans-serif;--wob:14px 10px 16px 9px/10px 15px 9px 16px}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;overflow:hidden;background:#14111c;font-family:var(--font);color:var(--ink);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none;font-size:15px}
   canvas#cv{position:fixed;left:0;top:0;width:100%;height:100%;display:block}
@@ -211,6 +211,7 @@
   #touch #tb svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
   #touch #tb.rdy{border-color:#fff;box-shadow:0 0 0 4px rgba(255,210,61,.55),0 0 22px rgba(255,210,61,.9);animation:rdy .55s ease-in-out infinite alternate}
   @keyframes rdy{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.09)}}
+  #touch #tb.pw,#touch #tj.pw,#touch2 #ts.pw{border-color:#fff;box-shadow:0 0 0 3px rgba(20,14,30,.5),0 0 18px var(--pwc)}#touch #tb.pw{--pwc:rgba(127,240,255,.9);background:conic-gradient(rgba(127,240,255,.92) calc(var(--p)*1%),rgba(255,255,255,.14) 0)}#touch #tj.pw,#touch2 #ts.pw{--pwc:rgba(255,122,184,.9);background:conic-gradient(rgba(255,122,184,.92) calc(var(--p)*1%),rgba(255,255,255,.14) 0)}
   #joy{position:fixed;z-index:3;width:0;height:0;pointer-events:none}
   #joy .jb{position:absolute;left:-54px;top:-54px;width:108px;height:108px;border-radius:50%;border:3px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12)}
   #joy .jk{position:absolute;left:-24px;top:-24px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.55);border:3px solid rgba(255,255,255,.9)}
@@ -229,7 +230,7 @@
   #homeOnline{min-height:1.4em}
   body.offl #homeOnline{visibility:hidden}
   .tabs button.locked{display:none!important}
-  .overlay>.card,#settings,#top,#stack,#hr,#home>.card,#home .card,#liveHud,#editbar{zoom:var(--uis,1)}
+  .overlay>.card,#settings,#top,#home>.card,#liveHud,#editbar,#homeWallet,#homeShare,#homeUpd{zoom:var(--uis,1)}#home .hbox{zoom:var(--uish,1)}   /* (only the outermost box: a box inside another would be made bigger twice) */
   html body #settings{max-height:min(var(--uih,90vh),800px)!important;width:min(580px,var(--uiw,calc(100vw - 20px)))!important}
   .overlay>.card,#home .card{max-height:var(--uihc,100%);max-width:var(--uiw,100%)}
   .kbf{outline:3px solid #ffd23d!important;outline-offset:2px;border-radius:8px}.csel-list>.kbf{outline-offset:-3px}
@@ -264,7 +265,7 @@
 
   /* ---- v5 additions ---- */
   #onl{font-size:13px}
-  #coinpill{white-space:nowrap;max-width:100%;display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:14px;padding:1px 9px;pointer-events:none}
+  #coinpill{white-space:nowrap;max-width:100%;min-width:0;box-sizing:border-box;display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:14px;padding:1px 9px;pointer-events:none;font-variant-numeric:tabular-nums;overflow:hidden}#coinpill .gemw{display:inline-flex;align-items:center;gap:3px;min-width:0}#coinpill .ic{flex:none}
   #timer{cursor:pointer;pointer-events:auto}
   #tpop{position:fixed;right:10px;top:50px;top:calc(50px + env(safe-area-inset-top));width:min(310px,calc(100vw - 20px));z-index:7;padding:10px 14px 12px;font-size:15px}
   #tpop h3{margin:0 0 6px;font-size:20px;font-weight:400;display:flex;align-items:center;gap:8px}
@@ -387,11 +388,11 @@
   #hr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;width:min(300px,60vw);justify-self:end}
   #topbar{display:flex;gap:6px;pointer-events:auto}
   #subbar{display:flex;gap:6px;align-items:flex-start;justify-content:flex-end;pointer-events:none}
-  #subbar .ibtn{pointer-events:auto}
+  #corner{position:relative;pointer-events:none;flex:none}#corner>.ibtn,#corner>#chatBtnWrap{position:absolute;pointer-events:auto}#corner>#chatBtnWrap>.ibtn{width:100%!important;height:100%!important}#corner .ibtn svg{width:52%;height:52%;max-width:30px;max-height:30px}
   #chatBtnWrap{position:relative;pointer-events:auto}
   .gemw{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
   .gemw .ic{width:16px;height:16px}
-  #chatBtnWrap .ibtn{width:34px}
+
   #chBadge{position:absolute;left:auto;right:-5px;top:-6px;width:17px;height:17px;border-radius:50%;background:var(--bad);color:#fff;font:700 11px/17px var(--font);text-align:center;font-style:normal;pointer-events:none;margin:0}
   #feed{display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:100%;pointer-events:none}
   .msg{border-left:0;border-right:4px solid var(--good);text-align:right;max-width:100%}
@@ -700,6 +701,7 @@
   #touch #tj.edit{background:rgba(255,204,61,.25)}
   #nameModal,#shareModal,#codeModal,#profModal,#lvlModal,#invModal,#addModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}#descModal{z-index:20;background:rgba(10,8,16,.72)}
   #descModal .nmcard{width:min(440px,100%);gap:12px}.dsnote{font-size:14px;line-height:1.4;opacity:.8}.dshad{font-size:14px;line-height:1.4;padding:8px 10px;border-radius:8px;background:rgba(255,120,70,.12);border:1.5px solid rgba(255,150,80,.55)}.dslab{font-size:14px;margin:0 0 -6px}#descModal .btns{display:flex;gap:10px}#descModal .btns button{flex:1}
+  .wicard{width:min(440px,100%);display:flex;flex-direction:column;gap:10px}.wicard h3{display:flex;align-items:center;gap:8px;margin:0 0 2px}.wirow{display:flex;align-items:center;gap:10px;font-size:16px;line-height:1.3}.wirow>span:first-child{flex:none;width:22px;display:inline-flex;justify-content:center}.wirow.big b{display:block;font-size:19px}.wirow small{display:block;opacity:.7;font-size:14px}#wiModal .btns{display:flex;gap:10px}#wiModal .btns button{flex:1}#wiModal{z-index:20}
   .nmcard textarea{font:inherit;font-size:17px;width:100%;box-sizing:border-box;resize:none;padding:8px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#120f1c;color:var(--ink);-webkit-user-select:text;user-select:text}.lvdesc{font-size:14px;margin:4px 0;padding:5px 9px;border-left:3px solid #ffd23d;background:rgba(255,255,255,.07);border-radius:4px;overflow-wrap:anywhere}#lvDescBtn{align-self:flex-start;margin-top:4px;font-size:13px}
   .nmcard{width:min(380px,100%);display:flex;flex-direction:column;gap:10px}.nmcard h3{margin:0;font-size:26px}.nmcard #nmIn{font-size:22px}
   .nmdice{align-self:flex-start;font-size:17px;padding:7px 14px}.nmdice svg{font-size:22px}
@@ -734,7 +736,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 160; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 161; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -887,7 +889,7 @@
 <symbol id="i-reset" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.300 5.700M20 4v7h-7"/></symbol>
 <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
 <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5.500" r="2.800"/><circle cx="6" cy="12" r="2.800"/><circle cx="18" cy="18.500" r="2.800"/><path d="M8.500 10.700l7-4M8.500 13.300l7 4"/></symbol>
-<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.500 9.500a2.500 2.500 0 1 1 3.500 2.300c-.7.400-1 1-1 1.700M12 17v.5"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.500 9.500a2.500 2.500 0 1 1 3.500 2.300c-.7.400-1 1-1 1.700M12 17v.5"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.500 2"/></symbol>
 <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
 <symbol id="i-more" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3.500"/></symbol>
@@ -938,11 +940,11 @@
 </div>
 <div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
 <div id="hr">
-  <div id="topbar">
+  <div id="corner">
     <button id="btnRespawn" class="ibtn" title="Reset: back to your checkpoint, or the start (R)" data-ic="reset"></button>
     <button id="btnSettings" class="ibtn" title="Pause (Esc)" data-ic="pause"></button>
+    <button id="btnShop" class="ibtn" title="Build" data-ic="plus"></button><div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Say something" data-ic="chat"></button></div>
   </div>
-  <div id="subbar"><button id="btnShop" class="ibtn" title="Shop: spend your coins" data-ic="plus"></button><div id="chatBtnWrap"><button id="btnChat" class="ibtn hide" title="Say something" data-ic="chat"></button></div></div>
   <div id="lreqs" class="hide"></div>
   <div id="feed"></div>
 </div></div>
@@ -1043,11 +1045,17 @@
       </div></div>
     </section>
     <section class="pane" data-pane="display">
-      <div class="dep" data-dep="desk"><div><div class="row"><span class="lbl"><span data-ic="plus"></span> Menu size</span><div id="selUi"></div><div class="small dim" style="margin-top:4px">How big the menus, buttons and messages are. Auto makes them bigger on a computer screen.</div></div></div></div>
+      <div class="row"><span class="lbl"><span data-ic="pause"></span> Corner buttons</span><div id="selCorner"></div><div class="small dim" id="cornerDesc" style="margin-top:4px"></div></div>
+      <div class="dep sub" data-dep="cornerbig"><div>
+        <div class="row"><span class="lbl">Biggest</span><div id="selCornerBig"></div></div>
+        <div class="dep" data-dep="cornermed"><div><div class="row"><span class="lbl">A bit bigger</span><div id="selCornerMed"></div></div></div></div>
+        <div class="row"><span class="lbl">The others go</span><div id="selCornerSide"></div></div>
+      </div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Look</span><div id="selVs"></div><div class="small dim" id="vsDesc" style="margin-top:4px"></div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="dep" data-dep="kb"><div><div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div></div></div>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Arrow to my base</b><small>When your base is off the screen, an arrow at the edge points to it</small></span></span><input type="checkbox" id="setBaseArrow"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Family friendly</b><small>Rude words in player names are starred out on your screen. Anyone can still type any name</small></span></span><input type="checkbox" id="setFamily"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Finish crowns</b><small>Gold, silver, bronze and rock crowns over everyone who has finished</small></span></span><input type="checkbox" id="setCrowns"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label>
       <div class="dep sub" data-dep="mmPlayers"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big player dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigP"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label>
@@ -1243,6 +1251,16 @@
   <div class="btns"><button id="cdNo" type="button">Cancel</button><button id="cdOk" type="button" class="go">OK</button></div>
 </div></div>
 
+<div id="wiModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="wiTitle"><div class="card wicard">
+  <h3 id="wiTitle"><span data-ic="globe"></span><span>Public world</span></h3>
+  <div class="wirow big"><span data-ic="map"></span><span><b id="wiMap"></b><small id="wiNext"></small></span></div>
+  <div class="wirow"><span data-ic="clock"></span><span id="wiChange"></span></div>
+  <div class="wirow"><span data-ic="users"></span><span id="wiPlayers">Checking…</span></div>
+  <div class="wirow"><span class="ndw"><i id="wiDot"></i></span><span id="wiNet"></span></div>
+  <div class="wirow"><span data-ic="beacon"></span><span id="wiBeacon"></span></div>
+  <div class="wirow"><span data-ic="crown"></span><span id="wiBeat"></span></div>
+  <div class="btns"><button type="button" id="wiClose">Close</button><button type="button" id="wiPlay" class="go">Play</button></div>
+</div></div>
 <div id="descModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="dsTitle"><div class="card nmcard">
   <h3 id="dsTitle">Describe this level</h3>
   <div class="dsnote" id="dsNote"></div>
@@ -1331,8 +1349,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=160"></script>
-<script src="physics.js?v=160"></script>
+<script src="maps.js?v=161"></script>
+<script src="physics.js?v=161"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1348,7 +1366,7 @@ const TS = BallMaps.TS, R = BallMaps.R, P = BallPhysics, STEP = 1 / 120, SLOT_MS
 const THEMES = BallMaps.themes;
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d');
-const FONT_HAND = '"Patrick Hand","Segoe Print","Bradley Hand","Chalkboard SE","Comic Sans MS",cursive,sans-serif', FONT_SMOOTH = '"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+const FONT_HAND = '"Patrick Hand","Chalkboard SE","Comic Sans MS",cursive,sans-serif', FONT_SMOOTH = '"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
 const smoothLook = () => document.documentElement.getAttribute('data-vs') === 'smooth';   // the Smooth look: clean lines and a plain font everywhere. Classic is hand-drawn
 let FONT = smoothLook() ? FONT_SMOOTH : FONT_HAND;
 const PALETTE = ['#ff4d4d', '#ff8a3d', '#ffd23d', '#a3e635', '#34d058', '#2ec4b6', '#38bdf8', '#6c7bff', '#8b5cf6', '#d946ef', '#ff6fb5', '#ffffff', '#bfc5d2', '#7a5c3b', '#2b2b2b', '#000000'];
@@ -1376,7 +1394,7 @@ function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'K
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiScale: 'auto', musicOn: true, family: true, shopBtn: false, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', cornerLayout: 'equal', cornerBig: 'pause', cornerMed: 'chat', cornerSide: 'left', musicOn: true, family: true, shopBtn: false, baseArrow: true, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -1398,7 +1416,8 @@ function normalize() {
   if (settings.keys) { const dk = defKeys(); for (const a of ['build', 'down', 'chat', 'help', 'map', 'pause', 'place', 'pcancel']) if (!Array.isArray(settings.keys[a])) settings.keys[a] = dk[a].filter(c => !Object.keys(settings.keys).some(o => Array.isArray(settings.keys[o]) && settings.keys[o].indexOf(c) >= 0)); }   // (new keys: the build menu, down, chat, how to play)
   if (settings.boostBtn && settings.boostPull) settings.boostPull = false;   // (one way to boost by hand, not both)
   if (['off', 'hold', 'holdr', 'follow'].indexOf(settings.mouseMove) < 0) settings.mouseMove = 'off';
-  if (['auto', '1', '1.15', '1.3', '1.5'].indexOf(String(settings.uiScale)) < 0) settings.uiScale = 'auto';
+  delete settings.uiScale;
+  if (['equal', 'big', 'bigmed'].indexOf(settings.cornerLayout) < 0) settings.cornerLayout = 'equal'; for (const k of ['cornerBig', 'cornerMed']) if (['pause', 'chat', 'reset', 'build'].indexOf(settings[k]) < 0) settings[k] = k === 'cornerBig' ? 'pause' : 'chat'; if (['left', 'right', 'both'].indexOf(settings.cornerSide) < 0) settings.cornerSide = 'left';
   settings.botMaxOff = clamp(Math.round(+settings.botMaxOff), 1, 19); if (!isFinite(settings.botMaxOff)) settings.botMaxOff = 6;
   settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
   settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
@@ -1415,7 +1434,7 @@ function normalize() {
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'family', 'shopBtn', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'family', 'shopBtn', 'baseArrow', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -1924,7 +1943,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.coinN = 0; S.own = {}; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; S.dels = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.powGot = {}; S.coinN = 0; S.own = {}; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; S.dels = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
   S.orig = S.world.grid.slice(); S.origTg = S.tg.slice(); S.mine = new Set();   /* how every tile began: a block that is put back the way it was needs no record at all */
   restoreWorld(slot);
   if (S.guest && party.priv) applyPartyProps(party.priv);
@@ -2150,11 +2169,12 @@ function update(dt) {
   if (!settings.boost) { b.bReq = false; S.bLatch = 0; } else if (S.bLatch > 0 && !bl) { S.bLatch -= dt; b.bReq = true; }
   b.noJm = !settings.powerJump;   // only you have the jump meter (and only if power jump is switched on)
   b.sjSep = !!settings.superBtn;   // a separate power-jump button: the normal jump never uses the full meter
+  { const now = Date.now(); b.pSpeed = Math.max(0, ((S.pwSpeed || 0) - now) / 1000); b.pJump = Math.max(0, ((S.pwJump || 0) - now) / 1000); }   // (power-ups go by the clock: a fall or a reset does not take them away)
   const ev = P.step(b, w, ax, jheld, dt);
   P.stepSwitches(w, botMode() === 'local' && bots.length ? (w.pb || [b]) : b, dt);
   if (w.follow) syncDoors();
   if (w.ev.length) worldEvents();
-  collectCoins(); touchFlags();
+  collectCoins(); collectPowers(); touchFlags();
   if (ev.boosted) { sfx('boost'); S.bLatch = 0; ring(b.x, b.y, '#ffd23d', 8, 70, 0.4); burst(b.x - b.bdir * R, b.y, ['#ffd23d', '#fff', '#ff8a3d'], 14, 260, 0); S.shake = Math.max(S.shake || 0, 0.12); }
   if (b.boost && fxOn() && ((S.t * 60) | 0) % 2 === 0) burst(b.x - b.bdir * (R + 2), b.y + (Math.random() - 0.5) * 14, ['#ffd23d', '#fff', '#ff8a3d'], 1, 90, 0);
   { const rdy = settings.boost && b.bcharge >= 1 && !b.boost; if (rdy && !S.bReady) sfx('ready'); S.bReady = rdy; }
@@ -2221,6 +2241,20 @@ function touchFlags() {   // checkpoint flags: touch one and your next fall brin
     S.cpArmed = i; S.cpUsed = -1; S.cpFlash = 1; sfx('ready');
     burst((c[0] + 0.5) * TS, c[1] * TS - 60, ['#46d17a', '#fff', '#b9ffd3'], 14, 200, 80);
     notice('Checkpoint! Your next fall or reset brings you back here', ''); return;
+  }
+}
+/* power-ups: sushi = a minute of non-stop boost, a flower bouquet = a minute of extra tall jumps. Each one comes back for you 3 minutes after you take it */
+const POW_T = 60000, POW_BACK = 180000;
+const POW_INFO = [['Sushi!', 'Super speed for a minute'], ['Flowers!', 'Super jumps for a minute']];
+function collectPowers() {
+  const ps = S.map.powers, b = S.b; if (!ps || !ps.length) return; const now = Date.now(); S.powGot = S.powGot || {};
+  for (let i = 0; i < ps.length; i++) {
+    const p = ps[i]; if (Math.abs(p[0] - b.x) > 40 || Math.abs(p[1] - b.y) > 40 || (S.powGot[i] || 0) > now) continue;
+    const dx = p[0] - b.x, dy = p[1] - b.y; if (dx * dx + dy * dy > 34 * 34) continue;
+    S.powGot[i] = now + POW_BACK;
+    if (p[2] === 0) S.pwSpeed = now + POW_T; else S.pwJump = now + POW_T;
+    sfx('ready'); burst(p[0], p[1], p[2] === 0 ? ['#ff8a6a', '#fff', '#3a2a20'] : ['#ff7ab8', '#fff', '#7ad36a', '#ffd23d'], 22, 240, 60); ring(p[0], p[1], p[2] === 0 ? '#7ff0ff' : '#ff7ab8', 6, 60, 0.5);
+    notice(POW_INFO[p[2]][0] + ' ' + POW_INFO[p[2]][1], '');
   }
 }
 function collectCoins() {
@@ -2403,11 +2437,13 @@ function worldEvents() {
   L.length = 0;
 }
 const startRect = () => P.noBuild(S.map)[0] || null;   // the start zone: 5 x 5 blocks around where you appear (nothing can be built in it)
-const zones = () => P.noBuild(S.map);   // the start zone and the zone around the finish flag
-const startTile = (tx, ty) => P.zoneT(S.map, tx, ty);   // (in the wide no-build circle around the start or the finish)
-const startBlock = (px, py, m) => { m = m === undefined ? TS * 0.6 : m; return P.zoneP(S.map, px, py, m); };   // (a little extra room, so nothing can hang over the edge of it)
+const zones = () => P.noBuild(S.world || S.map);   // the start zone and the zone around the finish flag
+const startTile = (tx, ty) => P.zoneT(S.world || S.map, tx, ty);   // (and every player's base)
+const mapTile = (tx, ty) => P.zoneT(S.map, tx, ty);   // (only the start and finish circles: what is checked when builds arrive or load, the same way the server checks them)
+const mapBlock = (px, py, m) => P.zoneP(S.map, px, py, m === undefined ? TS * 0.6 : m);   // (in the wide no-build circle around the start or the finish)
+const startBlock = (px, py, m) => { m = m === undefined ? TS * 0.6 : m; return P.zoneP(S.world || S.map, px, py, m); };   // (a little extra room, so nothing can hang over the edge of it)
 const PORC = [['#ffd23d', '#3da5ff'], ['#ff4a3d', '#a45cff'], ['#3ddc6a', '#ff6fc8'], ['#ff9a2e', '#2ee6d6']];   // the colours of portal pairs: yellow and blue, then red and purple, then green and pink, then orange and teal
-const validMisc = q => Array.isArray(q) && ((q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !startTile(q[1], q[2]) && !startTile(q[3], q[4])));
+const validMisc = q => Array.isArray(q) && ((q[0] === 'base' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
   for (let i = w.drops.length - 1; i >= 0; i--) {
@@ -2454,11 +2490,12 @@ function addMisc(w, q, anim) {   // ['see', column, ground row, 0]: a teeter-tot
   else if (q[0] === 'tl') { if (q[3] === -1) restoreTile(w, q[1], q[2], anim); else setTerrain(w, q[1], q[2], q[3], anim); }
   else if (q[0] === 'lav') { { const i = q[2] * w.W + q[1]; if (q[2] < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 2; } if (anim) { burst((q[1] + 0.5) * TS, q[2] * TS - 6, ['#ff4d2e', '#ff8a3d', '#ffd23d'], 16, 200, 160); ring((q[1] + 0.5) * TS, q[2] * TS, '#ff8a3d', 5, 50, 0.4); sfx('lava'); } }
   else if (q[0] === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: (q[3] === 1 ? 5 : 3) * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
+  else if (q[0] === 'base') { P.addBase(w, q); if (anim) { burst((q[1] + 0.5) * TS, (q[2] + 0.5) * TS, ['#7ff0ff', '#fff', '#ffd23d'], 22, 240, 120); ring((q[1] + 0.5) * TS, (q[2] + 0.5) * TS, '#7ff0ff', 8, P.BASE_R, 0.7); } }
   else if (q[0] === 'por') P.addPortal(w, q);
   else if (q[0] === 'rope') P.addRope(w, q);
   else P.addPad(w, [q[1], q[2], q[3]]);
 }
-const validDel = q => Array.isArray(q) && ((['b', 's', 'g', 'r'].includes(q[0]) && q.length === 2 && Number.isFinite(q[1])) || (['pad', 'por', 'c'].includes(q[0]) && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2])));
+const validDel = q => Array.isArray(q) && ((['b', 's', 'g', 'r'].includes(q[0]) && q.length === 2 && Number.isFinite(q[1])) || (['pad', 'por', 'c', 'base'].includes(q[0]) && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2])));
 function applyDelRec(q, anim) {   // something deleted (by you or anyone in this world): gone for good
   if (!validDel(q) || !S.world) return false;
   const w = S.world; let x = null, y = null;
@@ -2469,7 +2506,7 @@ function applyDelRec(q, anim) {   // something deleted (by you or anyone in this
   if (ok && anim && x !== null) { burst(x, y, ['#ff5a4a', '#fff', '#ffd23d'], 14, 170, 80); ring(x, y, '#ff5a4a', 5, 44, 0.4); }
   return ok;
 }
-function addBook(k, x, y) { if (k !== 'por' && k !== 'pad' && k !== 'c') return; P.addCancel({ dels: S.dels }, k, x, y); if (S.pubKeys) S.pubKeys.delete(pkey('d', [k, x, y])); }   // (a new portal, booster or flag where one was deleted before: the old note goes, so it can never take the new one away)
+function addBook(k, x, y) { if (k !== 'por' && k !== 'pad' && k !== 'c' && k !== 'base') return; P.addCancel({ dels: S.dels }, k, x, y); if (S.pubKeys) S.pubKeys.delete(pkey('d', [k, x, y])); }   // (a new portal, booster or flag where one was deleted before: the old note goes, so it can never take the new one away)
 function delBook(q) {   // keep the books after something was deleted: a built portal, booster or flag just comes off the list of built things; anything else is noted as deleted
   if (P.coordDel(q)) {
     const rec = q[0] === 'c' ? S.boughtCps.find(c => c[0] === q[1] && c[1] === q[2]) : S.boughtMisc.find(m => m[0] === q[0] && m[1] === q[1] && m[2] === q[2]);
@@ -2505,7 +2542,7 @@ function delWhere(q) {   // where a deleted thing was (for the little puff)
   if (q[0] === 'c') return [(q[1] + 0.5) * TS, q[2] * TS - 30];
   return null;
 }
-const validGate = q => Array.isArray(q) && q.length >= 5 && q.slice(0, 5).every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 && !startTile(q[0], q[1]) && !startTile(q[3], q[4]);
+const validGate = q => Array.isArray(q) && q.length >= 5 && q.slice(0, 5).every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 && !mapTile(q[0], q[1]) && !mapTile(q[3], q[4]);
 function addGate(w, q, quiet) {   // q = [column, top row, height in tiles, trigger column, trigger row]: a gate (shut), and a 2-wide trigger plate that holds it open while something is on it
   const id = w.doors.length, d = { id, uid: P.hash32('g' + q.slice(0, 5).join(',')), x: q[0], y: q[1], w: 1, h: q[2], open: false, latched: false };
   w.doors.push(d); P.setDoorTiles(w, d, false);
@@ -2558,19 +2595,19 @@ function applyPubBuild(pv) {   // what everyone in a public world has built so f
   if (!pv || !S.world) return; const seen = S.pubKeys, take = (k, q) => { const key = pkey(k, q); if (seen.has(key)) return false; seen.add(key); return true; };
   const occ = new Map(), have = propCounts();
   const takeP = q => { const key = pkey('p', q), n = (occ.get(key) || 0) + 1; occ.set(key, n); return n > (have.get(key) || 0); };   // (several crates put down on the very same spot are several crates: each one counts)
-  (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !startBlock(q[1], q[2]) && takeP(q)) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });
+  (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !mapBlock(q[1], q[2]) && takeP(q)) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });
   pv = normPv(pv); (pv.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q) && take('d', q)) { applyDelRec(q); S.dels.push(q.slice()); } });
   (pv.misc || []).forEach(q => { if (validMisc(q) && take('m', q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
   (pv.gates || []).forEach(q => { if (validGate(q) && take('g', q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
-  (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1]) && take('c', q)) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
+  (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1]) && take('c', q)) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
   (pv.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q) && take('d', q)) { applyDelRec(q); S.dels.push(q.slice()); } });
 }
 function applyPartyProps(pv) {   // what the host built is there when you arrive
-  (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !startBlock(q[1], q[2])) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });   // (remembered in the lists, so the world can be saved as a copy)
+  (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !mapBlock(q[1], q[2])) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });   // (remembered in the lists, so the world can be saved as a copy)
   pv = normPv(pv); (pv.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });
   (pv.misc || []).forEach(q => { if (validMisc(q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
   (pv.gates || []).forEach(q => { if (validGate(q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
-  (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
+  (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
   (pv.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });
 }
 function deriveOwn() {   // saves from before every item had its own count: work it out from what is there
@@ -2614,7 +2651,7 @@ function restoreWorld(slot) {
     (own && !pubW ? o.buys || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { key('p', q.slice(0, 3)); const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); if (startBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
     (own && !pubW ? o.gates || [] : []).forEach(q => { if (validGate(q)) { key('g', q.slice(0, 5)); addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
     (own && !pubW ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
-    (own && !pubW ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !startTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
+    (own && !pubW ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
     S.rcvN = o.rcv | 0; S.own = o.own && typeof o.own === 'object' ? o.own : deriveOwn();
     const seedD = [];
     if (!pubW) (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } else { d.x = q[1]; d.y = q[2]; d.vx = q[4] || 0; d.vy = q[5] || 0; d.rot = q[6] || 0; d.av = q[7] || 0; if (Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1 || Math.abs(d.av) > 0.05) d.sleep = false; } });
@@ -2797,7 +2834,7 @@ function kbNav(box, e, passGo) {
   if (best) { cur.classList.remove('kbf'); best.classList.add('kbf'); if (best.scrollIntoView) best.scrollIntoView({ block: 'nearest' }); }
   return true;
 }
-const KB_BOXES = ['pickPop', 'confirm', 'descModal', 'nameModal', 'codeModal', 'shareModal', 'profModal', 'addModal', 'invModal', 'lvlModal', 'emoPop', 'intro', 'settings', 'pause'];
+const KB_BOXES = ['wiModal', 'pickPop', 'confirm', 'descModal', 'nameModal', 'codeModal', 'shareModal', 'profModal', 'addModal', 'invModal', 'lvlModal', 'emoPop', 'intro', 'settings', 'pause'];
 addEventListener('pointerdown', () => { if (kbBox) { document.querySelectorAll('.kbf').forEach(x => x.classList.remove('kbf')); kbBox = null; } }, true);
 addEventListener('keydown', e => {
   if (keyCapture || typing() || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -2875,7 +2912,7 @@ addEventListener('blur', () => { keysDown.clear(); inp.left = inp.right = inp.ju
 cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
 /* One press does one thing. A button that opens a pop-up when your finger goes down (the +, chat, pause...) must not also press whatever in that pop-up ends up under
    your finger when it lifts. So a click inside a pop-up only counts if the press that made it started after the pop-up was open. */
-const POPS = ['shopPop', 'emoPop', 'pickPop', 'confirm', 'pause', 'settings', 'intro', 'lvlModal', 'descModal', 'nameModal', 'profModal', 'addModal', 'invModal', 'codeModal', 'shareModal', 'mmbig', 'codeBox'];
+const POPS = ['wiModal', 'shopPop', 'emoPop', 'pickPop', 'confirm', 'pause', 'settings', 'intro', 'lvlModal', 'descModal', 'nameModal', 'profModal', 'addModal', 'invModal', 'codeModal', 'shareModal', 'mmbig', 'codeBox'];
 const popOpenT = {}; let downT = 0;
 try { const mo = new MutationObserver(list => { const t = performance.now(); for (const m of list) { const el = m.target; if (!el.classList.contains('hide') && !(m.oldValue || '').split(' ').every(x => x !== 'hide')) popOpenT[el.id] = t; } });
   POPS.forEach(id => { const el = $(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ['class'], attributeOldValue: true }); }); } catch (e) {}
@@ -2960,7 +2997,7 @@ function visK(k) {
   }
 }
 // the parts of the screen the buttons must keep off: the info panel, the top buttons, the shop and chat buttons, and (while editing) the edit bar
-const KEEP_OFF = ['hl', 'hr', 'subbar', 'editbar'];
+const KEEP_OFF = ['hl', 'hr', 'corner', 'editbar'];
 function uiRects() {
   const out = [];
   KEEP_OFF.forEach(id => { const e = $(id); if (!e || e.classList.contains('hide') || e.offsetParent === null && getComputedStyle(e).position !== 'fixed') return; const r = e.getBoundingClientRect(); if (r.width > 2 && r.height > 2) out.push([r.left - 4, r.top - 4, r.right + 4, r.bottom + 4]); });
@@ -3011,6 +3048,34 @@ function layoutTouch() {
     el.style.left = pt[0] + 'px'; el.style.top = pt[1] + 'px'; el.style.width = el.style.height = pt[2] + 'px';
   });
 }
+/* The four corner buttons (reset, pause, build, chat): all the same size, or one big one (and maybe one a bit bigger) with the others packed beside it */
+const CORNER = { reset: 'btnRespawn', pause: 'btnSettings', build: 'btnShop', chat: 'chatBtnWrap' };
+function layoutCorner() {
+  const box = $('corner'); if (!box) return;
+  const vis = k => { const e = $(CORNER[k]); if (!e) return false; if (k === 'chat') return !$('btnChat').classList.contains('hide'); return !e.classList.contains('hide'); };
+  const ks = ['reset', 'pause', 'build', 'chat'].filter(vis), s = touchActive() ? 42 : 36, gap = 6, pos = {};
+  const L = settings.cornerLayout || 'equal';
+  let W = 0, H = 0;
+  if (L === 'equal' || ks.length < 2) {
+    ks.forEach((k, i) => { const row = Math.floor(i / 2), inRow = ks.slice(row * 2, row * 2 + 2), col = inRow.length === 1 ? 1 : i % 2; pos[k] = [col * (s + gap), row * (s + gap), s]; });
+    W = (ks.length > 1 ? 2 : 1) * s + (ks.length > 1 ? gap : 0); H = Math.ceil(ks.length / 2) * (s + gap) - gap;
+    if (ks.length === 1) pos[ks[0]][0] = 0;
+  } else {
+    const big = ks.indexOf(settings.cornerBig) >= 0 ? settings.cornerBig : ks.indexOf('pause') >= 0 ? 'pause' : ks[0], rest = ks.filter(k => k !== big);
+    let med = null; if (L === 'bigmed') { med = rest.indexOf(settings.cornerMed) >= 0 ? settings.cornerMed : rest[0]; rest.splice(rest.indexOf(med), 1); rest.unshift(med); }
+    const B = 2 * s + gap, M = Math.round(s * 1.45), sz = k => k === med ? M : s, cols = [];
+    let cur = null; for (const k of rest) { const h = sz(k); if (!cur || cur.h + gap + h > B + 0.5) { cur = { items: [], h: -gap, w: 0 }; cols.push(cur); } cur.items.push(k); cur.h += gap + h; cur.w = Math.max(cur.w, h); }
+    const side = settings.cornerSide || 'left', left = [], right = [];
+    cols.forEach((c, i) => { (side === 'right' ? right : side === 'both' ? (i % 2 ? right : left) : left).push(c); });
+    let x = 0; const place = c => { let y = 0; for (const k of c.items) { const h = sz(k); pos[k] = [x + (c.w - h), y, h]; y += h + gap; } x += c.w + gap; };
+    left.slice().reverse().forEach(place); pos[big] = [x, 0, B]; x += B + gap; right.forEach(place);
+    W = x - gap; H = B;
+  }
+  box.style.width = W + 'px'; box.style.height = H + 'px';
+  for (const k in CORNER) { const e = $(CORNER[k]); if (!e) continue; const p = pos[k]; if (!p) continue; e.style.left = p[0] + 'px'; e.style.top = p[1] + 'px'; e.style.width = p[2] + 'px'; e.style.height = p[2] + 'px'; e.style.borderRadius = Math.round(p[2] * 0.32) + 'px'; }
+}
+addEventListener('resize', () => layoutCorner());
+try { new MutationObserver(() => layoutCorner()).observe($('btnChat'), { attributes: true, attributeFilter: ['class'] }); new MutationObserver(() => layoutCorner()).observe($('btnShop'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {}
 function applyTouchUI() {
   const on = touchActive() || editMode, sc = settings.scheme;
   const g = $('gest'); g.classList.toggle('hide', !(on && !editMode && sc !== 'buttons'));
@@ -3019,7 +3084,8 @@ function applyTouchUI() {
   $('tl').classList.toggle('hide', sc !== 'buttons'); $('tr').classList.toggle('hide', sc !== 'buttons');
   $('tb').classList.toggle('hide', !visK('b') || !showBtns);
   ['ts', 'tpl', 'tpc', 'tm'].forEach(id => { const k = id === 'ts' ? 's' : id === 'tpl' ? 'p' : id === 'tm' ? 'm' : 'c'; $(id).classList.toggle('hide', !(on && visK(k))); });
-  $('btnShop').classList.toggle('hide', !!(on && visK('m')));   // (the build button is with your controls now: no second one in the corner)
+  $('btnShop').classList.toggle('hide', !!(on && visK('m')));
+  layoutCorner();   // (the build button is with your controls now: no second one in the corner)
   BK.forEach(k => $(BEL[k]).classList.toggle('edit', editMode));
   layoutTouch();
   $('btnEditLayout').disabled = !(sc === 'buttons' || sc === 'swipebtn');
@@ -3214,7 +3280,7 @@ $('btnOk').onclick = () => { auWake(); settings.intro = !$('dontShow').checked; 
 const GUIDE = [
   ['ground', 'Ground', 'Safe to roll and stand on.', 1], ['ice', 'Ice', 'Slippery: hard to stop on.', 1], ['lava', 'Lava', 'Burns you: back to your checkpoint or the start.', 1], ['water', 'Water', 'Hold jump to swim up.', 1],
   ['coin', 'Coin', 'Roll through it. Coins buy things to build.', 1], ['gem', 'Diamond', 'Rarer. Needed for the bigger builds.', 1], ['checkpoint', 'Checkpoint', 'Touch it: your next fall brings you back here.', 1], ['finish', 'Finish flag', 'Reach it to win the level.', 1],
-  ['crate', 'Crate', 'Push it, stack it, climb it.', 1], ['ball', 'Ball', 'Rolls when you bump it.', 1], ['ring', 'No-build circle', 'Around the start and the finish. Nothing can be built or left inside it.', 1],
+  ['crate', 'Crate', 'Push it, stack it, climb it.', 1], ['ball', 'Ball', 'Rolls when you bump it.', 1], ['ring', 'No-build circle', 'Around the start and the finish. Nothing can be built or left inside it.', 1], ['sushi', 'Sushi', 'A minute of non-stop super speed. Your boost ring turns cyan and ticks down.', 1], ['flowers', 'Flower bouquet', 'A minute where every jump can be an extra tall one. The ring turns pink.', 1],
   ['bigcoin', 'Big coin', 'Worth more than a small one.', 0], ['bigcrate', 'Big crate', 'Heavy: takes a run-up to shove.', 0], ['bigball', 'Big ball', 'Heavy and rolls far.', 0],
   ['spring', 'Spring', 'Land on it to bounce high.', 0], ['superspring', 'Super spring', 'Bounces you very, very high.', 0], ['booster', 'Floor booster', 'Roll over it and it throws you forward.', 0], ['groundspring', 'Ground spring', 'Set in the ground: land on it to bounce up.', 0],
   ['teeter', 'Teeter-totter', 'Tips with whatever is on it.', 0], ['bigteeter', 'Big teeter-totter', 'Longer: reaches further and flings harder.', 0], ['portal', 'Portals', 'Roll into one, come out of its partner.', 0],
@@ -3246,9 +3312,10 @@ function guideRender() {
   const off = offlineOn(), pub = settings.mp && !(typeof party !== 'undefined' && party);
   $('gMode').textContent = pub ? 'In a public world everyone online shares one map, and it changes every 3 hours (at 12, 3, 6 and 9 o’clock).' : off ? 'Offline it’s just you' + (settings.botsOff ? ', and bots that play like people.' : '.') : 'In a private game only people invited by its maker can join, and the maker picks the level.';
   const g = $('gGrid'); if (!g.childElementCount) g.innerHTML = GUIDE.map(([k, n, d, imp]) => '<figure class="gcard' + (imp ? '' : ' gx') + '"><div class="gimg" data-k="' + k + '"></div><figcaption><b>' + n + '</b>' + d + '</figcaption></figure>').join('');
+  if (typeof GUIDE_IMG !== 'undefined' && !GUIDE_IMG.sushi) { for (const [k, n] of [['sushi', 0], ['flowers', 1]]) { try { const c = document.createElement('canvas'); c.width = 240; c.height = 150; const g2 = c.getContext('2d'); const gr = g2.createLinearGradient(0, 0, 0, 150); gr.addColorStop(0, '#8fd0f0'); gr.addColorStop(1, '#bfe6f7'); g2.fillStyle = gr; g2.fillRect(0, 0, 240, 150); g2.fillStyle = '#8a6a46'; g2.fillRect(0, 118, 240, 32); g2.fillStyle = '#5bbf5a'; g2.fillRect(0, 112, 240, 8); drawPowerIcon(g2, 120, 70, n, 58, 0); GUIDE_IMG[k] = c.toDataURL(); } catch (e) {} } }
   g.querySelectorAll('.gimg').forEach(e => { if (!e.style.backgroundImage && typeof GUIDE_IMG !== 'undefined' && GUIDE_IMG[e.dataset.k]) e.style.backgroundImage = 'url(' + GUIDE_IMG[e.dataset.k] + ')'; });
   const tips = ['Roll one way for a while and a ring fills above your ball: then you can boost.', settings.powerJump ? 'Jump three times in a row, each right as you land, and a ring fills around your ball: the next jump is extra tall.' : null,
-    'Coins and diamonds buy crates, springs, bridges, portals and more from the build menu. Build anywhere outside the no-build circles.', 'Touch a checkpoint and your next fall brings you back to it once.',
+    'Coins and diamonds buy crates, springs, bridges, portals and more from the build menu. Build anywhere outside the no-build circles.', 'Build a Base (in Travel) to make your own no-build circle with you in the middle. An arrow points back to it, and it shows on the map.', 'Touch a checkpoint and your next fall brings you back to it once.',
     off ? null : 'Add friends in Friends to see where they are on the map. A crown marks anyone who has finished.', 'Chat with ready-made messages and emoji: tap the bubble, pick, and it sends.'].filter(Boolean);
   $('gTips').innerHTML = tips.map(t => '<li>' + t + '</li>').join('');
 }
@@ -3302,10 +3369,17 @@ const applyVs = () => { if (!VSS[settings.vs]) settings.vs = 'classic'; document
 applyVs();
 /* how big the menus are: bigger on a computer screen by default, and yours to choose */
 const MOUSE = { off: ['Off', 'The mouse only clicks buttons.'], hold: ['Hold to roll', 'Hold the left button: your ball rolls toward the pointer (further away = faster). Hold it well above your ball to jump.'], holdr: ['Hold to roll, right-click jumps', 'Hold the left button to roll toward the pointer. The right button jumps (hold it for a higher jump).'], follow: ['Follow the pointer', 'Your ball always rolls toward the pointer. Click to jump (hold for a higher jump).'] };
-function uiScaleNow() { const s = settings.uiScale; if (touchActive()) return 1; let k = s === 'auto' ? (touchActive() ? 1 : innerWidth >= 1700 && innerHeight >= 900 ? 1.45 : innerWidth >= 1200 && innerHeight >= 700 ? 1.25 : 1) : +s || 1; return Math.max(1, Math.min(k, innerWidth / 700, innerHeight / 520)); }   // (never bigger than the window can hold)
-function applyUi() { const k = Math.round(uiScaleNow() * 100) / 100, st = document.documentElement.style; st.setProperty('--uis', String(k)); st.setProperty('--uih', Math.floor(innerHeight * 0.9 / k) + 'px'); st.setProperty('--uihc', Math.floor((innerHeight - 28) / k) + 'px'); st.setProperty('--uiw', Math.floor((innerWidth - 28) / k) + 'px'); }
+function uiScaleNow() { if (touchActive()) return 1; return Math.max(1, Math.min(2.4, innerWidth / 900, innerHeight / 560)); }   // (on a computer the menus and buttons grow with the screen, so they look like they do on a phone; the game itself is not scaled)
+function applyUi() { const k = Math.round(uiScaleNow() * 100) / 100, st = document.documentElement.style;
+  { const hb = document.querySelector('#home .hbox'); let kh = k; if (hb && k > 1) { const z = parseFloat(getComputedStyle(hb).zoom) || 1, nat = hb.getBoundingClientRect().height / z; if (nat > 40) kh = Math.max(1, Math.min(k, (innerHeight - 40) / nat)); else setTimeout(applyUi, 300); } st.setProperty('--uish', String(Math.round(kh * 100) / 100)); }
+  st.setProperty('--uis', String(k)); st.setProperty('--uih', Math.floor(innerHeight * 0.9 / k) + 'px'); st.setProperty('--uihc', Math.floor((innerHeight - 28) / k) + 'px'); st.setProperty('--uiw', Math.floor((innerWidth - 28) / k) + 'px'); }
 addEventListener('resize', applyUi);
-const selUi = makeSelect($('selUi'), [{ v: 'auto', label: 'Auto' }, { v: '1', label: 'Normal' }, { v: '1.15', label: 'Large' }, { v: '1.3', label: 'Extra large' }, { v: '1.5', label: 'Huge' }], v => { settings.uiScale = v; save(); applyUi(); });
+const CORNER_L = { equal: ['All the same size', 'Reset, pause, build and chat in two neat rows.'], big: ['One big', 'One button is big and the others line up small beside it.'], bigmed: ['One big, one bigger', 'One big button, one a bit bigger than normal, and the rest small.'] };
+const CORNER_B = [{ v: 'pause', label: 'Pause' }, { v: 'chat', label: 'Chat' }, { v: 'reset', label: 'Reset' }, { v: 'build', label: 'Build (+)' }];
+const selCorner = makeSelect($('selCorner'), Object.keys(CORNER_L).map(k => ({ v: k, label: CORNER_L[k][0] })), v => { settings.cornerLayout = v; save(); $('cornerDesc').textContent = CORNER_L[v][1]; layoutCorner(); applyDeps(); });
+const selCornerBig = makeSelect($('selCornerBig'), CORNER_B, v => { settings.cornerBig = v; if (settings.cornerMed === v) settings.cornerMed = CORNER_B.map(o => o.v).find(x => x !== v); selCornerMed.set(settings.cornerMed); save(); layoutCorner(); });
+const selCornerMed = makeSelect($('selCornerMed'), CORNER_B, v => { if (v === settings.cornerBig) { sfx('warn'); selCornerMed.set(settings.cornerMed); return; } settings.cornerMed = v; save(); layoutCorner(); });
+const selCornerSide = makeSelect($('selCornerSide'), [{ v: 'left', label: 'To its left' }, { v: 'right', label: 'To its right' }, { v: 'both', label: 'On both sides' }], v => { settings.cornerSide = v; save(); layoutCorner(); });
 const selMouse = makeSelect($('selMouse'), Object.keys(MOUSE).map(k => ({ v: k, label: MOUSE[k][0] })), v => { settings.mouseMove = v; save(); $('mouseDesc').textContent = MOUSE[v][1]; });
 const selVs = makeSelect($('selVs'), Object.keys(VSS).map(k => ({ v: k, label: VSS[k][0] })), v => { settings.vs = v; save(); applyVs(); $('vsDesc').textContent = VSS[v][1]; });
 const TODS = { live: 'Follows the real clock, like the public worlds.', morning: 'It is always morning in your private world.', midday: 'It is always midday in your private world.', night: 'It is always night in your private world.' };
@@ -3356,11 +3430,11 @@ function buildLook() {
 }
 function syncUI() {
   nameUI();
-  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setFamily', 'family'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
+  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setFamily', 'family'], ['setBaseArrow', 'baseArrow'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
-  selUi.set(String(settings.uiScale)); selMouse.set(settings.mouseMove); $('mouseDesc').textContent = MOUSE[settings.mouseMove][1]; applyUi();
+  selCorner.set(settings.cornerLayout); $('cornerDesc').textContent = (CORNER_L[settings.cornerLayout] || CORNER_L.equal)[1]; selCornerBig.set(settings.cornerBig); selCornerMed.set(settings.cornerMed); selCornerSide.set(settings.cornerSide); layoutCorner(); selMouse.set(settings.mouseMove); $('mouseDesc').textContent = MOUSE[settings.mouseMove][1]; applyUi();
   selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); selVs.set(settings.vs); $('vsDesc').textContent = (VSS[settings.vs] || VSS.classic)[1]; $('todDesc').textContent = TODS[settings.tod];
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
   $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMaxOff; $('botMaxVal').textContent = settings.botMaxOff;
@@ -3376,7 +3450,7 @@ bindToggle('setStats', 'stats', () => { applyDeps(); statsKick(); }); ['Fps', 'P
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
-bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 'family'); bindToggle('setMusicOn', 'musicOn', () => { applyDeps(); if (!AU.ctx) auInit(); musicStart(); auVol(); }); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
+bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 'family'); bindToggle('setBaseArrow', 'baseArrow'); bindToggle('setMusicOn', 'musicOn', () => { applyDeps(); if (!AU.ctx) auInit(); musicStart(); auVol(); }); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
 bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => { settings.boostPull = !settings.boostBtn; $('setBoostPull').checked = settings.boostPull; save(); applyTouchUI(); });   /* (a button, or pull farther: one or the other) */ bindToggle('setShopBtn', 'shopBtn', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull', () => { settings.boostBtn = !settings.boostPull; $('setBoostBtn').checked = settings.boostBtn; save(); applyTouchUI(); }); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
@@ -3497,7 +3571,7 @@ $('btnReset').onclick = () => askConfirm('Reset all settings?', 'This puts every
 const showKb = () => settings.inputMode === 'keyboard' || (settings.inputMode === 'auto' && !touchActive());
 const showTouch = () => settings.inputMode === 'touch' || (settings.inputMode === 'auto' && touchActive());
 const DEPS = {
-  kb: showKb, desk: () => showKb() && !(matchMedia && matchMedia('(pointer:coarse)').matches && !matchMedia('(pointer:fine)').matches), touch: showTouch, touchbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'),
+  cornerbig: () => settings.cornerLayout === 'big' || settings.cornerLayout === 'bigmed', cornermed: () => settings.cornerLayout === 'bigmed', kb: showKb, desk: () => showKb() && !(matchMedia && matchMedia('(pointer:coarse)').matches && !matchMedia('(pointer:fine)').matches), touch: showTouch, touchbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn'),
   boostbtn: () => showTouch() && (settings.scheme === 'buttons' || settings.scheme === 'swipebtn') && !settings.boostAuto,
   boost: () => settings.boost, power: () => settings.powerJump, touchgest: () => showTouch() && settings.scheme !== 'buttons',
   mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => false, '!bots': () => true, botsPriv: () => !settings.mp && !settings.offline, botsOff: () => !settings.mp && !!settings.offline, botsOffOn: () => !!settings.botsOff,
@@ -3525,6 +3599,8 @@ if (!/^[A-Za-z0-9_-]{16,64}$/.test(devId)) {
   devId = [...a].map(v => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[v % 62]).join('');
   try { localStorage.setItem(DEVKEY, devId); } catch (e) {}
 }
+const myTag = () => P.hash32('o:' + devId) & 0xffffff;   // (whose base is whose: the server works out the same number)
+const myBase = () => S.world && S.world.bases ? S.world.bases.find(b => (b.o >>> 0) === myTag()) : null;
 /* your friend code is worked out from this browser's own id (same recipe as the server), so it is always there, online or not */
 function sha256hex(s) {
   const b = new TextEncoder().encode(s), l = b.length, n = ((l + 9 + 63) >> 6) << 6, d = new Uint8Array(n); d.set(b); d[l] = 0x80;
@@ -3734,7 +3810,20 @@ function trackFollow(e) {   // keeps the pin glued to the friend: their drawn ba
   if (!isFinite(e.sx) || !isFinite(e.sy)) { e.sx = tx; e.sy = ty; }
   if (Math.abs(tx - e.sx) > 600 || Math.abs(ty - e.sy) > 600) { e.sx = tx; e.sy = ty; } else { e.sx += (tx - e.sx) * k; e.sy += (ty - e.sy) * k; }
 }
+function drawBaseArrow(camL, camT, vw, vh, sc) {   // your base, when it is off the screen: an arrow at the edge pointing to it (Display: "Arrow to my base")
+  const mb = settings.baseArrow ? myBase() : null; if (!mb || !S.b) return;
+  const vx = camL + vw / 2, vy = camT + vh / 2, dx = mb.cx - vx, dy = mb.cy - vy, z = 1 / Math.max(0.45, sc);
+  if (Math.abs(dx) < vw / 2 - 20 && Math.abs(dy) < vh / 2 - 20) return;
+  const mg = 74 / Math.max(0.45, sc), k = Math.min((vw / 2 - mg) / (Math.abs(dx) || 1), (vh / 2 - mg * 0.8) / (Math.abs(dy) || 1)), a = Math.atan2(dy, dx), ax = vx + dx * k, ay = vy + dy * k;
+  ctx.save(); ctx.translate(ax, ay); ctx.scale(z, z);
+  ctx.save(); ctx.rotate(a); ctx.fillStyle = '#7ff0ff'; ctx.strokeStyle = '#16102a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(34, 0); ctx.lineTo(14, -13); ctx.lineTo(18, 0); ctx.lineTo(14, 13); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = '#7ff0ff'; ctx.strokeStyle = '#16102a'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(0, -13); ctx.lineTo(9, 0); ctx.lineTo(0, 13); ctx.lineTo(-9, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  const ty = Math.sin(a) > 0.2 ? -26 : 30, txt = 'Base · ' + ft(mb.cx - S.b.x, mb.cy - S.b.y) + 'b';
+  ctx.font = '15px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText(txt, 0, ty); ctx.fillStyle = '#fff'; ctx.fillText(txt, 0, ty);
+  ctx.restore();
+}
 function drawTrack(camL, camT, vw, vh, sc) {
+  drawBaseArrow(camL, camT, vw, vh, sc);
   const L = liveLinks(); if (!L.length) return;
   const vx = camL + vw / 2, vy = camT + vh / 2, z = 1 / Math.max(0.45, sc), bob = Math.sin(S.t * 3) * 3;
   for (const e of L) {
@@ -3764,6 +3853,12 @@ function drawTrack(camL, camT, vw, vh, sc) {
 /* ----- the maps: people you track are bigger and glow ----- */
 function drawLinksOnMap(g, toX, toY, r, labels, inside) {   // toX/toY turn tile numbers into canvas pixels
   const t = performance.now();
+  { const mb = myBase(); if (mb) {   // your base: a cyan diamond with a soft circle
+    const w = g.canvas.width, h = g.canvas.height, x = clamp(toX(mb.cx / TS), 8, w - 8), y = clamp(toY(mb.cy / TS), 8, h - 8), rr = Math.max(r * 1.6, 5);
+    g.save(); g.fillStyle = 'rgba(127,240,255,.22)'; g.beginPath(); g.arc(x, y, rr * 2.2, 0, TAU); g.fill();
+    g.fillStyle = '#7ff0ff'; g.strokeStyle = '#16102a'; g.lineWidth = Math.max(1.2, rr * 0.3); g.beginPath(); g.moveTo(x, y - rr * 1.3); g.lineTo(x + rr, y); g.lineTo(x, y + rr * 1.3); g.lineTo(x - rr, y); g.closePath(); g.fill(); g.stroke();
+    if (labels) { g.font = Math.round(rr * 2.2) + 'px ' + FONT; g.textAlign = 'center'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.8)'; g.strokeText('Base', x, y - rr * 1.8); g.fillStyle = '#fff'; g.fillText('Base', x, y - rr * 1.8); }
+    g.restore(); } }
   for (const e of liveLinks()) {
     trackFollow(e);
     if (!e.big) continue;
@@ -3906,7 +4001,9 @@ $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop'))
 /* ----- the shop: spend coins (and diamonds) on things that appear right next to you. They are only yours: nobody else sees them. ----- */
 const SHOP = [
   { cat: 'coins', id: 'coins', name: '250 coins', info: 'Trade one diamond for coins.', c: 0, g: 1, give: 250 },
+  { cat: 'gadgets', id: 'spring0', max: 60, name: 'Spring', info: 'Push it anywhere. Land on it to bounce high.', c: 100, g: 0, kind: 5 },
   { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
+  { cat: 'travel', id: 'base', max: 1, base: true, name: 'Base', info: 'Your own no-build circle, as big as the one at the start, with you right in the middle. Put it anywhere, even in the air, as long as it does not overlap another no-build circle. Nothing can be built or left inside it. Delete its glowing centre to move it.', c: 500, g: 5 },
   { cat: 'travel', id: 'flag', max: 1, name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot. You can have one at a time: delete it to put it somewhere else.', c: 400, g: 5 },
   { cat: 'blocks', id: 'box0', max: 150, name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
   { cat: 'blocks', id: 'box1', max: 120, name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
@@ -3933,6 +4030,8 @@ const shopIcon = id => {
   const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
   if (id === 'coins') return '<svg viewBox="0 0 40 40"><circle cx="15" cy="26" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="4.500" fill="none" stroke="#a06400" stroke-width="1.800"/></svg>';
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
+  if (id === 'spring0') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#3d8bd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ff6b6b" ' + st + '/></svg>';
+  if (id === 'base') return '<svg viewBox="0 0 40 40"><circle cx="20" cy="21" r="15" fill="rgba(127,240,255,.18)" stroke="#7ff0ff" stroke-width="2.200" stroke-dasharray="4 3"/><path d="M20 4V30" stroke="#7ff0ff" stroke-width="3" stroke-linecap="round" opacity=".6"/><path d="M14 30L20 18L26 30Z" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
   if (id === 'gate' || id === 'gateS') { const h = id === 'gate' ? 26 : 13; return '<svg viewBox="0 0 40 40"><rect x="7" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="15" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="23" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="5" y="' + (28 - h) + '" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="29" y="32" width="9" height="4" fill="#e0a93c" ' + st + '/></svg>'; }
   if (id === 'dig') return '<svg viewBox="0 0 40 40"><path d="M9 9L31 31M31 9L9 31" fill="none" stroke="#16100c" stroke-width="9" stroke-linecap="round"/><path d="M9 9L31 31M31 9L9 31" fill="none" stroke="#ff4a3d" stroke-width="5" stroke-linecap="round"/></svg>';
@@ -3982,8 +4081,8 @@ $('shopClose').onclick = () => toggleShop(false);
 $('chatClose').onclick = () => toggleChat(false);
 const ownCount = it => (S.own && S.own[it.id]) | 0;   // how many of this you have built on this map (what others built does not count)
 let noCaps = false; try { noCaps = localStorage.getItem('ballrun4_nocap') === '1'; } catch (e) {}   // (the code "unlimitedpower": no building limits at all, on this device)
-const atLimit = it => !noCaps && !!it.max && ownCount(it) >= it.max;
-const limitNote = it => it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : it.portal ? 'You have both portal pairs. Delete one to move it' : it.id === 'flag' ? 'You already have a checkpoint flag. Delete it to put one somewhere else' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
+const atLimit = it => it.base ? !!myBase() : !noCaps && !!it.max && ownCount(it) >= it.max;
+const limitNote = it => it.base ? 'You already have a base. Delete its glowing centre to put it somewhere else' : it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : it.portal ? 'You have both portal pairs. Delete one to move it' : it.id === 'flag' ? 'You already have a checkpoint flag. Delete it to put one somewhere else' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
 // 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
 const pullNow = () => ({ down: !!(tin.down || (settings.keys.down || []).some(c => keysDown.has(c))), up: !!(inp.jump || tin.jump || keysDown.has('ArrowUp') || keysDown.has('KeyW')) });   // what you are pulling on the controls
@@ -4019,7 +4118,7 @@ function flagSpot(side) {   // a checkpoint flag stands on the ground beside you
   }
   return null;
 }
-const tileIt = it => it && (it.id === 'flag' || it.gate || it.misc || it.portal);
+const tileIt = it => it && (it.id === 'flag' || it.gate || it.misc || it.portal || it.base);
 function gateSpot(side, hmax) {   // a gate: one tile wide, standing on the ground beside you, with clear air above it
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
@@ -4131,6 +4230,7 @@ function delTarget(side, pull) {
   for (const q of w.portals) if (!q.gone) { const rec = ['por', Math.round(q.a.x / TS) - 1, Math.round(q.a.y / TS)]; for (const e of [q.a, q.b]) offer(e.x - 30, e.y - 24, e.x + 30, e.y + 6, rec, 'pair of portals'); }
   for (const d of w.doors) if (!d.gone) offer(d.x * TS, d.y * TS, (d.x + d.w) * TS, (d.y + d.h) * TS, ['g', d.uid >>> 0], 'gate');
   for (const q of w.plates) if (!q.gone && q.to && q.to.length === 1 && w.doors[q.to[0]] && !w.doors[q.to[0]].gone) offer(q.x * TS, q.y * TS - 12, (q.x + q.w) * TS, q.y * TS + 4, ['g', w.doors[q.to[0]].uid >>> 0], 'gate');
+  { const mb = myBase(); if (mb) offer(mb.cx - 24, mb.cy - 40, mb.cx + 24, mb.cy + 26, ['base', mb.tx, mb.ty], 'base'); }   // (only your own base: its glowing centre)
   for (const c of S.map.checkpoints) if (c[0] > -1000) offer((c[0] + 0.5) * TS - 22, c[1] * TS - 66, (c[0] + 0.5) * TS + 22, c[1] * TS, ['c', c[0], c[1]], 'flag');
   { const fx = Math.floor((b.x + s * (R + 6)) / TS), rows = [Math.floor(b.y / TS), Math.floor((b.y + R + 4) / TS)];   // a ground spring set into the ground just ahead
     for (const r of rows) for (const tx of [fx, fx + s]) if (P.tile(w, tx, r) === 6) offer(tx * TS, r * TS, (tx + 1) * TS, (r + 1) * TS, null, 'ground spring', { tl: { tx, r } }); }
@@ -4141,7 +4241,7 @@ function lavaWaterAhead(side) {   // is there lava or water right where the dele
   return [[cx + s, cy], [cx + s, cy + 1], [cx, cy + 1]].some(([x, r]) => { const t = P.tile(w, x, r); return t === 2 || t === 5 || t === 7; });
 }
 function delThing(q) {   // delete it here, and for everyone in this world
-  let id = { s: 'see', g: 'gate', r: 'rope', por: 'portal', c: 'flag', pad: 'pad' }[q[0]];
+  let id = { s: 'see', g: 'gate', r: 'rope', por: 'portal', c: 'flag', pad: 'pad', base: 'base' }[q[0]];
   if (q[0] === 'por' && S.world && S.own && S.own.porC) { const p = S.world.portals.find(e => !e.gone && Math.round(e.a.x / TS) - 1 === q[1] && Math.round(e.a.y / TS) === q[2]); if (p) { const i = S.own.porC.indexOf(p.c | 0); if (i >= 0) S.own.porC.splice(i, 1); else id = null; } }   // (only one of your own pairs gives you a pair back)
   if (q[0] === 's' && S.world) { const e = S.world.see.find(o => o.uid === (q[1] >>> 0)); if (e && e.hl > 3 * TS + 1) id = 'seeb'; }
   if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), it = d && SHOP.find(s => s.kind === d.kind && !s.misc && !s.gate); if (it) id = it.id; if (d && d.bought && !d.local && shared()) id = null; }   // (somebody else's: they get it back, not you)
@@ -4224,6 +4324,9 @@ function computeGhost() {
   const g = placing, b = S.b; if (!g || !b) return;
   const ax = (inp.right ? 1 : 0) - (inp.left ? 1 : 0) || (Math.abs(tin.ax) > 0.15 ? Math.sign(tin.ax) : 0) || (Math.abs(b.vx) > 25 ? Math.sign(b.vx) : 0);
   if (ax) g.side = ax;
+  if (g.it.base) {   // a base: right where you are, you in the middle
+    g.btx = Math.floor(b.x / TS); g.bty = Math.floor(b.y / TS); g.ok = P.baseOk(S.world, g.btx, g.bty, myTag()); g.bz = !g.ok && !myBase(); g.sb = false; g.pb = false; g.pc = false; return;
+  }
   if (tileIt(g.it)) {   // tile-based things
     let sp = null, cx, cy;
     if (g.it.id === 'flag') { sp = flagSpot(g.side); if (sp) { g.ftx = sp.tx; g.frow = sp.row; cx = (sp.tx + 0.5) * TS; cy = sp.row * TS - 30; } }
@@ -4241,7 +4344,7 @@ function computeGhost() {
     else if (g.it.misc) { sp = flatSpot(g.side, g.it.misc === 'see', g.it.misc === 'see' ? 2 : 1, false, g.it.big ? 4 : 2); if (sp) { g.mtx = sp.tx; g.mgr = sp.gr; g.mside = sp.side; cx = (sp.tx + 1) * TS; cy = sp.gr * TS - (g.it.misc === 'see' ? 46 : 4); } }
     else { sp = gateSpot(g.side, g.it.gate); if (sp) { g.gtx = sp.tx; g.ggr = sp.gr; g.gh = sp.h; cx = (sp.tx + 0.5) * TS; cy = (sp.gr - sp.h / 2) * TS; } }
     g.ok = !!sp; g.sb = false;
-    if (sp && (startBlock(cx, cy) || (g.it.misc === 'spr' && startBlock(cx, g.mr0 * TS)) || (g.stage === 2 && g.it.gate && startBlock((sp.tx + 1) * TS, sp.row * TS)))) { g.ok = false; g.sb = true; }
+    if (sp && !(g.del && g.del.q && g.del.q[0] === 'base') && (startBlock(cx, cy) || (g.it.misc === 'spr' && startBlock(cx, g.mr0 * TS)) || (g.stage === 2 && g.it.gate && startBlock((sp.tx + 1) * TS, sp.row * TS)))) { g.ok = false; g.sb = true; }
     if (sp && g.ok && !g.del && portalClash(g, sp, cx)) { g.ok = false; g.pc = true; } else g.pc = false;
     g.pb = false;
     if (sp && g.ok && !(g.it.misc === 'ter' && g.del)) {   // nobody can be built on or inside (not even somebody else's ball)
@@ -4318,6 +4421,11 @@ function portalShape(x, y, col, alpha, nowT) {   // a glowing hole in the ground
 function drawTileGhost(g, nowT) {
   const bad = !g.ok, pulse = 0.55 + 0.15 * Math.sin(nowT / 170);
   ctx.save(); ctx.lineJoin = 'round';
+  if (g.it.base) {   // the circle it would make, around you
+    const cx = (g.btx + 0.5) * TS, cy = (g.bty + 0.5) * TS; ctx.globalAlpha = pulse; ctx.setLineDash([12, 10]); ctx.lineDashOffset = -nowT / 60;
+    ctx.beginPath(); ctx.arc(cx, cy, P.BASE_R, 0, TAU); ctx.fillStyle = bad ? 'rgba(255,80,60,.10)' : 'rgba(127,240,255,.10)'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,14,30,.5)'; ctx.stroke(); ctx.lineWidth = 2.6; ctx.strokeStyle = bad ? '#ff7a6a' : '#7ff0ff'; ctx.stroke(); ctx.setLineDash([]);
+    ctx.restore(); return;
+  }
   if (g.it.portal) {
     if (g.stage === 2 && g.pA) { const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++; portalShape((g.pA.tx + 1) * TS, g.pA.gr * TS, PORC[c][0], 0.9, nowT); }
     { const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++; portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : PORC[c][g.stage === 2 ? 1 : 0], pulse + 0.2, nowT); }
@@ -4399,7 +4507,7 @@ function finishPlacing() {
   const it = g.it; computeGhost();
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); cancelPlacing(true); return; }
   if (atLimit(it)) { notice(limitNote(it), 'urgent'); cancelPlacing(true); return; }
-  if (!g.ok) { notice(g.sb ? 'You cannot build at the start or by the finish flag' : g.pb ? 'Something is in the way' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
+  if (!g.ok) { notice(g.bz ? 'It would overlap another no-build circle. Move away a little (touching is fine)' : g.sb ? 'You cannot build at the start or by the finish flag' : g.pb ? 'Something is in the way' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space', 'urgent'); sfx('warn'); return; }
   if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   if (it.ter === 'dig' && g.del) delThing(g.del.q);
   else if (it.portal) {
@@ -4432,6 +4540,9 @@ function finishPlacing() {
       wDirty = true;
     } else { addBook(q[0], q[1], q[2]); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; }
     if (q[0] !== 'tl') { burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4); }
+  } else if (it.base) {
+    const q = ['base', g.btx, g.bty, myTag()]; addBook('base', q[1], q[2]); addMisc(S.world, q, true); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready');
+    notice('Base set. Nothing can be built or left in its circle', '');
   } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
   else placeProp(it.kind, [g.tx, g.ty]);
   S.own = S.own || {}; if (!g.cancelled) S.own[it.id] = ownCount(it) + 1;   /* (an action that cancels one of your own builds is not counted, and gives the earlier one back) */
@@ -5277,8 +5388,8 @@ function lvlRender() {
   const pub = $('homeMp').checked, h = $('homeLvl');
   let t = lvlLabel();
   if (h) {   // private: your level, tap to change. Public: the map everyone is on right now, and how long until the next one.
-    h.classList.toggle('static', pub); h.disabled = pub; h.setAttribute('aria-label', pub ? 'The public map right now' : 'Pick your level');
-    if (pub) { const p = pubIdx(); h.innerHTML = ico('map') + '<span class="lvt">' + lvLabelOf(p.i) + '</span><span class="lvtime">' + fmtClock(p.next - nowMs()) + '</span>'; }
+    h.classList.toggle('static', false); h.disabled = false; h.setAttribute('aria-label', pub ? 'The public world right now: tap for details' : 'Pick your level');
+    if (pub) { const p = pubIdx(); h.innerHTML = ico('map') + '<span class="lvt">' + lvLabelOf(p.i) + '</span><span class="lvtime">' + fmtClock(p.next - nowMs()) + '</span>' + ico('info'); }
     else h.innerHTML = ico('map') + '<span class="lvt">' + t + '</span>' + ico('chev');
   }
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
@@ -5358,7 +5469,26 @@ $('lvOk').onclick = () => {
   if (!inHome) { if (paused) resumeGame(); if (changed) hostLeaveWarn(() => rehost(() => soloGo(true)), 'change the level'); }
 };
 $('lvlModal').addEventListener('pointerdown', e => { if (e.target === $('lvlModal')) closeLevels(); });
-$('homeLvl').onclick = () => { sfx('ui'); openLevels(); };
+$('homeLvl').onclick = () => { sfx('ui'); if ($('homeMp').checked) openWorldInfo(); else openLevels(); };
+/* Public, on the main menu: tap the map and see everything about the public world right now */
+let wiTimer = 0;
+function wiFill() {
+  const p = pubIdx(), now = nowMs(); $('wiMap').textContent = lvLabelOf(p.i); $('wiNext').textContent = 'Up next: ' + BallMaps.names[(BallMaps.slotOf(now) + 1) % BallMaps.count];
+  $('wiChange').textContent = 'New map at ' + clockStr(p.next) + ' (in ' + fmtClock(p.next - now) + ')';
+  const nv = netView(); $('wiDot').className = 's-' + nv.st; $('wiNet').textContent = netDetail();
+  const bi = beaconInfo(now); $('wiBeacon').textContent = bi.on ? 'The finish beacon is on right now' : 'Next finish beacon in ' + fmtClock(bi.next);
+  $('wiBeat').textContent = isBeaten(p.i) ? 'You have beaten this map' : 'You have not beaten this map yet';
+}
+function openWorldInfo() {
+  wiFill(); $('wiModal').classList.remove('hide'); clearInterval(wiTimer); wiTimer = setInterval(() => { if ($('wiModal').classList.contains('hide')) { clearInterval(wiTimer); return; } wiFill(); }, 1000);
+  if (location.protocol !== 'file:') fetch(homeBase() + '/stats', { cache: 'no-store' }).then(r => r.json()).then(j => {
+    const n = j.online | 0, rs = Array.isArray(j.rooms) ? j.rooms.filter(r => r.players > 0) : [];
+    $('wiPlayers').textContent = n > 0 ? n + (n === 1 ? ' player' : ' players') + ' online' + (rs.length > 1 ? ' in ' + rs.length + ' worlds (' + rs.map(r => 'World ' + r.id + ': ' + r.players).join(', ') + ')' : '') : 'Nobody is playing right now. Be the first!';
+  }).catch(() => { $('wiPlayers').textContent = 'Could not reach the server just now'; });
+}
+$('wiClose').onclick = () => { sfx('ui'); $('wiModal').classList.add('hide'); };
+$('wiPlay').onclick = () => { $('wiModal').classList.add('hide'); $('homePlay').click(); };
+$('wiModal').addEventListener('pointerdown', e => { if (e.target === $('wiModal')) $('wiModal').classList.add('hide'); });
 $('btnPickLvl').onclick = () => { sfx('ui'); openLevels(); };
 lvlRender();
 
@@ -5727,8 +5857,8 @@ function onMsg(m) {
       if (placing) cancelPlacing(true);
       break; }
     case 'puid': { const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y); if (d) { adoptUid(w, d, m.u); d.srvU = true; } break; }
-    case 'padd': { S.buildAt = performance.now(); if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
-    case 'pcp': { S.buildAt = performance.now(); if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; addBook('c', m.x, m.y); S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
+    case 'padd': { S.buildAt = performance.now(); if (!S.world || !shared() || !P.propDims(m.k | 0).half || mapBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
+    case 'pcp': { S.buildAt = performance.now(); if (!S.map || !shared() || mapTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; addBook('c', m.x, m.y); S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'wsnap': if (!party) saveSnap(m); break;
     case 'ready': S.worldReady = true; break;
     case 'pong': if (typeof m.c === 'number') { const r = performance.now() - m.c; if (r >= 0 && r < 5000) { NET.rtt = NET.rtt * 0.7 + r * 0.3; NET.rttLo = Math.min(NET.rttLo, r); NET.rttLast = r; } if (m.c > NET.pongC) { NET.pongC = m.c; NET.pongAt = performance.now(); } } break;   // (how long a message takes to the server and back)   // (the server has sent everything around you: the world is complete)
@@ -6196,9 +6326,31 @@ function drawPad(px, py, tx) {   // bounce pad: a springy cushion with arrows th
   ctx.moveTo(cx - 8, cy + 4); ctx.lineTo(cx, cy - 3); ctx.lineTo(cx + 8, cy + 4); ctx.stroke();
   ctx.strokeStyle = INK;
 }
+function drawBase(z, camL, camT, vw, vh) {   // a player's base: its circle, a beam of light straight up so it stands out from far away, and the glowing centre (delete it to move the base)
+  const mine = (z.o >>> 0) === myTag(), nowT = performance.now(), pu = 0.5 + 0.5 * Math.sin(nowT / 700), col = mine ? '127,240,255' : '190,170,255';
+  if (Math.abs(z.cx - (camL + vw / 2)) < vw / 2 + 120) {   // the beam (seen even when the circle is off the top or bottom of the screen)
+    const top = camT - 20, g = ctx.createLinearGradient(0, z.cy, 0, top);
+    g.addColorStop(0, 'rgba(' + col + ',' + (mine ? 0.42 : 0.22) + ')'); g.addColorStop(1, 'rgba(' + col + ',0)');
+    ctx.save(); ctx.fillStyle = g; const bw = (mine ? 26 : 16) + 6 * pu; ctx.fillRect(z.cx - bw / 2, top, bw, Math.max(0, z.cy - top)); ctx.restore();
+  }
+  if (z.cx - z.r < camL + vw && z.cx + z.r > camL && z.cy - z.r < camT + vh && z.cy + z.r > camT) {
+    ctx.save(); ctx.beginPath(); ctx.arc(z.cx, z.cy, z.r, 0, TAU); ctx.fillStyle = 'rgba(' + col + ',' + (0.05 + 0.02 * pu) + ')'; ctx.fill();
+    ctx.setLineDash([10, 12]); ctx.lineDashOffset = -nowT / 90;
+    ctx.strokeStyle = 'rgba(30,18,40,.38)'; ctx.lineWidth = 5; ctx.stroke(); ctx.strokeStyle = 'rgba(' + col + ',' + (0.6 + 0.2 * pu) + ')'; ctx.lineWidth = 2.4; ctx.stroke(); ctx.setLineDash([]);
+    // the centre: a little glowing crystal on a stand
+    const x = z.cx, y = z.cy, gl = ctx.createRadialGradient(x, y - 8, 2, x, y - 8, 34); gl.addColorStop(0, 'rgba(' + col + ',.55)'); gl.addColorStop(1, 'rgba(' + col + ',0)');
+    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y - 8, 34, 0, TAU); ctx.fill();
+    ctx.lineJoin = 'round'; ctx.lineWidth = 2.4; ctx.strokeStyle = INK; ctx.fillStyle = '#4a3a5c'; ctx.beginPath(); ctx.moveTo(x - 14, y + 18); ctx.lineTo(x + 14, y + 18); ctx.lineTo(x + 8, y + 8); ctx.lineTo(x - 8, y + 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+    const bob = Math.sin(nowT / 500) * 3; ctx.fillStyle = mine ? '#7ff0ff' : '#c9b8ff'; ctx.beginPath(); ctx.moveTo(x, y - 30 + bob); ctx.lineTo(x + 10, y - 12 + bob); ctx.lineTo(x, y + 4 + bob); ctx.lineTo(x - 10, y - 12 + bob); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.moveTo(x - 2, y - 24 + bob); ctx.lineTo(x + 3, y - 14 + bob); ctx.lineTo(x - 2, y - 8 + bob); ctx.closePath(); ctx.fill();
+    if (mine) { ctx.font = '700 15px ' + FONT; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,14,30,.8)'; ctx.strokeText('Your base', x, y - 40 + bob); ctx.fillStyle = '#fff'; ctx.fillText('Your base', x, y - 40 + bob); }
+    ctx.restore();
+  }
+}
 function drawGadgets(camL, camT, vw, vh, dt) {
   const w = S.world, m = S.map;
   for (const z of zones()) {   // the no-build circles around the start and the finish: faint, but there
+    if (z.k === 'b') { drawBase(z, camL, camT, vw, vh); continue; }
     if (z.cx - z.r < camL + vw && z.cx + z.r > camL && z.cy - z.r < camT + vh && z.cy + z.r > camT) {
       const pu = 0.5 + 0.5 * Math.sin(performance.now() / 900);
       ctx.save(); ctx.beginPath(); ctx.arc(z.cx, z.cy, z.r, 0, TAU); ctx.fillStyle = 'rgba(200,70,30,' + (0.05 + 0.015 * pu) + ')'; ctx.fill();
@@ -6316,6 +6468,34 @@ function drawRope(r, camL, camT, vw, vh, ghost) {   // a rope bridge: two posts,
   ctx.lineWidth = 2.2; ctx.strokeStyle = bad ? '#ff5a4a' : '#5a3a1a'; ctx.beginPath(); ctx.moveTo(deck[0][0], deck[0][1]); deck.forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke();
   ctx.restore();
 }
+function drawPowerIcon(g, x, y, k, h, t) {   // a power-up, h tall (half as tall as a ball): sushi, or a little bouquet of flowers
+  g.save(); g.translate(x, y); g.lineJoin = 'round'; g.lineCap = 'round'; g.lineWidth = Math.max(1.4, h * 0.09); g.strokeStyle = INK;
+  if (k === 0) {   // a piece of salmon nigiri with a band of seaweed
+    const w = h * 1.7;
+    g.fillStyle = '#fbf6ea'; g.beginPath(); g.ellipse(0, h * 0.18, w / 2, h * 0.32, 0, 0, TAU); g.fill(); g.stroke();
+    g.fillStyle = '#ff8a5c'; g.beginPath(); g.moveTo(-w / 2 - h * 0.06, h * 0.05); g.quadraticCurveTo(-w * 0.2, -h * 0.55, w * 0.1, -h * 0.42); g.quadraticCurveTo(w * 0.45, -h * 0.3, w / 2 + h * 0.06, h * 0.02); g.quadraticCurveTo(0, -h * 0.02, -w / 2 - h * 0.06, h * 0.05); g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, h * 0.06); for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(i * w * 0.22 - h * 0.12, -h * 0.28); g.lineTo(i * w * 0.22 + h * 0.08, -h * 0.05); g.stroke(); }
+    g.strokeStyle = INK; g.lineWidth = Math.max(1.4, h * 0.09); g.fillStyle = '#1e3a2a'; g.fillRect(-h * 0.16, -h * 0.36, h * 0.32, h * 0.82); g.strokeRect(-h * 0.16, -h * 0.36, h * 0.32, h * 0.82);
+  } else {   // three flowers in a paper cone
+    g.fillStyle = '#5bbf5a'; g.strokeStyle = INK; for (const a of [-0.45, 0, 0.45]) { g.beginPath(); g.moveTo(0, h * 0.2); g.lineTo(Math.sin(a) * h * 0.55, -h * 0.25); g.stroke(); }
+    const fl = [[-h * 0.3, -h * 0.32, '#ff6fae'], [h * 0.3, -h * 0.32, '#ffd23d'], [0, -h * 0.5, '#ff5a4a']];
+    for (const [fx, fy, c] of fl) { g.fillStyle = c; for (let p = 0; p < 5; p++) { const a = p / 5 * TAU + (t || 0) * 0.6; g.beginPath(); g.arc(fx + Math.cos(a) * h * 0.11, fy + Math.sin(a) * h * 0.11, h * 0.1, 0, TAU); g.fill(); } g.fillStyle = '#fff3a0'; g.beginPath(); g.arc(fx, fy, h * 0.07, 0, TAU); g.fill(); }
+    g.fillStyle = '#f4e3c1'; g.strokeStyle = INK; g.beginPath(); g.moveTo(-h * 0.42, -h * 0.05); g.lineTo(h * 0.42, -h * 0.05); g.lineTo(0, h * 0.55); g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle = '#ff6fae'; g.lineWidth = Math.max(1.2, h * 0.08); g.beginPath(); g.moveTo(-h * 0.2, h * 0.15); g.lineTo(h * 0.2, h * 0.15); g.stroke();
+  }
+  g.restore();
+}
+function drawPowers(camL, camT, vw, vh) {
+  const ps = S.map.powers; if (!ps || !ps.length) return; const now = Date.now(), t = S.t;
+  for (let i = 0; i < ps.length; i++) {
+    const p = ps[i]; if (p[0] < camL - 60 || p[0] > camL + vw + 60 || p[1] < camT - 60 || p[1] > camT + vh + 60) continue;
+    if (S.powGot && (S.powGot[i] || 0) > now) continue;
+    const bob = Math.sin(t * 2.4 + i) * 3, x = p[0], y = p[1] + bob, glow = 0.35 + 0.15 * Math.sin(t * 3 + i);
+    const gl = ctx.createRadialGradient(x, y, 2, x, y, R * 1.5); gl.addColorStop(0, p[2] === 0 ? 'rgba(127,240,255,' + glow + ')' : 'rgba(255,122,184,' + glow + ')'); gl.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, R * 1.5, 0, TAU); ctx.fill();
+    drawPowerIcon(ctx, x, y, p[2], R, t);
+  }
+}
 function drawCoins(camL, camT, vw, vh) {
   const cs = S.map.coins, got = S.coinGot; if (!cs.length) return;
   let lo = 0, hi = cs.length; const xa = camL - 30;
@@ -6361,6 +6541,12 @@ function drawTrail(b) {
   ctx.restore();
 }
 function drawSuper(b) {   // the jump meter: a ring that fills with quick back-to-back jumps. Full = your next jump is extra tall.
+  if (b.pJump > 0) {   // flowers: the ring turns pink and ticks down until the minute is up
+    const f = Math.min(1, b.pJump / 60), pul = Math.sin(S.t * 8);
+    ctx.save(); ctx.lineCap = 'round'; ctx.globalAlpha = 0.25; ctx.strokeStyle = '#ff7ab8'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(b.x, b.y, R + 8, 0, TAU); ctx.stroke();
+    ctx.globalAlpha = 0.95; ctx.strokeStyle = 'rgba(20,14,30,.7)'; ctx.lineWidth = 6.5; ctx.beginPath(); ctx.arc(b.x, b.y, R + 8, -Math.PI / 2, -Math.PI / 2 + TAU * f); ctx.stroke();
+    ctx.strokeStyle = '#ff7ab8'; ctx.lineWidth = 4 + pul * 0.6; ctx.beginPath(); ctx.arc(b.x, b.y, R + 8, -Math.PI / 2, -Math.PI / 2 + TAU * f); ctx.stroke(); ctx.restore(); return;
+  }
   const q = S.jmv || 0; if (q < 0.03) return;
   const rdy = q >= 0.985, pul = Math.sin(S.t * 20);
   ctx.save(); ctx.lineCap = 'round';
@@ -6370,8 +6556,15 @@ function drawSuper(b) {   // the jump meter: a ring that fills with quick back-t
   if (rdy) { ctx.globalAlpha = 0.3; ctx.strokeStyle = '#ff9a3d'; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(b.x, b.y, R + 8, 0, TAU); ctx.stroke(); }
   ctx.restore();
 }
+function meterAt(b) { const up = (settings.tags && settings.name) || (S.crown && settings.crowns); return up ? [b.x + R + 15, b.y - R + 1] : [b.x, b.y - R - 22]; }   // (with a name or a crown over your ball, the meter sits beside it, where nothing covers it)
 function drawBoost(b) {   // the boost ring above your ball: fills while you roll one way, glows when it is ready, trails while you boost
-  const q = b.bcharge, rdy = q >= 1, x = b.x, y = b.y - R - 22, r = 9, t = S.t;
+  const q = b.bcharge, rdy = q >= 1, [x, y] = meterAt(b), r = 9, t = S.t;
+  if (b.pSpeed > 0) {   // sushi: the meter turns cyan, full, and ticks down until the minute is up
+    const f = Math.min(1, b.pSpeed / 60); ctx.save();
+    ctx.fillStyle = 'rgba(20,16,30,.75)'; ctx.beginPath(); ctx.arc(x, y, r + 3, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#7ff0ff'; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + TAU * Math.max(0.001, f)); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 10); ctx.beginPath(); ctx.arc(x, y, r + 3, 0, TAU); ctx.stroke(); ctx.restore(); return;
+  }
   if (b.boost) return;   // (the golden ribbon behind you shows the boost)
   if (q < 0.04) return;
   ctx.save();
@@ -6558,10 +6751,10 @@ function renderInner(dt, nowT) {
   const sc = Math.max(clamp(zoomBase() * settings.zoom, 0.2, 5), sw / VIEW_MAX_W, sh / VIEW_MAX_H);
   const vw = sw / sc, vh = sh / sc, b = S.b;
   updateFx(dt);
-  { const sep = !!settings.superBtn, tg = settings.powerJump ? clamp(b.jm || 0, 0, 1) : 0; S.jmv = (S.jmv || 0) + (tg - (S.jmv || 0)) * Math.min(1, dt * 14); if (Math.abs(tg - S.jmv) < 0.004) S.jmv = tg;   // the meter glides instead of jumping
+  { const sep = !!settings.superBtn, pj = b.pJump > 0, tg = pj ? Math.min(1, b.pJump / 60) : settings.powerJump ? clamp(b.jm || 0, 0, 1) : 0; S.jmv = (S.jmv || 0) + (tg - (S.jmv || 0)) * Math.min(1, dt * 14); if (Math.abs(tg - S.jmv) < 0.004) S.jmv = tg;   // the meter glides instead of jumping
     const q = Math.round(S.jmv * 100);
-    if (q !== S.tjq || sep !== S.tjsep) { S.tjq = q; S.tjsep = sep; const el = sep ? $('ts') : $('tj'), other = sep ? $('tj') : $('ts'); el.style.setProperty('--p', q); el.classList.toggle('rdy', q >= 99 && !editMode); other.style.setProperty('--p', 0); other.classList.remove('rdy'); } }   // (with the separate power-jump button the ring lives on that button)
-  { const tb = $('tb'); if (!tb.classList.contains('hide') && !editMode) { const q = Math.round(clamp(b.bcharge || 0, 0, 1) * 100); if (q !== S.tbq) { S.tbq = q; tb.style.setProperty('--p', q); tb.classList.toggle('rdy', q >= 100 && !b.boost); } } }
+    if (q !== S.tjq || sep !== S.tjsep || pj !== S.tjpw) { S.tjq = q; S.tjsep = sep; S.tjpw = pj; const el = sep ? $('ts') : $('tj'), other = sep ? $('tj') : $('ts'); el.style.setProperty('--p', q); el.classList.toggle('rdy', !pj && q >= 99 && !editMode); el.classList.toggle('pw', pj); other.style.setProperty('--p', 0); other.classList.remove('rdy', 'pw'); } }   // (with the separate power-jump button the ring lives on that button)
+  { const tb = $('tb'); if (!tb.classList.contains('hide') && !editMode) { const ps = b.pSpeed > 0, q = Math.round(clamp(ps ? b.pSpeed / 60 : b.bcharge || 0, 0, 1) * 100); if (q !== S.tbq || ps !== S.tbpw) { S.tbq = q; S.tbpw = ps; tb.style.setProperty('--p', q); tb.classList.toggle('rdy', !ps && q >= 100 && !b.boost); tb.classList.toggle('pw', ps); } } }
   const k = 1 - Math.exp(-7 * dt);
   S.camx += (b.x - S.camx) * k;
   S.camy += (b.y + clamp(b.vy * 0.12, -60, 90) - S.camy) * k;
@@ -6598,7 +6791,7 @@ function renderInner(dt, nowT) {
   if (camL < -2 * TS) ctx.fillRect(camL - 10, camT - 10, -2 * TS - camL + 10, vh + 20);
   if (camL + vw > ww + 2 * TS) ctx.fillRect(ww + 2 * TS, camT - 10, camL + vw - ww - 2 * TS + 10, vh + 20);
   drawTiles(camL, camT, vw, vh);
-  drawSpawn(); drawCheckpoints(camL, camT, vw, vh); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh); drawGhost(dt, nowT);
+  drawSpawn(); drawCheckpoints(camL, camT, vw, vh); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawPowers(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh); drawGhost(dt, nowT);
   if (S.beaconOn && beaconOK()) drawBeacon(camL, camT, vw, vh, sc);
   drawTrack(camL, camT, vw, vh, sc);
   S.view = { l: camL, t: camT, w: vw, h: vh };
@@ -6630,9 +6823,9 @@ function renderInner(dt, nowT) {
       let s = 1; if (S.spawnT > 0) { const p = 1 - S.spawnT / 0.6; s = 0.25 + 0.75 * Math.min(1, p * 1.25) + 0.12 * Math.sin(p * 3.14); }
       drawTrail(b);
       drawBall(b.x, b.y, b.rot, settings.color, settings.color2, settings.pat, 1, true, s);
+      drawLabel(censor(settings.name), false, S.crown, b.x, b.y);   // (name and crown first: the meters go on top of them)
       drawSuper(b);
-      if (settings.boost) drawBoost(b);
-      drawLabel(censor(settings.name), false, S.crown, b.x, b.y);
+      if (settings.boost || b.pSpeed > 0) drawBoost(b);
       if (S.myEmo) drawEmoBubble(S.myEmo, b.x, b.y - R - (settings.tags && settings.name ? 38 : 22) - (S.crown && settings.crowns ? crownH(S.crown) : 0));
     }
   }
@@ -6966,7 +7159,7 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, addGate, ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { NET, addGate, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();

@@ -1920,6 +1920,12 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       fins,   // (every place the finish can be: the first is where it always was)
       killY: (maxBottom + 6) * TS, chains: chainsOut
     };
+    /* power-ups: a few, far apart, each where a coin was (so it can be reached): sushi (a minute of super speed) or a flower bouquet (a minute of super jumps) */
+    { let h = (idx * 2654435761 + 97) >>> 0; const rnd = () => { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; };
+      const zs = startZone([(ox + 1.5) * TS, oy * TS - R - 1]), want = Math.max(4, Math.min(10, Math.round(map.W / 140))), gapT = Math.max(50, map.W / (want + 1) * 0.6), pw = [], keep = [];
+      const order = map.coins.map((c, i) => i).filter(i => !map.coins[i][2]); for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
+      for (const i of order) { if (pw.length >= want) break; const c = map.coins[i], tx = c[0] / TS, ty = c[1] / TS; if (inZone(zs, tx, ty, 3) || pw.some(p => Math.abs(p[0] / TS - tx) < gapT)) continue; pw.push([c[0], c[1] - 4, rnd() < 0.5 ? 0 : 1]); keep.push(i); }
+      const drop = new Set(keep); map.coins = map.coins.filter((c, i) => !drop.has(i)); map.powers = pw.sort((a, b) => a[0] - b[0]); }
     try { Object.defineProperty(map, '_raw', { value: map, enumerable: false }); } catch (e) {}
     cache[idx] = finClean(map); cacheOrder.push(idx);
     while (cacheOrder.length > 3) delete cache[cacheOrder.shift()];   // (50 big maps would add up: only the latest few are kept)
@@ -1937,6 +1943,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
   function finClean(m) {   // the map with everything of its own taken out of the circle around this round's finish
     const z = finZone(m.flag), G = m.gadgets || {};
     const props = (m.props || []).filter(p => !inZone(z, p[1] + 0.5, p[2] - 0.4, 0.6)), see = (G.see || []).filter(q => !inZone(z, q[0], q[1], q[2]));
+    const powers = (m.powers || []).filter(p => !inZone(z, p[0] / TS, p[1] / TS, 1));
     const keepD = (G.doors || []).map(d => !doorIn(z, d)), re = new Map(); let n = 0; keepD.forEach((k, i) => { if (k) re.set(i, n++); });
     const remap = a => a.map(i => re.get(i)).filter(i => i !== undefined);
     const plates = [], btns = [];
@@ -1944,10 +1951,10 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     (G.btns || []).forEach(q => { if (inZone(z, q[0] + 0.5, q[1], 0.5)) return; const r = remap(q[2]); if (r.length) btns.push([q[0], q[1], r]); });
     const has = new Set(); plates.forEach(q => q[3].forEach(i => has.add(i))); btns.forEach(q => q[2].forEach(i => has.add(i)));
     const doors = (G.doors || []).filter((d, i) => keepD[i]);   // (a gate whose only switch went stays: it is simply shut, as a wall)
-    if (props.length === (m.props || []).length && see.length === (G.see || []).length && doors.length === (G.doors || []).length && plates.length === (G.plates || []).length && btns.length === (G.btns || []).length) return m;
+    if (powers.length === (m.powers || []).length && props.length === (m.props || []).length && see.length === (G.see || []).length && doors.length === (G.doors || []).length && plates.length === (G.plates || []).length && btns.length === (G.btns || []).length) return m;
     const dk = new Set(doors.map(d => d[0] + ',' + (d[1] + d[3]))), bk = new Set(btns.map(q => q[0] + ',' + q[1]));
     const decor = (m.decor || []).filter(q => q[0] === 2 ? dk.has(q[1] + ',' + q[2]) : q[0] === 1 ? bk.has(q[1] + ',' + q[2]) : true);
-    const out = Object.assign({}, m, { props, decor, gadgets: Object.assign({}, G, { see, doors, plates, btns }) });
+    const out = Object.assign({}, m, { props, decor, powers, gadgets: Object.assign({}, G, { see, doors, plates, btns }) });
     try { Object.defineProperty(out, '_raw', { value: m._raw || m, enumerable: false }); } catch (e) {}
     return out;
   }
