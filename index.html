@@ -290,7 +290,7 @@
   .kchip button:hover{opacity:1;color:var(--bad)}
   .kadd{background:#3a3355;border:2px dashed var(--line);border-radius:var(--wob);padding:2px 9px;font-size:14px}
   .kadd.wait{border-style:solid;border-color:var(--accent);color:var(--accent)}
-  #keymsg{min-height:18px;font-size:13px;color:#ff9a8f}
+  #keymsg,#mkeymsg{min-height:18px;font-size:13px;color:#ff9a8f}
   .slrow{display:flex;align-items:center;gap:8px}.slrow svg{font-size:19px;flex:none;opacity:.85}
   .np{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:8px;background:#120f1c;border:2px solid var(--line);border-radius:var(--wob);padding:6px 10px}
   .np span{flex:none}.np #nowPlaying{flex:1;min-width:0;white-space:normal;line-height:1.2;overflow-wrap:anywhere}
@@ -734,7 +734,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 159; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 160; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1031,7 +1031,12 @@
         <div id="keyrows"></div><div id="keymsg"></div>
         <button class="btn" id="keyReset"><span data-ic="reset"></span>Reset keys</button>
         <p class="small dim">A key can only do one thing. Esc, <kbd>-</kbd> and <kbd>+</kbd> are always settings and zoom.</p>
-        <p class="small dim"><b>Building with the keyboard:</b> open the build menu with its key (B). <kbd>←</kbd> <kbd>→</kbd> change the tab, <kbd>↑</kbd> <kbd>↓</kbd> pick the item, <kbd>1</kbd>–<kbd>9</kbd> pick it straight away, <kbd>Enter</kbd> buys it. Then roll to where it should go: <kbd>Enter</kbd> or <kbd>E</kbd> places it, <kbd>Q</kbd> cancels.</p>
+        <h4><span data-ic="key"></span> Keys in menus and the build menu</h4>
+        <p class="small dim">Used in every menu, pop-up and the build menu. They can be the same keys you roll and jump with. <kbd>1</kbd>–<kbd>9</kbd> buy straight away in the build menu, and <kbd>Esc</kbd> always closes.</p>
+        <div id="mkeyrows"></div><div id="mkeymsg" class="kmsg"></div>
+        <button class="btn" id="mkeyReset"><span data-ic="reset"></span>Reset menu keys</button>
+        <p class="small dim"><b>Building with the keyboard:</b> open the build menu with its key, change the tab with the tab keys (or left and right), pick with up and down (or <kbd>1</kbd>–<kbd>9</kbd>) and buy with Select. Then roll to where it should go and use "Place it", or "Cancel placing".</p>
+
         <p class="small dim"><b>Menus with the keyboard:</b> every menu and pop-up works with the arrows (or the keys you move with), <kbd>Enter</kbd> or <kbd>Space</kbd> picks what is lit, <kbd>Esc</kbd> goes back. The keys above open the chat, the big map, how to play and the pause menu.</p>
         <h4><span data-ic="pad"></span> Mouse</h4>
         <div class="row"><span class="lbl">Move with the mouse</span><div id="selMouse"></div><div class="small dim" id="mouseDesc" style="margin-top:4px"></div></div>
@@ -1326,8 +1331,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=159"></script>
-<script src="physics.js?v=159"></script>
+<script src="maps.js?v=160"></script>
+<script src="physics.js?v=160"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1366,7 +1371,9 @@ function fillIcons(root) {
 fillIcons();
 
 /* ================= settings (saved in this browser, restored exactly on return) ================= */
-function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'] }; }
+const OPT_KEYS = ['mback'];   // (these may be left with no key at all)
+function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'KeyS'], mleft: ['ArrowLeft', 'KeyA'], mright: ['ArrowRight', 'KeyD'], mok: ['Enter', 'Space'], mback: ['Backspace'], tprev: ['KeyQ'], tnext: ['KeyE', 'Tab'] }; }
+function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiScale: 'auto', musicOn: true, family: true, shopBtn: false, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
@@ -1375,7 +1382,7 @@ function defaults() {
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
     boost: true, boostAuto: false, boostBtn: true, boostPull: false, joy: true, superBtn: true, btnMul: {},
-    keys: defKeys(), inputMode: 'auto', scheme: 'swipebtn', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
+    keys: defKeys(), mkeys: defMKeys(), inputMode: 'auto', scheme: 'swipebtn', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
 }
 let settings = defaults();
 try { const o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
@@ -1388,7 +1395,7 @@ function normalize() {
   settings.zoom = clamp(+settings.zoom || 1, 0.25, 2);
   settings.botMax = clamp(Math.round(+settings.botMax), 1, 200); if (!isFinite(settings.botMax)) settings.botMax = 8;
   if (!settings.lookSame) { settings.lookSame = 1; settings.botMsg = false; settings.botMark = false; if (settings.mmBots !== settings.mmPlayers) settings.mmBots = settings.mmPlayers; }   // (once: bots look just like players everywhere, unless you turn the markers back on yourself)
-  if (settings.keys) { const dk = defKeys(); for (const a of ['build', 'down', 'chat', 'help', 'map', 'pause']) if (!Array.isArray(settings.keys[a])) settings.keys[a] = dk[a].filter(c => !Object.keys(settings.keys).some(o => Array.isArray(settings.keys[o]) && settings.keys[o].indexOf(c) >= 0)); }   // (new keys: the build menu, down, chat, how to play)
+  if (settings.keys) { const dk = defKeys(); for (const a of ['build', 'down', 'chat', 'help', 'map', 'pause', 'place', 'pcancel']) if (!Array.isArray(settings.keys[a])) settings.keys[a] = dk[a].filter(c => !Object.keys(settings.keys).some(o => Array.isArray(settings.keys[o]) && settings.keys[o].indexOf(c) >= 0)); }   // (new keys: the build menu, down, chat, how to play)
   if (settings.boostBtn && settings.boostPull) settings.boostPull = false;   // (one way to boost by hand, not both)
   if (['off', 'hold', 'holdr', 'follow'].indexOf(settings.mouseMove) < 0) settings.mouseMove = 'off';
   if (['auto', '1', '1.15', '1.3', '1.5'].indexOf(String(settings.uiScale)) < 0) settings.uiScale = 'auto';
@@ -1421,17 +1428,19 @@ function normalize() {
   if (settings.btnPos === null && settings.preset === 'custom') settings.preset = 'moveleft'; if (settings.btnPosP === null && settings.presetP === 'custom') settings.presetP = 'moveleft';
 }
 // keys: each key may do only one thing, and every action needs at least one key
-function cleanKeys(k) {
-  const d = defKeys(), out = {}, used = {};
-  ['left', 'right', 'jump', 'boost', 'power', 'back'].forEach(a => {
+function cleanKeys(k, d) {   // every action keeps its keys (the ones you set, or the usual ones), and no key does two things in the same list
+  d = d || defKeys(); const out = {}, used = {}, A = Object.keys(d);
+  A.forEach(a => {
     const list = (k && Array.isArray(k[a])) ? k[a] : d[a]; out[a] = [];
     list.forEach(c => { if (typeof c === 'string' && c.length < 24 && c !== 'Escape' && !used[c] && out[a].length < 4) { used[c] = a; out[a].push(c); } });
   });
-  ['left', 'right', 'jump', 'boost', 'power', 'back'].forEach(a => { if (!out[a].length) { const c = d[a].find(x => !used[x]); if (c) { out[a].push(c); used[c] = a; } } });
+  A.forEach(a => { if (!out[a].length && !(k && Array.isArray(k[a]) && k[a].length === 0 && OPT_KEYS.indexOf(a) >= 0)) { const c = d[a].find(x => !used[x]); if (c) { out[a].push(c); used[c] = a; } } });
   return out;
 }
 normalize();
 settings.keys = cleanKeys(settings.keys);
+settings.mkeys = cleanKeys(settings.mkeys, defMKeys());   // (the keys for moving around in menus and the build menu: a list of their own, so they can share keys with rolling and jumping)
+const mk = (a, c) => { const l = settings.mkeys && settings.mkeys[a]; return !!l && l.indexOf(c) >= 0; };
 const save = () => { try { localStorage.setItem('ballrun4', JSON.stringify(settings)); } catch (e) {} try { applyDeps(); } catch (e) {} };
 
 /* ================= small helpers ================= */
@@ -2768,7 +2777,7 @@ function shopKb() { const rows = [...document.querySelectorAll('#shopList .shopi
    A slider that is lit moves with left and right; a text box that is lit is typed in after Enter. */
 let kbBox = null;
 function kbNav(box, e, passGo) {
-  const c = e.code, dir = c === 'ArrowLeft' || c === 'KeyA' ? [-1, 0] : c === 'ArrowRight' || c === 'KeyD' ? [1, 0] : c === 'ArrowUp' || c === 'KeyW' ? [0, -1] : c === 'ArrowDown' || c === 'KeyS' ? [0, 1] : null, go = c === 'Enter' || c === 'Space' || c === 'NumpadEnter';
+  const c = e.code, dir = mk('mleft', c) ? [-1, 0] : mk('mright', c) ? [1, 0] : mk('mup', c) ? [0, -1] : mk('mdown', c) ? [0, 1] : null, go = mk('mok', c) || c === 'NumpadEnter';
   if (!dir && !go) return false;
   if (kbBox !== box) { document.querySelectorAll('.kbf').forEach(x => x.classList.remove('kbf')); kbBox = box; }
   const bs = [...box.querySelectorAll('button, label.sw2, label.dont, label.saychk, input[type=range], input[type=text], textarea, #mm')].filter(b => b.offsetParent !== null && !b.disabled && b.getClientRects().length && !(b.tagName === 'LABEL' && !b.querySelector('input')));
@@ -2794,14 +2803,16 @@ addEventListener('keydown', e => {
   if (keyCapture || typing() || e.ctrlKey || e.metaKey || e.altKey) return;
   const has = (a) => (settings.keys[a] || []).indexOf(e.code) >= 0, eat = () => { e.preventDefault(); e.stopPropagation(); };
   { const L = document.querySelector('body > .csel-list');   // an open drop-down: up and down walk its lines, Enter picks
-    if (L) { const its = [...L.children], c = e.code, up = c === 'ArrowUp' || c === 'KeyW', dn = c === 'ArrowDown' || c === 'KeyS'; let i = its.findIndex(x => x.classList.contains('kbf')); if (i < 0) i = its.findIndex(x => x.classList.contains('on'));
+    if (L) { const its = [...L.children], c = e.code, up = mk('mup', c), dn = mk('mdown', c); let i = its.findIndex(x => x.classList.contains('kbf')); if (i < 0) i = its.findIndex(x => x.classList.contains('on'));
       if (up || dn) { its.forEach(x => x.classList.remove('kbf')); i = Math.max(0, Math.min(its.length - 1, i + (dn ? 1 : -1))); its[i].classList.add('kbf'); try { its[i].scrollIntoView({ block: 'nearest' }); } catch (er) {} eat(); return; }
-      if (c === 'Enter' || c === 'Space' || c === 'NumpadEnter') { if (i >= 0) its[i].click(); eat(); return; }
+      if (mk('mok', c) || c === 'NumpadEnter') { if (i >= 0) its[i].click(); eat(); return; }
+      if (mk('mback', c) && typeof closeSelectFn === 'function' && closeSelectFn) { closeSelectFn(); eat(); return; }
       if (c !== 'Escape') { eat(); } return; } }
   if (typeof shopOpen === 'undefined' || !shopOpen) {
     for (const id of KB_BOXES) { const box = $(id); if (!box || box.classList.contains('hide')) continue;
       if ((id === 'emoPop' && has('chat')) || (id === 'intro' && has('help'))) { if (id === 'emoPop') toggleChat(false); else { const ok = box.querySelector('.ok') || $('btnOk'); if (ok) ok.click(); else box.classList.add('hide'); } eat(); return; }
       if (id === 'pause' && has('pause') && !e.repeat) { escMenu(); eat(); return; }
+      if (mk('mback', e.code) && !e.repeat) { if (id === 'pickPop') closePick(); else if (id === 'confirm') $('cfNo').click(); else if (id === 'descModal') dsClose(false); else if (id === 'settings') { const cb = $('btnCloseSet'); if (cb) cb.click(); } else if (id === 'pause') resumeGame(); else if (id === 'emoPop') toggleChat(false); else if (id === 'intro') $('btnOk').click(); else try { box.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); } catch (er) {} eat(); return; }
       if (e.code === 'Escape' && id !== 'pickPop' && id !== 'confirm' && id !== 'settings' && id !== 'pause' && id !== 'intro' && id !== 'emoPop') { if (id === 'descModal') dsClose(false); else try { box.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); } catch (er) {} eat(); return; }
       if (kbNav(box, e)) eat(); return; }
     if (typeof inHome !== 'undefined' && inHome && !(typeof mmBigOn !== 'undefined' && mmBigOn)) { if (kbNav($('home'), e, true)) eat(); return; }
@@ -2818,12 +2829,12 @@ addEventListener('keydown', e => {
   if (!open) { if (bk.indexOf(e.code) >= 0 && !e.repeat && !blocked() && S.mode === 'play' && !(typeof placing !== 'undefined' && placing)) { shopSel = 0; toggleShop(true); if (shopOpen) { shopKb(); e.preventDefault(); e.stopPropagation(); } } return; }
   const tabs = [...document.querySelectorAll('#shopTabs button')], ti = tabs.findIndex(b => b.classList.contains('on')), c = e.code;
   let used = true;
-  if (c === 'Escape' || bk.indexOf(c) >= 0) toggleShop(false);
-  else if (c === 'ArrowLeft' || c === 'KeyA' || c === 'KeyQ') { if (tabs.length) { tabs[(ti - 1 + tabs.length) % tabs.length].click(); shopSel = 0; shopKb(); } }
-  else if (c === 'ArrowRight' || c === 'KeyD' || c === 'KeyE' || c === 'Tab') { if (tabs.length) { tabs[(ti + 1) % tabs.length].click(); shopSel = 0; shopKb(); } }
-  else if (c === 'ArrowDown' || c === 'KeyS') { const n = shopKb().length; if (n) { shopSel = (Math.max(-1, shopSel) + 1) % n; shopKb(); } }
-  else if (c === 'ArrowUp' || c === 'KeyW') { const n = shopKb().length; if (n) { shopSel = (Math.max(0, shopSel) - 1 + n) % n; shopKb(); } }
-  else if (c === 'Enter' || c === 'Space' || c === 'NumpadEnter') { const rows = shopKb(), b = rows[Math.max(0, shopSel)] && rows[Math.max(0, shopSel)].querySelector('button'); if (b && !b.disabled) b.click(); else sfx('warn'); }
+  if (c === 'Escape' || bk.indexOf(c) >= 0 || mk('mback', c)) toggleShop(false);
+  else if (mk('tprev', c) || mk('mleft', c)) { if (tabs.length) { tabs[(ti - 1 + tabs.length) % tabs.length].click(); shopSel = 0; shopKb(); } }
+  else if (mk('tnext', c) || mk('mright', c)) { if (tabs.length) { tabs[(ti + 1) % tabs.length].click(); shopSel = 0; shopKb(); } }
+  else if (mk('mdown', c)) { const n = shopKb().length; if (n) { shopSel = (Math.max(-1, shopSel) + 1) % n; shopKb(); } }
+  else if (mk('mup', c)) { const n = shopKb().length; if (n) { shopSel = (Math.max(0, shopSel) - 1 + n) % n; shopKb(); } }
+  else if (mk('mok', c) || c === 'NumpadEnter') { const rows = shopKb(), b = rows[Math.max(0, shopSel)] && rows[Math.max(0, shopSel)].querySelector('button'); if (b && !b.disabled) b.click(); else sfx('warn'); }
   else if (/^Digit[1-9]$/.test(c)) { const rows = shopKb(), i = +c.slice(5) - 1; if (rows[i]) { shopSel = i; shopKb(); const b = rows[i].querySelector('button'); if (b && !b.disabled) b.click(); else sfx('warn'); } }
   else used = false;
   if (used) { e.preventDefault(); e.stopPropagation(); }
@@ -2848,8 +2859,8 @@ addEventListener('keydown', e => {
   if (e.key === '=' || e.key === '+') { setZoom(settings.zoom + 0.1); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const a = e.code ? actionOf(e.code) : null;
-  if (!a && typeof placing !== 'undefined' && placing && !blocked() && !e.repeat) { if (e.code === 'KeyE' || e.code === 'Enter') { finishPlacing(); e.preventDefault(); return; } if (e.code === 'KeyQ' || e.code === 'Backspace') { cancelPlacing(); e.preventDefault(); return; } }
-  if (!a) return;
+  if ((a === 'place' || a === 'pcancel') && typeof placing !== 'undefined' && placing && !blocked() && !e.repeat) { if (a === 'place') finishPlacing(); else cancelPlacing(); e.preventDefault(); return; }
+  if (!a || ['left', 'right', 'jump', 'boost', 'power', 'back', 'down'].indexOf(a) < 0) return;   // (the shortcut keys have their own handler)
   if (!$('settings').classList.contains('hide')) closeSettingsNow();
   e.preventDefault();
   if (detected !== 'keyboard') { detected = 'keyboard'; applyTouchUI(); applyDeps(); }   // (any game key: this is a keyboard, the touch buttons and their settings go away)
@@ -2862,6 +2873,18 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { if (e.code && keysDown.delete(e.code)) syncKeys(); });
 addEventListener('blur', () => { keysDown.clear(); inp.left = inp.right = inp.jump = false; });
 cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
+/* One press does one thing. A button that opens a pop-up when your finger goes down (the +, chat, pause...) must not also press whatever in that pop-up ends up under
+   your finger when it lifts. So a click inside a pop-up only counts if the press that made it started after the pop-up was open. */
+const POPS = ['shopPop', 'emoPop', 'pickPop', 'confirm', 'pause', 'settings', 'intro', 'lvlModal', 'descModal', 'nameModal', 'profModal', 'addModal', 'invModal', 'codeModal', 'shareModal', 'mmbig', 'codeBox'];
+const popOpenT = {}; let downT = 0;
+try { const mo = new MutationObserver(list => { const t = performance.now(); for (const m of list) { const el = m.target; if (!el.classList.contains('hide') && !(m.oldValue || '').split(' ').every(x => x !== 'hide')) popOpenT[el.id] = t; } });
+  POPS.forEach(id => { const el = $(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ['class'], attributeOldValue: true }); }); } catch (e) {}
+document.addEventListener('pointerdown', () => { downT = performance.now(); }, true);
+document.addEventListener('click', e => {
+  if (!e.isTrusted || e.detail === 0) return;   // (a click from the keyboard, or one the game makes itself, is always fine)
+  const t = e.target; if (!t || !t.closest) return;
+  for (const id of POPS) { const T = popOpenT[id]; if (T && T > downT - 5) { const el = $(id); if (el && el.contains(t)) { e.preventDefault(); e.stopPropagation(); return; } } }
+}, true);
 let touchUi = false;   // (decided when the finger goes down: a list being rebuilt under a moving finger must not stop it scrolling)
 document.addEventListener('touchstart', e => { const t = e.target; touchUi = !!(t && t.closest && t.closest('#settings, .card, .csel-list, #editbar')); }, { passive: true, capture: true });
 document.addEventListener('touchmove', e => { const t = e.target; if (touchUi || (t && t.isConnected === false)) return; if (!t.closest || !t.closest('#settings, .card, .csel-list, #editbar')) e.preventDefault(); }, { passive: false });
@@ -3375,23 +3398,27 @@ $('setFallWarn').onchange = () => {
   askConfirm('Turn off the warning sign?', 'The sign tells you when you are near lava, near the edge of the world, or falling so fast that the landing could be your last.', 'Turn it off', () => { settings.fallWarn = settings.edge = false; S.edgeWarn = S.fallWarn = S.lavaWarn = false; $('setFallWarn').checked = false; save(); sfx('off'); });
 };
 /* ----- keyboard: pick your own keys (a key can do only one thing) ----- */
-const KEYACT = [['build', 'plus', 'Build menu'], ['chat', 'chat', 'Chat'], ['help', 'help', 'How to play'], ['map', 'map', 'Big map'], ['pause', 'pause', 'Pause menu'], ['down', 'down', 'Down (while building or deleting)'], ['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['boost', 'bolt', 'Boost'], ['power', 'spark', 'Power jump (with its own button)'], ['back', 'flag', 'Back to start']];
+const KEYACT = [['build', 'plus', 'Build menu'], ['chat', 'chat', 'Chat'], ['help', 'help', 'How to play'], ['map', 'map', 'Big map'], ['pause', 'pause', 'Pause menu'], ['down', 'down', 'Down (while building or deleting)'], ['place', 'check', 'Place it (while building)'], ['pcancel', 'close', 'Cancel placing'], ['left', 'left', 'Move left'], ['right', 'right', 'Move right'], ['jump', 'up', 'Jump'], ['boost', 'bolt', 'Boost'], ['power', 'spark', 'Power jump (with its own button)'], ['back', 'flag', 'Back to start']];
+const MKEYACT = [['mup', 'up', 'Up'], ['mdown', 'down', 'Down'], ['mleft', 'left', 'Left'], ['mright', 'right', 'Right'], ['mok', 'check', 'Select / buy'], ['mback', 'back', 'Back / close'], ['tprev', 'left', 'Previous tab'], ['tnext', 'right', 'Next tab']];
 const KEYNAMES = { Space: 'Space', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Enter: 'Enter', ShiftLeft: 'L-Shift', ShiftRight: 'R-Shift', Tab: 'Tab', Backspace: 'Backspace', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`', CapsLock: 'Caps' };
 const keyLabel = c => KEYNAMES[c] || (c.indexOf('Key') === 0 ? c.slice(3) : c.indexOf('Digit') === 0 ? c.slice(5) : c.indexOf('Numpad') === 0 ? 'Num ' + c.slice(6) : c);
 const RESERVED = ['Escape', 'Minus', 'Equal', 'NumpadAdd', 'NumpadSubtract', 'MetaLeft', 'MetaRight', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ContextMenu'];
-function buildKeys() {
-  const box = $('keyrows'); box.innerHTML = '';
-  KEYACT.forEach(ka => {
+const KEYGROUPS = [{ box: 'keyrows', acts: () => KEYACT, store: 'keys', def: () => defKeys() }, { box: 'mkeyrows', acts: () => MKEYACT, store: 'mkeys', def: () => defMKeys() }];
+function buildKeys() { KEYGROUPS.forEach(buildKeyGroup); }
+function buildKeyGroup(G) {
+  const box = $(G.box); if (!box) return; box.innerHTML = ''; const K = settings[G.store] || (settings[G.store] = G.def());
+  G.acts().forEach(ka => {
     const a = ka[0], row = document.createElement('div'); row.className = 'keyrow';
     row.innerHTML = '<span class="kn">' + ic(ka[1]) + '<span>' + ka[2] + '</span></span>';
-    (settings.keys[a] || (settings.keys[a] = (defKeys()[a] || []).filter(c => !actionOf(c)))).forEach((c, i) => {
+    const own = c => { for (const o in K) if (o !== a && K[o].indexOf(c) >= 0) return o; return null; };
+    (K[a] || (K[a] = (G.def()[a] || []).filter(c => !own(c)))).forEach((c, i) => {
       const chip = document.createElement('span'); chip.className = 'kchip'; chip.textContent = keyLabel(c);
-      if (settings.keys[a].length > 1) { const x = document.createElement('button'); x.title = 'Remove'; x.innerHTML = ic('close'); x.onclick = () => { settings.keys[a].splice(i, 1); save(); buildKeys(); sfx('off'); }; chip.appendChild(x); }
+      if (K[a].length > 1 || OPT_KEYS.indexOf(a) >= 0) { const x = document.createElement('button'); x.title = 'Remove'; x.setAttribute('aria-label', 'Remove ' + keyLabel(c)); x.innerHTML = ic('close'); x.onclick = () => { K[a].splice(i, 1); save(); buildKeys(); sfx('off'); }; chip.appendChild(x); }
       row.appendChild(chip);
     });
-    if (settings.keys[a].length < 4) {
+    if (K[a].length < 4) {
       const add = document.createElement('button'); add.className = 'kadd'; add.textContent = '+ key';
-      add.onclick = () => { if (keyCapture) cancelCapture(); keyCapture = { a, btn: add }; add.textContent = 'Press a key…'; add.classList.add('wait'); $('keymsg').textContent = ''; };
+      add.onclick = () => { if (keyCapture) cancelCapture(); keyCapture = { a, g: G, btn: add }; add.textContent = 'Press a key…'; add.classList.add('wait'); $('keymsg').textContent = ''; $('mkeymsg').textContent = ''; };
       row.appendChild(add);
     }
     box.appendChild(row);
@@ -3403,11 +3430,13 @@ addEventListener('keydown', e => {
   e.preventDefault(); e.stopPropagation();
   const code = e.code; if (!code || code === 'Unidentified') return;
   if (code === 'Escape') { cancelCapture(); return; }
-  if (RESERVED.indexOf(code) >= 0) { $('keymsg').textContent = keyLabel(code) + ' is reserved for the game menu. Pick another key.'; return; }
-  const owner = actionOf(code);
-  if (owner) { const nm = KEYACT.filter(k => k[0] === owner)[0][2]; $('keymsg').textContent = keyLabel(code) + ' already does "' + nm + '". A key can only do one thing, so remove it there first.'; sfx('warn'); return; }
-  settings.keys[keyCapture.a].push(code); keyCapture = null; save(); buildKeys(); sfx('on'); $('keymsg').textContent = '';
+  const G = keyCapture.g || KEYGROUPS[0], msg = $(G.box === 'mkeyrows' ? 'mkeymsg' : 'keymsg'), K = settings[G.store];
+  if (RESERVED.indexOf(code) >= 0 || (G.store === 'mkeys' && /^Digit[1-9]$/.test(code))) { msg.textContent = keyLabel(code) + ' is kept for the game. Pick another key.'; return; }
+  let owner = null; for (const o in K) if (K[o].indexOf(code) >= 0) owner = o;
+  if (owner) { const nm = G.acts().filter(k => k[0] === owner)[0][2]; msg.textContent = keyLabel(code) + ' already does "' + nm + '". A key can only do one thing here, so remove it there first.'; sfx('warn'); return; }
+  K[keyCapture.a].push(code); keyCapture = null; save(); buildKeys(); sfx('on'); msg.textContent = '';
 }, true);
+$('mkeyReset').onclick = () => { settings.mkeys = defMKeys(); save(); buildKeys(); $('mkeymsg').textContent = ''; sfx('on'); };
 $('keyReset').onclick = () => { settings.keys = defKeys(); keysDown.clear(); syncKeys(); save(); buildKeys(); $('keymsg').textContent = ''; sfx('on'); };
 // little click sounds for buttons
 document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('button'); if (t && !t.id.startsWith('t') && t.id !== 'cfYes') sfx('ui'); });
@@ -3926,7 +3955,7 @@ const ico = n => '<svg class="ic" viewBox="0 0 24 24"><use href="#i-' + n + '"/>
 const canShop = () => !inHome && !paused && S.mode === 'play' && !!S.b && !S.away && S.dead <= 0;
 let shopOpen = false;
 function shopRender() {
-  { let k = $('shopKeys'); if (!k) { k = document.createElement('div'); k.id = 'shopKeys'; k.className = 'small dim'; k.textContent = '← → tab   ↑ ↓ item   1–9 or Enter: buy   B or Esc: close'; $('shopList').parentNode.appendChild(k); } k.classList.toggle('hide', touchActive()); }
+  { let k = $('shopKeys'); if (!k) { k = document.createElement('div'); k.id = 'shopKeys'; k.className = 'small dim'; $('shopList').parentNode.appendChild(k); } const L = a => ((settings.mkeys || {})[a] || []).slice(0, 2).map(keyLabel).join('/') || '–'; k.textContent = L('tprev') + ' ' + L('tnext') + ' tab   ' + L('mup') + ' ' + L('mdown') + ' item   1–9 or ' + L('mok') + ': buy   ' + [((settings.keys.build || [])[0] && keyLabel(settings.keys.build[0])), 'Esc'].filter(Boolean).join(' or ') + ': close'; k.classList.toggle('hide', touchActive()); }
   $('shopWallet').innerHTML = '<span>' + ico('gcoin') + fmtW(wallet.c) + '</span><span>' + ico('gem') + fmtW(wallet.g) + '</span>';
   const T = $('shopTabs'); T.innerHTML = '';
   if (shopTab === 'gates') shopTab = 'gadgets';
