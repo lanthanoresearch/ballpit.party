@@ -26,6 +26,7 @@
     for (let more = true; more;) { more = false; for (let i = 0; i < PB.length; i++) if (!cut[i]) for (let j = 0; j < PB.length; j++) if (cut[j] && PB[i][2] > PB[j][0] + 2 && PB[i][0] < PB[j][2] - 2 && Math.abs(PB[i][3] - PB[j][1]) < 6) { cut[i] = more = true; break; } }   // (nothing of the map's own starts in the start zone or by the finish flag, nor anything stacked on such a thing)
     (map.props || []).forEach((p, i) => { if (cut[i]) return; const d = addProp(w, p[0], (p[1] + 0.5) * TS, p[2] * TS - propDims(p[0]).half - 0.5); d.nap = true; d.m0 = true; });   /* (the map's own things start out at rest: each one checks it is held up once somebody comes near) */   // pushable yellow things; each player has their own copy (never shared)
     natRopes(w, map);
+    for (const L of [w.see, w.pads, w.portals, w.ropes || [], w.doors, w.btns, w.plates]) for (const q of L) q.mm = 1;   // (the map's own: never anybody's)
     return w;
   }
 
@@ -727,14 +728,35 @@
     return z;
   }
   // nothing can be built in a wide circle around the start and around the finish (three times as wide as the small square in the middle, where nothing can even be left lying)
-  function zoneP(o, px, py, m) { const z = noBuild(o); for (let i = 0; i < z.length; i++) { const q = z[i], dx = px - q.cx, dy = py - q.cy, rr = q.r + (m || 0); if (dx * dx + dy * dy <= rr * rr) return true; } return false; }
+  function zoneP(o, px, py, m, own) { const z = noBuild(o); for (let i = 0; i < z.length; i++) { const q = z[i]; if (own !== undefined && q.k === 'b' && (q.o >>> 0) === (own >>> 0)) continue; const dx = px - q.cx, dy = py - q.cy, rr = q.r + (m || 0); if (dx * dx + dy * dy <= rr * rr) return true; } return false; }   // (own: a player's own base does not count for them)
+  function burnZone(w, d) {   // does this thing burn up where it is? Always in the circles at the start and the finish; in a player's base, anything that is not theirs (the server decides that in a shared world)
+    if (zoneP(w.map, d.x, d.y, 0)) return true;
+    if (w.follow || !w.bases || !w.bases.length) return false;
+    for (const b of w.bases) { const dx = d.x - b.cx, dy = d.y - b.cy; if (dx * dx + dy * dy <= b.r * b.r && (d.ownTag >>> 0) !== (b.o >>> 0)) return true; }
+    return false;
+  }
+  function baseGround(w, tx, ty) { const t = tile(w, tx, ty + 1), here = tile(w, tx, ty); return (t === 1 || t === 3) && here === 0; }   // (a base stands on dirt or ice, like a flag)
+  function baseClear(w, tx, ty, mine, cps) {   // what stands in the circle a base would make that is not yours (it has to be cleared first). mine(kind, thing) says what is yours
+    const cx = (tx + 0.5) * TS, cy = (ty + 0.5) * TS, rr = BASE_R, inC = (x, y, e) => { const dx = x - cx, dy = y - cy, r2 = rr + (e || 0); return dx * dx + dy * dy <= r2 * r2; };
+    for (const d of w.dyn) if (!(d.burn > 0) && !d.gone && d.x > -9000 && inC(d.x, d.y, d.r || d.hw) && !mine('b', d)) return d.k === 'o' ? 'a ball' : d.kind === 5 || d.kind === 6 ? 'a spring' : 'a crate';
+    for (const q of w.see) if (!q.gone && inC(q.cx, q.cy, q.hl) && !mine('s', q)) return 'a teeter-totter';
+    for (const q of w.pads) if (!q.gone && inC((q.x + 1) * TS, q.y * TS, TS) && !mine('pad', q)) return 'a floor booster';
+    for (const q of w.portals) if (!q.gone && (inC(q.a.x, q.a.y, 20) || inC(q.b.x, q.b.y, 20)) && !mine('por', q)) return 'a portal';
+    for (const q of (w.ropes || [])) if (!q.gone && (inC(q.ax, q.ay) || inC(q.bx, q.by) || inC((q.ax + q.bx) / 2, (q.ay + q.by) / 2)) && !mine('r', q)) return 'a rope bridge';
+    for (const q of w.doors) if (!q.gone && inC((q.x + q.w / 2) * TS, (q.y + q.h / 2) * TS, q.h * TS / 2) && !mine('g', q)) return 'a gate';
+    for (const q of w.btns) if (inC((q.x + 0.5) * TS, q.y * TS) && !mine('btn', q)) return 'a button';
+    for (const q of w.plates) if (!q.gone && inC((q.x + q.w / 2) * TS, q.y * TS) && !mine('plate', q)) return 'a trigger plate';
+    for (const c of (cps || [])) if (c[0] > -1000 && inC((c[0] + 0.5) * TS, c[1] * TS) && !mine('c', c)) return 'a checkpoint flag';
+    for (let y = ty - 8; y <= ty + 8; y++) for (let x = tx - 8; x <= tx + 8; x++) if (inC((x + 0.5) * TS, (y + 0.5) * TS) && tile(w, x, y) === 6 && !mine('spr', { x, y })) return 'a ground spring';
+    return null;
+  }
   const zoneT = (o, tx, ty) => zoneP(o, (tx + 0.5) * TS, (ty + 0.5) * TS, 0);
   function nearZone(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= (q.tx0 - 14) * TS && x <= (q.tx1 + 15) * TS && y >= (q.ty0 - 10) * TS && y <= (q.ty1 + 10) * TS) return true; } return false; }   // (the map's own toys around the start or the finish belong there: they never burn up in it)
   function inStart(w, x, y) { const z = noBuild(w.map); for (let i = 0; i < z.length; i++) { const q = z[i]; if (x >= q.tx0 * TS && x <= (q.tx1 + 1) * TS && y >= q.ty0 * TS && y <= (q.ty1 + 1) * TS) return true; } return false; }   // (a start or finish zone)
   function zoneSweep(w) {   // nothing at all may stay in a no-build circle, moving or not, wherever it came from (a saved world from before the circles grew, a pile that slid in): it burns up there and then, the same on every device
     const L = w.dyn;
     for (let i = 0; i < L.length; i++) { const d = L[i]; if (d.burn >= 1e9 || d.x < -9000) continue;
-      if (zoneP(w, d.x, d.y, 0)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); } }
+      if (burnZone(w, d)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); } }
   }
   let dynTick = 0, hStamp = 0; const DYN_BUDGET = 600, CELL = 64, HB = [], NONE = [], BALLSH = { x: 0, y: 0 }, PCO = [];
   function stepDyn(w, dt) {
@@ -847,7 +869,7 @@
       const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || ((!d._pl || !plankMoving(w, d)) && !d._pad));
       d.st = still ? (d.st || 0) + dt : 0;
       const burn = lavaOf.has(d);
-      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || zoneP(w, d.x, d.y, 0)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || zoneP(w.map, d.x, d.y, 0) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); }   // lost for good: this map will not give it back
+      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || burnZone(w, d)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || zoneP(w.map, d.x, d.y, 0) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); }   // lost for good: this map will not give it back
     }
     // a pile goes to sleep together, once every piece of it has been still for a moment
     const root = d => { while (d._uf !== d) { d._uf = d._uf._uf; d = d._uf; } return d; };   // (which pile each thing belongs to: every thing points the way to its pile's first piece)
@@ -1565,6 +1587,9 @@
   // what a player's chat message asks for, if anything: ('emo', i) for the emojis and ready-made phrases, ('say', a, b) for the built messages
   function askKind(t, a, b) {
     if (t === 'emo') { if (a < 10) return a === 0 || a === 1 || a === 7 || a === 6 ? 'praise' : null; return ({ 0: 'hi', 1: 'bye', 4: 'thanks', 6: 'praise', 7: 'praise', 8: 'praise', 9: 'gl', 10: 'follow', 11: 'follow', 12: 'wait', 13: 'help', 17: 'go', 18: 'praise' })[a - 10] || null; }
+    if (t === 'text') { const x = ' ' + String(a || '').toLowerCase().replace(/[^a-z ]/g, ' ') + ' ', has = (...w) => w.some(v => x.indexOf(' ' + v + ' ') >= 0);   // (anything a player writes: the bots pick up a few plain words)
+      if (has('hi', 'hello', 'hey', 'yo', 'sup', 'hiya', 'howdy')) return 'hi'; if (has('bye', 'cya', 'later', 'goodbye')) return 'bye'; if (has('thanks', 'thank', 'ty', 'thx')) return 'thanks';
+      if (has('help', 'stuck')) return 'help'; if (has('follow', 'come')) return 'follow'; if (has('wait', 'stop', 'hold')) return 'wait'; if (has('gl', 'luck')) return 'gl'; if (has('gg', 'nice', 'cool', 'wow', 'awesome', 'great')) return 'praise'; if (has('build', 'bridge')) return 'build'; return null; }
     if (t === 'say') { if (a === 0) return ['help', 'wait', 'follow', 'first', 'btn', 'btn', 'nope', 'build', 'build', 'nope', 'nope', 'nope'][b] || null; if (a === 1) return b === 0 ? 'build' : 'nope'; if (a === 8) return 'thanks'; return null; }
     return null;
   }
@@ -1577,7 +1602,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 161, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 162, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

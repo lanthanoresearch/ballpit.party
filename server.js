@@ -52,7 +52,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 161;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 162;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -384,6 +384,9 @@ function miscOkZ(w, q) {   // (the same rule every device uses: nothing built in
   if (q[0] === 'por' || q[0] === 'rope') return !inZoneT(w, q[1], q[2]) && !inZoneT(w, q[3], q[4]);
   return !inZoneT(w, q[1], q[2]) && !inZoneT(w, q[1] + 1, q[2]);
 }
+/* bases: inside somebody's base only they can build. bLock(w, px, py, otag): is this spot in a base that is not this player's? */
+function bLock(w, px, py, otag) { if (!w || !w.bases) return false; for (const b of w.bases) { const dx = px - b.cx, dy = py - b.cy; if (dx * dx + dy * dy <= b.r * b.r && (b.o >>> 0) !== ((otag || 0) >>> 0)) return true; } return false; }
+const mkey = q => q.slice(0, q[0] === 'por' || q[0] === 'rope' ? 5 : 3).join(',');
 function gateOkZ(w, q) { if (!Array.isArray(q) || q.length < 5) return false; return !inZoneT(w, q[0], q[1]) && !inZoneT(w, q[3], q[4]); }   // (exactly the client's validGate)
 function roomWorld(room) {
   if (room.world) return room.world;
@@ -396,7 +399,7 @@ function roomWorld(room) {
   (B.misc || []).forEach(q => { try { if (miscOkZ(w, q)) srvMisc(w, q); } catch (e) {} });
   if (B.gates) for (let i = B.gates.length - 1; i >= 0; i--) if (!gateOkZ(w, B.gates[i])) B.gates.splice(i, 1);
   (B.gates || []).forEach(q => { try { srvGate(w, q); } catch (e) {} });
-  (B.props || []).forEach(q => { try { const d = P.addProp(w, q[0], q[1], q[2]); if (d) d.brec = q; } catch (e) {} });
+  (B.props || []).forEach(q => { try { const d = P.addProp(w, q[0], q[1], q[2]); if (d) { d.brec = q; const t = B.po ? B.po[q.join(',')] : undefined; if (t !== undefined) d.ownTag = t >>> 0; else if (room.priv && room.priv.hostTag) d.ownTag = room.priv.hostTag >>> 0; } } catch (e) {} });
   (B.dels || []).forEach(q => { try { if (!P.coordDel(q)) P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
   let restored = false;
   if (room.snapDyn && room.snapDyn.length && Array.isArray(room.snapDyn.find(q => q)) && room.snapDyn.find(q => q).length >= 4) {   // (saved by name: each thing finds its own entry)
@@ -724,12 +727,12 @@ wss.on('connection', (ws, req) => {
         if (!p.pub) { send(p, { t: 'jno', why: 'nodev' }); return; }
         const key = privKey(p.pub), lv = m.host.m | 0;
         const hr0 = rooms.get(key);
-        if (hr0 && hr0.priv && hr0.priv.away && hr0.priv.hostPub === p.pub) { hr0.priv.owner = p.id; hr0.priv.away = 0; hr0.priv.back = 1; hr0.botsOn = !!m.host.bots; room = hr0; p.room = room; fr = { full: [] }; broadcast(room, { t: 'hostback', name: p.name }); }   // the host is back after their connection dropped: their world was kept open for everyone in it
+        if (hr0 && hr0.priv && hr0.priv.away && hr0.priv.hostPub === p.pub) { hr0.priv.owner = p.id; hr0.priv.away = 0; hr0.priv.back = 1; hr0.botsOn = !!m.host.bots; hr0.noCheats = !!m.host.nc; room = hr0; p.room = room; fr = { full: [] }; broadcast(room, { t: 'hostback', name: p.name }); }   // the host is back after their connection dropped: their world was kept open for everyone in it
         else if (hr0) { send(p, { t: 'jno', why: 'busy' }); return; }
         else {
         if (privFull()) { send(p, { t: 'jno', why: 'load' }); return; }   // (too many private games for this server to run well: the public world and offline games are still there)
         const props = [], gates = [], misc = [], cps = [], dels = [];   // (what the host built arrives right after, in small pieces)
-        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((maps.generate(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), botsOn: !!m.host.bots, priv: { at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
+        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((maps.generate(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), botsOn: !!m.host.bots, noCheats: !!m.host.nc, priv: { hostTag: p.otag >>> 0, at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] };
         }
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
@@ -752,13 +755,13 @@ wss.on('connection', (ws, req) => {
         send(p, {
           t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), fk: room.fk | 0, next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
-          build: room.priv ? undefined : bstate(room), priv: room.priv ? { back: room.priv.owner === p.id && room.priv.back ? 1 : 0, host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub } : undefined,
-          players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? Math.max(1, room.finishers.indexOf(o.id) + 1) : 0 }))   // (crown: what place they finished in)
+          build: room.priv ? undefined : bstate(room), priv: room.priv ? { back: room.priv.owner === p.id && room.priv.back ? 1 : 0, host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub, nc: room.noCheats ? 1 : 0 } : undefined,
+          players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, ot: o.otag || 0, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? Math.max(1, room.finishers.indexOf(o.id) + 1) : 0 }))   // (crown: what place they finished in)
         });
         p.dver = null; if (room.world) { send(p, doorPacket(room)); plankSend(room, room.world.see, p); }
         if (room.bots && room.bots.length) send(p, { t: 'bj', b: room.bots.map(botInfo) });
         if (room.botTl && room.botTl.size) for (const q of room.botTl.values()) send(p, { t: 'pobj', g: q, bot: 1, bulk: 1 });
-        broadcast(room, { t: 'join', id: p.id, pub: p.pub, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
+        broadcast(room, { t: 'join', id: p.id, pub: p.pub, ot: p.otag || 0, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
       } else {
         send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
       }
@@ -835,6 +838,7 @@ wss.on('connection', (ws, req) => {
       if (!addOk(p)) return;
       if (m.g[0] === 'tl') {   // one record per tile: a newer change replaces the older one, and -1 means the tile is back the way the map made it, so there is nothing to keep
         const put = (tx, ty, to) => {
+          if (r.world && bLock(r.world, (tx + 0.5) * P.TS, (ty + 0.5) * P.TS, p.otag)) return null;   // (somebody else's base)
           const mb = bstate(r).misc;
           for (let k = mb.length - 1; k >= 0; k--) if (mb[k][0] === 'tl' && mb[k][1] === tx && mb[k][2] === ty) mb.splice(k, 1);
           if (to === -1) { worldAdd.misc(r, ['tl', tx, ty, -1]); return [tx, ty, -1]; }
@@ -851,11 +855,19 @@ wss.on('connection', (ws, req) => {
       const e = (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' || m.g[0] === 'rope' ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])].concat(m.g[0] === 'por' && m.g.length === 6 ? [Math.max(0, Math.min(3, Math.round(m.g[5])))] : []) : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0];
       if (e[0] === 'base') { e[3] = p.otag >>> 0 || 0; }   // (a base is always the builder's own)
       if (e[0] === 'base' && (!p.otag || bstate(r).misc.some(x => x[0] === 'base' && (x[3] >>> 0) === (e[3] >>> 0)))) return;
+      if (e[0] === 'base' && roomWorld(r)) {   // on dirt or ice, and nothing of anybody else's in the circle (it is not a clearing tool)
+        const w = r.world, B = bstate(r), mo = r.mown || new Map(), hostT = r.priv && r.priv.hostTag;
+        const mine = (k, q) => { if (q.mm) return false; if (k === 'b') return !q.brec ? false : (q.ownTag === undefined ? true : (q.ownTag >>> 0) === (p.otag >>> 0));
+          const key = k === 'c' ? 'c,' + q[0] + ',' + q[1] : null; const t = key ? mo.get(key) : undefined; return t === undefined ? true : (t >>> 0) === (p.otag >>> 0); };
+        const why = !P.baseGround(w, e[1], e[2]) ? 'ground' : P.baseClear(w, e[1], e[2], mine, B.cps);
+        if (why) { send(p, { t: 'baseno', why }); p.rsAt = Date.now(); p.dver = null; p.sbh = p.sdh = null; send(p, { t: 'rebuild', rs: 1, priv: r.priv ? 1 : 0, b: { props: B.props, gates: B.gates, misc: B.misc, cps: B.cps, dels: B.dels } }); return; }
+      }
+      if (e[0] !== 'base' && e[0] !== 'tl' && roomWorld(r) && bLock(r.world, (e[1] + 1) * P.TS, e[2] * P.TS, p.otag)) { const B = bstate(r); p.rsAt = Date.now(); p.dver = null; p.sbh = p.sdh = null; send(p, { t: 'rebuild', rs: 1, priv: r.priv ? 1 : 0, b: { props: B.props, gates: B.gates, misc: B.misc, cps: B.cps, dels: B.dels } }); return; }   // (somebody else's base: only they build there)
       if (roomWorld(r) && (((e[0] === 'see' || e[0] === 'pad') && P.miscClash(r.world, e)) || (e[0] === 'base' && !P.baseOk(r.world, e[1], e[2], e[3])))) {   // (somebody else's is already there: this device gets the world as it really is, so nobody is ever left with a different one)
         const B = bstate(r); p.rsAt = Date.now(); p.dver = null; p.sbh = p.sdh = null; send(p, { t: 'rebuild', rs: 1, priv: r.priv ? 1 : 0, b: { props: B.props, gates: B.gates, misc: B.misc, cps: B.cps, dels: B.dels } }); return;
       }
       if (e[0] === 'por' || e[0] === 'pad' || e[0] === 'base') P.addCancel(bstate(r), e[0], e[1], e[2]);
-      bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p);
+      bstate(r).misc.push(e); worldAdd.misc(r, e); broadcast(r, { t: 'pobj', g: e }, p); (r.mown || (r.mown = new Map())).set(mkey(e), p.otag >>> 0);
     } else if (m.t === 'own') {   // a player's device says where the things it is pushing are: the server takes its word, unless somebody else is right there too
       const r = p.room; if (!r || !r.world || m.s !== rslot(r)) return;
       const w = r.world;   // (the first device to take something has it until it lets go; everyone else sees it as theirs)
@@ -939,6 +951,15 @@ wss.on('connection', (ws, req) => {
       const r = p.room, B = bstate(r); if (!B) return;
       const q = okDel(m.g); if (!q || !addOk(p)) return;
       if (q[0] === 'base') { const e = B.misc.find(x => x[0] === 'base' && x[1] === q[1] && x[2] === q[2]); if (!e || (e[3] >>> 0) !== (p.otag >>> 0)) return; }   // (only its owner can take a base away)
+      if (r.world && q[0] !== 'base') {   // nothing in somebody else's base can be deleted by anyone but them
+        const w = r.world, T = P.TS; let at = null;
+        if (q[0] === 'b') { const d = w.dynBy.get(q[1] >>> 0); if (d) at = [d.x, d.y]; }
+        else if (q[0] === 's') { const e = w.see.find(o => o.uid === (q[1] >>> 0)); if (e) at = [e.cx, e.cy]; }
+        else if (q[0] === 'g') { const e = w.doors.find(o => o.uid === (q[1] >>> 0)); if (e) at = [(e.x + 0.5) * T, (e.y + e.h / 2) * T]; }
+        else if (q[0] === 'r') { const e = (w.ropes || []).find(o => o.uid === (q[1] >>> 0)); if (e) at = [(e.ax + e.bx) / 2, (e.ay + e.by) / 2]; }
+        else at = [(q[1] + 1) * T, q[2] * T];
+        if (at && bLock(w, at[0], at[1], p.otag)) return;
+      }
       if (q[0] === 'b' && r.world) {   // deleting a crate, ball or spring somebody built: it is simply taken off the list of built things, as if it had never been put down. Nothing has to be remembered, so this never runs out
         const d = r.world.dynBy.get(q[1] >>> 0), i = d && d.brec ? B.props.indexOf(d.brec) : -1;
         if (i >= 0) { B.props.splice(i, 1); d.brec = null; worldAdd.del(r, q); broadcast(r, { t: 'pdel', g: q }, p); giveBack(r, d, p); return; }
@@ -951,14 +972,15 @@ wss.on('connection', (ws, req) => {
     } else if (m.t === 'pgate') {   // a gate and its trigger, built in a friend's world
       const r = p.room; if (!bstate(p.room) || !Array.isArray(m.g) || m.g.length !== 5 || !m.g.every(Number.isFinite) || m.g[2] < 2 || m.g[2] > 8 || bstate(r).gates.length >= ROOM_GATES) return;
       if (!addOk(p)) return;
-      const e = m.g.map(Math.round); if (roomWorld(r) && !gateOkZ(r.world, e)) return;   // (the same rule every device uses: no gate, and no plate of one, in a no-build circle)
+      const e = m.g.map(Math.round); if (roomWorld(r) && (!gateOkZ(r.world, e) || bLock(r.world, (e[0] + 0.5) * P.TS, (e[1] + e[2] / 2) * P.TS, p.otag) || bLock(r.world, (e[3] + 1) * P.TS, e[4] * P.TS, p.otag))) return;
+      (r.mown || (r.mown = new Map())).set('g,' + e.slice(0, 5).join(','), p.otag >>> 0);   // (the same rule every device uses: no gate, and no plate of one, in a no-build circle)
       bstate(r).gates.push(e); worldAdd.gate(r, e); broadcast(r, { t: 'pgate', g: e }, p);
     } else if (m.t === 'padd' || m.t === 'pcp') {   // somebody built something in a friend's world: everyone there gets it
       const r = p.room; if (!bstate(p.room)) return;
       if (!addOk(p)) return;
       if (m.t === 'padd') {
         const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
-        if (roomWorld(r) && P.zoneP(r.world.map, m.x, m.y, P.TS * 0.6)) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y) }); return; }
+        if (roomWorld(r) && (P.zoneP(r.world.map, m.x, m.y, P.TS * 0.6) || bLock(r.world, m.x, m.y, p.otag))) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y) }); return; }
         { // a fair share for everybody: each player in the world always has room for PROP_SHARE crates, balls and springs of their own; past that they may go on building only while that leaves every other player here their share
           const B = bstate(r), own = r.own || (r.own = new Map()), mine = own.get(p.pub) || 0; let used = B.props.length, keep = 0;
           for (const e of B.dels) if (e[0] === 'b') used--;
@@ -966,9 +988,11 @@ wss.on('connection', (ws, req) => {
           if (B.props.length >= ROOM_PROPS * 2 || used >= ROOM_PROPS || (mine >= PROP_SHARE && used + keep >= ROOM_PROPS)) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y), full: used >= ROOM_PROPS ? 1 : 0 }); return; }
           own.set(p.pub, mine + 1);
         }
-        const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); const nd = worldAdd.prop(r, e), nu = nd ? nd.uid : undefined; if (nd) nd.ownPub = p.pub; broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2], u: nu }, p); if (nu !== undefined) send(p, { t: 'puid', k: e[0], x: e[1], y: e[2], u: nu });   // (the server's name for it goes to everyone, so two things put down on the very same spot can never be mixed up)
+        const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); const nd = worldAdd.prop(r, e), nu = nd ? nd.uid : undefined; if (nd) { nd.ownPub = p.pub; nd.ownTag = p.otag >>> 0; } { const B = bstate(r); (B.po || (B.po = {}))[e.join(',')] = p.otag >>> 0; } broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2], u: nu }, p); if (nu !== undefined) send(p, { t: 'puid', k: e[0], x: e[1], y: e[2], u: nu });   // (the server's name for it goes to everyone, so two things put down on the very same spot can never be mixed up)
       } else {
         if (!Number.isFinite(m.x) || !Number.isFinite(m.y) || bstate(r).cps.length >= ROOM_CPS) return;
+        if (r.world && bLock(r.world, (m.x + 0.5) * P.TS, m.y * P.TS, p.otag)) return;
+        (r.mown || (r.mown = new Map())).set('c,' + Math.round(m.x) + ',' + Math.round(m.y), p.otag >>> 0);
         const e = [Math.round(m.x), Math.round(m.y)]; P.addCancel(bstate(r), 'c', e[0], e[1]); bstate(r).cps.push(e); broadcast(r, { t: 'pcp', x: e[0], y: e[1] }, p);
       }
     } else if (m.t === 'find') {
@@ -1066,6 +1090,18 @@ wss.on('connection', (ws, req) => {
     } else if (m.t === 'bots') {   // the host switches the bots in their private world on or off
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id) return;
       r.botsOn = !!m.on;
+    } else if (m.t === 'rules') {   // the host of a private world turns "no cheats" on or off: everyone there is told
+      const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id) return;
+      r.noCheats = !!m.nc; broadcast(r, { t: 'rules', nc: r.noCheats ? 1 : 0 });
+    } else if (m.t === 'gift') {   // coins and diamonds from one player to another in the same world (the giver's device takes them off first)
+      const r = p.room; if (!r || !addOk(p)) return; const c = Math.max(0, Math.min(1e7, Math.floor(+m.c || 0))), g = Math.max(0, Math.min(1e6, Math.floor(+m.g || 0)));
+      const q = r.players.get(m.to | 0); if (!q || q === p || !(c + g)) return;
+      send(q, { t: 'gift', from: p.id, name: p.name, c, g }); send(p, { t: 'giftok', to: q.id, c, g });
+    } else if (m.t === 'text') {   // a chat message: anything up to 200 characters, to everyone in your world
+      const r = p.room; if (!r || typeof m.s !== 'string') return; const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
+      const now = Date.now(); p.txT = (p.txT || []).filter(t => now - t < 10000); if (p.txT.length >= 6) { send(p, { t: 'texthold' }); return; } p.txT.push(now);   // (no more than 6 messages in 10 seconds)
+      broadcast(r, { t: 'text', id: p.id, name: p.name, color: p.color, s: txt, at: now }, p);
+      if (r.bots && r.bots.length) { const k = P.askKind('text', txt); if (k) roomCtx(r).asks.push({ kind: k, x: p.x, y: p.y, id: p.id }); }
     } else if (m.t === 'finish') {
       if (!p.room) return;
       const sl = rslot(p.room);
