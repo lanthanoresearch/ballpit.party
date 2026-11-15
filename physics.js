@@ -1016,6 +1016,7 @@
     else if (q[0] === 'c') { const a = L.cps || [], i = a.findIndex(c => c[0] === q[1] && c[1] === q[2]); if (i >= 0) { a.splice(i, 1); return true; } }
     return false;
   }
+  function addCancel(L, k, x, y) { const d = L.dels; if (!d) return; for (let i = d.length - 1; i >= 0; i--) if (d[i][0] === k && d[i][1] === x && d[i][2] === y) d.splice(i, 1); }   // (something new is built where one was deleted long ago: that old note must never take the new one away)
   function normBuild(L) { const d = L.dels; if (!d) return L; for (let i = d.length - 1; i >= 0; i--) if (Array.isArray(d[i]) && coordDel(d[i]) && delCancel(L, d[i])) d.splice(i, 1); return L; }
   function buildHash(L) {   // a fingerprint of everything built and deleted in a world (the order does not matter): two devices with the same number have the same world
     let h = 0; const one = (k, q, n) => { let s = k; for (let i = 0; i < n; i++) s += ',' + (typeof q[i] === 'number' ? Math.round(q[i]) : q[i]); let f = 2166136261; for (let i = 0; i < s.length; i++) { f ^= s.charCodeAt(i); f = Math.imul(f, 16777619); } h = (h + (f >>> 0)) >>> 0; };
@@ -1488,7 +1489,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 152, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 153, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

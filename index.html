@@ -714,7 +714,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 152; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 153; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1292,8 +1292,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=152"></script>
-<script src="physics.js?v=152"></script>
+<script src="maps.js?v=153"></script>
+<script src="physics.js?v=153"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2374,6 +2374,7 @@ function applyDelRec(q, anim) {   // something deleted (by you or anyone in this
   if (ok && anim && x !== null) { burst(x, y, ['#ff5a4a', '#fff', '#ffd23d'], 14, 170, 80); ring(x, y, '#ff5a4a', 5, 44, 0.4); }
   return ok;
 }
+function addBook(k, x, y) { if (k !== 'por' && k !== 'pad' && k !== 'c') return; P.addCancel({ dels: S.dels }, k, x, y); if (S.pubKeys) S.pubKeys.delete(pkey('d', [k, x, y])); }   // (a new portal, booster or flag where one was deleted before: the old note goes, so it can never take the new one away)
 function delBook(q) {   // keep the books after something was deleted: a built portal, booster or flag just comes off the list of built things; anything else is noted as deleted
   if (P.coordDel(q)) {
     const rec = q[0] === 'c' ? S.boughtCps.find(c => c[0] === q[1] && c[1] === q[2]) : S.boughtMisc.find(m => m[0] === q[0] && m[1] === q[1] && m[2] === q[2]);
@@ -4140,7 +4141,7 @@ function finishPlacing() {
   else if (it.portal) {
     const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++;   // (your first pair is yellow and blue, your second red and purple: never the same as one you have)
     const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr, c]; S.own = S.own || {}; S.own.porC = [...used, c];
-    addMisc(S.world, q); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('portal');
+    addBook('por', q[1], q[2]); addMisc(S.world, q); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('portal');
     burst((q[1] + 1) * TS, q[2] * TS - 8, [PORC[c][0], '#fff'], 14, 160, 60); burst((q[3] + 1) * TS, q[4] * TS - 8, [PORC[c][1], '#fff'], 14, 160, 60);
   } else if (it.gate && g.stage === 1) { g.gate = { tx: g.gtx, gr: g.ggr, h: g.gh }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   else if (it.gate) {
@@ -4165,7 +4166,7 @@ function finishPlacing() {
         S.mine.delete(i); partyBuild({ t: 'pobj', g: ['tl', q[1], q[2], -1], ex: exSend });
       } else { S.boughtMisc.push(q); S.mine.add(i); partyBuild({ t: 'pobj', g: q, ex: exSend }); }
       wDirty = true;
-    } else { S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; }
+    } else { addBook(q[0], q[1], q[2]); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; }
     if (q[0] !== 'tl') { burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4); }
   } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
   else placeProp(it.kind, [g.tx, g.ty]);
@@ -4190,7 +4191,7 @@ function placeProp(kind, at) {
 }
 function placeFlagAt(tx, found) {   // on the ground where the ghost stood: it is your checkpoint at once
   const w = S.world, b = S.b;
-  const cp = [tx, found], m = S.map; m.checkpoints.push(cp); S.boughtCps.push(cp); partyBuild({ t: 'pcp', x: tx, y: found });
+  const cp = [tx, found], m = S.map; addBook('c', tx, found); m.checkpoints.push(cp); S.boughtCps.push(cp); partyBuild({ t: 'pcp', x: tx, y: found });
   S.cpArmed = m.checkpoints.length - 1; S.cpUsed = -1; S.cpFlash = 1; wDirty = true;
   const fx0 = (tx + 0.5) * TS;
   burst(fx0, found * TS - 60, ['#46d17a', '#fff', '#b9ffd3'], 16, 220, 80); ring(fx0, found * TS - 6, '#46d17a', 5, 50, 0.5); sfx('ready');
@@ -5422,7 +5423,7 @@ function onMsg(m) {
       if (!S.world || !shared() || !validMisc(m.g) || (!party && m.g[0] !== 'tl' && !pubTake('m', m.g))) break;   // (a terrain change is absolute, so applying it twice does no harm)
       if (m.g[0] === 'tl' && m.g[3] === -1) { addMisc(S.world, m.g, true); dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); wDirty = true; break; }   // somebody put a tile back the way it was: nothing to remember
       if (m.g[0] === 'tl') { dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); }
-      addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 6 : m.g[0] === 'rope' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
+      addBook(m.g[0], m.g[1], m.g[2]); addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 6 : m.g[0] === 'rope' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
     case 'pdel': { if (!S.world || !shared() || !validDel(m.g) || (!party && !P.coordDel(m.g) && !pubTake('d', m.g))) break; S.buildAt = performance.now(); if (applyDelRec(m.g, !m.bulk && !m.lost) || m.lost) { delBook(m.g); wDirty = true; if (!m.bulk) sfx('pop'); } break; }   // somebody deleted something here
     case 'pgate': { S.buildAt = performance.now(); if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
     case 'pb': S.buildAt = performance.now(); (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); (m.dels || []).forEach(q => onMsg({ t: 'pdel', g: q, bulk: 1 })); sfx('big'); break;
@@ -5434,7 +5435,7 @@ function onMsg(m) {
       break; }
     case 'puid': { const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y); if (d) { adoptUid(w, d, m.u); d.srvU = true; } break; }
     case 'padd': { S.buildAt = performance.now(); if (!S.world || !shared() || !P.propDims(m.k | 0).half || startBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
-    case 'pcp': { S.buildAt = performance.now(); if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
+    case 'pcp': { S.buildAt = performance.now(); if (!S.map || !shared() || startTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; addBook('c', m.x, m.y); S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'wsnap': if (!party) saveSnap(m); break;
     case 'ready': S.worldReady = true; break;
     case 'pong': if (typeof m.c === 'number') { const r = performance.now() - m.c; if (r >= 0 && r < 5000) { NET.rtt = NET.rtt * 0.7 + r * 0.3; NET.rttLo = Math.min(NET.rttLo, r); NET.rttLast = r; } if (m.c > NET.pongC) { NET.pongC = m.c; NET.pongAt = performance.now(); } } break;   // (how long a message takes to the server and back)   // (the server has sent everything around you: the world is complete)
