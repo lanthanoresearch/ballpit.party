@@ -279,8 +279,9 @@
   function doorShut(w, d, bs) {   // a gate always shuts when it should: whatever is under it (a crate, a ball, a player) is pushed out to the nearer open side first, so nothing can ever hold one open
     const x0 = d.x * TS, x1 = (d.x + d.w) * TS, y0 = (d.y + 1) * TS, y1 = (d.y + d.h) * TS, cx = (x0 + x1) / 2;
     const sideOk = (sx, y) => { const tx = Math.floor(sx / TS), ty = Math.floor(y / TS); return !BSOLID(tile(w, tx, ty)); };
-    let seed = (hash32('g' + (d.uid || d.id || 0) + ':' + (w.tick | 0)) >>> 0) || 1; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };   // (the same 'random' on every device: it comes from the gate and the moment it slams)
-    const out = (o, e, heavy) => { let dir = o.x < cx ? -1 : 1; if (rnd() < 0.18) dir = -dir; if (!sideOk(dir < 0 ? x0 - e - 2 : x1 + e + 2, o.y)) dir = -dir;   // (now and then it goes out the other side: a slam is not tidy)
+    let seed = 1; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const out = (o, e, heavy) => { seed = (hash32('g' + (d.uid || d.id || 0) + ':' + (o.uid !== undefined ? o.uid : 'p')) >>> 0) || 1;   // (the same 'random' on every device: it comes from the gate and the thing itself, never from a clock, so the server and your screen throw it the same way)
+      let dir = o.x < cx ? -1 : 1; if (rnd() < 0.18) dir = -dir; if (!sideOk(dir < 0 ? x0 - e - 2 : x1 + e + 2, o.y)) dir = -dir;   // (now and then it goes out the other side: a slam is not tidy)
       o.x = dir < 0 ? x0 - e - 1 : x1 + e + 1; const k = heavy ? 0.55 : 1;
       o.vx = dir * (140 + rnd() * 230) * k; o.vy = Math.min(o.vy || 0, 0) - (90 + rnd() * 260) * k; if (o.av !== undefined) o.av = (rnd() - 0.5) * 14 * k; };
     const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [];
@@ -1602,7 +1603,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 162, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 163, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -577,16 +577,13 @@
   #settings.only .tabs{display:none}
   @media (max-height:520px) and (min-aspect-ratio:1/1){#settings.only{grid-template-columns:minmax(0,1fr)!important;width:min(560px,calc(100vw - 20px))!important}#settings.only .sbody{grid-column:1!important;grid-row:2!important}}
 .btnrow{display:flex;gap:8px;margin:8px 0}.btnrow .btn{flex:1}.btnrow .btn+.btn{flex:none}
-  #edZone{position:fixed;left:0;right:0;height:50%;z-index:4;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(220,40,40,.20) 0 14px,rgba(220,40,40,.30) 14px 28px);border:0 dashed rgba(255,90,90,.9);display:flex;align-items:center;justify-content:center}
-  #edZone.top{top:0;border-bottom-width:3px}#edZone.bot{bottom:0;border-top-width:3px}
-  #edZone span{background:rgba(120,10,10,.85);color:#fff;padding:5px 12px;border-radius:999px;font-size:14px}
-  body.uedit #infoWrap,body.uedit #mm,body.uedit #corner{pointer-events:auto!important;outline:2px dashed #ffd23d;outline-offset:3px;cursor:move;touch-action:none}
-  body.uedit #infoWrap *,body.uedit #corner *{pointer-events:none!important}
-  body.uedit .usel{outline:3px solid #ffd23d!important}body.uedit .ubad{outline-color:#ff4d4d!important}
+  #edZone{position:fixed;inset:0;z-index:4;pointer-events:none}
+  #edZone .zr{position:fixed;box-sizing:border-box;border:2px dashed rgba(255,90,90,.95);border-radius:10px;background:repeating-linear-gradient(135deg,rgba(220,40,40,.22) 0 10px,rgba(220,40,40,.36) 10px 20px)}
+  body.uedit #infoWrap,body.uedit #mm,body.uedit #corner,body.uedit #stLine{pointer-events:auto!important;outline:2px dashed #ffd23d;outline-offset:3px;cursor:move;touch-action:none}
+  body.uedit #infoWrap *,body.uedit #corner *,body.uedit #stLine *{pointer-events:none!important}
+  body.uedit .usel{outline:3px solid #ffd23d!important}body.uedit #corner .ibtn{outline:1px dashed rgba(255,210,61,.6);outline-offset:2px}body.uedit #corner .ibtn.usel{outline:3px solid #7ff0ff!important;outline-offset:3px}body.uedit .ubad{outline-color:#ff4d4d!important}
   #editbar.ebdown{top:auto;bottom:max(8px,env(safe-area-inset-bottom))}#ebSwap{padding:4px 8px}#ebSwap svg{width:18px;height:18px}
-  @media (max-height:520px) and (min-aspect-ratio:1/1){#editbar .ebtog small{display:none}}
-  #editbar .ebtog{margin:0}#editbar .ebtog small{display:block;font-size:12px;opacity:.75}
-  #infoWrap,#mm,#corner{transform-origin:top left}#corner{transform-origin:top right}
+  #infoWrap,#mm,#corner,#stLine{transform-origin:top left}#corner{transform-origin:top right}
   #editbar{touch-action:none}#editbar input[type=range]{touch-action:none;height:28px}
   #pickPop{z-index:13;background:rgba(10,8,16,.72)}
   .pickcard{width:min(620px,100%);display:flex;flex-direction:column;padding:16px 18px}
@@ -736,10 +733,8 @@
   @media (max-height:520px) and (min-aspect-ratio:1/1){.shoptabs{margin:0 0 4px}.shoptabs button{padding:3px 2px;font-size:13px}.chead{margin:0 0 2px}.lvmode .small{display:none}.lvmode .row{margin:2px 0}}
   canvas.pball{border:0!important;border-radius:0!important;box-shadow:none!important;background:none!important}
   /* one message at a time, high up and out of the way of the player: the most important one shows, the rest wait their turn */
-  #stack:has(#placeBar:not(.hide))>:not(#placeBar){display:none!important}
+  #stack:has(#placeBar:not(.hide))>#worldpop{display:none!important}
   #stack:has(#finishbanner:not(.hide))>#worldpop,#stack:has(#finishbanner:not(.hide))>#notice,#stack:has(#finishbanner:not(.hide))>#beaconbar{display:none!important}
-  #stack:has(#worldpop:not(.hide))>#notice,#stack:has(#worldpop:not(.hide))>#beaconbar{display:none!important}
-  #stack:has(#notice.show)>#beaconbar{display:none!important}
   @media (max-height:520px){#worldpop{padding:4px 12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}#worldpop b{display:inline!important;font-size:14px!important;margin:0 8px 0 0!important}#worldpop span{font-size:12px;opacity:.85}}
   @media (max-aspect-ratio:1/1) and (max-width:700px),(max-width:480px){   /* a phone held upright: the message sits beside the little map, under the buttons, never across the middle of the screen */
     #top{grid-template-areas:"hl hr" "hl mid"!important;grid-template-rows:auto 1fr}
@@ -747,6 +742,13 @@
     #stack>*{font-size:13px!important;padding:4px 10px!important;line-height:1.25!important}
     #worldpop b{font-size:14px!important;margin:0!important}
   }
+  /* messages (world news, what you are building, the beacon, notices) pop up over everything near the top middle, like the last-30-seconds timer: they never take room from the info panel or the buttons */
+  #top>#stack{position:fixed!important;left:50%!important;right:auto!important;top:max(10px,env(safe-area-inset-top))!important;transform:translateX(-50%)!important;z-index:30!important;width:max-content!important;max-width:min(94vw,560px)!important;align-items:center!important;justify-self:auto!important}
+  #top>#stack>#worldpop,#top>#stack>#notice,#top>#stack>#beaconbar{position:static!important;transform:none!important;left:auto!important;top:auto!important;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+  #top>#stack>#notice.show{animation:popin .28s cubic-bezier(.2,1.5,.4,1)}#top>#stack>#worldpop:not(.hide){animation:popin .28s cubic-bezier(.2,1.5,.4,1)}
+  @keyframes popin{0%{opacity:0;scale:.7}100%{opacity:1;scale:1}}
+  @media (max-aspect-ratio:1/1) and (max-width:700px){#top>#stack{top:max(24vh,calc(env(safe-area-inset-top) + 200px))!important}}   /* (a phone held upright: just under the info at the top, over the game) */
+  @media (min-aspect-ratio:1/1),(min-width:701px){body:has(#timer.final) #top>#stack{top:max(110px,calc(env(safe-area-inset-top) + 100px))!important}}
 </style>
 </head>
 <body>
@@ -757,7 +759,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 162; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 163; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -999,12 +1001,11 @@
 
 <div id="touch" class="hide"><button id="tl" data-ic="left"></button><button id="tr" data-ic="right"></button><button id="tj" data-ic="up"></button><button id="tb" data-ic="bolt" class="hide"></button></div>
 <div id="joy" class="hide"><i class="jb"></i><i class="jk"></i></div>
-<div id="editbar" class="paper hide" role="group" aria-label="Edit your buttons"><div class="eb1"><b id="ebTitle">Drag a button to move it, tap it to resize.</b><span class="ebb"><button class="btn sm" id="ebSwap" type="button" title="Move this bar to the other end of the screen" aria-label="Move this bar"><svg class="ic" viewBox="0 0 24 24"><path d="M8 4v16M8 4l-4 4M8 4l4 4M16 20V4M16 20l-4-4M16 20l4-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="btn sm" id="editReset" type="button">Reset</button><button class="btn prim sm" id="editDone" type="button">Done</button></span></div>
-  <label class="sw2 ebtog" id="ebTogRow"><span class="ti"><b id="ebTogT">Edit UI too</b><small id="ebTogS">Also move the info panel, map and corner buttons</small></span><input type="checkbox" id="ebTog"><i></i></label>
-  <div class="eb2"><div id="ebPresets" role="group" aria-label="Layouts"><button type="button" data-p="moveleft">Left hand</button><button type="button" data-p="moveright">Right hand</button></div><button class="btn sm hide" id="ebFlip" type="button"><span data-ic="reset"></span><span class="t">Edit sideways</span></button></div>
+<div id="editbar" class="paper hide" role="group" aria-label="Edit your buttons"><div class="eb1"><b id="ebTitle">Drag a button to move it, tap it to resize.</b><span class="ebb"><button class="btn sm" id="ebSwap" type="button" title="Move this bar to the other end of the screen" aria-label="Move this bar"><svg class="ic" viewBox="0 0 24 24"><path d="M8 4v16M8 4l-4 4M8 4l4 4M16 20V4M16 20l-4-4M16 20l4-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="btn sm hide" id="ebGroup" type="button">Whole group</button><button class="btn sm" id="editReset" type="button">Reset</button><button class="btn prim sm" id="editDone" type="button">Done</button></span></div>
+    <div class="eb2"><div id="ebPresets" role="group" aria-label="Layouts"><button type="button" data-p="moveleft">Left hand</button><button type="button" data-p="moveright">Right hand</button></div><button class="btn sm hide" id="ebFlip" type="button"><span data-ic="reset"></span><span class="t">Edit sideways</span></button></div>
   <label class="ebs"><span>Size: <b id="ebSelName">Jump</b></span><input type="range" id="ebSize" min="0.5" max="1.8" step="0.05"><span id="ebSizeVal" class="dim"></span></label>
   <div id="ebMsg" class="hide"></div></div>
-<div id="edZone" class="hide" aria-hidden="true"><span id="edZoneT"></span></div>
+<div id="edZone" class="hide" aria-hidden="true"></div>
 <div id="touch2"><button id="ts" class="hide" type="button" aria-label="Power jump" data-ic="spark"></button><button id="tpl" class="hide" type="button" aria-label="Place" data-ic="check"></button><button id="tpc" class="hide" type="button" aria-label="Cancel" data-ic="close"></button><button id="tm" class="hide" type="button" aria-label="Build menu" data-ic="plus"></button></div>
 
 <div id="sback"></div>
@@ -1033,7 +1034,7 @@
 
       <div class="dep" data-dep="touch"><div>
         <h4><span data-ic="pad"></span> Touch screen</h4>
-        <div class="row"><span class="lbl">Style</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
+        <div class="row"><span class="lbl">Move with</span><div id="selScheme"></div><div class="small dim" id="schemeDesc" style="margin-top:4px"></div></div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Build button with my controls</b><small>A second + button next to your other buttons. Move it with "Move buttons"</small></span></span><input type="checkbox" id="setShopBtn"><i></i></label>
         <div class="dep sub" data-dep="shopbtn"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Keep the + at the top too</b><small>Off: the + at the top hides while the one with your controls is there. On: you get both</small></span></span><input type="checkbox" id="setShopBoth"><i></i></label></div></div>
         <div class="dep" data-dep="touchgest"><div><label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Show a joystick</b><small>A little stick shows where you touch</small></span></span><input type="checkbox" id="setJoy"><i></i></label></div></div>
@@ -1080,12 +1081,13 @@
       </div></div>
     </section>
     <section class="pane" data-pane="display">
-      <div class="row"><span class="lbl"><span data-ic="pad"></span> Screen layout</span><div class="btnrow"><button class="btn" id="btnEditUi" type="button"><span data-ic="pad"></span>Edit UI</button><button class="btn" id="btnResetUi" type="button" title="Put the screen info back"><span data-ic="reset"></span>Reset</button></div><div class="small dim" style="margin-top:4px">Move and resize the info panel, the mini map and the corner buttons. They stay in the top half of the screen.</div><div class="small dim hide" id="editUiHint">Start playing first, then come back here to move things.</div></div>
+      <div class="row"><span class="lbl"><span data-ic="pad"></span> Screen layout</span><div class="btnrow"><button class="btn" id="btnEditUi" type="button"><span data-ic="pad"></span>Edit UI</button><button class="btn" id="btnResetUi" type="button" title="Put the screen info back"><span data-ic="reset"></span>Reset</button></div><div class="small dim" style="margin-top:4px">Move and resize the info panel, the mini map and the corner buttons. Tap the corner buttons, then tap one of them to move or resize it on its own. Screen info and your touch buttons never cover each other.</div><div class="small dim hide" id="editUiHint">Start playing first, then come back here to move things.</div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Look</span><div id="selVs"></div><div class="small dim" id="vsDesc" style="margin-top:4px"></div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="dep" data-dep="kb"><div><div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div></div></div>
       <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Arrow to my base</b><small>When your base is off the screen, an arrow at the edge points to it</small></span></span><input type="checkbox" id="setBaseArrow"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Bigger base on the map</b><small>Your base glows and pulses on the map, like a friend does</small></span></span><input type="checkbox" id="setBaseBig"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Family friendly</b><small>Rude words in player names are starred out on your screen. Anyone can still type any name</small></span></span><input type="checkbox" id="setFamily"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Finish crowns</b><small>Gold, silver, bronze and rock crowns over everyone who has finished</small></span></span><input type="checkbox" id="setCrowns"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label>
       <div class="dep sub" data-dep="tags"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Show my own name</b><small>Your name over your own ball. Others still see it</small></span></span><input type="checkbox" id="setMyName"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label>
@@ -1392,8 +1394,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=162"></script>
-<script src="physics.js?v=162"></script>
+<script src="maps.js?v=163"></script>
+<script src="physics.js?v=163"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1437,7 +1439,7 @@ function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'K
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -1477,8 +1479,8 @@ function normalize() {
   settings.soloLen = 0;   // your own world never runs out: it stays until you reset that level
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
-  if (['buttons', 'full', 'tap', 'swipebtn'].indexOf(settings.scheme) < 0) settings.scheme = 'buttons';
-  ['tags', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  if (settings.scheme !== 'buttons') settings.scheme = 'swipebtn';   // (the full-swipe and tap-to-jump styles are gone: you swipe or press to move, the rest is buttons)
+  ['tags', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'baseBig', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -1956,11 +1958,12 @@ function drawPersonMark(x, y) {   // a little person icon (head and shoulders): 
   ctx.restore();
 }
 function drawLabel(name, isBot, crown, x, y, isPerson, lift) {
-  let top = y - R - 6 - (lift || 0);   // (lift: room left for your boost meter, which sits right above your ball)
+  let top = y - R - 6 - (lift || 0);
   if (crown && settings.crowns) { drawCrown(x, top + 2, crown); top -= crownH(crown); }
   if (settings.tags && name) { drawTag(name, x, top); top -= 16; }
   if (isBot && settings.botMark) drawBotMark(x, top - 3);
   else if (isPerson && settings.peopleMark) drawPersonMark(x, top - 2);
+  return top;   // (the height just above the name and crown: what pops up over your head goes there)
 }
 
 /* ================= game state / maps ================= */
@@ -2762,7 +2765,7 @@ const LBC = P.botCtx ? P.botCtx() : { balls: [], players: [], asks: [], builds: 
 function localAsk(t, a, b) { if (botMode() !== 'local' || !bots.length) return; const k = P.askKind(t, a, b); if (k) LBC.asks.push({ kind: k, x: S.b.x, y: S.b.y, id: 'me' }); }
 function botTalk(bt, o) {   // a bot says something, or pulls a face: over its head, and in the messages
   if (!settings.botChat || chatMuted || o.k !== 'msg') return;   // (bots can only send what a player can: the faces, the ready-made phrases and the built messages)
-  if (o.a !== undefined) { const txt = sayText(o.a, o.b); if (txt === null) return; bt.emo = { i: -1, txt, t: S.t }; addFeedEmo(who(bt.name), -1, '', txt, 'bot'); chatAdd(who(bt.name), txt, '', 'bot'); }
+  if (o.a !== undefined) { const txt = sayText(o.a, o.b); if (txt === null) return; bt.emo = { i: -1, txt, t: S.t, dur: 5 }; addFeedEmo(who(bt.name), -1, '', txt, 'bot'); chatAdd(who(bt.name), txt, '', 'bot'); }
   else if (o.i >= 0 && o.i < CHATN) { bt.emo = { i: o.i, t: S.t }; addFeedEmo(who(bt.name), o.i, '', '', 'bot'); chatAdd(who(bt.name), EMO[o.i] ? EMO[o.i].n : (PHRASES[o.i - EMO.length] || ''), '', 'bot'); }
 }
 function botOutLocal(bt) {
@@ -2828,15 +2831,13 @@ function remoteBotMsg(m) {
 }
 
 /* ================= input: keyboard, touch (buttons or swipes), full screen ================= */
-let editMode = false, edSess = false, uiEdit = false, edFrom = 'btn', edKind = 'btn', uiSel = 'info';
+let editMode = false, edSess = false, uiEdit = false, edFrom = 'btn', edKind = 'btn', uiSel = 'info', cbSel = null;
 let detected = 'keyboard';
 try { if (('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.matchMedia && matchMedia('(pointer: coarse)').matches) detected = 'touch'; } catch (e) {}
 const touchActive = () => settings.inputMode === 'touch' || (settings.inputMode === 'auto' && detected === 'touch');
-const SCHEMES = {
-  buttons: { name: 'Buttons', desc: 'Left and right buttons plus a jump button. You can move them anywhere.' },
-  full: { name: 'Full swipes', desc: 'Drag left or right to move (a small drag = slow, farther = faster). Flick up to jump.' },
-  tap: { name: 'Swipe + tap', desc: 'Drag left or right to move. Tap anywhere with another finger to jump.' },
-  swipebtn: { name: 'Swipe + jump button', desc: 'Drag left or right to move. A jump button sits on the screen.' }
+const SCHEMES = {   // how you move. Jumping, boosting, building and the rest are always buttons
+  swipebtn: { name: 'Swipe', desc: 'Drag left or right anywhere to move (a small drag is slow, farther is faster). Jump and everything else are buttons.' },
+  buttons: { name: 'Buttons', desc: 'Left and right buttons to move. Jump and everything else are buttons too. You can move them all anywhere.' }
 };
 function pressJump() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0) S.b.jbuf = 0.12; }
 function pressBoost() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0 && settings.boost) S.bLatch = 0.25; }
@@ -3056,10 +3057,11 @@ function visK(k) {
   }
 }
 // the parts of the screen the buttons must keep off: the info panel, the top buttons, the shop and chat buttons, and (while editing) the edit bar
-const KEEP_OFF = ['infoWrap', 'mm', 'corner', 'lreqs', 'editbar'];
+// the parts of the screen the buttons must keep off: the room each piece of screen info has (a little more than it takes up), and while editing the edit bar
 function uiRects() {
-  const out = [];
-  KEEP_OFF.forEach(id => { const e = $(id); if (!e || e.classList.contains('hide') || e.offsetParent === null && getComputedStyle(e).position !== 'fixed') return; const r = e.getBoundingClientRect(); if (r.width > 2 && r.height > 2) out.push([r.left - 4, r.top - 4, r.right + 4, r.bottom + 4]); });
+  const out = uiReserved().map(q => q.r);
+  for (const id of ['lreqs']) {   // (the edit bar is not in the way: it moves to the other end of the screen)
+   const e = $(id); if (!e || e.classList.contains('hide')) continue; const r = e.getBoundingClientRect(); if (r.width > 2 && r.height > 2) out.push([r.left - 4, r.top - 4, r.right + 4, r.bottom + 4]); }
   return out;
 }
 const hitRect = (x, y, r, q) => { const cx = clamp(x, q[0], q[2]), cy = clamp(y, q[1], q[3]); return (x - cx) * (x - cx) + (y - cy) * (y - cy) < r * r; };
@@ -3117,6 +3119,7 @@ function layoutCorner() {
   ks.forEach((k, i) => { const row = Math.floor(i / 2), inRow = ks.slice(row * 2, row * 2 + 2), col = inRow.length === 1 ? 1 : i % 2; pos[k] = [col * (s + gap), row * (s + gap), s]; });
   W = (ks.length > 1 ? 2 : 1) * s + (ks.length > 1 ? gap : 0); H = Math.ceil(ks.length / 2) * (s + gap) - gap;
   if (ks.length === 1) pos[ks[0]][0] = 0;
+  { const C = (settings.uiL && settings.uiL.cb) || {}; for (const k in pos) { const o = C[k]; if (o) { const p = pos[k], ns = Math.round(p[2] * (o.s || 1)); pos[k] = [p[0] + (o.x || 0) - (ns - p[2]) / 2, p[1] + (o.y || 0) - (ns - p[2]) / 2, ns]; } } }   // (a corner button moved or resized on its own, in Edit UI)
   box.style.width = W + 'px'; box.style.height = H + 'px';
   for (const k in CORNER) { const e = $(CORNER[k]); if (!e) continue; const p = pos[k]; if (!p) continue; e.style.left = p[0] + 'px'; e.style.top = p[1] + 'px'; e.style.width = p[2] + 'px'; e.style.height = p[2] + 'px'; e.style.borderRadius = Math.round(p[2] * 0.32) + 'px'; }
 }
@@ -3178,7 +3181,7 @@ function pressSuper() { if (!blocked() && S.mode === 'play' && S.b && !S.away &&
 let editSel = 'j';
 function layoutKey() { return posK(); }
 function selectBtn(k) {
-  editSel = k; edKind = 'btn'; uiMark(); edZone(); BK.forEach(q => $(BEL[q]).classList.toggle('sel', q === k && editMode));
+  editSel = k; edKind = 'btn'; $('ebGroup').classList.add('hide'); uiMark(); edZone(); BK.forEach(q => $(BEL[q]).classList.toggle('sel', q === k && editMode));
   $('ebSelName').textContent = BNAME[k]; const v = curMul()[k] || 1; $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%';
 }
 function editChips() { document.querySelectorAll('#ebPresets button').forEach(b => { const on = b.getAttribute('data-p') === curPreset(); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }); }
@@ -3190,11 +3193,11 @@ BK.forEach(k => {
     if (curPreset() !== 'custom' || !settings[key]) { const cur = curLayout(), o = {}; BK.forEach(q => { o[q] = cur[q].auto ? (curPts[q] ? toAnchor(curPts[q][0], curPts[q][1]) : { a: 'c', dx: 0, dy: 100 }) : Object.assign({}, cur[q]); }); settings[key] = o; settings[presetK()] = 'custom'; selPreset.set('custom'); editChips(); }
     let last = (curPts[k] || [0, 0]).slice(0, 2), moved = false;
     const mv = ev => {
-      const W = window.innerWidth, H = window.innerHeight; let x = clamp(ev.clientX, 20, W - 20), y = clamp(ev.clientY, Math.ceil(H / 2), H - 12);   // (the buttons have the bottom half of the screen; the info at the top has the top half)
+      const W = window.innerWidth, H = window.innerHeight; let x = clamp(ev.clientX, 20, W - 20), y = clamp(ev.clientY, 20, H - 12);
       if (!validAt(k, x, y)) { if (validAt(k, x, last[1])) y = last[1]; else if (validAt(k, last[0], y)) x = last[0]; else { el.classList.add('bad'); return; } }   // slide along whatever is in the way
       el.classList.remove('bad'); last = [x, y]; moved = true;
       const a = x < W * 0.4 ? 'l' : x > W * 0.6 ? 'r' : 'c';
-      settings[key][k] = { a, dx: Math.round(a === 'l' ? x : a === 'r' ? W - x : x - W / 2), dy: Math.round(H - y) }; layoutTouch();
+      settings[key][k] = { a, dx: Math.round(a === 'l' ? x : a === 'r' ? W - x : x - W / 2), dy: Math.round(H - y) }; layoutTouch(); edZone();
     };
     const up = () => { el.classList.remove('bad'); el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); save(); $('btnResetLayout').disabled = false; };
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
@@ -3214,13 +3217,11 @@ const coarse = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matc
 let flipFs = false, ebMsgT = 0;
 function ebMsg(t) { const m = $('ebMsg'); m.textContent = t; m.classList.remove('hide'); clearTimeout(ebMsgT); ebMsgT = setTimeout(() => m.classList.add('hide'), 5000); }
 function editRefresh() {
-  $('ebTitle').textContent = !editMode ? 'Drag the info panel, map or corner buttons. Tap one to resize it.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + (uiEdit ? ' and screen info' : '') + ': drag to move, tap to resize.';
+  $('ebTitle').textContent = !editMode ? 'Drag the info panel, map, stats or corner buttons. Tap one to resize it. Tap a corner button twice to move it on its own.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize. Red is screen info.';
   $('ebPresets').classList.toggle('hide', !editMode);
-  const tg = $('ebTogRow'), canBtn = !$('btnEditLayout').disabled && showTouch(); tg.classList.toggle('hide', edFrom === 'ui' && !canBtn);
-  $('ebTogT').textContent = edFrom === 'ui' ? 'Edit controls too' : 'Edit UI too'; $('ebTogS').textContent = edFrom === 'ui' ? 'Also move your touch buttons' : 'Also move the info panel, map and corner buttons'; $('ebTog').checked = edFrom === 'ui' ? editMode : uiEdit;
   document.body.classList.toggle('uedit', uiEdit);
   const f = $('ebFlip'); f.classList.toggle('hide', !coarse() || !editMode); f.querySelector('.t').textContent = isPortrait() ? 'Edit sideways' : 'Edit upright';
-  editChips(); if (edKind === 'ui' && uiEdit) uiSelect(uiSel); else if (editMode) selectBtn(editSel); else uiSelect(uiSel);
+  editChips(); if (uiEdit) uiSelect(uiSel, cbSel); else selectBtn(editSel);
 }
 async function flipEdit() {   // turn the phone for them if the browser lets us (it needs full screen on most Android phones); otherwise ask them to turn it
   const want = isPortrait() ? 'landscape' : 'portrait', so = window.screen && screen.orientation, can = !!(so && so.lock);
@@ -3234,7 +3235,7 @@ function startEdit(ui) {
   ui = ui === true;
   if (!ui && $('btnEditLayout').disabled) return;
   if (inHome) { const h = $(ui ? 'editUiHint' : 'editHint'); h.classList.remove('hide'); clearTimeout(startEdit.t); startEdit.t = setTimeout(() => h.classList.add('hide'), 5000); return; }   // (the buttons only show while you are in the game)
-  edSess = true; edFrom = ui ? 'ui' : 'btn'; uiEdit = ui; editMode = !ui; edKind = ui ? 'ui' : 'btn';
+  edSess = true; edFrom = ui ? 'ui' : 'btn'; uiEdit = ui; editMode = !ui; edKind = ui ? 'ui' : 'btn'; cbSel = null; if (ui && !uiVis(uiSel)) uiSel = 'info';
   $('pause').classList.add('hide'); $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); $('ebMsg').classList.add('hide'); applyTouchUI(); editRefresh(); layoutTouch(); edZone();
 }
 function endEdit() { editMode = false; edSess = false; ebSwapped = false; $('editbar').classList.remove('ebdown'); uiEdit = false; document.body.classList.remove('uedit'); uiMark(); edZone(); save(); try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} if (flipFs) { flipFs = false; exitFs(); } $('ebMsg').classList.add('hide'); if (paused) $('pause').classList.remove('hide'); $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
@@ -3296,13 +3297,34 @@ function releaseInputs() {   // entering or leaving full screen cancels touches 
   releaseInputs(); applyTouchUI(); setTimeout(() => { dispatchEvent(new Event('resize')); }, 120);
 }));
 
-// ----- moving and resizing the screen info (the info panel, the mini map, the corner buttons). It has the top half of the screen; the touch buttons have the bottom half -----
-const UIP = { info: 'infoWrap', mm: 'mm', corner: 'corner' }, UIN = { info: 'Info panel', mm: 'Mini map', corner: 'Corner buttons' };
+// ----- moving and resizing the screen info: the info panel, the mini map, the stats line and the corner buttons (as a group, or each button on its own).
+// Every piece has a box of room a little bigger than itself; the touch buttons have a square of room each. Neither may go on the other's room, anywhere on the screen -----
+const UIP = { info: 'infoWrap', mm: 'mm', stats: 'stLine', corner: 'corner' }, UIN = { info: 'Info panel', mm: 'Mini map', stats: 'Stats', corner: 'Corner buttons' };
+const CBN = { reset: 'Reset button', pause: 'Pause button', build: 'Build button', chat: 'Chat button' };
+const UI_M = 8, BTN_M = 8;   // (the extra room around each piece, and around each touch button)
 const uiZ = () => { try { return parseFloat(getComputedStyle($('top')).zoom) || 1; } catch (e) { return 1; } };
 function uiLay() { const L = settings.uiL; return L && typeof L === 'object' ? L : (settings.uiL = {}); }
+const cbLay = () => { const L = uiLay(); return L.cb && typeof L.cb === 'object' ? L.cb : (L.cb = {}); };
+const cbEl = k => { const e = $(CORNER[k]); return e && (k === 'chat' ? !$('btnChat').classList.contains('hide') : !e.classList.contains('hide')) ? e : null; };
+const rectOf = e => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2 ? [r.left, r.top, r.right, r.bottom] : null; };
+function uiVis(k) { const e = $(UIP[k]); if (!e || e.classList.contains('hide')) return false; if (k === 'corner') return Object.keys(CORNER).some(cbEl); return !!rectOf(e); }
+function pieceRects(k) {   // what a piece really covers on the screen (the corner buttons: each button)
+  if (!uiVis(k)) return [];
+  if (k === 'corner') { const out = []; for (const q in CORNER) { const e = cbEl(q); const r = e && rectOf(e); if (r) out.push(r); } return out; }
+  const r = rectOf($(UIP[k])); if (!r) return [];
+  if (k === 'stats') { const o = uiLay().stats, full = 80 * uiZ() * ((o && o.s) || 1); if (r[3] - r[1] < full) r[3] = r[1] + full; }   // (room for every stat at once, so turning more on never needs more room)
+  return [r];
+}
+function uiReserved() { const out = []; for (const k in UIP) for (const r of pieceRects(k)) out.push({ k, r: [r[0] - UI_M, r[1] - UI_M, r[2] + UI_M, r[3] + UI_M] }); return out; }
+function btnSquares() {   // the room each touch button has, while they are on the screen
+  const out = []; if (!(touchActive() || editMode) || $('touch').classList.contains('hide') && $('touch2').querySelectorAll('button:not(.hide)').length === 0) return out;
+  for (const kk in curPts) { const el = $(BEL[kk]); if (!el || el.classList.contains('hide') || el.offsetParent === null && getComputedStyle(el).position !== 'fixed') continue; const q = curPts[kk], h = q[2] / 2 + BTN_M; out.push([q[0] - h, q[1] - h, q[0] + h, q[1] + h]); }
+  return out;
+}
+const rHit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
 function applyUiL() {
   const L = uiLay(), z = uiZ(), W = innerWidth, H = innerHeight;
-  { const rb = $('btnResetUi'); if (rb) rb.disabled = !Object.keys(L).length; }
+  { const rb = $('btnResetUi'); if (rb) rb.disabled = !Object.keys(L).some(k => k !== 'cb' || Object.keys(L.cb || {}).length); }
   for (const k in UIP) {
     const e = $(UIP[k]); if (!e) continue; const o = L[k];
     if (!o) { e.style.transform = ''; continue; }
@@ -3314,71 +3336,96 @@ function applyUiL() {
   const mm = $('mm'), sk = Math.min(3, Math.max(1, ((L.mm && L.mm.s) || 1) * (devicePixelRatio || 1)));   // (a bigger map gets a sharper picture of the same area)
   if (Math.abs((mm._k || 1) - sk) > 0.01) { mm._k = sk; mm.width = Math.round(170 * sk); mm.height = Math.round(110 * sk); }
 }
-function uiOk(k) {   // the middle of the piece stays in the top half, and it never covers one of your touch buttons
-  const e = $(UIP[k]), r = e.getBoundingClientRect(); if (r.width < 2) return true;
-  if ((r.top + r.bottom) / 2 > innerHeight / 2) return false;
-  if (editMode || touchActive()) for (const kk in curPts) { const q = curPts[kk], el = $(BEL[kk]); if (!el || el.classList.contains('hide')) continue; if (hitRect(q[0], q[1], q[2] / 2, [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4])) return false; }
+function uiOk(k) {   // on the screen, never on a touch button's room, never on another piece
+  const mine = pieceRects(k); if (!mine.length) return true; const W = innerWidth, H = innerHeight;
+  for (const r of mine) if (r[0] < 0 || r[1] < 0 || r[2] > W || r[3] > H) return false;
+  const sq = btnSquares(); for (const r of mine) for (const q of sq) if (rHit(r, q)) return false;   // (the red squares: a button and its room)
+  for (const kk in UIP) { if (kk === k) continue; for (const q of pieceRects(kk)) for (const r of mine) if (rHit(r, q)) return false; }
+  if (k === 'corner') for (let a = 0; a < mine.length; a++) for (let b = a + 1; b < mine.length; b++) if (rHit(mine[a], mine[b])) return false;   // (the corner buttons never sit on each other)
   return true;
 }
-function uiMark() { for (const k in UIP) { const e = $(UIP[k]); if (e) { e.classList.toggle('usel', uiEdit && edKind === 'ui' && k === uiSel); e.classList.remove('ubad'); } } }
-let ebSwapped = false;
-function edZone() {
-  const z = $('edZone'); if (!edSess) { z.classList.add('hide'); return; }
-  const ui = edKind === 'ui' && uiEdit; z.classList.remove('hide'); z.classList.toggle('top', !ui); z.classList.toggle('bot', ui);
-  $('editbar').classList.toggle('ebdown', ui !== ebSwapped);   // (the bar keeps out of the half you are editing; the arrows button swaps it)
-  $('edZoneT').textContent = ui ? 'Screen info can\'t go here' : 'Buttons can\'t go here';
+function uiMark() {
+  for (const k in UIP) { const e = $(UIP[k]); if (e) { e.classList.toggle('usel', uiEdit && edKind === 'ui' && k === uiSel && !(k === 'corner' && cbSel)); e.classList.remove('ubad'); } }
+  for (const q in CORNER) { const e = $(CORNER[q]); if (e) e.classList.toggle('usel', uiEdit && uiSel === 'corner' && cbSel === q); }
 }
-function uiSelect(k) {
-  uiSel = k; edKind = 'ui'; BK.forEach(q => $(BEL[q]).classList.remove('sel')); uiMark(); edZone();
-  const o = uiLay()[k], v = (o && o.s) || 1; $('ebSelName').textContent = UIN[k]; $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%';
+let ebSwapped = false;
+function edZone() {   // red: where what you are moving may not go
+  const z = $('edZone'); z.textContent = ''; if (!edSess) { z.classList.add('hide'); return; }
+  z.classList.remove('hide');
+  const rs = uiEdit ? btnSquares() : uiReserved().map(q => q.r);
+  for (const r of rs) { const d = document.createElement('div'); d.className = 'zr'; d.style.left = r[0] + 'px'; d.style.top = r[1] + 'px'; d.style.width = (r[2] - r[0]) + 'px'; d.style.height = (r[3] - r[1]) + 'px'; z.appendChild(d); }
+  const er = $('editbar').getBoundingClientRect(), mid = innerHeight / 2, sel = uiEdit ? pieceRects(uiSel)[0] : curPts[editSel] ? [0, curPts[editSel][1], 0, curPts[editSel][1]] : null;
+  const down = sel ? (sel[1] + sel[3]) / 2 < mid : false;   // (the bar sits at the far end from what you are moving; the arrows button swaps it)
+  $('editbar').classList.toggle('ebdown', down !== ebSwapped);
+}
+function uiSelect(k, cb) {
+  uiSel = k; cbSel = k === 'corner' && cb ? cb : null; edKind = 'ui'; BK.forEach(q => $(BEL[q]).classList.remove('sel')); uiMark(); edZone();
+  const v = cbSel ? ((cbLay()[cbSel] || {}).s || 1) : ((uiLay()[k] || {}).s || 1);
+  $('ebSelName').textContent = cbSel ? CBN[cbSel] : UIN[k]; $('ebSize').min = cbSel ? '0.6' : '0.5'; $('ebSize').max = cbSel ? '2' : '1.8'; $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%';
+  $('ebGroup').classList.toggle('hide', !cbSel);
 }
 function uiSet(k, o) { const L = uiLay(); if (Math.abs(o.x) < 1 && Math.abs(o.y) < 1 && Math.abs((o.s || 1) - 1) < 0.001) delete L[k]; else L[k] = o; }
+function cbSet(q, o) { const C = cbLay(); if (Math.abs(o.x) < 1 && Math.abs(o.y) < 1 && Math.abs((o.s || 1) - 1) < 0.001) delete C[q]; else C[q] = o; }
+function relayUi() { applyUiL(); layoutCorner(); }
 function uiResize(want) {
+  if (cbSel) {   // one corner button
+    const q = cbSel, cur = cbLay()[q] || { x: 0, y: 0, s: 1 }, old = cur.s || 1, o = { x: cur.x, y: cur.y, s: want };
+    cbSet(q, o); relayUi(); while (o.s > old && !uiOk('corner')) { o.s = Math.round((o.s - 0.05) * 100) / 100; cbSet(q, o); relayUi(); }
+    $('ebSize').value = o.s; $('ebSizeVal').textContent = Math.round(o.s * 100) + '%'; save(); layoutTouch(); edZone(); return;
+  }
   const k = uiSel, cur = uiLay()[k] || { x: 0, y: 0, s: 1 }, old = cur.s || 1, o = { x: cur.x, y: cur.y, s: want };
-  uiSet(k, o); applyUiL();
-  while (o.s > old && !uiOk(k)) { o.s = Math.round((o.s - 0.05) * 100) / 100; uiSet(k, o); applyUiL(); }   // (bigger only while it still fits)
-  $('ebSize').value = o.s; $('ebSizeVal').textContent = Math.round(o.s * 100) + '%'; save(); layoutTouch();
+  uiSet(k, o); relayUi();
+  while (o.s > old && !uiOk(k)) { o.s = Math.round((o.s - 0.05) * 100) / 100; uiSet(k, o); relayUi(); }   // (bigger only while it still fits)
+  $('ebSize').value = o.s; $('ebSizeVal').textContent = Math.round(o.s * 100) + '%'; save(); layoutTouch(); edZone();
 }
 function uiMoveBy(k, dx, dy) {   // try the move; if it is not allowed, slide along whichever way still works
-  const cur = uiLay()[k] || { x: 0, y: 0, s: 1 }, tries = [[dx, dy], [dx, 0], [0, dy]];
-  for (const t of tries) { if (!t[0] && !t[1]) continue; const o = { x: cur.x + t[0], y: cur.y + t[1], s: cur.s || 1 }; uiSet(k, o); applyUiL(); if (uiOk(k)) return true; }
+  if (k === 'corner' && cbSel) {
+    const q = cbSel, cur = cbLay()[q] || { x: 0, y: 0, s: 1 }, f = uiZ() * (((uiLay().corner || {}).s) || 1);   // (a button inside the group moves in the group's own units)
+    for (const t of [[dx, dy], [dx, 0], [0, dy]]) { if (!t[0] && !t[1]) continue; const o = { x: Math.round(cur.x + t[0] / f), y: Math.round(cur.y + t[1] / f), s: cur.s || 1 }; cbSet(q, o); relayUi(); if (uiOk('corner')) return true; }
+    cbSet(q, cur); relayUi(); return false;
+  }
+  const cur = uiLay()[k] || { x: 0, y: 0, s: 1 };
+  for (const t of [[dx, dy], [dx, 0], [0, dy]]) { if (!t[0] && !t[1]) continue; const o = { x: cur.x + t[0], y: cur.y + t[1], s: cur.s || 1 }; uiSet(k, o); applyUiL(); if (uiOk(k)) return true; }
   uiSet(k, cur); applyUiL(); return false;
 }
+const cbAt = (x, y) => { for (const q in CORNER) { const e = cbEl(q), r = e && rectOf(e); if (r && x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3]) return q; } return null; };
 Object.keys(UIP).forEach(k => {
   const el = $(UIP[k]); if (!el) return;
   el.addEventListener('pointerdown', e => {
     if (!uiEdit) return; e.preventDefault(); e.stopPropagation(); try { el.setPointerCapture(e.pointerId); } catch (x) {}
-    uiSelect(k); let lx = e.clientX, ly = e.clientY;
-    const mv = ev => { const dx = ev.clientX - lx, dy = ev.clientY - ly; if (!dx && !dy) return; const ok = uiMoveBy(k, dx, dy); el.classList.toggle('ubad', !ok); lx = ev.clientX; ly = ev.clientY; };
-    const up = () => { el.classList.remove('ubad'); el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); save(); layoutTouch(); $('btnResetUi').disabled = false; };
+    const hitB = k === 'corner' ? cbAt(e.clientX, e.clientY) : null, wasGroup = uiSel === 'corner' && !cbSel;
+    let tapInto = false;
+    if (k === 'corner' && cbSel && hitB) uiSelect('corner', hitB);   // (already working on single buttons: grab whichever one)
+    else if (k === 'corner' && wasGroup && hitB) tapInto = true;     // (the group was picked: a tap on one of its buttons picks that button; a drag still moves the group)
+    else uiSelect(k);
+    let lx = e.clientX, ly = e.clientY, moved = false; const sx = lx, sy = ly;
+    const mv = ev => { const dx = ev.clientX - lx, dy = ev.clientY - ly; if (!dx && !dy) return; if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return; moved = true; const ok = uiMoveBy(k, dx, dy); el.classList.toggle('ubad', !ok); lx = ev.clientX; ly = ev.clientY; edZone(); };
+    const up = () => { el.classList.remove('ubad'); el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); if (tapInto && !moved) uiSelect('corner', hitB); save(); layoutTouch(); edZone(); };
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   }, true);
 });
-addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#infoWrap,#mm,#corner')) { e.stopPropagation(); e.preventDefault(); } }, true);
+addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#infoWrap,#mm,#corner,#stLine')) { e.stopPropagation(); e.preventDefault(); } }, true);
 // with a keyboard: Tab picks the next piece, the arrows move it (hold Shift for big steps), + and - resize it, Enter or Esc is done
 addEventListener('keydown', e => {
-  if (!edSess || !uiEdit || edKind !== 'ui') return;
+  if (!edSess || !uiEdit) return;
   const t = e.target; if (t && (t.tagName === 'INPUT' && t.type !== 'checkbox' && t.type !== 'range')) return;
-  const st = e.shiftKey ? 40 : 8, ks = Object.keys(UIP); let hit = true;
+  const st = e.shiftKey ? 40 : 8; let hit = true;
+  const order = []; for (const k in UIP) { if (!uiVis(k)) continue; order.push([k, null]); if (k === 'corner') for (const q in CORNER) if (cbEl(q)) order.push(['corner', q]); }
+  const curS = () => cbSel ? ((cbLay()[cbSel] || {}).s || 1) : ((uiLay()[uiSel] || {}).s || 1);
   if (e.key === 'ArrowLeft') uiMoveBy(uiSel, -st, 0); else if (e.key === 'ArrowRight') uiMoveBy(uiSel, st, 0); else if (e.key === 'ArrowUp') uiMoveBy(uiSel, 0, -st); else if (e.key === 'ArrowDown') uiMoveBy(uiSel, 0, st);
-  else if (e.key === '+' || e.key === '=') uiResize(Math.min(1.8, ((uiLay()[uiSel] || {}).s || 1) + 0.05)); else if (e.key === '-' || e.key === '_') uiResize(Math.max(0.5, ((uiLay()[uiSel] || {}).s || 1) - 0.05));
-  else if (e.key === 'Tab') { let i = ks.indexOf(uiSel); do { i = (i + (e.shiftKey ? ks.length - 1 : 1)) % ks.length; } while ($(UIP[ks[i]]).getBoundingClientRect().width < 2 && ks[i] !== uiSel); uiSelect(ks[i]); }
+  else if (e.key === '+' || e.key === '=') uiResize(Math.min(+$('ebSize').max, curS() + 0.05)); else if (e.key === '-' || e.key === '_') uiResize(Math.max(+$('ebSize').min, curS() - 0.05));
+  else if (e.key === 'Tab') { let i = order.findIndex(o => o[0] === uiSel && o[1] === cbSel); i = (i + (e.shiftKey ? order.length - 1 : 1)) % order.length; if (order[i]) uiSelect(order[i][0], order[i][1]); }
   else if (e.key === 'Enter' && !(t && t.tagName === 'BUTTON')) endEdit();
   else hit = false;
-  if (hit) { e.preventDefault(); e.stopPropagation(); save(); }
+  if (hit) { e.preventDefault(); e.stopPropagation(); save(); edZone(); }
 }, true);
-$('ebTog').addEventListener('change', () => {
-  const on = $('ebTog').checked;
-  if (edFrom === 'ui') { editMode = on; if (!on && edKind === 'btn') edKind = 'ui'; if (on) edKind = 'btn'; BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); layoutTouch(); }
-  else { uiEdit = on; edKind = on ? 'ui' : 'btn'; }
-  editRefresh(); edZone();
-});
-function resetUi() { settings.uiL = {}; save(); applyUiL(); layoutTouch(); if (edSess && edKind === 'ui') uiSelect(uiSel); }
-const askResetUi = () => { if (!Object.keys(uiLay()).length) return; askConfirm('Reset the screen info?', 'The info panel, the mini map and the corner buttons go back to where they started, at their normal size.', 'Reset', resetUi, { no: 'Keep them' }); };
+$('ebGroup').onclick = () => uiSelect('corner');
+function resetUi() { settings.uiL = {}; save(); relayUi(); layoutTouch(); if (edSess && uiEdit) uiSelect(uiSel); }
+const askResetUi = () => { if ($('btnResetUi').disabled) return; askConfirm('Reset the screen info?', 'The info panel, the mini map, the stats and the corner buttons go back to where they started, at their normal size.', 'Reset', resetUi, { no: 'Keep them' }); };
 $('ebSwap').onclick = () => { ebSwapped = !ebSwapped; edZone(); };
 $('btnEditUi').onclick = () => startEdit(true);
 $('btnResetUi').onclick = askResetUi;
-addEventListener('resize', () => setTimeout(applyUiL, 60));
+addEventListener('resize', () => setTimeout(() => { applyUiL(); if (edSess) edZone(); }, 60));
 setTimeout(applyUiL, 0);
 
 /* ================= UI: popups, settings tabs, drop-downs, colours ================= */
@@ -3440,7 +3487,7 @@ function guideRender() {
   if (tch) {
     const sc = settings.scheme;
     row('<kbd>Move</kbd>', sc === 'buttons' ? 'The left and right buttons' : 'Drag left or right anywhere: farther is faster');
-    row('<kbd>Jump</kbd>', sc === 'full' ? 'Flick up to jump' : sc === 'tap' ? 'Tap with another finger to jump' : 'The jump button: tap for a hop, hold to go higher');
+    row('<kbd>Jump</kbd>', 'The jump button: tap for a hop, hold to go higher');
     if (settings.boost) row('<kbd>Boost</kbd>', boostTxt ? 'Happens by itself when the ring above you fills' : settings.boostPull ? 'When the ring above you is full, pull farther the way you are rolling' : 'Tap the boost button when the ring above you is full');
     if (settings.powerJump) row('<kbd>Power</kbd>', settings.superBtn ? 'The power jump button, when its ring is full' : 'Jump when the ring around your ball is full');
     row('<kbd>+</kbd>', settings.shopBtn ? 'The + by your controls opens the build menu' : 'The + at the top opens the build menu');
@@ -3453,8 +3500,8 @@ function guideRender() {
   if (typeof GUIDE_IMG !== 'undefined' && !GUIDE_IMG.sushi) { for (const [k, n] of [['sushi', 0], ['flowers', 1]]) { try { const c = document.createElement('canvas'); c.width = 240; c.height = 150; const g2 = c.getContext('2d'); const gr = g2.createLinearGradient(0, 0, 0, 150); gr.addColorStop(0, '#8fd0f0'); gr.addColorStop(1, '#bfe6f7'); g2.fillStyle = gr; g2.fillRect(0, 0, 240, 150); g2.fillStyle = '#8a6a46'; g2.fillRect(0, 118, 240, 32); g2.fillStyle = '#5bbf5a'; g2.fillRect(0, 112, 240, 8); drawPowerIcon(g2, 120, 70, n, 58, 0); GUIDE_IMG[k] = c.toDataURL(); } catch (e) {} } }
   g.querySelectorAll('.gimg').forEach(e => { if (!e.style.backgroundImage && typeof GUIDE_IMG !== 'undefined' && GUIDE_IMG[e.dataset.k]) e.style.backgroundImage = 'url(' + GUIDE_IMG[e.dataset.k] + ')'; });
   const tips = ['Roll one way for a while and a ring fills above your ball: then you can boost.', settings.powerJump ? 'Jump three times in a row, each right as you land, and a ring fills around your ball: the next jump is extra tall.' : null,
-    'Coins and diamonds buy crates, springs, bridges, portals and more from the build menu. Build anywhere outside the no-build circles.', 'Build a Base (in Travel) to make your own no-build circle with you in the middle. An arrow points back to it, and it shows on the map.', 'Touch a checkpoint and your next fall brings you back to it once.',
-    off ? null : 'Add friends in Friends to see where they are on the map. A crown marks anyone who has finished.', 'Chat with ready-made messages and emoji: tap the bubble, pick, and it sends.'].filter(Boolean);
+    'Coins and diamonds buy crates, springs, bridges, portals and more from the build menu. Build anywhere outside the no-build circles.', 'Build a Base (in Travel) for your own hideout: stand on dirt or ice, with nothing that is not yours in the circle. Only you can build or delete inside it. It is in your colours, an arrow points back to it, and it shows on the map.', 'Touch a checkpoint and your next fall brings you back to it once.',
+    off ? null : 'Add friends in Friends to see where they are on the map. A crown marks anyone who has finished.', 'Chat: tap the speech bubble and type. A message shows over your head for a few seconds, and stays in the chat window for a minute. In People you can give coins and diamonds to someone (never more than you have).'].filter(Boolean);
   $('gTips').innerHTML = tips.map(t => '<li>' + t + '</li>').join('');
 }
 $('gMore').onclick = () => { const g = $('gGrid'), on = g.classList.toggle('all'); $('gMore').lastChild.textContent = on ? 'Show less' : 'Show everything'; sfx('ui'); };
@@ -3562,7 +3609,7 @@ function buildLook() {
 }
 function syncUI() {
   nameUI();
-  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setShopBoth', 'shopBoth'], ['setFamily', 'family'], ['setMyName', 'myName'], ['setBaseArrow', 'baseArrow'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
+  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setShopBoth', 'shopBoth'], ['setFamily', 'family'], ['setMyName', 'myName'], ['setBaseArrow', 'baseArrow'], ['setBaseBig', 'baseBig'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
@@ -3589,7 +3636,7 @@ bindToggle('setStats', 'stats', () => { applyDeps(); statsKick(); }); ['Fps', 'P
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
-bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 'family'); bindToggle('setMyName', 'myName'); bindToggle('setBaseArrow', 'baseArrow'); bindToggle('setMusicOn', 'musicOn', () => { applyDeps(); if (!AU.ctx) auInit(); musicStart(); auVol(); }); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
+bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 'family'); bindToggle('setMyName', 'myName'); bindToggle('setBaseArrow', 'baseArrow'); bindToggle('setBaseBig', 'baseBig'); bindToggle('setMusicOn', 'musicOn', () => { applyDeps(); if (!AU.ctx) auInit(); musicStart(); auVol(); }); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
 bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => { settings.boostPull = !settings.boostBtn; $('setBoostPull').checked = settings.boostPull; save(); applyTouchUI(); });   /* (a button, or pull farther: one or the other) */ bindToggle('setShopBtn', 'shopBtn', () => { applyTouchUI(); applyDeps(); }); bindToggle('setShopBoth', 'shopBoth', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull', () => { settings.boostBtn = !settings.boostPull; $('setBoostBtn').checked = settings.boostBtn; save(); applyTouchUI(); }); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
@@ -4003,12 +4050,17 @@ function drawTrack(camL, camT, vw, vh, sc) {
 /* ----- the maps: people you track are bigger and glow ----- */
 function drawLinksOnMap(g, toX, toY, r, labels, inside) {   // toX/toY turn tile numbers into canvas pixels
   const t = performance.now();
-  { const mb = myBase(); if (mb) {   // your base: a cyan diamond with a soft circle
-    const w = g.canvas.width, h = g.canvas.height, x = clamp(toX(mb.cx / TS), 8, w - 8), y = clamp(toY(mb.cy / TS), 8, h - 8), rr = Math.max(r * 1.6, 5);
-    g.save(); g.fillStyle = 'rgba(127,240,255,.22)'; g.beginPath(); g.arc(x, y, rr * 2.2, 0, TAU); g.fill();
-    g.fillStyle = '#7ff0ff'; g.strokeStyle = '#16102a'; g.lineWidth = Math.max(1.2, rr * 0.3); g.beginPath(); g.moveTo(x, y - rr * 1.3); g.lineTo(x + rr, y); g.lineTo(x, y + rr * 1.3); g.lineTo(x - rr, y); g.closePath(); g.fill(); g.stroke();
-    if (labels) { g.font = Math.round(rr * 2.2) + 'px ' + FONT; g.textAlign = 'center'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.8)'; g.strokeText('Base', x, y - rr * 1.8); g.fillStyle = '#fff'; g.fillText('Base', x, y - rr * 1.8); }
-    g.restore(); } }
+  { const mb = myBase(); if (mb) {   // your base: a little diamond in your colours. With "Bigger base on the map" it glows and pulses like a friend does
+    const w = g.canvas.width, h = g.canvas.height, big = !!settings.baseBig, rr = big ? r * 1.15 : Math.max(3, r * 0.7);
+    let x = toX(mb.cx / TS), y = toY(mb.cy / TS);   // (always on the map: when it is past the edge, it waits at the edge on that side)
+    {
+      x = clamp(x, 8, w - 8); y = clamp(y, 8, h - 8); const p = 0.5 + 0.5 * Math.sin(t / 260), c1 = HEX.test(settings.color) ? settings.color : '#7ff0ff', c2 = HEX.test(settings.color2) ? settings.color2 : '#ffffff';
+      g.save();
+      if (big) { const gr = g.createRadialGradient(x, y, r * 0.3, x, y, r * 3.2); gr.addColorStop(0, c1); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.globalAlpha = 0.45 + 0.25 * p; g.fillStyle = gr; g.beginPath(); g.arc(x, y, r * 3.2, 0, TAU); g.fill(); g.globalAlpha = 1; }
+      g.fillStyle = c1; g.strokeStyle = big ? '#fff' : c2; g.lineWidth = big ? 2 : Math.max(1, rr * 0.35); g.beginPath(); g.moveTo(x, y - rr * 1.3); g.lineTo(x + rr, y); g.lineTo(x, y + rr * 1.3); g.lineTo(x - rr, y); g.closePath(); g.fill(); g.stroke();
+      if (big) { g.strokeStyle = 'rgba(255,255,255,' + (0.8 - 0.5 * p) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, rr * 1.4 + 3 + p * 3, 0, TAU); g.stroke(); }
+      g.restore();
+    } } }
   for (const e of liveLinks()) {
     trackFollow(e);
     if (!e.big) continue;
@@ -4064,7 +4116,7 @@ const SAY = [
 ];
 const sayText = (a, b) => { const q = SAY[a | 0]; if (!q) return null; const v = SAY_LISTS[q.l][b | 0]; return v === undefined ? null : q.t.replace('{}', v); };
 function drawEmoBubble(em, x, y) {   // a speech bubble with the emoji, floating above a ball for a few seconds
-  const D = em.dur || 3.2, age = S.t - em.t; if (age > D || age < 0) return;
+  const D = em.dur || 5, age = S.t - em.t; if (age > D || age < 0) return;
   const a = Math.min(1, age * 6, (D - age) * 2), rise = Math.min(1, age * 5) * 8, s = 34;
   if (em.txt || isPhrase(em.i)) {   // a ready-made phrase: the same bubble, stretched to fit the words
     const txt = em.txt || PHRASES[em.i - EMO.length]; if (txt === undefined) return;
@@ -4089,7 +4141,7 @@ function addFeedEmo(name, i, cls, txt, kind) {   // "Name" + the emoji, in the s
   else if (isPhrase(i)) d.appendChild(document.createTextNode(name + ': ' + (PHRASES[i - EMO.length] || '')));
   else { d.appendChild(document.createTextNode(name)); const sp = document.createElement('span'); sp.innerHTML = emoSvg(i); d.appendChild(sp.firstChild); }
   const f = $('feed'); f.appendChild(d); while (f.children.length > 6) f.removeChild(f.firstChild);
-  setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 600); }, 7000);
+  setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 600); }, 5000);   // (a message shows for about 5 seconds; the chat window keeps it for a minute)
 }
 
 /* ----- the chat window: Chat (public, emoji only) and Friends, in one panel under the chat button ----- */
@@ -4101,13 +4153,16 @@ function sendEmo(i) {
 }
 /* ----- chat: write anything. Family friendly mode hides rude words when it is shown (what was written is never changed) ----- */
 const chatLog = [];
-function chatAdd(name, txt, cls, kind) {   // one line in the chat window (and, for a few seconds, in the corner)
-  chatLog.push({ name, txt, cls: cls || '', kind: kind || '', t: Date.now() }); while (chatLog.length > 120) chatLog.shift();
+const CHAT_KEEP = 60000;   // (a message stays in the chat window for a minute, then it is gone for good)
+function chatPrune() { const cut = Date.now() - CHAT_KEEP; let n = 0; while (chatLog.length && chatLog[0].t < cut) { chatLog.shift(); n++; } if (!chatLog.some(m => m.cls !== 'sys')) $('btnChat').classList.remove('unread'); return n; }
+setInterval(() => { if (chatPrune() && chatOpen) chatRender(false); }, 1000);
+function chatAdd(name, txt, cls, kind) {   // one line in the chat window (and, for 5 seconds, over their head and in the corner)
+  chatPrune(); chatLog.push({ name, txt, cls: cls || '', kind: kind || '', t: Date.now() }); while (chatLog.length > 120) chatLog.shift();
   if (chatOpen) chatRender(true); else if (cls !== 'sys') { $('btnChat').classList.add('unread'); }
 }
 function chatRender(stick) {
   const L = $('chatLog'), atEnd = stick || L.scrollHeight - L.scrollTop - L.clientHeight < 40; L.textContent = '';
-  if (!chatLog.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No messages yet. Say hi!'; L.appendChild(e); }
+  if (!chatLog.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No messages in the last minute. Say hi!'; L.appendChild(e); }
   for (const m of chatLog) { const d = document.createElement('div'); d.className = 'cm ' + m.cls + (m.kind === 'bot' ? ' bot' : ''); if (m.cls !== 'sys') { const b = document.createElement('b'); b.textContent = m.name; d.appendChild(b); } d.appendChild(document.createTextNode(m.cls === 'sys' ? m.txt : censorText(m.txt))); L.appendChild(d); }
   if (atEnd) L.scrollTop = L.scrollHeight;
 }
@@ -4117,12 +4172,12 @@ function chatSend() {
   const inp = $('chatIn'), txt = inp.value.replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
   if (performance.now() < chatCool) return; chatCool = performance.now() + 600;
   if (online && ws && ws.readyState === 1) wsSend({ t: 'text', s: txt });
-  inp.value = ''; S.myEmo = { i: -1, txt: bubbleOf(txt), t: S.t, dur: Math.min(8, 3 + txt.length / 18) }; chatAdd('You', txt, 'me'); sfx('ui');
+  inp.value = ''; S.myEmo = { i: -1, txt: bubbleOf(txt), t: S.t, dur: 5 }; chatAdd('You', txt, 'me'); sfx('ui');
   try { localAsk('text', txt); } catch (e) {}
 }
 function onText(m) {
   const o = others.get(m.id), e = lkOf(m.pub || (o && o.pub)); if (chatMuted || (o && muteOf(o.pub) >= 2)) return;
-  if (o) o.emo = { i: -1, txt: bubbleOf(m.s), t: S.t, dur: Math.min(8, 3 + String(m.s).length / 18) };
+  if (o) o.emo = { i: -1, txt: bubbleOf(m.s), t: S.t, dur: 5 };
   chatAdd(who(m.name), m.s, e ? 'friend' : ''); addFeedEmo(who(m.name), -1, e ? 'friend' : '', bubbleOf(m.s));
 }
 $('chatForm').onsubmit = ev => { ev.preventDefault(); chatSend(); };
@@ -4191,7 +4246,7 @@ const SHOP = [
   { cat: 'coins', id: 'coins', name: '250 coins', info: 'Trade one diamond for coins.', c: 0, g: 1, give: 250 },
   { cat: 'gadgets', id: 'spring0', max: 60, name: 'Spring', info: 'Push it anywhere. Land on it to bounce high.', c: 100, g: 0, kind: 5 },
   { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
-  { cat: 'travel', id: 'base', max: 1, base: true, name: 'Base', info: 'Your own no-build circle, as big as the one at the start, with you right in the middle. Put it anywhere, even in the air, as long as it does not overlap another no-build circle. Nothing can be built or left inside it. Delete its glowing centre to move it.', c: 500, g: 5 },
+  { cat: 'travel', id: 'base', max: 1, base: true, name: 'Base', info: 'Your own hideout: a circle as big as the one at the start, with you in the middle. Stand on dirt or ice to set it, with nothing that is not yours in the circle, and not overlapping another no-build circle. Only you can build or delete inside it, and your things there are safe. Delete its glowing centre to move it.', c: 500, g: 5 },
   { cat: 'travel', id: 'flag', max: 1, name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot. You can have one at a time: delete it to put it somewhere else.', c: 400, g: 5 },
   { cat: 'blocks', id: 'box0', max: 150, name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
   { cat: 'blocks', id: 'box1', max: 120, name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
@@ -4735,7 +4790,7 @@ function finishPlacing() {
     if (q[0] !== 'tl') { burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4); }
   } else if (it.base) {
     const q = ['base', g.btx, g.bty, myTag()]; addBook('base', q[1], q[2]); addMisc(S.world, q, true); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready');
-    notice('Base set. Nothing can be built or left in its circle', '');
+    notice('Base set. Only you can build inside it', '');
   } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
   else placeProp(it.kind, [g.tx, g.ty]);
   S.own = S.own || {}; if (!g.cancelled) S.own[it.id] = ownCount(it) + 1;   /* (an action that cancels one of your own builds is not counted, and gives the earlier one back) */
@@ -4894,7 +4949,7 @@ function lpRender() {
   $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
   if (list._k !== lk) { list._k = lk; list.textContent = '';
   if (!lks.length) list.appendChild(el('div', 'small dim', 'No friends yet. Tap Add a friend to find players.'));
-  for (const l of lks) list.appendChild(friendCard(l)); }
+  for (const l of lks) if (!isMe(l)) list.appendChild(friendCard(l)); }
   const rl = $('lpReqs'); rl.textContent = '';
   reqs.forEach(r => rl.appendChild(reqCard(r))); $('lpReqH').classList.toggle('hide', !reqs.length);
   { const nw = $('lpNews'); nw.textContent = ''; $('lpNewsH').classList.toggle('hide', !friendNews.length);
@@ -4908,7 +4963,7 @@ function lpRender() {
   $('lpResH').textContent = (lpQ ? 'Search results' : 'Everyone who has played') + '. Tap a name to see their profile.';
   $('lpConn').textContent = (online || lobbyOn) ? '' : 'Connecting to the server…';
   $('lpConn').classList.toggle('hide', !$('lpConn').textContent);
-  const res = $('lpRes'), shown = foundList().filter(f => !reqs.some(r => r.pub === f.pub)), rk = JSON.stringify(shown.map(f => [f.pub, f.name, f.code, f.color, f.on, f.w, f.l, f.last && Math.floor(f.last / 60000), sentTo.has(f.pub), !!mutes[f.pub], !!lkOf(f.pub)])) + lpQ + lks.length;
+  const res = $('lpRes'), shown = foundList().filter(f => !reqs.some(r => r.pub === f.pub) && !isMe(f))   /* (you are never in your own lists) */, rk = JSON.stringify(shown.map(f => [f.pub, f.name, f.code, f.color, f.on, f.w, f.l, f.last && Math.floor(f.last / 60000), sentTo.has(f.pub), !!mutes[f.pub], !!lkOf(f.pub)])) + lpQ + lks.length;
   if (res._k !== rk) { res._k = rk; res.textContent = '';
   if (!shown.length) res.appendChild(el('div', 'small dim', lpQ ? 'Nobody found. You can also type someone\'s code.' : 'Nobody else has played yet.'));
   for (const f of shown) {
@@ -6531,10 +6586,10 @@ function drawBase(z, camL, camT, vw, vh) {   // a player's base: its circle, a b
   const mine = (z.o >>> 0) === myTag(), nowT = performance.now(), pu = 0.5 + 0.5 * Math.sin(nowT / 700);
   let c1 = '#b9a8ff', c2 = '#ffffff'; if (mine) { c1 = settings.color; c2 = settings.color2; } else for (const o of others.values()) if ((o.ot >>> 0) === (z.o >>> 0)) { c1 = o.color; c2 = o.color2 || '#ffffff'; break; }   // (the owner's own colours: it changes when they change theirs)
   const rgb = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); const v = m ? parseInt(m[1], 16) : 0xb9a8ff; return ((v >> 16) & 255) + ',' + ((v >> 8) & 255) + ',' + (v & 255); }, col = rgb(c1), col2 = rgb(c2);
-  if (Math.abs(z.cx - (camL + vw / 2)) < vw / 2 + 120) {   // the beam (seen even when the circle is off the top or bottom of the screen)
-    const top = camT - 20, g = ctx.createLinearGradient(0, z.cy, 0, top);
-    g.addColorStop(0, 'rgba(' + col + ',' + (mine ? 0.42 : 0.22) + ')'); g.addColorStop(1, 'rgba(' + col + ',0)');
-    ctx.save(); ctx.fillStyle = g; const bw = (mine ? 26 : 16) + 6 * pu; ctx.fillRect(z.cx - bw / 2, top, bw, Math.max(0, z.cy - top)); ctx.restore();
+  if (Math.abs(z.cx - (camL + vw / 2)) < vw / 2 + 120 && z.cy - 7 * TS < camT + vh) {   // the beam
+    const top = Math.max(camT - 20, z.cy - 7 * TS), g = ctx.createLinearGradient(0, z.cy, 0, top);   // (a short beam: a few blocks up, then it fades)
+    g.addColorStop(0, 'rgba(' + col + ',' + (mine ? 0.36 : 0.2) + ')'); g.addColorStop(1, 'rgba(' + col + ',0)');
+    ctx.save(); ctx.fillStyle = g; const bw = (mine ? 14 : 10) + 3 * pu; ctx.fillRect(z.cx - bw / 2, top, bw, Math.max(0, z.cy - top)); ctx.restore();
   }
   if (z.cx - z.r < camL + vw && z.cx + z.r > camL && z.cy - z.r < camT + vh && z.cy + z.r > camT) {
     ctx.save(); ctx.beginPath(); ctx.arc(z.cx, z.cy, z.r, 0, TAU); ctx.fillStyle = 'rgba(' + col + ',' + (0.05 + 0.02 * pu) + ')'; ctx.fill();
@@ -6762,8 +6817,8 @@ function drawSuper(b) {   // the jump meter: a ring that fills with quick back-t
   if (rdy) { ctx.globalAlpha = 0.3; ctx.strokeStyle = '#ff9a3d'; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(b.x, b.y, R + 8, 0, TAU); ctx.stroke(); }
   ctx.restore();
 }
-function meterAt(b) { return [b.x, b.y - R - 22]; }
-const meterUp = b => (b.pSpeed > 0 || (settings.boost && (b.bcharge || 0) >= 0.04 && !b.boost)) ? 26 : 0;   // (while the boost meter shows, your name and crown move up out of its way)
+function meterAt(b) { const t = S.lblTop !== undefined ? S.lblTop : b.y - R - 6; return [b.x, Math.min(b.y - R - 16, t - 12)]; }   // (the boost meter pops up above your name and crown; nothing moves to make room for it)
+const meterUp = b => (b.pSpeed > 0 || (settings.boost && (b.bcharge || 0) >= 0.04 && !b.boost)) ? 26 : 0;
 function drawBoost(b) {   // the boost ring above your ball: fills while you roll one way, glows when it is ready, trails while you boost
   const q = b.bcharge, rdy = q >= 1, [x, y] = meterAt(b), r = 9, t = S.t;
   if (b.pSpeed > 0) {   // sushi: the meter turns cyan, full, and ticks down until the minute is up
@@ -7030,10 +7085,10 @@ function renderInner(dt, nowT) {
       let s = 1; if (S.spawnT > 0) { const p = 1 - S.spawnT / 0.6; s = 0.25 + 0.75 * Math.min(1, p * 1.25) + 0.12 * Math.sin(p * 3.14); }
       drawTrail(b);
       drawBall(b.x, b.y, b.rot, settings.color, settings.color2, settings.pat, 1, true, s);
-      const lift = meterUp(b); drawLabel(settings.myName ? censor(settings.name) : '', false, S.crown, b.x, b.y, false, lift);   // (name and crown first, lifted clear of the meter: the meters go on top)
+      const lift = meterUp(b); S.lblTop = drawLabel(settings.myName ? censor(settings.name) : '', false, S.crown, b.x, b.y, false, 0);   // (name and crown stay put; the meters pop up above them)
       drawSuper(b);
       if (settings.boost || b.pSpeed > 0) drawBoost(b);
-      if (S.myEmo) drawEmoBubble(S.myEmo, b.x, b.y - R - lift - (settings.tags && settings.name && settings.myName ? 38 : 22) - (S.crown && settings.crowns ? crownH(S.crown) : 0));
+      if (S.myEmo) drawEmoBubble(S.myEmo, b.x, S.lblTop - 16 - lift);
     }
   }
   drawFx();
