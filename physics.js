@@ -710,6 +710,7 @@
   /* A base: one per player, a no-build circle the size of the one around the start, centred where they stood. ['base', column, row, owner tag].
      It may go anywhere (even in the air) as long as it does not overlap another no-build circle: touching is fine. */
   const BASE_R = 7.5 * TS;
+  function addPwr(w, q) { if (!w.pwrs) w.pwrs = []; const tx = q[1] | 0, ty = q[2] | 0; if (w.pwrs.some(p => !p.gone && p.tx === tx && p.ty === ty)) return; w.pwrs.push({ tx, ty, t: q[3] ? 1 : 0, x: (tx + 0.5) * TS, y: (ty + 0.5) * TS }); }   // a bought power-up: ['pwr', column, row, 0 sushi / 1 flowers], floating where it was set down
   function addBase(w, q) { if (!w.bases) w.bases = []; const tx = q[1] | 0, ty = q[2] | 0; if (w.bases.some(b => b.tx === tx && b.ty === ty)) return; w.bases.push({ tx, ty, o: q[3] >>> 0, cx: (tx + 0.5) * TS, cy: (ty + 0.5) * TS, r: BASE_R, k: 'b' }); w._nbv = (w._nbv | 0) + 1; }
   function baseOk(w, tx, ty, otag) {   // (the rule every device and the server use)
     const cx = (tx + 0.5) * TS, cy = (ty + 0.5) * TS;
@@ -1009,10 +1010,9 @@
         else b.hold = Math.max(0, b.hold - dt * 2);
       }
       b.bcharge = b.hold / BOOST_T;
-      if (b.pSpeed > 0) {   // sushi: a minute of boosting that never stops (the ring cannot fill meanwhile: there is nothing to fill it for)
-        b.pSpeed = Math.max(0, b.pSpeed - dt); b.hold = 0; b.bcharge = 0; b.bReq = false;
-        if (dir) { if (!b.boost || b.bdir !== dir) ev.boosted = true; b.boost = true; b.bdir = dir; b.btime = 0; } else b.boost = false;
-        if (b.pSpeed <= 0) b.boost = false;
+      if (b.pSpeed > 0) {   // sushi: for a minute your boost ring is always full. Boost whenever you like (turning or stopping still ends a boost, as always: just boost again)
+        b.pSpeed = Math.max(0, b.pSpeed - dt);
+        if (b.pSpeed > 0) { b.hold = BOOST_T; b.bcharge = 1; if (dir) b.hdir = dir; } else { b.hold = 0; b.bcharge = 0; }
       }
       if (!b.boost && b.bcharge >= 1 && dir && dir === b.hdir && (b.bReq || b.bAuto)) { b.boost = true; b.bdir = dir; b.btime = 0; b.hold = 0; b.bcharge = 0; ev.boosted = true; }
       b.bReq = false;
@@ -1091,9 +1091,9 @@
   /* One world, the same on every device. Things with no name of their own (portals, boosters, checkpoint flags) are deleted by where they stand:
      deleting one that somebody built simply takes it off the list of built things (so a new one can go in the same place, and be deleted again);
      only deleting one of the map's own leaves a note, and those notes are applied before anything built is put in. */
-  const coordDel = q => q[0] === 'por' || q[0] === 'pad' || q[0] === 'c' || q[0] === 'base';
+  const coordDel = q => q[0] === 'por' || q[0] === 'pad' || q[0] === 'c' || q[0] === 'base' || q[0] === 'pwr';
   function delCancel(L, q) {
-    if (q[0] === 'por' || q[0] === 'pad' || q[0] === 'base') { const a = L.misc || [], i = a.findIndex(m => m[0] === q[0] && m[1] === q[1] && m[2] === q[2]); if (i >= 0) { a.splice(i, 1); return true; } }
+    if (q[0] === 'por' || q[0] === 'pad' || q[0] === 'base' || q[0] === 'pwr') { const a = L.misc || [], i = a.findIndex(m => m[0] === q[0] && m[1] === q[1] && m[2] === q[2]); if (i >= 0) { a.splice(i, 1); return true; } }
     else if (q[0] === 'c') { const a = L.cps || [], i = a.findIndex(c => c[0] === q[1] && c[1] === q[2]); if (i >= 0) { a.splice(i, 1); return true; } }
     return false;
   }
@@ -1111,6 +1111,7 @@
     if (k === 's') { const s = w.see.find(e => e.uid === u && !e.gone); if (!s) return false; s.gone = true; s.cx = s.cy = -1e6; s.av = 0; s.sav = 0; return true; }
     if (k === 'r') { const r = (w.ropes || []).find(e => e.uid === u && !e.gone); if (!r) return false; r.gone = true; return true; }
     if (k === 'base') { const b = (w.bases || []).find(e => !e.gone && e.tx === q[1] && e.ty === q[2]); if (!b) return false; w.bases.splice(w.bases.indexOf(b), 1); w._nbv = (w._nbv | 0) + 1; return true; }
+    if (k === 'pwr') { const p = (w.pwrs || []).find(e => !e.gone && e.tx === q[1] && e.ty === q[2]); if (!p) return false; p.gone = true; return true; }
     if (k === 'pad') { const p = w.pads.find(e => !e.gone && e.x === q[1] && e.y === q[2]); if (!p) return false; p.gone = true; p.x = p.y = -100000; return true; }
     if (k === 'por') { const p = w.portals.find(e => !e.gone && Math.round(e.a.x / TS) - 1 === q[1] && Math.round(e.a.y / TS) === q[2]); if (!p) return false; p.gone = true; p.a.x = p.b.x = -1e7; return true; }
     if (k === 'g') {
@@ -1603,7 +1604,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 165, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 167, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1922,9 +1922,14 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
     };
     /* power-ups: a few, far apart, each where a coin was (so it can be reached): sushi (a minute of super speed) or a flower bouquet (a minute of super jumps) */
     { let h = (idx * 2654435761 + 97) >>> 0; const rnd = () => { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; };
-      const zs = startZone([(ox + 1.5) * TS, oy * TS - R - 1]), want = Math.max(8, Math.min(20, Math.round(map.W / 85))), gapT = Math.max(30, map.W / (want + 1) * 0.55), pw = [], keep = [];
-      const order = map.coins.map((c, i) => i).filter(i => !map.coins[i][2]); for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
-      for (const i of order) { if (pw.length >= want) break; const c = map.coins[i], tx = c[0] / TS, ty = c[1] / TS; if (inZone(zs, tx, ty, 3) || pw.some(p => Math.abs(p[0] / TS - tx) < gapT)) continue; pw.push([c[0], c[1] - 4, rnd() < 0.5 ? 0 : 1]); keep.push(i); }
+      const zs = startZone([(ox + 1.5) * TS, oy * TS - R - 1]), pw = [], keep = [], lanes = new Map();   // (each level of the map, top to bottom, gets 0 to 5 of them)
+      const laneOf = c => Math.round(-((c[1] / TS) - oy) / LS);
+      map.coins.forEach((c, i) => { if (c[2]) return; const l = laneOf(c); if (!lanes.has(l)) lanes.set(l, []); lanes.get(l).push(i); });
+      for (const l of [...lanes.keys()].sort((a, b) => a - b)) {
+        const order = lanes.get(l); for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
+        const want = Math.floor(rnd() * 6), mine = [], gapT = Math.max(25, map.W / 12);
+        for (const i of order) { if (mine.length >= want) break; const c = map.coins[i], tx = c[0] / TS, ty = c[1] / TS; if (inZone(zs, tx, ty, 3) || mine.some(p => Math.abs(p[0] / TS - tx) < gapT)) continue; const p = [c[0], c[1] - 4, rnd() < 0.5 ? 0 : 1]; mine.push(p); pw.push(p); keep.push(i); }
+      }
       const drop = new Set(keep); map.coins = map.coins.filter((c, i) => !drop.has(i)); map.powers = pw.sort((a, b) => a[0] - b[0]); }
     try { Object.defineProperty(map, '_raw', { value: map, enumerable: false }); } catch (e) {}
     cache[idx] = finClean(map); cacheOrder.push(idx);

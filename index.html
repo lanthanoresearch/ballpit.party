@@ -581,12 +581,16 @@
   #edZone{position:fixed;inset:0;z-index:4;pointer-events:none}
   #edZone .zr{position:fixed;box-sizing:border-box;border:2px dashed rgba(255,90,90,.95);border-radius:10px;background:repeating-linear-gradient(135deg,rgba(220,40,40,.22) 0 10px,rgba(220,40,40,.36) 10px 20px)}
   #msgDemo{padding:7px 16px;font-size:15px;background:rgba(255,210,61,.18);border:2px dashed #ffd23d;color:#fff;border-radius:var(--wob)}
+  body.uedit #feed{pointer-events:auto!important;cursor:move;touch-action:none;min-width:150px;outline:2px dashed #ffd23d;outline-offset:3px}body.uedit #feed *{pointer-events:none!important}
+  body.uedit #feed::before{content:'Chat and joins show here';display:block;padding:4px 10px;font-size:13px;color:#fff;background:rgba(255,210,61,.18);border:2px dashed #ffd23d;border-radius:8px;text-align:center}
+  #feed{transform-origin:top right}
   body.uedit #stack{pointer-events:auto!important;cursor:move;touch-action:none;min-width:180px}body.uedit #stack *{pointer-events:none!important}
   body.uedit #infoWrap,body.uedit #mm,body.uedit #corner,body.uedit #stLine{pointer-events:auto!important;outline:2px dashed #ffd23d;outline-offset:3px;cursor:move;touch-action:none}
   body.uedit #infoWrap *,body.uedit #corner *,body.uedit #stLine *{pointer-events:none!important}
   body.uedit .usel{outline:3px solid #ffd23d!important}body.uedit #corner .ibtn{outline:1px dashed rgba(255,210,61,.6);outline-offset:2px}body.uedit #corner .ibtn.usel{outline:3px solid #7ff0ff!important;outline-offset:3px}body.uedit .ubad{outline-color:#ff4d4d!important}
   #editbar.ebdown{top:auto;bottom:max(8px,env(safe-area-inset-bottom))}#ebSwap{padding:4px 8px}#ebSwap svg{width:18px;height:18px}
   #infoWrap,#mm,#corner,#stLine{transform-origin:top left}#corner{transform-origin:top right}
+  .sw2.always{cursor:default}
   #editbar{touch-action:none}#editbar input[type=range]{touch-action:none;height:28px}
   #pickPop{z-index:13;background:rgba(10,8,16,.72)}
   .pickcard{width:min(620px,100%);display:flex;flex-direction:column;padding:16px 18px}
@@ -762,7 +766,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 165; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 167; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1050,13 +1054,13 @@
       </div></div>
 
       <h4><span data-ic="up"></span> Jumping</h4>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Power jump</b><small>Jump three times in a row, each right as you land, and a ring fills around your ball. Then your next jump is extra tall.</small></span></span><input type="checkbox" id="setPower"><i></i></label>
+      <div class="sw2 ic2 always"><span class="ti"><span data-ic="spark"></span><span><b>Power jump</b><small>Always on. Jump three times in a row, each right as you land, and a ring fills around your ball. Then your next jump is extra tall.</small></span></span><input type="checkbox" id="setPower" hidden checked></div>
       <div class="dep sub" data-dep="power"><div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="pad"></span><span><b>Its own button</b><small>Off: the jump button does the extra tall jump when the ring is full. On: a separate power jump button does it, and the jump button stays a normal jump.</small></span></span><input type="checkbox" id="setSuperBtn"><i></i></label>
       </div></div>
 
       <h4><span data-ic="bolt"></span> Boost</h4>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Boost</b><small>Keep rolling one way and a ring fills. When it is full you launch forward.</small></span></span><input type="checkbox" id="setBoost"><i></i></label>
+      <div class="sw2 ic2 always"><span class="ti"><span data-ic="bolt"></span><span><b>Boost</b><small>Always on. Keep rolling one way and a ring fills. When it is full you launch forward.</small></span></span><input type="checkbox" id="setBoost" hidden checked></div>
       <div class="dep sub" data-dep="boost"><div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Launch by itself</b><small>Boost as soon as the ring is full. No button needed.</small></span></span><input type="checkbox" id="setBoostAuto"><i></i></label>
         <div class="dep sub" data-dep="boostman"><div>
@@ -1084,7 +1088,7 @@
       </div></div>
     </section>
     <section class="pane" data-pane="display">
-      <div class="row"><span class="lbl"><span data-ic="pad"></span> Screen layout</span><div class="btnrow"><button class="btn" id="btnEditUi" type="button"><span data-ic="pad"></span>Edit UI</button><button class="btn" id="btnResetUi" type="button" title="Put the screen info back"><span data-ic="reset"></span>Reset</button></div><div class="small dim" style="margin-top:4px">Move and resize the info panel, the mini map, the stats, the corner buttons and where messages pop up. Tap the corner buttons, then tap one of them to move or resize it on its own. Screen info and your touch buttons never cover each other.</div><div class="small dim hide" id="editUiHint">Start playing first, then come back here to move things.</div></div>
+      <div class="row"><span class="lbl"><span data-ic="pad"></span> Screen layout</span><div class="btnrow"><button class="btn" id="btnEditUi" type="button"><span data-ic="pad"></span>Edit UI</button><button class="btn" id="btnResetUi" type="button" title="Put the screen info back"><span data-ic="reset"></span>Reset</button></div><div class="small dim" style="margin-top:4px">Move and resize the info panel, the mini map, the stats, the corner buttons, where messages pop up and where chat and joins show. Tap the corner buttons, then tap one of them to move or resize it on its own. Screen info and your touch buttons never cover each other.</div><div class="small dim hide" id="editUiHint">Start playing first, then come back here to move things.</div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Look</span><div id="selVs"></div><div class="small dim" id="vsDesc" style="margin-top:4px"></div></div>
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
@@ -1397,8 +1401,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=165"></script>
-<script src="physics.js?v=165"></script>
+<script src="maps.js?v=167"></script>
+<script src="physics.js?v=167"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1462,6 +1466,7 @@ function normalize() {
   settings.botMax = clamp(Math.round(+settings.botMax), 1, 200); if (!isFinite(settings.botMax)) settings.botMax = 8;
   if (!settings.lookSame) { settings.lookSame = 1; settings.botMsg = false; settings.botMark = false; if (settings.mmBots !== settings.mmPlayers) settings.mmBots = settings.mmPlayers; }   // (once: bots look just like players everywhere, unless you turn the markers back on yourself)
   if (settings.keys) { const dk = defKeys(); for (const a of ['build', 'down', 'chat', 'help', 'map', 'pause', 'place', 'pcancel']) if (!Array.isArray(settings.keys[a])) settings.keys[a] = dk[a].filter(c => !Object.keys(settings.keys).some(o => Array.isArray(settings.keys[o]) && settings.keys[o].indexOf(c) >= 0)); }   // (new keys: the build menu, down, chat, how to play)
+  settings.boost = true; settings.powerJump = true;   // (boost and the power jump are part of the game: always on. How you trigger them is still up to you)
   if (settings.boostBtn && settings.boostPull) settings.boostPull = false;   // (one way to boost by hand, not both)
   if (['off', 'hold', 'holdr', 'follow'].indexOf(settings.mouseMove) < 0) settings.mouseMove = 'off';
   delete settings.uiScale;
@@ -2310,13 +2315,19 @@ function touchFlags() {   // checkpoint flags: touch one and your next fall brin
 }
 /* power-ups: sushi = a minute of non-stop boost, a flower bouquet = a minute of extra tall jumps. Each one comes back for you 3 minutes after you take it */
 const POW_T = 60000, POW_BACK = 180000;
-const POW_INFO = [['Sushi!', 'Super speed for a minute'], ['Flowers!', 'Super jumps for a minute']];
+const POW_INFO = [['Sushi!', 'Your boost is full for a minute: boost any time'], ['Flowers!', 'Super jumps for a minute']];
+function allPowers() {   // [x, y, type, key]: the map's own power-ups, then the ones people bought and set down (each comes back for you 3 minutes after you take it)
+  const out = [], ps = S.map.powers || [];
+  for (let i = 0; i < ps.length; i++) out.push([ps[i][0], ps[i][1], ps[i][2], i]);
+  const pw = S.world && S.world.pwrs; if (pw) for (const p of pw) if (!p.gone) out.push([p.x, p.y, p.t, 'p' + p.tx + ',' + p.ty]);
+  return out;
+}
 function collectPowers() {
-  const ps = S.map.powers, b = S.b; if (!ps || !ps.length) return; const now = Date.now(); S.powGot = S.powGot || {};
+  const ps = allPowers(), b = S.b; if (!ps.length) return; const now = Date.now(); S.powGot = S.powGot || {};
   for (let i = 0; i < ps.length; i++) {
-    const p = ps[i]; if (Math.abs(p[0] - b.x) > 40 || Math.abs(p[1] - b.y) > 40 || (S.powGot[i] || 0) > now) continue;
+    const p = ps[i]; if (Math.abs(p[0] - b.x) > 40 || Math.abs(p[1] - b.y) > 40 || (S.powGot[p[3]] || 0) > now) continue;
     const dx = p[0] - b.x, dy = p[1] - b.y; if (dx * dx + dy * dy > 34 * 34) continue;
-    S.powGot[i] = now + POW_BACK;
+    S.powGot[p[3]] = now + POW_BACK;
     if (p[2] === 0) S.pwSpeed = now + POW_T; else S.pwJump = now + POW_T;
     sfx('ready'); burst(p[0], p[1], p[2] === 0 ? ['#ff8a6a', '#fff', '#3a2a20'] : ['#ff7ab8', '#fff', '#7ad36a', '#ffd23d'], 22, 240, 60); ring(p[0], p[1], p[2] === 0 ? '#7ff0ff' : '#ff7ab8', 6, 60, 0.5);
     notice(POW_INFO[p[2]][0] + ' ' + POW_INFO[p[2]][1], '');
@@ -2508,7 +2519,7 @@ const mapTile = (tx, ty) => P.zoneT(S.map, tx, ty);   // (only the start and fin
 const mapBlock = (px, py, m) => P.zoneP(S.map, px, py, m === undefined ? TS * 0.6 : m);   // (in the wide no-build circle around the start or the finish)
 const startBlock = (px, py, m) => { m = m === undefined ? TS * 0.6 : m; return P.zoneP(S.world || S.map, px, py, m, typeof myTag === 'function' ? myTag() : undefined); };   // (your own base is yours to build in)   // (a little extra room, so nothing can hang over the edge of it)
 const PORC = [['#ffd23d', '#3da5ff'], ['#ff4a3d', '#a45cff'], ['#3ddc6a', '#ff6fc8'], ['#ff9a2e', '#2ee6d6']];   // the colours of portal pairs: yellow and blue, then red and purple, then green and pink, then orange and teal
-const validMisc = q => Array.isArray(q) && ((q[0] === 'base' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[3], q[4])));
+const validMisc = q => Array.isArray(q) && ((q[0] === 'base' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q[0] === 'pwr' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
   for (let i = w.drops.length - 1; i >= 0; i--) {
@@ -2557,10 +2568,11 @@ function addMisc(w, q, anim) {   // ['see', column, ground row, 0]: a teeter-tot
   else if (q[0] === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: (q[3] === 1 ? 5 : 3) * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
   else if (q[0] === 'base') { P.addBase(w, q); if (anim) { burst((q[1] + 0.5) * TS, (q[2] + 0.5) * TS, ['#7ff0ff', '#fff', '#ffd23d'], 22, 240, 120); ring((q[1] + 0.5) * TS, (q[2] + 0.5) * TS, '#7ff0ff', 8, P.BASE_R, 0.7); } }
   else if (q[0] === 'por') P.addPortal(w, q);
+  else if (q[0] === 'pwr') { P.addPwr(w, q); if (anim) { const x = (q[1] + 0.5) * TS, y = (q[2] + 0.5) * TS; burst(x, y, q[3] ? ['#ff7ab8', '#fff', '#7ad36a'] : ['#7ff0ff', '#fff', '#ff8a6a'], 16, 180, 40); ring(x, y, q[3] ? '#ff7ab8' : '#7ff0ff', 5, 50, 0.45); } }
   else if (q[0] === 'rope') P.addRope(w, q);
   else P.addPad(w, [q[1], q[2], q[3]]);
 }
-const validDel = q => Array.isArray(q) && ((['b', 's', 'g', 'r'].includes(q[0]) && q.length === 2 && Number.isFinite(q[1])) || (['pad', 'por', 'c', 'base'].includes(q[0]) && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2])));
+const validDel = q => Array.isArray(q) && ((['b', 's', 'g', 'r'].includes(q[0]) && q.length === 2 && Number.isFinite(q[1])) || (['pad', 'por', 'c', 'base', 'pwr'].includes(q[0]) && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2])));
 function applyDelRec(q, anim) {   // something deleted (by you or anyone in this world): gone for good
   if (!validDel(q) || !S.world) return false;
   const w = S.world; let x = null, y = null;
@@ -2571,7 +2583,7 @@ function applyDelRec(q, anim) {   // something deleted (by you or anyone in this
   if (ok && anim && x !== null) { burst(x, y, ['#ff5a4a', '#fff', '#ffd23d'], 14, 170, 80); ring(x, y, '#ff5a4a', 5, 44, 0.4); }
   return ok;
 }
-function addBook(k, x, y) { if (k !== 'por' && k !== 'pad' && k !== 'c' && k !== 'base') return; P.addCancel({ dels: S.dels }, k, x, y); if (S.pubKeys) S.pubKeys.delete(pkey('d', [k, x, y])); }   // (a new portal, booster or flag where one was deleted before: the old note goes, so it can never take the new one away)
+function addBook(k, x, y) { if (k !== 'por' && k !== 'pad' && k !== 'c' && k !== 'base' && k !== 'pwr') return; P.addCancel({ dels: S.dels }, k, x, y); if (S.pubKeys) S.pubKeys.delete(pkey('d', [k, x, y])); }   // (a new portal, booster or flag where one was deleted before: the old note goes, so it can never take the new one away)
 function delBook(q) {   // keep the books after something was deleted: a built portal, booster or flag just comes off the list of built things; anything else is noted as deleted
   if (P.coordDel(q)) {
     const rec = q[0] === 'c' ? S.boughtCps.find(c => c[0] === q[1] && c[1] === q[2]) : S.boughtMisc.find(m => m[0] === q[0] && m[1] === q[1] && m[2] === q[2]);
@@ -2601,6 +2613,7 @@ function delWhere(q) {   // where a deleted thing was (for the little puff)
   if (q[0] === 'b') { const d = w.dynBy.get(u); return d && !d.gone ? [d.x, d.y] : null; }
   if (q[0] === 's') { const e = w.see.find(o => o.uid === u); return e ? [e.cx, e.cy] : null; }
   if (q[0] === 'pad') return [(q[1] + 1) * TS, q[2] * TS];
+  if (q[0] === 'pwr') return [(q[1] + 0.5) * TS, (q[2] + 0.5) * TS];
   if (q[0] === 'r') { const r = (w.ropes || []).find(o => o.uid === u); return r ? [(r.ax + r.bx) / 2, (r.ay + r.by) / 2] : null; }
   if (q[0] === 'por') return [(q[1] + 1) * TS, q[2] * TS];
   if (q[0] === 'g') { const d = w.doors.find(o => o.uid === u); return d ? [(d.x + d.w / 2) * TS, (d.y + d.h / 2) * TS] : null; }
@@ -2679,7 +2692,7 @@ function deriveOwn() {   // saves from before every item had its own count: work
   const o = {}, add = id => { if (id) o[id] = (o[id] | 0) + 1; };
   S.bought.forEach(r => { const it = SHOP.find(s => s.kind === r[0] && !s.misc && !s.gate && !s.portal); add(it && it.id); });
   S.boughtGates.forEach(q => { const it = SHOP.find(s => s.gate === q[2]); add(it && it.id); });
-  S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'lav' ? 'lava' : k === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
+  S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'lav' ? 'lava' : k === 'pwr' ? (q[3] ? 'pw1' : 'pw0') : k === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
   S.boughtCps.forEach(() => add('flag')); (S.dels || []).forEach(() => add('dig')); return o;
 }
 function worldObj() {   // the world exactly as it is right now: everything built, where everything is and how it is moving
@@ -3220,7 +3233,7 @@ const coarse = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matc
 let flipFs = false, ebMsgT = 0;
 function ebMsg(t) { const m = $('ebMsg'); m.textContent = t; m.classList.remove('hide'); clearTimeout(ebMsgT); ebMsgT = setTimeout(() => m.classList.add('hide'), 5000); }
 function editRefresh() {
-  $('ebTitle').textContent = !editMode ? 'Drag a piece to move it, tap it to resize. Tap a corner button twice to move it alone. The yellow box is where messages pop up.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize. Red is screen info.';
+  $('ebTitle').textContent = !editMode ? 'Drag a piece to move it, tap it to resize. Tap a corner button twice to move it alone. The yellow boxes are where messages and chat show.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize. Red is screen info.';
   $('ebPresets').classList.toggle('hide', !editMode);
   document.body.classList.toggle('uedit', uiEdit); $('msgDemo').classList.toggle('hide', !uiEdit);
   const f = $('ebFlip'); f.classList.toggle('hide', !coarse() || !editMode); f.querySelector('.t').textContent = isPortrait() ? 'Edit sideways' : 'Edit upright';
@@ -3308,7 +3321,7 @@ function releaseInputs() {   // entering or leaving full screen cancels touches 
 
 // ----- moving and resizing the screen info: the info panel, the mini map, the stats line and the corner buttons (as a group, or each button on its own).
 // Every piece has a box of room a little bigger than itself; the touch buttons have a square of room each. Neither may go on the other's room, anywhere on the screen -----
-const UIP = { info: 'infoWrap', mm: 'mm', stats: 'stLine', corner: 'corner', msgs: 'stack' }, UIN = { info: 'Info panel', mm: 'Mini map', stats: 'Stats', corner: 'Corner buttons', msgs: 'Messages' };
+const UIP = { info: 'infoWrap', mm: 'mm', stats: 'stLine', corner: 'corner', msgs: 'stack', feed: 'feed' }, UIN = { info: 'Info panel', mm: 'Mini map', stats: 'Stats', corner: 'Corner buttons', msgs: 'Messages', feed: 'Chat and joins' };
 const CBN = { reset: 'Reset button', pause: 'Pause button', build: 'Build button', chat: 'Chat button' };
 const UI_M = 8, BTN_M = 8;   // (the extra room around each piece, and around each touch button)
 const uiZ = () => { try { return parseFloat(getComputedStyle($('top')).zoom) || 1; } catch (e) { return 1; } };
@@ -3324,7 +3337,7 @@ function pieceRects(k) {   // what a piece really covers on the screen (the corn
   if (k === 'stats') { const o = uiLay().stats, full = 80 * uiZ() * ((o && o.s) || 1); if (r[3] - r[1] < full) r[3] = r[1] + full; }   // (room for every stat at once, so turning more on never needs more room)
   return [r];
 }
-function uiReserved() { const out = []; for (const k in UIP) if (k !== 'msgs') for (const r of pieceRects(k)) out.push({ k, r: [r[0] - UI_M, r[1] - UI_M, r[2] + UI_M, r[3] + UI_M] }); return out; }
+function uiReserved() { const out = []; for (const k in UIP) if (k !== 'msgs' && k !== 'feed') for (const r of pieceRects(k)) out.push({ k, r: [r[0] - UI_M, r[1] - UI_M, r[2] + UI_M, r[3] + UI_M] }); return out; }
 function btnSquares() {   // the room each touch button has, while they are on the screen
   const out = []; if (!(touchActive() || editMode) || $('touch').classList.contains('hide') && $('touch2').querySelectorAll('button:not(.hide)').length === 0) return out;
   for (const kk in curPts) { const el = $(BEL[kk]); if (!el || el.classList.contains('hide') || el.offsetParent === null && getComputedStyle(el).position !== 'fixed') continue; const q = curPts[kk], h = q[2] / 2 + BTN_M; out.push([q[0] - h, q[1] - h, q[0] + h, q[1] + h]); }
@@ -3349,9 +3362,9 @@ function applyUiL() {
 function uiOk(k) {   // on the screen, never on a touch button's room, never on another piece
   const mine = pieceRects(k); if (!mine.length) return true; const W = innerWidth, H = innerHeight;
   for (const r of mine) if (r[0] < 0 || r[1] < 0 || r[2] > W || r[3] > H) return false;
-  if (k === 'msgs') return true;   // (messages pop up over everything else, so they only need to stay on the screen)
+  if (k === 'msgs' || k === 'feed') return true;   // (messages pop up over everything else, so they only need to stay on the screen)
   const sq = btnSquares(); for (const r of mine) for (const q of sq) if (rHit(r, q)) return false;   // (the red squares: a button and its room)
-  for (const kk in UIP) { if (kk === k || kk === 'msgs') continue; for (const q of pieceRects(kk)) for (const r of mine) if (rHit(r, q)) return false; }
+  for (const kk in UIP) { if (kk === k || kk === 'msgs' || kk === 'feed') continue; for (const q of pieceRects(kk)) for (const r of mine) if (rHit(r, q)) return false; }
   if (k === 'corner') for (let a = 0; a < mine.length; a++) for (let b = a + 1; b < mine.length; b++) if (rHit(mine[a], mine[b])) return false;   // (the corner buttons never sit on each other)
   return true;
 }
@@ -3415,7 +3428,7 @@ Object.keys(UIP).forEach(k => {
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   }, true);
 });
-addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#infoWrap,#mm,#corner,#stLine,#stack')) { e.stopPropagation(); e.preventDefault(); } }, true);
+addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#infoWrap,#mm,#corner,#stLine,#stack,#feed')) { e.stopPropagation(); e.preventDefault(); } }, true);
 // with a keyboard: Tab picks the next piece, the arrows move it (hold Shift for big steps), + and - resize it, Enter or Esc is done
 addEventListener('keydown', e => {
   if (!edSess || !uiEdit) return;
@@ -3476,7 +3489,7 @@ $('btnOk').onclick = () => { auWake(); settings.intro = !$('dontShow').checked; 
 const GUIDE = [
   ['ground', 'Ground', 'Safe to roll and stand on.', 1], ['ice', 'Ice', 'Slippery: hard to stop on.', 1], ['lava', 'Lava', 'Burns you: back to your checkpoint or the start.', 1], ['water', 'Water', 'Hold jump to swim up.', 1],
   ['coin', 'Coin', 'Roll through it. Coins buy things to build.', 1], ['gem', 'Diamond', 'Rarer. Needed for the bigger builds.', 1], ['checkpoint', 'Checkpoint', 'Touch it: your next fall brings you back here.', 1], ['finish', 'Finish flag', 'Reach it to win the level.', 1],
-  ['crate', 'Crate', 'Push it, stack it, climb it.', 1], ['ball', 'Ball', 'Rolls when you bump it.', 1], ['ring', 'No-build circle', 'Around the start and the finish. Nothing can be built or left inside it.', 1], ['sushi', 'Sushi', 'A minute of non-stop super speed. Your boost ring turns cyan and ticks down.', 1], ['flowers', 'Flower bouquet', 'A minute where every jump can be an extra tall one. The ring turns pink.', 1],
+  ['crate', 'Crate', 'Push it, stack it, climb it.', 1], ['ball', 'Ball', 'Rolls when you bump it.', 1], ['ring', 'No-build circle', 'Around the start and the finish. Nothing can be built or left inside it.', 1], ['sushi', 'Sushi', 'For a minute your boost is always full: boost whenever you like. The ring turns cyan and ticks down. You can buy one too (Travel).', 1], ['flowers', 'Flower bouquet', 'A minute where every jump can be an extra tall one. The ring turns pink. You can buy one too (Travel).', 1],
   ['bigcoin', 'Big coin', 'Worth more than a small one.', 0], ['bigcrate', 'Big crate', 'Heavy: takes a run-up to shove.', 0], ['bigball', 'Big ball', 'Heavy and rolls far.', 0],
   ['spring', 'Spring', 'Land on it to bounce high.', 0], ['superspring', 'Super spring', 'Bounces you very, very high.', 0], ['booster', 'Floor booster', 'Roll over it and it throws you forward.', 0], ['groundspring', 'Ground spring', 'Set in the ground: land on it to bounce up.', 0],
   ['teeter', 'Teeter-totter', 'Tips with whatever is on it.', 0], ['bigteeter', 'Big teeter-totter', 'Longer: reaches further and flings harder.', 0], ['portal', 'Portals', 'Roll into one, come out of its partner.', 0],
@@ -4258,6 +4271,8 @@ const SHOP = [
   { cat: 'gadgets', id: 'spring0', max: 60, name: 'Spring', info: 'Push it anywhere. Land on it to bounce high.', c: 100, g: 0, kind: 5 },
   { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
   { cat: 'travel', id: 'base', max: 1, base: true, name: 'Base', info: 'Your own hideout: a circle as big as the one at the start, with you in the middle. Stand on dirt or ice to set it, with nothing that is not yours in the circle, and not overlapping another no-build circle. Only you can build or delete inside it, and your things there are safe. Delete its glowing centre to move it.', c: 500, g: 5 },
+  { cat: 'travel', id: 'pw0', max: 40, pwr: 0, name: 'Sushi', info: 'A power-up, set down right in front of you. Roll into it now or leave it for later. Taking it fills your boost for a minute: boost any time, as often as you like. It comes back 3 minutes after someone takes it.', c: 750, g: 0 },
+  { cat: 'travel', id: 'pw1', max: 40, pwr: 1, name: 'Flower bouquet', info: 'A power-up, set down right in front of you. Roll into it now or leave it for later. Taking it gives you a minute where every jump can be an extra tall one. It comes back 3 minutes after someone takes it.', c: 750, g: 0 },
   { cat: 'travel', id: 'flag', max: 1, name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot. You can have one at a time: delete it to put it somewhere else.', c: 400, g: 5 },
   { cat: 'blocks', id: 'box0', max: 150, name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
   { cat: 'blocks', id: 'box1', max: 120, name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
@@ -4275,7 +4290,7 @@ const SHOP = [
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns a tile of ground into lava. It burns anything that touches it.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns a tile of ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
   { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water and ice into dirt, and lava into rock.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
-  { cat: 'coins', id: 'dig', name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal or flag, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first. Use it as often as you like.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
+  { cat: 'coins', id: 'dig', name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal, flag or power-up, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first. Use it as often as you like.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
   { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock and melts ice into water. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
 const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['travel', 'Travel'], ['terrain', 'Terrain'], ['coins', 'More']];
@@ -4286,6 +4301,8 @@ const shopIcon = id => {
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'spring0') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#3fa66b" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ff6a8a" ' + st + '/></svg>';
   if (id === 'base') return '<svg viewBox="0 0 40 40"><circle cx="20" cy="21" r="15" fill="rgba(127,240,255,.18)" stroke="#7ff0ff" stroke-width="2.200" stroke-dasharray="4 3"/><path d="M20 4V30" stroke="#7ff0ff" stroke-width="3" stroke-linecap="round" opacity=".6"/><path d="M14 30L20 18L26 30Z" fill="#ffd23d" ' + st + '/></svg>';
+  if (id === 'pw0') return '<svg viewBox="0 0 40 40"><ellipse cx="20" cy="25" rx="14" ry="8" fill="#fff" ' + st + '/><path d="M7 22Q20 8 33 22Q20 18 7 22Z" fill="#ff8a6a" ' + st + '/><rect x="17" y="15" width="6" height="18" fill="#24303a" ' + st + '/></svg>';
+  if (id === 'pw1') return '<svg viewBox="0 0 40 40"><path d="M20 36L14 18M20 36V16M20 36L26 18" fill="none" stroke="#3c9b4a" stroke-width="2.600" stroke-linecap="round"/><circle cx="13" cy="15" r="5.500" fill="#ff7ab8" ' + st + '/><circle cx="27" cy="15" r="5.500" fill="#ffd23d" ' + st + '/><circle cx="20" cy="10" r="5.500" fill="#b98cff" ' + st + '/><path d="M13 34H27L24 28H16Z" fill="#fff3d6" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
   if (id === 'gate' || id === 'gateS') { const h = id === 'gate' ? 26 : 13; return '<svg viewBox="0 0 40 40"><rect x="7" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="15" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="23" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="5" y="' + (28 - h) + '" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="29" y="32" width="9" height="4" fill="#e0a93c" ' + st + '/></svg>'; }
   if (id === 'dig') return '<svg viewBox="0 0 40 40"><path d="M9 9L31 31M31 9L9 31" fill="none" stroke="#16100c" stroke-width="9" stroke-linecap="round"/><path d="M9 9L31 31M31 9L9 31" fill="none" stroke="#ff4a3d" stroke-width="5" stroke-linecap="round"/></svg>';
@@ -4485,6 +4502,7 @@ function delTarget(side, pull) {
   for (const q of w.portals) if (!q.gone) { const rec = ['por', Math.round(q.a.x / TS) - 1, Math.round(q.a.y / TS)]; for (const e of [q.a, q.b]) offer(e.x - 30, e.y - 24, e.x + 30, e.y + 6, rec, 'pair of portals'); }
   for (const d of w.doors) if (!d.gone) offer(d.x * TS, d.y * TS, (d.x + d.w) * TS, (d.y + d.h) * TS, ['g', d.uid >>> 0], 'gate');
   for (const q of w.plates) if (!q.gone && q.to && q.to.length === 1 && w.doors[q.to[0]] && !w.doors[q.to[0]].gone) offer(q.x * TS, q.y * TS - 12, (q.x + q.w) * TS, q.y * TS + 4, ['g', w.doors[q.to[0]].uid >>> 0], 'gate');
+  for (const q of (w.pwrs || [])) if (!q.gone) offer(q.x - 24, q.y - 24, q.x + 24, q.y + 24, ['pwr', q.tx, q.ty], q.t ? 'flower bouquet' : 'sushi');
   { const mb = myBase(); if (mb) offer(mb.cx - 24, mb.cy - 40, mb.cx + 24, mb.cy + 26, ['base', mb.tx, mb.ty], 'base'); }   // (only your own base: its glowing centre)
   for (const c of S.map.checkpoints) if (c[0] > -1000) offer((c[0] + 0.5) * TS - 22, c[1] * TS - 66, (c[0] + 0.5) * TS + 22, c[1] * TS, ['c', c[0], c[1]], 'flag');
   { const fx = Math.floor((b.x + s * (R + 6)) / TS), rows = [Math.floor(b.y / TS), Math.floor((b.y + R + 4) / TS)];   // a ground spring set into the ground just ahead
@@ -4498,6 +4516,7 @@ function lavaWaterAhead(side) {   // is there lava or water right where the dele
 function delThing(q) {   // delete it here, and for everyone in this world
   let id = { s: 'see', g: 'gate', r: 'rope', por: 'portal', c: 'flag', pad: 'pad', base: 'base' }[q[0]];
   if (q[0] === 'por' && S.world && S.own && S.own.porC) { const p = S.world.portals.find(e => !e.gone && Math.round(e.a.x / TS) - 1 === q[1] && Math.round(e.a.y / TS) === q[2]); if (p) { const i = S.own.porC.indexOf(p.c | 0); if (i >= 0) S.own.porC.splice(i, 1); else id = null; } }   // (only one of your own pairs gives you a pair back)
+  if (q[0] === 'pwr' && S.world) { const e = (S.world.pwrs || []).find(o => !o.gone && o.tx === q[1] && o.ty === q[2]); id = e ? (e.t ? 'pw1' : 'pw0') : null; }
   if (q[0] === 's' && S.world) { const e = S.world.see.find(o => o.uid === (q[1] >>> 0)); if (e && e.hl > 3 * TS + 1) id = 'seeb'; }
   if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), it = d && SHOP.find(s => s.kind === d.kind && !s.misc && !s.gate); if (it) id = it.id; if (d && d.bought && !d.local && shared()) id = null; }   // (somebody else's: they get it back, not you)
   if (applyDelRec(q, true)) { delBook(q); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); if (id && S.own && S.own[id] > 0) S.own[id]--; }   // (deleting something gives you that one back to build again)
@@ -4579,6 +4598,17 @@ function computeGhost() {
   const g = placing, b = S.b; if (!g || !b) return;
   const ax = (inp.right ? 1 : 0) - (inp.left ? 1 : 0) || (Math.abs(tin.ax) > 0.15 ? Math.sign(tin.ax) : 0) || (Math.abs(b.vx) > 25 ? Math.sign(b.vx) : 0);
   if (ax) g.side = ax;
+  if (g.it.pwr !== undefined) {   // a power-up: floating right in front of you, at the height of your ball
+    const side = g.side || 1, w = S.world, free = (tx, ty) => { const v = P.tile(w, tx, ty); return v === 0 || v === undefined; };
+    let tx = Math.floor((b.x + side * TS * 1.5) / TS), ty = Math.floor(b.y / TS);
+    if (!free(tx, ty) && free(tx, ty - 1)) ty--;
+    g.ptx = tx; g.pty = ty; g.tx = (tx + 0.5) * TS; g.ty = (ty + 0.5) * TS; g.sb = false; g.pb = false; g.pc = false; g.bwhy = '';
+    if (!free(tx, ty)) g.bwhy = 'No room right in front of you';
+    else if (startBlock(g.tx, g.ty, 0)) g.bwhy = 'Not in the circles at the start or the finish';
+    else if (otherBase(g.tx, g.ty)) g.bwhy = 'That is somebody else\'s base';
+    else if (allPowers().some(p => Math.abs(p[0] - g.tx) < 2 * TS && Math.abs(p[1] - g.ty) < 2 * TS)) g.bwhy = 'There is a power-up right there already';
+    g.ok = !g.bwhy; g.bz = !g.ok; return;
+  }
   if (g.it.base) {   // a base: right where you stand (on dirt or ice), you in the middle, and nothing of anybody else's in its circle
     g.btx = Math.floor(b.x / TS); g.bty = Math.floor(b.y / TS); g.sb = false; g.pb = false; g.pc = false; g.bwhy = '';
     if (!b.ground || !P.baseGround(S.world, g.btx, g.bty)) g.bwhy = 'Stand on dirt or ice to set your base';
@@ -4641,6 +4671,7 @@ function drawGhost(dt, nowT) {
   const a = Math.min(1, dt * 20); g.dx += (g.tx - g.dx) * a; g.dy += (g.ty - g.dy) * a;
   refreshPlaceUI();
   if (tileIt(g.it)) { drawTileGhost(g, nowT); return; }
+  if (g.it.pwr !== undefined) { ctx.save(); ctx.globalAlpha = 0.55 + 0.15 * Math.sin(nowT / 170); if (!g.ok) { ctx.strokeStyle = '#ff4d4d'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(g.tx, g.ty, R * 1.6, 0, TAU); ctx.stroke(); } drawPowerIcon(ctx, g.tx, g.ty, g.it.pwr, R * 1.15, S.t); ctx.restore(); return; }   // (a power-up: shown where it will float)
   const k = g.it.kind, q = P.propDims(k), x = g.dx, y = g.dy, bad = !g.ok, INKc = '#16100c';
   ctx.save(); ctx.globalAlpha = 0.55 + 0.15 * Math.sin(nowT / 170); ctx.lineWidth = 2.4; ctx.lineJoin = 'round';
   if (k === 5 || k === 6) {
@@ -4802,6 +4833,8 @@ function finishPlacing() {
   } else if (it.base) {
     const q = ['base', g.btx, g.bty, myTag()]; addBook('base', q[1], q[2]); addMisc(S.world, q, true); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready');
     notice('Base set. Only you can build inside it', '');
+  } else if (it.pwr !== undefined) {
+    const q = ['pwr', g.ptx, g.pty, it.pwr]; addBook('pwr', q[1], q[2]); addMisc(S.world, q, true); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready');
   } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
   else placeProp(it.kind, [g.tx, g.ty]);
   S.own = S.own || {}; if (!g.cancelled) S.own[it.id] = ownCount(it) + 1;   /* (an action that cancels one of your own builds is not counted, and gives the earlier one back) */
@@ -6755,10 +6788,10 @@ function drawPowerIcon(g, x, y, k, h, t) {   // a power-up, h tall (half as tall
   g.restore();
 }
 function drawPowers(camL, camT, vw, vh) {
-  const ps = S.map.powers; if (!ps || !ps.length) return; const now = Date.now(), t = S.t;
+  const ps = allPowers(); if (!ps.length) return; const now = Date.now(), t = S.t;
   for (let i = 0; i < ps.length; i++) {
     const p = ps[i]; if (p[0] < camL - 60 || p[0] > camL + vw + 60 || p[1] < camT - 60 || p[1] > camT + vh + 60) continue;
-    if (S.powGot && (S.powGot[i] || 0) > now) continue;
+    if (S.powGot && (S.powGot[p[3]] || 0) > now) continue;
     const bob = Math.sin(t * 2.4 + i) * 3, x = p[0], y = p[1] + bob, glow = 0.35 + 0.15 * Math.sin(t * 3 + i);
     const col = p[2] === 0 ? '127,240,255' : '255,122,184', gl = ctx.createRadialGradient(x, y, 2, x, y, R * 2.2); gl.addColorStop(0, 'rgba(' + col + ',' + (glow + 0.2) + ')'); gl.addColorStop(1, 'rgba(' + col + ',0)');
     ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, R * 2.2, 0, TAU); ctx.fill();
@@ -7027,7 +7060,7 @@ function renderInner(dt, nowT) {
   { const sep = !!settings.superBtn, pj = b.pJump > 0, tg = pj ? Math.min(1, b.pJump / 60) : settings.powerJump ? clamp(b.jm || 0, 0, 1) : 0; S.jmv = (S.jmv || 0) + (tg - (S.jmv || 0)) * Math.min(1, dt * 14); if (Math.abs(tg - S.jmv) < 0.004) S.jmv = tg;   // the meter glides instead of jumping
     const q = Math.round(S.jmv * 100);
     if (q !== S.tjq || sep !== S.tjsep || pj !== S.tjpw) { S.tjq = q; S.tjsep = sep; S.tjpw = pj; const el = sep ? $('ts') : $('tj'), other = sep ? $('tj') : $('ts'); el.style.setProperty('--p', q); el.classList.toggle('rdy', !pj && q >= 99 && !editMode); el.classList.toggle('pw', pj); other.style.setProperty('--p', 0); other.classList.remove('rdy', 'pw'); } }   // (with the separate power-jump button the ring lives on that button)
-  { const tb = $('tb'); if (!tb.classList.contains('hide') && !editMode) { const ps = b.pSpeed > 0, q = Math.round(clamp(ps ? b.pSpeed / 60 : b.bcharge || 0, 0, 1) * 100); if (q !== S.tbq || ps !== S.tbpw) { S.tbq = q; S.tbpw = ps; tb.style.setProperty('--p', q); tb.classList.toggle('rdy', !ps && q >= 100 && !b.boost); tb.classList.toggle('pw', ps); } } }
+  { const tb = $('tb'); if (!tb.classList.contains('hide') && !editMode) { const ps = b.pSpeed > 0, q = Math.round(clamp(ps ? b.pSpeed / 60 : b.bcharge || 0, 0, 1) * 100); if (q !== S.tbq || ps !== S.tbpw || !!b.boost !== S.tbb) { S.tbq = q; S.tbpw = ps; S.tbb = !!b.boost; tb.style.setProperty('--p', q); tb.classList.toggle('rdy', (ps || q >= 100) && !b.boost); tb.classList.toggle('pw', ps); } } }
   const k = 1 - Math.exp(-7 * dt);
   S.camx += (b.x - S.camx) * k;
   S.camy += (b.y + clamp(b.vy * 0.12, -60, 90) - S.camy) * k;
@@ -7307,7 +7340,7 @@ function drawMinimapBig() {
     if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; dotAt(bt.b.x, bt.b.y, bt.color, dr >= 5 || settings.mmBigB ? sprite(HEX.test(bt.color) ? bt.color : '#ccc', HEX.test(bt.color2) ? bt.color2 : '#ffffff', (bt.pat | 0) % PATTERNS.length) : null, settings.mmBigB); });   // (drawn exactly like a player)
     if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) dotAt(q.x, q.y, o.color, dr >= 5 || settings.mmBigP ? sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length) : null, settings.mmBigP); });
   }
-  { const ps = S.map.powers || [], now = Date.now(); for (let i = 0; i < ps.length; i++) { if (S.powGot && (S.powGot[i] || 0) > now) continue; drawPowerIcon(g, X(ps[i][0] / TS), Y(ps[i][1] / TS), ps[i][2], 11, 0); } }   // (the power-ups on the big map)
+  { const ps = allPowers(), now = Date.now(); for (let i = 0; i < ps.length; i++) { if (S.powGot && (S.powGot[ps[i][3]] || 0) > now) continue; drawPowerIcon(g, X(ps[i][0] / TS), Y(ps[i][1] / TS), ps[i][2], 11, 0); } }   // (the power-ups on the big map)
   drawLinksOnMap(g, X, Y, 9, true, false);
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
   const bon = mapFin();
