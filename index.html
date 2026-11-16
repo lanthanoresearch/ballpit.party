@@ -295,7 +295,7 @@
   #keymsg,#mkeymsg{min-height:18px;font-size:13px;color:#ff9a8f}
   .slrow{display:flex;align-items:center;gap:8px}.slrow svg{font-size:19px;flex:none;opacity:.85}
   .np{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:8px;background:#120f1c;border:2px solid var(--line);border-radius:var(--wob);padding:6px 10px}
-  .np span{flex:none}.np #nowPlaying{flex:1;min-width:0;white-space:normal;line-height:1.2;overflow-wrap:anywhere}
+  .np span{flex:none}.np #nowPlaying{flex:1;min-width:0;white-space:normal;line-height:1.2;overflow-wrap:anywhere}.np #nowPlaying b{display:block;font-weight:normal}.np #nowPlaying small{display:block;font-size:12px;opacity:.7}
   #coinbig{pointer-events:none}
   .tabs button span:last-child{font-size:11px}
   @media (max-width:640px),(max-height:520px){
@@ -788,7 +788,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 174; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 177; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1143,7 +1143,7 @@
       <h4><span data-ic="music"></span> Music</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="music"></span><span><b>Music</b><small>Songs that play while you roll</small></span></span><input type="checkbox" id="setMusicOn"><i></i></label>
       <div class="dep" data-dep="music"><div><div class="row"><div id="selMusic"></div><div class="small dim" id="musicDesc" style="margin-top:4px"></div></div><div class="row slrow"><span data-ic="music"></span><input type="range" id="setMusicVol" min="0" max="1" step="0.05"></div>
-      <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnSkip" title="Next song"><span data-ic="skip"></span></button></div></div></div>
+      <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnPrevSong" title="The song before" aria-label="The song before"><span data-ic="skip" style="display:inline-block;transform:scaleX(-1)"></span></button><button class="btn" id="btnSkip" title="Next song" aria-label="Next song"><span data-ic="skip"></span></button></div></div></div>
     </section>
     <section class="pane" data-pane="online">
       <input type="checkbox" id="setMp" hidden>
@@ -1155,7 +1155,7 @@
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
         <button class="btn full danger hide" id="btnResetLvl" type="button"><span data-ic="reset"></span>Reset this level</button>
         <div id="lvOptBox"><div class="small dim" id="lvOptFor" style="margin:8px 0 2px"></div>
-      <label class="sw2 ic2" id="noCheatRow"><span class="ti"><span data-ic="lock"></span><span><b>No cheats</b><small>Everyone in your private game plays by the rules: cheat codes do nothing and money is never unlimited</small></span></span><input type="checkbox" id="setNoCheats"><i></i></label>
+      <label class="sw2 ic2" id="noCheatRow"><span class="ti"><span data-ic="lock"></span><span><b>No cheats</b><small>Cheat codes do nothing in your private game, for everyone. The options here in Mode still work</small></span></span><input type="checkbox" id="setNoCheats"><i></i></label>
       <label class="sw2 ic2 lvunl"><span class="ti"><span data-ic="gcoin"></span><span><b>Unlimited coins and diamonds</b><small id="lvMoney"></small></span></span><input type="checkbox" id="lvUnl"><i></i></label>
       <div class="lvmode">
         <div class="row todrow"><span data-ic="clock"></span><div id="selTod"></div></div>
@@ -1437,8 +1437,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=174"></script>
-<script src="physics.js?v=174"></script>
+<script src="maps.js?v=177"></script>
+<script src="physics.js?v=177"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1486,7 +1486,7 @@ function defaults() {
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
-    beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'peaceful', musicVol: 0.5,
+    beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'adaptive', musicVol: 0.5,
     boost: true, boostAuto: false, boostBtn: true, boostPull: false, joy: true, superBtn: true, btnMul: {},
     keys: defKeys(), mkeys: defMKeys(), inputMode: 'auto', scheme: 'swipebtn', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
 }
@@ -1516,7 +1516,8 @@ function normalize() {
   settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
   if (settings.music === 'none') { settings.music = 'random'; settings.musicOn = false; }   // (no music is a switch now, like sound effects)
   if (typeof settings.musicOn !== 'boolean') settings.musicOn = true;
-  if (['random', 'peaceful', 'upbeat', 'exciting'].indexOf(settings.music) < 0) settings.music = 'peaceful';
+  if (settings.music === 'peaceful') settings.music = 'chill'; if (settings.music === 'funk') settings.music = 'phonk';
+  if (['adaptive', 'random', 'chill', 'upbeat', 'exciting', 'phonk', 'dreamy'].indexOf(settings.music) < 0) settings.music = 'adaptive';
   ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
   settings.keys = cleanKeys(settings.keys);
   if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);
@@ -1819,34 +1820,64 @@ function windSet(level) {   // 0..1
   AU.windG.gain.setTargetAtTime(v, AU.ctx.currentTime, 0.15); AU.wind.frequency.setTargetAtTime(500 + level * 1500, AU.ctx.currentTime, 0.2);
 }
 
-/* ---------- music: three moods, three songs each, written as chords + a little tune that the browser plays live ---------- */
-const SCALES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], lydian: [0, 2, 4, 6, 7, 9, 11], dorian: [0, 2, 3, 5, 7, 9, 10], mixo: [0, 2, 4, 5, 7, 9, 10] };
+/* ---------- music: four kinds, six songs each, written as chords + a little tune that the browser plays live ---------- */
+const SCALES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], lydian: [0, 2, 4, 6, 7, 9, 11], dorian: [0, 2, 3, 5, 7, 9, 10], mixo: [0, 2, 4, 5, 7, 9, 10], phryg: [0, 1, 3, 5, 7, 8, 10] };
 const SONGS = {
-  peaceful: [
-    { name: 'Meadow Morning', bpm: 76, root: 60, scale: 'major', prog: [0, 5, 3, 4], seed: 11 },
-    { name: 'Drifting Clouds', bpm: 68, root: 62, scale: 'lydian', prog: [0, 4, 5, 3], seed: 23 },
-    { name: 'Lantern Pond', bpm: 72, root: 65, scale: 'major', prog: [0, 3, 5, 4], seed: 37 }
+  chill: [   // easygoing: a light groove, never sleepy (what plays when things are calm)
+    { name: 'Sunday Roll', bpm: 92, root: 60, scale: 'major', prog: [0, 5, 3, 4], seed: 301 },
+    { name: 'Breezy Steps', bpm: 96, root: 57, scale: 'mixo', prog: [0, 3, 6, 3], seed: 307 },
+    { name: 'Lemonade Lane', bpm: 90, root: 62, scale: 'major', prog: [0, 3, 4, 4], seed: 311 },
+    { name: 'Backyard Breeze', bpm: 94, root: 58, scale: 'dorian', prog: [0, 3, 0, 4], seed: 313 },
+    { name: 'Easy Coast', bpm: 88, root: 64, scale: 'lydian', prog: [0, 4, 5, 3], seed: 317 },
+    { name: 'Front Porch Bounce', bpm: 98, root: 55, scale: 'major', prog: [0, 4, 5, 3], seed: 331 }
   ],
   upbeat: [
     { name: 'Roll Call', bpm: 104, root: 55, scale: 'major', prog: [0, 4, 5, 3], seed: 41 },
     { name: 'Wobble Walk', bpm: 98, root: 57, scale: 'dorian', prog: [0, 3, 0, 4], seed: 53 },
-    { name: 'Sunny Side Bounce', bpm: 112, root: 60, scale: 'mixo', prog: [0, 6, 3, 4], seed: 67 }
+    { name: 'Sunny Side Bounce', bpm: 112, root: 60, scale: 'mixo', prog: [0, 6, 3, 4], seed: 67 },
+    { name: 'Pebble Hop', bpm: 108, root: 62, scale: 'major', prog: [0, 3, 4, 4], seed: 139 },
+    { name: 'Kite String', bpm: 100, root: 59, scale: 'lydian', prog: [0, 4, 1, 4], seed: 149 },
+    { name: 'Picnic Parade', bpm: 116, root: 56, scale: 'major', prog: [0, 5, 1, 4], seed: 157 }
   ],
   exciting: [
     { name: 'Turbo Tumble', bpm: 142, root: 52, scale: 'minor', prog: [0, 5, 2, 6], seed: 71 },
     { name: 'Lava Rush', bpm: 132, root: 50, scale: 'minor', prog: [0, 3, 5, 4], seed: 83 },
-    { name: 'Skyline Sprint', bpm: 150, root: 57, scale: 'dorian', prog: [0, 6, 5, 6], seed: 97 }
+    { name: 'Skyline Sprint', bpm: 150, root: 57, scale: 'dorian', prog: [0, 6, 5, 6], seed: 97 },
+    { name: 'Thunder Ramp', bpm: 138, root: 53, scale: 'minor', prog: [0, 6, 5, 4], seed: 163 },
+    { name: 'Comet Chase', bpm: 156, root: 55, scale: 'dorian', prog: [0, 3, 6, 4], seed: 173 },
+    { name: 'Gate Crasher', bpm: 146, root: 49, scale: 'minor', prog: [0, 0, 5, 6], seed: 181 }
+  ],
+  phonk: [   // dark drift phonk: cowbell tune, deep sliding 808, rolling hats, half-time clap
+    { name: 'Midnight Drift', bpm: 140, root: 53, scale: 'phryg', prog: [0, 0, 5, 1], seed: 401 },
+    { name: 'Cowbell Alley', bpm: 132, root: 51, scale: 'minor', prog: [0, 5, 0, 6], seed: 409 },
+    { name: 'Smoke Lane', bpm: 144, root: 50, scale: 'phryg', prog: [0, 1, 0, 5], seed: 419 },
+    { name: 'Low Rider', bpm: 128, root: 52, scale: 'minor', prog: [0, 3, 5, 5], seed: 421 },
+    { name: 'Shadow Tilt', bpm: 150, root: 54, scale: 'phryg', prog: [0, 0, 1, 0], seed: 431 },
+    { name: 'Neon Grip', bpm: 136, root: 49, scale: 'minor', prog: [0, 6, 5, 6], seed: 433 }
+  ],
+  dreamy: [   // slow and floaty: for exploring far away
+    { name: 'Meadow Morning', bpm: 76, root: 60, scale: 'major', prog: [0, 5, 3, 4], seed: 11 },
+    { name: 'Drifting Clouds', bpm: 68, root: 62, scale: 'lydian', prog: [0, 4, 5, 3], seed: 23 },
+    { name: 'Lantern Pond', bpm: 72, root: 65, scale: 'major', prog: [0, 3, 5, 4], seed: 37 },
+    { name: 'Far Horizon', bpm: 64, root: 57, scale: 'dorian', prog: [0, 6, 3, 4], seed: 113 },
+    { name: 'Moss and Moonlight', bpm: 70, root: 63, scale: 'lydian', prog: [0, 1, 0, 4], seed: 127 },
+    { name: 'Hammock Hour', bpm: 80, root: 58, scale: 'mixo', prog: [0, 3, 6, 3], seed: 131 }
   ]
 };
-const MOOD = { peaceful: 0, upbeat: 1, exciting: 2 };
+const MOOD = { dreamy: 0, upbeat: 1, exciting: 2, phonk: 3, chill: 4 };
+const KINDS = ['chill', 'upbeat', 'exciting', 'phonk', 'dreamy'];
+const KIND_NAME = { chill: 'chill', upbeat: 'upbeat', exciting: 'exciting', phonk: 'phonk', dreamy: 'dreamy' };
 const musOff = () => !settings.musicOn;
-const musStyle = () => settings.music === 'random' ? (AU.rnd || (AU.rnd = ['peaceful', 'upbeat', 'exciting'][Math.floor(Math.random() * 3)])) : settings.music;   // (Random: a different kind of music each game, and each time you skip)
-const MUSIC_INFO = { random: 'Random: a different kind each game', none: 'No music', peaceful: 'Peaceful: soft and dreamy', upbeat: 'Upbeat: bouncy and relaxed', exciting: 'Exciting: fast and driving' };
+const musStyle = () => settings.music === 'random' ? (AU.rnd || (AU.rnd = KINDS[Math.floor(Math.random() * KINDS.length)])) : settings.music === 'adaptive' ? (AU.target || 'chill') : settings.music;
+const MUSIC_INFO = { adaptive: 'Fits the moment: an easy groove when things are calm, upbeat when something is going on, phonk or exciting when it gets wild, and dreamy when you explore far away', random: 'Random: any song of any kind, one after another', none: 'No music', chill: 'Chill: an easy, light groove', upbeat: 'Upbeat: bouncy, something is going on', exciting: 'Exciting: fast and driving', phonk: 'Phonk: dark drift phonk, cowbells and deep 808s', dreamy: 'Dreamy: slow and floaty' };
 const RHY = [
   [[[0, 1.5], [1.5, 0.5], [2, 2]], [[0, 1], [1, 1], [2, 1], [3, 1]], [[0.5, 1], [2, 1.5]], [[0, 2], [2, 1], [3, 1]]],
   [[[0, 0.5], [0.5, 0.5], [1, 1], [2, 0.5], [3, 1]], [[0, 1], [1.5, 0.5], [2, 1], [3.5, 0.5]], [[0, 0.5], [1, 0.5], [2, 0.5], [3, 0.5], [3.5, 0.5]]],
-  [[[0, 0.5], [0.5, 0.5], [1, 0.5], [1.5, 0.5], [2, 0.5], [2.5, 0.5], [3, 1]], [[0, 0.75], [0.75, 0.75], [1.5, 0.5], [2, 0.5], [2.5, 0.5], [3, 1]], [[0, 0.5], [1, 0.5], [1.5, 0.5], [2, 1], [3, 0.5], [3.5, 0.5]]]
+  [[[0, 0.5], [0.5, 0.5], [1, 0.5], [1.5, 0.5], [2, 0.5], [2.5, 0.5], [3, 1]], [[0, 0.75], [0.75, 0.75], [1.5, 0.5], [2, 0.5], [2.5, 0.5], [3, 1]], [[0, 0.5], [1, 0.5], [1.5, 0.5], [2, 1], [3, 0.5], [3.5, 0.5]]],
+  [[[0, 0.25], [0.25, 0.25], [0.75, 0.25], [1.5, 0.25], [2, 0.25], [2.25, 0.25], [2.75, 0.5], [3.5, 0.25]], [[0, 0.5], [0.75, 0.25], [1.5, 0.25], [2, 0.25], [2.5, 0.25], [3, 0.5], [3.75, 0.25]], [[0, 0.25], [0.5, 0.25], [0.75, 0.25], [1.5, 0.5], [2.25, 0.25], [2.75, 0.25], [3.25, 0.5]]],
+  [[[0, 1], [1.5, 0.5], [2, 1], [3, 0.5]], [[0.5, 0.5], [1, 1], [2.5, 0.5], [3, 1]], [[0, 0.5], [0.5, 0.5], [1, 1], [2.5, 1.5]]]
 ];
+const PHONK_808 = [[0, 1.5, 2.75], [0, 0.75, 2.5], [0, 2, 2.75, 3.5]];
 function auRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const scNote = (sg, deg) => { const n = SCALES[sg.scale], o = Math.floor(deg / 7), i = ((deg % 7) + 7) % 7; return sg.root + n[i] + 12 * o; };
 function genMelody(sg, mood) {   // eight bars of tune; bars 5-8 echo bars 1-4 so it feels like a song
@@ -1864,15 +1895,37 @@ function genMelody(sg, mood) {   // eight bars of tune; bars 5-8 echo bars 1-4 s
     });
     bars.push(ev);
   }
+  sg._fb = PHONK_808[sg.seed % PHONK_808.length];
   return bars;
 }
 function musicBar(t0) {
   const sg = AU.song, mood = MOOD[AU.style], beat = 60 / sg.bpm, bar = AU.bar, ch = sg.prog[bar % 4], mus = AU.mus;
   const T = n => t0 + n * beat, cn = [ch, ch + 2, ch + 4];
-  // pad (soft chord held for the whole bar)
-  if (mood < 2) cn.forEach(d => tone(hz(scNote(sg, d) + 12), 4 * beat * 0.98, mood === 0 ? 'sine' : 'triangle', mood === 0 ? 0.05 : 0.035, 0, t0, mus, 0.5));
-  // bass
   const bn = hz(scNote(sg, ch) - 12);
+  if (mood === 3) {   // phonk: deep sliding 808, cowbell tune, rolling hats, a clap on the half beat
+    const sub = hz(scNote(sg, ch) - 24);
+    sg._fb.forEach((p, i) => { const len = beat * (i === sg._fb.length - 1 ? 1.1 : 1.4); tone(sub * 2, len, 'sine', 0.22, i === 0 && bar % 4 === 3 ? sub * 1.5 : sub * 1.9, T(p), mus, 0.01); tone(sub * 4, len * 0.6, 'triangle', 0.045, 0, T(p), mus, 0.01); });   // (808 with a little grit on top)
+    [0, 2.75].forEach(p => tone(160, 0.18, 'sine', 0.3, 45, T(p), mus));
+    noise(0.16, 0.2, 1800, 900, 'bandpass', T(2), mus); noise(0.1, 0.12, 3000, 1500, 'highpass', T(2.02), mus);   // (the clap)
+    for (let i = 0; i < 8; i++) noise(0.03, i % 2 ? 0.05 : 0.035, 9500, 7500, 'highpass', T(i * 0.5), mus);
+    if (bar % 2 === 1) for (let i = 0; i < 6; i++) noise(0.02, 0.02 + i * 0.004, 9000, 7500, 'highpass', T(3 + i / 6), mus);   // (hat roll)
+    AU.melody[bar % 8].forEach(e => { const f = hz(scNote(sg, e[1]) + 12); tone(f, 0.17, 'square', 0.055, 0, T(e[0]), mus, 0.003); tone(f * 1.48, 0.13, 'square', 0.036, 0, T(e[0]), mus, 0.003); });   // (cowbell: two clanging tones)
+    if (bar % 2 === 0) cn.forEach(d => tone(hz(scNote(sg, d)), beat * 8, 'sawtooth', 0.016, 0, t0, mus, 0.8));   // (a dark pad underneath)
+    return;
+  }
+  if (mood === 4) {   // chill: warm keys, a soft groove, light percussion
+    cn.forEach(d => tone(hz(scNote(sg, d) + 12), 4 * beat * 0.95, 'triangle', 0.05, 0, t0, mus, 0.25));
+    [0, 1.5, 2, 3.5].forEach((p, i) => tone(i === 3 ? bn * 1.5 : bn, beat * (i % 2 ? 0.45 : 0.8), 'triangle', 0.2, 0, T(p), mus, 0.01));
+    [0.5, 1.5, 2.5, 3.5].forEach(p => cn.forEach(d => tone(hz(scNote(sg, d) + 12), beat * 0.4, 'sine', 0.04, 0, T(p), mus, 0.008)));
+    AU.melody[bar % 8].forEach(e => tone(hz(scNote(sg, e[1])), Math.max(0.15, e[2] * beat), 'triangle', 0.12, 0, T(e[0]), mus, 0.01));
+    [0, 2.5].forEach(p => tone(140, 0.18, 'sine', 0.26, 45, T(p), mus));
+    [1, 3].forEach(p => { noise(0.05, 0.08, 3200, 2500, 'bandpass', T(p), mus); tone(420, 0.04, 'triangle', 0.05, 300, T(p), mus); });   // (rim)
+    for (let i = 0; i < 8; i++) noise(0.04, i % 2 ? 0.04 : 0.024, 8000, 6000, 'highpass', T(i * 0.5), mus);   // (shaker)
+    return;
+  }
+  // pad (soft chord held for the whole bar)
+  if (mood < 2) cn.forEach(d => tone(hz(scNote(sg, d) + 12), 4 * beat * 0.98, mood === 0 ? 'sine' : 'triangle', mood === 0 ? 0.065 : 0.035, 0, t0, mus, 0.5));
+  // bass
   if (mood === 0) tone(bn, 4 * beat * 0.95, 'sine', 0.13, 0, t0, mus, 0.08);
   else if (mood === 1) [0, 1.5, 2, 3.5].forEach((p, i) => tone(i === 3 ? bn * 1.5 : bn, beat * 0.7, 'triangle', 0.17, 0, T(p), mus));
   else for (let i = 0; i < 8; i++) tone(i % 4 === 3 ? bn * 2 : bn, beat * 0.42, 'sawtooth', 0.075, 0, T(i * 0.5), mus);
@@ -1891,37 +1944,93 @@ function musicBar(t0) {
   } else if (bar % 2 === 0) noise(0.5, 0.025, 7000, 9000, 'highpass', T(2), mus);
 }
 function musicPick(avoid) {
-  const list = SONGS[AU.style]; let s, tries = 0;
-  do { s = list[Math.floor(Math.random() * list.length)]; } while (s === avoid && list.length > 1 && tries++ < 8);
-  AU.song = s; AU.melody = genMelody(s, MOOD[AU.style]); AU.bar = 0;
-  const np = $('nowPlaying'); if (np) np.textContent = s.name + ' · ' + AU.style;
+  if (settings.music === 'random' && avoid !== null) AU.rnd = KINDS[Math.floor(Math.random() * KINDS.length)];   // (Random: the next song can be any kind)
+  AU.style = musStyle();
+  let list = SONGS[AU.style];
+  let s, tries = 0;
+  if (typeof avoid === 'number') s = list[((avoid % list.length) + list.length) % list.length];   // (flipping by hand: the next or the one before, in order)
+  else do { s = list[Math.floor(Math.random() * list.length)]; } while ((s === avoid || s === AU.lastSong) && list.length > 1 && tries++ < 12);
+  AU.lastSong = AU.song; AU.song = s; AU.melody = genMelody(s, MOOD[AU.style]); (AU.hist || (AU.hist = [])).push([AU.style, s]); if (AU.hist.length > 30) AU.hist.shift(); AU.bar = 0; AU.songAt = AU.ctx ? AU.ctx.currentTime : 0;
+  musicLabel();
+}
+function musicLabel() {   // the song, its kind, and which one of how many it is
+  const np = $('nowPlaying'); if (!np || !AU.song) return; const list = SONGS[AU.style] || [], n = list.indexOf(AU.song) + 1;
+  np.textContent = ''; const b = document.createElement('b'); b.textContent = AU.song.name; const sm = document.createElement('small'); sm.textContent = KIND_NAME[AU.style] + ' · song ' + n + ' of ' + list.length; np.append(b, sm);
 }
 function musicTick() {
   if (!AU.ctx || AU.ctx.state !== 'running' || musOff() || !AU.song) return;
   const beat = 60 / AU.song.bpm;
   let guard = 0;
   while (AU.nextT < AU.ctx.currentTime + 0.7 && guard++ < 4) {
+    if (settings.music === 'adaptive' && (AU.bar % 2 === 0 || AU.urgent) && musicShouldMove()) { musicSwap(2.4); AU.style = AU.target; musicPick(null); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.6); AU.movedAt = AU.ctx.currentTime; }
     musicBar(AU.nextT); AU.bar++; AU.nextT += 4 * beat;
     if (AU.bar >= 32) { musicPick(AU.song); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.1); }
   }
 }
-function musicSwap() {   // stop whatever is playing right away (notes already queued fade out) and start a clean channel
+function musicShouldMove() {   // Fits the moment: change only when the mood has really changed for a while, and not more than about every 20 seconds
+  const t = AU.ctx.currentTime;
+  if (!AU.target || AU.target === AU.style) { AU.tgtSince = t; return false; }
+  const big = Math.abs(MOOD_LEVEL[AU.target] - MOOD_LEVEL[AU.style]) >= 1.2;
+  if (AU.urgent && MOOD_LEVEL[AU.target] > MOOD_LEVEL[AU.style]) return t - (AU.tgtSince || t) > 0.8 && t - (AU.movedAt || 0) > 4;   // (falling, or the clock running out: change now)
+  return t - (AU.tgtSince || t) > (big ? 3 : 7) && t - (AU.movedAt || 0) > (big ? 10 : 20);
+}
+const MOOD_LEVEL = { dreamy: 0, chill: 0.6, upbeat: 1.2, phonk: 2, exciting: 2 };
+/* how busy things are right now, 0 (quiet) to 1 (wild): your speed, boosts and jumps, players and bots around you, things flying about, the last seconds of the clock */
+let musFallT = 0, musI = 0, musKick = 0, musScan = 0, musNear = 0, musMoving = 0, musFarT = 0;
+function musicFeel(dt, b, ev) {
+  if (settings.music !== 'adaptive' || musOff()) return;
+  if (ev) { if (ev.boosted) musKick += 0.25; if (ev.jumped) musKick += 0.05; if (ev.landed) musKick += 0.03; }
+  musKick = Math.max(0, Math.min(0.6, musKick) - dt * 0.12);
+  musScan -= dt;
+  if (musScan <= 0) { musScan = 0.5;
+    let n = 0, far = true; const R2 = 700 * 700, F2 = 2600 * 2600;
+    others.forEach(o => { if (!o.seen || o.dead || o.cx === undefined) return; const d = (o.cx - b.x) ** 2 + (o.cy - b.y) ** 2; if (d < R2) n++; if (d < F2) far = false; });
+    for (const bt of bots) { if (bt.dead > 0) continue; const d = (bt.b.x - b.x) ** 2 + (bt.b.y - b.y) ** 2; if (d < R2) n++; if (d < F2) far = false; }
+    musNear = n; let m = 0; const w = S.world; if (w) for (const d of w.dyn) if (!d.sleep && Math.abs(d.vx) + Math.abs(d.vy) > 60 && Math.abs(d.x - b.x) < 600 && Math.abs(d.y - b.y) < 500) m++;
+    musMoving = m;
+    const st = S.map && S.map.start, away = st ? Math.hypot(b.x - st[0], b.y - st[1]) > 3500 : false;
+    musFarT = far && away ? musFarT + 0.5 : 0;
+  }
+  const sp = Math.min(1, Math.hypot(b.vx, b.vy) / 700), fin = $('timer') && $('timer').classList.contains('final') ? 0.3 : 0;
+  const raw = Math.min(1, sp * 0.3 + (b.boost || b.pSpeed > 0 ? 0.2 : 0) + Math.min(1, musNear / 3) * 0.3 + Math.min(1, musMoving / 8) * 0.25 + musKick + fin);
+  musI += (raw - musI) * Math.min(1, dt / (raw > musI ? 2.5 : 9));   // (quick to liven up, slow to calm down)
+  AU.far = musFarT > 12;
+  // a long fall: something dramatic, right away
+  if (b.vy > 650 && !b.ground) musFallT += dt; else musFallT = Math.max(0, musFallT - dt * 0.5);
+  if (musFallT > 1) musI = Math.max(musI, 0.75);
+  const crowd = Math.min(1, musNear / 3) * 0.3 + Math.min(1, musMoving / 8) * 0.25, rush = sp * 0.3 + (b.boost || b.pSpeed > 0 ? 0.2 : 0) + fin + (musFallT > 1 ? 0.5 : 0);
+  // what fits: far away and quiet, dreamy; calm, an easy groove; something going on, upbeat; wild with lots of players and things flying, phonk; wild with speed, falls or the last seconds, exciting
+  const lvl = AU.far && musI < 0.45 ? 'dreamy' : musI < 0.22 ? 'chill' : musI < 0.52 ? 'upbeat' : crowd > rush ? 'phonk' : 'exciting';
+  AU.urgent = musFallT > 1 || fin > 0;
+  if (lvl !== AU.lvl) { AU.lvl = lvl; AU.target = lvl; }
+}
+function musicSwap(fade) {   // stop whatever is playing (notes already queued fade out) and start a clean channel; a longer fade for gentle changes
   if (!AU.ctx) return;
-  const old = AU.mus, t = AU.ctx.currentTime;
-  try { old.gain.cancelScheduledValues(t); old.gain.setValueAtTime(old.gain.value, t); old.gain.linearRampToValueAtTime(0, t + 0.2); } catch (e) {}
-  setTimeout(() => { try { old.disconnect(); } catch (e) {} }, 400);
-  AU.mus = AU.ctx.createGain(); AU.mus.gain.value = 1; AU.mus.connect(AU.musOut);
+  const old = AU.mus, t = AU.ctx.currentTime, f = fade || 0.2;
+  try { old.gain.cancelScheduledValues(t); old.gain.setValueAtTime(old.gain.value, t); old.gain.linearRampToValueAtTime(0, t + f); } catch (e) {}
+  setTimeout(() => { try { old.disconnect(); } catch (e) {} }, f * 1000 + 300);
+  AU.mus = AU.ctx.createGain(); AU.mus.connect(AU.musOut);
+  if (fade) { AU.mus.gain.setValueAtTime(0.0001, t); AU.mus.gain.linearRampToValueAtTime(1, t + f * 0.8); } else AU.mus.gain.value = 1;
 }
 function musicStart() {
   if (!AU.ctx) return;
   auVol();
   const np = $('nowPlaying');
   if (musOff()) { if (AU.style) musicSwap(); AU.style = ''; AU.song = null; if (np) np.textContent = 'Music is off'; return; }
-  if (AU.style === musStyle() && AU.song) return;
-  if (AU.style) musicSwap(); AU.style = musStyle(); musicPick(null); AU.nextT = AU.ctx.currentTime + 0.25;
+  if (AU.song && AU.mode === settings.music) return;
+  AU.mode = settings.music;
+  if (AU.style) musicSwap(); musicPick(null); AU.nextT = AU.ctx.currentTime + 0.25; AU.movedAt = AU.ctx.currentTime;
   if (!AU.timer) AU.timer = setInterval(musicTick, 150);
 }
-function musicSkip() { if (!AU.song || musOff()) return; if (settings.music === 'random') { AU.rnd = null; musicSwap(); AU.style = musStyle(); musicPick(null); AU.nextT = AU.ctx.currentTime + 0.25; return; } musicSwap(); musicPick(AU.song); AU.nextT = AU.ctx.currentTime + 0.25; }
+function musicSkip(dir) {   // next (or, with -1, the one before). With one kind chosen it goes through that kind's songs in order
+  if (!AU.song || musOff()) return; const list = SONGS[AU.style] || [], i = list.indexOf(AU.song);
+  musicSwap();
+  if (settings.music === 'random' || settings.music === 'adaptive' || i < 0) {
+    if (dir === -1 && AU.hist && AU.hist.length > 1) { AU.hist.pop(); const h = AU.hist.pop(); AU.style = h[0]; AU.rnd = h[0]; AU.lastSong = AU.song; AU.song = h[1]; AU.melody = genMelody(h[1], MOOD[h[0]]); AU.bar = 0; AU.hist.push(h); musicLabel(); }   // (the one that played before)
+    else musicPick(AU.song);
+  } else musicPick(i + (dir === -1 ? -1 : 1));
+  AU.nextT = AU.ctx.currentTime + 0.25; AU.movedAt = AU.ctx.currentTime;
+}
 
 /* ================= ball sprites (hand-drawn look, cached so lots of balls stay cheap) ================= */
 const SPN = 96, SPK = (SPN / 2 - 5) / R, SPW = SPN / SPK;
@@ -2282,7 +2391,7 @@ function update(dt) {
   P.stepSwitches(w, botMode() === 'local' && bots.length ? (w.pb || [b]) : b, dt);
   if (w.follow) syncDoors();
   if (w.ev.length) worldEvents();
-  collectCoins(); collectPowers(); touchFlags();
+  collectCoins(); collectPowers(); touchFlags(); musicFeel(dt, b, ev);
   if (ev.boosted) { sfx('boost'); S.bLatch = 0; ring(b.x, b.y, '#ffd23d', 8, 70, 0.4); burst(b.x - b.bdir * R, b.y, ['#ffd23d', '#fff', '#ff8a3d'], 14, 260, 0); S.shake = Math.max(S.shake || 0, 0.12); }
   if (b.boost && fxOn() && ((S.t * 60) | 0) % 2 === 0) burst(b.x - b.bdir * (R + 2), b.y + (Math.random() - 0.5) * 14, ['#ffd23d', '#fff', '#ff8a3d'], 1, 90, 0);
   { const rdy = settings.boost && b.bcharge >= 1 && !b.boost; if (rdy && !S.bReady) sfx('ready'); S.bReady = rdy; }
@@ -2319,7 +2428,7 @@ const lvKey = () => (inHome || !S.map) ? soloLevel() : S.idx;   // which private
 const purseOf = i => purseV[i] || (purseV[i] = { c: 0, g: 0, u: 0 });
 const unlimitedAt = i => !!(purseV[i] && purseV[i].u);
 const cheatsOff = () => !settings.mp && !offlineOn() && (party ? (party.role === 'host' ? !!settings.noCheats : !!party.nc) : !!settings.noCheats);   // (a private game whose maker said "no cheats": no codes, no unlimited money)
-const unlimitedNow = () => !settings.mp && !cheatsOff() && unlimitedAt(lvKey());
+const unlimitedNow = () => !settings.mp && unlimitedAt(lvKey());   // (the Unlimited coins option in Mode always works: No cheats only blocks the codes)
 const purseNow = () => settings.mp ? purseP : purseOf(lvKey());
 let infMoney = false; try { infMoney = localStorage.getItem('ballrun4_inf') === '1'; } catch (e) {}   // (the code "themaker1": coins and diamonds never run out again, on this device)
 const wallet = {
@@ -3645,7 +3754,7 @@ const selVs = makeSelect($('selVs'), Object.keys(VSS).map(k => ({ v: k, label: V
 const TODS = { live: 'Follows the real clock, like the public worlds.', morning: 'It is always morning in your private world.', midday: 'It is always midday in your private world.', night: 'It is always night in your private world.' };
 const selTod = makeSelect($('selTod'), [{ v: 'live', label: 'Time of day: Live' }, { v: 'morning', label: 'Time of day: Morning' }, { v: 'midday', label: 'Time of day: Midday' }, { v: 'night', label: 'Time of day: Night' }],
   v => { settings.tod = v; save(); $('todDesc').textContent = TODS[v]; });
-const selMusic = makeSelect($('selMusic'), [{ v: 'random', label: 'Random' }, { v: 'peaceful', label: 'Peaceful' }, { v: 'upbeat', label: 'Upbeat' }, { v: 'exciting', label: 'Exciting' }],
+const selMusic = makeSelect($('selMusic'), [{ v: 'adaptive', label: 'Fits the moment' }, { v: 'random', label: 'Random' }, { v: 'chill', label: 'Chill' }, { v: 'upbeat', label: 'Upbeat' }, { v: 'exciting', label: 'Exciting' }, { v: 'phonk', label: 'Phonk' }, { v: 'dreamy', label: 'Dreamy' }],
   v => { settings.music = v; AU.rnd = null; save(); $('musicDesc').textContent = MUSIC_INFO[v]; if (!AU.ctx) auInit(); musicStart(); auVol(); });
 
 // ball look
@@ -3721,7 +3830,8 @@ bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 
 bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => { settings.boostPull = !settings.boostBtn; $('setBoostPull').checked = settings.boostPull; save(); applyTouchUI(); });   /* (a button, or pull farther: one or the other) */ bindToggle('setShopBtn', 'shopBtn', () => { applyTouchUI(); applyDeps(); }); bindToggle('setShopBoth', 'shopBoth', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull', () => { settings.boostBtn = !settings.boostPull; $('setBoostBtn').checked = settings.boostBtn; save(); applyTouchUI(); }); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
-$('btnSkip').onclick = () => { auWake(); musicSkip(); };
+$('btnSkip').onclick = () => { auWake(); musicSkip(1); };
+$('btnPrevSong').onclick = () => { auWake(); musicSkip(-1); };
 function botNote() {}
 $('setBotMax').oninput = () => { settings.botMaxOff = Math.max(1, Math.min(19, +$('setBotMax').value)); $('botMaxVal').textContent = settings.botMaxOff; save(); };
 // the important switches ask first when you turn them OFF; the small ones just switch
@@ -5820,7 +5930,7 @@ $('lvRoll').onchange = () => { const i = soloLevel(), p = finOf(i); p.roll = $('
 function finRow(i) { const p = finOf(i); selFin.set(p.k === 'r' ? 'r' : 's' + (p.k | 0)); $('lvRoll').checked = !!p.roll; $('lvRollRow').classList.toggle('hide', p.k !== 'r'); }
 $('setNoCheats').onchange = () => { settings.noCheats = $('setNoCheats').checked; save(); sfx(settings.noCheats ? 'on' : 'off'); if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'rules', nc: settings.noCheats ? 1 : 0 })); } catch (e) {} } lvOptRender.k = ''; lvOptRender(); homeWalletRender.k = ''; try { homeWalletRender(); } catch (e) {} };
 function lvOptRender() {   // the options of the level you picked live in the Mode tab: the picker itself only picks
-  const i = soloLevel(), g = !!(party && party.role === 'guest'); $('lvOptBox').classList.toggle('hide', g); $('noCheatRow').classList.toggle('hide', g || offlineOn() || !!settings.mp); $('setNoCheats').checked = !!settings.noCheats; $('lvUnl').disabled = cheatsOff(); if (g) return;
+  const i = soloLevel(), g = !!(party && party.role === 'guest'); $('lvOptBox').classList.toggle('hide', g); $('noCheatRow').classList.toggle('hide', g || offlineOn() || !!settings.mp); $('setNoCheats').checked = !!settings.noCheats; $('lvUnl').disabled = false; if (g) return;
   const q = purseV[i], p = finOf(i), k = i + '|' + (q ? q.u + ',' + q.c + ',' + q.g : '') + '|' + p.k + '|' + p.roll; if (lvOptRender.k === k) return; lvOptRender.k = k;
   $('lvOptFor').textContent = 'For ' + lvLabelOf(i) + ':'; $('lvUnl').checked = unlimitedAt(i); $('lvMoney').textContent = lvMoneyText(i); finRow(i);
 }
@@ -7558,7 +7668,16 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, addGate, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+if (params && params.get('test')) window.__d = { NET, addGate, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
+    const sg = SONGS[kind][idx], sr = 22050, secs = bars * 4 * 60 / sg.bpm + 1.5, oc = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
+    if (!AU.noiseBuf) auInit();
+    const keep = { ctx: AU.ctx, mus: AU.mus, song: AU.song, style: AU.style, bar: AU.bar, melody: AU.melody };
+    const comp = oc.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(oc.destination);
+    const out = oc.createGain(); out.gain.value = 0.9 * 0.55; out.connect(comp);   // (the same chain as the game, at a middle volume)
+    AU.ctx = oc; AU.mus = out; AU.song = sg; AU.style = kind; AU.melody = genMelody(sg, MOOD[kind]);
+    try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += 4 * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
+    const buf = await oc.startRendering(); return Array.from(buf.getChannelData(0));
+  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();
