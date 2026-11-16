@@ -193,12 +193,18 @@
       if (!boxHits(w, qx, qy, ex - 2, ey - 2)) { d.x = qx; d.y = qy; }
     }
   }
+  const SO_COL = 300, soMap = new Map(), soIdx = [];
   function seeOut(w, skip) {   // shown the server's picture: a crate or ball drawn a few pixels into a plank (the two are carried on a little differently between updates) is drawn resting on it
+    if (!w.see.length) return;
+    soMap.clear(); for (let j = 0; j < w.dyn.length; j++) { const k = Math.floor(w.dyn[j].x / SO_COL); let a = soMap.get(k); if (!a) soMap.set(k, a = []); a.push(j); }   // (things by column: each plank only looks at what is near it, in the same order as before)
     for (let i = 0; i < w.see.length; i++) {
       const s = w.see[i]; if (s.gone) continue;
       const c = Math.cos(s.ang), sn = Math.sin(s.ang);
-      for (let j = 0; j < w.dyn.length; j++) {
-        const d = w.dyn[j]; if (d.burn > 0 || Math.abs(d.x - s.cx) > s.hl + 60 || Math.abs(d.y - s.cy) > s.hl + 60 || (skip && skip(d))) continue;
+      const k0 = Math.floor((s.cx - s.hl - 90) / SO_COL), k1 = Math.floor((s.cx + s.hl + 90) / SO_COL); soIdx.length = 0;
+      for (let k = k0; k <= k1; k++) { const a = soMap.get(k); if (a) for (let q = 0; q < a.length; q++) soIdx.push(a[q]); }
+      if (!soIdx.length) continue; if (k1 > k0) soIdx.sort((x, y) => x - y);
+      for (let jj = 0; jj < soIdx.length; jj++) {
+        const j = soIdx[jj], d = w.dyn[j]; if (d.burn > 0 || Math.abs(d.x - s.cx) > s.hl + 60 || Math.abs(d.y - s.cy) > s.hl + 60 || (skip && skip(d))) continue;
         const rx = d.x - s.cx, ry = d.y - s.cy; if (Math.abs(rx * c + ry * sn) > s.hl) continue;
         const sd = rx * sn - ry * c >= 0 ? 1 : -1, g = plankGap(s, d, s.ang, sd);
         if (g < 0 && g > -16) { d.x += sn * sd * -g; d.y -= c * sd * -g; }
@@ -305,6 +311,11 @@
     for (const o of list) { o.vy = -(light ? 260 + rnd() * 200 : 110 + rnd() * 40) * f; o.vx = (o.vx || 0) + (rnd() - 0.5) * (light ? 220 : 40) * f; if (o.av !== undefined && o.ii) o.av = (rnd() - 0.5) * 10 * f; o.nap = false; o.st = 0; o.sleep = false; }
     w.ev.push({ k: 'pop', x: (q.x + 0.5) * TS, y: q.y * TS, n: list.length });
   }
+  function noneNear(w, cx, cy, r) {   // on the server: nothing it is looking at can be anywhere near here (it only looks at things within 420 of a player), so there is nothing to search for
+    const f = w.cand && w.focus; if (!f || !Array.isArray(f)) return false;
+    for (let i = 0; i < f.length; i++) if (Math.abs(f[i].x - cx) < r && Math.abs(f[i].y - cy) < r) return false;
+    return true;
+  }
   function stepSwitches(w, bs, dt) {
     const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [];
     for (let i = 0; i < w.doors.length; i++) w.doors[i].latched = false;
@@ -312,7 +323,7 @@
       const q = w.btns[i], x0 = q.x * TS - R, x1 = (q.x + 1) * TS + R, fy = q.y * TS; let hit = false;
       for (let k = 0; k < L.length && !hit; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6) hit = true; }
       let on = null;   // (what rests on it: crates, balls and springs press it too, once it is up again)
-      if (!w.follow) { const DL0 = w.cand || w.dyn, DL = DL0.length > 48 ? nearCol(DL0, (x0 + x1) / 2) : DL0;
+      if (!w.follow && !noneNear(w, (x0 + x1) / 2, fy, 700)) { const DL0 = w.cand || w.dyn, DL = DL0.length > 48 ? nearCol(DL0, (x0 + x1) / 2) : DL0;
         for (let j = 0; j < DL.length; j++) { const o = DL[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 200) continue; const bot = o.y + (o.r || o.hh); if (o.x > x0 + R - 4 && o.x < x1 - R + 4 && bot >= fy - 10 && bot <= fy + 6) (on || (on = [])).push(o); } }
       if (q._was && !q.on && !(q.cool > 0)) q.cool = 1.5;   // (it has just popped back up: it cannot be pressed again for a moment)
       if (q.on) {   // pressed: it counts all the way down, whoever stands on it. Nobody can keep winding it up
@@ -327,7 +338,7 @@
     for (let i = 0; i < w.plates.length; i++) {
       const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = !!(w.follow && q.srvOn), dynOn = false;
       for (let k = 0; k < L.length && !on; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true; }
-      const DL0 = w.follow ? [] : w.cand || w.dyn, DL = DL0.length > 48 ? nearCol(DL0, (x0 + x1) / 2) : DL0;   // (on the server: only the things near a player. In the shared world the crates on it are the server's to judge: here only your own ball is looked at, so a crate seen a little differently never makes it flicker)
+      const DL0 = w.follow || noneNear(w, (x0 + x1) / 2, fy, 800) ? NONE : w.cand || w.dyn, DL = DL0.length > 48 ? nearCol(DL0, (x0 + x1) / 2) : DL0;   // (on the server: only the things near a player. In the shared world the crates on it are the server's to judge: here only your own ball is looked at, so a crate seen a little differently never makes it flicker)
       for (let j = 0; j < DL.length && !on; j++) {
         const o = DL[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 300) continue;
         const bot = o.y + (o.r || o.hh), m = q.on ? 4 : 0;   // (a little more room to stay pressed than to get pressed: something resting right at the edge never flickers it)
@@ -489,10 +500,19 @@
     for (const h of out) { const c = addC(dynB ? A : null, B, h, (A.uid >>> 0) * 4096 + h[5]); matPair(c, A, B); if (!dynB) { const rx = h[0] - A.x, ry = h[1] - A.y; c.kvx = (A.vx || 0) - (A.av || 0) * ry; c.kvy = (A.vy || 0) + (A.av || 0) * rx; } }
     return out.length;
   }
+  const SEE_B = 400, seeNearL = [];
+  function seeNear(w, x, rad) {   // the teeter-totters whose middle is within rad (plus the longest plank) of x, in the order of the list: a few instead of all of them
+    let ix = w._seeIx;
+    if (!ix || ix.n !== w.see.length) { ix = w._seeIx = { n: w.see.length, m: new Map(), hl: 0 }; for (let i = 0; i < w.see.length; i++) { const s = w.see[i]; if (s.cx < -1e5) continue; ix.hl = Math.max(ix.hl, s.hl); const k = Math.floor(s.cx / SEE_B); let a = ix.m.get(k); if (!a) ix.m.set(k, a = []); a.push(i); } }
+    seeNearL.length = 0; const R0 = rad + ix.hl, k0 = Math.floor((x - R0) / SEE_B), k1 = Math.floor((x + R0) / SEE_B);
+    for (let k = k0; k <= k1; k++) { const a = ix.m.get(k); if (a) for (let j = 0; j < a.length; j++) seeNearL.push(a[j]); }
+    if (k1 > k0 && seeNearL.length > 1) seeNearL.sort((a, b) => a - b);
+    return seeNearL;
+  }
   function plankContacts(w, d, sh) {
-    let n = 0;
-    for (let i = 0; i < w.see.length; i++) {
-      const s = w.see[i], ext = d.r || Math.max(sh.ex, sh.ey);
+    let n = 0; const near = seeNear(w, d.x, (d.r || Math.max(sh.ex, sh.ey)) + 14);
+    for (let ni = 0; ni < near.length; ni++) {
+      const i = near[ni], s = w.see[i], ext = d.r || Math.max(sh.ex, sh.ey);
       if (Math.abs(s.cx - d.x) > s.hl + ext + 14 || Math.abs(s.cy - d.y) > s.hl + ext + 14) continue;
       const c = Math.cos(s.ang), sn = Math.sin(s.ang), ux = sn, uy = -c;
       const pa = s._px || (s._px = { x: 0, y: 0, vx: 0, vy: 0, av: 0, _im: 0, _ii: 0, _bx: 0, _by: 0, _bw: 0, uid: s.uid });
@@ -588,8 +608,10 @@
   function ropeLoad(r, x, wt) { const u = clamp((x - r.ax) / r.L, 0, 1), f = u * r.n, i = Math.min(r.n - 1, Math.floor(f)), t = f - i; r.ld[i] += wt * (1 - t); r.ld[i + 1] += wt * t; }
   function stepRopes(w, dt) {
     if (!w.ropes || !w.ropes.length) return;
+    const srv = w.cand && Array.isArray(w.focus) ? w.focus : null;
     for (const r of w.ropes) {
       if (r.gone) continue;
+      if (srv) { let near = false; for (let i = 0; i < srv.length && !near; i++) { const q = srv[i]; if (q.x > r.ax - 1600 && q.x < r.bx + 1600 && Math.abs(q.y - r.ay) < 1600) near = true; } if (!near) continue; }   // (on the server: a bridge nobody is anywhere near waits, just as the crates far from everybody do. It catches up long before anyone reaches it)
       for (const d of w.dyn) {   // whatever rests on it weighs on it (worked out the same way everywhere, from where things are)
         if (d.burn > 0 || d.gone || d._dyn || d.x < r.ax - 40 || d.x > r.bx + 40) continue;   // (what is moving presses on it through its contacts, see below; what is at rest by where it lies)
         const e = d.r || Math.max(d.hw, d.hh), bot = d.y + (d.r || shapeOf(d).ey), s = ropeAt(r, d.x);
@@ -770,7 +792,7 @@
     const f = w.focus, FR = 1100, fol = w.follow || w.pubWait;
     if (f) {   // a very busy pile near you: only the nearest few dozen things are simulated each moment, so the game stays smooth however much has been built
       const near = [];
-      for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0 || d.nap || !nearF(f, d.x, d.y, FR, FR)) continue; near.push(d); }
+      for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0) continue; const n1 = d._n1 = nearF(f, d.x, d.y, FR, FR); if (d.nap || !n1) continue; near.push(d); }   // (_n1: worked out once here and used again below, nothing moves in between)
       if (near.length > DYN_BUDGET) { for (const d of near) d._pri = distF(f, d) - (d.gr && Math.abs(d.vx) + Math.abs(d.vy) < 40 ? 0 : 1e6); near.sort((a, b) => a._pri - b._pri); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }   // (only with a truly huge crowd moving at once: what is still falling or flying is always worked out, and the farthest of what is only settling waits a moment)
     }
     let pbMove = null; if (w.pb) for (const p of w.pb) { if (p._lx === undefined || Math.abs(p.x - p._lx) + Math.abs(p.y - p._ly) > 0.5) (pbMove || (pbMove = [])).push(p); p._lx = p.x; p._ly = p.y; }
@@ -779,13 +801,13 @@
     const grid = w._grid, used = w._gUsed; for (let i = 0; i < used.length; i++) used[i].length = 0; used.length = 0;
     const put = d => { const e = d.r || Math.max(d.hw, d.hh) * 1.42; for (let cx = Math.floor((d.x - e) / CELL); cx <= Math.floor((d.x + e) / CELL); cx++) for (let cy = Math.floor((d.y - e) / CELL); cy <= Math.floor((d.y + e) / CELL); cy++) { const k = (cx + 4) * 65536 + cy + 4; let g = grid.get(k); if (!g) grid.set(k, g = []); if (!g.length) used.push(g); g.push(d); } };
     const H = (x0, y0, x1, y1) => { const r = HB; r.length = 0; const st = ++hStamp; for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) { const g = grid.get((cx + 4) * 65536 + cy + 4); if (g) for (let j = 0; j < g.length; j++) { const o = g[j]; if (o._hT !== st) { o._hT = st; r.push(o); } } } return r; };
-    let farAwake = false; if (f) for (let i = 0; i < L.length; i++) { const d = L[i]; if (!d.nap && !(d.burn > 0) && !nearF(f, d.x, d.y, FR, FR)) { farAwake = true; break; } }   // (unless something far away is still moving: then everything is looked at, so it bumps into what is there)
+    let farAwake = false; if (f) for (let i = 0; i < L.length; i++) { const d = L[i]; if (!d.nap && !(d.burn > 0) && !d._n1) { farAwake = true; break; } }   // (unless something far away is still moving: then everything is looked at, so it bumps into what is there)
     for (let i = 0; i < L.length; i++) {
       const d = L[i]; d._i = i; d._dyn = false;
       if (d.burn > 0) { if (d.burn < 1e8) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; d.av = 0; d.rot = 0; } } continue; }
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
       if (d.sq > 0) d.sq = Math.max(0, d.sq - dt);
-      d._far = !!f && !nearF(f, d.x, d.y, FR, FR);
+      d._far = !!f && !d._n1;
       if (!d._far || !d.nap || farAwake || nearF(f, d.x, d.y, FR + 300, FR + 300)) put(d);   // (what rests far from everybody is not even looked at: nothing near anybody can touch it)
       if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if (d.farT > 30 && (d.gr || d.farT > 90)) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (only something that is on the ground: nothing is ever stopped in mid-air) */   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
       if (d._far && d.nap) { d.sleep = true; continue; }   // far from everybody and at rest: nothing to work out
@@ -1604,7 +1626,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 167, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 169, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

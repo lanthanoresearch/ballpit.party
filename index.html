@@ -724,7 +724,20 @@
   .chatform{display:flex;gap:8px}.chatform input{flex:1;min-width:0;font:inherit;font-size:17px;padding:9px 12px;border:2px solid var(--line);border-radius:12px;background:#120f1c;color:var(--ink)}.chatform button{width:48px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#2fa463!important;border:2px solid #fff!important;color:#fff}.chatform button svg{width:22px;height:22px;stroke:#fff}
   .chatppl{max-height:40%;overflow-y:auto;display:flex;flex-direction:column;gap:6px}.chatppl .pr{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.05)}.chatppl .pr b{flex:1;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chatppl .dot{width:18px;height:18px;border-radius:50%;border:2px solid #fff;flex:none}
   #emoPop .cfoot{display:flex;flex-direction:row!important;align-items:center;gap:10px;justify-content:space-between}
-  .givecard{gap:10px}.gvrow{display:flex;align-items:center;gap:10px;font-size:17px}.gvrow>span:nth-child(2){flex:1}.gvrow input{width:130px;font:inherit;font-size:17px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;background:#120f1c;color:var(--ink);text-align:right}#giveModal{z-index:22;background:rgba(10,8,16,.6)}#giveModal .btns{display:flex;gap:10px}#giveModal .btns button{flex:1}
+  .chatquick{display:flex;gap:6px;overflow-x:auto;overscroll-behavior:contain;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.chatquick::-webkit-scrollbar{display:none}
+  .chatquick button{flex:none;font:inherit;font-size:15px;padding:6px 12px;border-radius:999px;border:2px solid var(--line);background:rgba(255,255,255,.08);color:var(--ink);white-space:nowrap;cursor:pointer}.chatquick button:active{transform:scale(.95)}
+  .chatquick button.qedit{background:transparent;border-style:dashed;opacity:.85}
+  .chatlog .cm{position:relative;overflow:hidden}.chatlog .cm .cmt{float:right;margin-left:8px;font-size:12px;opacity:.6;font-variant-numeric:tabular-nums}
+  .chatlog .cm .cmbar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:rgba(255,210,61,.75);transform-origin:left;animation:cmgo linear forwards}
+  .chatlog .cm.soon .cmt{opacity:1;color:#ffb36b}
+  @keyframes cmgo{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+  .quickcard{gap:10px}.qmlist{display:flex;flex-direction:column;gap:6px;max-height:min(52vh,420px);overflow-y:auto}.qmlist input{font:inherit;font-size:16px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;background:#120f1c;color:var(--ink);width:100%;box-sizing:border-box}
+  .givecard{gap:10px}.gvrow{display:flex;align-items:center;gap:10px;font-size:17px}.gvrow>span:nth-child(2){flex:1}.gvrow input{width:130px;font:inherit;font-size:17px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;background:#120f1c;color:var(--ink);text-align:right}  .cscard{gap:10px;max-width:560px}.cscard h3 span{color:#ffd23d}.cscard{max-height:calc(100dvh - 24px);display:flex;flex-direction:column}.cslist{display:flex;flex-direction:column;gap:2px;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  .csrow{display:grid;grid-template-columns:minmax(130px,40%) 1fr;gap:12px;align-items:center;padding:8px 0;border-top:2px solid rgba(255,255,255,.08)}
+  .csrow code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:clamp(11px,3.3vw,16px);white-space:nowrap;letter-spacing:-.2px;background:#120f1c;border:2px solid #4b4161;border-radius:10px;padding:6px 4px;text-align:center;color:#7ff0ff;overflow:hidden}
+  .csrow b{display:block;font-size:16px;line-height:1.15}.csrow span{font-size:13.5px;opacity:.8;line-height:1.2;display:block}
+  #codesModal{z-index:23;background:rgba(10,8,16,.6)}
+#giveModal,#quickModal{z-index:22;background:rgba(10,8,16,.6)}#giveModal .btns{display:flex;gap:10px}#giveModal .btns button{flex:1}
   @media (max-height:520px){.chatcard{height:calc(100vh - 16px);padding:8px 12px;gap:6px}.chatlog .cm{font-size:14px;padding:4px 9px}}
   .wicard{width:min(620px,100%);gap:12px}.wimap{display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid var(--line);border-radius:14px;background:rgba(255,255,255,.05)}.wimap svg{width:30px;height:30px;flex:none}.wimap b{display:block;font-size:22px;line-height:1.2}.wimap small{display:block;opacity:.7;font-size:15px;margin-top:2px}.wigrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wirow{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);min-width:0}.wirow>span:first-child{flex:none;width:22px;display:inline-flex;justify-content:center;margin-top:2px}.wirow>span:last-child{min-width:0}.wirow small{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.6}.wirow b{display:block;font-weight:400;font-size:16px;line-height:1.3;overflow-wrap:anywhere}#wiModal .btns{display:flex;gap:10px}#wiModal .btns button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px}#wiModal{z-index:20;background:rgba(10,8,16,.6)}@media (max-width:520px){.wigrid{grid-template-columns:1fr}}@media (max-height:520px) and (min-aspect-ratio:1/1){.wicard{width:min(820px,100%);gap:8px}.wigrid{grid-template-columns:1fr 1fr 1fr;gap:8px}.wirow{padding:7px 9px}.wimap{padding:8px 12px}.wimap b{font-size:19px}}
   .nmcard textarea{font:inherit;font-size:17px;width:100%;box-sizing:border-box;resize:none;padding:8px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#120f1c;color:var(--ink);-webkit-user-select:text;user-select:text}.lvdesc{font-size:14px;margin:4px 0;padding:5px 9px;border-left:3px solid #ffd23d;background:rgba(255,255,255,.07);border-radius:4px;overflow-wrap:anywhere}#lvDescBtn{align-self:flex-start;margin-top:4px;font-size:13px}
@@ -766,7 +779,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 167; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 169; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -982,8 +995,15 @@
   <div class="chead"><h3 id="chatTitle">Chat</h3><button id="chatPplBtn" class="chip" type="button"><span data-ic="users"></span><span id="chatPplN">People</span></button><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="chatPeople" class="chatppl hide"></div>
   <div id="chatLog" class="chatlog" aria-live="polite"></div>
+  <div id="chatQuick" class="chatquick" aria-label="Quick messages"></div>
   <form id="chatForm" class="chatform" autocomplete="off"><input id="chatIn" type="text" maxlength="200" placeholder="Say something to everyone here" enterkeyhint="send" spellcheck="true"><button id="chatSend" class="go" type="submit" aria-label="Send"><span data-ic="up"></span></button></form>
   <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim" id="chatNote">Everyone in your world sees it.</span></div>
+</div></div>
+<div id="quickModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="qmTitle"><div class="card nmcard quickcard">
+  <h3 id="qmTitle">Quick messages</h3>
+  <div class="small dim">Up to 10. Tap one in the chat to send it right away. Leave a line empty to remove it.</div>
+  <div id="qmList" class="qmlist"></div>
+  <div class="btns"><button id="qmReset" type="button">Defaults</button><button id="qmNo" type="button">Cancel</button><button id="qmOk" type="button" class="go">Save</button></div>
 </div></div>
 <div id="giveModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="gvTitle"><div class="card nmcard givecard">
   <h3 id="gvTitle">Give</h3>
@@ -1285,6 +1305,13 @@
   <div class="btns"><button id="lvReset" type="button" class="danger hide" hidden>Reset level</button><button id="lvNo" type="button">Close</button><button id="lvOk" type="button" class="go">Play</button></div>
 </div></div>
 
+<div id="codesModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="csTitle"><div class="card cscard">
+  <h3 id="csTitle">Secret <span>codes</span></h3>
+  <div class="small dim">Double-tap your coins, type a code, then OK. Every new game starts without cheats.</div>
+  <div class="cslist"><div class="csrow"><code>themaker#1</code><div><b>Unlimited coins and diamonds</b><span>Buy and build anything, as much as you like.</span></div></div><div class="csrow"><code>maker</code><div><b>10,000 coins and 500 diamonds</b><span>Sets your money to that amount (and turns unlimited off).</span></div></div><div class="csrow"><code>zeros</code><div><b>Back to zero</b><span>Coins and diamonds go to 0 (and unlimited turns off).</span></div></div><div class="csrow"><code>unlimitedpower</code><div><b>No building limits</b><span>Build as many of every item as you like. Type it again to turn the limits back on.</span></div></div><div class="csrow"><code>updates</code><div><b>Show the update button</b><span>Puts the update button on the main menu until you close the game. Again to hide it.</span></div></div><div class="csrow"><code>codes</code><div><b>See all the codes</b><span>Shows this list. It changes nothing.</span></div></div></div>
+  <div class="small dim">In a private game set to No cheats, the money and building codes do nothing.</div>
+  <div class="btns"><button id="csOk" type="button" class="go">Got it</button></div>
+</div></div>
 <div id="codeModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="cdTitle"><div class="card nmcard">
   <h3 id="cdTitle">Enter a code</h3>
   <input type="text" id="cdIn" maxlength="24" placeholder="Code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -1401,8 +1428,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=167"></script>
-<script src="physics.js?v=167"></script>
+<script src="maps.js?v=169"></script>
+<script src="physics.js?v=169"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1446,7 +1473,7 @@ function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'K
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -1471,6 +1498,7 @@ function normalize() {
   if (['off', 'hold', 'holdr', 'follow'].indexOf(settings.mouseMove) < 0) settings.mouseMove = 'off';
   delete settings.uiScale;
   delete settings.cornerLayout; delete settings.cornerBig; delete settings.cornerMed; delete settings.cornerSide;   // (the corner layouts became Edit UI)
+  settings.chatQuick = Array.isArray(settings.chatQuick) ? settings.chatQuick.filter(t => typeof t === 'string').map(t => t.replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean).slice(0, 10) : null;   // (your quick chat messages: null means the starting set)
   { const L = settings.uiL, o = {}; if (L && typeof L === 'object') for (const k of ['info', 'mm', 'corner']) { const q = L[k]; if (q && isFinite(+q.x) && isFinite(+q.y)) o[k] = { x: Math.round(+q.x), y: Math.round(+q.y), s: clamp(+q.s || 1, 0.5, 1.8) }; } settings.uiL = o; }
   settings.botMaxOff = clamp(Math.round(+settings.botMaxOff), 1, 19); if (!isFinite(settings.botMaxOff)) settings.botMaxOff = 6;
   settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
@@ -1488,7 +1516,7 @@ function normalize() {
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (settings.scheme !== 'buttons') settings.scheme = 'swipebtn';   // (the full-swipe and tap-to-jump styles are gone: you swipe or press to move, the rest is buttons)
-  ['tags', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'baseBig', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'baseBig', 'lowAsked', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -2155,12 +2183,12 @@ function enterMap(slot, next) {   // going somewhere on purpose: no 'change' scr
   S.mode = 'play'; $('fade').classList.remove('on'); loadMap(slot, next);
 }
 function soloGo(announce) {   // your own world: the level you picked, just as you left it
-  clockOff = 0; loadSolo(); finRoll(soloLevel());
+  clockOff = 0; loadSolo(); finRoll(soloLevel()); resetCheats();
   enterMap(soloSlot(), soloNext());
   if (announce) announceEntry({ slot: soloSlot() });
 }
 function soloReset(idx) {   // start this level over: everything goes back to how it was at the start
-  delete solo2[idx]; saveSolo(); finRoll(idx);
+  delete solo2[idx]; saveSolo(); finRoll(idx); resetCheats();
   if (S.slot >= SOLO_BASE && S.idx === idx) { const s = S.slot; S.slot = -1; lastWorldStr = ''; loadMap(s, soloNext()); }
 }
 const TH = [60, 30, 10, 5, 1];   // minutes-before-the-end warnings
@@ -2289,10 +2317,16 @@ const wallet = {
 };
 const fmtW = v => v >= 1e9 ? '\u221e' : fmtN(v);   // (unlimited shows as the infinity sign)
 function loadPurses() {
-  try { const o = JSON.parse(localStorage.getItem(WALKEY) || 'null'); if (o) { purseP.c = Math.max(0, o.c | 0); purseP.g = Math.max(0, o.g | 0); walletFresh = false; } } catch (e) {}
-  try { const o = JSON.parse(localStorage.getItem(WALKEY_PRIV) || 'null'); if (o && typeof o === 'object') for (const k in o) { const q = o[k]; if (q && /^\d+$/.test(k) && +k < BallMaps.count) purseV[k] = { c: Math.max(0, q.c | 0), g: Math.max(0, q.g | 0), u: q.u ? 1 : 0 }; } } catch (e) {}
+  try { const o = JSON.parse(localStorage.getItem(WALKEY) || 'null'); if (o) { purseP.c = Math.max(0, o.c | 0); purseP.g = Math.max(0, o.g | 0); if (o.pre) purseP.pre = { c: Math.max(0, o.pre.c | 0), g: Math.max(0, o.pre.g | 0) }; walletFresh = false; } } catch (e) {}
+  try { const o = JSON.parse(localStorage.getItem(WALKEY_PRIV) || 'null'); if (o && typeof o === 'object') for (const k in o) { const q = o[k]; if (q && /^\d+$/.test(k) && +k < BallMaps.count) { purseV[k] = { c: Math.max(0, q.c | 0), g: Math.max(0, q.g | 0), u: q.u ? 1 : 0 }; if (q.pre) purseV[k].pre = { c: Math.max(0, q.pre.c | 0), g: Math.max(0, q.pre.g | 0) }; } } } catch (e) {}
 }
 loadPurses();
+function cheatPre(p) { if (!p.pre) p.pre = { c: p.c, g: p.g }; }   // (the money you had before the first money code of this game, so it can go back at the next one)
+function resetCheats() {   // every new game starts without cheats: no unlimited money, building limits back on, money codes undone (you keep what you have, but never more than before the code)
+  infMoney = false; try { noCaps = false; } catch (e) {} try { localStorage.removeItem('ballrun4_inf'); localStorage.removeItem('ballrun4_nocap'); } catch (e) {}
+  let ch = false; for (const p of [purseP, ...Object.values(purseV)]) if (p.pre) { p.c = Math.min(p.c, p.pre.c); p.g = Math.min(p.g, p.pre.g); delete p.pre; ch = true; }
+  if (ch) saveWallet();
+}
 const saveWallet = () => { try { localStorage.setItem(WALKEY, JSON.stringify(purseP)); const o = {}; for (const k in purseV) { const q = purseV[k]; if (q.c || q.g || q.u) o[k] = q; } localStorage.setItem(WALKEY_PRIV, JSON.stringify(o)); } catch (e) {} };
 const resetPurseOf = i => { const q = purseOf(i); q.c = 0; q.g = 0; saveWallet(); };
 const isBeaten = idx => { try { return !!JSON.parse(localStorage.getItem(BEATKEY) || '{}')[idx]; } catch (e) { return false; } };
@@ -2313,10 +2347,11 @@ function touchFlags() {   // checkpoint flags: touch one and your next fall brin
     notice('Checkpoint! Your next fall or reset brings you back here', ''); return;
   }
 }
-/* power-ups: sushi = a minute of non-stop boost, a flower bouquet = a minute of extra tall jumps. Each one comes back for you 3 minutes after you take it */
-const POW_T = 60000, POW_BACK = 180000;
+/* power-ups: sushi = a minute of always-full boost, a flower bouquet = a minute of extra tall jumps. Each one comes back for you 5 to 10 minutes after you take it */
+const POW_T = 60000;
+const powBack = key => { let h = 7; const t = String(key); for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0; return (5 + h % 6) * 60000; };   // (a power-up comes back 5 to 10 minutes after you take it: each one has its own wait)
 const POW_INFO = [['Sushi!', 'Your boost is full for a minute: boost any time'], ['Flowers!', 'Super jumps for a minute']];
-function allPowers() {   // [x, y, type, key]: the map's own power-ups, then the ones people bought and set down (each comes back for you 3 minutes after you take it)
+function allPowers() {   // [x, y, type, key]: the map's own power-ups, then the ones people bought and set down (each comes back for you 5 to 10 minutes after you take it)
   const out = [], ps = S.map.powers || [];
   for (let i = 0; i < ps.length; i++) out.push([ps[i][0], ps[i][1], ps[i][2], i]);
   const pw = S.world && S.world.pwrs; if (pw) for (const p of pw) if (!p.gone) out.push([p.x, p.y, p.t, 'p' + p.tx + ',' + p.ty]);
@@ -2327,7 +2362,7 @@ function collectPowers() {
   for (let i = 0; i < ps.length; i++) {
     const p = ps[i]; if (Math.abs(p[0] - b.x) > 40 || Math.abs(p[1] - b.y) > 40 || (S.powGot[p[3]] || 0) > now) continue;
     const dx = p[0] - b.x, dy = p[1] - b.y; if (dx * dx + dy * dy > 34 * 34) continue;
-    S.powGot[p[3]] = now + POW_BACK;
+    S.powGot[p[3]] = now + powBack(p[3]);
     if (p[2] === 0) S.pwSpeed = now + POW_T; else S.pwJump = now + POW_T;
     sfx('ready'); burst(p[0], p[1], p[2] === 0 ? ['#ff8a6a', '#fff', '#3a2a20'] : ['#ff7ab8', '#fff', '#7ad36a', '#ffd23d'], 22, 240, 60); ring(p[0], p[1], p[2] === 0 ? '#7ff0ff' : '#ff7ab8', 6, 60, 0.5);
     notice(POW_INFO[p[2]][0] + ' ' + POW_INFO[p[2]][1], '');
@@ -2910,7 +2945,7 @@ function kbNav(box, e, passGo) {
   if (best) { cur.classList.remove('kbf'); best.classList.add('kbf'); if (best.scrollIntoView) best.scrollIntoView({ block: 'nearest' }); }
   return true;
 }
-const KB_BOXES = ['ageGate', 'wiModal', 'pickPop', 'confirm', 'descModal', 'nameModal', 'codeModal', 'shareModal', 'profModal', 'addModal', 'invModal', 'lvlModal', 'emoPop', 'intro', 'settings', 'pause'];
+const KB_BOXES = ['ageGate', 'codesModal', 'quickModal', 'giveModal', 'wiModal', 'pickPop', 'confirm', 'descModal', 'nameModal', 'codeModal', 'shareModal', 'profModal', 'addModal', 'invModal', 'lvlModal', 'emoPop', 'intro', 'settings', 'pause'];
 addEventListener('pointerdown', () => { if (kbBox) { document.querySelectorAll('.kbf').forEach(x => x.classList.remove('kbf')); kbBox = null; } }, true);
 addEventListener('keydown', e => {
   if (keyCapture || typing() || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -2988,7 +3023,7 @@ addEventListener('blur', () => { keysDown.clear(); inp.left = inp.right = inp.ju
 cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
 /* One press does one thing. A button that opens a pop-up when your finger goes down (the +, chat, pause...) must not also press whatever in that pop-up ends up under
    your finger when it lifts. So a click inside a pop-up only counts if the press that made it started after the pop-up was open. */
-const POPS = ['wiModal', 'shopPop', 'emoPop', 'pickPop', 'confirm', 'pause', 'settings', 'intro', 'lvlModal', 'descModal', 'nameModal', 'profModal', 'addModal', 'invModal', 'codeModal', 'shareModal', 'mmbig', 'codeBox'];
+const POPS = ['codesModal', 'quickModal', 'giveModal', 'wiModal', 'shopPop', 'emoPop', 'pickPop', 'confirm', 'pause', 'settings', 'intro', 'lvlModal', 'descModal', 'nameModal', 'profModal', 'addModal', 'invModal', 'codeModal', 'shareModal', 'mmbig', 'codeBox'];
 const popOpenT = {}; let downT = 0;
 try { const mo = new MutationObserver(list => { const t = performance.now(); for (const m of list) { const el = m.target; if (!el.classList.contains('hide') && !(m.oldValue || '').split(' ').every(x => x !== 'hide')) popOpenT[el.id] = t; } });
   POPS.forEach(id => { const el = $(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ['class'], attributeOldValue: true }); }); } catch (e) {}
@@ -4179,7 +4214,7 @@ function sendEmo(i) {
 const chatLog = [];
 const CHAT_KEEP = 60000;   // (a message stays in the chat window for a minute, then it is gone for good)
 function chatPrune() { const cut = Date.now() - CHAT_KEEP; let n = 0; while (chatLog.length && chatLog[0].t < cut) { chatLog.shift(); n++; } if (!chatLog.some(m => m.cls !== 'sys')) $('btnChat').classList.remove('unread'); return n; }
-setInterval(() => { if (chatPrune() && chatOpen) chatRender(false); }, 1000);
+setInterval(() => { if (chatPrune() && chatOpen) chatRender(false); else if (chatOpen) { const now = Date.now(); for (const t of $('chatLog').querySelectorAll('.cmt')) { const left = Math.max(0, CHAT_KEEP - (now - +t.dataset.t)); t.textContent = Math.ceil(left / 1000) + 's'; if (left < 10000) t.parentNode.classList.add('soon'); } } }, 1000);
 function chatAdd(name, txt, cls, kind) {   // one line in the chat window (and, for 5 seconds, over their head and in the corner)
   chatPrune(); chatLog.push({ name, txt, cls: cls || '', kind: kind || '', t: Date.now() }); while (chatLog.length > 120) chatLog.shift();
   if (chatOpen) chatRender(true); else if (cls !== 'sys') { $('btnChat').classList.add('unread'); }
@@ -4187,16 +4222,20 @@ function chatAdd(name, txt, cls, kind) {   // one line in the chat window (and, 
 function chatRender(stick) {
   const L = $('chatLog'), atEnd = stick || L.scrollHeight - L.scrollTop - L.clientHeight < 40; L.textContent = '';
   if (!chatLog.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No messages in the last minute. Say hi!'; L.appendChild(e); }
-  for (const m of chatLog) { const d = document.createElement('div'); d.className = 'cm ' + m.cls + (m.kind === 'bot' ? ' bot' : ''); if (m.cls !== 'sys') { const b = document.createElement('b'); b.textContent = m.name; d.appendChild(b); } d.appendChild(document.createTextNode(m.cls === 'sys' ? m.txt : censorText(m.txt))); L.appendChild(d); }
+  const now = Date.now();
+  for (const m of chatLog) { const d = document.createElement('div'); d.className = 'cm ' + m.cls + (m.kind === 'bot' ? ' bot' : '');
+    { const left = Math.max(0, CHAT_KEEP - (now - m.t)), t = document.createElement('span'); t.className = 'cmt'; t.dataset.t = m.t; t.title = 'Disappears in'; t.textContent = Math.ceil(left / 1000) + 's'; d.appendChild(t);   // (how long until it disappears: a number and a bar that runs down)
+      const bar = document.createElement('i'); bar.className = 'cmbar'; bar.style.animationDuration = (CHAT_KEEP / 1000) + 's'; bar.style.animationDelay = (-(now - m.t) / 1000) + 's'; d.appendChild(bar); if (left < 10000) d.classList.add('soon'); }
+    if (m.cls !== 'sys') { const b = document.createElement('b'); b.textContent = m.name; d.appendChild(b); } d.appendChild(document.createTextNode(m.cls === 'sys' ? m.txt : censorText(m.txt))); L.appendChild(d); }
   if (atEnd) L.scrollTop = L.scrollHeight;
 }
 const bubbleOf = txt => { const t = censorText(txt); return t.length > 60 ? t.slice(0, 57) + '…' : t; };
 let chatCool = 0;
-function chatSend() {
-  const inp = $('chatIn'), txt = inp.value.replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
+function chatSend(quick) {
+  const inp = $('chatIn'), txt = (quick !== undefined ? String(quick) : inp.value).replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
   if (performance.now() < chatCool) return; chatCool = performance.now() + 600;
   if (online && ws && ws.readyState === 1) wsSend({ t: 'text', s: txt });
-  inp.value = ''; S.myEmo = { i: -1, txt: bubbleOf(txt), t: S.t, dur: 5 }; chatAdd('You', txt, 'me'); sfx('ui');
+  if (quick === undefined) inp.value = ''; S.myEmo = { i: -1, txt: bubbleOf(txt), t: S.t, dur: 5 }; chatAdd('You', txt, 'me'); sfx('ui');
   try { localAsk('text', txt); } catch (e) {}
 }
 function onText(m) {
@@ -4205,6 +4244,23 @@ function onText(m) {
   chatAdd(who(m.name), m.s, e ? 'friend' : ''); addFeedEmo(who(m.name), -1, e ? 'friend' : '', bubbleOf(m.s));
 }
 $('chatForm').onsubmit = ev => { ev.preventDefault(); chatSend(); };
+/* ----- quick messages: up to 10 of your own, one tap sends ----- */
+const QUICK_DEF = ['Hi!', 'Follow me', 'Nice!', 'Thanks!', 'Help!', 'Wait for me', 'GG'];
+const quickList = () => Array.isArray(settings.chatQuick) ? settings.chatQuick : QUICK_DEF;
+function quickRender() {
+  const q = $('chatQuick'); q.textContent = '';
+  for (const t of quickList()) { const b = document.createElement('button'); b.type = 'button'; b.textContent = censorText(t); b.title = 'Send: ' + t; b.onclick = () => chatSend(t); q.appendChild(b); }
+  const e = document.createElement('button'); e.type = 'button'; e.className = 'qedit'; e.textContent = quickList().length ? 'Edit' : '+ Add quick messages'; e.title = 'Change your quick messages'; e.onclick = openQuick; q.appendChild(e);
+}
+function openQuick() {
+  const L = $('qmList'); L.textContent = ''; const cur = quickList();
+  for (let i = 0; i < 10; i++) { const inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 60; inp.placeholder = 'Message ' + (i + 1); inp.value = cur[i] || ''; inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') $('qmOk').click(); if (e.key === 'Escape') $('qmNo').click(); }); L.appendChild(inp); }
+  $('quickModal').classList.remove('hide'); setTimeout(() => { try { L.querySelector('input').focus(); } catch (e) {} }, 50);
+}
+$('qmNo').onclick = () => $('quickModal').classList.add('hide');
+$('qmReset').onclick = () => { const ins = $('qmList').querySelectorAll('input'); ins.forEach((inp, i) => { inp.value = QUICK_DEF[i] || ''; }); };
+$('qmOk').onclick = () => { settings.chatQuick = [...$('qmList').querySelectorAll('input')].map(i => i.value.replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean).slice(0, 10); save(); quickRender(); $('quickModal').classList.add('hide'); };
+quickRender();
 $('chatIn').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') toggleChat(false); });
 /* ----- giving coins and diamonds to somebody in your world. Never more than you have, and it asks you first ----- */
 function chatPeople() {
@@ -4271,8 +4327,8 @@ const SHOP = [
   { cat: 'gadgets', id: 'spring0', max: 60, name: 'Spring', info: 'Push it anywhere. Land on it to bounce high.', c: 100, g: 0, kind: 5 },
   { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
   { cat: 'travel', id: 'base', max: 1, base: true, name: 'Base', info: 'Your own hideout: a circle as big as the one at the start, with you in the middle. Stand on dirt or ice to set it, with nothing that is not yours in the circle, and not overlapping another no-build circle. Only you can build or delete inside it, and your things there are safe. Delete its glowing centre to move it.', c: 500, g: 5 },
-  { cat: 'travel', id: 'pw0', max: 40, pwr: 0, name: 'Sushi', info: 'A power-up, set down right in front of you. Roll into it now or leave it for later. Taking it fills your boost for a minute: boost any time, as often as you like. It comes back 3 minutes after someone takes it.', c: 750, g: 0 },
-  { cat: 'travel', id: 'pw1', max: 40, pwr: 1, name: 'Flower bouquet', info: 'A power-up, set down right in front of you. Roll into it now or leave it for later. Taking it gives you a minute where every jump can be an extra tall one. It comes back 3 minutes after someone takes it.', c: 750, g: 0 },
+  { cat: 'travel', id: 'pw0', max: 40, pwr: 0, name: 'Sushi', info: 'A power-up, set down right in front of you. Roll into it now or leave it for later. Taking it fills your boost for a minute: boost any time, as often as you like. It comes back for each player 5 to 10 minutes after they take it.', c: 750, g: 0 },
+  { cat: 'travel', id: 'pw1', max: 40, pwr: 1, name: 'Flower bouquet', info: 'A power-up, set down right in front of you. Roll into it now or leave it for later. Taking it gives you a minute where every jump can be an extra tall one. It comes back for each player 5 to 10 minutes after they take it.', c: 750, g: 0 },
   { cat: 'travel', id: 'flag', max: 1, name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot. You can have one at a time: delete it to put it somewhere else.', c: 400, g: 5 },
   { cat: 'blocks', id: 'box0', max: 150, name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
   { cat: 'blocks', id: 'box1', max: 120, name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
@@ -5345,7 +5401,7 @@ function showHome() {
   keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0;
 }
 function enterGame(auto) {
-  bots.length = 0; $('feed').textContent = ''; resetTab();   // (a new game starts clean: no bots or messages from the last one, and the settings open on their first tab)
+  bots.length = 0; $('feed').textContent = ''; resetTab(); resetCheats();   // (a new game starts clean: no bots or messages from the last one, and the settings open on their first tab)
   const typed = auto ? '' : NEDS[0].pending();
   const v = settings.name || typed || randomName();   // everyone has a name
   if (v !== settings.name) { settings.name = v; save(); }   // the very first name is free
@@ -5794,21 +5850,24 @@ function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
+  if (v === 'codes') { closeCode(); $('codesModal').classList.remove('hide'); sfx('ready'); return; }   // (only shows the list of codes)
   if (v === 'updates') { const on = !updShown(); try { if (on) sessionStorage.setItem('ballrun4_updbtn', '1'); else sessionStorage.removeItem('ballrun4_updbtn'); } catch (e) {} $('homeUpd').classList.toggle('hide', !on); sfx('big'); closeCode(); notice(on ? 'The update button is on the main menu until you close the game.' : 'The update button is hidden again.', ''); return; }
   if (cheatsOff() && (v === 'unlimitedpower' || v === 'themaker#1' || v === 'maker' || v === 'zeros')) { $('cdNote').textContent = 'This private game is set to no cheats. Codes do nothing here.'; sfx('warn'); return; }
-  if (v === 'unlimitedpower') { if (noCaps) { $('cdNote').textContent = 'You already build without limits.'; sfx('warn'); return; } noCaps = true; try { localStorage.setItem('ballrun4_nocap', '1'); } catch (e) {} sfx('big'); closeCode(); notice('No building limits: build as much of everything as you like', ''); try { shopRender(); } catch (e) {} return; }
+  if (v === 'unlimitedpower') { if (noCaps) { noCaps = false; try { localStorage.removeItem('ballrun4_nocap'); } catch (e) {} sfx('big'); closeCode(); notice('Building limits are back on', ''); try { shopRender(); } catch (e) {} return; }   // (the same code again turns it off)
+    noCaps = true; try { localStorage.setItem('ballrun4_nocap', '1'); } catch (e) {} sfx('big'); closeCode(); notice('No building limits: build as much of everything as you like', ''); try { shopRender(); } catch (e) {} return; }
   if (v === 'themaker#1' || v === 'maker' || v === 'zeros') {   // the three money codes. They only ever change your own money on this device, and never a private world whose maker set its money to unlimited
     const done = t => { saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice(t, ''); };
     const setInf = on => { infMoney = on; try { if (on) localStorage.setItem('ballrun4_inf', '1'); else localStorage.removeItem('ballrun4_inf'); } catch (e) {} };
     if (unlimitedNow()) { $('cdNote').textContent = 'This world is already set to unlimited money. The code cannot change that.'; sfx('warn'); return; }
     if (v === 'themaker#1') { if (infMoney) { $('cdNote').textContent = 'You already have unlimited coins and diamonds.'; sfx('warn'); return; } setInf(true); done('Unlimited coins and diamonds'); return; }
     setInf(false);
-    if (v === 'maker') { wallet.c = 10000; wallet.g = 500; done('Your money is set to 10,000 coins and 500 diamonds'); return; }
-    wallet.c = 0; wallet.g = 0; done('Your coins and diamonds are back to zero'); return;
+    if (v === 'maker') { cheatPre(purseNow()); wallet.c = 10000; wallet.g = 500; done('Your money is set to 10,000 coins and 500 diamonds'); return; }
+    cheatPre(purseNow()); wallet.c = 0; wallet.g = 0; done('Your coins and diamonds are back to zero'); return;
   }
   $('cdIn').classList.remove('bad'); void $('cdIn').offsetWidth; $('cdIn').classList.add('bad'); $('cdNote').textContent = v ? "That code doesn't work" : 'Type a code first'; sfx('warn');
 }
 $('cdOk').onclick = submitCode; $('cdNo').onclick = closeCode;
+$('csOk').onclick = () => $('codesModal').classList.add('hide'); addEventListener('keydown', e => { if ($('codesModal').classList.contains('hide')) return; if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); $('codesModal').classList.add('hide'); } }, true); $('codesModal').addEventListener('pointerdown', e => { if (e.target === $('codesModal')) $('codesModal').classList.add('hide'); });
 $('cdIn').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); else if (e.key === 'Escape') closeCode(); e.stopPropagation(); });
 $('codeModal').addEventListener('pointerdown', e => { if (e.target === $('codeModal')) closeCode(); });
 function onDoubleTap(el, fn) { let t = 0, x = 0, y = 0; el.addEventListener('click', e => { const n = performance.now(); if (n - t < 450 && Math.hypot(e.clientX - x, e.clientY - y) < 40) { t = 0; fn(); } else { t = n; x = e.clientX; y = e.clientY; } }); }
@@ -7023,7 +7082,7 @@ function applyZoomRange() {   // the slider's left end is the farthest you can r
 }
 addEventListener('resize', applyZoomRange);
 let lastFrame = performance.now(), lastDraw = lastFrame, acc = 0, errCount = 0, frameN = 0;
-let rq = 1, ftAvg = 16.7, slowT = 0, fastT = 0, rqWait = 8, rqUp = -1e9;   // (a device that cannot keep up draws the picture with fewer pixels, and goes back to full sharpness once it can)
+let lowT = 0, rq = 1, ftAvg = 16.7, slowT = 0, fastT = 0, rqWait = 8, rqUp = -1e9;   // (a device that cannot keep up draws the picture with fewer pixels, and goes back to full sharpness once it can)
 function frame(nowT) {
   requestAnimationFrame(frame);
   try {
@@ -7031,10 +7090,13 @@ function frame(nowT) {
     if (!document.hidden && raw > 0 && raw < 1000 && S.mode === 'play') { ftAvg += (Math.min(200, raw) - ftAvg) * 0.05;
       if (ftAvg > 24) { slowT += dt; fastT = 0; } else if (ftAvg < 19) { fastT += dt; slowT = 0; } else { slowT = 0; fastT = 0; }
       if (slowT > 2 && rq > 0.5) { if (nowT - rqUp < 6000) rqWait = Math.min(120, rqWait * 2); rq = Math.max(0.5, rq - 0.25); slowT = 0; fastT = 0; ftAvg = 16.7; }
-      else if (fastT > rqWait && rq < 1) { rq = Math.min(1, rq + 0.25); fastT = 0; rqUp = nowT; } }   // (sharper again only after it has kept up for a while, and if that was too much, it waits longer before trying again)
+      else if (fastT > rqWait && rq < 1) { rq = Math.min(1, rq + 0.25); fastT = 0; rqUp = nowT; } }
+    if (!document.hidden && S.mode === 'play' && !settings.low && !settings.lowAsked && rq <= 0.5 && ftAvg > 30) { lowT += Math.min(0.1, raw / 1000);   // (even with the fewest pixels this device still cannot keep up: once, it offers Low power mode)
+      if (lowT > 25 && !blocked() && !placing) { settings.lowAsked = true; save(); askConfirm('This device is working hard', 'The game is running slowly here. Low power mode draws less (fewer clouds and details, 30 pictures a second) so it plays more smoothly. You can change it any time in Settings, Display.', 'Turn it on', () => { settings.low = true; save(); try { syncUI(); } catch (e) {} notice('Low power mode is on', ''); }, { no: 'Not now', yesClass: 'go' }); } }
+    else if (lowT > 0) lowT = Math.max(0, lowT - 0.02);   // (sharper again only after it has kept up for a while, and if that was too much, it waits longer before trying again)
     acc += dt;
     let nSt = 0; while (acc >= STEP && nSt < 4) { update(STEP); acc -= STEP; nSt++; } if (acc >= STEP) acc = 0;   // (a device that falls behind never tries to catch up all at once, which would only make the next frame slower still)
-    if (S.mode === 'fade' && nowT - S.fadeT0 > 2300) loadMap(S.pending, S.pendingNext);
+    if (S.mode === 'fade' && nowT - S.fadeT0 > 2300) { resetCheats(); loadMap(S.pending, S.pendingNext); }   // (a new map is a new game: cheats start over)
     if (settings.low && nowT - lastDraw < 30) return;       // low-power mode: ~30 fps
     render(Math.min(0.1, (nowT - lastDraw) / 1000), nowT); lastDraw = nowT;
     errCount = 0;

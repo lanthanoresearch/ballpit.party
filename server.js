@@ -14,6 +14,7 @@ const http = require('http');
 const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
+const zlib = require('zlib');
 const { WebSocketServer } = require('ws');
 const maps = require('./maps.js');
 const P = require('./physics.js');
@@ -52,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 167;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 169;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -283,15 +284,23 @@ const server = http.createServer((req, res) => {
   }
   const f = FILES[url];
   if (!f) { res.writeHead(404); return res.end('Not found'); }
-  let body = f.data;
-  if (f.type.indexOf('text/html') === 0) {
-    // the share image needs a full web address, so fill in this site's own address
+  let key = '';
+  if (f.type.indexOf('text/html') === 0) {   // the share image needs a full web address, so this site's own address is filled in
     const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
     const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim().replace(/[^A-Za-z0-9.:\-]/g, '');
-    body = Buffer.from(f.data.toString('utf8').split('__ORIGIN__').join(proto.replace(/[^a-z]/g, '') + '://' + host).split('__BUILD__').join(BUILD));
+    key = proto.replace(/[^a-z]/g, '') + '://' + host;
   }
+  // each file is made ready once (and squeezed with gzip once), then simply handed out: a page load costs the server almost nothing, and about a fifth of the data
+  const cache = f.cache || (f.cache = new Map()); let c = cache.get(key);
+  if (!c || c.src !== f.data) {
+    const raw = key ? Buffer.from(f.data.toString('utf8').split('__ORIGIN__').join(key).split('__BUILD__').join(BUILD)) : f.data;
+    const zip = /^(text\/|application\/(javascript|json|manifest)|image\/svg)/.test(f.type) && raw.length > 1024;
+    c = { src: f.data, raw, gz: zip ? zlib.gzipSync(raw, { level: 9 }) : null }; if (cache.size > 8) cache.clear(); cache.set(key, c);
+  }
+  const gz = c.gz && /\bgzip\b/.test(String(req.headers['accept-encoding'] || '')), body = gz ? c.gz : c.raw;
   useOut(body.length + 300);
-  res.writeHead(200, { 'Content-Type': f.type, 'Cache-Control': f.type.indexOf('image/') === 0 ? 'public, max-age=3600' : 'no-store' });
+  const hd = { 'Content-Type': f.type, 'Cache-Control': f.type.indexOf('image/') === 0 ? 'public, max-age=3600' : 'no-store' }; if (c.gz) hd.Vary = 'Accept-Encoding'; if (gz) hd['Content-Encoding'] = 'gzip';
+  res.writeHead(200, hd);
   res.end(body);
 });
 
@@ -543,7 +552,8 @@ function simTick() {
     if (n) {
       roomBots(room, w, dtReal);
       w.focus = act.map(p => ({ x: p.x, y: p.y })); if (room.bots) for (const bt of room.bots) if (!(bt.dead > 0)) w.focus.push({ x: bt.b.x, y: bt.b.y });
-      { const fo = w.focus; w.cand = w.dyn.filter(d => { if (d.burn > 0) return false; for (let i = 0; i < fo.length; i++) if (Math.abs(d.x - fo[i].x) < 420 && Math.abs(d.y - fo[i].y) < 420) return true; return false; }); }
+      { const fo = w.focus, fc = new Map(); for (const q of fo) { const c = Math.floor(q.x / 420); for (let k = c - 1; k <= c + 1; k++) { let a = fc.get(k); if (!a) fc.set(k, a = []); a.push(q); } }   // (players looked up by column: the same list as checking every player, found faster)
+        w.cand = w.dyn.filter(d => { if (d.burn > 0) return false; const a = fc.get(Math.floor(d.x / 420)); if (!a) return false; for (let i = 0; i < a.length; i++) if (Math.abs(d.x - a[i].x) < 420 && Math.abs(d.y - a[i].y) < 420) return true; return false; }); }
       const pbs = w.pbList || (w.pbList = []);
       for (let k = 0; k < n; k++) {
         pbs.length = 0; for (const p of act) { const o = p.pbo || (p.pbo = { x: 0, y: 0 }); o.x = p.x; o.y = p.y; pbs.push(o); }
@@ -1132,7 +1142,12 @@ wss.on('connection', (ws, req) => {
 // and (b) only those who moved since the last update (or just came into range), as a compact
 // binary message: 3 header bytes + 8 bytes per player (x is sent at 2-pixel precision so wide maps fit). If nothing changed, nothing is sent.
 let tickN = 0;
-setInterval(() => {
+const corked = [];
+function corkAll(on) {   // everything sent to one player in one update goes out in a single packet instead of several (much less work for the server, the same data)
+  if (on) { for (const r of rooms.values()) for (const p of r.players.values()) { const so = p.ws && p.ws._socket; if (so && !so.destroyed) { so.cork(); corked.push(so); } } }
+  else { for (const so of corked) { try { so.uncork(); } catch (e) {} } corked.length = 0; }   // (every socket corked is uncorked again, even if its player left meanwhile)
+}
+function relayTick() {   // (runs right after each world update, in the same packet to each player)
   tickN++;
   // (c) a tiny overview every 2 seconds, so everyone shows up on the map even when they are far away
   if (tickN % 120 === 0) {
@@ -1191,11 +1206,11 @@ setInterval(() => {
     }
     for (const p of list) { p.moved = false; if (p.hist) p.hist.length = 0; }
   }
-}, TICK_MS);
+}
 setInterval(() => { useRoll(); const msg = JSON.stringify({ t: 'use', u: usage }); for (const r of rooms.values()) for (const p of r.players.values()) if (p.ws.readyState === 1) p.ws.send(msg); }, 30000).unref();   // (every player's device keeps a copy of the month's counts)
 let lastTickAt = Date.now();
 setInterval(() => { const t0 = Date.now(), late = Math.max(0, t0 - lastTickAt - TICK_MS); lastTickAt = t0; const h0 = process.hrtime.bigint();
-  try { simTick(); } catch (e) { console.log('sim error', e && e.stack); }
+  corkAll(true); try { simTick(); } catch (e) { console.log('sim error', e && e.stack); } try { relayTick(); } catch (e) { console.log('relay error', e && e.stack); } corkAll(false);
   health.tickMs.push(Number(process.hrtime.bigint() - h0) / 1e6); health.late.push(late); if (health.tickMs.length > 600) health.tickMs.shift(); if (health.late.length > 600) health.late.shift(); health.lastTick = Date.now();   // (how long each update takes, and how late it came: the last ten seconds)
 }, TICK_MS);
 
