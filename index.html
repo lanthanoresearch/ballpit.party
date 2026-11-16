@@ -597,6 +597,11 @@
   .hudcard #mm{border:0!important;border-top:2px solid var(--line)!important;border-radius:0 0 calc(var(--wob,12px) - 2px) calc(var(--wob,12px) - 2px)!important;margin:0!important;width:100%!important;height:auto!important;aspect-ratio:170/110}
   .hudcard #mm.hide,.hudcard #mm[hidden]{display:none}
   #hudCard,#corner,#stLine{transform-origin:top left}#corner{transform-origin:top right}
+  #songBar{display:flex;align-items:center;gap:4px;padding:3px 4px;border-top:2px solid var(--line);pointer-events:auto;font-size:12px;min-width:0}
+  #songBar.hide{display:none}#songBar #sbName{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;opacity:.9;font-size:11px;letter-spacing:-.2px}
+  #songBar button{flex:none;width:24px;height:22px;display:grid;place-items:center;background:#120f1c;border:2px solid var(--line);border-radius:8px;color:var(--ink);padding:0;font-size:13px}
+  #songBar button:active{transform:translateY(1px)}
+  .hudcard.sb #mm{border-radius:0!important}
   .sw2.always{cursor:default}
   #editbar{touch-action:none}#editbar input[type=range]{touch-action:none;height:28px}
   #pickPop{z-index:13;background:rgba(10,8,16,.72)}
@@ -797,7 +802,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 179; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 180; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -996,7 +1001,8 @@
       <div class="nx"><span id="tpNext"></span></div>
     </div>
   </div>
-  <canvas id="mm" width="170" height="110"></canvas></div>
+  <canvas id="mm" width="170" height="110"></canvas>
+  <div id="songBar" class="hide"><button id="sbPrev" title="The song before" aria-label="The song before"><span data-ic="skip" style="display:inline-block;transform:scaleX(-1)"></span></button><span id="sbName"></span><button id="sbNext" title="Next song" aria-label="Next song"><span data-ic="skip"></span></button></div></div>
   <div id="stLine" class="hide" aria-live="off"></div>
 </div>
 <div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="msgDemo" class="paper hide">Messages pop up here</div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
@@ -1153,7 +1159,8 @@
       <h4><span data-ic="music"></span> Music</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="music"></span><span><b>Music</b><small>Songs that play while you roll</small></span></span><input type="checkbox" id="setMusicOn"><i></i></label>
       <div class="dep" data-dep="music"><div><div class="row"><div id="selMusic"></div><div class="small dim" id="musicDesc" style="margin-top:4px"></div></div><div class="row slrow"><span data-ic="music"></span><input type="range" id="setMusicVol" min="0" max="1" step="0.05"></div>
-      <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnPrevSong" title="The song before" aria-label="The song before"><span data-ic="skip" style="display:inline-block;transform:scaleX(-1)"></span></button><button class="btn" id="btnSkip" title="Next song" aria-label="Next song"><span data-ic="skip"></span></button></div></div></div>
+      <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnPrevSong" title="The song before" aria-label="The song before"><span data-ic="skip" style="display:inline-block;transform:scaleX(-1)"></span></button><button class="btn" id="btnSkip" title="Next song" aria-label="Next song"><span data-ic="skip"></span></button></div>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Song buttons in the game</b><small>The song name under the map, with buttons for the one before and the next one</small></span></span><input type="checkbox" id="setSongBar"><i></i></label></div></div>
     </section>
     <section class="pane" data-pane="online">
       <input type="checkbox" id="setMp" hidden>
@@ -1449,8 +1456,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=179"></script>
-<script src="physics.js?v=179"></script>
+<script src="maps.js?v=180"></script>
+<script src="physics.js?v=180"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1494,7 +1501,7 @@ function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'K
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: true,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -1539,7 +1546,7 @@ function normalize() {
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (settings.scheme !== 'buttons') settings.scheme = 'swipebtn';   // (the full-swipe and tap-to-jump styles are gone: you swipe or press to move, the rest is buttons)
-  ['tags', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'baseBig', 'lowAsked', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'songBar', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'baseBig', 'lowAsked', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -1831,48 +1838,49 @@ function windSet(level) {   // 0..1
   AU.windG.gain.setTargetAtTime(v, AU.ctx.currentTime, 0.15); AU.wind.frequency.setTargetAtTime(500 + level * 1500, AU.ctx.currentTime, 0.2);
 }
 
-/* ---------- music: four kinds, six songs each, written as chords + a little tune that the browser plays live ---------- */
+/* ---------- music: five kinds, six songs each. Every song has its own beat, bass line, backing and lead sound, and runs through an intro, a tune, a second part, a break and the tune again ---------- */
 const SCALES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], lydian: [0, 2, 4, 6, 7, 9, 11], dorian: [0, 2, 3, 5, 7, 9, 10], mixo: [0, 2, 4, 5, 7, 9, 10], phryg: [0, 1, 3, 5, 7, 8, 10] };
+/* g: the drum beat, kit: the drum sounds, b: the bass line, c: the backing, l: the lead sound, m: beats in a bar, gr: the smallest step of the tune, d: how busy the tune is, lp: how far it jumps, sw: swing, lift: a key change for the last part */
 const SONGS = {
   chill: [   // easygoing: a light groove, never sleepy (what plays when things are calm)
-    { name: 'Sunday Roll', bpm: 92, root: 60, scale: 'major', prog: [0, 5, 3, 4], seed: 301 },
-    { name: 'Breezy Steps', bpm: 96, root: 57, scale: 'mixo', prog: [0, 3, 6, 3], seed: 307 },
-    { name: 'Lemonade Lane', bpm: 90, root: 62, scale: 'major', prog: [0, 3, 4, 4], seed: 311 },
-    { name: 'Backyard Breeze', bpm: 94, root: 58, scale: 'dorian', prog: [0, 3, 0, 4], seed: 313 },
-    { name: 'Easy Coast', bpm: 88, root: 64, scale: 'lydian', prog: [0, 4, 5, 3], seed: 317 },
-    { name: 'Front Porch Bounce', bpm: 98, root: 55, scale: 'major', prog: [0, 4, 5, 3], seed: 331 }
+    { name: 'Sunday Roll', bpm: 86, root: 60, scale: 'major', prog: [0, 5, 3, 4], pb: [3, 4, 2, 5], seed: 301, g: 'boombap', kit: 'soft', b: 'walk', c: 'keys', l: 'tri', sw: 0.14, gr: 0.5, d: 0.45, lp: 0 },
+    { name: 'Breezy Steps', bpm: 128, root: 57, scale: 'dorian', prog: [0, 3, 6, 3], pb: [5, 3, 4, 4], seed: 307, g: 'bossa', kit: 'soft', b: 'tumbao', c: 'strum', l: 'flute', gr: 0.5, d: 0.4, lp: 1 },
+    { name: 'Lemonade Lane', bpm: 78, root: 62, scale: 'major', prog: [0, 3, 4, 4], pb: [5, 3, 0, 4], seed: 311, g: 'onedrop', kit: 'soft', b: 'reggae', c: 'skank', l: 'organ', gr: 0.5, d: 0.5, lp: 0 },
+    { name: 'Backyard Breeze', bpm: 132, m: 3, root: 58, scale: 'mixo', prog: [0, 3, 0, 4], pb: [6, 3, 4, 4], seed: 313, g: 'waltz', kit: 'soft', b: 'waltz', c: 'waltz', l: 'whistle', gr: 0.5, d: 0.5, lp: 1 },
+    { name: 'Easy Coast', bpm: 96, root: 64, scale: 'lydian', prog: [0, 4, 5, 3], pb: [3, 1, 4, 4], seed: 317, g: 'funkslow', kit: 'soft', b: 'funk', c: 'stab', l: 'bell', gr: 0.25, d: 0.32, lp: 1 },
+    { name: 'Front Porch Bounce', bpm: 104, root: 55, scale: 'major', prog: [0, 4, 5, 3], pb: [3, 0, 4, 4], seed: 331, g: 'shuffle', kit: 'acoustic', b: 'walk', c: 'strum', l: 'pluck', sw: 0.17, gr: 0.5, d: 0.55, lp: 1 }
   ],
   upbeat: [
-    { name: 'Roll Call', bpm: 104, root: 55, scale: 'major', prog: [0, 4, 5, 3], seed: 41 },
-    { name: 'Wobble Walk', bpm: 98, root: 57, scale: 'dorian', prog: [0, 3, 0, 4], seed: 53 },
-    { name: 'Sunny Side Bounce', bpm: 112, root: 60, scale: 'mixo', prog: [0, 6, 3, 4], seed: 67 },
-    { name: 'Pebble Hop', bpm: 108, root: 62, scale: 'major', prog: [0, 3, 4, 4], seed: 139 },
-    { name: 'Kite String', bpm: 100, root: 59, scale: 'lydian', prog: [0, 4, 1, 4], seed: 149 },
-    { name: 'Picnic Parade', bpm: 116, root: 56, scale: 'major', prog: [0, 5, 1, 4], seed: 157 }
+    { name: 'Roll Call', bpm: 120, root: 55, scale: 'major', prog: [0, 4, 5, 3], pb: [5, 3, 4, 4], seed: 41, g: 'four', kit: 'acoustic', b: 'octave', c: 'stab', l: 'brass', gr: 0.5, d: 0.5, lp: 1, lift: 2 },
+    { name: 'Wobble Walk', bpm: 152, root: 57, scale: 'mixo', prog: [0, 3, 0, 4], pb: [3, 3, 0, 4], seed: 53, g: 'ska', kit: 'acoustic', b: 'walk', c: 'ska', l: 'sq', gr: 0.5, d: 0.45, lp: 1 },
+    { name: 'Sunny Side Bounce', bpm: 112, root: 60, scale: 'major', prog: [0, 6, 3, 4], pb: [3, 4, 0, 4], seed: 67, g: 'march', kit: 'acoustic', b: 'bounce', c: 'arp8', l: 'chip', gr: 0.25, d: 0.42, lp: 2 },
+    { name: 'Pebble Hop', bpm: 168, m: 3, root: 62, scale: 'major', prog: [0, 3, 4, 4], pb: [5, 4, 3, 4], seed: 139, g: 'jig', kit: 'acoustic', b: 'waltz', c: 'waltz', l: 'whistle', gr: 0.5, d: 0.75, lp: 0 },
+    { name: 'Kite String', bpm: 100, root: 59, scale: 'lydian', prog: [0, 4, 1, 4], pb: [5, 1, 4, 4], seed: 149, g: 'pop', kit: 'acoustic', b: 'pulse8', c: 'strum', l: 'pluck', gr: 0.5, d: 0.5, lp: 1, lift: 1 },
+    { name: 'Picnic Parade', bpm: 118, root: 56, scale: 'major', prog: [0, 5, 1, 4], pb: [3, 0, 4, 4], seed: 157, g: 'train', kit: 'acoustic', b: 'country', c: 'strum', l: 'sq', gr: 0.5, d: 0.55, lp: 0 }
   ],
   exciting: [
-    { name: 'Turbo Tumble', bpm: 142, root: 52, scale: 'minor', prog: [0, 5, 2, 6], seed: 71 },
-    { name: 'Lava Rush', bpm: 132, root: 50, scale: 'minor', prog: [0, 3, 5, 4], seed: 83 },
-    { name: 'Skyline Sprint', bpm: 150, root: 57, scale: 'dorian', prog: [0, 6, 5, 6], seed: 97 },
-    { name: 'Thunder Ramp', bpm: 138, root: 53, scale: 'minor', prog: [0, 6, 5, 4], seed: 163 },
-    { name: 'Comet Chase', bpm: 156, root: 55, scale: 'dorian', prog: [0, 3, 6, 4], seed: 173 },
-    { name: 'Gate Crasher', bpm: 146, root: 49, scale: 'minor', prog: [0, 0, 5, 6], seed: 181 }
+    { name: 'Turbo Tumble', bpm: 172, root: 52, scale: 'minor', prog: [0, 5, 2, 6], pb: [3, 4, 5, 6], seed: 71, g: 'dnb', kit: 'hard', b: 'hold', c: 'pad', l: 'saw', gr: 0.5, d: 0.5, lp: 1 },
+    { name: 'Lava Rush', bpm: 134, root: 50, scale: 'minor', prog: [0, 3, 5, 4], pb: [5, 3, 6, 4], seed: 83, g: 'trance', kit: 'hard', b: 'offbeat', c: 'arp16', l: 'saw', gr: 0.5, d: 0.4, lp: 2, lift: 2 },
+    { name: 'Skyline Sprint', bpm: 150, root: 57, scale: 'dorian', prog: [0, 6, 5, 6], pb: [3, 4, 3, 6], seed: 97, g: 'break', kit: 'hard', b: 'octave', c: 'stab', l: 'chip', gr: 0.25, d: 0.45, lp: 1 },
+    { name: 'Thunder Ramp', bpm: 176, root: 53, scale: 'minor', prog: [0, 6, 5, 4], pb: [5, 6, 3, 4], seed: 163, g: 'punk', kit: 'hard', b: 'pulse8', c: 'power', l: 'brass', gr: 0.5, d: 0.55, lp: 0 },
+    { name: 'Comet Chase', bpm: 116, root: 55, scale: 'dorian', prog: [0, 3, 6, 4], pb: [3, 3, 0, 4], seed: 173, g: 'funkfast', kit: 'acoustic', b: 'funk', c: 'stab', l: 'sq', gr: 0.25, d: 0.5, lp: 1 },
+    { name: 'Gate Crasher', bpm: 158, root: 49, scale: 'minor', prog: [0, 0, 5, 6], pb: [3, 4, 5, 6], seed: 181, g: 'gallop', kit: 'hard', b: 'gallop', c: 'power', l: 'saw', gr: 0.5, d: 0.5, lp: 2, lift: 1 }
   ],
-  phonk: [   // dark drift phonk: cowbell tune, deep sliding 808, rolling hats, half-time clap
-    { name: 'Midnight Drift', bpm: 140, root: 53, scale: 'phryg', prog: [0, 0, 5, 1], seed: 401 },
-    { name: 'Cowbell Alley', bpm: 132, root: 51, scale: 'minor', prog: [0, 5, 0, 6], seed: 409 },
-    { name: 'Smoke Lane', bpm: 144, root: 50, scale: 'phryg', prog: [0, 1, 0, 5], seed: 419 },
-    { name: 'Low Rider', bpm: 128, root: 52, scale: 'minor', prog: [0, 3, 5, 5], seed: 421 },
-    { name: 'Shadow Tilt', bpm: 150, root: 54, scale: 'phryg', prog: [0, 0, 1, 0], seed: 431 },
-    { name: 'Neon Grip', bpm: 136, root: 49, scale: 'minor', prog: [0, 6, 5, 6], seed: 433 }
+  phonk: [   // dark drift phonk: cowbell tunes, deep sliding 808s, hats and claps, each with its own bounce
+    { name: 'Midnight Drift', bpm: 140, root: 53, scale: 'phryg', prog: [0, 0, 5, 1], pb: [5, 5, 1, 0], seed: 401, g: 'drift', kit: '808', b: '808', p8: [0, 0.75, 2.5], c: 'darkpad', l: 'cowbell', gr: 0.25, d: 0.45, lp: 1 },
+    { name: 'Cowbell Alley', bpm: 128, root: 51, scale: 'minor', prog: [0, 5, 0, 6], pb: [5, 5, 6, 6], seed: 409, g: 'memphis', kit: '808', b: '808', p8: [0, 1.5, 2.75], c: 'none', l: 'cowbell', gr: 0.25, d: 0.6, lp: 0 },
+    { name: 'Smoke Lane', bpm: 132, root: 50, scale: 'phryg', prog: [0, 1, 0, 5], pb: [1, 1, 0, 5], seed: 419, g: 'carioca', kit: '808', b: '808', p8: [0, 0.75, 1.5, 2.5], c: 'darkpad', l: 'cowbell', gr: 0.25, d: 0.7, lp: 2 },
+    { name: 'Low Rider', bpm: 122, root: 52, scale: 'minor', prog: [0, 3, 5, 5], pb: [5, 3, 0, 0], seed: 421, g: 'phouse', kit: '808', b: 'offbeat', c: 'stab', l: 'cowbell', gr: 0.5, d: 0.5, lp: 1 },
+    { name: 'Shadow Tilt', bpm: 150, root: 54, scale: 'phryg', prog: [0, 0, 1, 0], pb: [5, 5, 1, 1], seed: 431, g: 'trap', kit: '808', b: '808', p8: [0, 2, 2.75, 3.5], c: 'darkpad', l: 'bell', gr: 0.5, d: 0.35, lp: 2 },
+    { name: 'Neon Grip', bpm: 136, root: 49, scale: 'minor', prog: [0, 6, 5, 6], pb: [3, 4, 5, 5], seed: 433, g: 'memphis2', kit: '808', b: '808', p8: [0, 0.75, 2, 3], c: 'stab', l: 'cowbell', gr: 0.25, d: 0.5, lp: 1 }
   ],
   dreamy: [   // slow and floaty: for exploring far away
-    { name: 'Meadow Morning', bpm: 76, root: 60, scale: 'major', prog: [0, 5, 3, 4], seed: 11 },
-    { name: 'Drifting Clouds', bpm: 68, root: 62, scale: 'lydian', prog: [0, 4, 5, 3], seed: 23 },
-    { name: 'Lantern Pond', bpm: 72, root: 65, scale: 'major', prog: [0, 3, 5, 4], seed: 37 },
-    { name: 'Far Horizon', bpm: 64, root: 57, scale: 'dorian', prog: [0, 6, 3, 4], seed: 113 },
-    { name: 'Moss and Moonlight', bpm: 70, root: 63, scale: 'lydian', prog: [0, 1, 0, 4], seed: 127 },
-    { name: 'Hammock Hour', bpm: 80, root: 58, scale: 'mixo', prog: [0, 3, 6, 3], seed: 131 }
+    { name: 'Meadow Morning', bpm: 76, root: 60, scale: 'major', prog: [0, 5, 3, 4], pb: [3, 4, 5, 4], seed: 11, g: 'none', b: 'hold', c: 'alberti', l: 'flute', gr: 0.5, d: 0.4, lp: 1 },
+    { name: 'Drifting Clouds', bpm: 68, root: 62, scale: 'lydian', prog: [0, 4, 5, 3], pb: [1, 0, 1, 4], seed: 23, g: 'brush', kit: 'soft', b: 'hold', c: 'pad', l: 'bell', gr: 0.5, d: 0.35, lp: 2 },
+    { name: 'Lantern Pond', bpm: 96, m: 3, root: 65, scale: 'major', prog: [0, 3, 5, 4], pb: [3, 4, 0, 4], seed: 37, g: 'none', b: 'waltz', c: 'musicbox', l: 'sine', gr: 0.5, d: 0.45, lp: 1 },
+    { name: 'Far Horizon', bpm: 64, root: 57, scale: 'dorian', prog: [0, 6, 3, 4], pb: [5, 3, 6, 4], seed: 113, g: 'none', b: 'hold', c: 'arpUp', l: 'whistle', gr: 0.5, d: 0.3, lp: 2 },
+    { name: 'Moss and Moonlight', bpm: 84, m: 3, root: 63, scale: 'lydian', prog: [0, 1, 0, 4], pb: [5, 1, 4, 4], seed: 127, g: 'brush3', kit: 'soft', b: 'waltz', c: 'strum', l: 'flute', gr: 0.5, d: 0.4, lp: 1 },
+    { name: 'Hammock Hour', bpm: 80, root: 58, scale: 'mixo', prog: [0, 3, 6, 3], pb: [5, 3, 4, 4], seed: 131, g: 'bossa', kit: 'soft', b: 'tumbao', c: 'pad', l: 'sine', gr: 0.5, d: 0.4, lp: 0 }
   ]
 };
 const MOOD = { dreamy: 0, upbeat: 1, exciting: 2, phonk: 3, chill: 4 };
@@ -1881,78 +1889,179 @@ const KIND_NAME = { chill: 'chill', upbeat: 'upbeat', exciting: 'exciting', phon
 const musOff = () => !settings.musicOn;
 const musStyle = () => settings.music === 'random' ? (AU.rnd || (AU.rnd = KINDS[Math.floor(Math.random() * KINDS.length)])) : settings.music === 'adaptive' ? (AU.target || 'chill') : settings.music;
 const MUSIC_INFO = { adaptive: 'Fits the moment: an easy groove when things are calm, upbeat when something is going on, phonk or exciting when it gets wild, and dreamy when you explore far away', random: 'Random: any song of any kind, one after another', none: 'No music', chill: 'Chill: an easy, light groove', upbeat: 'Upbeat: bouncy, something is going on', exciting: 'Exciting: fast and driving', phonk: 'Phonk: dark drift phonk, cowbells and deep 808s', dreamy: 'Dreamy: slow and floaty' };
-const RHY = [
-  [[[0, 1.5], [1.5, 0.5], [2, 2]], [[0, 1], [1, 1], [2, 1], [3, 1]], [[0.5, 1], [2, 1.5]], [[0, 2], [2, 1], [3, 1]]],
-  [[[0, 0.5], [0.5, 0.5], [1, 1], [2, 0.5], [3, 1]], [[0, 1], [1.5, 0.5], [2, 1], [3.5, 0.5]], [[0, 0.5], [1, 0.5], [2, 0.5], [3, 0.5], [3.5, 0.5]]],
-  [[[0, 0.5], [0.5, 0.5], [1, 0.5], [1.5, 0.5], [2, 0.5], [2.5, 0.5], [3, 1]], [[0, 0.75], [0.75, 0.75], [1.5, 0.5], [2, 0.5], [2.5, 0.5], [3, 1]], [[0, 0.5], [1, 0.5], [1.5, 0.5], [2, 1], [3, 0.5], [3.5, 0.5]]],
-  [[[0, 0.25], [0.25, 0.25], [0.75, 0.25], [1.5, 0.25], [2, 0.25], [2.25, 0.25], [2.75, 0.5], [3.5, 0.25]], [[0, 0.5], [0.75, 0.25], [1.5, 0.25], [2, 0.25], [2.5, 0.25], [3, 0.5], [3.75, 0.25]], [[0, 0.25], [0.5, 0.25], [0.75, 0.25], [1.5, 0.5], [2.25, 0.25], [2.75, 0.25], [3.25, 0.5]]],
-  [[[0, 1], [1.5, 0.5], [2, 1], [3, 0.5]], [[0.5, 0.5], [1, 1], [2.5, 0.5], [3, 1]], [[0, 0.5], [0.5, 0.5], [1, 1], [2.5, 1.5]]]
-];
-const PHONK_808 = [[0, 1.5, 2.75], [0, 0.75, 2.5], [0, 2, 2.75, 3.5]];
+/* drum beats: one letter per sixteenth note (X loud, x normal, g soft). k kick, s snare, c clap, r rim, h closed hat, o open hat, sh shaker, t tom */
+const GROOVES = {
+  none: {},
+  boombap: { k: 'x......x.xx.....', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.' },
+  bossa: { k: 'x..x....x..x....', r: 'x..x..x...x..x..', sh: 'xgxgxgxgxgxgxgxg' },
+  onedrop: { k: '........X.......', r: '........x.......', h: '..x...x...x...x.' },
+  waltz: { k: 'x...........', s: '....g...g...', h: 'x.x.x.x.x.x.' },
+  funkslow: { k: 'x.....x...x..x..', s: '....x..g.g..x..g', h: 'xgxgxgxgxgxgxgxg' },
+  shuffle: { k: 'x.......x.x.....', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.' },
+  four: { k: 'X...x...X...x...', c: '....x.......x...', h: 'x...x...x...x...', o: '..x...x...x...x.' },
+  ska: { k: 'x.......x.......', s: '....x.......x...', h: '..x...x...x...x.' },
+  march: { k: 'x.......x.......', s: 'x.gxx.gx..x.xgxg' },
+  jig: { k: 'x.....x.....', s: '...g.....g..', sh: 'x.xx.xx.xx.x' },
+  pop: { k: 'x.....x.x.......', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.' },
+  train: { k: 'x.......x.......', s: 'ggxgggxgggxgggxg' },
+  dnb: { k: 'X.........x.....', s: '....X.......X...', h: 'x.x.x.x.x.x.x.x.', o: '..............x.' },
+  trance: { k: 'X...X...X...X...', c: '....x.......x...', h: 'gggggggggggggggg', o: '..x...x...x...x.' },
+  break: { k: 'x.....x...x.....', s: '....x..g.x..x..g', h: 'x.x.x.x.x.x.x.x.', o: '..........x.....' },
+  punk: { k: 'x...x.x.x...x.x.', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.' },
+  funkfast: { k: 'x.x....x..x..x..', s: '....x..g.g..x..g', h: 'xgxgxgxgxgxgxgxg' },
+  gallop: { k: 'x.xxx.xxx.xxx.xx', s: '....x.......x...', h: 'x...x...x...x...' },
+  drift: { k: 'x..x......x..x..', c: '........x.......', h: 'gggggggggggggggg', roll: 1 },
+  memphis: { k: 'x.....x...x.x...', c: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', roll: 1 },
+  carioca: { k: 'x..x..x...x..x..', c: '....x..x....x...', h: 'x.x.x.x.x.x.x.x.' },
+  phouse: { k: 'X...X...X...X...', c: '....x.......x...', o: '..x...x...x...x.', h: 'g.g.g.g.g.g.g.g.' },
+  trap: { k: 'x.......x..x....', c: '........x.......', h: 'x.x.x.x.x.x.x.x.', roll: 2 },
+  memphis2: { k: 'x..x..x...x.....', c: '....x.......x...', h: 'xgxxxgxxxgxxxgxx' },
+  brush: { k: 'x.......x.......', sh: 'x.g.x.g.x.g.x.g.' },
+  brush3: { k: 'x...........', sh: 'x.gx.gx.gx.g' }
+};
+const DRUM_V = { X: 1, x: 0.75, g: 0.35 };
 function auRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const scNote = (sg, deg) => { const n = SCALES[sg.scale], o = Math.floor(deg / 7), i = ((deg % 7) + 7) % 7; return sg.root + n[i] + 12 * o; };
-function genMelody(sg, mood) {   // eight bars of tune; bars 5-8 echo bars 1-4 so it feels like a song
-  const r = auRng(sg.seed * 7919), T = RHY[mood], pick = a => a[Math.floor(r() * a.length)], tmpl = [pick(T), pick(T), null, pick(T)]; tmpl[2] = tmpl[0];
-  const bars = []; let prev = 7 + sg.prog[0];
-  for (let b = 0; b < 8; b++) {
-    const ch = sg.prog[b % 4], tones = [ch, ch + 2, ch + 4, ch + 7, ch + 9, ch + 11], ev = [];
-    tmpl[b % 4].forEach((p, k) => {
-      let d;
-      if (k === 0) d = tones.reduce((best, x) => Math.abs(x - prev) < Math.abs(best - prev) ? x : best, tones[0]);
-      else d = prev + pick([-2, -1, -1, 0, 1, 1, 2]);
-      d = clamp(d, 4, 15); prev = d;
-      if (mood === 0 && b % 2 === 1 && r() < 0.4) return;
-      ev.push([p[0], d, p[1]]);
-    });
-    bars.push(ev);
-  }
-  sg._fb = PHONK_808[sg.seed % PHONK_808.length];
+const songBeats = sg => sg.m || 4;
+/* the parts of a song (32 bars): an intro, the tune, a second part, a quiet break, the tune again */
+const songPart = bar => bar < 4 ? 'intro' : bar < 12 ? 'A' : bar < 20 ? 'B' : bar < 24 ? 'break' : 'A2';
+function genMelody(sg) {   // works out the whole song once: the chord and the tune for every bar
+  const r = auRng(sg.seed * 7919 + 13), m = songBeats(sg), pick = a => a[Math.floor(r() * a.length)];
+  const steps = sg.lp === 2 ? [-3, -2, 2, 3, 4, -4, 1, -1] : sg.lp === 1 ? [-2, -1, 1, 2, 2, -2, 0, 3] : [-1, 1, -1, 1, 0, 2, -2];
+  const cell = (dens, sparse) => {   // one bar of rhythm
+    const g = sg.gr || 0.5, on = [];
+    for (let p = 0; p < m - 1e-6; p += g) { const q = Math.round(p * 100) / 100, strong = Math.abs(q - Math.round(q)) < 1e-6; if (q === 0 ? r() < 0.85 : r() < (sparse ? 0.12 : strong ? dens + 0.15 : dens * 0.75)) on.push(q); }
+    if (on.length < (sparse ? 1 : 2)) { on.length = 0; on.push(0); if (!sparse) on.push(Math.min(m - 1, 2)); }
+    return on.map((p, i) => [p, Math.min((i + 1 < on.length ? on[i + 1] : m) - p, 2)]);
+  };
+  const chordAt = b => songPart(b) === 'B' ? sg.pb[b % 4] : sg.prog[b % 4];
+  const phrase = (center, dens, b0) => {   // eight bars: bar 1's little tune comes back in bars 3, 5 and 7, so it is catchy
+    const c1 = cell(dens), c2 = cell(dens), c3 = cell(dens * 0.8), cEnd = cell(dens * 0.5, true), rh = [c1, c2, c1, c3, c1, c2, c1, cEnd], out = [];
+    let prev = center, shape1 = null, shape2 = null;
+    for (let i = 0; i < 8; i++) {
+      const ch = chordAt(b0 + i), tones = [ch, ch + 2, ch + 4, ch + 7, ch + 9, ch + 11, ch - 3, ch - 5], near = x => tones.reduce((a, t) => Math.abs(t - x) < Math.abs(a - x) ? t : a, tones[0]);
+      const start = near(prev), rep = rh[i] === c1 ? shape1 : rh[i] === c2 ? shape2 : null, ev = [];
+      let d = start;
+      rh[i].forEach((n, k) => {
+        if (k > 0) { d = rep && rep[k] !== undefined ? start + rep[k] : d + pick(steps); if (Math.abs(n[0] - Math.round(n[0])) < 1e-6 && !rep) d = near(d); }
+        d = clamp(d, center - 6, center + 6);
+        if (i === 7 && k === rh[i].length - 1) d = near(ch + 7 > center + 3 ? ch : ch + 7);   // (the end of the tune lands home)
+        ev.push([n[0], d, n[1]]);
+      });
+      if (rh[i] === c1 && !shape1) shape1 = ev.map(e => e[1] - start);
+      if (rh[i] === c2 && !shape2) shape2 = ev.map(e => e[1] - start);
+      prev = d; out.push(ev);
+    }
+    return out;
+  };
+  const A = phrase(9, sg.d, 4), B = phrase(11, clamp(sg.d + (r() < 0.5 ? 0.2 : -0.15), 0.2, 0.85), 12), bars = [];
+  for (let b = 0; b < 32; b++) { const p = songPart(b); bars.push({ ch: chordAt(b), ev: p === 'intro' ? [] : p === 'A' ? A[b - 4] : p === 'B' ? B[b - 12] : p === 'break' ? A[b - 20] : A[b - 24] }); }
   return bars;
 }
+function drumHit(kind, kit, t, v, mus) {
+  const soft = kit === 'soft' ? 0.6 : 1, hard = kit === 'hard';
+  switch (kind) {
+    case 'k': if (kit === '808') tone(160, 0.2, 'sine', 0.34 * v, 42, t, mus); else tone(hard ? 165 : 150, hard ? 0.18 : 0.22, 'sine', 0.42 * v * soft, 42, t, mus); if (hard) noise(0.02, 0.08 * v, 3000, 1000, 'bandpass', t, mus); break;
+    case 's': if (kit === 'soft') noise(0.18, 0.08 * v, 1800, 600, 'bandpass', t, mus); else { noise(0.14, (hard ? 0.22 : 0.15) * v, 2400, 900, 'highpass', t, mus); tone(190, 0.08, 'triangle', 0.1 * v, 120, t, mus); } break;
+    case 'c': noise(0.16, 0.2 * v, 1800, 900, 'bandpass', t, mus); noise(0.1, 0.12 * v, 3000, 1500, 'highpass', t + 0.02, mus); break;
+    case 'r': noise(0.05, 0.08 * v, 3200, 2500, 'bandpass', t, mus); tone(420, 0.04, 'triangle', 0.06 * v, 300, t, mus); break;
+    case 'h': noise(0.035, 0.05 * v * soft, 9000, 7000, 'highpass', t, mus); break;
+    case 'o': noise(0.2, 0.045 * v * soft, 8000, 6000, 'highpass', t, mus); break;
+    case 'sh': noise(0.05, 0.045 * v, 7000, 5000, 'bandpass', t, mus); break;
+    case 't': tone(210, 0.2, 'sine', 0.3 * v, 90, t, mus); break;
+    case 'x': noise(1.3, 0.07, 6000, 4000, 'highpass', t, mus); break;   // (a crash at the start of a part)
+  }
+}
+function leadNote(type, f, t, dur, vol, mus) {
+  switch (type) {
+    case 'sq': tone(f, dur, 'square', vol * 0.5, 0, t, mus, 0.006); break;
+    case 'saw': tone(f, dur, 'sawtooth', vol * 0.45, 0, t, mus, 0.008); tone(f * 1.007, dur, 'sawtooth', vol * 0.28, 0, t, mus, 0.008); break;
+    case 'sine': tone(f, dur, 'sine', vol * 1.1, 0, t, mus, 0.02); break;
+    case 'bell': tone(f, Math.max(dur, 0.6), 'sine', vol, 0, t, mus, 0.003); tone(f * 2.76, 0.35, 'sine', vol * 0.25, 0, t, mus, 0.003); break;
+    case 'pluck': tone(f, Math.min(dur, 0.4), 'sawtooth', vol * 0.4, 0, t, mus, 0.003); tone(f, Math.min(dur, 0.5), 'triangle', vol * 0.5, 0, t, mus, 0.003); break;
+    case 'flute': tone(f, dur, 'sine', vol, 0, t, mus, 0.06); tone(f * 2, dur * 0.8, 'triangle', vol * 0.12, 0, t, mus, 0.08); break;
+    case 'whistle': tone(f * 0.94, 0.07, 'sine', vol * 0.8, f, t, mus, 0.01); tone(f, dur, 'sine', vol, 0, t + 0.06, mus, 0.02); break;
+    case 'brass': tone(f, dur, 'sawtooth', vol * 0.4, 0, t, mus, 0.035); tone(f * 0.5, dur, 'square', vol * 0.15, 0, t, mus, 0.035); break;
+    case 'chip': tone(f * 2, 0.03, 'square', vol * 0.35, 0, t, mus, 0.002); tone(f, dur, 'square', vol * 0.42, 0, t + 0.03, mus, 0.003); break;
+    case 'organ': tone(f, dur, 'sine', vol * 0.8, 0, t, mus, 0.01); tone(f * 2, dur, 'sine', vol * 0.35, 0, t, mus, 0.01); tone(f * 3, dur, 'sine', vol * 0.18, 0, t, mus, 0.01); break;
+    case 'cowbell': tone(f, Math.min(dur, 0.17), 'square', vol * 0.5, 0, t, mus, 0.003); tone(f * 1.48, Math.min(dur, 0.13), 'square', vol * 0.33, 0, t, mus, 0.003); break;
+    default: tone(f, dur, 'triangle', vol, 0, t, mus, 0.01);
+  }
+}
 function musicBar(t0) {
-  const sg = AU.song, mood = MOOD[AU.style], beat = 60 / sg.bpm, bar = AU.bar, ch = sg.prog[bar % 4], mus = AU.mus;
-  const T = n => t0 + n * beat, cn = [ch, ch + 2, ch + 4];
-  const bn = hz(scNote(sg, ch) - 12);
-  if (mood === 3) {   // phonk: deep sliding 808, cowbell tune, rolling hats, a clap on the half beat
-    const sub = hz(scNote(sg, ch) - 24);
-    sg._fb.forEach((p, i) => { const len = beat * (i === sg._fb.length - 1 ? 1.1 : 1.4); tone(sub * 2, len, 'sine', 0.22, i === 0 && bar % 4 === 3 ? sub * 1.5 : sub * 1.9, T(p), mus, 0.01); tone(sub * 4, len * 0.6, 'triangle', 0.045, 0, T(p), mus, 0.01); });   // (808 with a little grit on top)
-    [0, 2.75].forEach(p => tone(160, 0.18, 'sine', 0.3, 45, T(p), mus));
-    noise(0.16, 0.2, 1800, 900, 'bandpass', T(2), mus); noise(0.1, 0.12, 3000, 1500, 'highpass', T(2.02), mus);   // (the clap)
-    for (let i = 0; i < 8; i++) noise(0.03, i % 2 ? 0.05 : 0.035, 9500, 7500, 'highpass', T(i * 0.5), mus);
-    if (bar % 2 === 1) for (let i = 0; i < 6; i++) noise(0.02, 0.02 + i * 0.004, 9000, 7500, 'highpass', T(3 + i / 6), mus);   // (hat roll)
-    AU.melody[bar % 8].forEach(e => { const f = hz(scNote(sg, e[1]) + 12); tone(f, 0.17, 'square', 0.055, 0, T(e[0]), mus, 0.003); tone(f * 1.48, 0.13, 'square', 0.036, 0, T(e[0]), mus, 0.003); });   // (cowbell: two clanging tones)
-    if (bar % 2 === 0) cn.forEach(d => tone(hz(scNote(sg, d)), beat * 8, 'sawtooth', 0.016, 0, t0, mus, 0.8));   // (a dark pad underneath)
-    return;
-  }
-  if (mood === 4) {   // chill: warm keys, a soft groove, light percussion
-    cn.forEach(d => tone(hz(scNote(sg, d) + 12), 4 * beat * 0.95, 'triangle', 0.05, 0, t0, mus, 0.25));
-    [0, 1.5, 2, 3.5].forEach((p, i) => tone(i === 3 ? bn * 1.5 : bn, beat * (i % 2 ? 0.45 : 0.8), 'triangle', 0.2, 0, T(p), mus, 0.01));
-    [0.5, 1.5, 2.5, 3.5].forEach(p => cn.forEach(d => tone(hz(scNote(sg, d) + 12), beat * 0.4, 'sine', 0.04, 0, T(p), mus, 0.008)));
-    AU.melody[bar % 8].forEach(e => tone(hz(scNote(sg, e[1])), Math.max(0.15, e[2] * beat), 'triangle', 0.12, 0, T(e[0]), mus, 0.01));
-    [0, 2.5].forEach(p => tone(140, 0.18, 'sine', 0.26, 45, T(p), mus));
-    [1, 3].forEach(p => { noise(0.05, 0.08, 3200, 2500, 'bandpass', T(p), mus); tone(420, 0.04, 'triangle', 0.05, 300, T(p), mus); });   // (rim)
-    for (let i = 0; i < 8; i++) noise(0.04, i % 2 ? 0.04 : 0.024, 8000, 6000, 'highpass', T(i * 0.5), mus);   // (shaker)
-    return;
-  }
-  // pad (soft chord held for the whole bar)
-  if (mood < 2) cn.forEach(d => tone(hz(scNote(sg, d) + 12), 4 * beat * 0.98, mood === 0 ? 'sine' : 'triangle', mood === 0 ? 0.065 : 0.035, 0, t0, mus, 0.5));
-  // bass
-  if (mood === 0) tone(bn, 4 * beat * 0.95, 'sine', 0.13, 0, t0, mus, 0.08);
-  else if (mood === 1) [0, 1.5, 2, 3.5].forEach((p, i) => tone(i === 3 ? bn * 1.5 : bn, beat * 0.7, 'triangle', 0.17, 0, T(p), mus));
-  else for (let i = 0; i < 8; i++) tone(i % 4 === 3 ? bn * 2 : bn, beat * 0.42, 'sawtooth', 0.075, 0, T(i * 0.5), mus);
-  // arpeggio / stabs
-  if (mood === 0) for (let i = 0; i < 8; i++) tone(hz(scNote(sg, cn[[0, 1, 2, 1, 0, 2, 1, 2][i]] + 7)), beat * 0.9, 'triangle', 0.045, 0, T(i * 0.5), mus);
-  else if (mood === 1) [0.5, 1.5, 2.5, 3.5].forEach(p => cn.forEach(d => tone(hz(scNote(sg, d) + 12), beat * 0.35, 'square', 0.018, 0, T(p), mus)));
-  else for (let i = 0; i < 16; i++) tone(hz(scNote(sg, cn[[0, 1, 2, 1][i % 4]] + 7)), beat * 0.22, 'square', 0.03, 0, T(i * 0.25), mus);
-  // melody
-  AU.melody[bar % 8].forEach(e => tone(hz(scNote(sg, e[1])), Math.max(0.15, e[2] * beat * (mood === 0 ? 1.4 : 0.95)), mood === 0 ? 'sine' : mood === 1 ? 'triangle' : 'sawtooth', mood === 2 ? 0.05 : 0.09, 0, T(e[0]), mus, 0.01));
+  const sg = AU.song, mood = MOOD[AU.style], beat = 60 / sg.bpm, bar = AU.bar, m = songBeats(sg), mus = AU.mus;
+  const plan = AU.melody[bar % 32], part = songPart(bar % 32), ch = plan.ch, lift = part === 'A2' ? (sg.lift || 0) : 0;
+  const sw = sg.sw || 0, swing = p => { const f = p - Math.floor(p); return Math.abs(f - 0.5) < 1e-6 ? p + sw : (Math.abs(f - 0.25) < 1e-6 || Math.abs(f - 0.75) < 1e-6) ? p + sw / 2 : p; };
+  const T = p => t0 + swing(p) * beat, N = d => hz(scNote(sg, d) + lift), cn = [ch, ch + 2, ch + 4];
+  const intro = part === 'intro', brk = part === 'break', last = bar % 8 === 7 || bar === 3 || bar === 23;
   // drums
-  if (mood >= 1) {
-    const kicks = mood === 2 ? [0, 1, 2, 3] : [0, 2, 2.5], snares = [1, 3];
-    kicks.forEach(p => { tone(150, 0.22, 'sine', 0.42, 42, T(p), mus); });
-    snares.forEach(p => { noise(0.14, mood === 2 ? 0.22 : 0.13, 2400, 900, 'highpass', T(p), mus); tone(190, 0.08, 'triangle', 0.1, 120, T(p), mus); });
-    for (let i = 0; i < 8; i++) if (mood === 2 ? (i % 2 === 1) : true) noise(0.035, mood === 2 ? 0.06 : 0.04, 9000, 7000, 'highpass', T(i * 0.5), mus);
-  } else if (bar % 2 === 0) noise(0.5, 0.025, 7000, 9000, 'highpass', T(2), mus);
+  const G = GROOVES[sg.g] || {}, kit = sg.kit || 'acoustic', steps = m * 4, hasDrums = Object.keys(G).length > 0;
+  if (hasDrums) {
+    if ((bar === 4 || bar === 12 || bar === 24) && mood !== 0) drumHit('x', kit, t0, 1, mus);
+    for (const inst of ['k', 's', 'c', 'r', 'h', 'o', 'sh']) {
+      const pat = G[inst]; if (!pat) continue;
+      if (brk && inst !== 'h' && inst !== 'sh') continue;
+      if (brk && bar < 22) continue;
+      if (intro && bar < 2 && (inst === 's' || inst === 'c' || inst === 'r')) continue;
+      for (let i = 0; i < steps; i++) {
+        const ch_ = pat[i % pat.length]; if (!DRUM_V[ch_]) continue;
+        if (last && i >= steps - 4 && (inst === 's' || inst === 'c' || inst === 'k') && !brk) continue;   // (room for the fill)
+        drumHit(inst, kit, T(i / 4), DRUM_V[ch_] * (part === 'B' && inst === 'h' ? 1.15 : 1), mus);
+      }
+    }
+    if (part === 'B' && !G.o && mood !== 0 && kit !== 'soft') for (let b = 0; b < m; b++) drumHit('o', kit, T(b + 0.5), 0.45, mus);   // (the second part opens up)
+    if (G.roll && bar % 2 === 1 && !brk) { const n = G.roll === 2 ? 9 : 6; for (let i = 0; i < n; i++) noise(0.02, 0.02 + i * 0.004, 9000, 7500, 'highpass', T(m - 1 + i / n), mus); }   // (hat roll)
+    if (last && !brk) {   // a fill into the next part: snare or toms
+      if (bar === 23) for (let i = 0; i < 16; i++) drumHit(kit === '808' ? 'c' : 's', kit, T(m - 4 + i / 4), 0.25 + i * 0.05, mus);
+      else if (kit === 'soft') drumHit('r', kit, T(m - 0.5), 0.8, mus);
+      else if (bar % 16 === 15 && kit !== '808') [0, 0.25, 0.5, 0.75].forEach((p, i) => tone(260 - i * 40, 0.2, 'sine', 0.28, 90 - i * 10, T(m - 1 + p), mus));
+      else [0, 0.25, 0.5, 0.75].forEach((p, i) => drumHit(kit === '808' ? 'c' : 's', kit, T(m - 1 + p), 0.4 + i * 0.15, mus));
+    } else if (brk && bar === 23) for (let i = 0; i < 16; i++) drumHit(kit === '808' ? 'c' : 's', kit, T(m - 4 + i / 4), 0.2 + i * 0.05, mus);
+  } else if (bar % 2 === 0 && !intro) noise(0.5, 0.025, 7000, 9000, 'highpass', T(m / 2), mus);
+  // bass
+  const bw = mood === 2 ? 'sawtooth' : mood === 0 ? 'sine' : 'triangle', bv = mood === 2 ? 0.075 : mood === 0 ? 0.13 : 0.17;
+  const rt = scNote(sg, ch) - 12 + lift, fifth = scNote(sg, ch + 4) - 12 + lift, third = scNote(sg, ch + 2) - 12 + lift, nxt = scNote(sg, AU.melody[(bar + 1) % 32].ch) - 12 + lift;
+  const B = (p, midi, len, v, slide) => tone(hz(midi), len * beat, bw, (v || 1) * bv * (brk ? 0.7 : 1), slide ? hz(slide) : 0, T(p), mus, 0.01);
+  if (!(intro && bar < 2 && mood !== 0)) switch (brk ? 'hold' : sg.b) {
+    case 'hold': B(0, rt, m * 0.95); break;
+    case 'pulse8': for (let i = 0; i < m * 2; i++) B(i / 2, rt, 0.42, i % 2 ? 0.8 : 1); break;
+    case 'octave': for (let i = 0; i < m * 2; i++) B(i / 2, i % 2 ? rt + 12 : rt, 0.42); break;
+    case 'bounce': B(0, rt, 0.8); B(1.5, rt, 0.45); B(2, rt, 0.8); B(3.5, fifth, 0.45); break;
+    case 'walk': { const ns = m === 3 ? [rt, third, fifth] : [rt, third, fifth, nxt + (nxt > fifth ? -1 : 1)]; ns.forEach((n, i) => B(i, n, 0.85)); break; }
+    case 'funk': B(0, rt, 0.4); B(0.75, rt, 0.2); B(1.5, rt + 12, 0.2, 0.9); B(2.5, rt, 0.3); B(2.75, fifth, 0.2); B(3.5, rt + 12, 0.3, 0.9, rt + 10); break;
+    case 'reggae': B(0.5, rt, 0.45); B(1, rt, 0.9); B(2, third, 0.45); B(2.5, fifth, 0.45); B(3, rt, 0.9); break;
+    case 'tumbao': B(0, rt, 1.4); B(1.5, fifth, 0.45); B(2, rt, 1.4); B(3.5, fifth, 0.45); break;
+    case 'waltz': B(0, rt, 0.9); if (bar % 2 === 1) B(2, fifth - 12, 0.9, 0.7); break;
+    case 'offbeat': for (let i = 0; i < m; i++) { B(i + 0.5, rt, 0.35); } if (mood === 3) for (let i = 0; i < m; i++) tone(hz(rt - 12), 0.3 * beat, 'sine', 0.2, 0, T(i), mus, 0.01); break;
+    case 'country': B(0, rt, 0.8); B(2, fifth - 12, 0.8); if (bar % 2) B(3.5, rt - 1, 0.4, 0.8); break;
+    case 'gallop': for (let i = 0; i < m; i++) [0, 0.5, 0.75].forEach(p => B(i + p, rt, 0.22)); break;
+    case '808': { const sub = hz(rt - 12), p8 = sg.p8 || [0, 1.5, 2.75]; p8.forEach((p, i) => { const len = beat * (i === p8.length - 1 ? 1.1 : 1.4); tone(sub * 2, len, 'sine', 0.22, i === 0 && bar % 4 === 3 ? sub * 1.5 : sub * 1.9, T(p), mus, 0.01); tone(sub * 4, len * 0.6, 'triangle', 0.045, 0, T(p), mus, 0.01); }); break; }
+  }
+  // backing
+  const cv = mood === 0 ? 0.065 : 0.035, chordF = (d, o) => N(d) * (o || 2);
+  switch (sg.c) {
+    case 'pad': cn.forEach(d => tone(chordF(d), m * beat * 0.98, mood === 0 ? 'sine' : mood === 2 ? 'sawtooth' : 'triangle', mood === 2 ? 0.014 : cv, 0, t0, mus, 0.5)); break;
+    case 'darkpad': if (bar % 2 === 0) cn.forEach(d => tone(N(d), beat * 8, 'sawtooth', 0.016, 0, t0, mus, 0.8)); break;
+    case 'keys': [[0, 1.4], [1.5, 0.4], [2.5, 1.2]].forEach(([p, l]) => cn.forEach(d => { tone(chordF(d), l * beat, 'triangle', 0.035, 0, T(p), mus, 0.01); tone(chordF(d) * 2, l * beat * 0.5, 'sine', 0.012, 0, T(p), mus, 0.005); })); break;
+    case 'strum': (m === 3 ? [0, 1, 2] : [0, 1, 1.5, 2.5, 3, 3.5]).forEach((p, i) => cn.concat([ch + 7]).forEach((d, k) => tone(chordF(d, 1) * (k === 3 ? 1 : 2), 0.45 * beat, 'triangle', i % 2 ? 0.022 : 0.032, 0, T(p) + k * 0.014, mus, 0.003))); break;
+    case 'skank': [1, 3].forEach(p => cn.forEach(d => { tone(chordF(d), 0.18 * beat, 'square', 0.016, 0, T(p), mus, 0.003); tone(chordF(d), 0.12 * beat, 'square', 0.01, 0, T(p + 0.25), mus, 0.003); })); break;
+    case 'ska': for (let i = 0; i < m; i++) cn.forEach(d => tone(chordF(d), 0.2 * beat, 'square', 0.017, 0, T(i + 0.5), mus, 0.003)); break;
+    case 'stab': [0.5, 1.25, 2.5, 3.25].forEach(p => cn.forEach(d => tone(chordF(d), 0.25 * beat, mood === 3 ? 'sawtooth' : 'square', 0.017, 0, T(p), mus, 0.003))); break;
+    case 'arp8': for (let i = 0; i < m * 2; i++) tone(chordF(cn[[0, 1, 2, 1][i % 4]] + 7, 1), beat * 0.4, 'triangle', 0.04, 0, T(i / 2), mus); break;
+    case 'arp16': for (let i = 0; i < m * 4; i++) tone(chordF([cn[0], cn[1], cn[2], cn[0] + 7][i % 4], 2), beat * 0.22, 'square', 0.022, 0, T(i / 4), mus, 0.002); break;
+    case 'arpUp': for (let i = 0; i < m * 2; i++) tone(chordF([cn[0], cn[1], cn[2], cn[0] + 7, cn[1] + 7, cn[2] + 7, cn[0] + 7, cn[2]][i % 8], 1), beat * 1.2, 'sine', 0.04, 0, T(i / 2), mus, 0.01); break;
+    case 'alberti': for (let i = 0; i < m * 2; i++) tone(chordF(cn[[0, 2, 1, 2][i % 4]], 1), beat * 0.6, 'triangle', 0.045, 0, T(i / 2), mus, 0.01); break;
+    case 'waltz': [1, 2].forEach(p => cn.forEach(d => tone(chordF(d), beat * 0.4, 'triangle', 0.028, 0, T(p), mus, 0.005))); break;
+    case 'musicbox': [0, 1, 2].forEach(p => tone(chordF(cn[(p + bar) % 3], 4), beat * 0.9, 'sine', 0.03, 0, T(p), mus, 0.003)); tone(chordF(cn[1], 4) * 2.76, 0.2, 'sine', 0.006, 0, T(0), mus); break;
+    case 'power': for (let i = 0; i < m * 2; i++) [0, 4].forEach(o => tone(hz(scNote(sg, ch) + lift + (o ? 7 : 0)), beat * 0.4, 'sawtooth', 0.02, 0, T(i / 2), mus, 0.004)); break;
+  }
+  // the tune (none in the intro; quieter in the break; a soft second voice in the second part)
+  const lv = (mood === 2 ? 0.1 : mood === 0 ? 0.09 : 0.11) * (brk ? 0.65 : 1), oct = sg.l === 'cowbell' ? 12 : 0;
+  plan.ev.forEach(e => {
+    const f = hz(scNote(sg, e[1]) + lift + oct), dur = Math.max(0.12, e[2] * beat * (sg.l === 'flute' || sg.l === 'sine' || mood === 0 ? 1.1 : 0.9));
+    leadNote(sg.l, f, T(e[0]), dur, lv, mus);
+    if (part === 'B' && mood !== 3) leadNote(sg.l, hz(scNote(sg, e[1] - 2) + lift + oct), T(e[0]), dur, lv * 0.35, mus);
+  });
 }
 function musicPick(avoid) {
   if (settings.music === 'random' && avoid !== null) AU.rnd = KINDS[Math.floor(Math.random() * KINDS.length)];   // (Random: the next song can be any kind)
@@ -1964,8 +2073,12 @@ function musicPick(avoid) {
   AU.lastSong = AU.song; AU.song = s; AU.melody = genMelody(s, MOOD[AU.style]); (AU.hist || (AU.hist = [])).push([AU.style, s]); if (AU.hist.length > 30) AU.hist.shift(); AU.bar = 0; AU.songAt = AU.ctx ? AU.ctx.currentTime : 0;
   musicLabel();
 }
+function songBarShow() {   // the song name and the two buttons under the map, if the player turned them on (and music is playing)
+  const e = $('songBar'); if (!e) return; const on = !!settings.songBar && !musOff() && !!AU.song; e.classList.toggle('hide', !on); const hc = $('hudCard'); if (hc) hc.classList.toggle('sb', on);
+}
 function musicLabel() {   // the song, its kind, and which one of how many it is
   const np = $('nowPlaying'); if (!np || !AU.song) return; const list = SONGS[AU.style] || [], n = list.indexOf(AU.song) + 1;
+  const sb = $('sbName'); if (sb) sb.textContent = AU.song.name; songBarShow();
   np.textContent = ''; const b = document.createElement('b'); b.textContent = AU.song.name; const sm = document.createElement('small'); sm.textContent = KIND_NAME[AU.style] + ' · song ' + n + ' of ' + list.length; np.append(b, sm);
 }
 function musicTick() {
@@ -1974,7 +2087,7 @@ function musicTick() {
   let guard = 0;
   while (AU.nextT < AU.ctx.currentTime + 0.7 && guard++ < 4) {
     if (settings.music === 'adaptive' && (AU.bar % 2 === 0 || AU.urgent) && musicShouldMove()) { musicSwap(2.4); AU.style = AU.target; musicPick(null); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.6); AU.movedAt = AU.ctx.currentTime; }
-    musicBar(AU.nextT); AU.bar++; AU.nextT += 4 * beat;
+    musicBar(AU.nextT); AU.bar++; AU.nextT += songBeats(AU.song) * beat;
     if (AU.bar >= 32) { musicPick(AU.song); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.1); }
   }
 }
@@ -2027,7 +2140,7 @@ function musicStart() {
   if (!AU.ctx) return;
   auVol();
   const np = $('nowPlaying');
-  if (musOff()) { if (AU.style) musicSwap(); AU.style = ''; AU.song = null; if (np) np.textContent = 'Music is off'; return; }
+  if (musOff()) { if (AU.style) musicSwap(); AU.style = ''; AU.song = null; songBarShow(); if (np) np.textContent = 'Music is off'; return; }
   if (AU.song && AU.mode === settings.music) return;
   AU.mode = settings.music;
   if (AU.style) musicSwap(); musicPick(null); AU.nextT = AU.ctx.currentTime + 0.25; AU.movedAt = AU.ctx.currentTime;
@@ -3810,7 +3923,7 @@ function buildLook() {
 }
 function syncUI() {
   nameUI();
-  [['setTags', 'tags'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setShopBoth', 'shopBoth'], ['setFamily', 'family'], ['setMyName', 'myName'], ['setBaseArrow', 'baseArrow'], ['setBaseBig', 'baseBig'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
+  [['setTags', 'tags'], ['setSongBar', 'songBar'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setShopBoth', 'shopBoth'], ['setFamily', 'family'], ['setMyName', 'myName'], ['setBaseArrow', 'baseArrow'], ['setBaseBig', 'baseBig'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
@@ -3843,6 +3956,9 @@ bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $(
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
 $('btnSkip').onclick = () => { auWake(); musicSkip(1); };
 $('btnPrevSong').onclick = () => { auWake(); musicSkip(-1); };
+$('sbPrev').onclick = e => { e.stopPropagation(); auWake(); musicSkip(-1); sfx('ui'); };
+$('sbNext').onclick = e => { e.stopPropagation(); auWake(); musicSkip(1); sfx('ui'); };
+bindToggle('setSongBar', 'songBar', () => songBarShow());
 function botNote() {}
 $('setBotMax').oninput = () => { settings.botMaxOff = Math.max(1, Math.min(19, +$('setBotMax').value)); $('botMaxVal').textContent = settings.botMaxOff; save(); };
 // the important switches ask first when you turn them OFF; the small ones just switch
@@ -6047,6 +6163,8 @@ function setNet(state) {
   if (state === 'offline' || state === 'solo') setTimeout(maybeAskBots, 700);
 }
 const wantLobby = () => inHome || (!settings.mp && !party);   // on the main menu, or in your own private world: connected for friends, but not in any shared world
+let capWait = null;
+function capStop() { if (capWait) { clearInterval(capWait.t); capWait = null; } }
 function toLobby() {   // leave whatever world you were in and stay connected: friends, invites and requests keep working, and nobody sees you
   if (ws && ws.readyState === 1) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; others.clear(); lastSent = ''; }
   else if (!ws) { retry = 0; connect(); }
@@ -6302,6 +6420,7 @@ function onMsg(m) {
       }
       if (inSolo() && !m.priv) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a public world we are no longer going to)
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
+      if (capWait) { capStop(); if (!$('confirm').classList.contains('hide') && $('cfTitle').textContent === 'The game is full') { cfCb = null; cfNoCb = null; cfOptCb = null; $('confirm').classList.add('hide'); } notice('A place opened up: you are in', ''); }
       bots.length = 0; S.welcomeAt = performance.now(); S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false;
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
       if (party && !m.priv) { partyOver(''); return; }
@@ -6336,6 +6455,15 @@ function onMsg(m) {
       break;
     }
     case 'stats': net.online = m.online; net.peak = m.peak; break;
+    case 'cap': {   // everybody who can play at once is playing: wait on this screen and get in as soon as somebody leaves
+      if (inHome && !capWait) break;
+      const txt = 'All ' + m.max + ' places are taken right now. That is as many players as the server can run smoothly. You will get in by yourself as soon as somebody leaves.';
+      if (!capWait) {
+        capWait = { t: setInterval(() => { if (!capWait) return; if (inHome) { capStop(); return; } if (ws && ws.readyState === 1 && lobbyOn) joinWorld(); }, 5000) };
+        askConfirm('The game is full', txt, 'Play on your own', () => { capStop(); if (party) leaveParty(); setMultiplayer(false); }, { yesClass: 'go', no: 'Main menu', onNo: () => { capStop(); if (party) leaveParty(); quitToHome(); } });
+      } else if (!$('confirm').classList.contains('hide') && $('cfTitle').textContent === 'The game is full') $('cfText').textContent = txt;
+      break;
+    }
     case 'jno': if (m.why === 'load') { partyOver(''); askConfirm('The server is very busy', 'A lot of private games are open right now, so a new one cannot start. You can play in the public world, or switch to an offline game, and try a private game again a little later.', 'OK', null, { single: true, yesClass: 'go' }); break; }
       partyOver(m.why === 'full' ? 'That private game is full' : m.why === 'busy' ? 'Your private game is still closing. Try again in a moment' : "You can't join that private game any more"); break;
     case 'pclose': { const was = party; partyOver(''); if (was && was.role === 'guest' && !inHome) quitToHome(); { const nm = who(m.name), tell = () => askConfirm('This game has closed', nm + ' made this private game and left it, so it closed for everyone. You are back on the main menu.', 'OK', null, { single: true, yesClass: 'go' }); if (typeof saveBusy !== 'undefined' && saveBusy) { saveAfter = tell; notice('The game closed. Your copy is safe: finish saving it', ''); } else tell(); } break; }
@@ -7684,14 +7812,14 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, addGate, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
-    const sg = SONGS[kind][idx], sr = 22050, secs = bars * 4 * 60 / sg.bpm + 1.5, oc = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
+if (params && params.get('test')) window.__d = { NET, addGate, SONGS, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
+    const sg = SONGS[kind][idx], sr = 22050, secs = bars * songBeats(sg) * 60 / sg.bpm + 1.5, oc = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
     if (!AU.noiseBuf) auInit();
     const keep = { ctx: AU.ctx, mus: AU.mus, song: AU.song, style: AU.style, bar: AU.bar, melody: AU.melody };
     const comp = oc.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(oc.destination);
     const out = oc.createGain(); out.gain.value = 0.9 * 0.55; out.connect(comp);   // (the same chain as the game, at a middle volume)
     AU.ctx = oc; AU.mus = out; AU.song = sg; AU.style = kind; AU.melody = genMelody(sg, MOOD[kind]);
-    try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += 4 * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
+    try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += songBeats(sg) * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
     const buf = await oc.startRendering(); return Array.from(buf.getChannelData(0));
   }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
 setNet(settings.mp ? 'offline' : 'solo');

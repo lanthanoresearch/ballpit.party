@@ -2,6 +2,7 @@
 // Optional environment variables:
 //   PORT              port to listen on (hosts like Render/Railway set this for you)
 //   MAX_PLAYERS      players per world (default 20). When a world is full, new players open World 2, 3, ...
+//   MAX_TOTAL         players on the whole site at once (default: 40 per processor core, see below). Past that, people wait on the menu for a place
 //   MAP_OFFSET_HOURS  shift the 3-hour map schedule (default 0 => switches every 3 hours on UTC multiples of 3,
 //                     which is 12, 3, 6, 9 o'clock US Central *Standard* Time; use -1 during daylight time)
 //   STATS_FILE        where the all-time record is saved (default ./stats.json)
@@ -22,8 +23,7 @@ const P = require('./physics.js');
 const PORT = process.env.PORT || 3000;
 // what one world can hold of what people build (shared by everyone in it). Each player has their own, lower limits per item; these keep a full world quick.
 const ROOM_PROPS = 1600, ROOM_GATES = 200, ROOM_MISC = 12000, ROOM_CPS = 150, ROOM_DELS = 20000;   // (deleting is not limited for a player: the world just has to remember what was deleted)
-const MAX_PLAYERS = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);
-const PROP_SHARE = Math.floor(1600 / MAX_PLAYERS);   // crates, balls and springs every player in a world is always sure of (80 with 20 players)   // players per world: few enough that a world full of builds stays smooth for everyone
+const MAX_PLAYERS_ENV = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);   // (the real number is worked out from what this server can run, below)
 const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
 const TICK_MS = 16, SEND_CAP = 36;   // SEND_CAP: crates and balls told to each player per update at most (about 50 KB a second even when hundreds are moving)                                      // up to 60 updates per second (the world steps and is told about every 1/60 s), and only for players who actually sent something new (the client fills in the motion between them)
@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 179;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 180;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -78,6 +78,13 @@ function cgroupNum(files) { for (const fp of files) { try { const t = fs.readFil
 const CPU_LIMIT = (() => { if (+process.env.CPU_LIMIT) return +process.env.CPU_LIMIT; const v2 = cgroupNum(['/sys/fs/cgroup/cpu.max']); if (v2) { const [q, pd] = v2.split(/\s+/); if (q !== 'max' && +q > 0 && +pd > 0) return +q / +pd; }
   const q1 = +cgroupNum(['/sys/fs/cgroup/cpu/cpu.cfs_quota_us', '/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us']), p1 = +cgroupNum(['/sys/fs/cgroup/cpu/cpu.cfs_period_us', '/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_period_us']); if (q1 > 0 && p1 > 0) return q1 / p1;
   CPU_KNOWN = false; return process.env.RENDER ? 0.5 : Math.max(1, require('os').cpus().length); })();
+/* How many people can play at once, set for the worst case: everybody in every world has built everything they are allowed to and keeps running through it.
+   Measured: one such world of 20 takes about three quarters of a processor core, two take a whole core and still run smoothly, three fall behind.
+   So: 40 players for each full core (a 0.5 core plan: 20, a free 0.1 core plan: 4), and 20 in any one world. MAX_TOTAL and MAX_PLAYERS set them by hand. */
+const CPU_EFF = Math.max(0.05, Math.min(1, CPU_LIMIT));   // (one game server only ever uses one core)
+const MAX_TOTAL = Math.max(2, parseInt(process.env.MAX_TOTAL, 10) || Math.max(4, Math.min(200, Math.round(CPU_EFF * 40))));
+const MAX_PLAYERS = Math.min(MAX_PLAYERS_ENV, MAX_TOTAL);
+const PROP_SHARE = Math.floor(1600 / MAX_PLAYERS);   // crates, balls and springs every player in a world is always sure of (80 with 20 players)   // players per world: few enough that a world full of builds stays smooth for everyone
 const PAID = CPU_LIMIT > 0.15, HOURS_LIMIT = +process.env.INSTANCE_HOURS || (PAID ? Infinity : 750);   // (a paid server has no monthly hour limit)
 const MEM_LIMIT = (() => { if (+process.env.MEM_MB) return +process.env.MEM_MB * 1048576; const v = +cgroupNum(['/sys/fs/cgroup/memory.max', '/sys/fs/cgroup/memory/memory.limit_in_bytes']); if (v > 0 && v < 1e15) return v; return process.env.RENDER ? 512 * 1048576 : require('os').totalmem(); })();
 const monthKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 7), dayKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 10);
@@ -121,7 +128,7 @@ function statusNow() {
     hours: { used: +(usage.sec / 3600).toFixed(2), limit: HOURS_LIMIT, upSec: Math.round(process.uptime()) },
     cpu: { used: +health.cpu.toFixed(4), limit: CPU_LIMIT }, mem: { used: rss, limit: MEM_LIMIT },
     tick: { ms: +tickMs.toFixed(2), budget: TICK_MS, lateMs: +lateP.toFixed(1), step: SIMDT > 0.01 ? 60 : 120 },
-    players: online, rooms: [...rooms.values()].filter(r => r.players.size).length, things, moving: awake };
+    players: online, maxPlayers: MAX_TOTAL, perWorld: MAX_PLAYERS, physBudget: physBudget(), physCostMs: +phys.cost.toFixed(4), rooms: [...rooms.values()].filter(r => r.players.size).length, things, moving: awake };
 }
 
 /* ---------- tracking links (two players tracking each other) ----------
@@ -554,8 +561,13 @@ function giveBack(r, d, by) {   // a built thing is gone (deleted by anyone, or 
   if (r.own && r.own.get(pub) > 0) r.own.set(pub, r.own.get(pub) - 1);
   if (!by || by.pub !== pub) for (const q of r.players.values()) if (q.pub === pub) send(q, { t: 'pback', k: d.kind | 0 });
 }
+/* The physics share: at most about half of what this server may use goes to crates and balls moving, shared out between the worlds where a lot is moving.
+   Past that, what is nearest to the players moves first and what is further away waits its turn, so a world where everybody built everything never slows the server down. */
+const phys = { cost: 0.012, busy: 1, busyN: 0 };   // (cost: milliseconds per moving thing per step, measured as it runs)
+function physBudget() { const perStep = 1000 * 0.5 * CPU_EFF * SIMDT; return Math.max(30, Math.min(600, Math.floor(perStep / phys.busy / Math.max(0.002, phys.cost)))); }
 function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
+  phys.busy = Math.max(1, phys.busyN); phys.busyN = 0;
   for (const room of rooms.values()) {
     const act = [...room.players.values()].filter(p => p.has && !p.dead && !p.hidden && p.ws.readyState === 1);
     if (act.length) room.aloneT = 0; else room.aloneT = (room.aloneT || 0) + dtReal;
@@ -576,7 +588,9 @@ function simTick() {
         pbs.length = 0; for (const p of act) { const o = p.pbo || (p.pbo = { x: 0, y: 0 }); o.x = p.x; o.y = p.y; pbs.push(o); }
         if (room.bots) for (const bt of room.bots) if (!(bt.dead > 0)) pbs.push(bt.b);   // (where the player really is: never the point carried on ahead for pushing, so nothing is moved by a player who has not reached it)
         w.pb = pbs;   // (every player's ball is solid to everything in the world: nothing is pushed or squeezed into it)
+        w.dynBudget = physBudget(); const pt0 = performance.now();
         P.stepDyn(w, SIMDT);
+        if (w.nAct > 40) { phys.cost += ((performance.now() - pt0) / w.nAct - phys.cost) * 0.02; if (k === 0) phys.busyN++; }
         if (room.bots && room.bots.length && (SIMDT > 1 / 100 || (room.tk + k) % 2)) stepRoomBots(room, w, SIMDT > 1 / 100 ? SIMDT : SIMDT * 2);   // (bots think and move 60 times a second)
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
@@ -682,6 +696,13 @@ function addOk(p) {   // building is rate-limited as a bucket (a burst of placem
   const now = Date.now(); p.tok = Math.min(60, (p.tok === undefined ? 60 : p.tok) + (now - (p.tokT || now)) / 1000 * 25); p.tokT = now;   // (far more than anybody can build by hand: only a flood is ever turned away)
   if (p.tok < 1) return false; p.tok -= 1; return true;
 }
+const justLeft = new Map();
+function siteFull(p) {   // is the whole site full? (somebody whose connection just dropped may always come back)
+  if (p.room || online < MAX_TOTAL) return false;
+  const t = p.pub && justLeft.get(p.pub); if (t && Date.now() - t < 45000) { justLeft.delete(p.pub); return false; }
+  return true;
+}
+setInterval(() => { const t = Date.now(); for (const [k, v] of justLeft) if (t - v > 45000) justLeft.delete(k); }, 30000).unref();
 function leave(p, toLobby) {
   const room = p.room;
   if (!room && !p.lobby) return;
@@ -693,6 +714,7 @@ function leave(p, toLobby) {
   if (room) {
     p.room = null;
     online--; statsDirty = true;
+    if (p.pub && !toLobby && !p.bye) justLeft.set(p.pub, Date.now());   // (a dropped connection: their place is kept for them for a little while)
     room.players.delete(p.id);
     if (!room.priv && room.players.size === 0) { try { keepWorlds(false); } catch (e) {} }   // (the last one out: the world is written down right now, exactly as they left it)
     for (const o of room.players.values()) o.vis.delete(p.id);
@@ -747,7 +769,8 @@ wss.on('connection', (ws, req) => {
       // everybody must run exactly the same game (same physics): an out-of-date page is told to update and is not let in
       const cb = typeof m.b === 'string' ? m.b.slice(0, 20) : '';
       if (BUILD_CHECK && cb !== BUILD && cb.charAt(0) !== '_') { send(p, { t: 'update', build: BUILD }); setTimeout(() => { try { ws.close(4001, 'update'); } catch (e) {} }, 400); return; }
-      const lobby = m.lobby ? 1 : 0, wasOn = p.lobby;   // lobby: the player is only on the main menu. Connected for friends, but not in any world and nobody sees them
+      const capped = !m.lobby && siteFull(p);   // (everybody who can play at once is playing: they wait on the main menu, still connected, and get in as soon as somebody leaves)
+      const lobby = m.lobby || capped ? 1 : 0, wasOn = p.lobby;   // lobby: the player is only on the main menu. Connected for friends, but not in any world and nobody sees them
       p.color = cleanColor(m.color, '#ff4d4d'); p.color2 = cleanColor(m.color2, '#ffffff'); p.pat = cleanPat(m.pat);
       if (typeof m.dev === 'string' && DEV.test(m.dev)) { p.pub = pubOf(m.dev); p.otag = P.hash32('o:' + m.dev) & 0xffffff; }   // (otag: whose base is whose, the same number the player's device works out)
       let fr = null, room = null, priv = null;
@@ -771,6 +794,7 @@ wss.on('connection', (ws, req) => {
         room = hr; p.room = room; fr = { full: [] };
       } else if (!lobby) { fr = findRoom(); room = fr.room; p.room = room; }
       p.lobby = lobby;
+      if (capped) send(p, { t: 'cap', n: online, max: MAX_TOTAL });
       let nm = cleanName(m.name);
       if (!nm && !lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || randomName();   // everybody has a name once they play
       if (!nm && lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || '';          // (a brand-new visitor on the menu has not picked one yet: that first pick stays free)

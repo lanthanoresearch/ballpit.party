@@ -782,7 +782,15 @@
     for (let i = 0; i < L.length; i++) { const d = L[i]; if (d.burn >= 1e9 || d.x < -9000) continue;
       if (burnZone(w, d)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); } }
   }
-  let dynTick = 0, hStamp = 0; const DYN_BUDGET = 600, CELL = 64, HB = [], NONE = [], BALLSH = { x: 0, y: 0 }, PCO = [];
+  let dynTick = 0, hStamp = 0; const DYN_BUDGET = 600, CELL = 64, TOPUT = [], HB = [], NONE = [], BALLSH = { x: 0, y: 0 }, PCO = [];
+  function selectFirst(a, k) {   // puts the k things with the lowest _pri first (in any order), without sorting the whole list
+    let lo = 0, hi = a.length - 1;
+    while (lo < hi) {
+      const pv = a[(lo + hi) >> 1]._pri; let i = lo, j = hi;
+      while (i <= j) { while (a[i]._pri < pv) i++; while (a[j]._pri > pv) j--; if (i <= j) { const t = a[i]; a[i] = a[j]; a[j] = t; i++; j--; } }
+      if (k - 1 <= j) hi = j; else if (k - 1 >= i) lo = i; else break;
+    }
+  }
   function stepDyn(w, dt) {
     dynTick++; wTick = w.tick = (w.tick || 0) + 1;
     stepSee(w, dt); stepRopes(w, dt);
@@ -793,11 +801,13 @@
     if (f) {   // a very busy pile near you: only the nearest few dozen things are simulated each moment, so the game stays smooth however much has been built
       const near = [];
       for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0) continue; const n1 = d._n1 = nearF(f, d.x, d.y, FR, FR); if (d.nap || !n1) continue; near.push(d); }   // (_n1: worked out once here and used again below, nothing moves in between)
-      if (near.length > DYN_BUDGET) { for (const d of near) d._pri = distF(f, d) - (d.gr && Math.abs(d.vx) + Math.abs(d.vy) < 40 ? 0 : 1e6); near.sort((a, b) => a._pri - b._pri); for (let k = DYN_BUDGET; k < near.length; k++) near[k].skip = true; }   // (only with a truly huge crowd moving at once: what is still falling or flying is always worked out, and the farthest of what is only settling waits a moment)
+      const BUD = w.dynBudget > 0 ? w.dynBudget : DYN_BUDGET;   // (the server can set a smaller number when it is busy: what is nearest to the players moves first)
+      if (near.length > BUD) { for (const d of near) d._pri = distF(f, d) - (d.gr && Math.abs(d.vx) + Math.abs(d.vy) < 40 ? 0 : 1e6); selectFirst(near, BUD); for (let k = BUD; k < near.length; k++) near[k].skip = true; }   // (the BUD most important ones first; their order among themselves does not matter)   // (only with a truly huge crowd moving at once: what is still falling or flying is always worked out, and the farthest of what is only settling waits a moment)
     }
     let pbMove = null; if (w.pb) for (const p of w.pb) { if (p._lx === undefined || Math.abs(p.x - p._lx) + Math.abs(p.y - p._ly) > 0.5) (pbMove || (pbMove = [])).push(p); p._lx = p.x; p._ly = p.y; }
     const act = [], chk = [], movingP = w.see.length ? w.see.filter(s => s.moving > 0 && !s.gone) : NONE;
     if (!w._grid || w._grid.size > 30000) { w._grid = new Map(); w._gUsed = []; }   // (which things are where, in squares of 64px: kept from moment to moment and only emptied, so nothing new has to be made each time)
+    TOPUT.length = 0;
     const grid = w._grid, used = w._gUsed; for (let i = 0; i < used.length; i++) used[i].length = 0; used.length = 0;
     const put = d => { const e = d.r || Math.max(d.hw, d.hh) * 1.42; for (let cx = Math.floor((d.x - e) / CELL); cx <= Math.floor((d.x + e) / CELL); cx++) for (let cy = Math.floor((d.y - e) / CELL); cy <= Math.floor((d.y + e) / CELL); cy++) { const k = (cx + 4) * 65536 + cy + 4; let g = grid.get(k); if (!g) grid.set(k, g = []); if (!g.length) used.push(g); g.push(d); } };
     const H = (x0, y0, x1, y1) => { const r = HB; r.length = 0; const st = ++hStamp; for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) { const g = grid.get((cx + 4) * 65536 + cy + 4); if (g) for (let j = 0; j < g.length; j++) { const o = g[j]; if (o._hT !== st) { o._hT = st; r.push(o); } } } return r; };
@@ -808,7 +818,7 @@
       if (d.im === undefined) { const I = d.r ? 0.5 * d.m * d.r * d.r : d.m * (d.hw * d.hw + d.hh * d.hh) / 3; d.im = 1 / d.m; d.ii = d.kind === 5 || d.kind === 6 ? 0 : 1 / I; if (d.av === undefined) d.av = 0; }
       if (d.sq > 0) d.sq = Math.max(0, d.sq - dt);
       d._far = !!f && !d._n1;
-      if (!d._far || !d.nap || farAwake || nearF(f, d.x, d.y, FR + 300, FR + 300)) put(d);   // (what rests far from everybody is not even looked at: nothing near anybody can touch it)
+      if (!d._far || !d.nap || farAwake || nearF(f, d.x, d.y, FR + 300, FR + 300)) TOPUT.push(d);   // (what rests far from everybody is not even looked at: nothing near anybody can touch it)
       if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if (d.farT > 30 && (d.gr || d.farT > 90)) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (only something that is on the ground: nothing is ever stopped in mid-air) */   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
       if (d._far && d.nap) { d.sleep = true; continue; }   // far from everybody and at rest: nothing to work out
       if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
@@ -820,9 +830,11 @@
       if (d.nap && movingP.length && movingP.some(s => Math.abs(s.cx - d.x) < s.hl + 60 && Math.abs(s.cy - d.y) < s.hl + 80)) { d.nap = false; d.st = 0; }   // (a plank that moves wakes what rests on it)
       if (d.nap && w.ropes.length && w.ropes.some(r => r.moving > 0 && !r.gone && d.x > r.ax - 40 && d.x < r.bx + 40 && Math.abs(ropeAt(r, d.x).y - d.y) < 90 && Math.abs(ropeAt(r, d.x).vy) > 15)) { d.nap = false; d.st = 0; }   // (and so does a rope bridge that swings)
       if (d.nap && pbMove && pbMove.some(p => Math.abs(p.x - d.x) < (d.r || d.hw * 1.42) + R + 6 && Math.abs(p.y - d.y) < (d.r || d.hw * 1.42) + R + 6)) { d.nap = false; d.st = 0; }   // (a player moving right by something resting on them or against them wakes it: it falls or rolls the moment they move away)
-      if (d.nap) { if (!d._far && (dynTick + i) % 15 === 0) chk.push(d); continue; }
+      if (d.nap) { if (!d._far && dynTick % 15 === 0) chk.push(d); continue; }   // (all together every 15th step, so the squares are filled in once for all of them)
       d._dyn = true; act.push(d);
     }
+    if (act.length || chk.length) for (let i = 0; i < TOPUT.length; i++) put(TOPUT[i]);   // (the squares are only filled in when something is going to look in them: a world where everything rests costs next to nothing)
+    TOPUT.length = 0;
     for (const d of chk) if (!hasSupport(w, d, H)) { d.nap = false; d.st = 0; d._dyn = true; act.push(d); }   // (something resting checks now and then that it is still held up)
     w.nAct = act.length;
     if (!act.length) { turnSee(w, dt); return; }
@@ -1626,7 +1638,7 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 179, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 180, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
