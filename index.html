@@ -302,6 +302,7 @@
     #mm{width:110px;height:74px}
     #settings{right:6px;top:50px;top:calc(50px + env(safe-area-inset-top));width:min(380px,calc(100vw - 12px));max-height:calc(100% - 56px)}
     .tabs button span{font-size:11px}
+    .tabs button[data-tab="notify"] span:last-child{font-size:9px;letter-spacing:-.2px}
     #timer.final{transform:scale(1.9)}
     #notice{top:80px;font-size:14px}
     .card{padding:14px 16px}.card h1{font-size:28px}.card p{font-size:15px}
@@ -796,7 +797,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 178; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 179; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1061,6 +1062,7 @@
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Mode</span></button>
     <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
+    <button data-tab="notify"><span data-ic="bell"></span><span>Notifications</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
   </div>
   <div class="sbody">
@@ -1204,13 +1206,15 @@
       <h4 id="lpNewsH" class="hide"><span data-ic="check"></span> Answers to your requests</h4><div id="lpNews"></div>
       <h4 id="lpOutH" class="hide"><span data-ic="clock"></span> Waiting for an answer</h4><div id="lpOut"></div>
       <button class="btn full prim" id="btnAddF" type="button"><span data-ic="search"></span>Add a friend</button>
-      <h4 class="hide"><span data-ic="bell"></span> Notifications</h4>
-      <label class="sw2 ic2 hide"><span class="ti"><span data-ic="bell"></span><span><b>Notifications</b><small id="ntSub">Reach you here, even when the game is closed</small></span></span><input type="checkbox" id="setNotify"><i></i></label>
+    </section>
+    <section class="pane" data-pane="notify">
+      <div class="small dim" style="margin:2px 0 8px">Get a notification on this device, even when the game is closed. Off until you turn it on. On iPhone and iPad, add the game to your Home Screen first (Share, then Add to Home Screen) and open it from there.</div>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bell"></span><span><b>Notifications</b><small id="ntSub">Reach you here, even when the game is closed</small></span></span><input type="checkbox" id="setNotify"><i></i></label>
       <div id="ntKinds" class="hide">
         <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Friends come online</b><small>A friend you track starts playing</small></span></span><input type="checkbox" id="setNFriends"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Friend requests</b><small>Someone asks you, or answers you</small></span></span><input type="checkbox" id="setNRequests"><i></i></label>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="share"></span><span><b>Game invites</b><small>A friend invites you to their private game</small></span></span><input type="checkbox" id="setNInvites"><i></i></label>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>New map</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="share"></span><span><b>Game invites</b><small>Someone invites you to their private game</small></span></span><input type="checkbox" id="setNInvites"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Map changes</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
         <button class="btn full" id="ntTest" type="button"><span data-ic="bell"></span>Send a test notification</button>
       </div>
     </section>
@@ -1445,8 +1449,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=178"></script>
-<script src="physics.js?v=178"></script>
+<script src="maps.js?v=179"></script>
+<script src="physics.js?v=179"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1492,7 +1496,7 @@ function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
-    notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: false,
+    notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: true,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'adaptive', musicVol: 0.5,
     boost: true, boostAuto: false, boostBtn: true, boostPull: false, joy: true, superBtn: true, btnMul: {},
@@ -1531,7 +1535,6 @@ function normalize() {
   if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);
   settings.finArrow = settings.finArrow !== false; delete settings.finMode;
   if (['live', 'morning', 'midday', 'night'].indexOf(settings.tod) < 0) settings.tod = 'live';
-  settings.notify = false;   // (notifications outside the game are switched off for now)
   settings.soloLen = 0;   // your own world never runs out: it stays until you reset that level
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
@@ -3724,7 +3727,7 @@ $('btnRespawn').onclick = () => { resetPress(); };
 // tabs
 const tabBtns = $('tabs').querySelectorAll('button');
 let curTab = 'controls';
-const HOME_TABS = ['sound', 'online', 'more'];   // (on the main menu: sound, mode and more. Controls, display and friends are for when you are playing; more is only on the main menu)
+const HOME_TABS = ['sound', 'online', 'notify', 'more'];   // (on the main menu: sound, mode and more. Controls, display and friends are for when you are playing; more is only on the main menu)
 const tabLocked = n => (n === 'you' ? false : (typeof inHome !== 'undefined' && inHome) ? HOME_TABS.indexOf(n) < 0 : n === 'more') || (n === 'friends' && !!settings.offline && !settings.mp) || (n === 'bots' && !!settings.mp);
 const firstTab = () => { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'); if (!tabLocked(n)) return n; } return 'controls'; };   // (Offline has no friends, Public has no bots: those tabs stay in their place, greyed out)
 function tabLocks() { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'), L = tabLocked(n); tabBtns[i].classList.toggle('locked', L); tabBtns[i].disabled = L; tabBtns[i].setAttribute('aria-disabled', L ? 'true' : 'false'); } if (tabLocked(curTab)) showTab(firstTab()); }
@@ -5780,7 +5783,7 @@ function ntRender() {
   const on = notifOK() ? Notification.permission !== 'denied' : false;
   $('setNotify').checked = !!settings.notify && notifOn();
   $('setNotify').disabled = !on && !settings.notify;
-  $('ntSub').textContent = !notifOK() ? 'Not available on this device or browser' : Notification.permission === 'denied' ? 'Blocked. Allow notifications for ballpit.party in your browser settings' : settings.notify && pushState === 'fail' ? 'On while the game is open. This browser cannot wake a closed game' : 'Reach you here, even when the game is closed';
+  $('ntSub').textContent = !notifOK() ? (/iPhone|iPad|iPod/.test(navigator.userAgent) ? 'Add the game to your Home Screen, open it from there, then turn this on' : 'Not available on this device or browser') : Notification.permission === 'denied' ? 'Blocked. Allow notifications for ballpit.party in your browser settings' : settings.notify && pushState === 'fail' ? 'On while the game is open. This browser cannot wake a closed game' : 'Reach you here, even when the game is closed';
   $('ntKinds').classList.toggle('hide', !(settings.notify && notifOn()));
   [['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps']].forEach(p => { $(p[0]).checked = !!settings[p[1]]; });
 }
