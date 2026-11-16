@@ -779,7 +779,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 169; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 172; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1428,8 +1428,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=169"></script>
-<script src="physics.js?v=169"></script>
+<script src="maps.js?v=172"></script>
+<script src="physics.js?v=172"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2353,8 +2353,8 @@ const powBack = key => { let h = 7; const t = String(key); for (let i = 0; i < t
 const POW_INFO = [['Sushi!', 'Your boost is full for a minute: boost any time'], ['Flowers!', 'Super jumps for a minute']];
 function allPowers() {   // [x, y, type, key]: the map's own power-ups, then the ones people bought and set down (each comes back for you 5 to 10 minutes after you take it)
   const out = [], ps = S.map.powers || [];
-  for (let i = 0; i < ps.length; i++) out.push([ps[i][0], ps[i][1], ps[i][2], i]);
-  const pw = S.world && S.world.pwrs; if (pw) for (const p of pw) if (!p.gone) out.push([p.x, p.y, p.t, 'p' + p.tx + ',' + p.ty]);
+  for (let i = 0; i < ps.length; i++) if (!buriedAt(ps[i][0], ps[i][1])) out.push([ps[i][0], ps[i][1], ps[i][2], i]);
+  const pw = S.world && S.world.pwrs; if (pw) for (const p of pw) if (!p.gone && !buriedAt(p.x, p.y)) out.push([p.x, p.y, p.t, 'p' + p.tx + ',' + p.ty]);
   return out;
 }
 function collectPowers() {
@@ -2368,13 +2368,17 @@ function collectPowers() {
     notice(POW_INFO[p[2]][0] + ' ' + POW_INFO[p[2]][1], '');
   }
 }
+function buriedAt(x, y) {   // built ground (dirt, ice and the rest) over a coin, diamond or power-up hides it: dig it out to get it
+  const w = S.world; if (!w) return false; const t = P.tile(w, Math.floor(x / TS), Math.floor(y / TS));
+  return t === 1 || t === 3 || t === 4 || t === 6 || t === 9;
+}
 function collectCoins() {
   const cs = S.map.coins, b = S.b; if (!cs.length) return;
   let lo = 0, hi = cs.length; const x0 = b.x - 36;
   while (lo < hi) { const mid = (lo + hi) >> 1; if (cs[mid][0] < x0) lo = mid + 1; else hi = mid; }
   for (let i = lo; i < cs.length && cs[i][0] <= b.x + 36; i++) {
     if (S.coinGot[i]) continue;
-    const c = cs[i], dx = c[0] - b.x, dy = c[1] - b.y;
+    const c = cs[i], dx = c[0] - b.x, dy = c[1] - b.y; if (dx * dx + dy * dy <= 32 * 32 && buriedAt(c[0], c[1])) continue;
     if (dx * dx + dy * dy > 32 * 32) continue;
     S.coinGot[i] = 1; wDirty = true;
     const v = c[2] === 2 ? 25 : c[2] === 1 ? 5 : 1; S.coinN += v;
@@ -3524,7 +3528,7 @@ $('btnOk').onclick = () => { auWake(); settings.intro = !$('dontShow').checked; 
 const GUIDE = [
   ['ground', 'Ground', 'Safe to roll and stand on.', 1], ['ice', 'Ice', 'Slippery: hard to stop on.', 1], ['lava', 'Lava', 'Burns you: back to your checkpoint or the start.', 1], ['water', 'Water', 'Hold jump to swim up.', 1],
   ['coin', 'Coin', 'Roll through it. Coins buy things to build.', 1], ['gem', 'Diamond', 'Rarer. Needed for the bigger builds.', 1], ['checkpoint', 'Checkpoint', 'Touch it: your next fall brings you back here.', 1], ['finish', 'Finish flag', 'Reach it to win the level.', 1],
-  ['crate', 'Crate', 'Push it, stack it, climb it.', 1], ['ball', 'Ball', 'Rolls when you bump it.', 1], ['ring', 'No-build circle', 'Around the start and the finish. Nothing can be built or left inside it.', 1], ['sushi', 'Sushi', 'For a minute your boost is always full: boost whenever you like. The ring turns cyan and ticks down. You can buy one too (Travel).', 1], ['flowers', 'Flower bouquet', 'A minute where every jump can be an extra tall one. The ring turns pink. You can buy one too (Travel).', 1],
+  ['crate', 'Crate', 'Push it, stack it, climb it.', 1], ['ball', 'Ball', 'Rolls when you bump it.', 1], ['ring', 'No-build circle', 'Around the start and the finish. Nothing can be built or left inside it.', 1], ['sushi', 'Sushi', 'For a minute your boost is always full: boost whenever you like. The ring turns cyan and ticks down. You can buy one too (Special).', 1], ['flowers', 'Flower bouquet', 'A minute where every jump can be an extra tall one. The ring turns pink. You can buy one too (Special).', 1],
   ['bigcoin', 'Big coin', 'Worth more than a small one.', 0], ['bigcrate', 'Big crate', 'Heavy: takes a run-up to shove.', 0], ['bigball', 'Big ball', 'Heavy and rolls far.', 0],
   ['spring', 'Spring', 'Land on it to bounce high.', 0], ['superspring', 'Super spring', 'Bounces you very, very high.', 0], ['booster', 'Floor booster', 'Roll over it and it throws you forward.', 0], ['groundspring', 'Ground spring', 'Set in the ground: land on it to bounce up.', 0],
   ['teeter', 'Teeter-totter', 'Tips with whatever is on it.', 0], ['bigteeter', 'Big teeter-totter', 'Longer: reaches further and flings harder.', 0], ['portal', 'Portals', 'Roll into one, come out of its partner.', 0],
@@ -3559,7 +3563,7 @@ function guideRender() {
   if (typeof GUIDE_IMG !== 'undefined' && !GUIDE_IMG.sushi) { for (const [k, n] of [['sushi', 0], ['flowers', 1]]) { try { const c = document.createElement('canvas'); c.width = 240; c.height = 150; const g2 = c.getContext('2d'); const gr = g2.createLinearGradient(0, 0, 0, 150); gr.addColorStop(0, '#8fd0f0'); gr.addColorStop(1, '#bfe6f7'); g2.fillStyle = gr; g2.fillRect(0, 0, 240, 150); g2.fillStyle = '#8a6a46'; g2.fillRect(0, 118, 240, 32); g2.fillStyle = '#5bbf5a'; g2.fillRect(0, 112, 240, 8); drawPowerIcon(g2, 120, 70, n, 58, 0); GUIDE_IMG[k] = c.toDataURL(); } catch (e) {} } }
   g.querySelectorAll('.gimg').forEach(e => { if (!e.style.backgroundImage && typeof GUIDE_IMG !== 'undefined' && GUIDE_IMG[e.dataset.k]) e.style.backgroundImage = 'url(' + GUIDE_IMG[e.dataset.k] + ')'; });
   const tips = ['Roll one way for a while and a ring fills above your ball: then you can boost.', settings.powerJump ? 'Jump three times in a row, each right as you land, and a ring fills around your ball: the next jump is extra tall.' : null,
-    'Coins and diamonds buy crates, springs, bridges, portals and more from the build menu. Build anywhere outside the no-build circles.', 'Build a Base (in Travel) for your own hideout: stand on dirt or ice, with nothing that is not yours in the circle. Only you can build or delete inside it. It is in your colours, an arrow points back to it, and it shows on the map.', 'Touch a checkpoint and your next fall brings you back to it once.',
+    'Coins and diamonds buy crates, springs, bridges, portals and more from the build menu. Build anywhere outside the no-build circles.', 'Build a Base (in Special) for your own hideout: stand on dirt or ice, with nothing that is not yours in the circle. Only you can build or delete inside it. It is in your colours, an arrow points back to it, and it shows on the map.', 'Touch a checkpoint and your next fall brings you back to it once.',
     off ? null : 'Add friends in Friends to see where they are on the map. A crown marks anyone who has finished.', 'Chat: tap the speech bubble and type. A message shows over your head for a few seconds, and stays in the chat window for a minute. In People you can give coins and diamonds to someone (never more than you have).'].filter(Boolean);
   $('gTips').innerHTML = tips.map(t => '<li>' + t + '</li>').join('');
 }
@@ -4349,7 +4353,7 @@ const SHOP = [
   { cat: 'coins', id: 'dig', name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal, flag or power-up, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first. Use it as often as you like.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
   { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock and melts ice into water. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
-const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['travel', 'Travel'], ['terrain', 'Terrain'], ['coins', 'More']];
+const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['travel', 'Special'], ['terrain', 'Terrain'], ['coins', 'More']];
 let shopTab = 'blocks';
 const shopIcon = id => {
   const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
@@ -6867,6 +6871,7 @@ function drawCoins(camL, camT, vw, vh) {
   const t = S.t; ctx.lineWidth = 2; ctx.strokeStyle = INK;
   for (let i = lo; i < cs.length && cs[i][0] <= camL + vw + 30; i++) {
     if (got[i]) continue;
+    if (buriedAt(cs[i][0], cs[i][1])) continue;   // (under built ground: hidden until it is dug out)
     const c = cs[i], y = c[1] + Math.sin(t * 3 + c[0] * 0.05) * 2.5;
     if (y < camT - 30 || y > camT + vh + 30) continue;
     const k = c[2], sp = Math.abs(Math.cos(t * 3.2 + c[0] * 0.03)) * 0.8 + 0.2;
@@ -7395,14 +7400,16 @@ function drawMinimapBig() {
   g.globalAlpha = 1;
   mbTilesDraw(g, L, T, Rr, B, z, cw, ch);
   drawThings(g, X, Y, z, L, T, Rr, B);
-  if (z >= 1.5) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
+  if (z >= 1.5) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B || buriedAt(q[0], q[1])) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = X(c[0] + 0.5), y = Y(c[1]); if (x < 0 || y < 0 || x > cw || y > ch) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.8, y - 12, 2, 12); g.beginPath(); g.moveTo(x + 1, y - 12); g.lineTo(x + 10, y - 9); g.lineTo(x + 1, y - 6); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 0.8; g.stroke(); });
   { const dr = tinyR(z), fr = friendsOnMap();   /* everybody else is drawn to scale, tiny when zoomed out */
     const dotAt = (x, y, col, sp, big) => { const rr = big ? Math.max(6, dr * 1.9) : dr; if (rr >= 5 && sp) g.drawImage(sp, X(x / TS) - rr, Y(y / TS) - rr, rr * 2, rr * 2); else { g.fillStyle = col; g.beginPath(); g.arc(X(x / TS), Y(y / TS), rr, 0, TAU); g.fill(); if (rr > 2.4) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 0.8; g.stroke(); } } };
     if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; dotAt(bt.b.x, bt.b.y, bt.color, dr >= 5 || settings.mmBigB ? sprite(HEX.test(bt.color) ? bt.color : '#ccc', HEX.test(bt.color2) ? bt.color2 : '#ffffff', (bt.pat | 0) % PATTERNS.length) : null, settings.mmBigB); });   // (drawn exactly like a player)
     if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) dotAt(q.x, q.y, o.color, dr >= 5 || settings.mmBigP ? sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length) : null, settings.mmBigP); });
   }
-  { const ps = allPowers(), now = Date.now(); for (let i = 0; i < ps.length; i++) { if (S.powGot && (S.powGot[ps[i][3]] || 0) > now) continue; drawPowerIcon(g, X(ps[i][0] / TS), Y(ps[i][1] / TS), ps[i][2], 11, 0); } }   // (the power-ups on the big map)
+  if (z >= 1.5) { const ps = allPowers(), now = Date.now(), rr = Math.max(1.5, z * 0.22);   // (power-ups on the big map: drawn to scale like the coins, and gone at the same zoom as them)
+    for (let i = 0; i < ps.length; i++) { if (S.powGot && (S.powGot[ps[i][3]] || 0) > now) continue; const tx = ps[i][0] / TS, ty = ps[i][1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue;
+      if (rr >= 3.5) drawPowerIcon(g, X(tx), Y(ty), ps[i][2], rr * 2, 0); else { g.fillStyle = ps[i][2] ? '#ff7ab8' : '#7ff0ff'; g.beginPath(); g.arc(X(tx), Y(ty), rr, 0, TAU); g.fill(); } } }
   drawLinksOnMap(g, X, Y, 9, true, false);
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
   const bon = mapFin();
