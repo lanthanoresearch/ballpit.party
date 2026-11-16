@@ -585,11 +585,17 @@
   body.uedit #feed::before{content:'Chat and joins show here';display:block;padding:4px 10px;font-size:13px;color:#fff;background:rgba(255,210,61,.18);border:2px dashed #ffd23d;border-radius:8px;text-align:center}
   #feed{transform-origin:top right}
   body.uedit #stack{pointer-events:auto!important;cursor:move;touch-action:none;min-width:180px}body.uedit #stack *{pointer-events:none!important}
-  body.uedit #infoWrap,body.uedit #mm,body.uedit #corner,body.uedit #stLine{pointer-events:auto!important;outline:2px dashed #ffd23d;outline-offset:3px;cursor:move;touch-action:none}
-  body.uedit #infoWrap *,body.uedit #corner *,body.uedit #stLine *{pointer-events:none!important}
+  body.uedit #hudCard,body.uedit #corner,body.uedit #stLine{pointer-events:auto!important;outline:2px dashed #ffd23d;outline-offset:3px;cursor:move;touch-action:none}
+  body.uedit #hudCard *,body.uedit #corner *,body.uedit #stLine *{pointer-events:none!important}
   body.uedit .usel{outline:3px solid #ffd23d!important}body.uedit #corner .ibtn{outline:1px dashed rgba(255,210,61,.6);outline-offset:2px}body.uedit #corner .ibtn.usel{outline:3px solid #7ff0ff!important;outline-offset:3px}body.uedit .ubad{outline-color:#ff4d4d!important}
   #editbar.ebdown{top:auto;bottom:max(8px,env(safe-area-inset-bottom))}#ebSwap{padding:4px 8px}#ebSwap svg{width:18px;height:18px}
-  #infoWrap,#mm,#corner,#stLine{transform-origin:top left}#corner{transform-origin:top right}
+  /* the info and the mini map are one card: they grow together and move together */
+  #hl>.hudcard{width:var(--hlw);box-sizing:border-box;flex:none;align-self:flex-start}
+  .hudcard{position:relative;pointer-events:none;display:flex;flex-direction:column;background:var(--paper);border:2px solid var(--line);border-radius:var(--wob);box-shadow:3px 4px 0 rgba(0,0,0,.35)}
+  .hudcard #info{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0}
+  .hudcard #mm{border:0!important;border-top:2px solid var(--line)!important;border-radius:0 0 calc(var(--wob,12px) - 2px) calc(var(--wob,12px) - 2px)!important;margin:0!important;width:100%!important;height:auto!important;aspect-ratio:170/110}
+  .hudcard #mm.hide,.hudcard #mm[hidden]{display:none}
+  #hudCard,#corner,#stLine{transform-origin:top left}#corner{transform-origin:top right}
   .sw2.always{cursor:default}
   #editbar{touch-action:none}#editbar input[type=range]{touch-action:none;height:28px}
   #pickPop{z-index:13;background:rgba(10,8,16,.72)}
@@ -770,7 +776,7 @@
   #top>#stack>#worldpop,#top>#stack>#notice,#top>#stack>#beaconbar{position:static!important;transform:none!important;left:auto!important;top:auto!important;box-shadow:0 6px 18px rgba(0,0,0,.45)}
   #top>#stack>#notice.show{animation:popin .28s cubic-bezier(.2,1.5,.4,1)}#top>#stack>#worldpop:not(.hide){animation:popin .28s cubic-bezier(.2,1.5,.4,1)}
   @keyframes popin{0%{opacity:0;scale:.7}100%{opacity:1;scale:1}}
-  @media (max-aspect-ratio:1/1) and (max-width:700px){#top>#stack{top:max(24vh,calc(env(safe-area-inset-top) + 200px))!important}}   /* (a phone held upright: just under the info at the top, over the game) */
+  @media (max-aspect-ratio:1/1) and (max-width:700px){#top>#stack{top:var(--stTop,max(24vh,calc(env(safe-area-inset-top) + 200px)))!important}}   /* (a phone held upright: just under the info at the top, over the game) */
   @media (min-aspect-ratio:1/1),(min-width:701px){body:has(#timer.final) #top>#stack{top:max(110px,calc(env(safe-area-inset-top) + 100px))!important}}
 </style>
 </head>
@@ -782,7 +788,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 173; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 174; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -964,7 +970,7 @@
 <div id="dflash"></div>
 
 <div id="top"><div id="hl">
-  <div id="infoWrap">
+  <div id="hudCard" class="hudcard"><div id="infoWrap">
     <div id="info" class="paper" title="Map info">
       <div id="infoTop"><div id="netstat"><i></i><span id="netText">Checking</span></div></div>
       <span id="onl"></span>
@@ -981,7 +987,7 @@
       <div class="nx"><span id="tpNext"></span></div>
     </div>
   </div>
-  <canvas id="mm" width="170" height="110"></canvas>
+  <canvas id="mm" width="170" height="110"></canvas></div>
   <div id="stLine" class="hide" aria-live="off"></div>
 </div>
 <div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="msgDemo" class="paper hide">Messages pop up here</div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
@@ -1431,8 +1437,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=173"></script>
-<script src="physics.js?v=173"></script>
+<script src="maps.js?v=174"></script>
+<script src="physics.js?v=174"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1502,7 +1508,9 @@ function normalize() {
   delete settings.uiScale;
   delete settings.cornerLayout; delete settings.cornerBig; delete settings.cornerMed; delete settings.cornerSide;   // (the corner layouts became Edit UI)
   settings.chatQuick = Array.isArray(settings.chatQuick) ? settings.chatQuick.filter(t => typeof t === 'string').map(t => t.replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean).slice(0, 10) : null;   // (your quick chat messages: null means the starting set)
-  { const L = settings.uiL, o = {}; if (L && typeof L === 'object') for (const k of ['info', 'mm', 'corner']) { const q = L[k]; if (q && isFinite(+q.x) && isFinite(+q.y)) o[k] = { x: Math.round(+q.x), y: Math.round(+q.y), s: clamp(+q.s || 1, 0.5, 1.8) }; } settings.uiL = o; }
+  { const L = settings.uiL, o = {}; if (L && typeof L === 'object') for (const k of ['info', 'stats', 'corner', 'msgs', 'feed']) { const q = L[k]; if (q && isFinite(+q.x) && isFinite(+q.y)) o[k] = { x: Math.round(+q.x), y: Math.round(+q.y), s: clamp(+q.s || 1, 0.5, 1.8) }; }
+    if (L && L.cb && typeof L.cb === 'object') { const cb = {}; for (const k of ['reset', 'pause', 'build', 'chat']) { const q = L.cb[k]; if (q && isFinite(+q.x) && isFinite(+q.y)) cb[k] = { x: Math.round(+q.x), y: Math.round(+q.y), s: clamp(+q.s || 1, 0.6, 2) }; } if (Object.keys(cb).length) o.cb = cb; }   // (the corner buttons each moved on their own)
+    settings.uiL = o; }
   settings.botMaxOff = clamp(Math.round(+settings.botMaxOff), 1, 19); if (!isFinite(settings.botMaxOff)) settings.botMaxOff = 6;
   settings.sfxVol = clamp(+settings.sfxVol, 0, 1); if (!isFinite(settings.sfxVol)) settings.sfxVol = 0.7;
   settings.musicVol = clamp(+settings.musicVol, 0, 1); if (!isFinite(settings.musicVol)) settings.musicVol = 0.5;
@@ -3363,7 +3371,7 @@ function releaseInputs() {   // entering or leaving full screen cancels touches 
 
 // ----- moving and resizing the screen info: the info panel, the mini map, the stats line and the corner buttons (as a group, or each button on its own).
 // Every piece has a box of room a little bigger than itself; the touch buttons have a square of room each. Neither may go on the other's room, anywhere on the screen -----
-const UIP = { info: 'infoWrap', mm: 'mm', stats: 'stLine', corner: 'corner', msgs: 'stack', feed: 'feed' }, UIN = { info: 'Info panel', mm: 'Mini map', stats: 'Stats', corner: 'Corner buttons', msgs: 'Messages', feed: 'Chat and joins' };
+const UIP = { info: 'hudCard', stats: 'stLine', corner: 'corner', msgs: 'stack', feed: 'feed' }, UIN = { info: 'Info and map', stats: 'Stats', corner: 'Corner buttons', msgs: 'Messages', feed: 'Chat and joins' };
 const CBN = { reset: 'Reset button', pause: 'Pause button', build: 'Build button', chat: 'Chat button' };
 const UI_M = 8, BTN_M = 8;   // (the extra room around each piece, and around each touch button)
 const uiZ = () => { try { return parseFloat(getComputedStyle($('top')).zoom) || 1; } catch (e) { return 1; } };
@@ -3392,13 +3400,14 @@ function applyUiL() {
   for (const k in UIP) {
     const e = $(UIP[k]); if (!e) continue; const o = L[k];
     const put = k === 'msgs' ? () => { const st = e.style; st.setProperty('--mx', ((o ? o.x : 0) / z) + 'px'); st.setProperty('--my', ((o ? o.y : 0) / z) + 'px'); st.setProperty('--ms', String((o && o.s) || 1)); }   // (the message zone is placed by the page's own rule: it only gets nudged)
+      : k === 'info' ? () => { const sc = o.s || 1; e.style.zoom = sc === 1 ? '' : String(sc); e.style.transform = 'translate(' + (o.x / z / sc) + 'px,' + (o.y / z / sc) + 'px)'; }   // (the info card really grows, so what sits under it, like the stats, moves down instead of being covered)
       : () => { e.style.transform = 'translate(' + (o.x / z) + 'px,' + (o.y / z) + 'px) scale(' + (o.s || 1) + ')'; };
-    if (!o) { if (k === 'msgs') put(); else e.style.transform = ''; continue; }
+    if (!o) { if (k === 'msgs') put(); else { e.style.transform = ''; if (k === 'info') e.style.zoom = ''; } continue; }
     put(); const r = e.getBoundingClientRect(); if (r.width < 2) continue;
     let dx = 0, dy = 0; if (r.left < 2) dx = 2 - r.left; else if (r.right > W - 2) dx = W - 2 - r.right; if (r.top < 2) dy = 2 - r.top; else if (r.bottom > H - 2) dy = H - 2 - r.bottom;   // (never off the screen, even after turning the phone)
     if (dx || dy) { o.x = Math.round(o.x + dx); o.y = Math.round(o.y + dy); put(); }
   }
-  const mm = $('mm'), sk = Math.min(3, Math.max(1, ((L.mm && L.mm.s) || 1) * (devicePixelRatio || 1)));   // (a bigger map gets a sharper picture of the same area)
+  const mm = $('mm'), sk = Math.min(3, Math.max(1, ((L.info && L.info.s) || 1) * (devicePixelRatio || 1)));   // (a bigger map gets a sharper picture of the same area)
   if (Math.abs((mm._k || 1) - sk) > 0.01) { mm._k = sk; mm.width = Math.round(170 * sk); mm.height = Math.round(110 * sk); }
 }
 function uiOk(k) {   // on the screen, never on a touch button's room, never on another piece
@@ -3470,7 +3479,7 @@ Object.keys(UIP).forEach(k => {
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   }, true);
 });
-addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#infoWrap,#mm,#corner,#stLine,#stack,#feed')) { e.stopPropagation(); e.preventDefault(); } }, true);
+addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#hudCard,#corner,#stLine,#stack,#feed')) { e.stopPropagation(); e.preventDefault(); } }, true);
 // with a keyboard: Tab picks the next piece, the arrows move it (hold Shift for big steps), + and - resize it, Enter or Esc is done
 addEventListener('keydown', e => {
   if (!edSess || !uiEdit) return;
@@ -3492,6 +3501,12 @@ $('ebSwap').onclick = () => { ebSwapped = !ebSwapped; edZone(); };
 $('btnEditUi').onclick = () => startEdit(true);
 $('btnResetUi').onclick = askResetUi;
 addEventListener('resize', () => setTimeout(() => { applyUiL(); if (edSess) edZone(); }, 60));
+function stackSpot() {   // on a phone held upright, messages pop up just under whatever is at the top of the screen (the info card and the stats as they are now), never over them
+  const st = $('stack'); if (!st) return; let b = 0; const z = uiZ();
+  for (const id of ['hudCard', 'stLine', 'corner']) { const e = $(id); if (!e || e.classList.contains('hide')) continue; const r = e.getBoundingClientRect(); if (r.width > 2 && r.top < innerHeight * 0.45) b = Math.max(b, r.bottom); }
+  const v = b ? Math.round((b + 8) / z) + 'px' : ''; if (st._tp !== v) { st._tp = v; if (v) st.style.setProperty('--stTop', v); else st.style.removeProperty('--stTop'); }
+}
+setInterval(stackSpot, 700);
 setTimeout(applyUiL, 0);
 
 /* ================= UI: popups, settings tabs, drop-downs, colours ================= */

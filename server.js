@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 173;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 174;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -142,7 +142,7 @@ const claimsOf = new Map();   // pub -> Set(pub): what each device says it is li
 const byPub = new Map();      // pub -> connected player
 const pend = new Map();       // "from>to" -> { t }
 const news = new Map();       // pub -> [{ p, ok, t }]: answers to this player's friend requests that came while they were away (yes or not now), kept until their device says it has seen them
-let linksDirty = false;
+let linksDirty = false, knownDirty = false, linksSavedAt = 0;   // (knownDirty: only when people were last seen or their colours changed. That is written out at most every 5 minutes, so players arriving cost the server almost nothing)
 const DAY = 24 * 3600 * 1000, REQ_TTL = 3 * DAY;   // a friend request waits three days for an answer, then it is dropped
 const known = new Map();      // pub -> { name, color, last, nameAt }: everyone who has ever been here, so they can be searched for later
 const CODE_CH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // short codes skip look-alike letters (no I, L, O, 0, 1)
@@ -212,7 +212,8 @@ try {
   if (seed) { try { const d = crypto.createHash('sha256').update('ballpit-vapid:' + seed).digest(), e = crypto.createECDH('prime256v1'); e.setPrivateKey(d); dv = makeVapid(b64u(e.getPublicKey()), b64u(d)); } catch (x) { dv = null; } }   // (the same keys every time this server starts, even with nothing saved: phones signed up for notifications keep getting them)
   if (ev) vapid = ev; else if (dv) vapid = dv; else if (!vapid) { vapid = newVapid(); linksDirty = true; } }   // (keys from the settings win; otherwise they are made once and kept with the saved links)
 function saveLinks(sync) {
-  if (!linksDirty) return; linksDirty = false;
+  if (knownDirty && (sync || Date.now() - linksSavedAt > 5 * 60000)) linksDirty = true;
+  if (!linksDirty) return; linksDirty = false; knownDirty = false; linksSavedAt = Date.now();
   // keep only what is needed: people not seen for two months (and not tied to a friend link or a waiting request) are forgotten
   { const old = Date.now() - STALE_MS, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); }); news.forEach((v, k) => { need.add(k); v.forEach(x => need.add(x.p)); });
     known.forEach((v, k) => { if ((v.last < old || (!v.played && v.last < Date.now() - DAY)) && !need.has(k) && !byPub.has(k)) known.delete(k); }); }   // (not seen for a month: forgotten, unless somebody has them as a friend or is waiting on a request with them. Their friends keep them)   // (everybody who has really played is kept for good; somebody who only opened the page for a moment is forgotten after a day)
@@ -380,14 +381,23 @@ function srvGate(w, q) {
   w.doors.push(d); P.setDoorTiles(w, d, false); w.plates.push({ x: q[3], y: q[4], w: 2, to: [id], on: false });
 }
 // where the finish is this round: each public map has up to 4 spots and a new one is drawn every round; a private world uses the one its host chose
-function finCount() { const m = maps.generate(curSlot % maps.count); return (m.fins || [1]).length; }
+const mapMemo = new Map();   // maps made here and kept: making one is the single most expensive thing the server does, so the public map (and a few private ones) are made once and kept
+function genMap(i) {
+  i = ((i | 0) % maps.count + maps.count) % maps.count;
+  let m = mapMemo.get(i); if (m) { mapMemo.delete(i); mapMemo.set(i, m); return m; }
+  m = maps.generate(i); mapMemo.set(i, m);
+  const keep = curSlot % maps.count; for (const k of mapMemo.keys()) { if (mapMemo.size <= 5) break; if (k !== keep) mapMemo.delete(k); }   // (the oldest go first, never the public one)
+  return m;
+}
+setInterval(() => { if (nextAt(curSlot) - Date.now() < 3 * 60000) genMap(curSlot + 1); }, 30000).unref();   // (the next public map is made a few minutes early, while things are calm, not at the moment everybody is waiting for it)
+function finCount() { const m = genMap(curSlot); return (m.fins || [1]).length; }
 function pickFin() { return Math.floor(Math.random() * finCount()); }
 /* A guard against too many private games at once. Plenty can run side by side; a new one is only turned away when there are a great many already,
    or when the server is truly falling behind (it has already dropped to its slowest setting) while a fair number are open. */
 const PRIV_ROOMS = Math.max(4, +process.env.PRIV_ROOMS || 80), PRIV_ROOMS_BUSY = Math.max(2, +process.env.PRIV_ROOMS_BUSY || 12);
 function privCount() { let n = 0; for (const r of rooms.values()) if (r.priv) n++; return n; }
 function privFull() { const n = privCount(); return n >= PRIV_ROOMS || (health.level >= 2 && n >= PRIV_ROOMS_BUSY); }
-function roomMap(room) { return maps.withFin(maps.generate(rslot(room) % maps.count), room.fk | 0); }
+function roomMap(room) { return maps.withFin(genMap(rslot(room)), room.fk | 0); }
 const inZoneT = (w, tx, ty) => P.zoneT(w.map, tx, ty);
 function miscOkZ(w, q) {   // (the same rule every device uses: nothing built in the start zone or around the finish, wherever the finish is this round)
   if (!Array.isArray(q)) return false;
@@ -466,11 +476,18 @@ function snapRoom(r) {
   return { build: r.build || null, dyn: w.dyn.map(d => d.burn >= 1e9 ? [0, 0, 0, d.uid >>> 0, 1] : [Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.rot * 1000) / 1000, d.uid >>> 0]), see: w.see.map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]) };   // (each thing by its name, so nothing can ever be put back in another's place; teeter-totters too)
 }
 const wkey = id => (curSlot % maps.count) + ':' + id;   // a public world is remembered by its map and its room, never by when it was played
+const worldStr = new Map();   // each remembered world, already written out as text: only the worlds people are in are written out again
+let worldFileStr = '';
 function keepWorlds(sync) {
-  for (const [id, r] of rooms) if (!r.priv && (r.world || r.snapDyn !== undefined || r.build)) { savedWorlds.set(wkey(id), snapRoom(r)); worldsDirty = true; }
+  for (const [id, r] of rooms) if (!r.priv && (r.world || r.snapDyn !== undefined || r.build)) {
+    const k = wkey(id), sn = snapRoom(r), t = JSON.stringify(sn); savedWorlds.set(k, sn);
+    if (worldStr.get(k) !== t) { worldStr.set(k, t); worldsDirty = true; }   // (nothing moved and nothing was built: nothing to write)
+  }
   if (!worldsDirty) return; worldsDirty = false;
-  const o = { maps: {} }; savedWorlds.forEach((v, k) => { o.maps[k] = v; });
-  const str = JSON.stringify(o), tmp = WORLD_FILE + '.tmp';
+  const parts = []; savedWorlds.forEach((v, k) => { let t = worldStr.get(k); if (t === undefined) { t = JSON.stringify(v); worldStr.set(k, t); } parts.push(JSON.stringify(k) + ':' + t); });
+  for (const k of worldStr.keys()) if (!savedWorlds.has(k)) worldStr.delete(k);
+  const str = '{"maps":{' + parts.join(',') + '}}', tmp = WORLD_FILE + '.tmp';
+  if (str === worldFileStr && !sync) return; worldFileStr = str;
   try { if (sync) { fs.writeFileSync(tmp, str); fs.renameSync(tmp, WORLD_FILE); } else fs.writeFile(tmp, str, er => { if (!er) fs.rename(tmp, WORLD_FILE, () => {}); }); } catch (e) {}
 }
 setInterval(() => keepWorlds(false), 20000).unref();
@@ -478,7 +495,7 @@ setInterval(() => {   // a private world whose host has not come back in ten min
   const t = Date.now();
   for (const [id, r] of rooms) if (r.priv && r.priv.away && t - r.priv.away > 10 * 60000) { for (const o of [...r.players.values()]) { send(o, { t: 'pclose', name: r.priv.hostName || 'The host' }); leave(o, true); } rooms.delete(id); }
 }, 15000).unref();
-setInterval(() => { const t = Date.now(); for (const [id, r] of rooms) if (r.players.size === 0 && (!r.emptyAt || t - r.emptyAt > ROOM_KEEP_MS)) { if (!r.priv) { const sn = snapRoom(r); if (sn) { savedWorlds.set(wkey(id), sn); worldsDirty = true; } } rooms.delete(id); } }, 30000).unref();
+setInterval(() => { const t = Date.now(); for (const [id, r] of rooms) if (r.players.size === 0 && !(id === 1 && !r.priv) && (!r.emptyAt || t - r.emptyAt > ROOM_KEEP_MS)) {   /* (the first public world is never put away: the next player to arrive finds it ready, instead of the server rebuilding it) */ if (!r.priv) { const sn = snapRoom(r); if (sn) { savedWorlds.set(wkey(id), sn); worldStr.delete(wkey(id)); worldsDirty = true; } } rooms.delete(id); } }, 30000).unref();
 /* ----- bots in private worlds, when the host switches them on. They fill the world to 10 to 20 players in all (real people always come first: with 20 people there are none),
    come and go now and then, and live here on the server, so they push crates, tip planks, cross bridges and press buttons for everybody, just like a player ----- */
 let botIdN = 0;
@@ -682,7 +699,7 @@ function leave(p, toLobby) {
     if (room.players.size === 0) { if (room.priv) rooms.delete(room.id); else room.emptyAt = Date.now(); }   // (a public world is kept for a while after the last player leaves, so a dropped connection or a closed tab does not rebuild everything you knocked down)
     else broadcast(room, { t: 'leave', id: p.id, name: p.name, pub: p.pub, n: room.players.size });
   }
-  if (p.pub && known.has(p.pub)) { known.get(p.pub).last = Date.now(); linksDirty = true; }
+  if (p.pub && known.has(p.pub)) { known.get(p.pub).last = Date.now(); knownDirty = true; }
   if (toLobby) {   // back to the main menu: still connected, just not in any world
     p.lobby = true; p.has = false; p.moved = false; p.vis = new Set();
     if (p.pub) for (const b of (links.get(p.pub) || [])) { const q = byPub.get(b); if (q) sendLinks(q); }
@@ -743,7 +760,7 @@ wss.on('connection', (ws, req) => {
         else {
         if (privFull()) { send(p, { t: 'jno', why: 'load' }); return; }   // (too many private games for this server to run well: the public world and offline games are still there)
         const props = [], gates = [], misc = [], cps = [], dels = [];   // (what the host built arrives right after, in small pieces)
-        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((maps.generate(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), botsOn: !!m.host.bots, noCheats: !!m.host.nc, priv: { hostTag: p.otag >>> 0, at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
+        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((genMap(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), botsOn: !!m.host.bots, noCheats: !!m.host.nc, priv: { hostTag: p.otag >>> 0, at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] };
         }
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
@@ -758,7 +775,7 @@ wss.on('connection', (ws, req) => {
       if (!nm && !lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || randomName();   // everybody has a name once they play
       if (!nm && lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || '';          // (a brand-new visitor on the menu has not picked one yet: that first pick stays free)
       const nameLeft = setName(p, nm);
-      if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.color2 = p.color2; k.pat = p.pat | 0; k.last = Date.now(); if (m.beat != null) k.beat = Math.max(0, Math.min(999, m.beat | 0)); linksDirty = true; }
+      if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.color2 = p.color2; k.pat = p.pat | 0; k.last = Date.now(); if (m.beat != null) k.beat = Math.max(0, Math.min(999, m.beat | 0)); knownDirty = true; }
       if (room) {
         room.players.set(p.id, p);
         online++; statsDirty = true;
@@ -1096,7 +1113,7 @@ wss.on('connection', (ws, req) => {
       const want = cleanName(m.name) || p.name, left = setName(p, want);
       send(p, { t: 'name', name: p.name, left, denied: want !== p.name ? 1 : 0 });
       p.color = cleanColor(m.color, p.color); p.color2 = cleanColor(m.color2, p.color2); p.pat = cleanPat(m.pat);
-      if (p.pub && known.get(p.pub)) { known.get(p.pub).color = p.color; known.get(p.pub).color2 = p.color2; known.get(p.pub).pat = p.pat | 0; if (m.beat != null) known.get(p.pub).beat = Math.max(0, Math.min(999, m.beat | 0)); linksDirty = true; }
+      if (p.pub && known.get(p.pub)) { known.get(p.pub).color = p.color; known.get(p.pub).color2 = p.color2; known.get(p.pub).pat = p.pat | 0; if (m.beat != null) known.get(p.pub).beat = Math.max(0, Math.min(999, m.beat | 0)); knownDirty = true; }
       if (p.pub) for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (q) sendLinks(q); }
       if (p.room) broadcast(p.room, { t: 'info', id: p.id, name: p.name, color: p.color, color2: p.color2, pat: p.pat }, p);
     } else if (m.t === 'bots') {   // the host switches the bots in their private world on or off
