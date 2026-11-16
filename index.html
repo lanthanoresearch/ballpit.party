@@ -727,7 +727,10 @@
   .chatquick{display:flex;gap:6px;overflow-x:auto;overscroll-behavior:contain;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.chatquick::-webkit-scrollbar{display:none}
   .chatquick button{flex:none;font:inherit;font-size:15px;padding:6px 12px;border-radius:999px;border:2px solid var(--line);background:rgba(255,255,255,.08);color:var(--ink);white-space:nowrap;cursor:pointer}.chatquick button:active{transform:scale(.95)}
   .chatquick button.qedit{background:transparent;border-style:dashed;opacity:.85}
-  .chatlog .cm{position:relative;overflow:hidden}.chatlog .cm .cmt{float:right;margin-left:8px;font-size:12px;opacity:.6;font-variant-numeric:tabular-nums}
+  .chatlog .cm{position:relative;overflow:hidden;flex:none}   /* (every message keeps its full size; the list scrolls) */
+  .chatwrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}.chatwrap>.chatlog{flex:1}
+  .chatdown{position:absolute;right:10px;bottom:10px;width:44px;height:44px;border-radius:50%;border:2px solid #fff;background:#2fa463;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.45);cursor:pointer;padding:0}.chatdown svg{width:24px;height:24px}
+  .chatdown i{position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#ff4d6d;border:2px solid #fff;display:none}.chatdown.new i{display:block}.chatlog .cm .cmt{float:right;margin-left:8px;font-size:12px;opacity:.6;font-variant-numeric:tabular-nums}
   .chatlog .cm .cmbar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:rgba(255,210,61,.75);transform-origin:left;animation:cmgo linear forwards}
   .chatlog .cm.soon .cmt{opacity:1;color:#ffb36b}
   @keyframes cmgo{from{transform:scaleX(1)}to{transform:scaleX(0)}}
@@ -779,7 +782,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 172; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 173; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -994,7 +997,7 @@
 <div id="emoPop" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="chatTitle"><div class="card chatcard">
   <div class="chead"><h3 id="chatTitle">Chat</h3><button id="chatPplBtn" class="chip" type="button"><span data-ic="users"></span><span id="chatPplN">People</span></button><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="chatPeople" class="chatppl hide"></div>
-  <div id="chatLog" class="chatlog" aria-live="polite"></div>
+  <div class="chatwrap"><div id="chatLog" class="chatlog" aria-live="polite"></div><button id="chatDown" class="chatdown hide" type="button" aria-label="Back to the newest message" title="Back to the newest message"><svg viewBox="0 0 24 24"><path d="M12 5v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><i></i></button></div>
   <div id="chatQuick" class="chatquick" aria-label="Quick messages"></div>
   <form id="chatForm" class="chatform" autocomplete="off"><input id="chatIn" type="text" maxlength="200" placeholder="Say something to everyone here" enterkeyhint="send" spellcheck="true"><button id="chatSend" class="go" type="submit" aria-label="Send"><span data-ic="up"></span></button></form>
   <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim" id="chatNote">Everyone in your world sees it.</span></div>
@@ -1428,8 +1431,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=172"></script>
-<script src="physics.js?v=172"></script>
+<script src="maps.js?v=173"></script>
+<script src="physics.js?v=173"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -4221,18 +4224,23 @@ function chatPrune() { const cut = Date.now() - CHAT_KEEP; let n = 0; while (cha
 setInterval(() => { if (chatPrune() && chatOpen) chatRender(false); else if (chatOpen) { const now = Date.now(); for (const t of $('chatLog').querySelectorAll('.cmt')) { const left = Math.max(0, CHAT_KEEP - (now - +t.dataset.t)); t.textContent = Math.ceil(left / 1000) + 's'; if (left < 10000) t.parentNode.classList.add('soon'); } } }, 1000);
 function chatAdd(name, txt, cls, kind) {   // one line in the chat window (and, for 5 seconds, over their head and in the corner)
   chatPrune(); chatLog.push({ name, txt, cls: cls || '', kind: kind || '', t: Date.now() }); while (chatLog.length > 120) chatLog.shift();
-  if (chatOpen) chatRender(true); else if (cls !== 'sys') { $('btnChat').classList.add('unread'); }
+  if (chatOpen) chatRender(cls === 'me'); else if (cls !== 'sys') { $('btnChat').classList.add('unread'); }
 }
 function chatRender(stick) {
-  const L = $('chatLog'), atEnd = stick || L.scrollHeight - L.scrollTop - L.clientHeight < 40; L.textContent = '';
+  const L = $('chatLog'), atEnd = stick || chatStick, keep = L.scrollTop, n0 = L.childElementCount; L.textContent = '';
   if (!chatLog.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No messages in the last minute. Say hi!'; L.appendChild(e); }
   const now = Date.now();
   for (const m of chatLog) { const d = document.createElement('div'); d.className = 'cm ' + m.cls + (m.kind === 'bot' ? ' bot' : '');
     { const left = Math.max(0, CHAT_KEEP - (now - m.t)), t = document.createElement('span'); t.className = 'cmt'; t.dataset.t = m.t; t.title = 'Disappears in'; t.textContent = Math.ceil(left / 1000) + 's'; d.appendChild(t);   // (how long until it disappears: a number and a bar that runs down)
       const bar = document.createElement('i'); bar.className = 'cmbar'; bar.style.animationDuration = (CHAT_KEEP / 1000) + 's'; bar.style.animationDelay = (-(now - m.t) / 1000) + 's'; d.appendChild(bar); if (left < 10000) d.classList.add('soon'); }
     if (m.cls !== 'sys') { const b = document.createElement('b'); b.textContent = m.name; d.appendChild(b); } d.appendChild(document.createTextNode(m.cls === 'sys' ? m.txt : censorText(m.txt))); L.appendChild(d); }
-  if (atEnd) L.scrollTop = L.scrollHeight;
+  if (atEnd) { L.scrollTop = L.scrollHeight; chatStick = true; $('chatDown').classList.add('hide', 'new'); $('chatDown').classList.remove('new'); }
+  else { L.scrollTop = keep; if (L.childElementCount > n0) $('chatDown').classList.add('new'); chatDownSync(); }   // (reading older messages: you stay where you are, and the arrow shows there is something new)
 }
+let chatStick = true;
+function chatDownSync() { const L = $('chatLog'), far = L.scrollHeight - L.scrollTop - L.clientHeight > 40; chatStick = !far; $('chatDown').classList.toggle('hide', !far); if (!far) $('chatDown').classList.remove('new'); }
+$('chatLog').addEventListener('scroll', chatDownSync, { passive: true });
+$('chatDown').onclick = () => { const L = $('chatLog'); L.scrollTo({ top: L.scrollHeight, behavior: 'smooth' }); chatStick = true; $('chatDown').classList.remove('new'); setTimeout(chatDownSync, 400); };
 const bubbleOf = txt => { const t = censorText(txt); return t.length > 60 ? t.slice(0, 57) + '…' : t; };
 let chatCool = 0;
 function chatSend(quick) {
