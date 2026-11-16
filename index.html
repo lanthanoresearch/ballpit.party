@@ -778,6 +778,14 @@
   @keyframes popin{0%{opacity:0;scale:.7}100%{opacity:1;scale:1}}
   @media (max-aspect-ratio:1/1) and (max-width:700px){#top>#stack{top:var(--stTop,max(24vh,calc(env(safe-area-inset-top) + 200px)))!important}}   /* (a phone held upright: just under the info at the top, over the game) */
   @media (min-aspect-ratio:1/1),(min-width:701px){body:has(#timer.final) #top>#stack{top:max(110px,calc(env(safe-area-inset-top) + 100px))!important}}
+  /* the map details: a big card over everything */
+  #tpopBack{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));background:rgba(10,8,16,.62);box-sizing:border-box}
+  #tpopBack.hide{display:none}
+  #tpopBack>#tpop{position:relative!important;left:auto!important;right:auto!important;top:auto!important;width:min(560px,100%)!important;max-height:100%;overflow-y:auto;box-sizing:border-box;padding:20px 24px 22px!important;font-size:clamp(17px,2.4vmin + 6px,22px)!important;z-index:auto}
+  #tpopBack>#tpop h3{font-size:1.45em!important;margin:0 44px 12px 0!important}
+  #tpopBack>#tpop .tl{margin:10px 0;gap:12px}#tpopBack>#tpop .tl svg{font-size:1.15em}
+  #tpopBack>#tpop .nx{font-size:.85em;margin-top:12px;padding-top:10px}
+  #tpopBack .tpx{position:absolute;top:12px;right:12px;width:42px;height:42px;border-radius:12px;border:2px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}#tpopBack .tpx svg{width:22px;height:22px}
 </style>
 </head>
 <body>
@@ -788,7 +796,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 177; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 178; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1437,8 +1445,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=177"></script>
-<script src="physics.js?v=177"></script>
+<script src="maps.js?v=178"></script>
+<script src="physics.js?v=178"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -7655,7 +7663,12 @@ function fillTimerPop(rem) {
   if (on && S.b) { const f = S.map.flag, a = Math.atan2(f[1] * TS - S.b.y, f[0] * TS - S.b.x) * 180 / Math.PI + 90; ar.style.transform = 'rotate(' + a.toFixed(0) + 'deg)'; }
 }
 $('info').onclick = e => { if (e.target.closest('#linkpill,#tpop')) return; e.stopPropagation(); const el = $('tpop'); const open = el.classList.contains('hide'); el.classList.toggle('hide', !open); if (open) { fillTimerPop(S.nextAt - nowMs()); sfx('ui'); } };
-document.addEventListener('pointerdown', e => { const el = $('tpop'); if (!el.classList.contains('hide') && !el.contains(e.target) && !$('info').contains(e.target)) el.classList.add('hide'); });
+// the map details open as a big card over everything (tap outside it, the X, or Esc to close)
+{ const bk = document.createElement('div'); bk.id = 'tpopBack'; bk.className = 'hide'; document.body.appendChild(bk); const tp = $('tpop'); bk.appendChild(tp);
+  const x = document.createElement('button'); x.type = 'button'; x.className = 'tpx'; x.setAttribute('aria-label', 'Close'); x.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'; tp.prepend(x);
+  const sync = () => bk.classList.toggle('hide', tp.classList.contains('hide')); new MutationObserver(sync).observe(tp, { attributes: true, attributeFilter: ['class'] });
+  x.onclick = () => tp.classList.add('hide'); bk.addEventListener('pointerdown', e => { if (e.target === bk) { e.preventDefault(); tp.classList.add('hide'); } });
+  addEventListener('keydown', e => { if (!tp.classList.contains('hide') && (e.key === 'Escape' || e.key === 'Enter')) { e.preventDefault(); e.stopPropagation(); tp.classList.add('hide'); } }, true); }
 
 /* ================= boot ================= */
 applyZoomRange(); syncUI(); applyTouchUI();
