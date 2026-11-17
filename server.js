@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 185;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 187;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -260,10 +260,10 @@ try {
 function saveLinks(sync) {
   if (knownDirty && (sync || Date.now() - linksSavedAt > 5 * 60000)) linksDirty = true;
   if (!linksDirty) return; linksDirty = false; knownDirty = false; linksSavedAt = Date.now();
-  // keep only what is needed: people not seen for two months (and not tied to a friend link or a waiting request) are forgotten
+  // keep only what is needed: people not seen for 30 days (and not tied to a friend link or a waiting request) are forgotten
   { const old = Date.now() - STALE_MS, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); }); news.forEach((v, k) => { need.add(k); v.forEach(x => need.add(x.p)); });
-    known.forEach((v, k) => { if ((v.last < old || (!v.played && v.last < Date.now() - DAY)) && !need.has(k) && !byPub.has(k)) known.delete(k); }); }   // (not seen for a month: forgotten, unless somebody has them as a friend or is waiting on a request with them. Their friends keep them)   // (everybody who has really played is kept for good; somebody who only opened the page for a moment is forgotten after a day)
-  if (known.size > 50000) [...known.entries()].sort((a, b) => a[1].last - b[1].last).slice(0, known.size - 50000).forEach(e => known.delete(e[0]));
+    known.forEach((v, k) => { if ((v.last < old || (!v.played && v.last < Date.now() - DAY)) && !need.has(k) && !byPub.has(k)) { known.delete(k); pushSubs.delete(k); blocks.delete(k); gone.delete(k); claimsOf.delete(k); } }); }   // (and what was kept for them goes with them: their notifications, their block list)   // (not seen for a month: forgotten, unless somebody has them as a friend or is waiting on a request with them. Their friends keep them)   // (everybody who has really played is kept for good; somebody who only opened the page for a moment is forgotten after a day)
+  if (known.size > 50000) { const need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); [...known.entries()].filter(e => !need.has(e[0]) && !byPub.has(e[0])).sort((a, b) => a[1].last - b[1].last).slice(0, known.size - 50000).forEach(e => known.delete(e[0])); }   // (a safety ceiling that never drops anybody's friend)
   const o = { links: {}, gone: {}, known: {}, pend: [...pend.entries()].map(e => [e[0], e[1].t]), news: [...news.entries()].filter(e => e[1].length), vapid: vapid ? { pub: vapid.pub, priv: vapid.priv } : undefined, push: Object.fromEntries(pushSubs) };
   o.blocks = {}; blocks.forEach((v, k) => { if (v.size) o.blocks[k] = [...v]; });
   o.pairs = {}; pairT.forEach((v, k) => { const [a, b] = k.split('|'); if ((links.get(a) && links.get(a).has(b)) || v.m > Date.now() - STALE_MS) o.pairs[k] = v; });   // (kept while they are friends)
@@ -277,7 +277,7 @@ function saveLinks(sync) {
 const linkSet = pub => { let s = links.get(pub); if (!s) links.set(pub, s = new Set()); return s; };
 function addLink(a, b) { if (blocked(a, b)) return; if (!linkSet(a).has(b)) pairOf(a, b).s = Date.now(); linkSet(a).add(b); linkSet(b).add(a); linksDirty = true; }
 function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; }
-const STALE_MS = 30 * 86400000;   // everybody who has played is listed; anybody gone for three months (and not a friend or in a waiting request) is forgotten
+const STALE_MS = 30 * 86400000;   // everybody who has played in the last 30 days is listed; anybody gone longer (and not somebody's friend or in a waiting request) is quietly forgotten
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
 function cleanShare(o) { const r = {}; for (const k in SHARE_DEF) r[k] = o && o[k] === 0 && (k === 'fr' || k === 'since') ? 0 : 1; return r; }   // (only how many friends you have and when you started can be kept private; the rest is always shown)
 const peerInfo = (pub, viewer) => {   // what one player is told about another: their name and ball always, the rest only as far as they share it
@@ -1132,7 +1132,7 @@ wss.on('connection', (ws, req) => {
       known.forEach((k, pub) => {
         if (pub === p.pub) return;
         const code = codeOf(pub), q2 = byPub.get(pub), on = live(q2) ? (q2.room || true) : null, nm = q2 ? q2.name : k.name, last = on ? now : k.last;
-        if (!nm || (!k.played && !on) || (!on && k.last < Date.now() - STALE_MS)) return;   // (and nobody who has been away for a month: they are only still there for their friends)   // (only people who have really played: somebody who opened the page for a moment is not listed)
+        if (!nm || (!k.played && !on) || (!on && k.last < Date.now() - STALE_MS && !(mine && mine.has(pub)))) return;   // (and nobody who has been away for a month: they are only still there for their friends)   // (only people who have really played: somebody who opened the page for a moment is not listed)
         if (blocked(p.pub, pub)) return;   // (nobody you blocked, and nobody who blocked you)
         const sh = shareOf(pub), linked = !!(mine && mine.has(pub));
         if (!browse && !(nm.toLowerCase().indexOf(q) >= 0 || code === qc || code.indexOf(qc) === 0 && qc.length >= 3)) return;
@@ -1377,6 +1377,7 @@ setInterval(() => {
   for (const room of rooms.values()) for (const p of room.players.values()) if (p.ws.readyState === 1) p.ws.send(s);
 }, 5000);
 setInterval(() => { linksDirty = true; }, 6 * 3600000);   // (re-checks who has been gone for two months)
+setInterval(() => { linksDirty = true; }, 6 * 3600000);   // (the 30-day clean-up runs at least every six hours, even when nothing else changed)
 setInterval(() => { savePeak(false); saveLinks(false); const t = Date.now(); pend.forEach((v, k) => { if (t - v.t > REQ_TTL) pend.delete(k); }); }, 15000);
 
 // Map rotation (every 6 hours)

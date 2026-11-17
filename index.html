@@ -714,8 +714,17 @@
   .ptiles>div{background:#2c2644;border:2px solid var(--line);border-radius:var(--wob);padding:6px 10px;min-width:0}.ptiles span{display:block;font-size:12px;opacity:.65}.ptiles b{display:block;font-weight:normal;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .fme{margin:0 0 8px}.fme .prs{background:rgba(255,210,61,.08);border-color:rgba(255,210,61,.55)}
   .fnote{margin:0 0 8px}
-  .nqtimes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:-2px 0 10px 40px}.nqtimes label{display:flex;min-width:0;flex-direction:column;gap:2px;font-size:13px}.nqtimes span{opacity:.7}
-  .nqtimes input{font:inherit;font-size:16px;padding:6px;border-radius:10px;border:2px solid var(--line);background:#14111c;color:var(--ink);color-scheme:dark;min-width:0;width:100%;box-sizing:border-box}
+  .nqtimes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:-2px 0 10px 40px}.nqtimes>div{display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:0}.nqtimes span{opacity:.7}
+  .nqbtn{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;box-sizing:border-box;padding:7px 10px;border:2px solid var(--line);border-radius:var(--wob);background:#14111c;color:var(--ink);font-size:18px;cursor:pointer}.nqbtn b{font-weight:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nqbtn .ic{width:18px;height:18px;flex:none;opacity:.8}.nqbtn:active{transform:translateY(1px)}
+  #tpModal{z-index:26;background:rgba(10,8,16,.6)}.tpcard{width:min(360px,100%);text-align:center;padding:16px 18px}.tpcard .chead{display:flex;align-items:center;justify-content:space-between;gap:8px}.tpcard h3{margin:0;font-size:24px}
+  .tpdial{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0 6px;user-select:none;-webkit-user-select:none}
+  .tpcol{display:flex;flex-direction:column;align-items:center;gap:4px;touch-action:none}.tpcol button{width:64px;height:38px;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355}.tpcol button .ic{width:22px;height:22px}.tpcol button:active{background:#4b4370;transform:translateY(1px)}
+  .tpnum{width:84px;font-size:52px;line-height:1.15;padding:2px 0;border:2px solid var(--line);border-radius:var(--wob);background:#14111c;color:var(--accent);font-variant-numeric:tabular-nums;cursor:ns-resize;outline:none}.tpnum:focus-visible{box-shadow:0 0 0 3px rgba(255,204,61,.5)}
+  .tpcolon{font-size:46px;color:var(--accent);padding:0 2px;margin-top:-6px}
+  .tpap{display:flex;flex-direction:column;gap:6px;margin-left:8px}.tpap button{width:56px;padding:8px 0;font-size:18px;border:2px solid var(--line);border-radius:var(--wob);background:#3a3355;opacity:.65}.tpap button.on{background:#2f9e61;opacity:1}
+  .tpdn{transform:rotate(180deg)}.tpquick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:8px 0 4px}.tpquick button{padding:5px 2px;font-size:14px;white-space:nowrap;border:2px solid var(--line);border-radius:var(--wob);background:#2a2440}.tpquick button.on{background:#4b4370;border-color:var(--accent)}
+  .tpsum{font-size:15px;opacity:.8;margin:6px 0 0;min-height:1.3em}
+  @media (max-height:520px){.tpcard{padding:10px 14px}.tpdial{margin:6px 0 2px}.tpnum{font-size:40px;width:70px}.tpcol button{height:30px}.tpquick{margin:4px 0 2px}}
   .ntkinds{margin:0 0 6px 14px;padding-left:12px;border-left:3px solid var(--line)}.ntk{margin:2px 0 4px}
   .ntfr{margin:-4px 0 8px 44px}.ntfr .plist{margin-top:6px}.ntfr .prs{padding:5px 8px}.ntfr .prs input{width:22px;height:22px;flex:none;accent-color:#2fa463}
   .hbadge{display:inline-block;min-width:20px;height:20px;line-height:20px;padding:0 5px;margin-left:6px;border-radius:99px;background:#2fa463;color:#fff;font-size:13px;text-align:center}
@@ -838,7 +847,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 185; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 187; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1271,7 +1280,7 @@
         <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Map changes</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="play"></span><span><b>Not while I'm playing</b><small>Show a message in the game instead</small></span></span><input type="checkbox" id="setNInGame"><i></i></label>
         <label class="sw2 ic2 nqsw"><span class="ti"><span data-ic="clock"></span><span><b>Quiet hours</b><small id="nqSub">A time of day with no notifications, like at night</small></span></span><input type="checkbox" id="setNQuiet"><i></i></label>
-        <div class="nqtimes hide" id="nqTimes"><label><span>From</span><input type="time" id="nqFrom" value="22:00"></label><label><span>Until</span><input type="time" id="nqTo" value="07:00"></label></div>
+        <div class="nqtimes hide" id="nqTimes"><div><span>From</span><button type="button" class="nqbtn" id="nqFrom" aria-label="Quiet hours start"><b>10:00 PM</b><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"/></svg></button></div><div><span>Until</span><button type="button" class="nqbtn" id="nqTo" aria-label="Quiet hours end"><b>7:00 AM</b><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"/></svg></button></div></div>
         <button class="btn full" id="ntTest" type="button"><span data-ic="bell"></span>Send a test notification</button>
       </div>
     </section>
@@ -1444,6 +1453,18 @@
   <input type="text" id="shText" readonly spellcheck="false" autocomplete="off">
   <div class="btns"><button id="shClose" type="button">Close</button><button id="shCopy" type="button" class="go">Copy link</button></div>
 </div></div>
+<div id="tpModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="tpTitle"><div class="card tpcard">
+  <div class="chead"><h3 id="tpTitle">Quiet hours start</h3><button id="tpClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="tpdial">
+    <div class="tpcol" id="tpH"><button type="button" data-d="1" aria-label="Later hour"><svg class="ic"><use href="#i-up"/></svg></button><div class="tpnum" tabindex="0" role="spinbutton" aria-label="Hour"></div><button type="button" data-d="-1" aria-label="Earlier hour"><svg class="ic tpdn"><use href="#i-up"/></svg></button></div>
+    <div class="tpcolon">:</div>
+    <div class="tpcol" id="tpM"><button type="button" data-d="1" aria-label="Later minute"><svg class="ic"><use href="#i-up"/></svg></button><div class="tpnum" tabindex="0" role="spinbutton" aria-label="Minutes"></div><button type="button" data-d="-1" aria-label="Earlier minute"><svg class="ic tpdn"><use href="#i-up"/></svg></button></div>
+    <div class="tpap" id="tpAP"><button type="button" data-p="0">AM</button><button type="button" data-p="1">PM</button></div>
+  </div>
+  <div class="tpquick" id="tpQuick"></div>
+  <p class="tpsum" id="tpSum"></p>
+  <div class="btns"><button id="tpNo" type="button">Cancel</button><button id="tpYes" class="go" type="button">Set</button></div>
+</div></div>
 <div id="confirm" class="overlay hide"><div class="card" style="width:min(420px,100%)">
   <h3 id="cfTitle"></h3><p id="cfText"></p>
   <label class="dont hide" id="cfOptWrap"><input type="checkbox" id="cfOpt"><span id="cfOptText"></span></label>
@@ -1509,8 +1530,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=185"></script>
-<script src="physics.js?v=185"></script>
+<script src="maps.js?v=187"></script>
+<script src="physics.js?v=187"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -5455,7 +5476,7 @@ function personRow(p, sub, acts, noProf) {
 const canMessage = l => !!l && l.ok && l.on && online && !inHome && !!ws && ws.readyState === 1;
 function friendCard(l) {
   const nm = who(l.name), msg = canMessage(l) ? iconBtn('btn sm', 'chat', 'Message ' + nm, () => openChatTo(l.pub), 'Message') : null;
-  return personRow(l, !l.ok && (online || lobbyOn) ? 'Waiting for them to come back' : '', [msg]);
+  return personRow(l, '', [msg]);   // (offline: when they were last on)
 }
 function meEntry() { const c = profCache['@me'] || {}; return { pub: '', me: 1, code: myCode, name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, on: online || lobbyOn ? 1 : 0, w: c.w || 0, b: beatCount(), fr: Math.max(lks.length, meInfo.fr | 0, c.fr | 0), first: c.first || meInfo.first, fe: c.fe }; }
 
@@ -6144,13 +6165,56 @@ function quietPrefs() { const q = settings.nQuiet; if (!q || !q.on || q.a === q.
 function quietNowC() { const q = settings.nQuiet; if (!q || !q.on || q.a === q.b) return false; const d = new Date(), m = d.getHours() * 60 + d.getMinutes(); return q.a < q.b ? m >= q.a && m < q.b : m >= q.a || m < q.b; }
 function quietRender() {
   const q = settings.nQuiet || {}; $('setNQuiet').checked = !!q.on; $('nqTimes').classList.toggle('hide', !q.on);
-  if (document.activeElement !== $('nqFrom')) $('nqFrom').value = qHm(q.a | 0); if (document.activeElement !== $('nqTo')) $('nqTo').value = qHm(q.b | 0);
+  $('nqFrom').firstChild.textContent = qClock(q.a | 0); $('nqTo').firstChild.textContent = qClock(q.b | 0);
   $('nqSub').textContent = q.on ? (q.a === q.b ? 'Pick two different times' : 'No notifications from ' + qClock(q.a) + ' to ' + qClock(q.b) + (quietNowC() ? ' (quiet right now)' : '')) : 'A time of day with no notifications, like at night';
 }
 const qClock = m => { try { const d = new Date(); d.setHours(Math.floor(m / 60), m % 60, 0, 0); return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); } catch (e) { return qHm(m); } };
 $('setNInGame').onchange = () => { settings.nInGame = $('setNInGame').checked; save(); sfx(settings.nInGame ? 'on' : 'off'); };
 $('setNQuiet').onchange = () => { settings.nQuiet = Object.assign({ a: 1320, b: 420 }, settings.nQuiet || {}, { on: $('setNQuiet').checked }); save(); sfx(settings.nQuiet.on ? 'on' : 'off'); quietRender(); pushSyncSoon(); };
-for (const [id, k] of [['nqFrom', 'a'], ['nqTo', 'b']]) $(id).onchange = () => { const v = qMh($(id).value); if (v < 0) return; settings.nQuiet = Object.assign({ on: true, a: 1320, b: 420 }, settings.nQuiet || {}); settings.nQuiet[k] = v; save(); quietRender(); pushSyncSoon(); };
+/* the time picker: big hour and minute with up and down arrows (hold to keep going, or drag the number up and down, or scroll it), AM and PM where your clock uses them, and a few quick picks */
+const tp = { k: 'a', m: 0, h12: (() => { try { const c = new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions(); return c.hourCycle ? /h1[12]/.test(c.hourCycle) : !!c.hour12; } catch (e) { return true; } })() };
+const tpLen = (a, b) => { const d = ((b - a) % 1440 + 1440) % 1440, h = Math.floor(d / 60), m = d % 60; return m ? (h ? h + ' h ' : '') + m + ' min' : h + (h === 1 ? ' hour' : ' hours'); };
+function tpRender() {
+  const h = Math.floor(tp.m / 60), mi = tp.m % 60;
+  $('tpH').querySelector('.tpnum').textContent = tp.h12 ? String(h % 12 || 12) : String(h).padStart(2, '0');
+  $('tpM').querySelector('.tpnum').textContent = String(mi).padStart(2, '0');
+  $('tpH').querySelector('.tpnum').setAttribute('aria-valuetext', qClock(tp.m)); $('tpM').querySelector('.tpnum').setAttribute('aria-valuetext', qClock(tp.m));
+  $('tpAP').classList.toggle('hide', !tp.h12); $('tpAP').querySelectorAll('button').forEach(b => b.classList.toggle('on', (+b.dataset.p) === (h >= 12 ? 1 : 0)));
+  $('tpQuick').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.m === tp.m));
+  const q = settings.nQuiet || {}, a = tp.k === 'a' ? tp.m : q.a | 0, b = tp.k === 'b' ? tp.m : q.b | 0;
+  $('tpSum').textContent = a === b ? 'Start and end can not be the same time' : 'Quiet from ' + qClock(a) + ' to ' + qClock(b) + ' · ' + tpLen(a, b);
+  $('tpYes').disabled = a === b;
+}
+const tpStep = (col, d) => { if (col === 'h') tp.m = ((tp.m + d * 60) % 1440 + 1440) % 1440; else { const h = Math.floor(tp.m / 60), mi = ((Math.round(tp.m % 60 / 5) * 5 + d * 5) % 60 + 60) % 60; tp.m = h * 60 + mi; } tpRender(); };
+function tpOpen(k) {
+  const q = settings.nQuiet || {}; tp.k = k; tp.m = k === 'a' ? (q.a | 0) : (q.b | 0); tp.start = tp.m;
+  $('tpTitle').textContent = k === 'a' ? 'Quiet hours start' : 'Quiet hours end';
+  const picks = k === 'a' ? [1200, 1260, 1320, 1380] : [360, 420, 480, 540], qb = $('tpQuick'); qb.textContent = '';
+  for (const m of picks) { const b = el('button', '', qClock(m)); b.type = 'button'; b.dataset.m = m; b.onclick = () => { sfx('ui'); tp.m = m; tpRender(); }; qb.appendChild(b); }
+  tpRender(); $('tpModal').classList.remove('hide'); sfx('ui'); setTimeout(() => $('tpH').querySelector('.tpnum').focus({ preventScroll: true }), 30);
+}
+const tpClose = () => { $('tpModal').classList.add('hide'); $(tp.k === 'a' ? 'nqFrom' : 'nqTo').focus({ preventScroll: true }); };
+$('tpYes').onclick = () => { const q = settings.nQuiet || {}; if ((tp.k === 'a' ? tp.m : q.a) === (tp.k === 'b' ? tp.m : q.b)) return; settings.nQuiet = Object.assign({ on: true, a: 1320, b: 420 }, q); settings.nQuiet[tp.k] = tp.m; save(); sfx('on'); tpClose(); quietRender(); pushSyncSoon(); };
+$('tpNo').onclick = $('tpClose').onclick = () => { sfx('ui'); tpClose(); };
+$('tpModal').addEventListener('pointerdown', e => { if (e.target === $('tpModal')) tpClose(); });
+$('tpAP').querySelectorAll('button').forEach(b => b.onclick = () => { const pm = +b.dataset.p, h = Math.floor(tp.m / 60); if ((h >= 12 ? 1 : 0) !== pm) { tp.m = (tp.m + 720) % 1440; sfx('ui'); tpRender(); } });
+for (const [id, col] of [['tpH', 'h'], ['tpM', 'm']]) {
+  const box = $(id), num = box.querySelector('.tpnum');
+  box.querySelectorAll('button').forEach(b => {   // (hold an arrow and it keeps going, faster the longer you hold)
+    let rt = 0; const stop = () => { clearTimeout(rt); rt = 0; };
+    b.addEventListener('pointerdown', e => { e.preventDefault(); const d = +b.dataset.d; tpStep(col, d); sfx('ui'); let n = 0; const go = () => { tpStep(col, d); n++; rt = setTimeout(go, n > 8 ? 60 : 120); }; rt = setTimeout(go, 380); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, stop));
+    b.onclick = e => { if (e.detail === 0) tpStep(col, +b.dataset.d); };   // (keyboard Enter or Space)
+  });
+  let dy = null, acc = 0;   // drag the number up or down
+  num.addEventListener('pointerdown', e => { dy = e.clientY; acc = 0; num.setPointerCapture(e.pointerId); });
+  num.addEventListener('pointermove', e => { if (dy == null) return; acc += dy - e.clientY; dy = e.clientY; while (Math.abs(acc) >= 18) { const d = acc > 0 ? 1 : -1; acc -= d * 18; tpStep(col, d); } });
+  ['pointerup', 'pointercancel'].forEach(t => num.addEventListener(t, () => { dy = null; }));
+  num.addEventListener('wheel', e => { e.preventDefault(); tpStep(col, e.deltaY < 0 ? 1 : -1); }, { passive: false });
+  num.addEventListener('keydown', e => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); tpStep(col, e.key === 'ArrowUp' ? 1 : -1); } });
+}
+$('tpModal').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); tpClose(); } else if (e.key === 'Enter' && e.target.classList.contains('tpnum')) { e.preventDefault(); $('tpYes').click(); } });
+$('nqFrom').onclick = () => tpOpen('a'); $('nqTo').onclick = () => tpOpen('b');
 setInterval(() => { if ($('nqSub') && $('nqSub').offsetParent) quietRender(); }, 30000);
 const nOffHas = pub => Array.isArray(settings.nOff) && settings.nOff.indexOf(pub) >= 0;
 function nOffSet(pub, off) { const a = Array.isArray(settings.nOff) ? settings.nOff.filter(x => x !== pub) : []; if (off) a.push(pub); settings.nOff = a.slice(0, 64); save(); ntFrRender(); pushSyncSoon(); }
