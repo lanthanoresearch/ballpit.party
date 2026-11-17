@@ -861,7 +861,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 191; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 192; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1544,8 +1544,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=191"></script>
-<script src="physics.js?v=191"></script>
+<script src="maps.js?v=192"></script>
+<script src="physics.js?v=192"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1629,7 +1629,7 @@ function normalize() {
   { const o = {}; if (settings.lvSave && typeof settings.lvSave === 'object') for (const k in settings.lvSave) if (/^\d+$/.test(k) && settings.lvSave[k]) o[k] = 1; settings.lvSave = o; }
   settings.nInGame = settings.nInGame !== false;
   { const q = settings.nQuiet && typeof settings.nQuiet === 'object' ? settings.nQuiet : {}, ok = v => Number.isInteger(v) && v >= 0 && v <= 1439; settings.nQuiet = { on: !!q.on, a: ok(q.a) ? q.a : 1320, b: ok(q.b) ? q.b : 420 }; }
-  settings.nOff = Array.isArray(settings.nOff) ? settings.nOff.filter(x => /^[0-9a-f]{16}$/.test(x)).slice(0, 64) : [];
+  settings.nOff = Array.isArray(settings.nOff) ? settings.nOff.filter(x => /^[0-9a-f]{16}$/.test(x)).slice(0, 500) : [];
   if (settings.share && typeof settings.share === 'object') { const o = {}; for (const k of ['on', 'last', 'beat', 'fr', 'since']) o[k] = settings.share[k] === 0 ? 0 : 1; settings.share = o; } else settings.share = null;
   ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
   settings.keys = cleanKeys(settings.keys);
@@ -4024,7 +4024,7 @@ function guideRender() {
 $('gMore').onclick = () => { const g = $('gGrid'), on = g.classList.toggle('all'); $('gMore').lastChild.textContent = on ? 'Show less' : 'Show everything'; sfx('ui'); };
 function showIntro() { guideRender(); $('dontShow').checked = !settings.intro; $('intro').classList.remove('hide'); const b = $('intro').querySelector('.ibody'); if (b) b.scrollTop = 0; }
 function closeSettingsNow() {
-  $('settings').classList.add('hide'); if ($('settings').classList.contains('only') && typeof curTab !== 'undefined' && (curTab === 'you' || tabLocked(curTab))) showTab(firstTab()); $('settings').classList.remove('only'); /* (your look is only changed from the main menu: Settings itself never opens on it) */ $('shTitle').textContent = 'Settings'; $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
+  $('settings').classList.add('hide'); if ($('settings').classList.contains('only') && typeof curTab !== 'undefined') showTab(firstTab());   /* (Friends, Customize and Mode are their own pages: after one, Settings opens on its first tab) */ $('settings').classList.remove('only'); /* (your look is only changed from the main menu: Settings itself never opens on it) */ $('shTitle').textContent = 'Settings'; $('pause').classList.remove('sopen'); if (closeSelectFn) closeSelectFn(); closePicker();
   try { const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); } catch (e) {}
   if (typeof lpAfterTab === 'function') lpAfterTab();
   if (typeof finApply === 'function') finApply();
@@ -4042,7 +4042,7 @@ $('btnRespawn').onclick = () => { resetPress(); };
 
 // tabs
 const tabBtns = $('tabs').querySelectorAll('button');
-let curTab = 'controls';
+let curTab = 'controls', onlyPrev = '';
 const HOME_TABS = ['sound', 'online', 'friends', 'notify', 'more'];   // (on the main menu: sound, mode and more. Controls, display and friends are for when you are playing; more is only on the main menu)
 const tabLocked = n => (n === 'you' ? false : (typeof inHome !== 'undefined' && inHome) ? HOME_TABS.indexOf(n) < 0 : n === 'more') || (n === 'bots' && !!settings.mp);
 const firstTab = () => { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'); if (!tabLocked(n)) return n; } return 'controls'; };   // (Offline has no friends, Public has no bots: those tabs stay in their place, greyed out)
@@ -5484,7 +5484,7 @@ setInterval(() => {
 addEventListener('storage', e => { if (e.key === WALKEY || e.key === WALKEY_PRIV) { loadPurses(); if (shopOpen) shopRender(); } });   // (another tab of the game spent or earned something)
 const openFriends = () => {   // the friends screen: from the main menu (to look, and to add friends), the pause menu, or the friends pill while playing
   if (chatOpen) toggleChat(false); if (!inHome && !paused) openPause();
-  if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Friends'; showTab('friends'); toggleSettings(); } else showTab('friends');
+  if ($('settings').classList.contains('hide')) { onlyPrev = curTab; $('settings').classList.add('only'); $('shTitle').textContent = 'Friends'; showTab('friends'); toggleSettings(); } else showTab('friends');
   lpRender();
 };
 function homeFriendsN() { const n = lks.filter(l => l.ok && l.on).length + reqs.length, b = $('homeFrN'); if (!b) return; b.textContent = reqs.length ? reqs.length + ' new' : n; b.classList.toggle('hide', !n); b.title = reqs.length ? 'Friend requests waiting' : n + ' online'; }
@@ -5574,7 +5574,7 @@ function shareRender() {
   const me = meEntry(); if (!sh.fr) me.fr = -1; if (!sh.since) me.first = 0; profTiles($('meTiles'), me, true);
   if (!shareRender.asked && (online || lobbyOn)) { shareRender.asked = 1; wsSend({ t: 'prof', to: 'me' }); setTimeout(() => { shareRender.asked = 0; }, 5000); }
 }
-function openLook() { if (inHome) { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; } showTab('you'); if ($('settings').classList.contains('hide')) toggleSettings(); return; } if (!paused) openPause(); $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; showTab('you'); if ($('settings').classList.contains('hide')) toggleSettings(); }
+function openLook() { if (inHome) { if ($('settings').classList.contains('hide')) { onlyPrev = curTab; $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; } showTab('you'); if ($('settings').classList.contains('hide')) toggleSettings(); return; } if (!paused) openPause(); onlyPrev = curTab; $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; showTab('you'); if ($('settings').classList.contains('hide')) toggleSettings(); }
 
 /* ----- a player's profile: who they are, how many levels they have beaten, their friend number, and what you can do ----- */
 const LEVELS = 50;
@@ -6057,7 +6057,7 @@ function escMenu() {   // Escape: closes whatever is on top, then pauses / resum
 }
 $('pResume').onclick = resumeGame;
 $('pLevel').onclick = () => { sfx('ui'); openModePage(); };
-function openModePage() { if (chatOpen) toggleChat(false); if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Mode'; toggleSettings(); } showTab('online'); }   // (just the Mode page on its own, like Friends)
+function openModePage() { if (chatOpen) toggleChat(false); if ($('settings').classList.contains('hide')) { onlyPrev = curTab; $('settings').classList.add('only'); $('shTitle').textContent = 'Mode'; toggleSettings(); } showTab('online'); }   // (just the Mode page on its own, like Friends)
 const soloDesc = (i, st) => {   // what is already saved on that level, in words
   const o = (st || solo2)[i]; if (!o) return '';
   const n = (o.buys ? o.buys.length : 0) + (o.gates ? o.gates.length : 0) + (o.misc ? o.misc.length : 0);
@@ -6315,7 +6315,7 @@ $('tpModal').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stop
 $('nqFrom').onclick = () => tpOpen('a'); $('nqTo').onclick = () => tpOpen('b');
 setInterval(() => { if ($('nqSub') && $('nqSub').offsetParent) quietRender(); }, 30000);
 const nOffHas = pub => Array.isArray(settings.nOff) && settings.nOff.indexOf(pub) >= 0;
-function nOffSet(pub, off) { const a = Array.isArray(settings.nOff) ? settings.nOff.filter(x => x !== pub) : []; if (off) a.push(pub); settings.nOff = a.slice(0, 64); save(); ntFrRender(); pushSyncSoon(); }
+function nOffSet(pub, off) { const a = Array.isArray(settings.nOff) ? settings.nOff.filter(x => x !== pub) : []; if (off) a.push(pub); settings.nOff = a.slice(0, 500); save(); ntFrRender(); pushSyncSoon(); }
 let ntFrOpen = false;
 function ntFrRender() {   // under "Friends come online": which friends (all of them unless you turn some off)
   const box = $('ntFrList'); if (!box) return; const fr = lks.filter(l => l.ok || l.name), off = fr.filter(l => nOffHas(l.pub)).length;
@@ -6366,7 +6366,7 @@ async function pushSync() {   // tell the server where to reach this device, and
 const pushSyncSoon = () => { clearTimeout(pushTimer); pushTimer = setTimeout(pushSync, 1200); };
 const sendVis = () => wsSend({ t: 'vis', h: document.hidden ? 1 : 0 });   // while the page is in the background the server sends your notifications as pushes
 document.addEventListener('visibilitychange', sendVis);
-['setNFriends', 'setNRequests', 'setNInvites', 'setNMaps'].forEach(id => { $(id).addEventListener('change', () => pushSyncSoon()); });
+[['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps']].forEach(([id, k]) => { bindToggle(id, k); $(id).addEventListener('change', () => pushSyncSoon()); });   // (each switch keeps what you pick)
 $('setNotify').onchange = async () => {
   const want = $('setNotify').checked;
   if (!want) { settings.notify = false; save(); sfx('off'); ntRender(); pushSyncSoon(); return; }
