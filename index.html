@@ -295,6 +295,8 @@
   #keymsg,#mkeymsg{min-height:18px;font-size:13px;color:#ff9a8f}
   .slrow{display:flex;align-items:center;gap:8px}.slrow svg{font-size:19px;flex:none;opacity:.85}
   .np{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:8px;background:#120f1c;border:2px solid var(--line);border-radius:var(--wob);padding:6px 10px}
+  .np{position:relative;overflow:hidden;padding-bottom:9px!important}.nptime{font-size:12px;opacity:.65;font-variant-numeric:tabular-nums}
+  .mprog{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--accent);border-radius:0 3px 3px 0;transition:width .25s linear;pointer-events:none}#songBar .mprog{left:4px;bottom:2px;max-width:calc(100% - 8px);opacity:.85}
   .np span{flex:none}.np #nowPlaying{flex:1;min-width:0;white-space:normal;line-height:1.2;overflow-wrap:anywhere}.np #nowPlaying b{display:block;font-weight:normal}.np #nowPlaying small{display:block;font-size:12px;opacity:.7}
   #coinbig{pointer-events:none}
   .tabs button span:last-child{font-size:11px}
@@ -585,7 +587,7 @@
   body.uedit #feed{pointer-events:auto!important;cursor:move;touch-action:none;min-width:150px;outline:2px dashed #ffd23d;outline-offset:3px}body.uedit #feed *{pointer-events:none!important}
   body.uedit #feed::before{content:'Chat and joins show here';display:block;padding:4px 10px;font-size:13px;color:#fff;background:rgba(255,210,61,.18);border:2px dashed #ffd23d;border-radius:8px;text-align:center}
   #feed{transform-origin:top right}
-  body.uedit #stack{pointer-events:auto!important;cursor:move;touch-action:none;min-width:180px}body.uedit #stack *{pointer-events:none!important}
+
   body.uedit #hudCard,body.uedit #corner,body.uedit #stLine{pointer-events:auto!important;outline:2px dashed #ffd23d;outline-offset:3px;cursor:move;touch-action:none}
   body.uedit #hudCard *,body.uedit #corner *,body.uedit #stLine *{pointer-events:none!important}
   body.uedit .usel{outline:3px solid #ffd23d!important}body.uedit #corner .ibtn{outline:1px dashed rgba(255,210,61,.6);outline-offset:2px}body.uedit #corner .ibtn.usel{outline:3px solid #7ff0ff!important;outline-offset:3px}body.uedit .ubad{outline-color:#ff4d4d!important}
@@ -597,7 +599,7 @@
   .hudcard #mm{border:0!important;border-top:2px solid var(--line)!important;border-radius:0 0 calc(var(--wob,12px) - 2px) calc(var(--wob,12px) - 2px)!important;margin:0!important;width:100%!important;height:auto!important;aspect-ratio:170/110}
   .hudcard #mm.hide,.hudcard #mm[hidden]{display:none}
   #hudCard,#corner,#stLine{transform-origin:top left}#corner{transform-origin:top right}
-  #songBar{display:flex;align-items:center;gap:4px;padding:3px 4px;border-top:2px solid var(--line);pointer-events:auto;font-size:12px;min-width:0}
+  #songBar{display:flex;align-items:center;gap:4px;padding:3px 4px 5px;border-top:2px solid var(--line);pointer-events:auto;font-size:12px;min-width:0;position:relative}
   #songBar.hide{display:none}#songBar #sbName{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;opacity:.9;font-size:11px;letter-spacing:-.2px}
   #songBar button{flex:none;width:24px;height:22px;display:grid;place-items:center;background:#120f1c;border:2px solid var(--line);border-radius:8px;color:var(--ink);padding:0;font-size:13px}
   #songBar button:active{transform:translateY(1px)}
@@ -677,7 +679,7 @@
   #cfText.pre{white-space:pre-line}
   .cfmid{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px}
   #srvStat{z-index:31;background:rgba(8,6,16,.8)}
-  .sscard{width:min(480px,100%);text-align:left}
+  .sscard{width:min(480px,100%);text-align:left;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
   .ssrate{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:2px solid var(--line);border-radius:var(--wob);margin:4px 0 10px;background:#262040}
   .ssrate b{font-size:24px;font-weight:normal;letter-spacing:.5px}.ssrate span{font-size:15px;opacity:.85}
   .ssrate.r-good{border-color:var(--good)}.ssrate.r-good b{color:var(--good)}
@@ -692,6 +694,9 @@
   .sssub{font-size:13px;opacity:.7}
   .ssgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:15px;margin:2px 0 6px}.ssgrid div{display:flex;justify-content:space-between;gap:6px}.ssgrid span{opacity:.7}
   .ssnote{font-size:13px;opacity:.6;margin:6px 0 0}
+  .ebpush{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0 0;cursor:pointer}.ebpush input{width:18px;height:18px;flex:none;accent-color:var(--accent)}
+  .sscap{border:2px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 10px;background:#14111c}.sscap b{display:block;font-size:20px;font-weight:400}.sscap span{font-size:13px;opacity:.75;line-height:1.35}
+  .ssgrid small{display:block;font-size:12px;opacity:.6}.ssgrid>div{display:block!important}.ssgrid>div b{display:block;font-size:19px;font-weight:400}.ssfoot{margin:4px 0 0}
   #ssLive{margin-top:8px}
   #codeBox{z-index:32;background:rgba(8,6,16,.8)}.codecard{width:min(360px,100%);text-align:left}.codehint{margin:2px 0 8px;font-size:15px;opacity:.85}
   .codebad{color:var(--bad);font-size:14px;margin:6px 0 0}#codeBox .btns{margin-top:12px}
@@ -802,7 +807,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 180; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 181; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1002,7 +1007,7 @@
     </div>
   </div>
   <canvas id="mm" width="170" height="110"></canvas>
-  <div id="songBar" class="hide"><button id="sbPrev" title="The song before" aria-label="The song before"><span data-ic="skip" style="display:inline-block;transform:scaleX(-1)"></span></button><span id="sbName"></span><button id="sbNext" title="Next song" aria-label="Next song"><span data-ic="skip"></span></button></div></div>
+  <div id="songBar" class="hide"><button id="sbPrev" title="The song before" aria-label="The song before"><span data-ic="skip" style="display:inline-block;transform:scaleX(-1)"></span></button><span id="sbName"></span><i class="mprog" id="sbProg"></i><button id="sbNext" title="Next song" aria-label="Next song"><span data-ic="skip"></span></button></div></div>
   <div id="stLine" class="hide" aria-live="off"></div>
 </div>
 <div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="msgDemo" class="paper hide">Messages pop up here</div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
@@ -1055,6 +1060,7 @@
 <div id="editbar" class="paper hide" role="group" aria-label="Edit your buttons"><div class="eb1"><b id="ebTitle">Drag a button to move it, tap it to resize.</b><span class="ebb"><button class="btn sm" id="ebSwap" type="button" title="Move this bar to the other end of the screen" aria-label="Move this bar"><svg class="ic" viewBox="0 0 24 24"><path d="M8 4v16M8 4l-4 4M8 4l4 4M16 20V4M16 20l-4-4M16 20l4-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="btn sm hide" id="ebGroup" type="button">Whole group</button><button class="btn sm" id="editReset" type="button">Reset</button><button class="btn prim sm" id="editDone" type="button">Done</button></span></div>
     <div class="eb2"><div id="ebPresets" role="group" aria-label="Layouts"><button type="button" data-p="moveleft">Left hand</button><button type="button" data-p="moveright">Right hand</button></div><button class="btn sm hide" id="ebFlip" type="button"><span data-ic="reset"></span><span class="t">Edit sideways</span></button></div>
   <label class="ebs"><span>Size: <b id="ebSelName">Jump</b></span><input type="range" id="ebSize" min="0.5" max="1.8" step="0.05"><span id="ebSizeVal" class="dim"></span></label>
+  <label class="ebpush hide" id="ebPushW"><input type="checkbox" id="ebPush"><span>Push what is below out of the way when something grows or moves</span></label>
   <div id="ebMsg" class="hide"></div></div>
 <div id="edZone" class="hide" aria-hidden="true"></div>
 <div id="touch2"><button id="ts" class="hide" type="button" aria-label="Power jump" data-ic="spark"></button><button id="tpl" class="hide" type="button" aria-label="Place" data-ic="check"></button><button id="tpc" class="hide" type="button" aria-label="Cancel" data-ic="close"></button><button id="tm" class="hide" type="button" aria-label="Build menu" data-ic="plus"></button></div>
@@ -1159,7 +1165,7 @@
       <h4><span data-ic="music"></span> Music</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="music"></span><span><b>Music</b><small>Songs that play while you roll</small></span></span><input type="checkbox" id="setMusicOn"><i></i></label>
       <div class="dep" data-dep="music"><div><div class="row"><div id="selMusic"></div><div class="small dim" id="musicDesc" style="margin-top:4px"></div></div><div class="row slrow"><span data-ic="music"></span><input type="range" id="setMusicVol" min="0" max="1" step="0.05"></div>
-      <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><button class="btn" id="btnPrevSong" title="The song before" aria-label="The song before"><span data-ic="skip" style="display:inline-block;transform:scaleX(-1)"></span></button><button class="btn" id="btnSkip" title="Next song" aria-label="Next song"><span data-ic="skip"></span></button></div>
+      <div class="np"><span data-ic="music"></span><span id="nowPlaying">Music is off</span><span class="nptime" id="npTime"></span><button class="btn" id="btnPrevSong" title="The song before" aria-label="The song before"><span data-ic="skip" style="display:inline-block;transform:scaleX(-1)"></span></button><button class="btn" id="btnSkip" title="Next song" aria-label="Next song"><span data-ic="skip"></span></button><i class="mprog" id="npProg"></i></div>
       <label class="sw2 ic2"><span class="ti"><span data-ic="skip"></span><span><b>Song buttons in the game</b><small>The song name under the map, with buttons for the one before and the next one</small></span></span><input type="checkbox" id="setSongBar"><i></i></label></div></div>
     </section>
     <section class="pane" data-pane="online">
@@ -1456,8 +1462,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=180"></script>
-<script src="physics.js?v=180"></script>
+<script src="maps.js?v=181"></script>
+<script src="physics.js?v=181"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1501,11 +1507,11 @@ function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'K
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: true,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
-    beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'adaptive', musicVol: 0.5,
+    beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'random', musicVol: 0.5,
     boost: true, boostAuto: false, boostBtn: true, boostPull: false, joy: true, superBtn: true, btnMul: {},
     keys: defKeys(), mkeys: defMKeys(), inputMode: 'auto', scheme: 'swipebtn', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
 }
@@ -1527,7 +1533,7 @@ function normalize() {
   delete settings.uiScale;
   delete settings.cornerLayout; delete settings.cornerBig; delete settings.cornerMed; delete settings.cornerSide;   // (the corner layouts became Edit UI)
   settings.chatQuick = Array.isArray(settings.chatQuick) ? settings.chatQuick.filter(t => typeof t === 'string').map(t => t.replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean).slice(0, 10) : null;   // (your quick chat messages: null means the starting set)
-  { const L = settings.uiL, o = {}; if (L && typeof L === 'object') for (const k of ['info', 'stats', 'corner', 'msgs', 'feed']) { const q = L[k]; if (q && isFinite(+q.x) && isFinite(+q.y)) o[k] = { x: Math.round(+q.x), y: Math.round(+q.y), s: clamp(+q.s || 1, 0.5, 1.8) }; }
+  { const L = settings.uiL, o = {}; if (L && typeof L === 'object') for (const k of ['info', 'stats', 'corner', 'feed']) { const q = L[k]; if (q && isFinite(+q.x) && isFinite(+q.y)) o[k] = { x: Math.round(+q.x), y: Math.round(+q.y), s: clamp(+q.s || 1, 0.5, 1.8) }; }
     if (L && L.cb && typeof L.cb === 'object') { const cb = {}; for (const k of ['reset', 'pause', 'build', 'chat']) { const q = L.cb[k]; if (q && isFinite(+q.x) && isFinite(+q.y)) cb[k] = { x: Math.round(+q.x), y: Math.round(+q.y), s: clamp(+q.s || 1, 0.6, 2) }; } if (Object.keys(cb).length) o.cb = cb; }   // (the corner buttons each moved on their own)
     settings.uiL = o; }
   settings.botMaxOff = clamp(Math.round(+settings.botMaxOff), 1, 19); if (!isFinite(settings.botMaxOff)) settings.botMaxOff = 6;
@@ -1546,7 +1552,7 @@ function normalize() {
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (settings.scheme !== 'buttons') settings.scheme = 'swipebtn';   // (the full-swipe and tap-to-jump styles are gone: you swipe or press to move, the rest is buttons)
-  ['tags', 'songBar', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'baseBig', 'lowAsked', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'songBar', 'uiPush', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'baseBig', 'lowAsked', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -2070,12 +2076,20 @@ function musicPick(avoid) {
   let s, tries = 0;
   if (typeof avoid === 'number') s = list[((avoid % list.length) + list.length) % list.length];   // (flipping by hand: the next or the one before, in order)
   else do { s = list[Math.floor(Math.random() * list.length)]; } while ((s === avoid || s === AU.lastSong) && list.length > 1 && tries++ < 12);
-  AU.lastSong = AU.song; AU.song = s; AU.melody = genMelody(s, MOOD[AU.style]); (AU.hist || (AU.hist = [])).push([AU.style, s]); if (AU.hist.length > 30) AU.hist.shift(); AU.bar = 0; AU.songAt = AU.ctx ? AU.ctx.currentTime : 0;
+  AU.lastSong = AU.song; AU.song = s; AU.melody = genMelody(s, MOOD[AU.style]); (AU.hist || (AU.hist = [])).push([AU.style, s]); if (AU.hist.length > 30) AU.hist.shift(); AU.bar = 0; AU.bar0 = 0; AU.songT0 = 0; AU.songAt = AU.ctx ? AU.ctx.currentTime : 0;
   musicLabel();
 }
 function songBarShow() {   // the song name and the two buttons under the map, if the player turned them on (and music is playing)
   const e = $('songBar'); if (!e) return; const on = !!settings.songBar && !musOff() && !!AU.song; e.classList.toggle('hide', !on); const hc = $('hudCard'); if (hc) hc.classList.toggle('sb', on);
 }
+function musicProgress() {   // the line under the song name (in the game and in Sound settings) and the time
+  if (!AU.ctx || !AU.song || musOff()) { const a = $('npTime'); if (a) a.textContent = ''; return; }
+  const sb = $('songBar'), sp = $('npProg'); const showSb = sb && !sb.classList.contains('hide'), showNp = sp && sp.offsetParent; if (!showSb && !showNp) return;
+  const len = 32 * songBeats(AU.song) * 60 / AU.song.bpm, el = Math.max(0, Math.min(len, AU.ctx.currentTime - (AU.songT0 || AU.ctx.currentTime))), f = (el / len * 100).toFixed(1) + '%';
+  if (showSb) $('sbProg').style.width = 'calc(' + f + ' - 8px * ' + (el / len).toFixed(3) + ')';
+  if (showNp) { sp.style.width = f; const mm = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0'); $('npTime').textContent = mm(el) + ' / ' + mm(len); }
+}
+setInterval(musicProgress, 250);
 function musicLabel() {   // the song, its kind, and which one of how many it is
   const np = $('nowPlaying'); if (!np || !AU.song) return; const list = SONGS[AU.style] || [], n = list.indexOf(AU.song) + 1;
   const sb = $('sbName'); if (sb) sb.textContent = AU.song.name; songBarShow();
@@ -2083,20 +2097,28 @@ function musicLabel() {   // the song, its kind, and which one of how many it is
 }
 function musicTick() {
   if (!AU.ctx || AU.ctx.state !== 'running' || musOff() || !AU.song) return;
+  if (AU.hush) { AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.05); return; }   // (a long fall: the music holds its breath)
   const beat = 60 / AU.song.bpm;
   let guard = 0;
   while (AU.nextT < AU.ctx.currentTime + 0.7 && guard++ < 4) {
-    if (settings.music === 'adaptive' && (AU.bar % 2 === 0 || AU.urgent) && musicShouldMove()) { musicSwap(2.4); AU.style = AU.target; musicPick(null); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.6); AU.movedAt = AU.ctx.currentTime; }
+    if (settings.music === 'adaptive' && AU.target && AU.target !== AU.style) {
+      const m = musicShouldMove();
+      if (m === 'now') { musicSwap(1.2); AU.style = AU.target; musicPick(null); musicJump(4); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.15); AU.movedAt = AU.ctx.currentTime; }   // (a big change: a quick fade straight into the new song, past its intro)
+      else if (m === 'soon' && AU.bar < 24 && AU.bar % 4 === 0 && AU.bar >= 4) { AU.bar = 24; AU.bar0 = Math.min(AU.bar0, 0); AU.rushed = true; }   // (a small change: this song skips ahead to its last part and the next one fits the new mood)
+    }
+    if (AU.bar === AU.bar0 || (AU.rushed && AU.bar === 24)) { AU.songT0 = AU.nextT - AU.bar * songBeats(AU.song) * beat; AU.rushed = false; }   // (for the line that shows how far through the song it is)
     musicBar(AU.nextT); AU.bar++; AU.nextT += songBeats(AU.song) * beat;
-    if (AU.bar >= 32) { musicPick(AU.song); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.1); }
+    if (AU.bar >= 32) { musicPick(AU.song); AU.nextT = Math.max(AU.nextT, AU.ctx.currentTime + 0.1); if (settings.music === 'adaptive') AU.movedAt = AU.ctx.currentTime; }
   }
 }
-function musicShouldMove() {   // Fits the moment: change only when the mood has really changed for a while, and not more than about every 20 seconds
+function musicJump(bar) { AU.bar = bar; AU.bar0 = bar; }   // (start this song from a later part)
+function musicShouldMove() {   // Fits the moment: 'now' for a big change that has lasted a few seconds (or something urgent), 'soon' for a smaller one that has lasted a while
   const t = AU.ctx.currentTime;
-  if (!AU.target || AU.target === AU.style) { AU.tgtSince = t; return false; }
-  const big = Math.abs(MOOD_LEVEL[AU.target] - MOOD_LEVEL[AU.style]) >= 1.2;
-  if (AU.urgent && MOOD_LEVEL[AU.target] > MOOD_LEVEL[AU.style]) return t - (AU.tgtSince || t) > 0.8 && t - (AU.movedAt || 0) > 4;   // (falling, or the clock running out: change now)
-  return t - (AU.tgtSince || t) > (big ? 3 : 7) && t - (AU.movedAt || 0) > (big ? 10 : 20);
+  if (!AU.target || AU.target === AU.style) { AU.tgtSince = t; return ''; }
+  const big = Math.abs(MOOD_LEVEL[AU.target] - MOOD_LEVEL[AU.style]) >= 1.2, held = t - (AU.tgtSince || t), since = t - (AU.movedAt || 0);
+  if (AU.urgent && MOOD_LEVEL[AU.target] > MOOD_LEVEL[AU.style]) return held > 0.8 && since > 4 ? 'now' : '';   // (the clock running out: change now)
+  if (big) return held > 2.5 && since > 8 ? 'now' : '';
+  return held > 5 && since > 15 ? 'soon' : '';
 }
 const MOOD_LEVEL = { dreamy: 0, chill: 0.6, upbeat: 1.2, phonk: 2, exciting: 2 };
 /* how busy things are right now, 0 (quiet) to 1 (wild): your speed, boosts and jumps, players and bots around you, things flying about, the last seconds of the clock */
@@ -2121,6 +2143,7 @@ function musicFeel(dt, b, ev) {
   AU.far = musFarT > 12;
   // a long fall: something dramatic, right away
   if (b.vy > 650 && !b.ground) musFallT += dt; else musFallT = Math.max(0, musFallT - dt * 0.5);
+  musicFall(b, ev, dt);
   if (musFallT > 1) musI = Math.max(musI, 0.75);
   const crowd = Math.min(1, musNear / 3) * 0.3 + Math.min(1, musMoving / 8) * 0.25, rush = sp * 0.3 + (b.boost || b.pSpeed > 0 ? 0.2 : 0) + fin + (musFallT > 1 ? 0.5 : 0);
   // what fits: far away and quiet, dreamy; calm, an easy groove; something going on, upbeat; wild with lots of players and things flying, phonk; wild with speed, falls or the last seconds, exciting
@@ -2128,6 +2151,27 @@ function musicFeel(dt, b, ev) {
   AU.urgent = musFallT > 1 || fin > 0;
   if (lvl !== AU.lvl) { AU.lvl = lvl; AU.target = lvl; }
 }
+/* Fits the moment, falling: after a moment of falling fast the music fades out and a low rising hum takes over (the tense bit). Landing hits hard, and an exciting
+   song starts straight away from its main part. Coming out of the fall any other way (water, a rope, the ball starting over) just brings the music back. */
+let musFallOn = 0, musFallEnd = 0;
+function musicFall(b, ev, dt) {
+  if (!AU.ctx || !AU.song || musOff()) { AU.hush = false; return; }
+  const t = AU.ctx.currentTime, falling = b.vy > 700 && !b.ground;
+  if (!AU.hush) {
+    if (falling) musFallOn += dt; else musFallOn = 0;
+    if (musFallOn > 0.7 && t - (AU.hushEnd || -99) > 12) {   // (not again within a few seconds of the last one: a run of drops is one long moment, not a stop-start)
+      AU.hush = true; AU.hushAt = t; musicSwap(0.5); AU.mus.gain.cancelScheduledValues(t); AU.mus.gain.setValueAtTime(0, t);
+      const d = AU.humG = AU.ctx.createGain(); d.connect(AU.musOut); tone(55, 5, 'sine', 0.09, 90, t + 0.2, d, 1.2); noise(5, 0.03, 300, 2600, 'bandpass', t + 0.2, d);   // (the low hum and the wind rising)
+    }
+    return;
+  }
+  if (ev && ev.landed || b.ground) {
+    AU.hush = false; musFallOn = 0; AU.hushEnd = t; const d = AU.musOut; musicHumOff(t);
+    if (ev && ev.landed) { tone(90, 0.5, 'sine', 0.5, 32, t, d); noise(1.4, 0.12, 5000, 2500, 'highpass', t, d); noise(0.3, 0.18, 900, 200, 'lowpass', t, d); }   // (the landing hits)
+    musicSwap(0); AU.style = AU.target = AU.lvl = 'exciting'; musicPick(null); musicJump(4); AU.nextT = t + (ev && ev.landed ? 0.35 : 0.1); AU.movedAt = t; AU.tgtSince = t;
+  } else if (!falling && t - AU.hushAt > 1.5) { AU.hush = false; musFallOn = 0; AU.hushEnd = t; musicHumOff(t); musicSwap(1); AU.nextT = t + 0.1; }   // (the fall ended without a landing: the music simply comes back)
+}
+function musicHumOff(t) { const g = AU.humG; if (!g) return; AU.humG = null; try { g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + 0.15); } catch (e) {} setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 6000); }
 function musicSwap(fade) {   // stop whatever is playing (notes already queued fade out) and start a clean channel; a longer fade for gentle changes
   if (!AU.ctx) return;
   const old = AU.mus, t = AU.ctx.currentTime, f = fade || 0.2;
@@ -2141,6 +2185,7 @@ function musicStart() {
   auVol();
   const np = $('nowPlaying');
   if (musOff()) { if (AU.style) musicSwap(); AU.style = ''; AU.song = null; songBarShow(); if (np) np.textContent = 'Music is off'; return; }
+  if (AU.hush && AU.ctx) musicHumOff(AU.ctx.currentTime); AU.hush = false;
   if (AU.song && AU.mode === settings.music) return;
   AU.mode = settings.music;
   if (AU.style) musicSwap(); musicPick(null); AU.nextT = AU.ctx.currentTime + 0.25; AU.movedAt = AU.ctx.currentTime;
@@ -2150,7 +2195,7 @@ function musicSkip(dir) {   // next (or, with -1, the one before). With one kind
   if (!AU.song || musOff()) return; const list = SONGS[AU.style] || [], i = list.indexOf(AU.song);
   musicSwap();
   if (settings.music === 'random' || settings.music === 'adaptive' || i < 0) {
-    if (dir === -1 && AU.hist && AU.hist.length > 1) { AU.hist.pop(); const h = AU.hist.pop(); AU.style = h[0]; AU.rnd = h[0]; AU.lastSong = AU.song; AU.song = h[1]; AU.melody = genMelody(h[1], MOOD[h[0]]); AU.bar = 0; AU.hist.push(h); musicLabel(); }   // (the one that played before)
+    if (dir === -1 && AU.hist && AU.hist.length > 1) { AU.hist.pop(); const h = AU.hist.pop(); AU.style = h[0]; AU.rnd = h[0]; AU.lastSong = AU.song; AU.song = h[1]; AU.melody = genMelody(h[1], MOOD[h[0]]); AU.bar = 0; AU.bar0 = 0; AU.songT0 = 0; AU.hist.push(h); musicLabel(); }   // (the one that played before)
     else musicPick(AU.song);
   } else musicPick(i + (dir === -1 ? -1 : 1));
   AU.nextT = AU.ctx.currentTime + 0.25; AU.movedAt = AU.ctx.currentTime;
@@ -3516,9 +3561,9 @@ const coarse = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matc
 let flipFs = false, ebMsgT = 0;
 function ebMsg(t) { const m = $('ebMsg'); m.textContent = t; m.classList.remove('hide'); clearTimeout(ebMsgT); ebMsgT = setTimeout(() => m.classList.add('hide'), 5000); }
 function editRefresh() {
-  $('ebTitle').textContent = !editMode ? 'Drag a piece to move it, tap it to resize. Tap a corner button twice to move it alone. The yellow boxes are where messages and chat show.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize. Red is screen info.';
+  $('ebTitle').textContent = !editMode ? 'Drag a piece to move it, tap it to resize. Tap a corner button twice to move it alone. The yellow box is where chat and joins show; pop-up messages stay where they are.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize. Red is screen info.';
   $('ebPresets').classList.toggle('hide', !editMode);
-  document.body.classList.toggle('uedit', uiEdit); $('msgDemo').classList.toggle('hide', !uiEdit);
+  document.body.classList.toggle('uedit', uiEdit); $('msgDemo').classList.add('hide');   // (the pop-up messages are not moved: no sample of them while editing)
   const f = $('ebFlip'); f.classList.toggle('hide', !coarse() || !editMode); f.querySelector('.t').textContent = isPortrait() ? 'Edit sideways' : 'Edit upright';
   editChips(); if (uiEdit) uiSelect(uiSel, cbSel); else selectBtn(editSel);
 }
@@ -3604,7 +3649,8 @@ function releaseInputs() {   // entering or leaving full screen cancels touches 
 
 // ----- moving and resizing the screen info: the info panel, the mini map, the stats line and the corner buttons (as a group, or each button on its own).
 // Every piece has a box of room a little bigger than itself; the touch buttons have a square of room each. Neither may go on the other's room, anywhere on the screen -----
-const UIP = { info: 'hudCard', stats: 'stLine', corner: 'corner', msgs: 'stack', feed: 'feed' }, UIN = { info: 'Info and map', stats: 'Stats', corner: 'Corner buttons', msgs: 'Messages', feed: 'Chat and joins' };
+const UIP = { info: 'hudCard', stats: 'stLine', corner: 'corner', feed: 'feed' }, UIN = { info: 'Info and map', stats: 'Stats', corner: 'Corner buttons', feed: 'Chat and joins' };   // (the pop-up messages stay where they are: they are pop-ups)
+const uiPushOn = () => settings.uiPush !== false;
 const CBN = { reset: 'Reset button', pause: 'Pause button', build: 'Build button', chat: 'Chat button' };
 const UI_M = 8, BTN_M = 8;   // (the extra room around each piece, and around each touch button)
 const uiZ = () => { try { return parseFloat(getComputedStyle($('top')).zoom) || 1; } catch (e) { return 1; } };
@@ -3620,7 +3666,7 @@ function pieceRects(k) {   // what a piece really covers on the screen (the corn
   if (k === 'stats') { const o = uiLay().stats, full = 80 * uiZ() * ((o && o.s) || 1); if (r[3] - r[1] < full) r[3] = r[1] + full; }   // (room for every stat at once, so turning more on never needs more room)
   return [r];
 }
-function uiReserved() { const out = []; for (const k in UIP) if (k !== 'msgs' && k !== 'feed') for (const r of pieceRects(k)) out.push({ k, r: [r[0] - UI_M, r[1] - UI_M, r[2] + UI_M, r[3] + UI_M] }); return out; }
+function uiReserved() { const out = []; for (const k in UIP) for (const r of pieceRects(k)) out.push({ k, r: [r[0] - UI_M, r[1] - UI_M, r[2] + UI_M, r[3] + UI_M] }); return out; }
 function btnSquares() {   // the room each touch button has, while they are on the screen
   const out = []; if (!(touchActive() || editMode) || $('touch').classList.contains('hide') && $('touch2').querySelectorAll('button:not(.hide)').length === 0) return out;
   for (const kk in curPts) { const el = $(BEL[kk]); if (!el || el.classList.contains('hide') || el.offsetParent === null && getComputedStyle(el).position !== 'fixed') continue; const q = curPts[kk], h = q[2] / 2 + BTN_M; out.push([q[0] - h, q[1] - h, q[0] + h, q[1] + h]); }
@@ -3628,17 +3674,31 @@ function btnSquares() {   // the room each touch button has, while they are on t
 }
 const rHit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
 function applyUiL() {
-  const L = uiLay(), z = uiZ(), W = innerWidth, H = innerHeight;
+  const L = uiLay(), z = uiZ(), W = innerWidth, H = innerHeight, fixed = edSess && uiEdit ? uiSel : null;
   { const rb = $('btnResetUi'); if (rb) rb.disabled = !Object.keys(L).some(k => k !== 'cb' || Object.keys(L.cb || {}).length); }
+  { const st = $('stack'); if (st) { st.style.removeProperty('--mx'); st.style.removeProperty('--my'); st.style.removeProperty('--ms'); } }
+  const put = (k, e, ady) => { const o = L[k]; if (!o && !ady) { e.style.transform = ''; return; } const x = o ? o.x : 0, y = (o ? o.y : 0) + ady, sc = o ? o.s || 1 : 1; e.style.transform = 'translate(' + (x / z) + 'px,' + (y / z) + 'px)' + (sc !== 1 ? ' scale(' + sc + ')' : ''); };
   for (const k in UIP) {
-    const e = $(UIP[k]); if (!e) continue; const o = L[k];
-    const put = k === 'msgs' ? () => { const st = e.style; st.setProperty('--mx', ((o ? o.x : 0) / z) + 'px'); st.setProperty('--my', ((o ? o.y : 0) / z) + 'px'); st.setProperty('--ms', String((o && o.s) || 1)); }   // (the message zone is placed by the page's own rule: it only gets nudged)
-      : k === 'info' ? () => { const sc = o.s || 1; e.style.zoom = sc === 1 ? '' : String(sc); e.style.transform = 'translate(' + (o.x / z / sc) + 'px,' + (o.y / z / sc) + 'px)'; }   // (the info card really grows, so what sits under it, like the stats, moves down instead of being covered)
-      : () => { e.style.transform = 'translate(' + (o.x / z) + 'px,' + (o.y / z) + 'px) scale(' + (o.s || 1) + ')'; };
-    if (!o) { if (k === 'msgs') put(); else { e.style.transform = ''; if (k === 'info') e.style.zoom = ''; } continue; }
-    put(); const r = e.getBoundingClientRect(); if (r.width < 2) continue;
+    const e = $(UIP[k]); if (!e) continue; const o = L[k]; e.style.zoom = ''; e._ady = 0;
+    put(k, e, 0); if (!o) continue; const r = e.getBoundingClientRect(); if (r.width < 2) continue;
     let dx = 0, dy = 0; if (r.left < 2) dx = 2 - r.left; else if (r.right > W - 2) dx = W - 2 - r.right; if (r.top < 2) dy = 2 - r.top; else if (r.bottom > H - 2) dy = H - 2 - r.bottom;   // (never off the screen, even after turning the phone)
-    if (dx || dy) { o.x = Math.round(o.x + dx); o.y = Math.round(o.y + dy); put(); }
+    if (dx || dy) { o.x = Math.round(o.x + dx); o.y = Math.round(o.y + dy); put(k, e, 0); }
+  }
+  /* What sits right under a piece that has grown or moved down onto it is pushed down out of its way (if "Push what is below" is on). The chat and joins are
+     always pushed out of the way, so they never cover anything. Whatever is being moved or resized right now is never the one pushed. */
+  const box = k => { const e = $(UIP[k]); if (!e || e.classList.contains('hide')) return null;
+    if (k === 'corner') { const rs = pieceRects('corner'); if (!rs.length) return null; return [Math.min(...rs.map(r => r[0])), Math.min(...rs.map(r => r[1])), Math.max(...rs.map(r => r[2])), Math.max(...rs.map(r => r[3]))]; }
+    const r = e.getBoundingClientRect(); if (r.width < 2) return k === 'feed' ? [r.left - 150, r.top, r.right, r.top + 1] : null;
+    const b = [r.left, r.top, r.right, r.bottom]; if (k === 'stats') { const p = pieceRects('stats')[0]; if (p) b[3] = p[3]; } return b; };
+  const ks = Object.keys(UIP).map(k => [k, box(k)]).filter(q => q[1]).sort((a, b) => a[1][1] - b[1][1]), done = [];
+  for (const [k, r0] of ks) {
+    let r = r0;
+    if (k !== fixed && (uiPushOn() || k === 'feed')) {
+      let need = 0; for (const [, a] of done) if (a[0] < r[2] && a[2] > r[0] && a[1] <= r[1] && a[3] + UI_M > r[1]) need = Math.max(need, a[3] + UI_M - r[1]);
+      need = Math.min(need, Math.max(0, H - 2 - r[3]));   // (but never off the bottom of the screen)
+      if (need > 0.5) { const e = $(UIP[k]); e._ady = Math.round(need); put(k, e, e._ady); r = box(k) || r; }
+    }
+    done.push([k, r]);
   }
   const mm = $('mm'), sk = Math.min(3, Math.max(1, ((L.info && L.info.s) || 1) * (devicePixelRatio || 1)));   // (a bigger map gets a sharper picture of the same area)
   if (Math.abs((mm._k || 1) - sk) > 0.01) { mm._k = sk; mm.width = Math.round(170 * sk); mm.height = Math.round(110 * sk); }
@@ -3646,9 +3706,8 @@ function applyUiL() {
 function uiOk(k) {   // on the screen, never on a touch button's room, never on another piece
   const mine = pieceRects(k); if (!mine.length) return true; const W = innerWidth, H = innerHeight;
   for (const r of mine) if (r[0] < 0 || r[1] < 0 || r[2] > W || r[3] > H) return false;
-  if (k === 'msgs' || k === 'feed') return true;   // (messages pop up over everything else, so they only need to stay on the screen)
   const sq = btnSquares(); for (const r of mine) for (const q of sq) if (rHit(r, q)) return false;   // (the red squares: a button and its room)
-  for (const kk in UIP) { if (kk === k || kk === 'msgs' || kk === 'feed') continue; for (const q of pieceRects(kk)) for (const r of mine) if (rHit(r, q)) return false; }
+  for (const kk in UIP) { if (kk === k) continue; for (const q of pieceRects(kk)) for (const r of mine) if (rHit(r, q)) return false; }
   if (k === 'corner') for (let a = 0; a < mine.length; a++) for (let b = a + 1; b < mine.length; b++) if (rHit(mine[a], mine[b])) return false;   // (the corner buttons never sit on each other)
   return true;
 }
@@ -3665,6 +3724,7 @@ function edZone() {   // red: where what you are moving may not go
   const er = $('editbar').getBoundingClientRect(), mid = innerHeight / 2, sel = uiEdit ? pieceRects(uiSel)[0] : curPts[editSel] ? [0, curPts[editSel][1], 0, curPts[editSel][1]] : null;
   const down = sel ? (sel[1] + sel[3]) / 2 < mid : false;   // (the bar sits at the far end from what you are moving; the arrows button swaps it)
   $('editbar').classList.toggle('ebdown', down !== ebSwapped);
+  { const pw = $('ebPushW'); if (pw) { pw.classList.toggle('hide', !uiEdit); $('ebPush').checked = uiPushOn(); } }
 }
 function uiSelect(k, cb) {
   uiSel = k; cbSel = k === 'corner' && cb ? cb : null; edKind = 'ui'; BK.forEach(q => $(BEL[q]).classList.remove('sel')); uiMark(); edZone();
@@ -3712,7 +3772,7 @@ Object.keys(UIP).forEach(k => {
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   }, true);
 });
-addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#hudCard,#corner,#stLine,#stack,#feed')) { e.stopPropagation(); e.preventDefault(); } }, true);
+addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#hudCard,#corner,#stLine,#feed')) { e.stopPropagation(); e.preventDefault(); } }, true);
 // with a keyboard: Tab picks the next piece, the arrows move it (hold Shift for big steps), + and - resize it, Enter or Esc is done
 addEventListener('keydown', e => {
   if (!edSess || !uiEdit) return;
@@ -3959,6 +4019,7 @@ $('btnPrevSong').onclick = () => { auWake(); musicSkip(-1); };
 $('sbPrev').onclick = e => { e.stopPropagation(); auWake(); musicSkip(-1); sfx('ui'); };
 $('sbNext').onclick = e => { e.stopPropagation(); auWake(); musicSkip(1); sfx('ui'); };
 bindToggle('setSongBar', 'songBar', () => songBarShow());
+$('ebPush').onchange = () => { settings.uiPush = $('ebPush').checked; save(); relayUi(); layoutTouch(); edZone(); };
 function botNote() {}
 $('setBotMax').oninput = () => { settings.botMaxOff = Math.max(1, Math.min(19, +$('setBotMax').value)); $('botMaxVal').textContent = settings.botMaxOff; save(); };
 // the important switches ask first when you turn them OFF; the small ones just switch
@@ -5427,26 +5488,26 @@ function ssBar(title, right, frac, sub, warnAt) {   // one row: a name, a figure
   const f = Math.max(0, Math.min(1, frac || 0)), w = warnAt || 0.7, cl = f >= 0.97 ? 'x' : f >= (1 + w) / 2 ? 'h' : f >= w ? 'w' : '';
   return '<div class="ssrow"><div class="sshd"><b>' + title + '</b><span>' + right + '</span></div><div class="ssbar"><i class="' + cl + '" style="width:' + (f * 100).toFixed(1) + '%"></i></div>' + (sub ? '<div class="sssub">' + sub + '</div>' : '') + '</div>';
 }
-function ssShow(st, err) {
-  const R = { good: ['Good', 'r-good'], bad: ['Bad', 'r-bad'], 'really bad': ['Really bad', 'r-really'], unusable: ['Unusable', 'r-unusable'], frozen: ['Frozen', 'r-frozen'] };
+function ssShow(st, err) {   // the server's figures that matter over time: how many can play, the month's allowance, and the highest it has been (nothing that changes from second to second)
   const box = $('ssRate');
-  if (!st) { box.className = 'ssrate r-frozen'; $('ssWord').textContent = err === 'slow' ? 'Frozen' : 'Not answering'; $('ssWhy').textContent = err === 'slow' ? 'The server took too long to answer' : 'Could not reach the game server (it may be starting up, which takes about a minute)'; $('ssBody').innerHTML = ''; return; }
-  const r = R[st.rating] || R.good; box.className = 'ssrate ' + r[1]; $('ssWord').textContent = r[0];
-  $('ssWhy').textContent = st.why + (st.level ? (st.level >= 2 ? ' · it is working the world out in bigger steps to keep up' : ' · it is sending updates less often to keep up') : '');
-  const bw = st.bandwidth, h = st.hours, bwF = bw.used / bw.limit, dayShare = bw.perDayLeft;
+  if (!st) { box.className = 'ssrate r-frozen'; $('ssWord').textContent = err === 'slow' ? 'Not answering' : 'Not answering'; $('ssWhy').textContent = err === 'slow' ? 'The server took too long to answer' : 'Could not reach the game server (it may be starting up, which takes about a minute)'; $('ssBody').innerHTML = ''; return; }
+  const bw = st.bandwidth, h = st.hours, bwF = bw.used / bw.limit, hF = h.limit ? h.used / h.limit : 0, pk = st.peaks || {}, cap = st.capacity || {}, memF = Math.max(pk.mem || 0, st.mem.used) / st.mem.limit;
+  const day = t => { if (!t) return ''; const d = new Date(t); return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); };
+  let word = 'Good', cls = 'r-good', why = 'Plenty left for this month';
+  if (bwF >= 0.85 || hF >= 0.85 || memF >= 0.85 || (pk.cpu || 0) >= 0.95) { word = 'Watch it'; cls = 'r-bad'; why = bwF >= 0.85 ? 'Most of this month\'s data is used' : hF >= 0.85 ? 'Most of this month\'s server hours are used' : memF >= 0.85 ? 'Memory has come close to the limit' : 'The server has been at full stretch at times this month'; }
+  if (bwF >= 1 || hF >= 1) { word = 'Out'; cls = 'r-unusable'; why = bwF >= 1 ? 'This month\'s data is used up' : 'This month\'s server hours are used up'; }
+  box.className = 'ssrate ' + cls; $('ssWord').textContent = word; $('ssWhy').textContent = why;
   const lasts = bw.lastsDays >= st.daysLeft ? 'At this pace it lasts the month' : 'At this pace it runs out in about ' + ssFmtD(bw.lastsDays);
-  let html = '';
-  html += ssBar('Data this month', ssFmtB(bw.used) + ' of ' + ssFmtB(bw.limit) + ' · ' + Math.round(100 - bwF * 100) + '% left', bwF, lasts + ' · ' + ssFmtB(dayShare) + ' a day left to use over ' + ssFmtD(st.daysLeft));
-  html += ssBar('Data today', ssFmtB(bw.today) + ' of about ' + ssFmtB(Math.max(1, dayShare + bw.today)), bw.today / Math.max(1, dayShare + bw.today), 'Sending ' + ssFmtB(bw.outPerSec) + '/s now · receiving ' + ssFmtB(bw.inPerSec) + '/s');
-  const upTxt = 'Running for ' + (h.upSec >= 3600 ? Math.floor(h.upSec / 3600) + ' h ' : '') + Math.floor(h.upSec % 3600 / 60) + ' min since it last started';
-  if (h.limit) html += ssBar('Server hours this month', h.used.toFixed(1) + ' of ' + h.limit + ' h', h.used / h.limit, upTxt + ' (a free server sleeps 15 min after everyone leaves)');
-  else html += ssBar('Server hours this month', h.used.toFixed(1) + ' h · no limit', 0, upTxt);   // (a paid server has no hour limit)
-  const cpuF = st.cpu.used / st.cpu.limit;
-  html += ssBar('Processor', Math.round(cpuF * 100) + '% of what it may use', cpuF, (st.cpu.limit < 1 ? 'Allowed ' + Math.round(st.cpu.limit * 100) + '% of one processor' : 'Allowed ' + st.cpu.limit + ' processor' + (st.cpu.limit > 1 ? 's' : '')), 0.6);
-  html += ssBar('Memory', ssFmtB(st.mem.used) + ' of ' + ssFmtB(st.mem.limit), st.mem.used / st.mem.limit, '', 0.6);
-  const tF = st.tick.ms / st.tick.budget;
-  html += ssBar('Speed', st.tick.ms.toFixed(1) + ' ms of ' + st.tick.budget + ' ms per update', tF, st.tick.lateMs < 5 ? 'Updates arrive on time (' + (Math.round(1000 / st.tick.budget / 10) * 10) + ' a second, physics ' + st.tick.step + ' steps a second)' : 'Updates are running up to ' + Math.round(st.tick.lateMs) + ' ms late', 0.5);
-  html += '<div class="ssgrid"><div><span>Players online</span><b>' + st.players + '</b></div><div><span>Worlds in use</span><b>' + st.rooms + '</b></div><div><span>Things in the worlds</span><b>' + st.things + '</b></div><div><span>Moving right now</span><b>' + st.moving + '</b></div></div>';
+  const tile = (k, v, sub) => '<div><span>' + k + '</span><b>' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>';
+  let html = '<div class="sscap"><b>' + (cap.total || st.maxPlayers) + ' players at once</b><span>Across the whole site. Everyone in a game counts once, in a public world or a private one, and hosting a private game counts as one player too. Up to ' + (cap.perWorld || st.perWorld) + ' in any one world. When it is full, newcomers wait on the menu and get in as soon as someone leaves.' + (cap.fullQuality && cap.fullQuality < cap.total ? ' Past about ' + cap.fullQuality + ' busy players the server eases off a little (fewer updates a second) so it stays smooth for everyone.' : '') + '</span></div>';
+  html += '<div class="ssgrid">' + tile('Most players this month', pk.players || 0, day(pk.playersAt)) + tile('Most ever', st.record || 0, '') +
+    tile('Highest server use', Math.round((pk.cpu || 0) * 100) + '%', pk.cpuAt ? day(pk.cpuAt) + ' · over 10 s' : 'this month · over 10 s') + tile('Most memory', ssFmtB(Math.max(pk.mem || 0, st.mem.used)), 'of ' + ssFmtB(st.mem.limit) + ' this month') + '</div>';
+  html += ssBar('Data this month', ssFmtB(bw.used) + ' of ' + ssFmtB(bw.limit) + ' · ' + Math.max(0, Math.round(100 - bwF * 100)) + '% left', bwF, lasts + ' · about ' + ssFmtB(bw.perDayLeft) + ' a day for the ' + ssFmtD(st.daysLeft) + ' left');
+  if (h.limit) html += ssBar('Server hours this month', h.used.toFixed(1) + ' of ' + h.limit + ' h', hF, 'A free server sleeps 15 minutes after everyone leaves');
+  else html += ssBar('Server hours this month', h.used.toFixed(1) + ' h · no limit', 0, '');
+  html += ssBar('Memory now', ssFmtB(st.mem.used) + ' of ' + ssFmtB(st.mem.limit), st.mem.used / st.mem.limit, '', 0.6);
+  const up = h.upSec, upTxt = (up >= 86400 ? Math.floor(up / 86400) + ' d ' : '') + (up >= 3600 ? Math.floor(up % 86400 / 3600) + ' h ' : '') + Math.floor(up % 3600 / 60) + ' min';
+  html += '<p class="sssub ssfoot">Server version ' + st.v + ' · running ' + upTxt + ' since it last started · allowed ' + (st.cpu.limit < 1 ? Math.round(st.cpu.limit * 100) + '% of one processor' : st.cpu.limit + ' processor' + (st.cpu.limit > 1 ? 's' : '')) + '</p>';
   $('ssBody').innerHTML = html;
 }
 function ssPoll() {
@@ -5459,12 +5520,12 @@ function ssPoll() {
 }
 function openStatus() {
   $('ssWord').textContent = 'Checking…'; $('ssWhy').textContent = ''; $('ssRate').className = 'ssrate'; $('ssBody').innerHTML = '';
-  $('srvStat').classList.remove('hide'); ssPoll(); if (!ssTimer) ssTimer = setInterval(ssPoll, 2000);
+  $('srvStat').classList.remove('hide'); ssPoll();   // (once: these figures do not change from moment to moment)
 }
 $('ssClose').onclick = () => { sfx('ui'); $('srvStat').classList.add('hide'); };
 
 /* ----- maker access: the server's figures are behind a code ----- */
-let makerOk = false; try { makerOk = sessionStorage.getItem('ballrun4_maker') === '1'; } catch (e) {}
+let makerOk = true;   // (the server's figures are open to whoever can see the update button)
 function askMaker() {
   if (makerOk) { openStatus(); return; }
   $('cbInput').value = ''; $('cbBad').classList.add('hide'); $('codeBox').classList.remove('hide'); setTimeout(() => { try { $('cbInput').focus(); } catch (e) {} }, 50);
@@ -6135,7 +6196,7 @@ $('csOk').onclick = () => $('codesModal').classList.add('hide'); addEventListene
 $('cdIn').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); else if (e.key === 'Escape') closeCode(); e.stopPropagation(); });
 $('codeModal').addEventListener('pointerdown', e => { if (e.target === $('codeModal')) closeCode(); });
 function onDoubleTap(el, fn) { let t = 0, x = 0, y = 0; el.addEventListener('click', e => { const n = performance.now(); if (n - t < 450 && Math.hypot(e.clientX - x, e.clientY - y) < 40) { t = 0; fn(); } else { t = n; x = e.clientX; y = e.clientY; } }); }
-onDoubleTap($('homeWallet'), openCode); onDoubleTap($('coinpill'), openCode);
+onDoubleTap($('homeWallet'), openCode);   // (the coins in the game are handled with the map info: see infoPop)
 
 /* ================= networking ================= */
 /* The little bubble at the top says two plain things. The word is the kind of game: Public or Private. The dot is the connection: green = connected, orange = connecting, red = not connected. */
@@ -7793,7 +7854,11 @@ function fillTimerPop(rem) {
   ar.classList.toggle('hide', !on);
   if (on && S.b) { const f = S.map.flag, a = Math.atan2(f[1] * TS - S.b.y, f[0] * TS - S.b.x) * 180 / Math.PI + 90; ar.style.transform = 'rotate(' + a.toFixed(0) + 'deg)'; }
 }
-$('info').onclick = e => { if (e.target.closest('#linkpill,#tpop')) return; e.stopPropagation(); const el = $('tpop'); const open = el.classList.contains('hide'); el.classList.toggle('hide', !open); if (open) { fillTimerPop(S.nextAt - nowMs()); sfx('ui'); } };
+function infoPop() { const el = $('tpop'); const open = el.classList.contains('hide'); el.classList.toggle('hide', !open); if (open) { fillTimerPop(S.nextAt - nowMs()); sfx('ui'); } }
+let coinTapT = 0;   // (a tap on the coins waits a moment: a second tap opens the code box instead, and the map info never shows)
+$('info').onclick = e => { if (e.target.closest('#linkpill,#tpop')) return; e.stopPropagation();
+  if (e.target.closest('#coinpill')) { if (coinTapT) { clearTimeout(coinTapT); coinTapT = 0; $('tpop').classList.add('hide'); openCode(); } else coinTapT = setTimeout(() => { coinTapT = 0; infoPop(); }, 330); return; }
+  infoPop(); };
 // the map details open as a big card over everything (tap outside it, the X, or Esc to close)
 { const bk = document.createElement('div'); bk.id = 'tpopBack'; bk.className = 'hide'; document.body.appendChild(bk); const tp = $('tpop'); bk.appendChild(tp);
   const x = document.createElement('button'); x.type = 'button'; x.className = 'tpx'; x.setAttribute('aria-label', 'Close'); x.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'; tp.prepend(x);
@@ -7812,7 +7877,7 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, addGate, SONGS, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
+if (params && params.get('test')) window.__d = { NET, addGate, SONGS, ui: { start: () => startEdit(true), end: () => endEdit(), sel: (k, c) => uiSelect(k, c), size: v => uiResize(v), move: (k, x, y) => uiMoveBy(k, x, y), push: on => { settings.uiPush = on; relayUi(); }, rects: () => { const o = {}; for (const k in UIP) { const r = pieceRects(k)[0]; o[k] = r ? r.map(Math.round) : null; } o.feedTop = Math.round($("feed").getBoundingClientRect().top); o.lay = JSON.stringify(settings.uiL); return o; } }, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, hush: !!AU.hush, bar: AU.bar, t0: AU.songT0, ct: AU.ctx && AU.ctx.currentTime, prog: ($('npProg') || {}).style ? $('npProg').style.width : '', sbp: $('sbProg').style.width, npt: $('npTime').textContent, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
     const sg = SONGS[kind][idx], sr = 22050, secs = bars * songBeats(sg) * 60 / sg.bpm + 1.5, oc = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
     if (!AU.noiseBuf) auInit();
     const keep = { ctx: AU.ctx, mus: AU.mus, song: AU.song, style: AU.style, bar: AU.bar, melody: AU.melody };

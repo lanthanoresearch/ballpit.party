@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 180;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 181;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -80,35 +80,50 @@ const CPU_LIMIT = (() => { if (+process.env.CPU_LIMIT) return +process.env.CPU_L
   CPU_KNOWN = false; return process.env.RENDER ? 0.5 : Math.max(1, require('os').cpus().length); })();
 /* How many people can play at once, set for the worst case: everybody in every world has built everything they are allowed to and keeps running through it.
    Measured: one such world of 20 takes about three quarters of a processor core, two take a whole core and still run smoothly, three fall behind.
-   So: 40 players for each full core (a 0.5 core plan: 20, a free 0.1 core plan: 4), and 20 in any one world. MAX_TOTAL and MAX_PLAYERS set them by hand. */
+   So: 40 players for each full core, but never fewer than 20 (on a small plan the server eases off as it fills up), and 20 in any one world. MAX_TOTAL and MAX_PLAYERS set them by hand. */
 const CPU_EFF = Math.max(0.05, Math.min(1, CPU_LIMIT));   // (one game server only ever uses one core)
-const MAX_TOTAL = Math.max(2, parseInt(process.env.MAX_TOTAL, 10) || Math.max(4, Math.min(200, Math.round(CPU_EFF * 40))));
+const MAX_TOTAL = Math.max(2, parseInt(process.env.MAX_TOTAL, 10) || Math.max(20, Math.min(200, Math.round(CPU_EFF * 40))));   // (never fewer than 20: past what the processor can do at full quality, the server eases off step by step, see health)
 const MAX_PLAYERS = Math.min(MAX_PLAYERS_ENV, MAX_TOTAL);
 const PROP_SHARE = Math.floor(1600 / MAX_PLAYERS);   // crates, balls and springs every player in a world is always sure of (80 with 20 players)   // players per world: few enough that a world full of builds stays smooth for everyone
 const PAID = CPU_LIMIT > 0.15, HOURS_LIMIT = +process.env.INSTANCE_HOURS || (PAID ? Infinity : 750);   // (a paid server has no monthly hour limit)
 const MEM_LIMIT = (() => { if (+process.env.MEM_MB) return +process.env.MEM_MB * 1048576; const v = +cgroupNum(['/sys/fs/cgroup/memory.max', '/sys/fs/cgroup/memory/memory.limit_in_bytes']); if (v > 0 && v < 1e15) return v; return process.env.RENDER ? 512 * 1048576 : require('os').totalmem(); })();
 const monthKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 7), dayKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 10);
-let usage = { m: monthKey(), out: 0, in: 0, sec: 0, day: dayKey(), dayOut: 0 };
+let usage = { m: monthKey(), out: 0, in: 0, sec: 0, day: dayKey(), dayOut: 0, pkCpu: 0, pkCpuAt: 0, pkMem: 0, pkPl: 0, pkPlAt: 0 };   // (pk: this month's highest processor use, memory and players)
 try { const u = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8')).usage; if (u && u.m === usage.m) usage = Object.assign(usage, u); } catch (e) {}
-function useRoll() { const m = monthKey(), d = dayKey(); if (usage.m !== m) usage = { m, out: 0, in: 0, sec: 0, day: d, dayOut: 0 }; if (usage.day !== d) { usage.day = d; usage.dayOut = 0; } }
+function useRoll() { const m = monthKey(), d = dayKey(); if (usage.m !== m) usage = { m, out: 0, in: 0, sec: 0, day: d, dayOut: 0, pkCpu: 0, pkCpuAt: 0, pkMem: 0, pkPl: 0, pkPlAt: 0 }; if (usage.day !== d) { usage.day = d; usage.dayOut = 0; } }
 function useOut(n) { usage.out += n; usage.dayOut += n; netNow.out += n; }
 function useIn(n) { usage.in += n; netNow.in += n; }
 function useMerge(u) {   // a player's device remembers the counts from before the server restarted
   if (!u || u.m !== usage.m || typeof u.out !== 'number') return;
   usage.out = Math.max(usage.out, Math.min(u.out, 1e13)); usage.in = Math.max(usage.in, Math.min(+u.in || 0, 1e13)); usage.sec = Math.max(usage.sec, Math.min(+u.sec || 0, 31 * 86400));
   if (u.day === usage.day) usage.dayOut = Math.max(usage.dayOut, Math.min(+u.dayOut || 0, 1e13));
+  if (+u.pkCpu > usage.pkCpu && +u.pkCpu < 5) { usage.pkCpu = +u.pkCpu; usage.pkCpuAt = +u.pkCpuAt || 0; } if (+u.pkMem > usage.pkMem && +u.pkMem < 1e12) usage.pkMem = +u.pkMem; if ((u.pkPl | 0) > usage.pkPl && (u.pkPl | 0) < 10000) { usage.pkPl = u.pkPl | 0; usage.pkPlAt = +u.pkPlAt || 0; }
 }
 const netNow = { out: 0, in: 0, t: Date.now(), rOut: 0, rIn: 0 };
-const health = { tickMs: [], late: [], lastTick: Date.now(), cpu: 0, cpuT: process.cpuUsage(), cpuAt: Date.now(), level: 0, levelAt: 0, awake: 0 };
-setInterval(() => {   // once a second: data rates, how much of the processor it uses, hours running; and if it cannot keep up, it takes it easier
+const health = { tickMs: [], late: [], lastTick: Date.now(), cpu: 0, cpuNow: 0, cpuHist: [], cpuT: process.cpuUsage(), cpuAt: Date.now(), level: 0, levelAt: 0, awake: 0, physMs: 0, physAvg: 0 };
+/* How hard it works: measured every second, but judged over the last 10 seconds. A single second can jump high and fall straight back (a new map being made,
+   the JavaScript engine tuning itself up, tidying memory), and that is not the server being overloaded.
+   Levels: 0 everything at full quality. 1 players hear about the world 20 times a second instead of 30. 2 also 15 a second. 3 also the world worked out in
+   steps half as fine. It goes down a level only when it is truly short of processor or falling behind, and back up as soon as there is room again. */
+setInterval(() => {
   useRoll(); usage.sec += 1;
   const t = Date.now(), dt = (t - netNow.t) / 1000; netNow.rOut = netNow.out / dt; netNow.rIn = netNow.in / dt; netNow.out = netNow.in = 0; netNow.t = t;
-  const c = process.cpuUsage(health.cpuT), w = (t - health.cpuAt) * 1000; health.cpu = w > 0 ? (c.user + c.system) / w : 0; health.cpuT = process.cpuUsage(); health.cpuAt = t;
-  const lateP = pct(health.late, 0.95), load = health.cpu / CPU_LIMIT;
-  if ((lateP > 45 || (CPU_KNOWN && load > 0.95 && lateP > 15)) && t - health.levelAt > 4000 && health.level < 2) { health.level++; health.levelAt = t; }   // (really falling behind: first it tells the players less often, then it works the world out in bigger steps. Being busy alone is fine as long as it keeps up)
-  else if (lateP < 20 && (!CPU_KNOWN || load < 0.7) && t - health.levelAt > 8000 && health.level > 0) { health.level--; health.levelAt = t; }   // (and back to full speed as soon as it is keeping up again)
-  SIMDT = health.level >= 2 ? 1 / 60 : 1 / 120;
+  const c = process.cpuUsage(health.cpuT), w = (t - health.cpuAt) * 1000; health.cpuNow = w > 0 ? (c.user + c.system) / w : 0; health.cpuT = process.cpuUsage(); health.cpuAt = t;
+  health.cpuHist.push(health.cpuNow); if (health.cpuHist.length > 10) health.cpuHist.shift();
+  health.cpu = health.cpuHist.reduce((a, b) => a + b, 0) / health.cpuHist.length;
+  health.physAvg += (health.physMs / Math.max(0.2, dt) / 1000 - health.physAvg) * 0.3; health.physMs = 0;
+  const lateP = pct(health.late, 0.95), load = health.cpu / CPU_LIMIT, rss = process.memoryUsage().rss;
+  if (health.cpuHist.length >= 10 && load > usage.pkCpu && process.uptime() > 30) { usage.pkCpu = +load.toFixed(3); usage.pkCpuAt = t; }   // (this month's highest, over 10 seconds; not counting the first half minute after a start, which is the engine warming up)
+  if (rss > usage.pkMem) usage.pkMem = rss;
+  { const n = health.cpuHist.length, l3 = health.cpuHist.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, n || 1) / CPU_LIMIT, lt = health.late.slice(-60), lateNow = lt.length ? Math.max(...lt) : 0;
+    if ((CPU_KNOWN && l3 > 0.85) || lateNow > 25) phys.bud = Math.max(30, phys.bud * 0.7);
+    else if ((!CPU_KNOWN || l3 < 0.65) && lateNow < 8) phys.bud = Math.min(600 * Math.max(1, phys.busy), phys.bud * 1.15 + 5); }
+  const down = lateP > 45 || (CPU_KNOWN && load > 0.92 && lateP > 12), up = lateP < 15 && (!CPU_KNOWN || load < 0.7);
+  if (down && t - health.levelAt > 3000 && health.level < 3) { health.level++; health.levelAt = t; }
+  else if (up && t - health.levelAt > 6000 && health.level > 0) { health.level--; health.levelAt = t; }
+  SIMDT = health.level >= 3 ? 1 / 60 : 1 / 120;
 }, 1000).unref();
+const sendEvery = () => health.level >= 2 ? 4 : health.level >= 1 ? 3 : 2;   // (in 60ths of a second: 30, 20 or 15 updates a second)
 function pct(a, q) { if (!a.length) return 0; const b = [...a].sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.floor(b.length * q))]; }
 function statusNow() {
   useRoll();
@@ -126,7 +141,9 @@ function statusNow() {
   return { v: GAME_V, rating, why, level: health.level, now: t, month: usage.m, daysInMonth: dim, daysLeft: +daysLeft.toFixed(2),
     bandwidth: { used: usage.out, limit: bwLimit, inUsed: usage.in, today: usage.dayOut, perDayLeft: Math.max(0, (bwLimit - usage.out) / daysLeft), perDayAvg: perDay, lastsDays: +lasts.toFixed(1), outPerSec: Math.round(netNow.rOut), inPerSec: Math.round(netNow.rIn) },
     hours: { used: +(usage.sec / 3600).toFixed(2), limit: HOURS_LIMIT, upSec: Math.round(process.uptime()) },
-    cpu: { used: +health.cpu.toFixed(4), limit: CPU_LIMIT }, mem: { used: rss, limit: MEM_LIMIT },
+    cpu: { used: +health.cpu.toFixed(4), now: +health.cpuNow.toFixed(4), limit: CPU_LIMIT, known: CPU_KNOWN }, mem: { used: rss, limit: MEM_LIMIT },
+    peaks: { players: usage.pkPl, playersAt: usage.pkPlAt, cpu: usage.pkCpu, cpuAt: usage.pkCpuAt, mem: Math.max(usage.pkMem, rss) }, record: peak,
+    capacity: { total: MAX_TOTAL, perWorld: MAX_PLAYERS, fullQuality: Math.max(1, Math.round(CPU_EFF * 40)) },
     tick: { ms: +tickMs.toFixed(2), budget: TICK_MS, lateMs: +lateP.toFixed(1), step: SIMDT > 0.01 ? 60 : 120 },
     players: online, maxPlayers: MAX_TOTAL, perWorld: MAX_PLAYERS, physBudget: physBudget(), physCostMs: +phys.cost.toFixed(4), rooms: [...rooms.values()].filter(r => r.players.size).length, things, moving: awake };
 }
@@ -396,14 +413,25 @@ function genMap(i) {
   const keep = curSlot % maps.count; for (const k of mapMemo.keys()) { if (mapMemo.size <= 5) break; if (k !== keep) mapMemo.delete(k); }   // (the oldest go first, never the public one)
   return m;
 }
-setInterval(() => { if (nextAt(curSlot) - Date.now() < 3 * 60000) genMap(curSlot + 1); }, 30000).unref();   // (the next public map is made a few minutes early, while things are calm, not at the moment everybody is waiting for it)
+/* The next public map is made a few minutes early, and on the side (in a second thread), so the world everybody is playing in never stops for it */
+let genBusy = false;
+function genAhead(i) {
+  i = ((i | 0) % maps.count + maps.count) % maps.count; if (mapMemo.has(i) || genBusy) return;
+  let wk; try { const { Worker } = require('worker_threads'); wk = new Worker("const { parentPort, workerData } = require('worker_threads'); parentPort.postMessage(require(workerData.f).generate(workerData.i));", { eval: true, workerData: { f: require.resolve('./maps.js'), i } }); }
+  catch (e) { genMap(i); return; }
+  genBusy = true;
+  wk.once('message', m => { if (!mapMemo.has(i) && m && m.W) { mapMemo.set(i, m); const keep = curSlot % maps.count; for (const k of mapMemo.keys()) { if (mapMemo.size <= 5) break; if (k !== keep && k !== i) mapMemo.delete(k); } } });
+  wk.once('error', () => {}); wk.once('exit', () => { genBusy = false; });
+}
+setInterval(() => { if (nextAt(curSlot) - Date.now() < 3 * 60000) genAhead(curSlot + 1); }, 30000).unref();
+setTimeout(() => genAhead(curSlot), 50);   // (and the public map is made as soon as the server starts, before anybody arrives)   // (the next public map is made a few minutes early, while things are calm, not at the moment everybody is waiting for it)
 function finCount() { const m = genMap(curSlot); return (m.fins || [1]).length; }
 function pickFin() { return Math.floor(Math.random() * finCount()); }
 /* A guard against too many private games at once. Plenty can run side by side; a new one is only turned away when there are a great many already,
    or when the server is truly falling behind (it has already dropped to its slowest setting) while a fair number are open. */
 const PRIV_ROOMS = Math.max(4, +process.env.PRIV_ROOMS || 80), PRIV_ROOMS_BUSY = Math.max(2, +process.env.PRIV_ROOMS_BUSY || 12);
 function privCount() { let n = 0; for (const r of rooms.values()) if (r.priv) n++; return n; }
-function privFull() { const n = privCount(); return n >= PRIV_ROOMS || (health.level >= 2 && n >= PRIV_ROOMS_BUSY); }
+function privFull() { const n = privCount(); return n >= PRIV_ROOMS || (health.level >= 3 && n >= PRIV_ROOMS_BUSY); }
 function roomMap(room) { return maps.withFin(genMap(rslot(room)), room.fk | 0); }
 const inZoneT = (w, tx, ty) => P.zoneT(w.map, tx, ty);
 function miscOkZ(w, q) {   // (the same rule every device uses: nothing built in the start zone or around the finish, wherever the finish is this round)
@@ -563,8 +591,8 @@ function giveBack(r, d, by) {   // a built thing is gone (deleted by anyone, or 
 }
 /* The physics share: at most about half of what this server may use goes to crates and balls moving, shared out between the worlds where a lot is moving.
    Past that, what is nearest to the players moves first and what is further away waits its turn, so a world where everybody built everything never slows the server down. */
-const phys = { cost: 0.012, busy: 1, busyN: 0 };   // (cost: milliseconds per moving thing per step, measured as it runs)
-function physBudget() { const perStep = 1000 * 0.5 * CPU_EFF * SIMDT; return Math.max(30, Math.min(600, Math.floor(perStep / phys.busy / Math.max(0.002, phys.cost)))); }
+const phys = { cost: 0.012, busy: 1, busyN: 0, bud: 600 };   // (bud: how many moving things in all; it is turned down when the server is short of processor or running late, and back up when there is room)   // (cost: milliseconds per moving thing per step, measured as it runs)
+function physBudget() { return Math.max(30, Math.min(600, Math.floor(phys.bud / phys.busy))); }   // (shared between the worlds where a lot is moving)
 function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
   phys.busy = Math.max(1, phys.busyN); phys.busyN = 0;
@@ -580,9 +608,15 @@ function simTick() {
     for (const p of room.players.values()) if (!act.includes(p)) p.qx = undefined;
     if (n) {
       roomBots(room, w, dtReal);
-      w.focus = act.map(p => ({ x: p.x, y: p.y })); if (room.bots) for (const bt of room.bots) if (!(bt.dead > 0)) w.focus.push({ x: bt.b.x, y: bt.b.y });
-      { const fo = w.focus, fc = new Map(); for (const q of fo) { const c = Math.floor(q.x / 420); for (let k = c - 1; k <= c + 1; k++) { let a = fc.get(k); if (!a) fc.set(k, a = []); a.push(q); } }   // (players looked up by column: the same list as checking every player, found faster)
-        w.cand = w.dyn.filter(d => { if (d.burn > 0) return false; const a = fc.get(Math.floor(d.x / 420)); if (!a) return false; for (let i = 0; i < a.length; i++) if (Math.abs(d.x - a[i].x) < 420 && Math.abs(d.y - a[i].y) < 420) return true; return false; }); }
+      { const fo = [], seen = new Set(), add = (x, y) => { const k = Math.floor(x / 48) * 100003 + Math.floor(y / 48); if (seen.has(k)) return; seen.add(k); fo.push({ x, y }); };   // (where the players are, one point for each little square: a crowd standing together counts once)
+        for (const p of act) add(p.x, p.y); if (room.bots) for (const bt of room.bots) if (!(bt.dead > 0)) add(bt.b.x, bt.b.y);
+        w.focus = fo;
+        if (!w.cand || room.tk - (w.candTk | 0) >= 2 || w.dyn.length !== w.candN || fo.length !== w.candF) {   // (the things near a player: worked out every other update, a little wider than needed so nobody outruns it)
+          w.candTk = room.tk; w.candN = w.dyn.length; w.candF = fo.length; const R = 450, fc = new Map();
+          for (const q of fo) { const c = Math.floor(q.x / R); for (let k = c - 1; k <= c + 1; k++) { let a = fc.get(k); if (!a) fc.set(k, a = []); a.push(q); } }
+          w.cand = w.dyn.filter(d => { if (d.burn > 0) return false; const a = fc.get(Math.floor(d.x / R)); if (!a) return false; for (let i = 0; i < a.length; i++) if (Math.abs(d.x - a[i].x) < R && Math.abs(d.y - a[i].y) < R) return true; return false; });
+        } else if (w.cand.length && w.cand.some(d => d.burn > 0)) w.cand = w.cand.filter(d => !(d.burn > 0));
+      }
       const pbs = w.pbList || (w.pbList = []);
       for (let k = 0; k < n; k++) {
         pbs.length = 0; for (const p of act) { const o = p.pbo || (p.pbo = { x: 0, y: 0 }); o.x = p.x; o.y = p.y; pbs.push(o); }
@@ -590,7 +624,7 @@ function simTick() {
         w.pb = pbs;   // (every player's ball is solid to everything in the world: nothing is pushed or squeezed into it)
         w.dynBudget = physBudget(); const pt0 = performance.now();
         P.stepDyn(w, SIMDT);
-        if (w.nAct > 40) { phys.cost += ((performance.now() - pt0) / w.nAct - phys.cost) * 0.02; if (k === 0) phys.busyN++; }
+        { const ms = performance.now() - pt0; health.physMs += ms; w.physFix = w.physFix === undefined ? ms : w.physFix; if (w.nAct < 8) w.physFix += (ms - w.physFix) * 0.05; else { if (w.nAct > 40) phys.cost += (Math.max(0.004, (ms - Math.min(w.physFix, ms * 0.8)) / w.nAct) - phys.cost) * 0.02; if (k === 0) phys.busyN++; } }   // (what each moving thing costs, apart from what the step costs anyway)
         if (room.bots && room.bots.length && (SIMDT > 1 / 100 || (room.tk + k) % 2)) stepRoomBots(room, w, SIMDT > 1 / 100 ? SIMDT : SIMDT * 2);   // (bots think and move 60 times a second)
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
@@ -654,7 +688,7 @@ function simTick() {
         for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (p.dver.get(d.uid) === d.ver) continue; const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y; if (p.looked0 && (Math.abs(x - p.x) > 1900 || Math.abs(y - p.y) > 1500)) continue; pend.add(d); }   // (someone who has just arrived is told where everything in the whole world is, once: their map shows every crate and ball that was ever built, where it really lies, not only what is near them. After that they hear about what is around them)
       } else for (let i = 0; i < chg.length; i++) { const d = chg[i]; if (p.dver.get(d.uid) === d.ver) continue; if (!(d.burn > 0) && p.dver.has(d.uid) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue; pend.add(d); }   // (what is far away is told only now and then, enough for the map: every few seconds at most)
       if (!pend.size) { if (!p.looked0 && full) { p.looked0 = true; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); } continue; }
-      if (!p.looked0 ? false : room.tk % (health.level >= 1 ? 4 : 2)) continue;   // (30 times a second, which each device fills in smoothly; a server that cannot keep up halves that. A player who has just arrived gets everything as fast as it goes)
+      if (!p.looked0 ? false : room.tk % sendEvery()) continue;   // (30 times a second, which each device fills in smoothly; a server that cannot keep up halves that. A player who has just arrived gets everything as fast as it goes)
       // each moment only so much is sent (a slow connection is never flooded): what has waited longest and what is closest goes first, so nothing is ever left waiting while other things are told again and again. In between, each device carries everything on along its path, falling as it falls
       const cap = !p.looked0 || pend.size > 200 ? 200 : SEND_CAP; let out;
       if (pend.size <= cap) { out = [...pend]; pend.clear(); }
@@ -804,6 +838,7 @@ wss.on('connection', (ws, req) => {
         room.players.set(p.id, p);
         online++; statsDirty = true;
         if (online > peak) { peak = online; peakDirty = true; }
+        if (online > usage.pkPl) { usage.pkPl = online; usage.pkPlAt = Date.now(); }
         send(p, {
           t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), fk: room.fk | 0, next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
