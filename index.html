@@ -590,6 +590,8 @@
   body.uedit #feed::before{content:'Chat and joins show here';display:block;padding:4px 10px;font-size:13px;color:#fff;background:rgba(255,210,61,.18);border:2px dashed #ffd23d;border-radius:8px;text-align:center}
   #feed{transform-origin:top right}
 
+  body.uedit #stack{pointer-events:auto!important;cursor:move;touch-action:none;outline:2px dashed #ffd23d;outline-offset:3px}body.uedit #stack *{pointer-events:none!important}body.uedit #stack>:not(#msgDemo){display:none!important}body.uedit #stack>#msgDemo{display:block!important}
+  html body #top>#stack.popset{position:fixed!important;left:var(--popX)!important;top:var(--popY)!important;right:auto!important;bottom:auto!important;transform:translateX(-50%) scale(var(--popS,1))!important;transform-origin:50% 0;width:max-content!important;max-width:min(92vw,520px)!important;justify-self:auto!important;align-self:auto!important;align-items:center!important;margin:0!important;z-index:7}
   body.uedit #hudCard,body.uedit #corner,body.uedit #stLine{pointer-events:auto!important;outline:2px dashed #ffd23d;outline-offset:3px;cursor:move;touch-action:none}
   body.uedit #hudCard *,body.uedit #corner *,body.uedit #stLine *{pointer-events:none!important}
   body.uedit .usel{outline:3px solid #ffd23d!important}body.uedit #corner .ibtn{outline:1px dashed rgba(255,210,61,.6);outline-offset:2px}body.uedit #corner .ibtn.usel{outline:3px solid #7ff0ff!important;outline-offset:3px}body.uedit .ubad{outline-color:#ff4d4d!important}
@@ -847,7 +849,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 187; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 188; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1050,7 +1052,7 @@
   <div id="songBar" class="hide"><button id="sbPrev" title="The song before" aria-label="The song before"><span data-ic="skip" style="display:inline-block;transform:scaleX(-1)"></span></button><span id="sbName"></span><i class="mprog" id="sbProg"></i><button id="sbNext" title="Next song" aria-label="Next song"><span data-ic="skip"></span></button></div></div>
   <div id="stLine" class="hide" aria-live="off"></div>
 </div>
-<div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="msgDemo" class="paper hide">Messages pop up here</div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
+<div id="stack"><div id="placeBar" class="hide" role="group" aria-label="Place the item"><span class="pi"><b id="placeName"></b><small id="placeHint"></small></span><button id="placeCancel" class="btn" type="button">Cancel</button><button id="placeOk" class="btn prim" type="button">Place</button></div><div id="beaconbar" class="hide"><span data-ic="beacon"></span><span id="beaconText"></span></div><div id="notice"></div><div id="worldpop" class="paper hide"></div><div id="msgDemo" class="paper hide">Pop-up messages show here</div><div id="finishbanner" class="paper hide"><h2><span data-ic="crown"></span> You finished!</h2><div id="fbText"></div></div></div>
 <div id="hr">
   <div id="corner">
     <button id="btnRespawn" class="ibtn" title="Reset: back to your checkpoint, or the start (R)" data-ic="reset"></button>
@@ -1530,8 +1532,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=187"></script>
-<script src="physics.js?v=187"></script>
+<script src="maps.js?v=188"></script>
+<script src="physics.js?v=188"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1602,6 +1604,7 @@ function normalize() {
   delete settings.cornerLayout; delete settings.cornerBig; delete settings.cornerMed; delete settings.cornerSide;   // (the corner layouts became Edit UI)
   settings.chatQuick = Array.isArray(settings.chatQuick) ? settings.chatQuick.filter(t => typeof t === 'string').map(t => t.replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean).slice(0, 10) : null;   // (your quick chat messages: null means the starting set)
   { const L = settings.uiL, o = {}; if (L && typeof L === 'object') for (const k of ['info', 'stats', 'corner', 'feed']) { const q = L[k]; if (q && isFinite(+q.x) && isFinite(+q.y)) o[k] = { x: Math.round(+q.x), y: Math.round(+q.y), s: clamp(+q.s || 1, 0.5, 1.8) }; }
+    { const q = L && L.pop; if (q && isFinite(+q.fx) && isFinite(+q.fy)) o.pop = { fx: clamp(+q.fx, 0, 1), fy: clamp(+q.fy, 0, 1), s: clamp(+q.s || 1, 0.5, 1.8) }; }   // (where pop-up messages show: a spot on the screen)
     if (L && L.cb && typeof L.cb === 'object') { const cb = {}; for (const k of ['reset', 'pause', 'build', 'chat']) { const q = L.cb[k]; if (q && isFinite(+q.x) && isFinite(+q.y)) cb[k] = { x: Math.round(+q.x), y: Math.round(+q.y), s: clamp(+q.s || 1, 0.6, 2) }; } if (Object.keys(cb).length) o.cb = cb; }   // (the corner buttons each moved on their own)
     settings.uiL = o; }
   settings.botMaxOff = clamp(Math.round(+settings.botMaxOff), 1, 19); if (!isFinite(settings.botMaxOff)) settings.botMaxOff = 6;
@@ -3639,9 +3642,9 @@ const coarse = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matc
 let flipFs = false, ebMsgT = 0;
 function ebMsg(t) { const m = $('ebMsg'); m.textContent = t; m.classList.remove('hide'); clearTimeout(ebMsgT); ebMsgT = setTimeout(() => m.classList.add('hide'), 5000); }
 function editRefresh() {
-  $('ebTitle').textContent = !editMode ? 'Drag a piece to move it, tap it to resize. Tap a corner button twice to move it alone. The yellow box is where chat and joins show; pop-up messages stay where they are.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize. Red is screen info.';
+  $('ebTitle').textContent = !editMode ? 'Drag a piece to move it, tap it to resize. Tap a corner button twice to move it alone. The yellow boxes show where chat and pop-up messages go.' : (isPortrait() ? 'Upright buttons' : 'Sideways buttons') + ': drag to move, tap to resize. Red is screen info.';
   $('ebPresets').classList.toggle('hide', !editMode);
-  document.body.classList.toggle('uedit', uiEdit); $('msgDemo').classList.add('hide');   // (the pop-up messages are not moved: no sample of them while editing)
+  document.body.classList.toggle('uedit', uiEdit); $('msgDemo').classList.toggle('hide', !uiEdit); if (uiEdit) applyPop();   // (a sample pop-up while editing the screen, to move)
   const f = $('ebFlip'); f.classList.toggle('hide', !coarse() || !editMode); f.querySelector('.t').textContent = isPortrait() ? 'Edit sideways' : 'Edit upright';
   editChips(); if (uiEdit) uiSelect(uiSel, cbSel); else selectBtn(editSel);
 }
@@ -3727,7 +3730,7 @@ function releaseInputs() {   // entering or leaving full screen cancels touches 
 
 // ----- moving and resizing the screen info: the info panel, the mini map, the stats line and the corner buttons (as a group, or each button on its own).
 // Every piece has a box of room a little bigger than itself; the touch buttons have a square of room each. Neither may go on the other's room, anywhere on the screen -----
-const UIP = { info: 'hudCard', stats: 'stLine', corner: 'corner', feed: 'feed' }, UIN = { info: 'Info and map', stats: 'Stats', corner: 'Corner buttons', feed: 'Chat and joins' };   // (the pop-up messages stay where they are: they are pop-ups)
+const UIP = { info: 'hudCard', stats: 'stLine', corner: 'corner', feed: 'feed', pop: 'stack' }, UIN = { info: 'Info and map', stats: 'Stats', corner: 'Corner buttons', feed: 'Chat and joins', pop: 'Pop-up messages' };   // (pop: where pop-up messages show. They show over everything, so they never push anything and nothing pushes them)
 const uiPushOn = () => settings.uiPush !== false;
 const CBN = { reset: 'Reset button', pause: 'Pause button', build: 'Build button', chat: 'Chat button' };
 const UI_M = 8, BTN_M = 8;   // (the extra room around each piece, and around each touch button)
@@ -3744,19 +3747,34 @@ function pieceRects(k) {   // what a piece really covers on the screen (the corn
   if (k === 'stats') { const o = uiLay().stats, full = 80 * uiZ() * ((o && o.s) || 1); if (r[3] - r[1] < full) r[3] = r[1] + full; }   // (room for every stat at once, so turning more on never needs more room)
   return [r];
 }
-function uiReserved() { const out = []; for (const k in UIP) for (const r of pieceRects(k)) out.push({ k, r: [r[0] - UI_M, r[1] - UI_M, r[2] + UI_M, r[3] + UI_M] }); return out; }
+function uiReserved() { const out = []; for (const k in UIP) if (k !== 'pop') for (const r of pieceRects(k)) out.push({ k, r: [r[0] - UI_M, r[1] - UI_M, r[2] + UI_M, r[3] + UI_M] }); return out; }
 function btnSquares() {   // the room each touch button has, while they are on the screen
   const out = []; if (!(touchActive() || editMode) || $('touch').classList.contains('hide') && $('touch2').querySelectorAll('button:not(.hide)').length === 0) return out;
   for (const kk in curPts) { const el = $(BEL[kk]); if (!el || el.classList.contains('hide') || el.offsetParent === null && getComputedStyle(el).position !== 'fixed') continue; const q = curPts[kk], h = q[2] / 2 + BTN_M; out.push([q[0] - h, q[1] - h, q[0] + h, q[1] + h]); }
   return out;
 }
 const rHit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+function popCur() {   // where the pop-ups show now: their own spot, or (never moved yet) where they would show by themselves
+  const o = uiLay().pop; if (o && Number.isFinite(o.fx) && Number.isFinite(o.fy)) return o;
+  const r = $('stack').getBoundingClientRect(); return { fx: (r.left + r.right) / 2 / innerWidth, fy: Math.max(0, r.top) / innerHeight, s: 1 };
+}
+function applyPop() {
+  const st = $('stack'), o = uiLay().pop; if (!st) return;
+  if (!o || !Number.isFinite(o.fx) || !Number.isFinite(o.fy)) { if (o) delete uiLay().pop; st.classList.remove('popset'); ['--popX', '--popY', '--popS'].forEach(v => st.style.removeProperty(v)); return; }
+  const z = uiZ(), W = innerWidth, H = innerHeight; o.fx = Math.min(1, Math.max(0, o.fx)); o.fy = Math.min(1, Math.max(0, o.fy));
+  st.classList.add('popset'); st.style.setProperty('--popX', (o.fx * W / z) + 'px'); st.style.setProperty('--popY', (o.fy * H / z) + 'px'); st.style.setProperty('--popS', o.s || 1);
+  const r = st.getBoundingClientRect();   // (never off the screen, even after turning the phone)
+  if (r.width > 2) { let dx = 0, dy = 0; if (r.left < 2) dx = 2 - r.left; else if (r.right > W - 2) dx = W - 2 - r.right; if (r.top < 2) dy = 2 - r.top; else if (r.bottom > H - 2) dy = H - 2 - r.bottom;
+    if (dx || dy) { if (!(edSess && uiEdit)) { st.style.setProperty('--popX', ((o.fx * W + dx) / z) + 'px'); st.style.setProperty('--popY', ((o.fy * H + dy) / z) + 'px'); } else { o.fx += dx / W; o.fy += dy / H; st.style.setProperty('--popX', (o.fx * W / z) + 'px'); st.style.setProperty('--popY', (o.fy * H / z) + 'px'); } } }
+}
 function applyUiL() {
   const L = uiLay(), z = uiZ(), W = innerWidth, H = innerHeight, fixed = edSess && uiEdit ? uiSel : null;
   { const rb = $('btnResetUi'); if (rb) rb.disabled = !Object.keys(L).some(k => k !== 'cb' || Object.keys(L.cb || {}).length); }
   { const st = $('stack'); if (st) { st.style.removeProperty('--mx'); st.style.removeProperty('--my'); st.style.removeProperty('--ms'); } }
   const put = (k, e, ady) => { const o = L[k]; if (!o && !ady) { e.style.transform = ''; return; } const x = o ? o.x : 0, y = (o ? o.y : 0) + ady, sc = o ? o.s || 1 : 1; e.style.transform = 'translate(' + (x / z) + 'px,' + (y / z) + 'px)' + (sc !== 1 ? ' scale(' + sc + ')' : ''); };
+  applyPop();
   for (const k in UIP) {
+    if (k === 'pop') continue;
     const e = $(UIP[k]); if (!e) continue; const o = L[k]; e.style.zoom = ''; e._ady = 0;
     put(k, e, 0); if (!o) continue; const r = e.getBoundingClientRect(); if (r.width < 2) continue;
     let dx = 0, dy = 0; if (r.left < 2) dx = 2 - r.left; else if (r.right > W - 2) dx = W - 2 - r.right; if (r.top < 2) dy = 2 - r.top; else if (r.bottom > H - 2) dy = H - 2 - r.bottom;   // (never off the screen, even after turning the phone)
@@ -3768,7 +3786,7 @@ function applyUiL() {
     if (k === 'corner') { const rs = pieceRects('corner'); if (!rs.length) return null; return [Math.min(...rs.map(r => r[0])), Math.min(...rs.map(r => r[1])), Math.max(...rs.map(r => r[2])), Math.max(...rs.map(r => r[3]))]; }
     const r = e.getBoundingClientRect(); if (r.width < 2) return k === 'feed' ? [r.left - 150, r.top, r.right, r.top + 1] : null;
     const b = [r.left, r.top, r.right, r.bottom]; if (k === 'stats') { const p = pieceRects('stats')[0]; if (p) b[3] = p[3]; } return b; };
-  const ks = Object.keys(UIP).map(k => [k, box(k)]).filter(q => q[1]).sort((a, b) => a[1][1] - b[1][1]), done = [];
+  const ks = Object.keys(UIP).filter(k => k !== 'pop').map(k => [k, box(k)]).filter(q => q[1]).sort((a, b) => a[1][1] - b[1][1]), done = [];
   for (const [k, r0] of ks) {
     let r = r0;
     if (k !== fixed && (uiPushOn() || k === 'feed')) {
@@ -3784,8 +3802,9 @@ function applyUiL() {
 function uiOk(k) {   // on the screen, never on a touch button's room, never on another piece
   const mine = pieceRects(k); if (!mine.length) return true; const W = innerWidth, H = innerHeight;
   for (const r of mine) if (r[0] < 0 || r[1] < 0 || r[2] > W || r[3] > H) return false;
+  if (k === 'pop') return true;   // (pop-ups show over everything: anywhere on the screen is fine)
   const sq = btnSquares(); for (const r of mine) for (const q of sq) if (rHit(r, q)) return false;   // (the red squares: a button and its room)
-  for (const kk in UIP) { if (kk === k) continue; for (const q of pieceRects(kk)) for (const r of mine) if (rHit(r, q)) return false; }
+  for (const kk in UIP) { if (kk === k || kk === 'pop') continue; for (const q of pieceRects(kk)) for (const r of mine) if (rHit(r, q)) return false; }
   if (k === 'corner') for (let a = 0; a < mine.length; a++) for (let b = a + 1; b < mine.length; b++) if (rHit(mine[a], mine[b])) return false;   // (the corner buttons never sit on each other)
   return true;
 }
@@ -3810,7 +3829,7 @@ function uiSelect(k, cb) {
   $('ebSelName').textContent = cbSel ? CBN[cbSel] : UIN[k]; $('ebSize').min = cbSel ? '0.6' : '0.5'; $('ebSize').max = cbSel ? '2' : '1.8'; $('ebSize').value = v; $('ebSizeVal').textContent = Math.round(v * 100) + '%';
   $('ebGroup').classList.toggle('hide', !cbSel);
 }
-function uiSet(k, o) { const L = uiLay(); if (Math.abs(o.x) < 1 && Math.abs(o.y) < 1 && Math.abs((o.s || 1) - 1) < 0.001) delete L[k]; else L[k] = o; }
+function uiSet(k, o) { const L = uiLay(); if (k === 'pop') { L.pop = o; applyPop(); return; } if (Math.abs(o.x) < 1 && Math.abs(o.y) < 1 && Math.abs((o.s || 1) - 1) < 0.001) delete L[k]; else L[k] = o; }
 function cbSet(q, o) { const C = cbLay(); if (Math.abs(o.x) < 1 && Math.abs(o.y) < 1 && Math.abs((o.s || 1) - 1) < 0.001) delete C[q]; else C[q] = o; }
 function relayUi() { applyUiL(); layoutCorner(); }
 function uiResize(want) {
@@ -3819,7 +3838,7 @@ function uiResize(want) {
     cbSet(q, o); relayUi(); while (o.s > old && !uiOk('corner')) { o.s = Math.round((o.s - 0.05) * 100) / 100; cbSet(q, o); relayUi(); }
     $('ebSize').value = o.s; $('ebSizeVal').textContent = Math.round(o.s * 100) + '%'; save(); layoutTouch(); edZone(); return;
   }
-  const k = uiSel, cur = uiLay()[k] || { x: 0, y: 0, s: 1 }, old = cur.s || 1, o = { x: cur.x, y: cur.y, s: want };
+  const k = uiSel, cur = k === 'pop' ? popCur() : uiLay()[k] || { x: 0, y: 0, s: 1 }, old = cur.s || 1, o = k === 'pop' ? Object.assign({}, cur, { s: want }) : { x: cur.x, y: cur.y, s: want };
   uiSet(k, o); relayUi();
   while (o.s > old && !uiOk(k)) { o.s = Math.round((o.s - 0.05) * 100) / 100; uiSet(k, o); relayUi(); }   // (bigger only while it still fits)
   $('ebSize').value = o.s; $('ebSizeVal').textContent = Math.round(o.s * 100) + '%'; save(); layoutTouch(); edZone();
@@ -3829,6 +3848,11 @@ function uiMoveBy(k, dx, dy) {   // try the move; if it is not allowed, slide al
     const q = cbSel, cur = cbLay()[q] || { x: 0, y: 0, s: 1 }, f = uiZ() * (((uiLay().corner || {}).s) || 1);   // (a button inside the group moves in the group's own units)
     for (const t of [[dx, dy], [dx, 0], [0, dy]]) { if (!t[0] && !t[1]) continue; const o = { x: Math.round(cur.x + t[0] / f), y: Math.round(cur.y + t[1] / f), s: cur.s || 1 }; cbSet(q, o); relayUi(); if (uiOk('corner')) return true; }
     cbSet(q, cur); relayUi(); return false;
+  }
+  if (k === 'pop') {   // (kept as a spot on the screen, so it stays put whatever else moves, and turning the phone keeps it in the same part of the screen)
+    const cur = popCur(), W = innerWidth, H = innerHeight;
+    for (const t of [[dx, dy], [dx, 0], [0, dy]]) { if (!t[0] && !t[1]) continue; uiLay().pop = { fx: cur.fx + t[0] / W, fy: cur.fy + t[1] / H, s: cur.s || 1 }; applyPop(); if (uiOk('pop')) return true; }
+    uiLay().pop = cur; applyPop(); return false;
   }
   const cur = uiLay()[k] || { x: 0, y: 0, s: 1 };
   for (const t of [[dx, dy], [dx, 0], [0, dy]]) { if (!t[0] && !t[1]) continue; const o = { x: cur.x + t[0], y: cur.y + t[1], s: cur.s || 1 }; uiSet(k, o); applyUiL(); if (uiOk(k)) return true; }
@@ -3850,7 +3874,7 @@ Object.keys(UIP).forEach(k => {
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   }, true);
 });
-addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#hudCard,#corner,#stLine,#feed')) { e.stopPropagation(); e.preventDefault(); } }, true);
+addEventListener('click', e => { if (uiEdit && e.target && e.target.closest && e.target.closest('#hudCard,#corner,#stLine,#feed,#stack')) { e.stopPropagation(); e.preventDefault(); } }, true);
 // with a keyboard: Tab picks the next piece, the arrows move it (hold Shift for big steps), + and - resize it, Enter or Esc is done
 addEventListener('keydown', e => {
   if (!edSess || !uiEdit) return;
@@ -3867,13 +3891,13 @@ addEventListener('keydown', e => {
 }, true);
 $('ebGroup').onclick = () => uiSelect('corner');
 function resetUi() { settings.uiL = {}; save(); relayUi(); layoutTouch(); if (edSess && uiEdit) uiSelect(uiSel); }
-const askResetUi = () => { if ($('btnResetUi').disabled) return; askConfirm('Reset the screen info?', 'The info panel, the mini map, the stats and the corner buttons go back to where they started, at their normal size.', 'Reset', resetUi, { no: 'Keep them' }); };
+const askResetUi = () => { if ($('btnResetUi').disabled) return; askConfirm('Reset the screen info?', 'The info panel, the mini map, the stats, the corner buttons and the pop-up messages go back to where they started, at their normal size.', 'Reset', resetUi, { no: 'Keep them' }); };
 $('ebSwap').onclick = () => { ebSwapped = !ebSwapped; edZone(); };
 $('btnEditUi').onclick = () => startEdit(true);
 $('btnResetUi').onclick = askResetUi;
 addEventListener('resize', () => setTimeout(() => { applyUiL(); if (edSess) edZone(); }, 60));
 function stackSpot() {   // on a phone held upright, messages pop up just under whatever is at the top of the screen (the info card and the stats as they are now), never over them
-  const st = $('stack'); if (!st) return; let b = 0; const z = uiZ();
+  const st = $('stack'); if (!st || uiLay().pop) return; let b = 0; const z = uiZ();
   for (const id of ['hudCard', 'stLine', 'corner']) { const e = $(id); if (!e || e.classList.contains('hide')) continue; const r = e.getBoundingClientRect(); if (r.width > 2 && r.top < innerHeight * 0.45) b = Math.max(b, r.bottom); }
   const v = b ? Math.round((b + 8) / z) + 'px' : ''; if (st._tp !== v) { st._tp = v; if (v) st.style.setProperty('--stTop', v); else st.style.removeProperty('--stTop'); }
 }
