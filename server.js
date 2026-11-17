@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 189;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 191;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -404,7 +404,7 @@ function findRoom() {
     const r = rooms.get(id);
     if (r && r.players.size >= MAX_PLAYERS) { full.push(id); continue; }
     if (r) return { room: r, full };
-    const nr = { id, players: new Map(), finishers: [], bornAt: Date.now(), fk: pickFin() };
+    const nr = { id, players: new Map(), finishers: [], bornAt: Date.now(), fk: pickFin(id) };
     loadSaved(nr);   // (a world that was here before comes back as it was)
     rooms.set(id, nr);
     return { room: nr, full };
@@ -461,7 +461,10 @@ function genAhead(i) {
 setInterval(() => { if (nextAt(curSlot) - Date.now() < 3 * 60000) genAhead(curSlot + 1); }, 30000).unref();
 setTimeout(() => genAhead(curSlot), 50);   // (and the public map is made as soon as the server starts, before anybody arrives)   // (the next public map is made a few minutes early, while things are calm, not at the moment everybody is waiting for it)
 function finCount() { const m = genMap(curSlot); return (m.fins || [1]).length; }
-function pickFin() { return Math.floor(Math.random() * finCount()); }
+function pickFin(id) {   // where the finish is in a public world: the same for this map and this world every time, so a server restart (or a world that empties and fills again) never moves it in the middle of a round
+  let h = Math.imul((curSlot | 0) * 1000003 + (id | 0) * 7919 + 40503, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
+  return (h >>> 0) % Math.max(1, finCount());
+}
 /* A guard against too many private games at once. Plenty can run side by side; a new one is only turned away when there are a great many already,
    or when the server is truly falling behind (it has already dropped to its slowest setting) while a fair number are open. */
 const PRIV_ROOMS = Math.max(4, +process.env.PRIV_ROOMS || 80), PRIV_ROOMS_BUSY = Math.max(2, +process.env.PRIV_ROOMS_BUSY || 12);
@@ -865,6 +868,8 @@ wss.on('connection', (ws, req) => {
         if (!p.pub || !(hr.priv.invited.has(p.pub) || linkSet(p.pub).has(m.join))) { send(p, { t: 'jno', why: 'nope' }); return; }
         if (hr.players.size >= PRIV_MAX) { send(p, { t: 'jno', why: 'full' }); return; }
         room = hr; p.room = room; fr = { full: [] };
+      } else if (!lobby && Number.isInteger(m.pw) && m.pw > 0 && rooms.get(m.pw) && !rooms.get(m.pw).priv && rooms.get(m.pw).players.size < MAX_PLAYERS) {   // a friend's public world, picked from their profile (if it is full, the usual world instead)
+        room = rooms.get(m.pw); p.room = room; fr = { full: [] };
       } else if (!lobby) { fr = findRoom(); room = fr.room; p.room = room; }
       p.lobby = lobby;
       if (capped) send(p, { t: 'cap', n: online, max: MAX_TOTAL });
@@ -946,6 +951,12 @@ wss.on('connection', (ws, req) => {
       p.lastEmo = now;
       bcastFrom(p.room, p, { t: 'say', id: p.id, pub: p.pub, name: p.name, a, b });
       if (p.room.bots && p.room.bots.length) { const k = P.askKind('say', a, b); if (k) roomCtx(p.room).asks.push({ kind: k, x: p.x, y: p.y, id: p.id }); }
+    } else if (m.t === 'ask') {   // asking a friend in a private game if you can join them: they get a pop-up (the one who made the game can invite you)
+      const now = Date.now(); if (now - (p.lastAsk || 0) < 3000) return; p.lastAsk = now;
+      if (!p.pub || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to) || blocked(p.pub, m.to)) return;
+      const q = byPub.get(m.to);
+      if (!live(q) || !q.room || !q.room.priv) { send(p, { t: 'askno', pub: m.to }); return; }
+      send(q, { t: 'ask', pub: p.pub, name: p.name, own: q.room.priv.owner === q.id ? 1 : 0 }); send(p, { t: 'asksent', pub: m.to });
     } else if (m.t === 'inv') {   // the host asks a friend to come to their world
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to)) return;
       const now = Date.now(); if (now - (p.lastInv || 0) < 700) return; p.lastInv = now;
@@ -1390,7 +1401,7 @@ setInterval(() => {
   worldsDirty = true;
   for (const room of rooms.values()) {
     if (room.priv) continue;
-    room.world = null; loadSaved(room); room.fk = pickFin();
+    room.world = null; loadSaved(room); room.fk = pickFin(room.id);
     room.finishers = []; room.finPub = new Map();
     for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); p.dver = null; }
     broadcast(room, { t: 'newmap', slot: curSlot, fk: room.fk | 0, next: nextAt(curSlot), now: Date.now(), build: bstate(room) });   // (with what was built on this map the last time it was played)

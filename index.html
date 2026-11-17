@@ -788,6 +788,18 @@
   .chatquick button.qedit{background:transparent;border-style:dashed;opacity:.85}
   .chatlog .cm{position:relative;overflow:hidden;flex:none}   /* (every message keeps its full size; the list scrolls) */
   .chatwrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}.chatwrap>.chatlog{flex:1}
+  /* Android phones: the chat is a sheet along the bottom of the screen that always sits right on top of the keyboard. While typing, the quick messages and the
+     note step aside so the messages get the room. (Computers and iPhones keep the pop-up in the middle.) */
+  html.android #emoPop{align-items:flex-end;padding:0;bottom:auto;top:var(--vvt,0px);height:var(--vvh,100%)}
+  html.android #emoPop .chatcard{zoom:1;width:100%;max-width:100%;height:min(92%,680px);max-height:100%;border-radius:20px 20px 0 0;border-bottom:none;box-shadow:0 -6px 18px rgba(0,0,0,.45);padding:10px 12px calc(10px + env(safe-area-inset-bottom));gap:8px}
+  html.android #emoPop .chatcard .chead h3{font-size:22px}
+  html.android #emoPop .chatlog{height:auto!important;min-height:70px;font-size:16px}
+  html.android #emoPop .chatform input{font-size:17px;padding:11px 14px;border-radius:22px}
+  html.android #emoPop .chatform button{width:52px;height:48px;border-radius:24px}
+  html.android #emoPop .chatquick button{font-size:15px;padding:8px 14px}
+  html.android.kbopen #emoPop .chatcard{height:100%;border-radius:0;padding-top:6px;padding-bottom:6px;gap:6px}
+  html.android.kbopen #emoPop .chatquick,html.android.kbopen #emoPop .cfoot,html.android.kbopen #emoPop #chatPeople{display:none!important}
+  html.android.kbopen #emoPop .chatcard .chead h3{font-size:18px}html.android.kbopen #emoPop .chatcard .chead .chip{padding-top:2px;padding-bottom:2px}
   .chatdown{position:absolute;right:10px;bottom:10px;width:44px;height:44px;border-radius:50%;border:2px solid #fff;background:#2fa463;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.45);cursor:pointer;padding:0}.chatdown svg{width:24px;height:24px}
   .chatdown i{position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#ff4d6d;border:2px solid #fff;display:none}.chatdown.new i{display:block}.chatlog .cm .cmt{float:right;margin-left:8px;font-size:12px;opacity:.6;font-variant-numeric:tabular-nums}
   .chatlog .cm .cmbar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:rgba(255,210,61,.75);transform-origin:left;animation:cmgo linear forwards}
@@ -849,7 +861,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 189; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 191; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1532,8 +1544,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=189"></script>
-<script src="physics.js?v=189"></script>
+<script src="maps.js?v=191"></script>
+<script src="physics.js?v=191"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2308,6 +2320,16 @@ function sprite(c1, c2, pat) {
   if (!s) { if (sprites.size > 150) sprites.clear(); s = makeSprite(c1, c2, pat); sprites.set(k, s); }
   return s;
 }
+/* Phones short on memory can quietly wipe pictures the game keeps (the screen flashes black and comes back). The balls are kept pictures, so they would come
+   back blank: you would be just your ring, and the others not there at all. So the game checks one of them every few seconds, and whenever you come back to it,
+   and simply draws them all again if they were wiped. */
+function gfxLost() { for (const s of sprites.values()) { try { return s.getContext('2d').getImageData(SPN / 2, SPN / 2, 1, 1).data[3] === 0; } catch (e) { return true; } } return false; }
+function gfxReset() { sprites.clear(); try { paperPat = null; } catch (e) {} }
+function gfxCheck() { try { if (gfxLost()) gfxReset(); } catch (e) {} }
+setInterval(gfxCheck, 2000);
+['pageshow', 'focus'].forEach(n => addEventListener(n, () => setTimeout(gfxCheck, 300)));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { setTimeout(gfxCheck, 300); setTimeout(gfxCheck, 1500); } });
+cv.addEventListener('contextrestored', () => gfxReset());   // (the browser says the screen itself was wiped and is back)
 function drawBall(x, y, rot, c1, c2, pat, alpha, me, scale) {
   ctx.save(); ctx.translate(x, y);
   if (scale !== undefined && scale !== 1) ctx.scale(scale, scale);
@@ -2689,9 +2711,20 @@ function loadPurses() {
 }
 loadPurses();
 function cheatPre(p) { if (!p.pre) p.pre = { c: p.c, g: p.g }; }   // (the money you had before the first money code of this game, so it can go back at the next one)
-function resetCheats() {   // every new game starts without cheats: no unlimited money, building limits back on, money codes undone (you keep what you have, but never more than before the code)
-  infMoney = false; try { noCaps = false; } catch (e) {} try { localStorage.removeItem('ballrun4_inf'); localStorage.removeItem('ballrun4_nocap'); } catch (e) {}
-  let ch = false; for (const p of [purseP, ...Object.values(purseV)]) if (p.pre) { p.c = Math.min(p.c, p.pre.c); p.g = Math.min(p.g, p.pre.g); delete p.pre; ch = true; }
+/* Cheats used in a public game last until that public map changes (every 2 hours): leaving, reloading, an update, or a trip to a private world and back
+   does not take them away. A private game still starts without them. */
+const PCK = 'ballrun4_pcheat';
+const pubNow = () => !!settings.mp && !party && !offlineOn();
+const pubSlotNow = () => BallMaps.slotOf(nowMs());
+function pubCheat() { try { const o = JSON.parse(localStorage.getItem(PCK) || 'null'); return o && o.slot === pubSlotNow() ? o : null; } catch (e) { return null; } }
+function notePubCheat() { if (!pubNow()) return; try { localStorage.setItem(PCK, JSON.stringify({ slot: pubSlotNow(), inf: infMoney ? 1 : 0, nc: (typeof noCaps !== 'undefined' && noCaps) ? 1 : 0 })); } catch (e) {} }
+function resetCheats() {   // a new game starts without cheats: no unlimited money, building limits back on, money codes undone (you keep what you have, but never more than before the code)
+  const keep = pubCheat();
+  const setFlags = (inf, nc) => { infMoney = inf; try { noCaps = nc; } catch (e) {} try { if (inf) localStorage.setItem('ballrun4_inf', '1'); else localStorage.removeItem('ballrun4_inf'); if (nc) localStorage.setItem('ballrun4_nocap', '1'); else localStorage.removeItem('ballrun4_nocap'); } catch (e) {} };
+  if (keep && pubNow()) setFlags(!!keep.inf, !!keep.nc);   // (back in public on the same map: your cheats are still on)
+  else setFlags(false, false);
+  let ch = false; for (const p of [purseP, ...Object.values(purseV)]) if (p.pre && !(keep && p === purseP)) { p.c = Math.min(p.c, p.pre.c); p.g = Math.min(p.g, p.pre.g); delete p.pre; ch = true; }   // (the public money codes stay until the map changes)
+  if (!keep) { try { localStorage.removeItem(PCK); } catch (e) {} }
   if (ch) saveWallet();
 }
 const saveWallet = () => { try { localStorage.setItem(WALKEY, JSON.stringify(purseP)); const o = {}; for (const k in purseV) { const q = purseV[k]; if (q.c || q.g || q.u) o[k] = q; } localStorage.setItem(WALKEY_PRIV, JSON.stringify(o)); } catch (e) {} };
@@ -4810,10 +4843,22 @@ $('pickPop').addEventListener('pointerdown', e => { if (e.target === $('pickPop'
 function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it
   if (on && inHome) return;
   chatOpen = on; $('emoPop').classList.toggle('hide', !on); if (!on && closeSelectFn) closeSelectFn(); if (on && shopOpen) toggleShop(false);
+  chatFit();
   if (on) { if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); $('btnChat').classList.remove('unread'); chatRender(true); if (!$('chatPeople').classList.contains('hide')) chatPeople(); chatToRender(); if (!touchActive()) setTimeout(() => { try { $('chatIn').focus(); } catch (e) {} }, 30); }
   else { try { $('chatIn').blur(); } catch (e) {} }
 }
 $('btnChat').onclick = () => toggleChat(!chatOpen);
+/* Android: keep the chat sheet right above the keyboard (the keyboard covers the page there instead of making it shorter) */
+const isAndroid = /Android/i.test(navigator.userAgent);
+if (isAndroid) document.documentElement.classList.add('android');
+function chatFit() {
+  if (!isAndroid) return; const vv = window.visualViewport, ep = $('emoPop'), H = vv ? vv.height : innerHeight;
+  ep.style.setProperty('--vvh', Math.round(H) + 'px'); ep.style.setProperty('--vvt', Math.round(vv ? vv.offsetTop : 0) + 'px');
+  const kb = document.activeElement === $('chatIn') && (H < innerHeight * 0.85 || screen.height - H > 260 || (vv && vv.offsetTop > 0));
+  const was = document.documentElement.classList.contains('kbopen'); document.documentElement.classList.toggle('kbopen', chatOpen && (kb || document.activeElement === $('chatIn') && H < 560));
+  if (chatOpen) { const lg = $('chatLog'); if (lg && (was !== document.documentElement.classList.contains('kbopen') || lg.scrollHeight - lg.scrollTop - lg.clientHeight < 80)) lg.scrollTop = lg.scrollHeight; }
+}
+if (isAndroid) { if (window.visualViewport) { visualViewport.addEventListener('resize', chatFit); visualViewport.addEventListener('scroll', chatFit); } addEventListener('resize', chatFit); $('chatIn').addEventListener('focus', () => setTimeout(chatFit, 50)); $('chatIn').addEventListener('blur', () => setTimeout(chatFit, 50)); }
 $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop')) { e.preventDefault(); toggleChat(false); } });
 
 /* ----- the shop: spend coins (and diamonds) on things that appear right next to you. They are only yours: nobody else sees them. ----- */
@@ -5568,6 +5613,10 @@ function profRender() {
   if (me) {}
   else if (linked) {   // everything about this one friend
     if (canMessage(lk)) add('btn prim', 'Message ' + nm, () => { closeProfile(); openChatTo(p.pub); }, false, 'chat');
+    { const f = Object.assign({}, p, lk);   // a quick way to get together: what it does depends on where they are
+      if (f.ok && f.on && !f.hid && f.w > 0) { const here = !inHome && online && !party && settings.mp && room.id === f.w; add('btn prim', here ? 'You are in World ' + f.w + ' together' : 'Join public game', () => joinFriendPublic(f), here, 'play'); }
+      else if (f.ok && f.on && !f.hid && f.w < 0) { const there = !!party && party.host === p.pub; add('btn prim', there ? 'You are in their game' : 'Ask to join', () => { wsSend({ t: 'ask', to: p.pub }); sfx('ui'); }, there, 'users'); }
+      else if (f.ok && f.on && !f.hid) add('btn prim', nm + ' is on the main screen', () => {}, true, 'users'); }
     const m1 = row('On your map', 'How ' + nm + ' looks while you play'), o = el('div', 'fopts');
     o.appendChild(chip('Big and glowing', lk.big, () => { lk.big = !lk.big; saveLinks(); lpRender(); }, 'Show ' + nm + ' bigger and glowing on both maps'));
     o.appendChild(chip('Arrow and name', lk.arrow, () => { lk.arrow = !lk.arrow; saveLinks(); lpRender(); }, 'Point to ' + nm + ' with an arrow and a name tag'));
@@ -5659,7 +5708,7 @@ const UPLOG = 'bp_updates', UPRES = 'bp_resume';
 let updating = false;
 function resumeAfterUpdate() { try { const v = sessionStorage.getItem(UPRES); sessionStorage.removeItem(UPRES); return v === '1'; } catch (e) { return false; } }
 function wipeAndReload() {
-  const go = () => location.replace(location.pathname + '?r=' + Date.now() + location.hash);
+  const go = () => { let q = ''; try { const u = new URLSearchParams(location.search); u.delete('r'); u.set('r', Date.now()); q = '?' + u.toString(); } catch (e) { q = '?r=' + Date.now(); } location.replace(location.pathname + q + location.hash); };   // (any other settings in the address stay)
   try {
     Promise.all([
       navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(rs => Promise.all(rs.map(r => r.unregister()))) : 0,
@@ -6154,6 +6203,23 @@ function stopHosting() {
   if (ws && ws.readyState === 1) { try { ws.send('{"t":"lobby"}'); } catch (e) {} }
   party = null; online = false; others.clear(); toLobby(); setNet('solo'); lvlRender(); notice('Your private game is closed to friends', '');
 }
+let wantW = 0;
+function joinFriendPublic(f) {   // to the public world a friend is in
+  const w = f.w | 0; if (w <= 0) return;
+  closeProfile(); wantW = w; sfx('ui');
+  if (inHome) { settings.mp = true; settings.offline = false; save(); enterGame(false); return; }
+  if (paused) { paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); }
+  if (!settings.mp || party || S.slot >= SOLO_BASE) { setMultiplayer(true); return; }
+  if (ws && ws.readyState === 1 && online) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; others.clear(); lastSent = ''; }
+  retry = 0; setNet('connecting'); joinWorld();
+}
+function askedToJoin(m) {   // a friend would like to join your private game
+  if (typeof m.pub !== 'string' || (mutes[m.pub] || 0) >= 2) return;
+  const nm = who(m.name || nameOf(m.pub)); sfx('notice');
+  if (!m.own || !party || party.role !== 'host') { notice(nm + ' would like to join you. Only the one who made this game can invite them', ''); return; }
+  if (!$('confirm').classList.contains('hide')) { notice(nm + ' would like to join your game. Invite them from the Invite button', ''); return; }
+  askConfirm(nm + ' wants to join you', nm + ' would like to come to your private game. Invite them?', 'Invite', () => { try { ws.send(JSON.stringify({ t: 'inv', to: m.pub, keep: true })); } catch (e) {} if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } }, { yesClass: 'go', no: 'Not now' });
+}
 function joinParty(hp, name) {
   if (party && party.host === hp) return;   // (already there)
   if (party && party.role === 'host') { if (S.map && S.slot >= 0) saveWorld(true); leaveParty(); }   // going to a friend's game ends the one you were hosting, and your own world is kept
@@ -6505,10 +6571,10 @@ function submitCode() {
   if (v === 'codes') { closeCode(); $('codesModal').classList.remove('hide'); sfx('ready'); return; }   // (only shows the list of codes)
   if (v === 'updates') { const on = !updShown(); try { if (on) sessionStorage.setItem('ballrun4_updbtn', '1'); else sessionStorage.removeItem('ballrun4_updbtn'); } catch (e) {} $('homeUpd').classList.toggle('hide', !on); sfx('big'); closeCode(); notice(on ? 'The update button is on the main menu until you close the game.' : 'The update button is hidden again.', ''); return; }
   if (cheatsOff() && (v === 'unlimitedpower' || v === 'themaker#1' || v === 'maker' || v === 'zeros')) { $('cdNote').textContent = 'This private game is set to no cheats. Codes do nothing here.'; sfx('warn'); return; }
-  if (v === 'unlimitedpower') { if (noCaps) { noCaps = false; try { localStorage.removeItem('ballrun4_nocap'); } catch (e) {} sfx('big'); closeCode(); notice('Building limits are back on', ''); try { shopRender(); } catch (e) {} return; }   // (the same code again turns it off)
-    noCaps = true; try { localStorage.setItem('ballrun4_nocap', '1'); } catch (e) {} sfx('big'); closeCode(); notice('No building limits: build as much of everything as you like', ''); try { shopRender(); } catch (e) {} return; }
+  if (v === 'unlimitedpower') { if (noCaps) { noCaps = false; try { localStorage.removeItem('ballrun4_nocap'); } catch (e) {} notePubCheat(); sfx('big'); closeCode(); notice('Building limits are back on', ''); try { shopRender(); } catch (e) {} return; }   // (the same code again turns it off)
+    noCaps = true; try { localStorage.setItem('ballrun4_nocap', '1'); } catch (e) {} notePubCheat(); sfx('big'); closeCode(); notice('No building limits: build as much of everything as you like', ''); try { shopRender(); } catch (e) {} return; }
   if (v === 'themaker#1' || v === 'maker' || v === 'zeros') {   // the three money codes. They only ever change your own money on this device, and never a private world whose maker set its money to unlimited
-    const done = t => { saveWallet(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice(t, ''); };
+    const done = t => { saveWallet(); notePubCheat(); homeWalletRender.k = ''; homeWalletRender(); sfx('big'); closeCode(); notice(t, ''); };
     const setInf = on => { infMoney = on; try { if (on) localStorage.setItem('ballrun4_inf', '1'); else localStorage.removeItem('ballrun4_inf'); } catch (e) {} };
     if (unlimitedNow()) { $('cdNote').textContent = 'This world is already set to unlimited money. The code cannot change that.'; sfx('warn'); return; }
     if (v === 'themaker#1') { if (infMoney) { $('cdNote').textContent = 'You already have unlimited coins and diamonds.'; sfx('warn'); return; } setInf(true); done('Unlimited coins and diamonds'); return; }
@@ -6579,6 +6645,7 @@ function setMultiplayer(on) {
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
   if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), fk: soloFin(soloLevel()), bots: settings.botsPriv ? 1 : 0, nc: settings.noCheats ? 1 : 0 }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
+  if (!lobby && !party && wantW > 0) o.pw = wantW;   // (joining a friend's public world from their profile)
   return JSON.stringify(o);
 };
 function joinWorld() {
@@ -6808,6 +6875,7 @@ function onMsg(m) {
       }
       if (inSolo() && !m.priv) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a public world we are no longer going to)
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
+      { const ww = wantW; wantW = 0; if (ww && !m.priv && m.room !== ww) setTimeout(() => notice('World ' + ww + ' is full right now, so you are in World ' + m.room, ''), 1500); }
       if (capWait) { capStop(); if (!$('confirm').classList.contains('hide') && $('cfTitle').textContent === 'The game is full') { cfCb = null; cfNoCb = null; cfOptCb = null; $('confirm').classList.add('hide'); } notice('A place opened up: you are in', ''); }
       bots.length = 0; S.welcomeAt = performance.now(); S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false;
       if (m.priv && !party) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a friend's world we are no longer going to)
@@ -6865,6 +6933,9 @@ function onMsg(m) {
     case 'text': onText(m); break;
     case 'texthold': notice('Slow down a little: a few messages at a time', ''); break;
     case 'inv': partyInvited(m); break;
+    case 'ask': askedToJoin(m); break;
+    case 'asksent': notice('Asked ' + who(nameOf(m.pub) || 'your friend') + ' if you can join', ''); break;
+    case 'askno': notice(who(nameOf(m.pub) || 'Your friend') + ' is not in a private game any more', ''); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
     case 'pobj': S.buildAt = performance.now(); if (m.bot) { if (S.world && validMisc(m.g) && m.g[0] === 'tl') { addMisc(S.world, m.g, !m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)); if (!m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)) sfx('ui'); } break; } { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1 }); });
       if (!S.world || !shared() || !validMisc(m.g) || (!party && m.g[0] !== 'tl' && !pubTake('m', m.g))) break;   // (a terrain change is absolute, so applying it twice does no harm)
@@ -8217,7 +8288,7 @@ if (params && params.get('test')) window.__d = { NET, addGate, SONGS, ui: { star
     AU.ctx = oc; AU.mus = out; AU.song = sg; AU.style = kind; AU.melody = genMelody(sg, MOOD[kind]);
     try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += songBeats(sg) * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
     const buf = await oc.startRendering(); return Array.from(buf.getChannelData(0));
-  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online };
+  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();
