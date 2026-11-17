@@ -32,7 +32,7 @@ const MAX_PER_IP = parseInt(process.env.MAX_PER_IP, 10) || 10;
 const STATS_FILE = process.env.STATS_FILE || path.join(__dirname, 'stats.json');
 const PATTERNS = 6;
 const EMOJIS = 64;                                       // the built-in chat: 10 emojis and 14 ready-made phrases. Players can only send one of these (by number)
-const MAX_LINKS = 12;                                     // how many people one player can track
+const MAX_LINKS = 1000;                                   // friends one player can have: as many as anyone will ever want (only a safety ceiling)
 const LINKS_FILE = process.env.LINKS_FILE || path.join(__dirname, 'links.json');
 
 /* ---------- static files (loaded once, kept in memory) ---------- */
@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 182;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 183;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -231,7 +231,7 @@ try {
   const o = JSON.parse(fs.readFileSync(LINKS_FILE, 'utf8'));
   for (const k in (o.links || {})) if (PUB.test(k)) links.set(k, new Set((o.links[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));
   for (const k in (o.gone || {})) if (PUB.test(k)) gone.set(k, new Set((o.gone[k] || []).filter(v => PUB.test(v)).slice(0, 50)));
-  for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', color2: HEX.test(v.color2) ? v.color2 : '#ffffff', pat: cleanPat(v.pat), last: +v.last || 0, nameAt: +v.nameAt || 0, first: +v.first || 0, share: v.share && typeof v.share === 'object' ? cleanShare(v.share) : undefined, played: v.played === undefined ? 1 : v.played ? 1 : 0, beat: Math.max(0, Math.min(999, v.beat | 0)) }); }
+  for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', color2: HEX.test(v.color2) ? v.color2 : '#ffffff', pat: cleanPat(v.pat), last: +v.last || 0, nameAt: +v.nameAt || 0, first: +v.first || +v.last || Date.now(), firstEst: v.first ? (v.firstEst ? 1 : 0) : 1, share: v.share && typeof v.share === 'object' ? cleanShare(v.share) : undefined, played: v.played === undefined ? 1 : v.played ? 1 : 0, beat: Math.max(0, Math.min(999, v.beat | 0)) }); }
   for (const k in (o.blocks || {})) if (PUB.test(k)) blocks.set(k, new Set((o.blocks[k] || []).filter(v => PUB.test(v)).slice(0, 200)));
   for (const k in (o.pairs || {})) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k)) { const v = o.pairs[k] || {}; pairT.set(k, { s: +v.s || 0, m: +v.m || 0 }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
@@ -266,12 +266,12 @@ function addLink(a, b) { if (blocked(a, b)) return; if (!linkSet(a).has(b)) pair
 function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; }
 const STALE_MS = 30 * 86400000;   // everybody who has played is listed; anybody gone for three months (and not a friend or in a waiting request) is forgotten
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
-function cleanShare(o) { const r = {}; for (const k in SHARE_DEF) r[k] = o && o[k] === 0 ? 0 : 1; return r; }
+function cleanShare(o) { const r = {}; for (const k in SHARE_DEF) r[k] = o && o[k] === 0 && (k === 'fr' || k === 'since') ? 0 : 1; return r; }   // (only how many friends you have and when you started can be kept private; the rest is always shown)
 const peerInfo = (pub, viewer) => {   // what one player is told about another: their name and ball always, the rest only as far as they share it
   const k = known.get(pub) || {}, q = byPub.get(pub), sh = shareOf(pub), pr = viewer ? pairT.get(pairK(pub, viewer)) : null, on = live(q);
   return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), color2: q ? q.color2 : (k.color2 || '#ffffff'), pat: q ? q.pat | 0 : (k.pat | 0),
     on: sh.on && on ? 1 : 0, hid: sh.on ? 0 : 1, w: sh.on && q && q.room ? (q.room.priv ? -1 : q.room.id) : 0, last: sh.last ? (on && sh.on ? Date.now() : (k.last || 0)) : 0, b: sh.beat ? k.beat | 0 : -1,
-    fr: sh.fr ? linkSet(pub).size : -1, first: sh.since ? k.first || 0 : 0, since: pr ? pr.s : 0, dm: pr ? pr.m : 0 };
+    fr: sh.fr ? linkSet(pub).size : -1, first: sh.since ? k.first || 0 : 0, fe: k.firstEst ? 1 : 0, since: pr ? pr.s : 0, dm: pr ? pr.m : 0 };
 };
 function sendMe(p) {   // your own profile as others see it, what you share, and who you have blocked
   if (!p.pub) return; const k = known.get(p.pub) || {};
@@ -862,11 +862,13 @@ wss.on('connection', (ws, req) => {
       if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.color2 = p.color2; k.pat = p.pat | 0; k.last = Date.now(); if (m.beat != null) k.beat = Math.max(0, Math.min(999, m.beat | 0)); knownDirty = true; }
       if (room) {
         room.players.set(p.id, p);
+        const myFin = p.pub && room.finPub && room.finPub.get(p.pub);   // (finished this round already, then left and came back: the crown and the place are still theirs)
+        if (myFin && !room.priv) { p.fin = rslot(room); room.finishers[myFin - 1] = p.id; }
         online++; statsDirty = true;
         if (online > peak) { peak = online; peakDirty = true; }
         if (online > usage.pkPl) { usage.pkPl = online; usage.pkPlAt = Date.now(); }
         send(p, {
-          t: 'welcome', id: p.id, room: room.id, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
+          t: 'welcome', id: p.id, room: room.id, mine: myFin && !room.priv ? myFin : 0, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), fk: room.fk | 0, next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
           build: room.priv ? undefined : bstate(room), priv: room.priv ? { back: room.priv.owner === p.id && room.priv.back ? 1 : 0, host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub, nc: room.noCheats ? 1 : 0 } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, ot: o.otag || 0, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? Math.max(1, room.finishers.indexOf(o.id) + 1) : 0 }))   // (crown: what place they finished in)
@@ -874,7 +876,7 @@ wss.on('connection', (ws, req) => {
         p.dver = null; if (room.world) { send(p, doorPacket(room)); plankSend(room, room.world.see, p); }
         if (room.bots && room.bots.length) send(p, { t: 'bj', b: room.bots.map(botInfo) });
         if (room.botTl && room.botTl.size) for (const q of room.botTl.values()) send(p, { t: 'pobj', g: q, bot: 1, bulk: 1 });
-        broadcast(room, { t: 'join', id: p.id, pub: p.pub, ot: p.otag || 0, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size }, p);
+        broadcast(room, { t: 'join', id: p.id, pub: p.pub, ot: p.otag || 0, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, n: room.players.size, crown: myFin && !room.priv ? myFin : 0 }, p);
       } else {
         send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
       }
@@ -1136,7 +1138,7 @@ wss.on('connection', (ws, req) => {
         if (blocked(p.pub, m.to)) { send(p, { t: 'tsent', pub: m.to, name: tn, off: 1 }); return; }   // (blocked: it goes nowhere, and nobody is told why)
         if (linkSet(p.pub).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, name: tn, why: 'mine' });
         if (linkSet(m.to).size >= MAX_LINKS) return send(p, { t: 'tno', pub: m.to, name: tn, why: 'theirs' });
-        let n = 0; pend.forEach((v, k) => { if (k.indexOf(p.pub + '>') === 0) n++; }); if (n >= 8) return;
+        let n = 0; pend.forEach((v, k) => { if (k.indexOf(p.pub + '>') === 0) n++; }); if (n >= 20) return;
         const back = m.to + '>' + p.pub;
         if (pend.has(back)) {   // they had already asked you: that is a yes from both sides
           pend.delete(back); addLink(p.pub, m.to);
@@ -1212,8 +1214,8 @@ wss.on('connection', (ws, req) => {
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id) return;
       r.noCheats = !!m.nc; broadcast(r, { t: 'rules', nc: r.noCheats ? 1 : 0 });
     } else if (m.t === 'gift') {   // coins and diamonds from one player to another in the same world (the giver's device takes them off first)
-      const r = p.room; if (!r || !addOk(p)) return; const c = Math.max(0, Math.min(1e7, Math.floor(+m.c || 0))), g = Math.max(0, Math.min(1e6, Math.floor(+m.g || 0)));
-      const q = r.players.get(m.to | 0); if (!q || q === p || !(c + g)) return;
+      const r = p.room; if (!r || !addOk(p)) return; const c = Math.max(0, Math.min(1e6, Math.floor(+m.c || 0))), g = Math.max(0, Math.min(1e4, Math.floor(+m.g || 0)));   // (never more than a million coins and ten thousand diamonds at once)
+      const q = r.players.get(m.to | 0); if (!q || q === p || !(c + g) || (p.pub && q.pub && blocked(p.pub, q.pub))) return;
       send(q, { t: 'gift', from: p.id, name: p.name, c, g }); send(p, { t: 'giftok', to: q.id, c, g });
     } else if (m.t === 'text') {   // a chat message: anything up to 200 characters, to everyone in your world
       const r = p.room; if (!r || typeof m.s !== 'string') return; const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
@@ -1231,6 +1233,11 @@ wss.on('connection', (ws, req) => {
       pairOf(p.pub, m.to).m = now; linksDirty = true;
       send(q, { t: 'dm', from: p.pub, name: p.name, color: p.color, s: txt, at: now });
       send(p, { t: 'dmok', to: m.to, s: txt, at: now, c: m.c | 0 });
+    } else if (m.t === 'prof') {   // everything shown on a player's profile, fresh (yours too)
+      if (!p.pub) return; const now = Date.now(); if (now - (p.lastProf || 0) < 150) return; p.lastProf = now;
+      const who = m.to === 'me' ? p.pub : m.to; if (typeof who !== 'string' || !PUB.test(who) || !known.has(who)) return;
+      if (who !== p.pub && blocked(p.pub, who)) return send(p, { t: 'prof', pub: who, blk: 1 });
+      send(p, Object.assign({ t: 'prof', me: who === p.pub ? 1 : 0, friend: linkSet(p.pub).has(who) ? 1 : 0 }, peerInfo(who, who === p.pub ? null : p.pub)));
     } else if (m.t === 'blk') {   // block (or unblock) a player: no requests, messages or chat between you, and you are no longer friends
       if (!p.pub || typeof m.to !== 'string' || !PUB.test(m.to) || m.to === p.pub) return;
       let b = blocks.get(p.pub); if (!b) blocks.set(p.pub, b = new Set());
@@ -1248,13 +1255,13 @@ wss.on('connection', (ws, req) => {
     } else if (m.t === 'finish') {
       if (!p.room) return;
       const sl = rslot(p.room);
-      if (m.m !== sl || !p.has || p.fin === sl) return;
+      if (m.m !== sl || !p.has || p.fin === sl || (p.pub && p.room.finPub && p.room.finPub.has(p.pub))) return;
       const flag = roomMap(p.room).flag;
       const dx = p.x - flag[0] * maps.TS, dy = p.y - flag[1] * maps.TS;
       if (Math.abs(dx) > 14 * maps.TS || dy > 120 || dy < -400) return;   // must really be at the flag
       p.fin = sl;
       const room = p.room;
-      room.finishers.push(p.id); if (room.bots && room.bots.length) roomCtx(room).fins.push({ x: p.x, y: p.y });
+      room.finishers.push(p.id); if (p.pub) (room.finPub || (room.finPub = new Map())).set(p.pub, room.finishers.length); if (room.bots && room.bots.length) roomCtx(room).fins.push({ x: p.x, y: p.y });
       broadcast(room, { t: 'fin', id: p.id, name: p.name, rank: room.finishers.length, ms: Math.max(0, Math.min(1e9, +m.ms || 0)) });
     }
   });
@@ -1298,10 +1305,14 @@ function relayTick() {   // (runs right after each world update, in the same pac
     }
   }
   // (d) linked players always receive each other's position, wherever they are
+  const inSlot = new Map(); for (const q of byPub.values()) if (q.room && q.has) { const sl = rslot(q.room); let a = inSlot.get(sl); if (!a) inSlot.set(sl, a = []); a.push(q); }   // (who is playing on each map: a player with hundreds of friends only costs as much as the people actually there)
   for (const r of byPub.values()) {
     if (!r.room || r.ws.readyState !== 1) continue;
     const ls = links.get(r.pub); if (!ls || !ls.size) continue;
-    const arr = []; let fresh = tickN % 60 === 0; for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has && rslot(q.room) === rslot(r.room)) { arr.push(q); if (q.moved) fresh = true; } }
+    const here = inSlot.get(rslot(r.room)) || [], arr = []; let fresh = tickN % 60 === 0;
+    if (ls.size <= here.length) { for (const b of ls) { const q = byPub.get(b); if (q && q.room && q.has && rslot(q.room) === rslot(r.room)) { arr.push(q); if (q.moved) fresh = true; } } }
+    else for (const q of here) if (q !== r && ls.has(q.pub)) { arr.push(q); if (q.moved) fresh = true; }
+    if (arr.length > 200) arr.length = 200;
     if (!arr.length || !fresh) continue;   // (only when somebody moved, plus a heartbeat every second)
     const buf = Buffer.allocUnsafe(3 + arr.length * 12);
     buf[0] = 3; buf.writeUInt16LE(rslot(r.room) & 0xFFFF, 1);
@@ -1366,7 +1377,7 @@ setInterval(() => {
   for (const room of rooms.values()) {
     if (room.priv) continue;
     room.world = null; loadSaved(room); room.fk = pickFin();
-    room.finishers = [];
+    room.finishers = []; room.finPub = new Map();
     for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); p.dver = null; }
     broadcast(room, { t: 'newmap', slot: curSlot, fk: room.fk | 0, next: nextAt(curSlot), now: Date.now(), build: bstate(room) });   // (with what was built on this map the last time it was played)
   }

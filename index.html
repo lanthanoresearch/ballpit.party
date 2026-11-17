@@ -545,6 +545,7 @@
   @media (max-height:520px){#placeBar{padding:3px 4px 3px 10px;gap:6px}#placeBar .pi small{display:none}#placeBar .btn{padding:4px 10px;min-height:32px}}
   #homeWallet{position:fixed;right:12px;top:12px;top:calc(12px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:4;display:none;align-items:center;gap:12px;padding:6px 12px;background:#fff4d8;border:2px solid #2b1d12;border-radius:var(--wob);color:#2b1d12;font-size:16px;box-shadow:2px 3px 0 rgba(43,29,18,.3);touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
   body.home #homeWallet{display:inline-flex}#homeWallet span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}#homeWallet{max-width:calc(100vw - 80px)}#homeWallet .ic{width:19px;height:19px}
+  #coinpill .ic{width:1.15em!important;height:1.15em!important}#coinpill>span:not(.gemw){min-width:0}
   #coinpill{pointer-events:auto!important;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
   #cdIn.bad{border-color:#ff7a6a;animation:shake .3s}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .lbtn{cursor:pointer;border-radius:6px}.lbtn:hover b,.lbtn:focus-visible b{text-decoration:underline}.lbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -695,6 +696,13 @@
   .sssub{font-size:13px;opacity:.7}
   .ssgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:15px;margin:2px 0 6px}.ssgrid div{display:flex;justify-content:space-between;gap:6px}.ssgrid span{opacity:.7}
   .ssnote{font-size:13px;opacity:.6;margin:6px 0 0}
+  .lvsave{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 4px}
+  .lvsave button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border:3px solid var(--line);border-radius:var(--wob);background:#1b1726;color:var(--ink);font:inherit;cursor:pointer;opacity:.75}
+  .lvsave button b{font-weight:normal;font-size:18px}.lvsave button small{font-size:12px;opacity:.75}.lvsave button .ic{width:22px;height:22px}
+  .lvsave button.on{background:#2fa463;border-color:#bff0d2;color:#fff;opacity:1;box-shadow:2px 3px 0 rgba(0,0,0,.35)}
+  #lvSaveNow{margin-top:6px}
+  #lvOptSlot #lvOptBox{margin-top:6px;border-top:2px dashed var(--line);padding-top:4px}
+  .lvcard{max-height:calc(100dvh - 20px)}.lvcard .lvl{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain}.lvcard .btns{flex:none}
   .plist{display:flex;flex-direction:column;gap:6px;margin:0 0 6px}
   .prs{display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(36,31,54,.7);border:2px solid var(--line);border-radius:var(--wob);box-shadow:2px 3px 0 rgba(0,0,0,.3)}
   .prs .lname{flex:1;min-width:0;white-space:normal}.prs .lname b{display:block;font-size:17px;font-weight:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.prs .btn{flex:none}
@@ -828,7 +836,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 182; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 183; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1203,6 +1211,9 @@
         <button class="btn full" id="btnPickLvl" type="button"><span data-ic="map"></span><span id="pickLvlText"></span></button>
         <button class="btn full danger hide" id="btnResetLvl" type="button"><span data-ic="reset"></span>Reset this level</button>
         <div id="lvOptBox"><div class="small dim" id="lvOptFor" style="margin:8px 0 2px"></div>
+      <div class="lvsave" role="group" aria-label="How this level is kept"><button type="button" id="lvSaveLive"><span data-ic="reset"></span><b>Live</b><small>Stays as you leave it</small></button><button type="button" id="lvSaveSnap"><span data-ic="lock"></span><b>Saved state</b><small>Same start every time</small></button></div>
+      <div class="small dim" id="lvSaveNote"></div>
+      <button class="btn full hide" id="lvSaveNow" type="button"><span data-ic="down"></span>Save the level as it is now</button>
       <label class="sw2 ic2" id="noCheatRow"><span class="ti"><span data-ic="lock"></span><span><b>No cheats</b><small>Cheat codes do nothing in your private game, for everyone. The options here in Mode still work</small></span></span><input type="checkbox" id="setNoCheats"><i></i></label>
       <label class="sw2 ic2 lvunl"><span class="ti"><span data-ic="gcoin"></span><span><b>Unlimited coins and diamonds</b><small id="lvMoney"></small></span></span><input type="checkbox" id="lvUnl"><i></i></label>
       <div class="lvmode">
@@ -1364,6 +1375,7 @@
     </div>
     <div class="lvright">
       <div class="lvsel"><b id="lvName"></b><div class="lvtags" id="lvTags"></div><span class="small dim" id="lvNote"></span><div class="lvdesc hide" id="lvDesc"></div><button type="button" class="chip" id="lvDescBtn"><span>Add a description</span></button></div>
+      <div id="lvOptSlot"></div>
     </div>
   </div>
   <div class="btns"><button id="lvReset" type="button" class="danger hide" hidden>Reset level</button><button id="lvNo" type="button">Close</button><button id="lvOk" type="button" class="go">Play</button></div>
@@ -1438,7 +1450,7 @@
   <div class="chead"><h3>Server status</h3><button id="ssClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="ssrate" id="ssRate"><b id="ssWord">Checking…</b><span id="ssWhy"></span></div>
   <div id="ssBody"></div>
-  <button id="ssLive" class="btn full go" type="button"><span data-ic="bolt"></span>Show live stats while playing</button>
+  <button id="ssLive" class="btn full go hide" type="button"><span data-ic="bolt"></span>Show live stats while playing</button>
   <p class="ssnote" id="ssNote">Counted by the game server since the start of the month (UTC). Render's dashboard has the exact figures.</p>
 </div></div>
 
@@ -1492,8 +1504,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=182"></script>
-<script src="physics.js?v=182"></script>
+<script src="maps.js?v=183"></script>
+<script src="physics.js?v=183"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1537,7 +1549,7 @@ function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'K
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: true,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -1573,6 +1585,7 @@ function normalize() {
   if (typeof settings.musicOn !== 'boolean') settings.musicOn = true;
   if (settings.music === 'peaceful') settings.music = 'chill'; if (settings.music === 'funk') settings.music = 'phonk';
   if (['adaptive', 'random', 'chill', 'upbeat', 'exciting', 'phonk', 'dreamy'].indexOf(settings.music) < 0) settings.music = 'adaptive';
+  { const o = {}; if (settings.lvSave && typeof settings.lvSave === 'object') for (const k in settings.lvSave) if (/^\d+$/.test(k) && settings.lvSave[k]) o[k] = 1; settings.lvSave = o; }
   settings.nOff = Array.isArray(settings.nOff) ? settings.nOff.filter(x => /^[0-9a-f]{16}$/.test(x)).slice(0, 64) : [];
   if (settings.share && typeof settings.share === 'object') { const o = {}; for (const k of ['on', 'last', 'beat', 'fr', 'since']) o[k] = settings.share[k] === 0 ? 0 : 1; settings.share = o; } else settings.share = null;
   ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
@@ -2367,8 +2380,9 @@ function loadMap(slot, next) {
   if (S.guest && party.priv) applyPartyProps(party.priv);
   else if (S.pendingBuild && S.pendingBuild.slot === slot) pubSync(S.pendingBuild.b);
   S.pendingBuild = null;
-  S.started = false; S.finished = false; S.done = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;   // (done: you have finished this round. It stays that way until the next map, even if you fall and start again)
-  others.forEach(o => { o.crown = false; });
+  S.started = false; S.finished = false; S.done = false; S.mode = 'play'; S.crown = false; S.away = false; S.dead = 0;
+  if (S.myFin && S.myFin.slot === slot && online && !party) { S.crown = S.myFin.r; S.done = true; }   // (you finished this round before leaving and coming back: your crown is still yours)   // (done: you have finished this round. It stays that way until the next map, even if you fall and start again)
+  if (S.crownSlot !== slot) others.forEach(o => { o.crown = false; }); S.crownSlot = slot;   // (crowns only go when the map changes; coming back to the same round keeps everybody's)
   bots.length = 0; botNextSpawn = rnd(1, 4); fx.length = 0;
   S.deathPos = null;
   try { const d = JSON.parse(localStorage.getItem('ballrun4_death') || 'null'); if (d && d.idx === m.idx) S.deathPos = { x: d.x, y: d.y }; } catch (e) {}
@@ -2427,7 +2441,7 @@ function nearEdge(b) {
   return b.y > P.killYAt(S.world, b.x) - 9 * TS;   // (the walls and ceiling are solid now: only the open bottom is a danger)
 }
 function finishRun() {
-  S.finished = true; S.done = true; S.finT = 5; S.crown = S.crown || true; if (botMode() === 'local') LBC.fins.push({ x: S.b.x, y: S.b.y }); sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
+  S.finished = true; S.done = true; S.finT = 5; S.finHide = performance.now() + 5000; S.crown = S.crown || true; if (botMode() === 'local') LBC.fins.push({ x: S.b.x, y: S.b.y }); sfx('finish'); setBeaten(S.idx); setTimeout(() => { try { sendInfo(); } catch (e) {} }, 50);
   S.finMs = S.started ? performance.now() - S.runStart : 0;
   $('fbText').textContent = 'Time ' + fmtT(S.finMs);
   $('finishbanner').classList.remove('hide');
@@ -2576,6 +2590,7 @@ function update(dt) {
   if (S.dead > 0) { S.dead -= dt; if (S.dead <= 0) respawn(false, true); return; }
   if (S.away) return;
   if (S.finished) { S.finT -= dt; if (S.finT <= 0) $('finishbanner').classList.add('hide'); }
+
   const b = S.b, bl = blocked();
   const kb = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
   const ms = bl ? null : mouseTick();
@@ -2653,6 +2668,7 @@ const resetPurseOf = i => { const q = purseOf(i); q.c = 0; q.g = 0; saveWallet()
 const isBeaten = idx => { try { return !!JSON.parse(localStorage.getItem(BEATKEY) || '{}')[idx]; } catch (e) { return false; } };
 const beatCount = () => { try { return Object.keys(JSON.parse(localStorage.getItem(BEATKEY) || '{}')).length; } catch (e) { return 0; } };
 const infoMsg = () => JSON.stringify({ t: 'info', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, beat: beatCount() });
+setInterval(() => { const fb = $('finishbanner'); if (fb && !fb.classList.contains('hide') && performance.now() > (S.finHide || 0)) fb.classList.add('hide'); }, 300);   // ("You finished" always goes after 5 seconds, whatever happens meanwhile: falling, starting again, a new map)
 function setBeaten(idx) { try { const o = JSON.parse(localStorage.getItem(BEATKEY) || '{}'); if (!o[idx]) { o[idx] = 1; localStorage.setItem(BEATKEY, JSON.stringify(o)); } } catch (e) {} }
 let wDirty = false, lastWorldStr = '', lastSave = 0;
 function touchFlags() {   // checkpoint flags: touch one and your next fall brings you back to it
@@ -3067,8 +3083,10 @@ function worldObj() {   // the world exactly as it is right now: everything buil
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
   return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, room: S.slot < SOLO_BASE ? S.pubRoom : undefined, rcv: S.rcvN | 0, own: S.own, dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
 }
-function saveWorld(force) {
+function saveWorld(force, snap) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
+  if (S.slot >= SOLO_BASE && !snap && settings.lvSave && settings.lvSave[S.idx]) return;   // (a level kept as a saved state only changes when you save it)
+  if (snap) lastWorldStr = '';
   const o = worldObj(), pv = S.slot >= SOLO_BASE ? solo2[S.idx] : null; if (pv && pv.from) o.from = pv.from;   // (a copy saved from someone else stays marked as one)
   const str = JSON.stringify(o);
   if (str !== lastWorldStr) {
@@ -4192,7 +4210,7 @@ syncUI = function () { _syncUI(); if (typeof lvlRender === 'function') lvlRender
 /* ================= tracking: two players who accept each other always see where the other one is =================
    Each device has a private random code. The server only ever shares a scrambled version of it, so links belong to the device (not the name)
    and come back by themselves when you return. */
-const DEVKEY = 'ballrun4_dev', LKKEY = 'ballrun4_links', MAXLINK = 12;
+const DEVKEY = 'ballrun4_dev', LKKEY = 'ballrun4_links', MAXLINK = 1000;   // (no real limit on friends)
 let devId = '';
 try { devId = localStorage.getItem(DEVKEY) || ''; } catch (e) {}
 if (!/^[A-Za-z0-9_-]{16,64}$/.test(devId)) {
@@ -4342,6 +4360,13 @@ function linkMsg(m) {
       meInfo.first = +m.first || 0; meInfo.fr = m.fr | 0; myBlocks = Array.isArray(m.blocks) ? m.blocks.filter(b => b && /^[0-9a-f]{16}$/.test(b.pub)) : [];
       if (m.share && settings.share && JSON.stringify(shareNow()) !== JSON.stringify(Object.assign({}, SHARE_ALL, m.share))) wsSend({ t: 'share', s: shareNow() });   // (the server forgot what you chose: tell it again)
       lpRender(); shareRender(); return true;
+    }
+    case 'prof': {   // a profile, fresh from the server
+      if (!/^[0-9a-f]{16}$/.test(m.pub || '')) return true;
+      if (m.blk) { profCache[m.pub] = { blk: 1 }; profRender(); return true; }
+      const k = m.me ? '@me' : m.pub; profCache[k] = m; if (m.me) { meInfo.fr = m.fr; meInfo.first = m.first; shareRender(); }
+      const l = lkOf(m.pub); if (l) { l.b = m.b; l.fr = m.fr; l.first = m.first; l.since = m.since || l.since; l.dm = Math.max(l.dm || 0, m.dm || 0); }
+      if (profPub === k) profRender(); return true;
     }
     case 'dm': dmIn(m); return true;
     case 'dmok': dmOk(m); return true;
@@ -4681,10 +4706,11 @@ function chatPeople() {
 }
 $('chatPplBtn').onclick = () => { const b = $('chatPeople'), on = b.classList.contains('hide'); b.classList.toggle('hide', !on); if (on) chatPeople(); sfx('ui'); };
 let giveTo = null;
-function giveMax() { const c = wallet.c >= 1e9 ? 100000 : Math.floor(wallet.c), g = wallet.g >= 1e9 ? 5000 : Math.floor(wallet.g); return { c: Math.max(0, c), g: Math.max(0, g) }; }
+const GIVE_C = 1000000, GIVE_G = 10000;   // (the most that can be given at once: coins from codes and unlimited money count like any other, up to this)
+function giveMax() { const c = Math.min(GIVE_C, Math.floor(wallet.c)), g = Math.min(GIVE_G, Math.floor(wallet.g)); return { c: Math.max(0, c), g: Math.max(0, g) }; }
 function openGive(id) {
   const o = others.get(id); if (!o) return; giveTo = id; const mx = giveMax();
-  $('gvTitle').textContent = 'Give to ' + who(o.name); $('gvHave').textContent = 'You have ' + fmtN(mx.c) + ' coins and ' + fmtN(mx.g) + ' diamonds' + (wallet.c >= 1e9 ? ' (up to that much at a time)' : '') + '.';
+  $('gvTitle').textContent = 'Give to ' + who(o.name); $('gvHave').textContent = 'You have ' + fmtN(mx.c) + ' coins and ' + fmtN(mx.g) + ' diamonds' + (wallet.c > GIVE_C || wallet.g > GIVE_G ? ' to give right now (the most at a time)' : '') + '.';
   $('gvC').value = 0; $('gvG').value = 0; $('gvC').max = mx.c; $('gvG').max = mx.g; $('giveModal').classList.remove('hide'); setTimeout(() => { try { $('gvC').focus(); $('gvC').select(); } catch (e) {} }, 50);
 }
 $('gvNo').onclick = () => { $('giveModal').classList.add('hide'); giveTo = null; };
@@ -4692,7 +4718,7 @@ $('gvOk').onclick = () => {
   const o = others.get(giveTo), mx = giveMax(); if (!o) { $('giveModal').classList.add('hide'); notice('They are not here any more', ''); return; }
   const c = Math.floor(+$('gvC').value || 0), g = Math.floor(+$('gvG').value || 0);
   if (c < 0 || g < 0 || (!c && !g)) { sfx('warn'); notice('Pick how many to give', ''); return; }
-  if (c > mx.c || g > mx.g) { sfx('warn'); notice('You do not have that much', 'urgent'); return; }
+  if (c > mx.c || g > mx.g) { sfx('warn'); notice(c > GIVE_C || g > GIVE_G ? 'The most you can give at once is ' + fmtN(GIVE_C) + ' coins and ' + fmtN(GIVE_G) + ' diamonds' : 'You do not have that much', 'urgent'); return; }
   const what = [c ? fmtN(c) + ' coin' + (c === 1 ? '' : 's') : '', g ? fmtN(g) + ' diamond' + (g === 1 ? '' : 's') : ''].filter(Boolean).join(' and '), nm = who(o.name), id = giveTo;
   $('giveModal').classList.add('hide');
   askConfirm('Give ' + nm + ' ' + what + '?', 'They come out of what you have and go straight to ' + nm + '. You cannot take them back.', 'Yes, give', () => {
@@ -5424,11 +5450,11 @@ function friendCard(l) {
   const nm = who(l.name), msg = canMessage(l) ? iconBtn('btn sm', 'chat', 'Message ' + nm, () => openChatTo(l.pub), 'Message') : null;
   return personRow(l, !l.ok && (online || lobbyOn) ? 'Waiting for them to come back' : '', [msg]);
 }
-function meEntry() { return { pub: '', me: 1, code: myCode, name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, on: 1, b: beatCount(), fr: lks.filter(l => l.ok).length, first: meInfo.first }; }
+function meEntry() { const c = profCache['@me'] || {}; return { pub: '', me: 1, code: myCode, name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, on: online || lobbyOn ? 1 : 0, w: c.w || 0, b: beatCount(), fr: Math.max(lks.length, meInfo.fr | 0, c.fr | 0), first: c.first || meInfo.first, fe: c.fe }; }
 
 /* ----- what you share: your name and ball always; when you are on, when you were last on, levels beaten, number of friends, when you started can each be kept private ----- */
 const SHARE_ALL = { on: 1, last: 1, beat: 1, fr: 1, since: 1 };
-const SHARE_ROWS = [['on', 'clock', 'When you are online, and where', 'Off: you always look offline to others, and friends get no "came online" alerts about you'], ['last', 'clock', 'When you were last on', 'Off: nobody sees how long ago you played'], ['beat', 'trophy', 'How many levels you have beaten', ''], ['fr', 'users', 'How many friends you have', ''], ['since', 'flag', 'When you started playing', '']];
+const SHARE_ROWS = [['fr', 'users', 'How many friends you have', ''], ['since', 'flag', 'When you started playing', '']];   // (everything else on a profile is always shown)
 const shareNow = () => Object.assign({}, SHARE_ALL, settings.share || {});
 function shareRender() {
   const box = $('shareBox'); if (!box) return; const sh = shareNow();
@@ -5440,24 +5466,26 @@ function shareRender() {
   }
   fillIcons(box);
   for (const inp of box.querySelectorAll('input')) inp.checked = !!sh[inp.dataset.k];
-  const me = meEntry(); if (!sh.beat) me.b = -1; if (!sh.fr) me.fr = -1; if (!sh.since) me.first = 0; profTiles($('meTiles'), me, true);
+  const me = meEntry(); if (!sh.fr) me.fr = -1; if (!sh.since) me.first = 0; profTiles($('meTiles'), me, true);
+  if (!shareRender.asked && (online || lobbyOn)) { shareRender.asked = 1; wsSend({ t: 'prof', to: 'me' }); setTimeout(() => { shareRender.asked = 0; }, 5000); }
 }
 function openLook() { if (inHome) { if ($('settings').classList.contains('hide')) { $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; } showTab('you'); if ($('settings').classList.contains('hide')) toggleSettings(); return; } if (!paused) openPause(); $('settings').classList.add('only'); $('shTitle').textContent = 'Customize'; showTab('you'); if ($('settings').classList.contains('hide')) toggleSettings(); }
 
 /* ----- a player's profile: who they are, how many levels they have beaten, their friend number, and what you can do ----- */
 const LEVELS = 50;
 let profPub = '', profSnap = null;
-function profData(pub) { if (pub === '@me') return meEntry(); return (lks.filter(l => l.pub === pub)[0]) || (lpFound.filter(f => f.pub === pub)[0]) || reqs.filter(r => r.pub === pub)[0] || myBlocks.filter(b => b.pub === pub)[0] || seenEntry(pub) || (profSnap && profSnap.pub === pub ? profSnap : null); }
-function openProfile(p) { if (!p) return; profPub = p.me || isMe(p) ? '@me' : p.pub; profSnap = Object.assign({}, p); profRender(); $('profModal').classList.remove('hide'); const cd = document.querySelector('#profModal .profcard'); if (cd) cd.scrollTop = 0; setTimeout(() => { try { $('profClose').focus({ preventScroll: true }); } catch (e) {} if (cd) cd.scrollTop = 0; }, 30); }   // (it always opens at the top)
+const profCache = {};   // what the server last said about each profile (and yours, as '@me')
+function profData(pub) { if (pub === '@me') return Object.assign(meEntry(), profCache['@me'] || {}, { me: 1, pub: '', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, b: beatCount() }); if (profCache[pub] && !profCache[pub].blk) return Object.assign({}, (lks.filter(l => l.pub === pub)[0]) || (profSnap && profSnap.pub === pub ? profSnap : {}), profCache[pub]); return (lks.filter(l => l.pub === pub)[0]) || (lpFound.filter(f => f.pub === pub)[0]) || reqs.filter(r => r.pub === pub)[0] || myBlocks.filter(b => b.pub === pub)[0] || seenEntry(pub) || (profSnap && profSnap.pub === pub ? profSnap : null); }
+function openProfile(p) { if (!p) return; profPub = p.me || isMe(p) ? '@me' : p.pub; if (profPub) wsSend({ t: 'prof', to: profPub === '@me' ? 'me' : profPub }); profSnap = Object.assign({}, p); profRender(); $('profModal').classList.remove('hide'); const cd = document.querySelector('#profModal .profcard'); if (cd) cd.scrollTop = 0; setTimeout(() => { try { $('profClose').focus({ preventScroll: true }); } catch (e) {} if (cd) cd.scrollTop = 0; }, 30); }   // (it always opens at the top)
 function closeProfile() { profPub = ''; $('profModal').classList.add('hide'); }
 const isMe = p => !!p && (p.me || (!!myCode && String(p.code || '').toUpperCase().replace(/^#/, '') === String(myCode).toUpperCase().replace(/^#/, '')));
 const dateOf = t => { try { return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: new Date(t).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); } catch (e) { return ''; } };
 function profTiles(box, p, me) {   // the figures about a player, as far as they share them
   box.textContent = ''; const t = (k, v) => { if (v === null || v === undefined || v === '') return; const d = el('div'); d.appendChild(el('span', '', k)); d.appendChild(el('b', '', String(v))); box.appendChild(d); };
   const lk = lkOf(p.pub);
-  if ((p.b | 0) >= 0 && p.b !== undefined) t('Levels beaten', (p.b | 0) + ' of ' + LEVELS);
+  if (p.b !== undefined && (p.b | 0) >= 0) t('Levels beaten', (p.b | 0) + ' of ' + LEVELS);
   if (p.fr !== undefined && p.fr >= 0) t('Friends', p.fr);
-  if (p.first) t('Playing since', dateOf(p.first));
+  if (p.first) t('Playing since', dateOf(p.first) + (p.fe ? ' or earlier' : ''));
   if (lk && lk.since) t('Friends since', dateOf(lk.since));
   if (lk) t('Last message', lk.dm ? ago(lk.dm) : 'None yet');
   if (!me && !p.on && !p.hid && p.last) t('Last on', ago(p.last));
@@ -5469,7 +5497,7 @@ function profRender() {
   const c1 = me ? settings.color : q.color, c2 = me ? settings.color2 : q.color2, pt = me ? settings.pat : q.pat;
   { const cv = $('profDot'), g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); g.drawImage(sprite(HEX.test(c1) ? c1 : '#ccc', HEX.test(c2) ? c2 : '#ffffff', (pt | 0) % PATTERNS.length), 0, 0, cv.width, cv.height); }   // the ball exactly as it looks in the game
   $('profName').textContent = nm; $('profCode').textContent = '#' + (q.code || myCode || '');
-  const st = me ? { c: 'on', t: 'This is you. Other players see your profile like this' } : blk ? { c: 'hid', t: 'Blocked' } : statusOf(q);
+  const st = blk ? { c: 'hid', t: 'Blocked' } : statusOf(Object.assign({}, q, { me: 0, code: me ? '' : q.code }));
   $('profStatus').textContent = st.t; $('profStatus').className = 'pstat' + (st.c === 'on' ? ' on' : ''); $('profLight').className = 'sdot ' + st.c;
   const n = q.b | 0; $('profBeat').parentNode.parentNode.classList.add('hide');
   profTiles($('profTiles'), q, me);
@@ -5477,7 +5505,7 @@ function profRender() {
   const add = (cls, txt, fn, dis, icn) => { const b = el('button', cls); b.type = 'button'; b.innerHTML = (icn ? ic(icn) : '') + '<span></span>'; b.lastChild.textContent = txt; if (dis) b.disabled = true; b.onclick = fn; (/\bprim\b/.test(cls) || /Unblock/.test(txt) ? main : act).appendChild(b); return b; };   // (the main thing to do sits right under the figures; the rest at the bottom)
   const ps = $('profSet'); ps.textContent = '';
   const row = (label, note) => { const r = el('div', 'prow'); const t = el('div', 'ptxt'); t.appendChild(el('b', '', label)); if (note) t.appendChild(el('small', '', note)); r.appendChild(t); ps.appendChild(r); return r; };
-  if (me) { add('btn prim', 'Change what you share', () => { closeProfile(); openLook(); }, false, 'eye'); }
+  if (me) {}
   else if (linked) {   // everything about this one friend
     if (canMessage(lk)) add('btn prim', 'Message ' + nm, () => { closeProfile(); openChatTo(p.pub); }, false, 'chat');
     const m1 = row('On your map', 'How ' + nm + ' looks while you play'), o = el('div', 'fopts');
@@ -5518,7 +5546,7 @@ function lpRender() {
   { const off = offlineOn() || !(online || lobbyOn), n = $('fNote'); n.textContent = offlineOn() ? 'Offline mode is on, so this shows your friends as they were last time. Turn offline mode off to see who is on and to add friends.' : !(online || lobbyOn) ? 'Connecting to the server…' : ''; n.classList.toggle('hide', !off); $('btnAddF').disabled = offlineOn(); }
   const list = $('lpList'), order = lks.filter(l => !isMe(l)).slice().sort((a, b) => (b.ok && b.on) - (a.ok && a.on) || (b.last || 0) - (a.last || 0));
   const lk = JSON.stringify(order.map(l => [l.pub, l.name, l.code, l.ok, l.on, l.hid, l.w, l.last && Math.floor(l.last / 60000), l.color, l.color2, l.pat, canMessage(l)])) + (online || lobbyOn);   // (only rebuilt when something in it changed, so it never jumps while you scroll)
-  $('lpCount').textContent = '(' + lks.length + ' / ' + MAXLINK + ')';
+  $('lpCount').textContent = '(' + lks.length + ')';
   if (list._k !== lk) { list._k = lk; list.textContent = '';
     if (!order.length) list.appendChild(el('div', 'small dim', 'No friends yet. Tap Add a friend to find players.'));
     for (const l of order) list.appendChild(friendCard(l)); }
@@ -5880,7 +5908,7 @@ function enterGame(auto) {
   try { auWake(); } catch (e) {}
   if (settings.mp !== homeMode) setMultiplayer(settings.mp);
   else if (settings.mp) joinWorld();
-  else { setNet('solo'); if (S.slot !== soloSlot()) soloGo(false); if (offlineOn() || !startHosting()) { if (!ws) { retry = 0; connect(); } } }   // (a private game is on the server from the very first moment, so nothing jumps when friends come: the game waits until it is there)
+  else { setNet('solo'); if (S.slot === soloSlot() && lvSaveOn(soloLevel())) S.slot = -1;   /* (a level kept as a saved state starts from that state every time you come in) */ if (S.slot !== soloSlot()) soloGo(false); if (offlineOn() || !startHosting()) { if (!ws) { retry = 0; connect(); } } }   // (a private game is on the server from the very first moment, so nothing jumps when friends come: the game waits until it is there)
   setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
   if (reenter) backToStart(); reenter = true;
   if (!settings.mp) setTimeout(() => announceEntry({ slot: soloSlot() }), 350);
@@ -6219,9 +6247,9 @@ function lvlRender() {
   const pub = $('homeMp').checked, h = $('homeLvl');
   let t = lvlLabel();
   if (h) {   // private: your level, tap to change. Public: the map everyone is on right now, and how long until the next one.
-    h.classList.toggle('static', false); h.disabled = false; h.setAttribute('aria-label', pub ? 'The public world right now: tap for details' : 'Pick your level');
+    h.classList.toggle('static', false); h.disabled = false; h.setAttribute('aria-label', pub ? 'The public world right now: tap for details' : 'Your level: tap to look, change it, and play');
     if (pub) { const p = pubIdx(); h.innerHTML = ico('map') + '<span class="lvt">' + lvLabelOf(p.i) + '</span><span class="lvtime">' + fmtClock(p.next - nowMs()) + '</span>' + ico('info'); }
-    else h.innerHTML = ico('map') + '<span class="lvt">' + t + '</span>' + ico('chev');
+    else h.innerHTML = ico('map') + '<span class="lvt">' + t + '</span><span class="lvtime">' + (lvSaveOn(soloLevel()) ? 'Saved state' : hasSoloSave(soloLevel()) ? 'Live' : 'New') + '</span>' + ico('info');
   }
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
   lvOptRender();
@@ -6256,36 +6284,57 @@ function lvSelect(i) {
   const mt = BallMaps.meta && BallMaps.meta[i], tags = $('lvTags'); tags.innerHTML = '';
   if (mt) { const len = lvLen(i); if (len) { const s = document.createElement('span'); s.textContent = len; tags.appendChild(s); } mt.th.slice(0, 5).map(biomeOf).filter(Boolean).forEach(t => { const s = document.createElement('span'); s.innerHTML = '<i style="background:' + t.top + '"></i>' + t.id.charAt(0).toUpperCase() + t.id.slice(1); tags.appendChild(s); }); }
   $('lvNote').textContent = (isBeaten(i) ? 'You have beaten this level. ' : 'Not beaten yet. ') + (soloFrom(i) ? 'A copy saved from ' + soloFrom(i) + '.' : soloBuilt(i) ? 'What you built here is saved.' : hasSoloSave(i) ? 'Your progress here is saved. Nothing built yet.' : 'Nothing saved yet.') ; { const t = lvDescOf(i), de = $('lvDesc'); de.textContent = t; de.classList.toggle('hide', !t); $('lvDescBtn').lastChild.textContent = t ? 'Edit description' : 'Add a description'; }
-  $('lvOk').textContent = inHome ? 'Choose' : (i === soloLevel() ? 'Keep playing' : 'Play');
+  $('lvOk').textContent = inHome ? 'Play' : (i === soloLevel() ? 'Keep playing' : 'Play'); lvOptRender.k = ''; lvOptRender();
 }
 $('lvFil').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { sfx('ui'); lvF = b.getAttribute('data-f'); lvFilter(); } });
 $('lvUnl').onchange = () => {   // every private map decides for itself: earn coins and diamonds there, or have them without limit
-  const i = soloLevel(), on = $('lvUnl').checked; purseOf(i).u = on ? 1 : 0; saveWallet(); sfx(on ? 'on' : 'off'); $('lvMoney').textContent = lvMoneyText(i);
+  const i = optIdx(), on = $('lvUnl').checked; purseOf(i).u = on ? 1 : 0; saveWallet(); sfx(on ? 'on' : 'off'); $('lvMoney').textContent = lvMoneyText(i);
   lastCoinShown = lastGemShown = -1; homeWalletRender.k = ''; if (shopOpen) shopRender();
 
 };
 /* where the finish is on each of your levels: spot 1 to 4, or Random (drawn once and kept, or drawn again every game) */
 let finChg = false;
 const selFin = makeSelect($('selFin'), [{ v: 's0', label: 'Finish: Spot 1' }, { v: 's1', label: 'Finish: Spot 2' }, { v: 's2', label: 'Finish: Spot 3' }, { v: 's3', label: 'Finish: Spot 4' }, { v: 'r', label: 'Finish: Random' }], v => {
-  const i = soloLevel(), p = finOf(i), was = soloFin(i);
+  const i = optIdx(), p = finOf(i), was = soloFin(i);
   if (v === 'r') { p.k = 'r'; p.cur = Math.floor(Math.random() * FIN_N); } else { p.k = +v.slice(1); delete p.cur; }
   finPref[i] = p; saveFin(); sfx('ui'); finRow(i);
   if (soloFin(i) !== was && i === soloLevel()) finChg = true;
 });
-$('lvRoll').onchange = () => { const i = soloLevel(), p = finOf(i); p.roll = $('lvRoll').checked ? 1 : 0; finPref[i] = p; saveFin(); sfx(p.roll ? 'on' : 'off'); };
+$('lvRoll').onchange = () => { const i = optIdx(), p = finOf(i); p.roll = $('lvRoll').checked ? 1 : 0; finPref[i] = p; saveFin(); sfx(p.roll ? 'on' : 'off'); };
 function finRow(i) { const p = finOf(i); selFin.set(p.k === 'r' ? 'r' : 's' + (p.k | 0)); $('lvRoll').checked = !!p.roll; $('lvRollRow').classList.toggle('hide', p.k !== 'r'); }
 $('setNoCheats').onchange = () => { settings.noCheats = $('setNoCheats').checked; save(); sfx(settings.noCheats ? 'on' : 'off'); if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'rules', nc: settings.noCheats ? 1 : 0 })); } catch (e) {} } lvOptRender.k = ''; lvOptRender(); homeWalletRender.k = ''; try { homeWalletRender(); } catch (e) {} };
+const optIdx = () => !$('lvlModal').classList.contains('hide') && typeof lvSel === 'number' ? lvSel : soloLevel();   // (the level whose options are showing: the one picked in the level list while it is open)
+/* Live or saved state, for each of your levels. Live: the level stays as you leave it. Saved state: it starts from the same saved moment every time,
+   whatever you did since, until you save it again */
+const lvSaveOn = i => !!(settings.lvSave && settings.lvSave[i]);
+function lvSaveSet(i, on) {
+  const o = Object.assign({}, settings.lvSave || {}); if (on) o[i] = 1; else delete o[i]; settings.lvSave = o; save();
+  if (on && S.slot >= SOLO_BASE && S.idx === i && !inHome && !S.guest) { saveWorld(true, true); notice('Saved state on. This level now starts just like this every time', ''); }
+  else notice(on ? 'Saved state on. This level starts the same way every time' : 'Live: this level stays the way you leave it', '');
+  sfx(on ? 'on' : 'off'); lvOptRender.k = ''; lvOptRender();
+}
+function lvSaveRender(i) {
+  const on = lvSaveOn(i), here = S.slot >= SOLO_BASE && S.idx === i && !inHome && !(party && party.role === 'guest');
+  $('lvSaveLive').classList.toggle('on', !on); $('lvSaveSnap').classList.toggle('on', on); $('lvSaveLive').setAttribute('aria-pressed', !on); $('lvSaveSnap').setAttribute('aria-pressed', on);
+  $('lvSaveNote').textContent = on ? 'Every game on this level starts from the saved moment. What you build, break or move after that is gone when you come back, unless you save again.' : 'What you build, break or move stays that way. Leave and come back, and the level is just how you left it.';
+  $('lvSaveNow').classList.toggle('hide', !on || !here);
+}
+$('lvSaveLive').onclick = () => { const i = optIdx(); if (lvSaveOn(i)) lvSaveSet(i, false); };
+$('lvSaveSnap').onclick = () => { const i = optIdx(); if (!lvSaveOn(i)) lvSaveSet(i, true); };
+$('lvSaveNow').onclick = () => { if (S.slot >= SOLO_BASE && !S.guest) { saveWorld(true, true); sfx('big'); notice('Saved. This level now starts just like this', ''); } };
 function lvOptRender() {   // the options of the level you picked live in the Mode tab: the picker itself only picks
-  const i = soloLevel(), g = !!(party && party.role === 'guest'); $('lvOptBox').classList.toggle('hide', g); $('noCheatRow').classList.toggle('hide', g || offlineOn() || !!settings.mp); $('setNoCheats').checked = !!settings.noCheats; $('lvUnl').disabled = false; if (g) return;
-  const q = purseV[i], p = finOf(i), k = i + '|' + (q ? q.u + ',' + q.c + ',' + q.g : '') + '|' + p.k + '|' + p.roll; if (lvOptRender.k === k) return; lvOptRender.k = k;
+  const i = optIdx(), g = !!(party && party.role === 'guest'); $('lvOptBox').classList.toggle('hide', g); lvSaveRender(i); $('noCheatRow').classList.toggle('hide', g || offlineOn() || !!settings.mp); $('setNoCheats').checked = !!settings.noCheats; $('lvUnl').disabled = false; if (g) return;
+  const q = purseV[i], p = finOf(i), k = i + '|' + (q ? q.u + ',' + q.c + ',' + q.g : '') + '|' + p.k + '|' + p.roll + '|' + lvSaveOn(i) + S.slot + inHome; if (lvOptRender.k === k) return; lvOptRender.k = k;
   $('lvOptFor').textContent = 'For ' + lvLabelOf(i) + ':'; $('lvUnl').checked = unlimitedAt(i); $('lvMoney').textContent = lvMoneyText(i); finRow(i);
 }
 function finApply() { if (!finChg) return; finChg = false; if (inHome || settings.mp || (party && party.role === 'guest')) return; hostLeaveWarn(() => rehost(() => soloGo(true)), 'move the finish'); }
+let lvOptHome = null;
 function openLevels() {
-  loadSolo(); lvBuild(); lvSelect(soloLevel()); $('lvlModal').classList.remove('hide');
+  loadSolo(); lvBuild(); if (!lvOptHome) lvOptHome = { p: $('lvOptBox').parentNode, n: $('lvOptBox').nextSibling }; $('lvOptSlot').appendChild($('lvOptBox'));   // (the level's options come along into the list: look, set, then play)
+  $('lvlModal').classList.remove('hide'); lvSelect(soloLevel()); $('lvNo').textContent = inHome ? 'Cancel' : 'Close';
   setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }, 30);
 }
-function closeLevels() { $('lvlModal').classList.add('hide'); }
+function closeLevels() { $('lvlModal').classList.add('hide'); if (lvOptHome && $('lvOptBox').parentNode !== lvOptHome.p) lvOptHome.p.insertBefore($('lvOptBox'), lvOptHome.n); lvOptRender.k = ''; lvOptRender(); }
 function askResetLevel(i, after, twice) {
   if (twice) { askConfirm('Reset ' + lvLabelOf(i) + '?', 'This starts the level over from nothing. You will be asked once more before anything is removed.', 'Continue', () => setTimeout(() => askResetLevel(i, after), 60), { no: 'Keep it', yesClass: 'go' }); return; }
   askConfirm('Reset ' + lvLabelOf(i) + '?', 'Everything you built, moved, opened or collected on this level goes back to the start. Your coins and diamonds stay yours.', 'Reset level', () => {
@@ -6298,6 +6347,7 @@ $('lvNo').onclick = closeLevels;
 $('lvReset').onclick = () => askResetLevel(lvSel);
 $('lvOk').onclick = () => {
   const changed = lvSel !== soloLevel(); settings.soloMap = String(lvSel); save(); lvlRender(); closeLevels(); sfx('ui');
+  if (inHome) { setTimeout(() => $('homePlay').click(), 30); return; }   // (from the main menu: straight into the game)
   if (!inHome) { if (paused) resumeGame(); if (changed) hostLeaveWarn(() => rehost(() => soloGo(true)), 'change the level'); }
 };
 $('lvlModal').addEventListener('pointerdown', e => { if (e.target === $('lvlModal')) closeLevels(); });
@@ -6647,6 +6697,7 @@ function onMsg(m) {
       net.online = m.online; net.peak = m.peak;
       myCode = m.code || myCode; try { if (m.code) localStorage.setItem('ballrun4_code', m.code); } catch (e) {} showMyCode(); nameServer(m.name, m.nameLeft | 0, false);
       lastSent = infoMsg();
+      if (m.mine && !m.priv) { S.myFin = { slot: m.slot, r: m.mine }; if (S.slot === m.slot && S.mode === 'play') { S.crown = m.mine; S.done = true; } }   // (you finished this round before: still yours)
       others.clear();
       m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; o.ot = p.ot >>> 0; others.set(p.id, o); noteSeen(o.pub, p.name, p.color, p.code, undefined, undefined, p.color2, p.pat); }); saveSeen();
       setNet('online');
@@ -6662,7 +6713,7 @@ function onMsg(m) {
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
-    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat); o.pub = m.pub || ''; o.ot = m.ot >>> 0; others.set(m.id, o); noteSeen(o.pub, m.name, m.color, m.code, undefined, undefined, m.color2, m.pat); saveSeen(); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
+    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat, m.crown || 0); o.pub = m.pub || ''; o.ot = m.ot >>> 0; others.set(m.id, o); noteSeen(o.pub, m.name, m.color, m.code, undefined, undefined, m.color2, m.pat); saveSeen(); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
     case 'leave': { others.delete(m.id); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' left', 'leave', false, 'human'); if (settings.joinMsg) sfx('leave'); } botNote(); break; }
     case 'info': {   // someone changed how they look: show a clear little transformation
       const o = others.get(m.id);
@@ -6740,7 +6791,7 @@ function onMsg(m) {
     case 'fin': {
       if (m.bot) { const bt = bots.find(b => b.id === m.id); if (bt) { bt.crown = m.rank || 1; if (nearMe(bt.b.x, bt.b.y)) burst(bt.b.x, bt.b.y - 10, ['#ffd23d', '#fff', '#ff5b4a'], 24, 300, 400); } if (settings.announce && settings.botAnnounce) addFeed(who(m.name) + ' finished (#' + m.rank + ')', 'fin', true, 'bot'); break; }
       const mine = m.id === myId, o = others.get(m.id);
-      if (mine) { S.crown = m.rank || 1; $('fbText').textContent = 'Place #' + m.rank + ' · Time ' + fmtT(m.ms); }
+      if (mine) { S.crown = m.rank || 1; S.done = true; if (!party) S.myFin = { slot: S.slot, r: S.crown }; $('fbText').textContent = 'Place #' + m.rank + ' · Time ' + fmtT(m.ms); }
       else if (o) { o.crown = m.rank || 1; if (nearMe(o.cx, o.cy)) burst(o.cx, o.cy - 10, ['#ffd23d', '#fff', '#ff5b4a'], 24, 300, 400); }
       if (settings.announce) {
         const nm = mine ? 'You' : who(m.name);
@@ -7993,6 +8044,9 @@ function hudTick() {
   $('onl').textContent = worldText();
   if (wallet.c !== lastCoinShown) { lastCoinShown = wallet.c; $('coinN').textContent = fmtW(wallet.c); }
   if (wallet.g !== lastGemShown) { lastGemShown = wallet.g; $('gemN').textContent = fmtW(wallet.g); }
+  { const pl = $('coinpill'), k = $('coinN').textContent + '|' + $('gemN').textContent + '|' + innerWidth; if (pl._fk !== k) { pl._fk = k; pl.style.fontSize = ''; }
+    const over = () => pl.clientWidth && (pl.scrollWidth > pl.clientWidth + 1 || Math.max($('gemN').getBoundingClientRect().right, $('coinN').getBoundingClientRect().right) > pl.getBoundingClientRect().right - (parseFloat(getComputedStyle(pl).paddingRight) || 0) + 0.5);
+    for (let n = 0; n < 12 && over(); n++) { const f = parseFloat(getComputedStyle(pl).fontSize) || 14; if (f <= 8.5) break; pl.style.fontSize = (f - 0.5) + 'px'; } }   // (big numbers: the text gets a little smaller until it fits in its box)
   $('coinpill').title = 'Your coins and diamonds. Spend them in the shop (the + button).';
   $('mpstats').textContent = online && party ? worldText() + '.' : online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : '');
   if (!$('tpop').classList.contains('hide')) fillTimerPop(rem);
