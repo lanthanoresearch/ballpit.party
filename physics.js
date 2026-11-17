@@ -1645,7 +1645,49 @@
     return 'Bot' + Math.floor(Math.random() * 1000);
   }
   const botLook = () => ({ color: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], color2: BOT_COLORS[Math.floor(Math.random() * BOT_COLORS.length)], pat: Math.floor(Math.random() * 6) });
-  const api = { VERSION: 181, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+
+  /* ----- personal info in chat: phone numbers, emails, home addresses, links and accounts on other apps are never sent, written with digits or spelled out in
+     words. The same check runs on the device (so you know at once) and on the server (which has the last word). Returns why, or '' when it is fine ----- */
+  const PII_NUM = { zero: '0', oh: '0', o: '0', one: '1', won: '1', two: '2', three: '3', four: '4', fore: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', niner: '9', ten: '10', eleven: '11', twelve: '12', thirteen: '13', fourteen: '14', fifteen: '15', sixteen: '16', seventeen: '17', eighteen: '18', nineteen: '19', twenty: '20', thirty: '30', forty: '40', fourty: '40', fifty: '50', sixty: '60', seventy: '70', eighty: '80', ninety: '90', hundred: '00', thousand: '000', double: '', triple: '' };
+  const PII_SOFT = { oh: 1, o: 1, won: 1, fore: 1, double: 1, triple: 1 };   // (only count as numbers right next to other numbers)
+  const PII_GAP = { and: 1, dash: 1, dot: 1, then: 1, space: 1, hyphen: 1, x: 1, ext: 1, area: 1, code: 1, is: 1, its: 1, plus: 1, number: 1, num: 1, no: 1 };
+  function piiCheck(raw) {
+    let s = String(raw == null ? '' : raw); try { s = s.normalize('NFKC'); } catch (e) {}
+    s = s.toLowerCase().replace(/[​-‏⁠﻿]/g, '');
+    const flat = s.replace(/[^a-z0-9@]+/g, ' ');
+    // emails, links and other apps
+    if (/[a-z0-9._%+-]+\s*(@|\(\s*at\s*\)|\[\s*at\s*\]|\{\s*at\s*\})\s*[a-z0-9-]+/.test(s) || /[a-z0-9._%+-]{2,}\s*(@|\bat\b)\s*[a-z0-9-]{2,}\s*(\.|\bdot\b|\(dot\)|\[dot\])\s*[a-z]{2,4}\b/.test(s)) return 'email';
+    if (/\b(g ?mail|yahoo|hotmail|outlook|icloud|aol|proton ?mail|ymail|msn|gmx|zoho)\b/.test(flat)) return 'email';
+    if (/https?:|www\s*\.|\b[a-z0-9-]{2,}\s*(\.|\bdot\b)\s*(com|net|org|gg|io|me|ly|tv|app|co|us|uk|ca|xyz|info|link|site|online|store)\b/.test(s)) return 'link';
+    if (/\b(snap ?chat|snap me|my snap|add me on snap|sc me|insta ?gram|my insta|my ig|ig me|discord|tik ?tok|whats ?app|telegram|kik|facebook|fb me|messenger|wechat|we chat|skype|imessage|facetime|face time|venmo|cash ?app|paypal|onlyfans|reddit me|twitter me|x me at)\b/.test(flat)) return 'app';
+    if (/\b(my (phone|cell|mobile|home) ?(number|no|num|#)?|my number|my digits|phone (number|no|num)|cell (number|no)|call me at|text me at|ring me at)\b/.test(flat)) return 'phone';
+    // numbers, written with digits or in words: seven or more in a row (with dashes, dots, brackets, spaces or a word or two between) is a phone number
+    const tk = flat.split(' ').filter(Boolean), ns = [];
+    for (let i = 0; i < tk.length; i++) {
+      const t = tk[i]; let d = null;
+      if (/^\d+$/.test(t)) d = t;
+      else if (/\d/.test(t)) { const u = t.replace(/zero|one|two|three|four|five|six|seven|eight|nine/g, m => PII_NUM[m]).replace(/[^0-9]/g, ''); d = u.length >= 2 ? u : null; }   // (digits hidden among letters, or number words run together with them: 5five5)
+      else if (PII_NUM[t] !== undefined) { const nb = q => q >= 0 && q < tk.length && (/\d/.test(tk[q]) || (PII_NUM[tk[q]] !== undefined && !PII_SOFT[tk[q]])); d = PII_SOFT[t] && !(nb(i - 1) || nb(i + 1)) ? null : PII_NUM[t]; if (d !== null && /^(twenty|thirty|forty|fourty|fifty|sixty|seventy|eighty|ninety)$/.test(t) && PII_NUM[tk[i + 1]] && PII_NUM[tk[i + 1]].length === 1) d = d.charAt(0); }
+      ns.push(d);
+    }
+    let run = '', gap = 0, best = '', all = '';
+    for (let i = 0; i < ns.length; i++) {
+      const d = ns[i];
+      if (d !== null) { run += d; all += d; gap = 0; if (run.length > best.length) best = run; continue; }
+      if ((PII_GAP[tk[i]] || tk[i].length <= 2) && gap < 2 && run) { gap++; continue; }
+      run = ''; gap = 0;
+    }
+    const round = x => /^\d0+$/.test(x);   // (a big round number of coins is not a phone number)
+    if (best.length >= 7 && !round(best)) return 'phone';
+    if (all.length >= 10 && !round(all)) return 'phone';
+    // home addresses
+    const words = ns.map((d, i) => d !== null ? '#' : tk[i]).join(' ');
+    if (/# ([a-z]+ ){1,3}(street|st|avenue|ave|av|road|rd|boulevard|blvd|lane|ln|drive|dr|court|ct|way|place|pl|circle|cir|terrace|ter|parkway|pkwy|highway|hwy|trail|trl|crescent|cres|square|sq|alley|close|loop|pike|route|rte)\b/.test(words)) return 'address';
+    if (/\b(my address|home address|i live (at|on)|we live (at|on)|zip ?code|postal ?code|post ?code|p ?o box|apartment #|apt #|suite #|my house is (at|on)|my school is)\b/.test(words)) return 'address';
+    return '';
+  }
+  const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
+  const api = { VERSION: 182, piiCheck, PII_WHY, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
