@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 183;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 185;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -220,8 +220,21 @@ function sendPush(pub, payload) {
   rq.on('error', () => {}); rq.on('timeout', () => rq.destroy()); rq.end(body);
 }
 const pushLast = new Map();   // pub + tag -> time: the same news is not pushed again and again
+/* Quiet hours: a player can choose a stretch of the day (in their own time zone) with no notifications, for the night */
+function cleanQuiet(q) {
+  if (!q || typeof q !== 'object') return null; const a = q.a | 0, b = q.b | 0, tz = typeof q.tz === 'string' ? q.tz.slice(0, 64) : '';
+  if (a < 0 || a > 1439 || b < 0 || b > 1439 || a === b) return null;
+  let ok = ''; if (tz) { try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); ok = tz; } catch (e) {} }
+  return { a, b, tz: ok, off: Math.max(-900, Math.min(900, q.off | 0)) };
+}
+function quietNow(q) {   // is it within their quiet hours, where they are?
+  if (!q) return false; let m;
+  try { if (q.tz) { const f = new Intl.DateTimeFormat('en-US', { timeZone: q.tz, hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).formatToParts(new Date()); m = (+f.find(x => x.type === 'hour').value % 24) * 60 + +f.find(x => x.type === 'minute').value; } } catch (e) {}
+  if (m === undefined) { const d = new Date(Date.now() - q.off * 60000); m = d.getUTCHours() * 60 + d.getUTCMinutes(); }   // (no time zone name: by the clock offset the device gave)
+  return q.a < q.b ? m >= q.a && m < q.b : m >= q.a || m < q.b;   // (a stretch over midnight, like 22:00 to 07:00, too)
+}
 function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map. Only to devices that are not connected right now.
-  const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !sub[kind] || (live(here) && !here.hidden) || (from && sub.mu && sub.mu.indexOf(from) >= 0)) return;
+  const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !sub[kind] || (live(here) && !here.hidden) || (from && sub.mu && sub.mu.indexOf(from) >= 0) || quietNow(sub.q)) return;
   const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : 30000; if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
   if (pushLast.size > 4000) { for (const [kk, v] of pushLast) if (t - v > 3600000) pushLast.delete(kk); }
   sendPush(pub, { title: String(n[0]).slice(0, 60), body: String(n[1]).slice(0, 100), tag });
@@ -236,7 +249,7 @@ try {
   for (const k in (o.pairs || {})) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k)) { const v = o.pairs[k] || {}; pairT.set(k, { s: +v.s || 0, m: +v.m || 0 }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
   if (o.vapid && o.vapid.pub && o.vapid.priv) vapid = makeVapid(o.vapid.pub, o.vapid.priv);
-  for (const k in (o.push || {})) if (PUB.test(k) && o.push[k] && okPushUrl(o.push[k].ep)) { const v = o.push[k]; pushSubs.set(k, { ep: String(v.ep), p: String(v.p).slice(0, 100), a: String(v.a).slice(0, 40), f: v.f ? 1 : 0, r: v.r ? 1 : 0, i: v.i ? 1 : 0, m: v.m ? 1 : 0, mu: Array.isArray(v.mu) ? v.mu.filter(x => PUB.test(x)).slice(0, 12) : [], t: +v.t || 0 }); }
+  for (const k in (o.push || {})) if (PUB.test(k) && o.push[k] && okPushUrl(o.push[k].ep)) { const v = o.push[k]; pushSubs.set(k, { ep: String(v.ep), p: String(v.p).slice(0, 100), a: String(v.a).slice(0, 40), f: v.f ? 1 : 0, r: v.r ? 1 : 0, i: v.i ? 1 : 0, m: v.m ? 1 : 0, mu: Array.isArray(v.mu) ? v.mu.filter(x => PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(v.q), t: +v.t || 0 }); }
   for (const e of (o.news || [])) if (Array.isArray(e) && PUB.test(e[0]) && Array.isArray(e[1])) news.set(e[0], e[1].filter(x => x && PUB.test(x.p) && Date.now() - x.t < REQ_TTL).map(x => ({ p: x.p, ok: x.ok ? 1 : 0, t: +x.t })).slice(-30));
   console.log('Restored ' + known.size + ' players, ' + [...links.values()].reduce((a, v) => a + v.size, 0) / 2 + ' friendships, ' + pend.size + ' waiting requests, from ' + LINKS_FILE);
 } catch (e) {}
@@ -1170,7 +1183,7 @@ wss.on('connection', (ws, req) => {
       const k1 = unb64u(m.sub.keys.p256dh || ''), k2 = unb64u(m.sub.keys.auth || ''); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16) return;
       if (!pushSubs.has(p.pub) && pushSubs.size >= 8000) return;
       const pr = m.prefs && typeof m.prefs === 'object' ? m.prefs : {};
-      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 12) : [], t: Date.now() };
+      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(pr.q), t: Date.now() };
       pushSubs.set(p.pub, ent); linksDirty = true;
       for (const f of linkSet(p.pub)) { const q = byPub.get(f); if (q && live(q)) send(q, { t: 'fsub', pub: p.pub, s: ent }); }   // (your friends' devices keep where to reach yours: if this server ever forgets, they tell it again)
       send(p, { t: 'fsubs', l: [...linkSet(p.pub)].filter(f => pushSubs.has(f)).slice(0, 64).map(f => [f, pushSubs.get(f)]) });
@@ -1181,7 +1194,7 @@ wss.on('connection', (ws, req) => {
         if (!Array.isArray(e) || e.length !== 2 || typeof e[0] !== 'string' || !PUB.test(e[0]) || pushSubs.has(e[0]) || !(mine.has(e[0]) || cl.has(e[0]))) continue;
         const s = e[1]; if (!s || typeof s !== 'object' || typeof s.ep !== 'string' || !okPushUrl(s.ep)) continue;
         const k1 = unb64u(String(s.p || '')), k2 = unb64u(String(s.a || '')); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16 || pushSubs.size >= 8000) continue;
-        pushSubs.set(e[0], { ep: s.ep, p: b64u(k1), a: b64u(k2), f: s.f ? 1 : 0, r: s.r ? 1 : 0, i: s.i ? 1 : 0, m: s.m ? 1 : 0, mu: Array.isArray(s.mu) ? s.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 12) : [], t: Date.now() }); linksDirty = true;
+        pushSubs.set(e[0], { ep: s.ep, p: b64u(k1), a: b64u(k2), f: s.f ? 1 : 0, r: s.r ? 1 : 0, i: s.i ? 1 : 0, m: s.m ? 1 : 0, mu: Array.isArray(s.mu) ? s.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(s.q), t: Date.now() }); linksDirty = true;
       }
     } else if (m.t === 'vis') {   // this page is in the background (or back): while it is, the server sends notifications as pushes
       p.hidden = m.h ? 1 : 0;

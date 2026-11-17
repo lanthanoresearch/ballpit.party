@@ -714,6 +714,8 @@
   .ptiles>div{background:#2c2644;border:2px solid var(--line);border-radius:var(--wob);padding:6px 10px;min-width:0}.ptiles span{display:block;font-size:12px;opacity:.65}.ptiles b{display:block;font-weight:normal;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .fme{margin:0 0 8px}.fme .prs{background:rgba(255,210,61,.08);border-color:rgba(255,210,61,.55)}
   .fnote{margin:0 0 8px}
+  .nqtimes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:-2px 0 10px 40px}.nqtimes label{display:flex;min-width:0;flex-direction:column;gap:2px;font-size:13px}.nqtimes span{opacity:.7}
+  .nqtimes input{font:inherit;font-size:16px;padding:6px;border-radius:10px;border:2px solid var(--line);background:#14111c;color:var(--ink);color-scheme:dark;min-width:0;width:100%;box-sizing:border-box}
   .ntkinds{margin:0 0 6px 14px;padding-left:12px;border-left:3px solid var(--line)}.ntk{margin:2px 0 4px}
   .ntfr{margin:-4px 0 8px 44px}.ntfr .plist{margin-top:6px}.ntfr .prs{padding:5px 8px}.ntfr .prs input{width:22px;height:22px;flex:none;accent-color:#2fa463}
   .hbadge{display:inline-block;min-width:20px;height:20px;line-height:20px;padding:0 5px;margin-left:6px;border-radius:99px;background:#2fa463;color:#fff;font-size:13px;text-align:center}
@@ -836,7 +838,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 183; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 185; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1267,6 +1269,9 @@
         <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Friend requests</b><small>Someone asks you, or answers you</small></span></span><input type="checkbox" id="setNRequests"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="share"></span><span><b>Game invites</b><small>Someone invites you to their private game</small></span></span><input type="checkbox" id="setNInvites"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Map changes</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="play"></span><span><b>Not while I'm playing</b><small>Show a message in the game instead</small></span></span><input type="checkbox" id="setNInGame"><i></i></label>
+        <label class="sw2 ic2 nqsw"><span class="ti"><span data-ic="clock"></span><span><b>Quiet hours</b><small id="nqSub">A time of day with no notifications, like at night</small></span></span><input type="checkbox" id="setNQuiet"><i></i></label>
+        <div class="nqtimes hide" id="nqTimes"><label><span>From</span><input type="time" id="nqFrom" value="22:00"></label><label><span>Until</span><input type="time" id="nqTo" value="07:00"></label></div>
         <button class="btn full" id="ntTest" type="button"><span data-ic="bell"></span>Send a test notification</button>
       </div>
     </section>
@@ -1504,8 +1509,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=183"></script>
-<script src="physics.js?v=183"></script>
+<script src="maps.js?v=185"></script>
+<script src="physics.js?v=185"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1549,7 +1554,7 @@ function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'K
 function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, nQuiet: { on: false, a: 1320, b: 420 }, nInGame: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: true,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -1586,6 +1591,8 @@ function normalize() {
   if (settings.music === 'peaceful') settings.music = 'chill'; if (settings.music === 'funk') settings.music = 'phonk';
   if (['adaptive', 'random', 'chill', 'upbeat', 'exciting', 'phonk', 'dreamy'].indexOf(settings.music) < 0) settings.music = 'adaptive';
   { const o = {}; if (settings.lvSave && typeof settings.lvSave === 'object') for (const k in settings.lvSave) if (/^\d+$/.test(k) && settings.lvSave[k]) o[k] = 1; settings.lvSave = o; }
+  settings.nInGame = settings.nInGame !== false;
+  { const q = settings.nQuiet && typeof settings.nQuiet === 'object' ? settings.nQuiet : {}, ok = v => Number.isInteger(v) && v >= 0 && v <= 1439; settings.nQuiet = { on: !!q.on, a: ok(q.a) ? q.a : 1320, b: ok(q.b) ? q.b : 420 }; }
   settings.nOff = Array.isArray(settings.nOff) ? settings.nOff.filter(x => /^[0-9a-f]{16}$/.test(x)).slice(0, 64) : [];
   if (settings.share && typeof settings.share === 'object') { const o = {}; for (const k of ['on', 'last', 'beat', 'fr', 'since']) o[k] = settings.share[k] === 0 ? 0 : 1; settings.share = o; } else settings.share = null;
   ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
@@ -4287,7 +4294,7 @@ const codeTag = c => { const s = document.createElement('span'); s.className = '
 function friendNote(e, nm, on) {   // a special heads-up when someone you track comes online or goes offline
   if (e.mute >= 1 || !settings.mp) return;
   const t = who(nm || e.name) + (on ? ' is online' : ' went offline');
-  notice('★ ' + t, '', 'human'); addFeed('★ ' + t, 'friend', true, 'human'); sfx(on ? 'join' : 'leave'); if (on && !nOffHas(e.pub)) sysNotify('nFriends', who(nm || e.name) + ' is online', 'Jump in and play together', 'on-' + e.pub);
+  if (on && ![...others.values()].some(o => o.pub === e.pub)) notice('★ ' + t, '', 'human'); addFeed('★ ' + t, 'friend', true, 'human'); sfx(on ? 'join' : 'leave'); if (on && !nOffHas(e.pub)) sysNotify('nFriends', who(nm || e.name) + ' is online', 'Jump in and play together', 'on-' + e.pub);   // (coming online gets a pop-up, unless they came straight into your game: that has its own; going offline is just a line in the list)
 }
 const wsSend = o => { if (ws && ws.readyState === 1 && (online || lobbyOn)) ws.send(JSON.stringify(o)); };
 
@@ -6126,9 +6133,25 @@ async function showNow(title, body, tag) {   // true when the system accepted it
   try { new Notification(title, { body, tag, icon: 'icon-192.png' }); return true; } catch (e) { return false; }
 }
 function sysNotify(kind, title, body, tag) {   // a notification from the system, only when you are not looking at the game (the server sends the same one when the page is asleep; the same tag means you see it once)
-  if (!notifOn() || !settings[kind] || (!document.hidden && document.hasFocus())) return;
+  if (!notifOn() || !settings[kind] || quietNowC()) return;
+  const looking = !document.hidden && document.hasFocus(), playing = !document.hidden && !inHome;   // (in a game, the game shows its own message instead, unless you asked for notifications there too)
+  if (settings.nInGame ? looking || playing : looking && inHome) return;
   showNow(title, body, tag);
 }
+/* ----- quiet hours: a stretch of the day with no notifications at all (for the night). The server is told your time zone so it keeps them too ----- */
+const qHm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'), qMh = t => { const r = /^(\d{1,2}):(\d{2})/.exec(t || ''); return r ? Math.min(1439, (+r[1] % 24) * 60 + Math.min(59, +r[2])) : -1; };
+function quietPrefs() { const q = settings.nQuiet; if (!q || !q.on || q.a === q.b) return null; let tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {} return { a: q.a, b: q.b, tz, off: new Date().getTimezoneOffset() }; }
+function quietNowC() { const q = settings.nQuiet; if (!q || !q.on || q.a === q.b) return false; const d = new Date(), m = d.getHours() * 60 + d.getMinutes(); return q.a < q.b ? m >= q.a && m < q.b : m >= q.a || m < q.b; }
+function quietRender() {
+  const q = settings.nQuiet || {}; $('setNQuiet').checked = !!q.on; $('nqTimes').classList.toggle('hide', !q.on);
+  if (document.activeElement !== $('nqFrom')) $('nqFrom').value = qHm(q.a | 0); if (document.activeElement !== $('nqTo')) $('nqTo').value = qHm(q.b | 0);
+  $('nqSub').textContent = q.on ? (q.a === q.b ? 'Pick two different times' : 'No notifications from ' + qClock(q.a) + ' to ' + qClock(q.b) + (quietNowC() ? ' (quiet right now)' : '')) : 'A time of day with no notifications, like at night';
+}
+const qClock = m => { try { const d = new Date(); d.setHours(Math.floor(m / 60), m % 60, 0, 0); return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); } catch (e) { return qHm(m); } };
+$('setNInGame').onchange = () => { settings.nInGame = $('setNInGame').checked; save(); sfx(settings.nInGame ? 'on' : 'off'); };
+$('setNQuiet').onchange = () => { settings.nQuiet = Object.assign({ a: 1320, b: 420 }, settings.nQuiet || {}, { on: $('setNQuiet').checked }); save(); sfx(settings.nQuiet.on ? 'on' : 'off'); quietRender(); pushSyncSoon(); };
+for (const [id, k] of [['nqFrom', 'a'], ['nqTo', 'b']]) $(id).onchange = () => { const v = qMh($(id).value); if (v < 0) return; settings.nQuiet = Object.assign({ on: true, a: 1320, b: 420 }, settings.nQuiet || {}); settings.nQuiet[k] = v; save(); quietRender(); pushSyncSoon(); };
+setInterval(() => { if ($('nqSub') && $('nqSub').offsetParent) quietRender(); }, 30000);
 const nOffHas = pub => Array.isArray(settings.nOff) && settings.nOff.indexOf(pub) >= 0;
 function nOffSet(pub, off) { const a = Array.isArray(settings.nOff) ? settings.nOff.filter(x => x !== pub) : []; if (off) a.push(pub); settings.nOff = a.slice(0, 64); save(); ntFrRender(); pushSyncSoon(); }
 let ntFrOpen = false;
@@ -6149,7 +6172,7 @@ function ntRender() {
   $('ntSub').textContent = !notifOK() ? (/iPhone|iPad|iPod/.test(navigator.userAgent) ? 'Add the game to your Home Screen, open it from there, then turn this on' : 'Not available on this device or browser') : Notification.permission === 'denied' ? 'Blocked. Allow notifications for ballpit.party in your browser settings' : settings.notify && pushState === 'fail' ? 'On while the game is open. This browser cannot wake a closed game' : 'Reach you here, even when the game is closed';
   $('ntKinds').classList.toggle('hide', !(settings.notify && notifOn()));
   [['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps']].forEach(p => { $(p[0]).checked = !!settings[p[1]]; });
-  ntFrRender();
+  ntFrRender(); quietRender(); $('setNInGame').checked = !!settings.nInGame;
 }
 const b64uBytes = s => { const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')), o = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; };
 let vapidKey = '', pushSock = null, pushSig = '', pushTimer = 0;
@@ -6170,7 +6193,7 @@ async function pushSync() {   // tell the server where to reach this device, and
     const want = b64uBytes(vapidKey); let sub = await reg.pushManager.getSubscription();
     if (sub) { const have = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null; if (!have || have.length !== want.length || have.some((v, i) => v !== want[i])) { await sub.unsubscribe(); sub = null; } }   // (the server's keys changed: subscribe again)
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
-    const prefs = { f: settings.nFriends ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, mu: [...new Set(lks.filter(l => l.mute >= 1 || nOffHas(l.pub)).map(l => l.pub))].slice(0, 12) };   // (friends you do not want to hear about)
+    const prefs = { f: settings.nFriends ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, mu: [...new Set(lks.filter(l => l.mute >= 1 || nOffHas(l.pub)).map(l => l.pub))].slice(0, 500), q: quietPrefs() };   // (friends you do not want to hear about)
     const j = sub.toJSON(), sig = JSON.stringify([j.endpoint, prefs]);
     pushState = 'on'; ntRender();
     if (sig === pushSig && pushSock === ws) return;
@@ -6713,7 +6736,7 @@ function onMsg(m) {
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
-    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat, m.crown || 0); o.pub = m.pub || ''; o.ot = m.ot >>> 0; others.set(m.id, o); noteSeen(o.pub, m.name, m.color, m.code, undefined, undefined, m.color2, m.pat); saveSeen(); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } botNote(); break; }
+    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat, m.crown || 0); o.pub = m.pub || ''; o.ot = m.ot >>> 0; others.set(m.id, o); noteSeen(o.pub, m.name, m.color, m.code, undefined, undefined, m.color2, m.pat); saveSeen(); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } else if ((q.mute | 0) < 1 && !m.quiet) { notice('★ ' + who(m.name) + ' joined your game', '', 'human'); addFeed('★ ' + who(m.name) + ' joined your game', 'friend', true, 'human'); sfx('join'); } botNote(); break; }
     case 'leave': { others.delete(m.id); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' left', 'leave', false, 'human'); if (settings.joinMsg) sfx('leave'); } botNote(); break; }
     case 'info': {   // someone changed how they look: show a clear little transformation
       const o = others.get(m.id);
