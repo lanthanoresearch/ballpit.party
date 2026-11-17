@@ -849,7 +849,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 188; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 189; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1196,7 +1196,7 @@
       <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Finish crowns</b><small>Gold, silver, bronze and rock crowns over everyone who has finished</small></span></span><input type="checkbox" id="setCrowns"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label>
       <div class="dep sub" data-dep="tags"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Show my own name</b><small>Your name over your own ball. Others still see it</small></span></span><input type="checkbox" id="setMyName"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label>
       <div class="dep sub" data-dep="mmPlayers"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big player dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigP"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label>
-      <div class="dep sub" data-dep="mmBots"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big bot dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigB"><i></i></label></div></div></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="flag"></span><span><b>Finish arrow in private worlds</b><small>On: an arrow on screen always points to the finish. Off: the finish only shows on the map</small></span></span><input type="checkbox" id="setFinArrow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small></small></span></span><input type="checkbox" id="setFs"><i></i></label>
+      <div class="dep sub" data-dep="mmBots"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big bot dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigB"><i></i></label></div></div></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="flag"></span><span><b>Finish arrow in private worlds</b><small>On: an arrow on screen always points to the finish. Off: the finish only shows on the map</small></span></span><input type="checkbox" id="setFinArrow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small>Stays on until you turn it off. If you leave full screen, your next tap puts you back</small></span></span><input type="checkbox" id="setFs"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="search"></span><span><b>Show stats</b><small>Tiny numbers in the corner, under the map</small></span></span><input type="checkbox" id="setStats"><i></i></label><div class="dep sub" data-dep="stats"><div><label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Frame rate</b><small>How many pictures a second your screen draws</small></span></span><input type="checkbox" id="setStFps"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Ping</b><small>How long a message takes to the server and back</small></span></span><input type="checkbox" id="setStPing"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="clock"></span><span><b>Buffer</b><small>How far behind other players and things are shown, to keep them smooth</small></span></span><input type="checkbox" id="setStBuf"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Connection speed</b><small>Data coming in and going out each second</small></span></span><input type="checkbox" id="setStData"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="gear"></span><span><b>Server load</b><small>How hard the game server is working</small></span></span><input type="checkbox" id="setStSrv"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Conflicts</b><small>Times your screen and the server did not match</small></span></span><input type="checkbox" id="setStConf"><i></i></label></div></div>
       <h4><span data-ic="tag"></span> Name icons</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Robot icon on bots</b><small>Over a bot's ball in the game</small></span></span><input type="checkbox" id="setBotMark"><i></i></label>
@@ -1532,8 +1532,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=188"></script>
-<script src="physics.js?v=188"></script>
+<script src="maps.js?v=189"></script>
+<script src="physics.js?v=189"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3652,7 +3652,7 @@ async function flipEdit() {   // turn the phone for them if the browser lets us 
   const want = isPortrait() ? 'landscape' : 'portrait', so = window.screen && screen.orientation, can = !!(so && so.lock);
   const tryLock = async () => { try { await so.lock(want); return true; } catch (e) { return false; } };
   let ok = can && await tryLock();
-  if (!ok && can && fsSupported() && !isFs()) { flipFs = true; reqFs(); await new Promise(r => setTimeout(r, 350)); ok = await tryLock(); if (!ok) { flipFs = false; exitFs(); } }
+  if (!ok && can && fsSupported() && !isFs()) { flipFs = true; reqFs(); await new Promise(r => setTimeout(r, 350)); ok = await tryLock(); if (!ok) { flipFs = false; if (!settings.fs) exitFs(); } }
   if (!ok) ebMsg(want === 'landscape' ? 'Turn your phone sideways to edit that layout.' : 'Turn your phone upright to edit that layout.');
 }
 $('ebFlip').onclick = flipEdit;
@@ -3669,7 +3669,7 @@ function startEdit(ui) {
   try { releaseInputs(); } catch (e) {} edSess = true; edFrom = ui ? 'ui' : 'btn'; uiEdit = ui; editMode = !ui; edKind = ui ? 'ui' : 'btn'; cbSel = null; if (ui && !uiVis(uiSel)) uiSel = 'info';
   $('pause').classList.add('hide'); $('settings').classList.add('hide'); $('editbar').classList.remove('hide'); $('ebMsg').classList.add('hide'); applyTouchUI(); editRefresh(); layoutTouch(); edZone();
 }
-function endEdit() { $('msgDemo').classList.add('hide'); editMode = false; edSess = false; ebSwapped = false; $('editbar').classList.remove('ebdown'); uiEdit = false; document.body.classList.remove('uedit'); uiMark(); edZone(); save(); try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} if (flipFs) { flipFs = false; exitFs(); } $('ebMsg').classList.add('hide'); if (paused) $('pause').classList.remove('hide'); $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
+function endEdit() { $('msgDemo').classList.add('hide'); editMode = false; edSess = false; ebSwapped = false; $('editbar').classList.remove('ebdown'); uiEdit = false; document.body.classList.remove('uedit'); uiMark(); edZone(); save(); try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} if (flipFs) { flipFs = false; if (!settings.fs) exitFs(); } $('ebMsg').classList.add('hide'); if (paused) $('pause').classList.remove('hide'); $('editbar').classList.add('hide'); BK.forEach(q => $(BEL[q]).classList.remove('sel', 'bad')); applyTouchUI(); $('settings').classList.remove('hide'); }
 $('editDone').onclick = endEdit;
 function resetLayout() { settings[posK()] = null; settings[mulK()] = {}; if (curPreset() === 'custom') settings[presetK()] = 'moveleft'; selPreset.set(curPreset()); save(); applyTouchUI(); if (editMode) { editChips(); selectBtn(editSel); } }
 const askReset = () => { if (!(settings[posK()] || Object.keys(curMul()).length)) { return; } askConfirm('Reset your buttons?', 'Your moved buttons and sizes go back to the layout you picked. This only changes the layout for how you hold your phone right now.', 'Reset', resetLayout, { no: 'Keep them' }); };
@@ -3711,20 +3711,28 @@ function gUp(id) {
   }
 })();
 
-/* ----- full screen: only acts when you flip the switch, then tries to keep you in it ----- */
+/* ----- full screen: a switch that stays where you put it. On: the game keeps putting you back in full screen (browsers only allow that when you touch, click or press a key,
+   so it happens on your next one). Off: it takes you out once, then leaves full screen alone ----- */
 const fsEl = document.documentElement;
 const fsSupported = () => !!((document.fullscreenEnabled || document.webkitFullscreenEnabled) && (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen));
 const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 function reqFs() { try { const p = (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function exitFs() { try { const p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function setFullscreen(on) { settings.fs = on; save(); if (on) reqFs(); else if (isFs()) exitFs(); }
+let fsTry = 0;
+function fsKeep(e) {   // the switch is on but you are not in full screen: back in, on this touch, click or key press
+  if (!settings.fs || isFs() || !fsSupported() || flipFs) return;
+  if (e && e.type === 'keydown' && (e.key === 'Escape' || e.repeat)) return;
+  if (e && e.target && e.target.closest && e.target.closest('label:has(#setFs), #setFs')) return;   // (the tap on the switch itself: that one decides)   // (Esc is how you leave it; the browser would refuse there anyway)
+  const t = performance.now(); if (t - fsTry < 700) return; fsTry = t; reqFs();
+}
+['pointerup', 'touchend', 'click', 'keydown'].forEach(n => addEventListener(n, fsKeep, true));
 function releaseInputs() {   // entering or leaving full screen cancels touches mid-air: let go of everything so nothing stays 'pressed'
   keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnL = tin.btnR = tin.btnJ = false; tin.jumpUntil = 0;
   document.querySelectorAll('#touch button.on').forEach(b => b.classList.remove('on'));
 }
 ['fullscreenchange', 'webkitfullscreenchange'].forEach(n => document.addEventListener(n, () => {
-  const on = isFs(); if (settings.fs !== on) { settings.fs = on; save(); }
-  const sw = $('setFs'); if (sw) sw.checked = on;
+  const sw = $('setFs'); if (sw) sw.checked = !!settings.fs;   // (leaving full screen some other way does not turn the switch off)
   releaseInputs(); applyTouchUI(); setTimeout(() => { dispatchEvent(new Event('resize')); }, 120);
 }));
 
