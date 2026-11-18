@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 196;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 197;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -244,6 +244,7 @@ try {
   const o = JSON.parse(fs.readFileSync(LINKS_FILE, 'utf8'));
   for (const k in (o.links || {})) if (PUB.test(k)) links.set(k, new Set((o.links[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));
   for (const k in (o.gone || {})) if (PUB.test(k)) gone.set(k, new Set((o.gone[k] || []).filter(v => PUB.test(v)).slice(0, 50)));
+  for (const k in (o.claims || {})) if (PUB.test(k)) claimsOf.set(k, new Set((o.claims[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));   // (who each player says their friends are, so friendships rebuild after a restart even when the two come back at different times)
   for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', color2: HEX.test(v.color2) ? v.color2 : '#ffffff', pat: cleanPat(v.pat), last: +v.last || 0, nameAt: +v.nameAt || 0, first: +v.first || +v.last || Date.now(), firstEst: v.first ? (v.firstEst ? 1 : 0) : 1, share: v.share && typeof v.share === 'object' ? cleanShare(v.share) : undefined, played: v.played === undefined ? 1 : v.played ? 1 : 0, beat: Math.max(0, Math.min(999, v.beat | 0)) }); }
   for (const k in (o.blocks || {})) if (PUB.test(k)) blocks.set(k, new Set((o.blocks[k] || []).filter(v => PUB.test(v)).slice(0, 200)));
   for (const k in (o.pairs || {})) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k)) { const v = o.pairs[k] || {}; pairT.set(k, { s: +v.s || 0, m: +v.m || 0 }); }
@@ -268,6 +269,7 @@ function saveLinks(sync) {
   o.blocks = {}; blocks.forEach((v, k) => { if (v.size) o.blocks[k] = [...v]; });
   o.pairs = {}; pairT.forEach((v, k) => { const [a, b] = k.split('|'); if ((links.get(a) && links.get(a).has(b)) || v.m > Date.now() - STALE_MS) o.pairs[k] = v; });   // (kept while they are friends)
   links.forEach((v, k) => { if (v.size) o.links[k] = [...v]; }); gone.forEach((v, k) => { if (v.size) o.gone[k] = [...v]; }); known.forEach((v, k) => { o.known[k] = v; });
+  o.claims = {}; claimsOf.forEach((v, k) => { if (v.size && known.has(k)) o.claims[k] = [...v]; });
   const s = JSON.stringify(o);
   try {   /* written to a side file first and then swapped in, so a restart in the middle of saving can never leave a half-written list */
     const tmp = LINKS_FILE + '.tmp';
@@ -291,7 +293,7 @@ function saveShares() {
 setInterval(saveShares, 20000);
 function dropShares(a, b) { for (const [id, v] of shares) if ((v.from === a && v.to === b) || (v.from === b && v.to === a)) { shares.delete(id); sharesDirty = true; } }
 const shareMeta = v => ({ id: v.id, from: v.from, name: (byPub.get(v.from) || {}).name || v.fromName || '', idx: v.idx, n: v.n, t: v.t });
-function sendShares(p) { const now = Date.now(), list = []; for (const v of shares.values()) if (v.to === p.pub && now - v.t <= SHARE_TTL && !blocked(v.from, v.to) && linkSet(p.pub).has(v.from)) list.push(shareMeta(v)); if (list.length) send(p, { t: 'shr', list }); }
+function sendShares(p) { const now = Date.now(), list = [], cl = claimsOf.get(p.pub) || new Set(); for (const v of shares.values()) if (v.to === p.pub && now - v.t <= SHARE_TTL && !blocked(v.from, v.to) && (linkSet(p.pub).has(v.from) || cl.has(v.from))) list.push(shareMeta(v)); if (list.length) send(p, { t: 'shr', list }); }   // (only from somebody you have as a friend too)
 const STALE_MS = 30 * 86400000;   // everybody who has played in the last 30 days is listed; anybody gone longer (and not somebody's friend or in a waiting request) is quietly forgotten
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
 function cleanShare(o) { const r = {}; for (const k in SHARE_DEF) r[k] = o && o[k] === 0 && (k === 'fr' || k === 'since') ? 0 : 1; return r; }   // (only how many friends you have and when you started can be kept private; the rest is always shown)
@@ -939,7 +941,7 @@ wss.on('connection', (ws, req) => {
         { const old = byPub.get(p.pub); if (old && old !== p && Date.now() - (old.lastMsg || 0) > 5000) { try { old.ws.terminate(); } catch (e) {} } }   // (the same player's old connection that went quiet, from a phone that slept or a network that changed: it goes at once, so no frozen copy of them stands about in the world)
         byPub.set(p.pub, p);
         const mine = new Set(Array.isArray(m.claims) ? m.claims.filter(v => typeof v === 'string' && PUB.test(v) && v !== p.pub).slice(0, MAX_LINKS) : []);
-        claimsOf.set(p.pub, mine);
+        { const was = claimsOf.get(p.pub); if (!was || was.size !== mine.size || [...mine].some(v => !was.has(v))) linksDirty = true; } claimsOf.set(p.pub, mine);
         const g = gone.get(p.pub), removed = [];
         if (g && g.size) { for (const v of g) { removed.push(v); const ls = links.get(p.pub); if (ls) ls.delete(v); } gone.delete(p.pub); linksDirty = true; }
         for (const v of mine) {   // rebuild a link if both sides still remember it (e.g. after the server restarted)
@@ -1003,13 +1005,13 @@ wss.on('connection', (ws, req) => {
       let total = 0; for (const v of shares.values()) total += v.data.length;
       const now = Date.now(), nThings = (o.o.buys.length | 0) + ((o.o.gates || []).length | 0) + ((o.o.misc || []).length | 0) + ((o.o.cps || []).length | 0); let sent = 0;
       for (const t of to) {
-        if (!linkSet(p.pub).has(t) || blocked(p.pub, t)) continue;
+        if (!(linkSet(p.pub).has(t) || (claimsOf.get(p.pub) || new Set()).has(t)) || blocked(p.pub, t)) continue;   // (your friend, by the server's list or by yours: theirs is checked again when it reaches them)
         for (const [id, v] of shares) if (v.from === p.pub && v.to === t && v.idx === idx) shares.delete(id);   // (a newer version of the same map replaces the one still waiting)
         const mine = [...shares.values()].filter(v => v.to === t).sort((a, b) => a.t - b.t); while (mine.length >= SHARE_PER_TO) shares.delete(mine.shift().id);
         if (total + str.length > SHARE_ALL) { const all = [...shares.values()].sort((a, b) => a.t - b.t); while (all.length && total + str.length > SHARE_ALL) { const x = all.shift(); total -= x.data.length; shares.delete(x.id); } }
         const id = crypto.randomBytes(8).toString('hex'), v = { id, from: p.pub, fromName: p.name || '', to: t, idx, n: nThings, data: str, t: now };
         shares.set(id, v); total += str.length; sent++;
-        const q = byPub.get(t); if (live(q)) send(q, { t: 'shr', list: [shareMeta(v)] });
+        const q = byPub.get(t); if (live(q) && (linkSet(t).has(p.pub) || (claimsOf.get(t) || new Set()).has(p.pub))) send(q, { t: 'shr', list: [shareMeta(v)] });
         pushTo(t, 'i', [(p.name || 'A friend') + ' shared a map with you', 'Open ballpit.party to save it'], 'shr-' + p.pub + '-' + idx);
       }
       sharesDirty = true; saveShares();

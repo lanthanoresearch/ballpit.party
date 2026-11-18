@@ -870,7 +870,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 196; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 197; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1571,8 +1571,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=196"></script>
-<script src="physics.js?v=196"></script>
+<script src="maps.js?v=197"></script>
+<script src="physics.js?v=197"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -6159,7 +6159,7 @@ function openShare(i) {
   $('shTitle2').textContent = 'Share ' + lvLabelOf(i); $('shSub').textContent = 'Your version of this level, with everything in it. Your base stays yours: nobody else can change it.';
   shRender(); $('shModal').classList.remove('hide');
 }
-function shFriends() { return lks.filter(l => l.ok && !blockedPub(l.pub)).sort((a, b) => (b.on | 0) - (a.on | 0) || String(a.name).localeCompare(String(b.name))); }
+function shFriends() { return lks.filter(l => l.pub && !isMe(l) && (l.ok || l.name) && !blockedPub(l.pub))   /* (everyone on your friends list, even while the server is still catching up on who is friends with whom) */.sort((a, b) => (b.on | 0) - (a.on | 0) || String(a.name).localeCompare(String(b.name))); }
 function shRender() {
   const box = $('shList'), fr = shFriends(); box.textContent = '';
   const loading = !fr.length && !linksSeen;
