@@ -3,7 +3,7 @@
   "name": "ballpit.party",
   "short_name": "ballpit",
   "description": "A multiplayer ball platformer. Roll, jump, explore giant worlds and find the hidden finish flag.",
-  "start_url": "/",
+  "start_url": "/?app=1",
   "scope": "/",
   "display": "standalone",
   "display_override": [

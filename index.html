@@ -870,7 +870,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 198; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 199; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1571,8 +1571,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=198"></script>
-<script src="physics.js?v=198"></script>
+<script src="maps.js?v=199"></script>
+<script src="physics.js?v=199"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -8491,6 +8491,9 @@ requestAnimationFrame(frame);
 if (window.__bootStep) window.__bootStep('Rolling out the map…', 85);
 let bootSeen = 0; (function waitFirst() { if (S.map && S.b && ++bootSeen > 6) { if (window.__bootHide) window.__bootHide(); } else requestAnimationFrame(waitFirst); })();
 try { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !(params && params.get('test'))) navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+/* tell the service worker whether this is the app on your home screen, so tapping a notification opens the app (and not a browser tab) when it is installed */
+function swMode(installed) { try { if (!('serviceWorker' in navigator)) return; navigator.serviceWorker.ready.then(r => { const w = navigator.serviceWorker.controller || r.active; if (w) w.postMessage(installed ? { t: 'installed' } : { t: 'mode', app: isStandalone() }); }).catch(() => {}); } catch (e) {} }
+swMode(); document.addEventListener('visibilitychange', () => { if (!document.hidden) swMode(); }); addEventListener('appinstalled', () => swMode(true));
 window.__ballOk = true;
 })();
 </script>
