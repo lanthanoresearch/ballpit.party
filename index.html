@@ -870,7 +870,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 197; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 198; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1377,11 +1377,11 @@
 </div></div>
 
 <div id="shModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="shTitle2"><div class="card shcard">
-  <div class="chead"><h3 id="shTitle2">Share</h3><button id="shClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="chead"><h3 id="shTitle2">Share</h3><button id="shmClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <p class="small dim" id="shSub"></p>
   <div class="shbar"><b>Send to</b><button class="btn sm" id="shAll" type="button">Select all</button></div>
   <div id="shList" class="plist shlist"></div>
-  <p class="small dim" id="shNote">Friends who are away get it next time they play. It waits for them for 3 days.</p>
+  <p class="small dim" id="shmNote">Friends who are away get it next time they play. It waits for them for 3 days.</p>
   <div class="btns"><button id="shNo" type="button">Cancel</button><button id="shGo" class="go" type="button" disabled>Share</button></div>
 </div></div>
 <div id="shIn" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="shInT"><div class="card shcard">
@@ -1571,8 +1571,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=197"></script>
-<script src="physics.js?v=197"></script>
+<script src="maps.js?v=198"></script>
+<script src="physics.js?v=198"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -6166,7 +6166,7 @@ function shRender() {
   if (loading) { const d = el('div', 'ldr'); d.setAttribute('role', 'status'); d.appendChild(document.createElement('i')); d.appendChild(el('span', '', Date.now() - shOpenT > 10000 ? 'Still loading. Check your internet' : 'Loading your friends…')); box.appendChild(d); clearTimeout(shLoadT); shLoadT = setTimeout(() => { if (!$('shModal').classList.contains('hide') && !linksSeen) shRender(); }, 10500); }
   else if (!fr.length) box.appendChild(el('div', 'shnone small', 'No friends to share with yet. Add friends in Friends on the main menu, then share.'));
   document.querySelector('#shModal .shbar').classList.toggle('hide', !fr.length);
-  $('shGo').classList.toggle('hide', !fr.length); $('shNote').classList.toggle('hide', !fr.length); $('shNo').textContent = fr.length || loading ? 'Cancel' : 'Close';
+  $('shGo').classList.toggle('hide', !fr.length); $('shmNote').classList.toggle('hide', !fr.length); $('shNo').textContent = fr.length || loading ? 'Cancel' : 'Close';
   for (const l of fr) {
     const c = document.createElement('input'); c.type = 'checkbox'; c.checked = shSel.has(l.pub); c.setAttribute('aria-label', 'Share with ' + who(l.name));
     c.onchange = () => { if (c.checked) shSel.add(l.pub); else shSel.delete(l.pub); sfx(c.checked ? 'on' : 'off'); shCount(); };
@@ -6177,7 +6177,7 @@ function shRender() {
 function shCount() { const n = shSel.size, all = shFriends().length; $('shGo').disabled = !n || shSending; $('shGo').classList.toggle('btnspin', shSending); $('shGo').textContent = shSending ? 'Sharing…' : n ? 'Share with ' + n + (n === 1 ? ' friend' : ' friends') : 'Pick a friend'; $('shAll').textContent = n && n === all ? 'Select none' : 'Select all'; }
 $('shAll').onclick = () => { const fr = shFriends(); if (shSel.size === fr.length) shSel.clear(); else fr.forEach(l => shSel.add(l.pub)); sfx('ui'); shRender(); };
 const shClose = () => { $('shModal').classList.add('hide'); };
-$('shClose').onclick = $('shNo').onclick = () => { sfx('ui'); shClose(); };
+$('shmClose').onclick = $('shNo').onclick = () => { sfx('ui'); shClose(); };
 $('shGo').onclick = () => {
   const d = shareData(shIdx), to = [...shSel].filter(p => lkOf(p)); if (!d || !to.length || shSending) return;
   const str = JSON.stringify(d), CH = 24000, n = Math.ceil(str.length / CH);   // (small parts: even full of quotes, each fits what the server takes in one go)
