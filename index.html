@@ -728,6 +728,9 @@
   .tpsum{font-size:15px;opacity:.8;margin:6px 0 0;min-height:1.3em}
   @media (max-height:520px){.tpcard{padding:10px 14px}.tpdial{margin:6px 0 2px}.tpnum{font-size:40px;width:70px}.tpcol button{height:30px}.tpquick{margin:4px 0 2px}}
   .ntkinds{margin:0 0 6px 14px;padding-left:12px;border-left:3px solid var(--line)}.ntk{margin:2px 0 4px}
+  .shcard{width:min(420px,100%);max-height:100%;display:flex;flex-direction:column;gap:8px;text-align:left}.shcard .chead{display:flex;align-items:center;justify-content:space-between;gap:8px}.shcard h3{margin:0}.shcard p{margin:0}
+  .shbar{display:flex;align-items:center;justify-content:space-between;gap:8px}.shlist{overflow-y:auto;min-height:60px;max-height:min(46vh,360px);margin:0;padding-right:2px}.shlist .prs{padding:6px 10px;cursor:pointer}.shlist .prs input{width:24px;height:24px;flex:none;accent-color:#2fa463}.shlist .shnone{padding:14px;text-align:center;opacity:.75}
+  .shfrom .prs{pointer-events:none}#shIn{z-index:17}#shModal{z-index:16}
   .ntfr{margin:-4px 0 8px 44px}.ntfr .plist{margin-top:6px}.ntfr .prs{padding:5px 8px}.ntfr .prs input{width:22px;height:22px;flex:none;accent-color:#2fa463}
   .hbadge{display:inline-block;min-width:20px;height:20px;line-height:20px;padding:0 5px;margin-left:6px;border-radius:99px;background:#2fa463;color:#fff;font-size:13px;text-align:center}
   .chatto{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;align-items:center}.chatto::-webkit-scrollbar{display:none}
@@ -861,7 +864,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 192; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 194; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1239,6 +1242,7 @@
       <div class="lvsave" role="group" aria-label="How this level is kept"><button type="button" id="lvSaveLive"><span data-ic="reset"></span><b>Live</b><small>Stays as you leave it</small></button><button type="button" id="lvSaveSnap"><span data-ic="lock"></span><b>Saved state</b><small>Same start every time</small></button></div>
       <div class="small dim" id="lvSaveNote"></div>
       <button class="btn full hide" id="lvSaveNow" type="button"><span data-ic="down"></span>Save the level as it is now</button>
+      <button class="btn full hide" id="lvShare" type="button"><span data-ic="share"></span>Share this map with friends</button>
       <label class="sw2 ic2" id="noCheatRow"><span class="ti"><span data-ic="lock"></span><span><b>No cheats</b><small>Cheat codes do nothing in your private game, for everyone. The options here in Mode still work</small></span></span><input type="checkbox" id="setNoCheats"><i></i></label>
       <label class="sw2 ic2 lvunl"><span class="ti"><span data-ic="gcoin"></span><span><b>Unlimited coins and diamonds</b><small id="lvMoney"></small></span></span><input type="checkbox" id="lvUnl"><i></i></label>
       <div class="lvmode">
@@ -1345,6 +1349,7 @@
   <button id="pResume" class="pbtn go" type="button"><span data-ic="play"></span>Resume</button>
   <button id="pInvite" class="pbtn" type="button"><span data-ic="users"></span>Friends</button>
   <button id="pSave" class="pbtn hide" type="button"><span data-ic="map"></span>Save this map</button>
+  <button id="pShare" class="pbtn hide" type="button"><span data-ic="share"></span>Share this map</button>
   <button id="pLevel" class="pbtn" type="button"><span data-ic="globe"></span>Mode</button>
   <button id="pSettings" class="pbtn" type="button"><span data-ic="gear"></span>Settings</button>
   <button id="pHome" class="pbtn" type="button"><span data-ic="back"></span>Main menu</button>
@@ -1365,6 +1370,21 @@
   <button class="ok" id="btnOk">OK</button></div>
 </div></div>
 
+<div id="shModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="shTitle2"><div class="card shcard">
+  <div class="chead"><h3 id="shTitle2">Share</h3><button id="shClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <p class="small dim" id="shSub"></p>
+  <div class="shbar"><b>Send to</b><button class="btn sm" id="shAll" type="button">Select all</button></div>
+  <div id="shList" class="plist shlist"></div>
+  <p class="small dim" id="shNote">Friends who are away get it next time they play. It waits for them for 3 days.</p>
+  <div class="btns"><button id="shNo" type="button">Cancel</button><button id="shGo" class="go" type="button" disabled>Share</button></div>
+</div></div>
+<div id="shIn" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="shInT"><div class="card shcard">
+  <div class="chead"><h3 id="shInT">A friend shared a map</h3><button id="shInX" class="xbtn" type="button" aria-label="Decide later"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="shfrom" id="shInWho"></div>
+  <p id="shInText"></p>
+  <p class="small dim" id="shInMore"></p>
+  <div class="btns"><button id="shInNo" type="button">Discard</button><button id="shInYes" class="go" type="button">Save it</button></div>
+</div></div>
 <div id="profModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="profName"><div class="card profcard">
   <div class="phead"><span class="bdot pbig"><canvas id="profDot" class="pball" width="108" height="108"></canvas><i id="profLight" class="sdot"></i></span><div class="pwho"><h3 id="profName"></h3><div class="psub"><span id="profCode" class="code"></span><span id="profStatus" class="pstat"></span></div></div></div>
   <div id="profTiles" class="ptiles"></div>
@@ -1544,8 +1564,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=192"></script>
-<script src="physics.js?v=192"></script>
+<script src="maps.js?v=194"></script>
+<script src="physics.js?v=194"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2487,7 +2507,7 @@ function die(why) {
 }
 function outOfBounds(b) {
   const m = S.map;
-  return b.x < 0 || b.x > m.W * TS || b.y < 0 || b.y > P.killYAt(S.world, b.x);   // the box is solid, but anything that gets out of it is lost
+  return b.x < -P.OOB * TS || b.x > (m.W + P.OOB) * TS || b.y < -P.OOB * TS || b.y > P.killYAt(S.world, b.x);   // the box is solid, but anything that gets out of it is lost
 }
 function nearEdge(b) {
   const m = S.map;
@@ -2711,7 +2731,7 @@ function loadPurses() {
 }
 loadPurses();
 function cheatPre(p) { if (!p.pre) p.pre = { c: p.c, g: p.g }; }   // (the money you had before the first money code of this game, so it can go back at the next one)
-/* Cheats used in a public game last until that public map changes (every 2 hours): leaving, reloading, an update, or a trip to a private world and back
+/* Cheats used in a public game last until that public map changes (every 3 hours): leaving, reloading, an update, or a trip to a private world and back
    does not take them away. A private game still starts without them. */
 const PCK = 'ballrun4_pcheat';
 const pubNow = () => !!settings.mp && !party && !offlineOn();
@@ -3023,14 +3043,46 @@ function applyDelRec(q, anim) {   // something deleted (by you or anyone in this
   if (ok && anim && x !== null) { burst(x, y, ['#ff5a4a', '#fff', '#ffd23d'], 14, 170, 80); ring(x, y, '#ff5a4a', 5, 44, 0.4); }
   return ok;
 }
+/* who built each thing here (see the owner book in physics.js): every record knows its builder's number, and limits are counted from that */
+const recOwn = new WeakMap();
+const ownSet = (r, t) => { if (r && typeof r === 'object' && Number.isFinite(t)) recOwn.set(r, t >>> 0); return r; };
+const ownMe = r => ownSet(r, myTag());
+const ownLists = () => ({ props: S.bought || [], gates: S.boughtGates || [], misc: S.boughtMisc || [], cps: S.boughtCps || [], dels: S.dels || [] });
+function bookOut() { const b = {}, L = ownLists(); for (const n in P.BOOK_K) for (const q of L[n]) { const t = recOwn.get(q); if (t !== undefined) P.bookAdd(b, P.BOOK_K[n], q, t); } return b; }
+function ownApply(L, book, dflt) { const rd = P.bookReader(book); for (const n in P.BOOK_K) for (const q of (L[n] || [])) { if (!Array.isArray(q)) continue; const t = rd(P.BOOK_K[n], q); ownSet(q, t !== undefined ? t : dflt); } }
+function recItemId(k, q) {   // which shop item a record is
+  if (k === 'p') { const it = SHOP.find(s => s.kind === q[0] && !s.misc && !s.gate && !s.portal); return it && it.id; }
+  if (k === 'g') { const it = SHOP.find(s => s.gate === q[2]); return it && it.id; }
+  if (k === 'c') return 'flag'; if (k === 'd') return 'dig';
+  const m = q[0]; return m === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : m === 'pad' ? 'pad' : m === 'por' ? 'portal' : m === 'bnc' || m === 'spr' ? 'bnc' : m === 'lav' ? 'lava' : m === 'pwr' ? (q[3] ? 'pw1' : 'pw0') : m === 'rope' ? 'rope' : m === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null;
+}
+const whoCache = new WeakMap();
+function savedWho(o) {   // who built each thing in a saved world. Saves from before the owner book: as many of each as the save said were yours are yours (so your limits are just as they were), the rest nobody's
+  if (whoCache.has(o)) return whoCache.get(o);
+  const rd = P.bookReader(o.ow), quota = !o.ow && !o.from && o.own && typeof o.own === 'object' ? Object.assign({}, o.own) : null;
+  const f = (k, q) => { const t = rd(k, q); if (t !== undefined) return t; if (o.ow || o.from) return undefined; if (!quota) return myTag(); const id = recItemId(k, q); if (id && quota[id] > 0) { quota[id]--; return myTag(); } return undefined; };
+  whoCache.set(o, f); return f;
+}
+let tallyK = '', tallyV = null;
+function ownTally() {   // how many of each item you have built in this world (only yours, whoever else built here)
+  const me = myTag(), L = ownLists(), k = me + '|' + L.props.length + '|' + L.gates.length + '|' + L.misc.length + '|' + L.cps.length + '|' + L.dels.length + '|' + (S.ownV | 0);
+  if (k === tallyK && tallyV) return tallyV;
+  const o = {}, add = id => { if (id) o[id] = (o[id] | 0) + 1; }, mine = q => recOwn.get(q) === me;
+  L.props.forEach(r => { if (mine(r)) add(recItemId('p', r)); });
+  L.gates.forEach(q => { if (mine(q)) add(recItemId('g', q)); });
+  const lastTl = new Map(); L.misc.forEach(q => { if (q[0] === 'tl') lastTl.set(q[1] + ',' + q[2], q); });   // (a tile changed again counts once: only its newest change is there)
+  L.misc.forEach(q => { if (!mine(q)) return; if (q[0] === 'tl' && lastTl.get(q[1] + ',' + q[2]) !== q) return; add(recItemId('m', q)); });
+  L.cps.forEach(q => { if (mine(q)) add('flag'); }); L.dels.forEach(q => { if (mine(q)) add('dig'); });
+  tallyK = k; tallyV = o; return o;
+}
 function addBook(k, x, y) { if (k !== 'por' && k !== 'pad' && k !== 'c' && k !== 'base' && k !== 'pwr') return; P.addCancel({ dels: S.dels }, k, x, y); if (S.pubKeys) S.pubKeys.delete(pkey('d', [k, x, y])); }   // (a new portal, booster or flag where one was deleted before: the old note goes, so it can never take the new one away)
-function delBook(q) {   // keep the books after something was deleted: a built portal, booster or flag just comes off the list of built things; anything else is noted as deleted
+function delBook(q, by) {   // keep the books after something was deleted: a built portal, booster or flag just comes off the list of built things; anything else is noted as deleted
   if (P.coordDel(q)) {
     const rec = q[0] === 'c' ? S.boughtCps.find(c => c[0] === q[1] && c[1] === q[2]) : S.boughtMisc.find(m => m[0] === q[0] && m[1] === q[1] && m[2] === q[2]);
     if (rec && P.delCancel({ misc: S.boughtMisc, cps: S.boughtCps }, q)) { if (S.pubKeys) { const k = q[0] === 'c' ? 'c' : 'm'; S.pubKeys.delete(pkey(k, rec)); S.pubKeys.delete(pkey(k, rec.slice(0, 5))); S.pubKeys.delete(pkey('d', q)); } return; }
   }
   if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), i = d && d.brec ? S.bought.indexOf(d.brec) : -1; if (i >= 0) { S.bought.splice(i, 1); d.brec = null; return; } }   // (a crate or ball somebody built: off the list, as if it had never been put down)
-  S.dels.push(q.slice());
+  S.dels.push(ownSet(q.slice(), by));
 }
 const normPv = pv => P.normBuild({ props: pv.props, gates: pv.gates, misc: (pv.misc || []).slice(), cps: (pv.cps || []).slice(), dels: (pv.dels || []).slice() });
 /* is this device's world the same as the server's? The server tells its fingerprint every few seconds. If this one stays different (and nobody is building right now), the whole world is fetched again. */
@@ -3093,7 +3145,7 @@ function offerSnap(slot, roomId) {   // the server knows nothing of this world: 
 }
 function sendHostBuild() {   // your own world, opened for friends: everything in it goes to the server in one go (a few big parts at most), in order, so nothing can be missed
   if (!ws || ws.readyState !== 1) return;
-  const str = JSON.stringify({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }), n = Math.max(1, Math.ceil(str.length / 50000));
+  const str = JSON.stringify({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels, ow: bookOut() }), n = Math.max(1, Math.ceil(str.length / 50000));
   for (let i = 0; i < n; i++) { try { ws.send(JSON.stringify({ t: 'hbuild', n, i, c: str.slice(i * 50000, (i + 1) * 50000) })); } catch (e) {} }
 }
 function hostSeed(nb) {   // your own world, opened for friends: the server takes it exactly as your device has it (where everything is), since your device is its memory
@@ -3110,23 +3162,24 @@ function sendBulk(lists) {   // tell the world what you have built, 25 things at
 }
 function propCounts() { const m = new Map(); for (const q of S.bought) { const k = pkey('p', q); m.set(k, (m.get(k) || 0) + 1); } return m; }   // how many of each build this world has
 function applyPubBuild(pv) {   // what everyone in a public world has built so far (each thing only once, however often it is told). It becomes part of your world, so it is kept for when you come back
-  if (!pv || !S.world) return; const seen = S.pubKeys, take = (k, q) => { const key = pkey(k, q); if (seen.has(key)) return false; seen.add(key); return true; };
-  const occ = new Map(), have = propCounts();
+  if (!pv || !S.world) return; const seen = S.pubKeys, rd = P.bookReader(pv.ow), take = (k, q) => { const key = pkey(k, q); if (seen.has(key)) return false; seen.add(key); return true; };
+  const occ = new Map(), have = propCounts(), keep = (L, rec, t) => { ownSet(rec, t); L.push(rec); };
   const takeP = q => { const key = pkey('p', q), n = (occ.get(key) || 0) + 1; occ.set(key, n); return n > (have.get(key) || 0); };   // (several crates put down on the very same spot are several crates: each one counts)
-  (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !mapBlock(q[1], q[2]) && takeP(q)) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });
-  pv = normPv(pv); (pv.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q) && take('d', q)) { applyDelRec(q); S.dels.push(q.slice()); } });
-  (pv.misc || []).forEach(q => { if (validMisc(q) && take('m', q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
-  (pv.gates || []).forEach(q => { if (validGate(q) && take('g', q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
-  (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1]) && take('c', q)) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
-  (pv.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q) && take('d', q)) { applyDelRec(q); S.dels.push(q.slice()); } });
+  (pv.props || []).forEach(q => { const t = Array.isArray(q) ? rd('p', q) : undefined; if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !mapBlock(q[1], q[2]) && takeP(q)) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; if (t !== undefined) d.ownTag = t; keep(S.bought, rec, t); S.rcvN++; } });
+  pv = normPv(pv); (pv.dels || []).forEach(q => { const t = rd('d', q); if (P.coordDel(q) && validDel(q) && take('d', q)) { applyDelRec(q); keep(S.dels, q.slice(), t); } });
+  (pv.misc || []).forEach(q => { const t = rd('m', q); if (validMisc(q) && take('m', q)) { addMisc(S.world, q); keep(S.boughtMisc, q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4), t); S.rcvN++; } });
+  (pv.gates || []).forEach(q => { const t = rd('g', q); if (validGate(q) && take('g', q)) { addGate(S.world, q, true); keep(S.boughtGates, q.slice(0, 5), t); S.rcvN++; } });
+  (pv.cps || []).forEach(q => { const t = rd('c', q); if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1]) && take('c', q)) { S.map.checkpoints.push([q[0], q[1]]); keep(S.boughtCps, [q[0], q[1]], t); S.rcvN++; } });
+  (pv.dels || []).forEach(q => { if (P.coordDel(q)) return; const t = rd('d', q); if (validDel(q) && take('d', q)) { applyDelRec(q); keep(S.dels, q.slice(), t); } });
 }
-function applyPartyProps(pv) {   // what the host built is there when you arrive
-  (pv.props || []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !mapBlock(q[1], q[2])) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; S.bought.push(rec); S.rcvN++; } });   // (remembered in the lists, so the world can be saved as a copy)
-  pv = normPv(pv); (pv.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });
-  (pv.misc || []).forEach(q => { if (validMisc(q)) { addMisc(S.world, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); S.rcvN++; } });
-  (pv.gates || []).forEach(q => { if (validGate(q)) { addGate(S.world, q, true); S.boughtGates.push(q.slice(0, 5)); S.rcvN++; } });
-  (pv.cps || []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); S.rcvN++; } });
-  (pv.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });
+function applyPartyProps(pv) {   // what the host built is there when you arrive (and who built each thing: yours stay yours, so your limits are the same as when you left)
+  const rd = P.bookReader(pv.ow), keep = (L, rec, t) => { ownSet(rec, t); L.push(rec); };
+  (pv.props || []).forEach(q => { const t = Array.isArray(q) ? rd('p', q) : undefined; if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !mapBlock(q[1], q[2])) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; if (t !== undefined) d.ownTag = t; keep(S.bought, rec, t); S.rcvN++; } });   // (remembered in the lists, so the world can be saved as a copy)
+  pv = normPv(pv); (pv.dels || []).forEach(q => { const t = rd('d', q); if (P.coordDel(q) && validDel(q)) { applyDelRec(q); keep(S.dels, q.slice(), t); } });
+  (pv.misc || []).forEach(q => { const t = rd('m', q); if (validMisc(q)) { addMisc(S.world, q); keep(S.boughtMisc, q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4), t); S.rcvN++; } });
+  (pv.gates || []).forEach(q => { const t = rd('g', q); if (validGate(q)) { addGate(S.world, q, true); keep(S.boughtGates, q.slice(0, 5), t); S.rcvN++; } });
+  (pv.cps || []).forEach(q => { const t = rd('c', q); if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); keep(S.boughtCps, [q[0], q[1]], t); S.rcvN++; } });
+  (pv.dels || []).forEach(q => { if (P.coordDel(q)) return; const t = rd('d', q); if (validDel(q)) { applyDelRec(q); keep(S.dels, q.slice(), t); } });
 }
 function deriveOwn() {   // saves from before every item had its own count: work it out from what is there
   const o = {}, add = id => { if (id) o[id] = (o[id] | 0) + 1; };
@@ -3145,7 +3198,7 @@ function worldObj() {   // the world exactly as it is right now: everything buil
   }
   const see = w.see.map(q => [r2(q.ang), r2(q.av), r2(q.tilt)]);
   const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
-  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, room: S.slot < SOLO_BASE ? S.pubRoom : undefined, rcv: S.rcvN | 0, own: S.own, dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
+  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, room: S.slot < SOLO_BASE ? S.pubRoom : undefined, rcv: S.rcvN | 0, own: S.own, ow: bookOut(), dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
 }
 function saveWorld(force, snap) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
@@ -3166,12 +3219,13 @@ function restoreWorld(slot) {
     const o = slot >= SOLO_BASE ? solo2[S.idx] : JSON.parse(localStorage.getItem(WKEY) || 'null');
     if (!o || (slot < SOLO_BASE && o.slot !== slot)) return;           // a new session (or a level you reset): everything starts fresh
     const w = S.world; { const n = normPv({ misc: o.misc, cps: o.cps, dels: o.dels }); o.misc = n.misc; o.cps = n.cps; o.dels = n.dels; }
-    if (slot >= SOLO_BASE) (o.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q)) { applyDelRec(q); S.dels.push(q.slice()); } });   // (the map's own portals and boosters that were deleted: before anything built goes in)
-    const own = true, pubW = slot < SOLO_BASE, key = (k, q) => { if (pubW && S.pubKeys) S.pubKeys.add(pkey(k, q)); };   // (what you built is remembered everywhere; in a public world it is also told to the room again when you come back)
-    (own && !pubW ? o.buys || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { key('p', q.slice(0, 3)); const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; d.ownTag = myTag(); S.bought.push(rec); if (mapBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
-    (own && !pubW ? o.gates || [] : []).forEach(q => { if (validGate(q)) { key('g', q.slice(0, 5)); addGate(w, q, true); S.boughtGates.push(q.slice(0, 5)); } });   // gates you bought, with their triggers (before the doors' own states are put back)
-    (own && !pubW ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); addMisc(w, q); S.boughtMisc.push(q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); } });   // teeter-totters and floor boosters you bought
-    (own && !pubW ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push([q[0], q[1]]); } });
+    if (slot >= SOLO_BASE) { const who0 = savedWho(o); (o.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q)) { const t = who0('d', q); applyDelRec(q); S.dels.push(ownSet(q.slice(), t)); } }); }   // (the map's own portals and boosters that were deleted: before anything built goes in)
+    const own = true, pubW = slot < SOLO_BASE, key = (k, q) => { if (pubW && S.pubKeys) S.pubKeys.add(pkey(k, q)); };
+    const who = savedWho(o);   // (who built each thing; an older save without the book was all yours, unless it was a copy of somebody else's)   // (what you built is remembered everywhere; in a public world it is also told to the room again when you come back)
+    (own && !pubW ? o.buys || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { key('p', q.slice(0, 3)); const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]], t = who('p', rec); d.bought = true; d.brec = rec; d.ownTag = t !== undefined ? t : myTag(); S.bought.push(ownSet(rec, t)); if (mapBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
+    (own && !pubW ? o.gates || [] : []).forEach(q => { if (validGate(q)) { key('g', q.slice(0, 5)); addGate(w, q, true); const r = q.slice(0, 5); S.boughtGates.push(ownSet(r, who('g', r))); } });   // gates you bought, with their triggers (before the doors' own states are put back)
+    (own && !pubW ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); addMisc(w, q); const r = q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4); S.boughtMisc.push(ownSet(r, who('m', r))); } });   // teeter-totters and floor boosters you bought
+    (own && !pubW ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push(ownSet([q[0], q[1]], who('c', q))); } });
     S.rcvN = o.rcv | 0; S.own = o.own && typeof o.own === 'object' ? o.own : deriveOwn();
     const seedD = [];
     if (!pubW) (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } else { d.x = q[1]; d.y = q[2]; d.vx = q[4] || 0; d.vy = q[5] || 0; d.rot = q[6] || 0; d.av = q[7] || 0; if (Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1 || Math.abs(d.av) > 0.05) d.sleep = false; } });
@@ -3179,7 +3233,7 @@ function restoreWorld(slot) {
     if (!pubW) (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
     if (!pubW) (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
     (o.got || []).forEach(i => { if (i < S.coinGot.length) S.coinGot[i] = 1; });
-    if (!pubW) (o.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(q.slice()); } });   // what you deleted stays deleted (in a public world the server has all of it: this device only mirrors it)
+    if (!pubW) (o.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(ownSet(q.slice(), who('d', q))); } });   // what you deleted stays deleted (in a public world the server has all of it: this device only mirrors it)
     S.seed = null;
 
     S.coinN = o.n | 0; if (walletFresh) { walletFresh = false; purseP.c += S.coinN; saveWallet(); }   // (first time with a wallet: coins you already had on this map count)
@@ -3352,7 +3406,7 @@ function kbNav(box, e, passGo) {
   if (best) { cur.classList.remove('kbf'); best.classList.add('kbf'); if (best.scrollIntoView) best.scrollIntoView({ block: 'nearest' }); }
   return true;
 }
-const KB_BOXES = ['ageGate', 'codesModal', 'quickModal', 'giveModal', 'wiModal', 'pickPop', 'confirm', 'descModal', 'nameModal', 'codeModal', 'shareModal', 'profModal', 'addModal', 'invModal', 'lvlModal', 'emoPop', 'intro', 'settings', 'pause'];
+const KB_BOXES = ['ageGate', 'codesModal', 'quickModal', 'giveModal', 'wiModal', 'pickPop', 'confirm', 'descModal', 'nameModal', 'codeModal', 'shareModal', 'profModal', 'addModal', 'invModal', 'lvlModal', 'emoPop', 'intro', 'settings', 'pause', 'shModal', 'shIn', 'tpModal'];
 addEventListener('pointerdown', () => { if (kbBox) { document.querySelectorAll('.kbf').forEach(x => x.classList.remove('kbf')); kbBox = null; } }, true);
 addEventListener('keydown', e => {
   if (keyCapture || typing() || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -3407,7 +3461,7 @@ addEventListener('keydown', e => {
     if (closeSelectFn) { closeSelectFn(); return; }
     if (CP.open) { closePicker(); return; }
     if (typeof mmBigOn !== 'undefined' && mmBigOn) { toggleMmBig(false); e.preventDefault(); return; }
-    if (!$('confirm').classList.contains('hide')) $('cfNo').click(); else if (edSess) $('editDone').click(); else if ($('intro').classList.contains('hide')) escMenu();
+    if (!$('confirm').classList.contains('hide')) $('cfNo').click(); else if (edSess) $('editDone').click(); else if ($('intro').classList.contains('hide')) escMenu(); else $('btnOk').click();   // (Esc closes the help too)
     e.preventDefault(); return;
   }
   if (e.key === '-' || e.key === '_') { setZoom(settings.zoom - 0.1); return; }
@@ -3430,7 +3484,7 @@ addEventListener('blur', () => { keysDown.clear(); inp.left = inp.right = inp.ju
 cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(settings.zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
 /* One press does one thing. A button that opens a pop-up when your finger goes down (the +, chat, pause...) must not also press whatever in that pop-up ends up under
    your finger when it lifts. So a click inside a pop-up only counts if the press that made it started after the pop-up was open. */
-const POPS = ['codesModal', 'quickModal', 'giveModal', 'wiModal', 'shopPop', 'emoPop', 'pickPop', 'confirm', 'pause', 'settings', 'intro', 'lvlModal', 'descModal', 'nameModal', 'profModal', 'addModal', 'invModal', 'codeModal', 'shareModal', 'mmbig', 'codeBox'];
+const POPS = ['codesModal', 'quickModal', 'giveModal', 'wiModal', 'shopPop', 'emoPop', 'pickPop', 'confirm', 'pause', 'settings', 'intro', 'lvlModal', 'descModal', 'nameModal', 'profModal', 'addModal', 'invModal', 'codeModal', 'shareModal', 'mmbig', 'codeBox', 'shModal', 'shIn', 'tpModal'];
 const popOpenT = {}; let downT = 0;
 try { const mo = new MutationObserver(list => { const t = performance.now(); for (const m of list) { const el = m.target; if (!el.classList.contains('hide') && !(m.oldValue || '').split(' ').every(x => x !== 'hide')) popOpenT[el.id] = t; } });
   POPS.forEach(id => { const el = $(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ['class'], attributeOldValue: true }); }); } catch (e) {}
@@ -4492,13 +4546,13 @@ function trackBin(dv, len, ty) {   // 2: everybody (far away too) for the maps. 
   if (ty === 2) {
     for (let off = 3; off + 8 <= len; off += 8) {
       const o = others.get(dv.getUint32(off, true)); if (!o) continue;
-      o.mx = dv.getUint16(off + 4, true) * 4; o.my = dv.getUint16(off + 6, true) * 2; o.mt = t;
+      o.mx = dv.getUint16(off + 4, true) * 4 - P.POFF; o.my = dv.getUint16(off + 6, true) * 2 - P.POFF; o.mt = t;
     }
   } else {
     for (let off = 3; off + 12 <= len; off += 12) {
       const num = dv.getUint32(off, true), e = lks.find(l => lkNum(l.pub) === num); if (!e) continue;
       const yr = dv.getUint16(off + 6, true);
-      e.dead = yr === 65535; e.x = dv.getUint16(off + 4, true) * 4; e.y = e.dead ? e.y : yr * 2; e.w = dv.getUint16(off + 8, true); e.vx = e.dead ? 0 : dv.getInt8(off + 10) * 5; e.vy = e.dead ? 0 : dv.getInt8(off + 11) * 20; e.t = t;
+      e.dead = yr === 65535; e.x = dv.getUint16(off + 4, true) * 4 - P.POFF; e.y = e.dead ? e.y : yr * 2 - P.POFF; e.w = dv.getUint16(off + 8, true); e.vx = e.dead ? 0 : dv.getInt8(off + 10) * 5; e.vy = e.dead ? 0 : dv.getInt8(off + 11) * 20; e.t = t;
       if (e.sx == null || e.dead) { e.sx = e.x; e.sy = e.y; }
     }
   }
@@ -4864,30 +4918,30 @@ $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop'))
 /* ----- the shop: spend coins (and diamonds) on things that appear right next to you. They are only yours: nobody else sees them. ----- */
 const SHOP = [
   { cat: 'coins', id: 'coins', name: '250 coins', info: 'Trade one diamond for coins.', c: 0, g: 1, give: 250 },
-  { cat: 'gadgets', id: 'spring0', max: 60, name: 'Spring', info: 'Push it anywhere. Land on it to bounce high.', c: 100, g: 0, kind: 5 },
-  { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Push it anywhere. Bounces you very, very high.', c: 200, g: 0, kind: 6 },
-  { cat: 'travel', id: 'base', max: 1, base: true, name: 'Base', info: 'Your own hideout: a circle as big as the one at the start, with you in the middle. Stand on dirt or ice to set it, with nothing that is not yours in the circle, and not overlapping another no-build circle. Only you can build or delete inside it, and your things there are safe. Delete its glowing centre to move it.', c: 500, g: 5 },
-  { cat: 'travel', id: 'pw0', max: 40, pwr: 0, name: 'Sushi', info: 'A power-up, set down right in front of you. Roll into it now or leave it for later. Taking it fills your boost for a minute: boost any time, as often as you like. It comes back for each player 5 to 10 minutes after they take it.', c: 750, g: 0 },
-  { cat: 'travel', id: 'pw1', max: 40, pwr: 1, name: 'Flower bouquet', info: 'A power-up, set down right in front of you. Roll into it now or leave it for later. Taking it gives you a minute where every jump can be an extra tall one. It comes back for each player 5 to 10 minutes after they take it.', c: 750, g: 0 },
-  { cat: 'travel', id: 'flag', max: 1, name: 'Checkpoint flag', info: 'Drops right where you stand and saves your spot. You can have one at a time: delete it to put it somewhere else.', c: 400, g: 5 },
+  { cat: 'gadgets', id: 'spring0', max: 60, name: 'Spring', info: 'Bounces you high.', c: 100, g: 0, kind: 5 },
+  { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Bounces you very high.', c: 200, g: 0, kind: 6 },
+  { cat: 'travel', id: 'base', max: 1, base: true, name: 'Base', info: 'Your own safe zone. Only you can build in it.', c: 500, g: 5 },
+  { cat: 'travel', id: 'pw0', max: 40, pwr: 0, name: 'Sushi', info: 'Power-up: unlimited boost for a minute.', c: 750, g: 0 },
+  { cat: 'travel', id: 'pw1', max: 40, pwr: 1, name: 'Flower bouquet', info: 'Power-up: extra tall jumps for a minute.', c: 750, g: 0 },
+  { cat: 'travel', id: 'flag', max: 1, name: 'Checkpoint flag', info: 'Saves your spot. One at a time.', c: 400, g: 5 },
   { cat: 'blocks', id: 'box0', max: 150, name: 'Small square', info: 'A little crate to push around.', c: 50, g: 0, kind: 0 },
   { cat: 'blocks', id: 'box1', max: 120, name: 'Big square', info: 'A big, heavy crate.', c: 100, g: 0, kind: 1 },
   { cat: 'blocks', id: 'ball0', max: 150, name: 'Tiny ball', info: 'A very small ball.', c: 25, g: 0, kind: 7 },
   { cat: 'blocks', id: 'ball1', max: 150, name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
   { cat: 'blocks', id: 'ball2', max: 120, name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
-  { cat: 'gadgets', id: 'gate', max: 40, name: 'Gate', info: 'A tall gate and a trigger plate. It gets shorter to fit under a ceiling.', c: 200, g: 2, gate: 7 },
-  { cat: 'gadgets', id: 'gateS', max: 40, name: 'Small gate', info: 'Half as tall. Same trigger plate.', c: 200, g: 2, gate: 4 },
-  { cat: 'gadgets', id: 'see', max: 25, name: 'Small teeter-totter', info: 'A plank on a pivot. It tips with whatever is on it.', c: 500, g: 5, misc: 'see' },
-  { cat: 'gadgets', id: 'seeb', max: 25, name: 'Big teeter-totter', info: 'A long plank on a pivot: it reaches further, and flings harder.', c: 500, g: 5, misc: 'see', big: true },
-  { cat: 'gadgets', id: 'rope', max: 40, name: 'Rope bridge', info: 'Ties to the edge of the dirt you stand on and stretches to the next dirt, up to 20 blocks across and less than 6 up or down. Nothing may be in its way.', c: 1000, g: 1, misc: 'rope' },
-  { cat: 'gadgets', id: 'pad', max: 100, name: 'Floor booster', info: 'Set into the ground. Roll over it and it throws you forward.', c: 100, g: 0, misc: 'pad' },
-  { cat: 'travel', id: 'portal', max: 2, name: 'Portals', info: 'Two holes in the ground: go in one and come out of the other. You can have two pairs: the first is yellow and blue, the second red and purple. Delete a pair to move it.', c: 1000, g: 20, portal: true },
-  { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Set into the ground. Land on it and it bounces you up.', c: 100, g: 0, misc: 'spr' },
-  { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns a tile of ground into lava. It burns anything that touches it.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
-  { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns a tile of ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
-  { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Grows from other dirt, side to side. Turns water and ice into dirt, and lava into rock.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
-  { cat: 'coins', id: 'dig', name: 'Delete', info: 'Removes what is right in front of you: a crate, ball, spring, booster, teeter-totter, gate, portal, flag or power-up, or a tile of dirt, ice or rock. Lava and water have to be turned into dirt first. Use it as often as you like.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
-  { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock and melts ice into water. In a pool it digs on down and sideways.', c: 150, g: 7, misc: 'ter', ter: 'water' }
+  { cat: 'gadgets', id: 'gate', max: 40, name: 'Gate', info: 'A tall gate with a trigger plate.', c: 200, g: 2, gate: 7 },
+  { cat: 'gadgets', id: 'gateS', max: 40, name: 'Small gate', info: 'A short gate with a trigger plate.', c: 200, g: 2, gate: 4 },
+  { cat: 'gadgets', id: 'see', max: 25, name: 'Small teeter-totter', info: 'A plank that tips.', c: 500, g: 5, misc: 'see' },
+  { cat: 'gadgets', id: 'seeb', max: 25, name: 'Big teeter-totter', info: 'A long plank that tips and flings.', c: 500, g: 5, misc: 'see', big: true },
+  { cat: 'gadgets', id: 'rope', max: 40, name: 'Rope bridge', info: 'A bridge to the next ground.', c: 1000, g: 1, misc: 'rope' },
+  { cat: 'gadgets', id: 'pad', max: 100, name: 'Floor booster', info: 'Throws you forward.', c: 100, g: 0, misc: 'pad' },
+  { cat: 'travel', id: 'portal', max: 2, name: 'Portals', info: 'Go in one, come out the other.', c: 1000, g: 20, portal: true },
+  { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Bounces you up from the ground.', c: 100, g: 0, misc: 'spr' },
+  { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns ground into lava.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
+  { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
+  { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Adds ground next to other ground.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
+  { cat: 'coins', id: 'dig', name: 'Delete', info: 'Removes what is in front of you.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
+  { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock, ice into water.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
 const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['travel', 'Special'], ['terrain', 'Terrain'], ['coins', 'More']];
 let shopTab = 'blocks';
@@ -4946,7 +5000,7 @@ $('setKeep').onchange = () => { settings.terrKeep = $('setKeep').checked; save()
 $('btnShop').onclick = () => toggleShop(!shopOpen);
 $('shopClose').onclick = () => toggleShop(false);
 $('chatClose').onclick = () => toggleChat(false);
-const ownCount = it => (S.own && S.own[it.id]) | 0;   // how many of this you have built on this map (what others built does not count)
+const ownCount = it => ownTally()[it.id] | 0;   // how many of this you have built on this map, counted from who built what (what others built does not count; leaving and coming back changes nothing)
 let noCaps = false; try { noCaps = localStorage.getItem('ballrun4_nocap') === '1'; } catch (e) {}   // (the code "unlimitedpower": no building limits at all, on this device)
 const atLimit = it => it.base ? !!myBase() : !(noCaps && !cheatsOff()) && !!it.max && ownCount(it) >= it.max;
 const limitNote = it => it.base ? 'You already have a base. Delete its glowing centre to put it somewhere else' : it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : it.portal ? 'You have both portal pairs. Delete one to move it' : it.id === 'flag' ? 'You already have a checkpoint flag. Delete it to put one somewhere else' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
@@ -5115,7 +5169,7 @@ function delThing(q) {   // delete it here, and for everyone in this world
   if (q[0] === 'pwr' && S.world) { const e = (S.world.pwrs || []).find(o => !o.gone && o.tx === q[1] && o.ty === q[2]); id = e ? (e.t ? 'pw1' : 'pw0') : null; }
   if (q[0] === 's' && S.world) { const e = S.world.see.find(o => o.uid === (q[1] >>> 0)); if (e && e.hl > 3 * TS + 1) id = 'seeb'; }
   if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), it = d && SHOP.find(s => s.kind === d.kind && !s.misc && !s.gate); if (it) id = it.id; if (d && d.bought && !d.local && shared()) id = null; }   // (somebody else's: they get it back, not you)
-  if (applyDelRec(q, true)) { delBook(q); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); if (id && S.own && S.own[id] > 0) S.own[id]--; }   // (deleting something gives you that one back to build again)
+  if (applyDelRec(q, true)) { delBook(q, myTag()); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); if (id && S.own && S.own[id] > 0) S.own[id]--; }   // (deleting something gives you that one back to build again)
 }
 function waterEx(x, r) {   // water never sits on ice or beside lava: the ice under it melts, and any lava it touches turns to rock
   const w = S.world, out = [], T = (a, b) => P.tile(w, a, b);
@@ -5190,10 +5244,12 @@ function playerIn(x0, y0, x1, y1, notMe) {   // is anybody's ball on this box: y
   others.forEach(o => { if (hit || !o.seen || o.dead || now - o.seen > 6000 || o.cx === undefined) return; if (near(o.cx, o.cy, R + 6)) hit = true; });
   return hit;
 }
+const offMapNow = () => !!(S.b && S.world && (S.b.x < 3 * TS || S.b.x > (S.world.W - 3) * TS || S.b.y < 2 * TS));   // (out in the open air around the map)
 function computeGhost() {
   const g = placing, b = S.b; if (!g || !b) return;
   const ax = (inp.right ? 1 : 0) - (inp.left ? 1 : 0) || (Math.abs(tin.ax) > 0.15 ? Math.sign(tin.ax) : 0) || (Math.abs(b.vx) > 25 ? Math.sign(b.vx) : 0);
   if (ax) g.side = ax;
+  g.off = offMapNow(); if (g.off) { g.ok = false; g.bz = true; g.bwhy = 'You can only build on the map, not out past its edges'; g.tx = b.x + (g.side || 1) * TS * 1.5; g.ty = b.y; if (g.dx === undefined) { g.dx = g.tx; g.dy = g.ty; } return; }   // (out past the map there is only air: nothing to build on)
   if (g.it.pwr !== undefined) {   // a power-up: floating right in front of you, at the height of your ball
     const side = g.side || 1, w = S.world, free = (tx, ty) => { const v = P.tile(w, tx, ty); return v === 0 || v === undefined; };
     let tx = Math.floor((b.x + side * TS * 1.5) / TS), ty = Math.floor(b.y / TS);
@@ -5379,7 +5435,7 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (!on) return;
   $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; if (g.it.max && !noCaps) $('placeName').textContent += ' · ' + ownCount(g.it) + ' of ' + g.it.max + ' placed'; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Delete' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Delete' : 'Place');
-  $('placeHint').textContent = g.it.base ? (g.ok ? 'Your base goes right here, with you in the middle' : g.bwhy) : g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space');
+  $('placeHint').textContent = g.off ? g.bwhy : g.it.base ? (g.ok ? 'Your base goes right here, with you in the middle' : g.bwhy) : g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space');
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
@@ -5399,21 +5455,21 @@ function finishPlacing() {
   else if (it.portal) {
     const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++;   // (your first pair is yellow and blue, your second red and purple: never the same as one you have)
     const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr, c]; S.own = S.own || {}; S.own.porC = [...used, c];
-    addBook('por', q[1], q[2]); addMisc(S.world, q); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('portal');
+    addBook('por', q[1], q[2]); addMisc(S.world, q); S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('portal');
     burst((q[1] + 1) * TS, q[2] * TS - 8, [PORC[c][0], '#fff'], 14, 160, 60); burst((q[3] + 1) * TS, q[4] * TS - 8, [PORC[c][1], '#fff'], 14, 160, 60);
   } else if (it.gate && g.stage === 1) { g.gate = { tx: g.gtx, gr: g.ggr, h: g.gh }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   else if (it.gate) {
     const q = [g.gate.tx, g.gate.gr - g.gate.h, g.gate.h, g.ptx, g.prow, Math.round(g.py0)];
-    addGate(S.world, q); S.boughtGates.push(q.slice(0, 5)); partyBuild({ t: 'pgate', g: q.slice(0, 5) }); wDirty = true;
+    addGate(S.world, q); S.boughtGates.push(ownMe(q.slice(0, 5))); partyBuild({ t: 'pgate', g: q.slice(0, 5) }); wDirty = true;
     burst((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, '#fff', 4, 40, 0.4);
-  } else if (it.misc === 'rope') { const q = g.rq.slice(); addMisc(S.world, q); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('big');
+  } else if (it.misc === 'rope') { const q = g.rq.slice(); addMisc(S.world, q); S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('big');
   } else if (it.misc) {
     const q = [it.misc === 'ter' ? 'tl' : it.misc, g.mtx, g.mgr, it.misc === 'ter' ? g.mto : it.misc === 'pad' ? ((g.mside || g.side) < 0 ? -1 : 1) : it.misc === 'spr' ? g.mr0 : it.big ? 1 : 0];
     addMisc(S.world, q, true);
     const exSend = [];
     if (q[0] === 'tl') for (const e of (g.mex || [])) {   // what the water did to its neighbours (melted ice, lava turned to rock)
       const eq = ['tl', e[0], e[1], e[2]], w2 = S.world, j = e[1] * w2.W + e[0]; addMisc(w2, eq, true); dropTileRecords(e[0], e[1]);
-      if (S.orig && w2.grid[j] === S.orig[j] && !(w2.rock && w2.rock[j])) { S.tg[j] = S.origTg[j]; exSend.push([e[0], e[1], -1]); } else { S.boughtMisc.push(eq); S.mine.add(j); exSend.push([e[0], e[1], e[2]]); }
+      if (S.orig && w2.grid[j] === S.orig[j] && !(w2.rock && w2.rock[j])) { S.tg[j] = S.origTg[j]; exSend.push([e[0], e[1], -1]); } else { S.boughtMisc.push(ownMe(eq)); S.mine.add(j); exSend.push([e[0], e[1], e[2]]); }
     }
     if (q[0] === 'tl' && (q[3] === 1 || q[3] === 3) && botMode() === 'local') LBC.builds.push({ x: q[1], y: q[2] });   // (the bots notice what you build)
     if (q[0] === 'tl') {   /* one record per tile, ever. If the tile is back the way the map made it, there is nothing to remember at all, and it does not count */
@@ -5422,15 +5478,15 @@ function finishPlacing() {
         S.tg[i] = S.origTg[i]; g.cancelled = true;
         if (S.mine.has(i)) for (const o of gone) { const id = { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[o[3]]; if (id && S.own && S.own[id] > 0) S.own[id]--; }
         S.mine.delete(i); partyBuild({ t: 'pobj', g: ['tl', q[1], q[2], -1], ex: exSend });
-      } else { S.boughtMisc.push(q); S.mine.add(i); partyBuild({ t: 'pobj', g: q, ex: exSend }); }
+      } else { S.boughtMisc.push(ownMe(q)); S.mine.add(i); partyBuild({ t: 'pobj', g: q, ex: exSend }); }
       wDirty = true;
-    } else { addBook(q[0], q[1], q[2]); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; }
+    } else { addBook(q[0], q[1], q[2]); S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; }
     if (q[0] !== 'tl') { burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4); }
   } else if (it.base) {
-    const q = ['base', g.btx, g.bty, myTag()]; addBook('base', q[1], q[2]); addMisc(S.world, q, true); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready');
+    const q = ['base', g.btx, g.bty, myTag()]; addBook('base', q[1], q[2]); addMisc(S.world, q, true); S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready');
     notice('Base set. Only you can build inside it', '');
   } else if (it.pwr !== undefined) {
-    const q = ['pwr', g.ptx, g.pty, it.pwr]; addBook('pwr', q[1], q[2]); addMisc(S.world, q, true); S.boughtMisc.push(q); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready');
+    const q = ['pwr', g.ptx, g.pty, it.pwr]; addBook('pwr', q[1], q[2]); addMisc(S.world, q, true); S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready');
   } else if (it.id === 'flag') placeFlagAt(g.ftx, g.frow);
   else placeProp(it.kind, [g.tx, g.ty]);
   S.own = S.own || {}; if (!g.cancelled) S.own[it.id] = ownCount(it) + 1;   /* (an action that cancels one of your own builds is not counted, and gives the earlier one back) */
@@ -5449,12 +5505,12 @@ function partyBuild(msg) {
   if (shared() && online && ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }
 function placeProp(kind, at) {
   const d = P.addProp(S.world, kind, at[0], at[1]); d.sleep = false; d.bought = true; d.local = true; d.ownTag = myTag();   /* (put down here: shown at once, before the server has answered) */ partyBuild({ t: 'padd', k: kind, x: Math.round(at[0]), y: Math.round(at[1]) });
-  const rec = [kind, Math.round(at[0]), Math.round(at[1])]; d.brec = rec; S.bought.push(rec); wDirty = true;
+  const rec = [kind, Math.round(at[0]), Math.round(at[1])]; d.brec = rec; S.bought.push(ownMe(rec)); wDirty = true;
   burst(at[0], at[1], ['#fff', '#ffd23d'], 10, 140, 60); ring(at[0], at[1], '#fff', 4, 34, 0.4);
 }
 function placeFlagAt(tx, found) {   // on the ground where the ghost stood: it is your checkpoint at once
   const w = S.world, b = S.b;
-  const cp = [tx, found], m = S.map; addBook('c', tx, found); m.checkpoints.push(cp); S.boughtCps.push(cp); partyBuild({ t: 'pcp', x: tx, y: found });
+  const cp = [tx, found], m = S.map; addBook('c', tx, found); m.checkpoints.push(cp); S.boughtCps.push(ownMe(cp)); partyBuild({ t: 'pcp', x: tx, y: found });
   S.cpArmed = m.checkpoints.length - 1; S.cpUsed = -1; S.cpFlash = 1; wDirty = true;
   const fx0 = (tx + 0.5) * TS;
   burst(fx0, found * TS - 60, ['#46d17a', '#fff', '#b9ffd3'], 16, 220, 80); ring(fx0, found * TS - 6, '#46d17a', 5, 50, 0.5); sfx('ready');
@@ -6075,6 +6131,113 @@ function dsClose(ok) { $('descModal').classList.add('hide'); try { $('dsA').blur
 $('dsSplit').onchange = () => { const on = $('dsSplit').checked; $('dsB').classList.toggle('hide', !on); $('dsA').placeholder = on ? 'For my private map' : 'A few words about this level'; sfx(on ? 'on' : 'off'); };
 $('dsOk').onclick = () => { sfx('ui'); dsClose(true); }; $('dsNo').onclick = () => { sfx('ui'); dsClose(false); };
 $('lvDescBtn').onclick = () => { const i = lvSel; sfx('ui'); askDesc({ title: 'Describe ' + lvLabelOf(i), note: 'Only you see this. It shows for this level in private and offline games.', a: lvDescOf(i) }, r => { if (r) { setLvDesc(i, null, r.a); lvSelect(i); } }); };
+/* ----- sharing a map: your version of one of your levels (everything built in it, and who built what) goes to the friends you pick.
+   They get a pop-up the next time they play, for up to 3 days, and choose to save it or not (each asked twice) ----- */
+let shIdx = -1, shSel = new Set(), shSending = false;
+function shareData(i) {   // what is shared: the level as it is now (or its saved moment, if it is kept as a saved state)
+  const here = !inHome && S.world && S.slot === SOLO_BASE + i && !(party && party.role === 'guest');
+  let o = null;
+  if (here && !lvSaveOn(i)) { saveWorld(true); o = JSON.parse(JSON.stringify(worldObj())); }
+  else if (solo2[i]) o = JSON.parse(JSON.stringify(solo2[i]));
+  if (!o) return null;
+  delete o.slot; delete o.from; o.got = []; o.n = 0; o.own = {};   // (their own coins to collect, their own portal colours; who built what stays in the owner book)
+  return { v: 1, idx: i, desc: lvDescOf(i), o };
+}
+function openShare(i) {
+  if (offlineOn()) { notice('Sharing needs the internet. Turn offline play off first', 'urgent'); return; }
+  if (!ws || ws.readyState !== 1 || !(online || lobbyOn)) { notice('Not connected right now. Try again in a moment', 'urgent'); return; }
+  if (!shareData(i)) { notice('Play this level first. There is nothing on it to share yet', 'urgent'); return; }
+  shIdx = i; shSel = new Set(); sfx('ui');
+  $('shTitle2').textContent = 'Share ' + lvLabelOf(i); $('shSub').textContent = 'Your version of this level, with everything in it. Your base stays yours: nobody else can change it.';
+  shRender(); $('shModal').classList.remove('hide');
+}
+function shFriends() { return lks.filter(l => l.ok && !blockedPub(l.pub)).sort((a, b) => (b.on | 0) - (a.on | 0) || String(a.name).localeCompare(String(b.name))); }
+function shRender() {
+  const box = $('shList'), fr = shFriends(); box.textContent = '';
+  if (!fr.length) { const d = el('div', 'shnone small', 'Add friends first. You can only share with friends.'); box.appendChild(d); }
+  for (const l of fr) {
+    const c = document.createElement('input'); c.type = 'checkbox'; c.checked = shSel.has(l.pub); c.setAttribute('aria-label', 'Share with ' + who(l.name));
+    c.onchange = () => { if (c.checked) shSel.add(l.pub); else shSel.delete(l.pub); sfx(c.checked ? 'on' : 'off'); shCount(); };
+    const r = personRow(l, '', [c], true); r.onclick = e => { if (e.target !== c) { c.checked = !c.checked; c.onchange(); } }; box.appendChild(r);
+  }
+  $('shAll').classList.toggle('hide', fr.length < 2); shCount();
+}
+function shCount() { const n = shSel.size, all = shFriends().length; $('shGo').disabled = !n || shSending; $('shGo').textContent = n ? 'Share with ' + n + (n === 1 ? ' friend' : ' friends') : 'Share'; $('shAll').textContent = n && n === all ? 'Select none' : 'Select all'; }
+$('shAll').onclick = () => { const fr = shFriends(); if (shSel.size === fr.length) shSel.clear(); else fr.forEach(l => shSel.add(l.pub)); sfx('ui'); shRender(); };
+const shClose = () => { $('shModal').classList.add('hide'); };
+$('shClose').onclick = $('shNo').onclick = () => { sfx('ui'); shClose(); };
+$('shGo').onclick = () => {
+  const d = shareData(shIdx), to = [...shSel].filter(p => lkOf(p)); if (!d || !to.length || shSending) return;
+  const str = JSON.stringify(d), CH = 50000, n = Math.ceil(str.length / CH);
+  if (str.length > 1400000) { notice('This map has too much in it to share', 'urgent'); return; }
+  if (!ws || ws.readyState !== 1) { notice('Not connected right now. Try again in a moment', 'urgent'); return; }
+  const sid = Math.random().toString(36).slice(2, 12).replace(/[^a-z0-9]/g, '') || 'sh' + Date.now().toString(36);
+  shSending = true; shCount();
+  for (let i = 0; i < n; i++) { try { ws.send(JSON.stringify({ t: 'shup', sid, n, i, c: str.slice(i * CH, (i + 1) * CH), to, idx: shIdx })); } catch (e) {} }
+  setTimeout(() => { if (shSending) { shSending = false; shCount(); } }, 8000);
+  sfx('ui');
+};
+function shareSent(m) { shSending = false; shClose(); if (m.n > 0) { sfx('ready'); notice('Shared ' + lvLabelOf(m.idx | 0) + ' with ' + m.n + (m.n === 1 ? ' friend' : ' friends'), ''); } else notice('Nobody to share it with', 'urgent'); }
+function shareRefused(m) { shSending = false; shCount(); notice(m.why === 'big' ? 'This map has too much in it to share' : 'Could not share this map. Try again', 'urgent'); }
+/* the other side: maps your friends shared with you */
+let shQ = [], shLater = new Set(), shCur = null, shGet = null;
+function sharesIn(list) {
+  let fresh = 0;
+  for (const v of list || []) { if (!v || typeof v.id !== 'string' || shQ.some(x => x.id === v.id) || blockedPub(v.from)) continue; shQ.push(v); fresh++; }
+  if (fresh && !inHome && S.mode === 'play' && !paused) { const v = shQ[shQ.length - 1]; notice('★ ' + who(v.name || nameOf(v.from) || 'A friend') + ' shared a map with you. Pause or go to the menu to see it', ''); sfx('ready'); }
+  shTry();
+}
+const shBusy = () => !$('shIn').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('shModal').classList.contains('hide') || !$('descModal').classList.contains('hide') || !!shGet;
+function shTry() {   // shown on the main menu, or when the game is paused: never in the middle of a run
+  if (shBusy() || !(inHome || paused)) return;
+  const v = shQ.find(x => !shLater.has(x.id)); if (v) shShow(v);
+}
+setInterval(shTry, 1200);
+function shShow(v) {
+  shCur = v; const nm = who(v.name || nameOf(v.from) || 'A friend'), lab = lvLabelOf(v.idx | 0), had = hasSoloSave(v.idx | 0);
+  $('shInT').textContent = nm + ' shared a map with you';
+  const wbox = $('shInWho'); wbox.textContent = ''; wbox.appendChild(personRow(lkOf(v.from) || { pub: v.from, name: v.name }, 'Shared ' + ago(v.t), [], true));
+  $('shInText').textContent = 'Their version of ' + lab + (v.n ? ', with ' + v.n + (v.n === 1 ? ' thing' : ' things') + ' built in it' : '') + '. Save it to your maps?';
+  $('shInMore').textContent = had ? 'Saving replaces your own ' + lab + ' (' + soloDesc(v.idx | 0, readSolo(SOLOKEY_P)) + ').' : 'It goes in your maps for ' + lab + '. Play it in a private or offline game.';
+  $('shIn').classList.remove('hide'); sfx('notice');
+}
+const shHide = () => { $('shIn').classList.add('hide'); };
+$('shInX').onclick = () => { sfx('ui'); if (shCur) shLater.add(shCur.id); shHide(); shCur = null; };   // (later: it comes back next time you play, until it runs out)
+$('shInYes').onclick = () => {
+  const v = shCur; if (!v) return; const nm = who(v.name || nameOf(v.from) || 'your friend'), lab = lvLabelOf(v.idx | 0), had = hasSoloSave(v.idx | 0); shHide(); sfx('ui');
+  askConfirm('Save ' + nm + '\'s map?', had ? 'This replaces your own ' + lab + ' (' + soloDesc(v.idx | 0, readSolo(SOLOKEY_P)) + '). It can not be undone.' : 'It goes in your maps as ' + lab + '.', had ? 'Replace and save' : 'Save it', () => shFetch(v), { yesClass: had ? 'danger' : 'go', no: 'Back', onNo: () => setTimeout(() => shShow(v), 60) });
+};
+$('shInNo').onclick = () => {
+  const v = shCur; if (!v) return; const nm = who(v.name || nameOf(v.from) || 'your friend'); shHide(); sfx('ui');
+  askConfirm('Discard ' + nm + '\'s map?', 'You will not be able to get it back. ' + nm + ' can share it again.', 'Discard', () => { shAnswer(v, false); notice('Discarded', ''); }, { no: 'Back', onNo: () => setTimeout(() => shShow(v), 60) });
+};
+function shAnswer(v, ok) { shQ = shQ.filter(x => x.id !== v.id); shCur = null; wsSend({ t: 'shans', id: v.id, ok: ok ? 1 : 0 }); setTimeout(shTry, 400); }
+function shFetch(v) {
+  if (!ws || ws.readyState !== 1) { notice('Not connected right now. It will be there next time', 'urgent'); return; }
+  shGet = { v, n: 0, a: [], t: setTimeout(() => { if (shGet && shGet.v === v) { shGet = null; notice('Could not get the map right now. It will be there next time', 'urgent'); } }, 20000) };
+  wsSend({ t: 'shget', id: v.id }); notice('Getting the map…', '');
+}
+function shPart(m) {
+  const g = shGet; if (!g || m.id !== g.v.id || !Number.isFinite(m.n) || !Number.isFinite(m.i) || typeof m.c !== 'string') return;
+  g.n = m.n; g.a[m.i] = m.c; if (g.a.filter(x => typeof x === 'string').length < g.n) return;
+  clearTimeout(g.t); shGet = null; let d = null; try { d = JSON.parse(g.a.join('')); } catch (e) {}
+  const v = g.v, i = v.idx | 0;
+  if (!d || !d.o || typeof d.o !== 'object' || !Array.isArray(d.o.buys) || (d.idx | 0) !== i) { notice('That map could not be read. It was discarded', 'urgent'); shAnswer(v, false); return; }
+  const nm = who(v.name || nameOf(v.from) || 'a friend'), cur = !inHome && S.slot === SOLO_BASE + i && !(party && party.role === 'guest');
+  const go = () => {
+    const o = d.o; o.from = nm; delete o.slot;
+    const was = S.slot === SOLO_BASE + i; if (was) S.slot = -1;   // (the old world of this level, even the one behind the main menu, is never saved over what you just got)
+    if (!saveCopy(SOLOKEY_P, { o, idx: i })) { notice('Could not save: there is no room left on this device', 'urgent'); if (was) S.slot = SOLO_BASE + i; return; }
+    if (typeof d.desc === 'string' && d.desc && !lvDescOf(i, SOLOKEY_P)) setLvDesc(i, SOLOKEY_P, d.desc);
+    loadSolo(); lvlRender(); shAnswer(v, true); sfx('big'); notice('Saved ' + nm + '\'s ' + lvLabelOf(i) + ' to your maps', '');
+    if (cur) rehost(() => { lastWorldStr = ''; loadMap(SOLO_BASE + i, soloNext()); });
+  };
+  if (cur) hostLeaveWarn(go, 'load the map you saved'); else go();
+}
+function shareGone(m) { if (shGet && shGet.v.id === m.id) { clearTimeout(shGet.t); shGet = null; } shQ = shQ.filter(x => x.id !== m.id); notice('That map is not there any more', 'urgent'); }
+function shareAnswered(m) { if (m.ok) { sfx('ready'); notice('★ ' + who(m.name || nameOf(m.pub) || 'Your friend') + ' saved your ' + lvLabelOf(m.idx | 0), ''); } }
+$('pShare').onclick = () => { if (S.slot >= SOLO_BASE) openShare(S.idx); };
+$('lvShare').onclick = () => openShare(optIdx());
 function saveDone() { saveBusy = false; const f = saveAfter; saveAfter = null; if (f) setTimeout(f, 250); }
 $('pSave').onclick = () => {   // keep a copy of the world you are in as your own map of this level (private and offline games share it). The copy is taken right now, so it is safe even if the game closes while you write
   const snap = copySnap(); if (!snap) return;
@@ -6440,6 +6603,7 @@ function lvlRender() {
   lvOptRender();
   const sl = !settings.mp && !(party && party.role === 'guest'); $('btnResetLvl').classList.toggle('hide', !sl || !hasSoloSave(soloLevel()));
   $('pSave').classList.toggle('hide', !((settings.mp && !party) || (party && party.role === 'guest')) || !S.world || S.slot < 0);
+  $('pShare').classList.toggle('hide', !S.world || S.slot < SOLO_BASE || !!(party && party.role === 'guest') || offlineOn());
   const canInv = !settings.mp && !(party && party.role === 'guest'); $('btnInviteF').classList.toggle('hide', !canInv || inHome); $('invT').textContent = party ? 'Invite more friends' : 'Invite friends to play'; $('invS').textContent = party ? 'Your world is open. Send another link' : 'Pick friends and send them a link to this world';
   $('pInvite').classList.toggle('hide', offlineOn()); pauseLayout();
 }
@@ -6503,6 +6667,7 @@ function lvSaveRender(i) {
   $('lvSaveLive').classList.toggle('on', !on); $('lvSaveSnap').classList.toggle('on', on); $('lvSaveLive').setAttribute('aria-pressed', !on); $('lvSaveSnap').setAttribute('aria-pressed', on);
   $('lvSaveNote').textContent = on ? 'Every game on this level starts from the saved moment. What you build, break or move after that is gone when you come back, unless you save again.' : 'What you build, break or move stays that way. Leave and come back, and the level is just how you left it.';
   $('lvSaveNow').classList.toggle('hide', !on || !here);
+  $('lvShare').classList.toggle('hide', offlineOn() || !!(party && party.role === 'guest') || !(hasSoloSave(i) || (here && S.world)));
 }
 $('lvSaveLive').onclick = () => { const i = optIdx(); if (lvSaveOn(i)) lvSaveSet(i, false); };
 $('lvSaveSnap').onclick = () => { const i = optIdx(); if (!lvSaveOn(i)) lvSaveSet(i, true); };
@@ -6564,7 +6729,8 @@ function homeWalletRender() { const k = wallet.c + ':' + wallet.g; if (homeWalle
 setInterval(() => { if (inHome) homeWalletRender(); }, 400);
 setInterval(() => { if (inHome && $('homeMp').checked) lvlRender(); }, 1000);
 let codeBack = null;
-function openCode() { $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $('cdNote').textContent = ''; $('codeModal').classList.remove('hide'); setTimeout(() => { try { $('cdIn').focus(); } catch (e) {} }, 30); }
+const codeOk = () => !inHome && S.mode === 'play' && !!S.world && !paused && $('settings').classList.contains('hide') && $('lvlModal').classList.contains('hide');   // (codes are only typed in the middle of a game, never from the menus)
+function openCode() { if (!codeOk()) return; $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $('cdNote').textContent = ''; $('codeModal').classList.remove('hide'); setTimeout(() => { try { $('cdIn').focus(); } catch (e) {} }, 30); }
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
@@ -6589,7 +6755,7 @@ $('csOk').onclick = () => $('codesModal').classList.add('hide'); addEventListene
 $('cdIn').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); else if (e.key === 'Escape') closeCode(); e.stopPropagation(); });
 $('codeModal').addEventListener('pointerdown', e => { if (e.target === $('codeModal')) closeCode(); });
 function onDoubleTap(el, fn) { let t = 0, x = 0, y = 0; el.addEventListener('click', e => { const n = performance.now(); if (n - t < 450 && Math.hypot(e.clientX - x, e.clientY - y) < 40) { t = 0; fn(); } else { t = n; x = e.clientX; y = e.clientY; } }); }
-onDoubleTap($('homeWallet'), openCode);   // (the coins in the game are handled with the map info: see infoPop)
+/* (codes are typed only during a game: double-tap the coins in the game. The coins on the main menu do not open it) */
 
 /* ================= networking ================= */
 /* The little bubble at the top says two plain things. The word is the kind of game: Public or Private. The dot is the connection: green = connected, orange = connecting, red = not connected. */
@@ -6795,7 +6961,7 @@ function onBin(buf) {   // compact position update: [1][slot u16] then per playe
   for (let off = 3; off + 12 <= buf.byteLength; off += 12) {
     const id = dv.getUint32(off, true);
     if (id === myId) continue;
-    const x = dv.getUint16(off + 4, true) * 2, y = dv.getUint16(off + 6, true), vx = dv.getInt8(off + 8) * 5, vy = dv.getInt8(off + 9) * 20, st = dv.getUint16(off + 10, true);
+    const x = dv.getUint16(off + 4, true) * 2 - P.POFF, yv = dv.getUint16(off + 6, true), y = yv >= 65534 ? yv : yv - P.POFF, vx = dv.getInt8(off + 8) * 5, vy = dv.getInt8(off + 9) * 20, st = dv.getUint16(off + 10, true);
     let o = others.get(id);
     if (!o) { o = newOther('', '#ccc', '#fff', 0); others.set(id, o); }
     if (y === 65534) { if (o.seen) { o.mx = o.cx; o.my = o.cy; o.mt = t; } o.seen = 0; o.dead = 0; o.t0 = 0; continue; }   // moved out of range: hide, no effects
@@ -6934,17 +7100,23 @@ function onMsg(m) {
     case 'texthold': notice('Slow down a little: a few messages at a time', ''); break;
     case 'inv': partyInvited(m); break;
     case 'ask': askedToJoin(m); break;
+    case 'shr': sharesIn(m.list); break;
+    case 'shsent': shareSent(m); break;
+    case 'shno': shareRefused(m); break;
+    case 'shd': shPart(m); break;
+    case 'shgone': shareGone(m); break;
+    case 'shres': shareAnswered(m); break;
     case 'asksent': notice('Asked ' + who(nameOf(m.pub) || 'your friend') + ' if you can join', ''); break;
     case 'askno': notice(who(nameOf(m.pub) || 'Your friend') + ' is not in a private game any more', ''); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
-    case 'pobj': S.buildAt = performance.now(); if (m.bot) { if (S.world && validMisc(m.g) && m.g[0] === 'tl') { addMisc(S.world, m.g, !m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)); if (!m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)) sfx('ui'); } break; } { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1 }); });
+    case 'pobj': S.buildAt = performance.now(); if (m.bot) { if (S.world && validMisc(m.g) && m.g[0] === 'tl') { addMisc(S.world, m.g, !m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)); if (!m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)) sfx('ui'); } break; } { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1, o: m.o }); });
       if (!S.world || !shared() || !validMisc(m.g) || (!party && m.g[0] !== 'tl' && !pubTake('m', m.g))) break;   // (a terrain change is absolute, so applying it twice does no harm)
       if (m.g[0] === 'tl' && m.g[3] === -1) { addMisc(S.world, m.g, true); dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); wDirty = true; break; }   // somebody put a tile back the way it was: nothing to remember
       if (m.g[0] === 'tl') { dropTileRecords(m.g[1], m.g[2]); S.mine.delete(m.g[2] * S.world.W + m.g[1]); }
-      addBook(m.g[0], m.g[1], m.g[2]); addMisc(S.world, m.g, true); { S.boughtMisc.push(m.g.slice(0, m.g[0] === 'por' ? 6 : m.g[0] === 'rope' ? 5 : 4)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
-    case 'pdel': { if (!S.world || !shared() || !validDel(m.g) || (!party && !P.coordDel(m.g) && !pubTake('d', m.g))) break; S.buildAt = performance.now(); if (applyDelRec(m.g, !m.bulk && !m.lost) || m.lost) { delBook(m.g); wDirty = true; if (!m.bulk) sfx('pop'); } break; }   // somebody deleted something here
-    case 'pgate': { S.buildAt = performance.now(); if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(m.g.slice(0, 5)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
-    case 'pb': S.buildAt = performance.now(); (m.props || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1 }); }); (m.gates || []).forEach(q => onMsg({ t: 'pgate', g: q, bulk: 1 })); (m.misc || []).forEach(q => onMsg({ t: 'pobj', g: q, bulk: 1 })); (m.cps || []).forEach(q => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1 }); }); (m.dels || []).forEach(q => onMsg({ t: 'pdel', g: q, bulk: 1 })); sfx('big'); break;
+      addBook(m.g[0], m.g[1], m.g[2]); addMisc(S.world, m.g, true); { S.boughtMisc.push(ownSet(m.g.slice(0, m.g[0] === 'por' ? 6 : m.g[0] === 'rope' ? 5 : 4), m.o)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
+    case 'pdel': { if (!S.world || !shared() || !validDel(m.g) || (!party && !P.coordDel(m.g) && !pubTake('d', m.g))) break; S.buildAt = performance.now(); if (applyDelRec(m.g, !m.bulk && !m.lost) || m.lost) { delBook(m.g, m.o); wDirty = true; if (!m.bulk) sfx('pop'); } break; }   // somebody deleted something here
+    case 'pgate': { S.buildAt = performance.now(); if (!S.world || !shared() || !validGate(m.g) || (!party && !pubTake('g', m.g))) break; addGate(S.world, m.g); { S.boughtGates.push(ownSet(m.g.slice(0, 5), m.o)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) sfx('big'); break; }
+    case 'pb': S.buildAt = performance.now(); { const ow = m.ow || {}, o = (k, i) => Array.isArray(ow[k]) ? ow[k][i] : undefined; (m.props || []).forEach((q, i) => { if (Array.isArray(q)) onMsg({ t: 'padd', k: q[0], x: q[1], y: q[2], bulk: 1, o: o('props', i) }); }); (m.gates || []).forEach((q, i) => onMsg({ t: 'pgate', g: q, bulk: 1, o: o('gates', i) })); (m.misc || []).forEach((q, i) => onMsg({ t: 'pobj', g: q, bulk: 1, o: o('misc', i) })); (m.cps || []).forEach((q, i) => { if (Array.isArray(q)) onMsg({ t: 'pcp', x: q[0], y: q[1], bulk: 1, o: o('cps', i) }); }); (m.dels || []).forEach((q, i) => onMsg({ t: 'pdel', g: q, bulk: 1, o: o('dels', i) })); } sfx('big'); break;
     case 'pno': {   // the world has no room for that one: it is taken back and paid back
       const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.local && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y);
       if (d) { const i = S.bought.indexOf(d.brec); if (i >= 0) S.bought.splice(i, 1); d.bought = false; d.gone = true; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; const it = SHOP.find(q => q.kind === d.kind && !q.misc); if (it) { wallet.c += it.c; wallet.g += it.g; saveWallet(); } wDirty = true; }
@@ -6952,8 +7124,8 @@ function onMsg(m) {
       if (placing) cancelPlacing(true);
       break; }
     case 'puid': { const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y); if (d) { adoptUid(w, d, m.u); d.srvU = true; } break; }
-    case 'padd': { S.buildAt = performance.now(); if (!S.world || !shared() || !P.propDims(m.k | 0).half || mapBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) d.brec = rec; S.bought.push(rec); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
-    case 'pcp': { S.buildAt = performance.now(); if (!S.map || !shared() || mapTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; addBook('c', m.x, m.y); S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push([m.x, m.y]); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
+    case 'padd': { S.buildAt = performance.now(); if (!S.world || !shared() || !P.propDims(m.k | 0).half || mapBlock(m.x, m.y)) break;   /* (every one counts, even several put down on the very same spot) */ const d = P.addProp(S.world, m.k | 0, m.x, m.y); if (d) { d.sleep = false; d.bought = true; if (m.u !== undefined) { adoptUid(S.world, d, m.u); d.srvU = true; } } { const rec = [m.k | 0, m.x | 0, m.y | 0]; if (d) { d.brec = rec; if (Number.isFinite(m.o)) d.ownTag = m.o >>> 0; } S.bought.push(ownSet(rec, m.o)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } if (!m.bulk) { burst(m.x, m.y, ['#fff', '#ffd23d'], 10, 140, 60); ring(m.x, m.y, '#fff', 4, 34, 0.4); } break; }
+    case 'pcp': { S.buildAt = performance.now(); if (!S.map || !shared() || mapTile(m.x, m.y) || (!party && !pubTake('c', [m.x | 0, m.y | 0]))) break; addBook('c', m.x, m.y); S.map.checkpoints.push([m.x, m.y]); { S.boughtCps.push(ownSet([m.x, m.y], m.o)); if (!party || party.role === 'guest') S.rcvN++; wDirty = true; } burst((m.x + 0.5) * TS, m.y * TS - 60, ['#46d17a', '#fff'], 10, 160, 60); break; }
     case 'wsnap': if (!party) saveSnap(m); break;
     case 'ready': S.worldReady = true; break;
     case 'pong': if (typeof m.c === 'number') { const r = performance.now() - m.c; if (r >= 0 && r < 5000) { NET.rtt = NET.rtt * 0.7 + r * 0.3; NET.rttLo = Math.min(NET.rttLo, r); NET.rttLast = r; } if (m.c > NET.pongC) { NET.pongC = m.c; NET.pongAt = performance.now(); } } break;   // (how long a message takes to the server and back)   // (the server has sent everything around you: the world is complete)
@@ -6968,7 +7140,7 @@ function onMsg(m) {
     case 'rebuild': if (m.rs && m.b && S.world && S.mode === 'play') {   // this device's world had drifted from the server's: here is the real one, put in place without moving you
         const fresh = () => { S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; };
         if (party && party.role === 'guest') { if (!m.priv) break; party.priv = Object.assign({}, party.priv, m.b); reloadKeep(() => { fresh(); loadMap(S.slot, S.nextAt); }); }
-        else if (party && party.role === 'host') { if (!m.priv) break; S.bought = m.b.props || []; S.boughtGates = m.b.gates || []; S.boughtMisc = m.b.misc || []; S.boughtCps = m.b.cps || []; S.dels = m.b.dels || []; saveWorld(true); reloadKeep(() => { fresh(); loadMap(S.slot, S.nextAt); }); }
+        else if (party && party.role === 'host') { if (!m.priv) break; S.bought = m.b.props || []; S.boughtGates = m.b.gates || []; S.boughtMisc = m.b.misc || []; S.boughtCps = m.b.cps || []; S.dels = m.b.dels || []; ownApply({ props: S.bought, gates: S.boughtGates, misc: S.boughtMisc, cps: S.boughtCps, dels: S.dels }, m.b.ow); saveWorld(true); reloadKeep(() => { fresh(); loadMap(S.slot, S.nextAt); }); }
         else if (!party && !inSolo() && !m.priv) reloadKeep(() => { S.pendingBuild = { slot: S.slot, b: m.b }; fresh(); loadMap(S.slot, S.nextAt); });
         break; }
       if (m.priv && party && party.role === 'guest' && m.b && S.world) { party.priv = Object.assign({}, party.priv, m.b); S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break; }   // (the host's world has now all arrived: load it again, complete)
@@ -7020,7 +7192,7 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
   }
   lastSend = { x: x, y: y, vx: qx, vy: qy, g: g, d: d, t: t, pr: pr, pv: pv };
   const buf = new ArrayBuffer(13), dv = new DataView(buf);
-  dv.setUint8(0, 0x70); dv.setUint16(1, S.slot & 0xFFFF, true); dv.setUint16(3, clamp(x >> 1, 0, 65534), true); dv.setUint16(5, d ? 65535 : clamp(y, 0, 65533), true);
+  dv.setUint8(0, 0x70); dv.setUint16(1, S.slot & 0xFFFF, true); dv.setUint16(3, clamp((x + P.POFF) >> 1, 0, 65534), true); dv.setUint16(5, d ? 65535 : clamp(y + P.POFF, 0, 65533), true);   // (shifted by P.POFF, so the open air left of and above the map fits)
   dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true); dv.setUint8(11, pr | (pv && !d ? 2 : 0)); dv.setInt8(12, d ? 0 : clamp(Math.round(rvx / 5), -127, 127));   // (2: that speed is how hard you push something that holds you back, not how fast you move: the server pushes with it, everybody else sees you standing against it)
   ws.send(buf);
 }
@@ -7866,7 +8038,7 @@ function renderInner(dt, nowT) {
   let shx = 0, shy = 0;
   if (S.shake > 0) { S.shake -= dt; const a = Math.min(1, S.shake * 4) * 7; shx = (Math.random() - 0.5) * a; shy = (Math.random() - 0.5) * a; }
   const ww = S.world.W * TS;
-  const cx = ww > vw ? clamp(S.camx, vw / 2 - 3 * TS, ww - vw / 2 + 3 * TS) : ww / 2;
+  const E = P.OOB * TS, cx = ww + 2 * E > vw ? clamp(S.camx, vw / 2 - E - 3 * TS, ww + E - vw / 2 + 3 * TS) : ww / 2;   // (the view follows you out into the open air around the map, up to the far walls)
   const camL = cx - vw / 2 + shx, camT = S.camy - vh / 2 + shy;
   S.vis = { l: camL, t: camT, r: camL + vw, b: camT + vh };
 
@@ -7881,7 +8053,8 @@ function renderInner(dt, nowT) {
   }
   // the lava sea at the very bottom, and the edge of the world on the sides
   { // the lava sea follows the land: it sits right under the level, wherever you are
-    const fl = S.map.floorY, xa = Math.max(0, Math.floor(camL / TS) - 1), xb = Math.min(S.world.W - 1, Math.ceil((camL + vw) / TS) + 1);
+    const fl0 = S.map.floorY, WW = S.world.W, fl = { length: 0 }, xa = Math.floor(camL / TS) - 1, xb = Math.ceil((camL + vw) / TS) + 1;   // (it goes on forever, past both edges of the map)
+    for (let x = xa; x <= xb; x++) fl[x] = fl0[x < 0 ? 0 : x >= WW ? WW - 1 : x];   // (just the columns on the screen)
     let low = 0; for (let x = xa; x <= xb; x++) low = Math.max(low, fl[x] * TS);
     if (camT + vh > low - 60) {
       ctx.beginPath(); ctx.moveTo(xa * TS, camT + vh + 40);
@@ -7893,8 +8066,9 @@ function renderInner(dt, nowT) {
     }
   }
   ctx.fillStyle = 'rgba(0,0,0,.55)';
-  if (camL < -2 * TS) ctx.fillRect(camL - 10, camT - 10, -2 * TS - camL + 10, vh + 20);
-  if (camL + vw > ww + 2 * TS) ctx.fillRect(ww + 2 * TS, camT - 10, camL + vw - ww - 2 * TS + 10, vh + 20);
+  { const E = P.OOB * TS; if (camL < -E) ctx.fillRect(camL - 10, camT - 10, -E - camL + 10, vh + 20);   // (the walls far out past the map, and the ceiling far above it)
+    if (camL + vw > ww + E) ctx.fillRect(ww + E, camT - 10, camL + vw - ww - E + 10, vh + 20);
+    if (camT < -E) ctx.fillRect(camL - 10, camT - 10, vw + 20, -E - camT); }
   drawTiles(camL, camT, vw, vh);
   drawSpawn(); drawCheckpoints(camL, camT, vw, vh); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawPowers(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh); drawGhost(dt, nowT);
   if (S.beaconOn && beaconOK()) drawBeacon(camL, camT, vw, vh, sc);
@@ -8259,7 +8433,7 @@ function fillTimerPop(rem) {
 function infoPop() { const el = $('tpop'); const open = el.classList.contains('hide'); el.classList.toggle('hide', !open); if (open) { fillTimerPop(S.nextAt - nowMs()); sfx('ui'); } }
 let coinTapT = 0;   // (a tap on the coins waits a moment: a second tap opens the code box instead, and the map info never shows)
 $('info').onclick = e => { if (e.target.closest('#linkpill,#tpop')) return; e.stopPropagation();
-  if (e.target.closest('#coinpill')) { if (coinTapT) { clearTimeout(coinTapT); coinTapT = 0; $('tpop').classList.add('hide'); openCode(); } else coinTapT = setTimeout(() => { coinTapT = 0; infoPop(); }, 330); return; }
+  if (e.target.closest('#coinpill')) { if (coinTapT) { clearTimeout(coinTapT); coinTapT = 0; if (codeOk()) { $('tpop').classList.add('hide'); openCode(); } } else coinTapT = setTimeout(() => { coinTapT = 0; infoPop(); }, 330); return; }
   infoPop(); };
 // the map details open as a big card over everything (tap outside it, the X, or Esc to close)
 { const bk = document.createElement('div'); bk.id = 'tpopBack'; bk.className = 'hide'; document.body.appendChild(bk); const tp = $('tpop'); bk.appendChild(tp);
@@ -8288,7 +8462,7 @@ if (params && params.get('test')) window.__d = { NET, addGate, SONGS, ui: { star
     AU.ctx = oc; AU.mus = out; AU.song = sg; AU.style = kind; AU.melody = genMelody(sg, MOOD[kind]);
     try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += songBeats(sg) * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
     const buf = await oc.startRendering(); return Array.from(buf.getChannelData(0));
-  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
+  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();

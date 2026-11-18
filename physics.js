@@ -36,9 +36,10 @@
   }
   const killYAt = (w, x) => { const f = w.map.floorY; return f ? f[clamp(Math.floor(x / TS), 0, w.W - 1)] * TS : w.map.killY; };
 
+  const OOB = 100, POFF = (OOB + 2) * TS;   // (POFF: positions sent between devices are shifted by this much, so the open air left of and above the map still fits in them)   // room to explore around the map: 100 blocks of open air on each side and above it, before the walls and the ceiling
   function tile(w, tx, ty) {
-    if (tx < 0 || tx >= w.W || ty < 0) return 1;      // the world is a closed box: solid walls on both sides and a solid ceiling (only the bottom is open, and it kills)
-    if (ty >= w.H) return 0;
+    if (tx < -OOB || tx >= w.W + OOB || ty < -OOB) return 1;   // the world is a closed box, a good way out past the map: solid walls far out on both sides and a solid ceiling far above (the bottom is open, and the lava there goes on forever)
+    if (tx < 0 || tx >= w.W || ty < 0 || ty >= w.H) return 0;
     return w.grid[ty * w.W + tx];
   }
 
@@ -912,7 +913,7 @@
       const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || ((!d._pl || !plankMoving(w, d)) && !d._pad));
       d.st = still ? (d.st || 0) + dt : 0;
       const burn = lavaOf.has(d);
-      if (burn || d.y > killYAt(w, d.x) || d.x < 0 || d.x > w.W * TS || d.y < 0 || burnZone(w, d)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || zoneP(w.map, d.x, d.y, 0) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); }   // lost for good: this map will not give it back
+      if (burn || d.y > killYAt(w, d.x) || d.x < -OOB * TS || d.x > (w.W + OOB) * TS || d.y < -OOB * TS || burnZone(w, d)) {   /* (lava, off the map, or into the start zone, where nothing may be left: it burns up for good) */ d.bx = d.x; d.by = d.y; d.bl = burn || zoneP(w.map, d.x, d.y, 0) ? 1 : 0; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); }   // lost for good: this map will not give it back
     }
     // a pile goes to sleep together, once every piece of it has been still for a moment
     const root = d => { while (d._uf !== d) { d._uf = d._uf._uf; d = d._uf; } return d; };   // (which pile each thing belongs to: every thing points the way to its pile's first piece)
@@ -1140,6 +1141,22 @@
   }
   function addCancel(L, k, x, y) { const d = L.dels; if (!d) return; for (let i = d.length - 1; i >= 0; i--) if (d[i][0] === k && d[i][1] === x && d[i][2] === y) d.splice(i, 1); }   // (something new is built where one was deleted long ago: that old note must never take the new one away)
   function normBuild(L) { const d = L.dels; if (!d) return L; for (let i = d.length - 1; i >= 0; i--) if (Array.isArray(d[i]) && coordDel(d[i]) && delCancel(L, d[i])) d.splice(i, 1); return L; }
+  /* Who built what. Every thing built in a world (a crate, a gate, a flag, dirt, a deletion...) belongs to the player who made it, by their own number (never their name).
+     The world keeps this as an owner book: for each record, the numbers of whoever built one there (several, when several are on the very same spot). It goes everywhere
+     the world goes: the server, saves, guests, shared copies. Limits are counted from it, so leaving, coming back or sharing never gives anybody extra. */
+  const BOOK_K = { props: 'p', gates: 'g', misc: 'm', cps: 'c', dels: 'd' };
+  function bkey(k, q) { return k + ':' + q.join(','); }
+  function bookAdd(book, k, q, tag) { const key = bkey(k, q), a = book[key] || (book[key] = []); a.push(tag >>> 0); return book; }
+  function bookDel(book, k, q, tag) { const key = bkey(k, q), a = book[key]; if (!a) return; const i = tag !== undefined && a.indexOf(tag >>> 0) >= 0 ? a.indexOf(tag >>> 0) : 0; a.splice(i, 1); if (!a.length) delete book[key]; }
+  function bookReader(book) {   // reads owners off a book in record order: each record of the same kind and place takes the next number
+    const used = new Map(), ok = book && typeof book === 'object';
+    return (k, q) => { if (!ok) return undefined; const key = bkey(k, q), a = book[key]; if (!Array.isArray(a)) return undefined; const n = used.get(key) | 0; used.set(key, n + 1); const t = a[n]; return Number.isFinite(t) ? t >>> 0 : undefined; };
+  }
+  function bookClean(book, L) {   // a book from outside: only numbers, only for records the world really has, never more owners than records
+    const out = {}, rd = bookReader(book);
+    for (const name in BOOK_K) for (const q of (L[name] || [])) { if (!Array.isArray(q)) continue; const t = rd(BOOK_K[name], q); if (t !== undefined) bookAdd(out, BOOK_K[name], q, t); }
+    return out;
+  }
   function buildHash(L) {   // a fingerprint of everything built and deleted in a world (the order does not matter): two devices with the same number have the same world
     let h = 0; const one = (k, q, n) => { let s = k; for (let i = 0; i < n; i++) s += ',' + (typeof q[i] === 'number' ? Math.round(q[i]) : q[i]); let f = 2166136261; for (let i = 0; i < s.length; i++) { f ^= s.charCodeAt(i); f = Math.imul(f, 16777619); } h = (h + (f >>> 0)) >>> 0; };
     (L.props || []).forEach(q => one('p', q, 3)); (L.gates || []).forEach(q => one('g', q, 5)); (L.misc || []).forEach(q => one('m', q, q[0] === 'por' || q[0] === 'rope' ? 5 : 4)); (L.cps || []).forEach(q => one('c', q, 2)); (L.dels || []).forEach(q => one('d', q, q.length));
@@ -1178,7 +1195,7 @@
      keep out of lava, and they are solid like anyone: they push crates, tip planks, cross rope bridges, press buttons and stand on plates ----- */
   const BSOLID = t => t === 1 || t === 3 || t === 4 || t === 6;
   const brnd = (a, b) => a + Math.random() * (b - a);
-  const botOob = (w, b) => b.x < 0 || b.x > w.W * TS || b.y < 0 || b.y > killYAt(w, b.x);
+  const botOob = (w, b) => b.x < -OOB * TS || b.x > (w.W + OOB) * TS || b.y < -OOB * TS || b.y > killYAt(w, b.x);
   function botRuns(w, A) {
     const out = []; let s = null;
     for (let x = A[0]; x < A[0] + A[2]; x++) { if (BSOLID(tile(w, x, A[1]))) { if (s === null) s = x; } else if (s !== null) { out.push([s, x - 1]); s = null; } }
@@ -1687,7 +1704,7 @@
     return '';
   }
   const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
-  const api = { VERSION: 192, piiCheck, PII_WHY, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 194, OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
