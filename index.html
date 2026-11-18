@@ -729,6 +729,12 @@
   @media (max-height:520px){.tpcard{padding:10px 14px}.tpdial{margin:6px 0 2px}.tpnum{font-size:40px;width:70px}.tpcol button{height:30px}.tpquick{margin:4px 0 2px}}
   .ntkinds{margin:0 0 6px 14px;padding-left:12px;border-left:3px solid var(--line)}.ntk{margin:2px 0 4px}
   .shcard{width:min(420px,100%);max-height:100%;display:flex;flex-direction:column;gap:8px;text-align:left}.shcard .chead{display:flex;align-items:center;justify-content:space-between;gap:8px}.shcard h3{margin:0}.shcard p{margin:0}
+  .ldr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:26px 10px;text-align:center}.ldr span{opacity:.8}
+  .ldr i,.btnspin::before{border-radius:50%;border:3px solid rgba(255,255,255,.18);border-top-color:var(--accent);animation:ldspin .8s linear infinite}.ldr i{width:32px;height:32px}
+  .btnspin::before{content:'';display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border-width:2px;border-color:rgba(255,255,255,.35);border-top-color:#fff}
+  @keyframes ldspin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.ldr i,.btnspin::before{animation-duration:2.4s}}
+  #shIn.loading #shInWho,#shIn.loading #shInText,#shIn.loading #shInMore,#shIn.loading .btns,#shIn.loading #shInX{display:none}#shIn:not(.loading) #shInLoad{display:none}
+  .shcard #shGo:disabled{opacity:.45;filter:grayscale(.6);cursor:default}
   .shbar{display:flex;align-items:center;justify-content:space-between;gap:8px}.shlist{overflow-y:auto;min-height:60px;max-height:min(46vh,360px);margin:0;padding-right:2px}.shlist .prs{padding:6px 10px;cursor:pointer}.shlist .prs input{width:24px;height:24px;flex:none;accent-color:#2fa463}.shlist .shnone{padding:14px;text-align:center;opacity:.75}
   .shfrom .prs{pointer-events:none}#shIn{z-index:17}#shModal{z-index:16}
   .ntfr{margin:-4px 0 8px 44px}.ntfr .plist{margin-top:6px}.ntfr .prs{padding:5px 8px}.ntfr .prs input{width:22px;height:22px;flex:none;accent-color:#2fa463}
@@ -864,7 +870,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 194; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 196; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1383,6 +1389,7 @@
   <div class="shfrom" id="shInWho"></div>
   <p id="shInText"></p>
   <p class="small dim" id="shInMore"></p>
+  <div class="ldr" id="shInLoad" role="status" aria-live="polite"><i></i><span>Getting the map…</span></div>
   <div class="btns"><button id="shInNo" type="button">Discard</button><button id="shInYes" class="go" type="button">Save it</button></div>
 </div></div>
 <div id="profModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="profName"><div class="card profcard">
@@ -1564,8 +1571,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=194"></script>
-<script src="physics.js?v=194"></script>
+<script src="maps.js?v=196"></script>
+<script src="physics.js?v=196"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -4464,6 +4471,7 @@ function foundList() {   // what the server says, plus anybody this device remem
 function linkMsg(m) {
   switch (m.t) {
     case 'links': {
+      linksSeen = true; if (!$('shModal').classList.contains('hide')) setTimeout(shRender, 0);   // (the share list fills in as soon as your friends arrive)
       const list = m.list || [], seen = new Set();
       for (const o of list) {
         seen.add(o.pub); let e = lkOf(o.pub);
@@ -6133,7 +6141,7 @@ $('dsOk').onclick = () => { sfx('ui'); dsClose(true); }; $('dsNo').onclick = () 
 $('lvDescBtn').onclick = () => { const i = lvSel; sfx('ui'); askDesc({ title: 'Describe ' + lvLabelOf(i), note: 'Only you see this. It shows for this level in private and offline games.', a: lvDescOf(i) }, r => { if (r) { setLvDesc(i, null, r.a); lvSelect(i); } }); };
 /* ----- sharing a map: your version of one of your levels (everything built in it, and who built what) goes to the friends you pick.
    They get a pop-up the next time they play, for up to 3 days, and choose to save it or not (each asked twice) ----- */
-let shIdx = -1, shSel = new Set(), shSending = false;
+let shIdx = -1, shSel = new Set(), shSending = false, shTimer = 0, linksSeen = false, shOpenT = 0, shLoadT = 0;
 function shareData(i) {   // what is shared: the level as it is now (or its saved moment, if it is kept as a saved state)
   const here = !inHome && S.world && S.slot === SOLO_BASE + i && !(party && party.role === 'guest');
   let o = null;
@@ -6147,14 +6155,18 @@ function openShare(i) {
   if (offlineOn()) { notice('Sharing needs the internet. Turn offline play off first', 'urgent'); return; }
   if (!ws || ws.readyState !== 1 || !(online || lobbyOn)) { notice('Not connected right now. Try again in a moment', 'urgent'); return; }
   if (!shareData(i)) { notice('Play this level first. There is nothing on it to share yet', 'urgent'); return; }
-  shIdx = i; shSel = new Set(); sfx('ui');
+  shIdx = i; shSel = new Set(); shSending = false; shOpenT = Date.now(); sfx('ui');
   $('shTitle2').textContent = 'Share ' + lvLabelOf(i); $('shSub').textContent = 'Your version of this level, with everything in it. Your base stays yours: nobody else can change it.';
   shRender(); $('shModal').classList.remove('hide');
 }
 function shFriends() { return lks.filter(l => l.ok && !blockedPub(l.pub)).sort((a, b) => (b.on | 0) - (a.on | 0) || String(a.name).localeCompare(String(b.name))); }
 function shRender() {
   const box = $('shList'), fr = shFriends(); box.textContent = '';
-  if (!fr.length) { const d = el('div', 'shnone small', 'Add friends first. You can only share with friends.'); box.appendChild(d); }
+  const loading = !fr.length && !linksSeen;
+  if (loading) { const d = el('div', 'ldr'); d.setAttribute('role', 'status'); d.appendChild(document.createElement('i')); d.appendChild(el('span', '', Date.now() - shOpenT > 10000 ? 'Still loading. Check your internet' : 'Loading your friends…')); box.appendChild(d); clearTimeout(shLoadT); shLoadT = setTimeout(() => { if (!$('shModal').classList.contains('hide') && !linksSeen) shRender(); }, 10500); }
+  else if (!fr.length) box.appendChild(el('div', 'shnone small', 'No friends to share with yet. Add friends in Friends on the main menu, then share.'));
+  document.querySelector('#shModal .shbar').classList.toggle('hide', !fr.length);
+  $('shGo').classList.toggle('hide', !fr.length); $('shNote').classList.toggle('hide', !fr.length); $('shNo').textContent = fr.length || loading ? 'Cancel' : 'Close';
   for (const l of fr) {
     const c = document.createElement('input'); c.type = 'checkbox'; c.checked = shSel.has(l.pub); c.setAttribute('aria-label', 'Share with ' + who(l.name));
     c.onchange = () => { if (c.checked) shSel.add(l.pub); else shSel.delete(l.pub); sfx(c.checked ? 'on' : 'off'); shCount(); };
@@ -6162,23 +6174,23 @@ function shRender() {
   }
   $('shAll').classList.toggle('hide', fr.length < 2); shCount();
 }
-function shCount() { const n = shSel.size, all = shFriends().length; $('shGo').disabled = !n || shSending; $('shGo').textContent = n ? 'Share with ' + n + (n === 1 ? ' friend' : ' friends') : 'Share'; $('shAll').textContent = n && n === all ? 'Select none' : 'Select all'; }
+function shCount() { const n = shSel.size, all = shFriends().length; $('shGo').disabled = !n || shSending; $('shGo').classList.toggle('btnspin', shSending); $('shGo').textContent = shSending ? 'Sharing…' : n ? 'Share with ' + n + (n === 1 ? ' friend' : ' friends') : 'Pick a friend'; $('shAll').textContent = n && n === all ? 'Select none' : 'Select all'; }
 $('shAll').onclick = () => { const fr = shFriends(); if (shSel.size === fr.length) shSel.clear(); else fr.forEach(l => shSel.add(l.pub)); sfx('ui'); shRender(); };
 const shClose = () => { $('shModal').classList.add('hide'); };
 $('shClose').onclick = $('shNo').onclick = () => { sfx('ui'); shClose(); };
 $('shGo').onclick = () => {
   const d = shareData(shIdx), to = [...shSel].filter(p => lkOf(p)); if (!d || !to.length || shSending) return;
-  const str = JSON.stringify(d), CH = 50000, n = Math.ceil(str.length / CH);
+  const str = JSON.stringify(d), CH = 24000, n = Math.ceil(str.length / CH);   // (small parts: even full of quotes, each fits what the server takes in one go)
   if (str.length > 1400000) { notice('This map has too much in it to share', 'urgent'); return; }
   if (!ws || ws.readyState !== 1) { notice('Not connected right now. Try again in a moment', 'urgent'); return; }
   const sid = Math.random().toString(36).slice(2, 12).replace(/[^a-z0-9]/g, '') || 'sh' + Date.now().toString(36);
   shSending = true; shCount();
   for (let i = 0; i < n; i++) { try { ws.send(JSON.stringify({ t: 'shup', sid, n, i, c: str.slice(i * CH, (i + 1) * CH), to, idx: shIdx })); } catch (e) {} }
-  setTimeout(() => { if (shSending) { shSending = false; shCount(); } }, 8000);
+  clearTimeout(shTimer); shTimer = setTimeout(() => { if (shSending) { shSending = false; shCount(); notice('Could not share right now. Try again in a minute', 'urgent'); } }, 15000);
   sfx('ui');
 };
-function shareSent(m) { shSending = false; shClose(); if (m.n > 0) { sfx('ready'); notice('Shared ' + lvLabelOf(m.idx | 0) + ' with ' + m.n + (m.n === 1 ? ' friend' : ' friends'), ''); } else notice('Nobody to share it with', 'urgent'); }
-function shareRefused(m) { shSending = false; shCount(); notice(m.why === 'big' ? 'This map has too much in it to share' : 'Could not share this map. Try again', 'urgent'); }
+function shareSent(m) { clearTimeout(shTimer); shSending = false; shClose(); if (m.n > 0) { sfx('ready'); notice('Shared ' + lvLabelOf(m.idx | 0) + ' with ' + m.n + (m.n === 1 ? ' friend' : ' friends'), ''); } else notice('Nobody to share it with', 'urgent'); }
+function shareRefused(m) { clearTimeout(shTimer); shSending = false; shCount(); notice(m.why === 'big' ? 'This map has too much in it to share' : 'Could not share this map. Try again', 'urgent'); }
 /* the other side: maps your friends shared with you */
 let shQ = [], shLater = new Set(), shCur = null, shGet = null;
 function sharesIn(list) {
@@ -6194,7 +6206,7 @@ function shTry() {   // shown on the main menu, or when the game is paused: neve
 }
 setInterval(shTry, 1200);
 function shShow(v) {
-  shCur = v; const nm = who(v.name || nameOf(v.from) || 'A friend'), lab = lvLabelOf(v.idx | 0), had = hasSoloSave(v.idx | 0);
+  $('shIn').classList.remove('loading'); shCur = v; const nm = who(v.name || nameOf(v.from) || 'A friend'), lab = lvLabelOf(v.idx | 0), had = hasSoloSave(v.idx | 0);
   $('shInT').textContent = nm + ' shared a map with you';
   const wbox = $('shInWho'); wbox.textContent = ''; wbox.appendChild(personRow(lkOf(v.from) || { pub: v.from, name: v.name }, 'Shared ' + ago(v.t), [], true));
   $('shInText').textContent = 'Their version of ' + lab + (v.n ? ', with ' + v.n + (v.n === 1 ? ' thing' : ' things') + ' built in it' : '') + '. Save it to your maps?';
@@ -6212,15 +6224,16 @@ $('shInNo').onclick = () => {
   askConfirm('Discard ' + nm + '\'s map?', 'You will not be able to get it back. ' + nm + ' can share it again.', 'Discard', () => { shAnswer(v, false); notice('Discarded', ''); }, { no: 'Back', onNo: () => setTimeout(() => shShow(v), 60) });
 };
 function shAnswer(v, ok) { shQ = shQ.filter(x => x.id !== v.id); shCur = null; wsSend({ t: 'shans', id: v.id, ok: ok ? 1 : 0 }); setTimeout(shTry, 400); }
+function shLoading(on) { $('shIn').classList.toggle('loading', on); if (on) $('shIn').classList.remove('hide'); else { $('shIn').classList.add('hide'); } }   // (the pop-up stays up with a spinner while the map comes in)
 function shFetch(v) {
   if (!ws || ws.readyState !== 1) { notice('Not connected right now. It will be there next time', 'urgent'); return; }
-  shGet = { v, n: 0, a: [], t: setTimeout(() => { if (shGet && shGet.v === v) { shGet = null; notice('Could not get the map right now. It will be there next time', 'urgent'); } }, 20000) };
-  wsSend({ t: 'shget', id: v.id }); notice('Getting the map…', '');
+  shGet = { v, n: 0, a: [], t: setTimeout(() => { if (shGet && shGet.v === v) { shGet = null; shLoading(false); notice('Could not get the map right now. It will be there next time', 'urgent'); } }, 20000) };
+  shCur = v; shLoading(true); wsSend({ t: 'shget', id: v.id });
 }
 function shPart(m) {
   const g = shGet; if (!g || m.id !== g.v.id || !Number.isFinite(m.n) || !Number.isFinite(m.i) || typeof m.c !== 'string') return;
   g.n = m.n; g.a[m.i] = m.c; if (g.a.filter(x => typeof x === 'string').length < g.n) return;
-  clearTimeout(g.t); shGet = null; let d = null; try { d = JSON.parse(g.a.join('')); } catch (e) {}
+  clearTimeout(g.t); shGet = null; shLoading(false); let d = null; try { d = JSON.parse(g.a.join('')); } catch (e) {}
   const v = g.v, i = v.idx | 0;
   if (!d || !d.o || typeof d.o !== 'object' || !Array.isArray(d.o.buys) || (d.idx | 0) !== i) { notice('That map could not be read. It was discarded', 'urgent'); shAnswer(v, false); return; }
   const nm = who(v.name || nameOf(v.from) || 'a friend'), cur = !inHome && S.slot === SOLO_BASE + i && !(party && party.role === 'guest');
@@ -6234,7 +6247,7 @@ function shPart(m) {
   };
   if (cur) hostLeaveWarn(go, 'load the map you saved'); else go();
 }
-function shareGone(m) { if (shGet && shGet.v.id === m.id) { clearTimeout(shGet.t); shGet = null; } shQ = shQ.filter(x => x.id !== m.id); notice('That map is not there any more', 'urgent'); }
+function shareGone(m) { if (shGet && shGet.v.id === m.id) { clearTimeout(shGet.t); shGet = null; shLoading(false); } shQ = shQ.filter(x => x.id !== m.id); notice('That map is not there any more', 'urgent'); }
 function shareAnswered(m) { if (m.ok) { sfx('ready'); notice('★ ' + who(m.name || nameOf(m.pub) || 'Your friend') + ' saved your ' + lvLabelOf(m.idx | 0), ''); } }
 $('pShare').onclick = () => { if (S.slot >= SOLO_BASE) openShare(S.idx); };
 $('lvShare').onclick = () => openShare(optIdx());
