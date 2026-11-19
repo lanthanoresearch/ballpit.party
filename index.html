@@ -870,7 +870,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 199; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 200; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1571,8 +1571,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=199"></script>
-<script src="physics.js?v=199"></script>
+<script src="maps.js?v=200"></script>
+<script src="physics.js?v=200"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2421,7 +2421,7 @@ const S = {
   mode: 'play', slot: -1, idx: 0, map: null, world: null, tg: null, b: null, t: 0, nextAt: 0, pending: -1, pendingNext: 0, fadeT0: 0,
   dead: 0, spawnT: 0, shake: 0, bLatch: 0, bReady: false, airP: null, away: false, crown: false, done: false, started: false, runStart: 0, finished: false, finT: 0, finMs: 0,
   camx: 0, camy: 0, water: [], deathPos: null, edgeWarn: false, mm: null,
-  lavaWarn: false, coinN: 0, coinGot: null, coinBest: 0, recordShown: false, fallWarn: false, wasWater: false, beaconOn: false, fallLvl: 0
+  lavaWarn: false, coinN: 0, pickLoc: null, coinBest: 0, recordShown: false, fallWarn: false, wasWater: false, beaconOn: false, fallLvl: 0
 };
 const inp = { left: false, right: false, jump: false };               // keyboard
 const tin = { ax: 0, jump: false, btnL: false, btnR: false, btnJ: false, jumpUntil: 0 };   // touch
@@ -2454,7 +2454,7 @@ function loadMap(slot, next) {
   }
   S.mm = { cw, ch, cell, seen: new Uint8Array(cw * ch) };
   S.world.focus = { x: m.start[0], y: m.start[1] };
-  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.coinGot = new Uint8Array(m.coins.length); S.powGot = {}; S.coinN = 0; S.own = {}; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; S.dels = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
+  S.cpArmed = -1; S.cpUsed = -1; S.cpFlash = 0; S.pickLoc = {}; S.coinN = 0; S.own = {}; S.bought = []; S.boughtCps = []; S.boughtGates = []; S.boughtMisc = []; S.dels = []; if (typeof pendingBuy !== 'undefined') pendingBuy = null; if (typeof placing !== 'undefined' && placing) cancelPlacing(true); S.fallWarn = false; S.wasWater = false;
   S.orig = S.world.grid.slice(); S.origTg = S.tg.slice(); S.mine = new Set();   /* how every tile began: a block that is put back the way it was needs no record at all */
   restoreWorld(slot);
   if (S.guest && party.priv) applyPartyProps(party.priv);
@@ -2775,25 +2775,44 @@ function touchFlags() {   // checkpoint flags: touch one and your next fall brin
     notice('Checkpoint! Your next fall or reset brings you back here', ''); return;
   }
 }
-/* power-ups: sushi = a minute of always-full boost, a flower bouquet = a minute of extra tall jumps. Each one comes back for you 5 to 10 minutes after you take it */
-const POW_T = 60000;
-const powBack = key => { let h = 7; const t = String(key); for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0; return (5 + h % 6) * 60000; };   // (a power-up comes back 5 to 10 minutes after you take it: each one has its own wait)
+/* power-ups: sushi = a minute of always-full boost, a flower bouquet = a minute of extra tall jumps */
+const POW_T = 60000, PICK_BACK = 10 * 60000;   // (coins, diamonds, sushi and flowers all come back 10 minutes after they are taken)
 const POW_INFO = [['Sushi!', 'Your boost is full for a minute: boost any time'], ['Flowers!', 'Super jumps for a minute']];
-function allPowers() {   // [x, y, type, key]: the map's own power-ups, then the ones people bought and set down (each comes back for you 5 to 10 minutes after you take it)
+/* pick-ups are shared in an online world: once somebody takes one it is gone for everyone until it comes back (the server says who got it first) */
+let pickTaken = new Map(); const pickPend = new Map();
+const pickShared = () => !!(online && ws && ws.readyState === 1 && shared() && S.slot >= 0 && !inHome);
+function pkGone(k) {
+  if (pickShared()) { if (pickPend.has(k)) return true; const t = pickTaken.get(k); return !!t && t > nowMs(); }
+  const t = S.pickLoc && S.pickLoc[k]; return !!t && t > Date.now();
+}
+function pickLocal(k, award) { S.pickLoc = S.pickLoc || {}; S.pickLoc[k] = Date.now() + PICK_BACK; wDirty = true; award(); }
+function pickGet(k, award) {   // the burst and sound come at once; what you get is given when the server says you were first
+  if (!pickShared()) { pickLocal(k, award); return; }
+  pickPend.set(k, { award, t: Date.now() }); wsSend({ t: 'take', k });
+}
+function pickAnswer(m, ok) {
+  const p = pickPend.get(m.k); pickPend.delete(m.k);
+  if (m.back) pickTaken.set(m.k, m.back);
+  if (!p) return;
+  if (ok) p.award();
+  else if (!m.back) pickLocal(m.k, p.award);   // (the server could not place it: just yours, so nothing is lost)
+  else notice('Somebody got that one first', '');
+}
+setInterval(() => { const t = Date.now(); for (const [k, p] of pickPend) if (t - p.t > 4000) { pickPend.delete(k); pickLocal(k, p.award); } }, 1000);   // (no answer: keep it rather than lose it)
+function allPowers() {   // [x, y, type, key]: the map's own power-ups, then the ones people bought and set down
   const out = [], ps = S.map.powers || [];
-  for (let i = 0; i < ps.length; i++) if (!buriedAt(ps[i][0], ps[i][1])) out.push([ps[i][0], ps[i][1], ps[i][2], i]);
+  for (let i = 0; i < ps.length; i++) if (!buriedAt(ps[i][0], ps[i][1])) out.push([ps[i][0], ps[i][1], ps[i][2], 'w' + i]);
   const pw = S.world && S.world.pwrs; if (pw) for (const p of pw) if (!p.gone && !buriedAt(p.x, p.y)) out.push([p.x, p.y, p.t, 'p' + p.tx + ',' + p.ty]);
   return out;
 }
 function collectPowers() {
-  const ps = allPowers(), b = S.b; if (!ps.length) return; const now = Date.now(); S.powGot = S.powGot || {};
+  const ps = allPowers(), b = S.b; if (!ps.length) return;
   for (let i = 0; i < ps.length; i++) {
-    const p = ps[i]; if (Math.abs(p[0] - b.x) > 40 || Math.abs(p[1] - b.y) > 40 || (S.powGot[p[3]] || 0) > now) continue;
+    const p = ps[i]; if (Math.abs(p[0] - b.x) > 40 || Math.abs(p[1] - b.y) > 40 || pkGone(p[3])) continue;
     const dx = p[0] - b.x, dy = p[1] - b.y; if (dx * dx + dy * dy > 34 * 34) continue;
-    S.powGot[p[3]] = now + powBack(p[3]);
-    if (p[2] === 0) S.pwSpeed = now + POW_T; else S.pwJump = now + POW_T;
-    sfx('ready'); burst(p[0], p[1], p[2] === 0 ? ['#ff8a6a', '#fff', '#3a2a20'] : ['#ff7ab8', '#fff', '#7ad36a', '#ffd23d'], 22, 240, 60); ring(p[0], p[1], p[2] === 0 ? '#7ff0ff' : '#ff7ab8', 6, 60, 0.5);
-    notice(POW_INFO[p[2]][0] + ' ' + POW_INFO[p[2]][1], '');
+    const ty = p[2];
+    sfx('ready'); burst(p[0], p[1], ty === 0 ? ['#ff8a6a', '#fff', '#3a2a20'] : ['#ff7ab8', '#fff', '#7ad36a', '#ffd23d'], 22, 240, 60); ring(p[0], p[1], ty === 0 ? '#7ff0ff' : '#ff7ab8', 6, 60, 0.5);
+    pickGet(p[3], () => { const now = Date.now(); if (ty === 0) S.pwSpeed = now + POW_T; else S.pwJump = now + POW_T; notice(POW_INFO[ty][0] + ' ' + POW_INFO[ty][1], ''); });
   }
 }
 function buriedAt(x, y) {   // built ground (dirt, ice and the rest) over a coin, diamond or power-up hides it: dig it out to get it
@@ -2805,12 +2824,11 @@ function collectCoins() {
   let lo = 0, hi = cs.length; const x0 = b.x - 36;
   while (lo < hi) { const mid = (lo + hi) >> 1; if (cs[mid][0] < x0) lo = mid + 1; else hi = mid; }
   for (let i = lo; i < cs.length && cs[i][0] <= b.x + 36; i++) {
-    if (S.coinGot[i]) continue;
+    if (pkGone('c' + i)) continue;
     const c = cs[i], dx = c[0] - b.x, dy = c[1] - b.y; if (dx * dx + dy * dy <= 32 * 32 && buriedAt(c[0], c[1])) continue;
     if (dx * dx + dy * dy > 32 * 32) continue;
-    S.coinGot[i] = 1; wDirty = true;
-    const v = c[2] === 2 ? 25 : c[2] === 1 ? 5 : 1; S.coinN += v;
-    wallet.c += v; if (c[2] === 2) wallet.g++; saveWallet();   // coins and diamonds you can spend in the shop
+    const v = c[2] === 2 ? 25 : c[2] === 1 ? 5 : 1, gem = c[2] === 2;
+    pickGet('c' + i, () => { S.coinN += v; wallet.c += v; if (gem) wallet.g++; saveWallet(); wDirty = true; });   // coins and diamonds you can spend in the shop
     sfx(c[2] === 2 ? 'gem' : c[2] === 1 ? 'big' : 'coin');
     burst(c[0], c[1], c[2] === 2 ? ['#7af0ff', '#fff', '#c58bff'] : ['#ffd23d', '#fff3a0'], c[2] ? 14 : 6, c[2] ? 220 : 120, 40);
   }
@@ -3204,8 +3222,8 @@ function worldObj() {   // the world exactly as it is right now: everything buil
     else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2 || Math.abs(d.rot) > 0.01 || Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1) dyn.push([i, r2(d.x), r2(d.y), 0, r2(d.vx), r2(d.vy), r2(d.rot), r2(d.av)]);
   }
   const see = w.see.map(q => [r2(q.ang), r2(q.av), r2(q.tilt)]);
-  const got = []; for (let i = 0; i < S.coinGot.length; i++) if (S.coinGot[i]) got.push(i);
-  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, room: S.slot < SOLO_BASE ? S.pubRoom : undefined, rcv: S.rcvN | 0, own: S.own, ow: bookOut(), dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), got, n: S.coinN };
+  const pickT = {}, nw = Date.now(); for (const k in S.pickLoc || {}) if (S.pickLoc[k] > nw) pickT[k] = S.pickLoc[k];
+  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, room: S.slot < SOLO_BASE ? S.pubRoom : undefined, rcv: S.rcvN | 0, own: S.own, ow: bookOut(), dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), pickT, n: S.coinN };
 }
 function saveWorld(force, snap) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
@@ -3239,7 +3257,7 @@ function restoreWorld(slot) {
     if (!pubW) (o.see || []).forEach((q, i) => { const e = w.see[i]; if (e && Array.isArray(q)) { e.ang = q[0] || 0; e.av = q[1] || 0; e.tilt = q[2] || 0; } });
     if (!pubW) (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
     if (!pubW) (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
-    (o.got || []).forEach(i => { if (i < S.coinGot.length) S.coinGot[i] = 1; });
+    { const nw = Date.now(); S.pickLoc = {}; if (o.pickT && typeof o.pickT === 'object') for (const k in o.pickT) if (+o.pickT[k] > nw && +o.pickT[k] < nw + PICK_BACK + 60000) S.pickLoc[k] = +o.pickT[k]; }   // (what you took comes back 10 minutes later, even across a reload)
     if (!pubW) (o.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(ownSet(q.slice(), who('d', q))); } });   // what you deleted stays deleted (in a public world the server has all of it: this device only mirrors it)
     S.seed = null;
 
@@ -6382,7 +6400,7 @@ function stopHosting() {
 let wantW = 0;
 function joinFriendPublic(f) {   // to the public world a friend is in
   const w = f.w | 0; if (w <= 0) return;
-  closeProfile(); wantW = w; sfx('ui');
+  closeEverything(); wantW = w; sfx('ui');
   if (inHome) { settings.mp = true; settings.offline = false; save(); enterGame(false); return; }
   if (paused) { paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); }
   if (!settings.mp || party || S.slot >= SOLO_BASE) { setMultiplayer(true); return; }
@@ -6396,6 +6414,14 @@ function askedToJoin(m) {   // a friend would like to join your private game
   if (!$('confirm').classList.contains('hide')) { notice(nm + ' would like to join your game. Invite them from the Invite button', ''); return; }
   askConfirm(nm + ' wants to join you', nm + ' would like to come to your private game. Invite them?', 'Invite', () => { try { ws.send(JSON.stringify({ t: 'inv', to: m.pub, keep: true })); } catch (e) {} if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } }, { yesClass: 'go', no: 'Not now' });
 }
+function closeEverything() {   // going to a friend's game: every menu, page and pop-up closes, and you are straight in
+  try { closeProfile(); } catch (e) {} try { closeInvites(); } catch (e) {} try { closeLevels(); } catch (e) {} try { toggleChat(false); } catch (e) {} try { toggleShop(false); } catch (e) {}
+  try { if (!$('settings').classList.contains('hide')) closeSettingsNow(); } catch (e) {}
+  for (const id of ['shModal', 'shIn', 'addModal', 'quickModal', 'giveModal', 'pickPop', 'codesModal', 'codeModal', 'wiModal', 'descModal', 'shareModal', 'tpModal', 'confirm', 'intro', 'srvStat', 'codeBox']) { const e = $(id); if (e) e.classList.add('hide'); }
+  try { if (!$('mmbig').classList.contains('hide')) $('mmbig').classList.add('hide'); } catch (e) {}
+  if (paused) { paused = false; $('pause').classList.add('hide'); clearInput(); }
+  try { if (placing) cancelPlacing(true); } catch (e) {}
+}
 function joinParty(hp, name) {
   if (party && party.host === hp) return;   // (already there)
   if (party && party.role === 'host') { if (S.map && S.slot >= 0) saveWorld(true); leaveParty(); }   // going to a friend's game ends the one you were hosting, and your own world is kept
@@ -6403,8 +6429,7 @@ function joinParty(hp, name) {
   if (party && party.role === 'guest') S.slot = -1;
   party = { role: 'guest', host: hp, name };
   if (inHome) { inHome = false; document.body.classList.remove('home'); $('home').classList.add('hide'); try { auWake(); } catch (e) {} reenter = true; firstEntry = false; nameUI(); resetTab(); }
-  if (paused) { paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); }
-  closeLevels(); closeInvites(); toggleChat(false); toggleShop(false);
+  closeEverything();
   retry = 0; setNet('connecting'); joinWorld(); lvlRender();
 }
 
@@ -7043,6 +7068,7 @@ function onMsg(m) {
     case 'dr': applyDoors(m); return;
     case 'update': forceUpdate(); return;   // the server only lets people with the same version in
     case 'welcome':
+      pickTaken = new Map(Array.isArray(m.taken) ? m.taken : []); pickPend.clear();
       { let u = null; try { u = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); } catch (e) {} if (u && u.m) setTimeout(() => wsSend({ t: 'use', u }), 600); }   // (the server's monthly counts, kept here in case it restarted and forgot them)
       { let c = null; try { c = JSON.parse(localStorage.getItem('ballrun4_fsub') || 'null'); } catch (e) {} if (c && typeof c === 'object') { const l = Object.keys(c).slice(0, 64).map(k => [k, c[k]]); if (l.length) setTimeout(() => wsSend({ t: 'fsubs', l }), 400); } }
       if (m.lobby) {   // connected from the main menu: friends work, but you are not in a world
@@ -7159,8 +7185,10 @@ function onMsg(m) {
       if (m.priv && party && party.role === 'guest' && m.b && S.world) { party.priv = Object.assign({}, party.priv, m.b); S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break; }   // (the host's world has now all arrived: load it again, complete)
       if (party || inSolo() || !m.b || !S.world) break;   // the server got this world's memory back from a player: load it again, as it really was
       S.pendingBuild = { slot: S.slot, b: m.b }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break;
+    case 'took': pickAnswer(m, !!m.mine); break;
+    case 'tookno': pickAnswer(m, false); break;
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
-      clockOff = m.now - Date.now(); setNetFk(m.slot, m.fk); if (forcedLeft === null) S.nextAt = m.next; if (m.build && !party) S.pendingBuild = { slot: m.slot, b: m.build }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; startTransition(m.slot, m.next); break;   // (a map that comes back has everything that was built on it, and is shown once the server has said where it all is)
+      clockOff = m.now - Date.now(); pickTaken = new Map(); pickPend.clear(); setNetFk(m.slot, m.fk); if (forcedLeft === null) S.nextAt = m.next; if (m.build && !party) S.pendingBuild = { slot: m.slot, b: m.build }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; startTransition(m.slot, m.next); break;   // (a map that comes back has everything that was built on it, and is shown once the server has said where it all is)
     case 'bj': case 'bl': case 'bp': remoteBotMsg(m); break;
     case 'bsay': { const bt = bots.find(b => b.id === m.id); if (bt) botTalk(bt, m.a !== undefined ? { k: 'msg', a: m.a | 0, b: m.b | 0 } : { k: 'msg', i: m.i | 0 }); break; }
     case 'fin': {
@@ -7771,7 +7799,7 @@ function drawPowers(camL, camT, vw, vh) {
   const ps = allPowers(); if (!ps.length) return; const now = Date.now(), t = S.t;
   for (let i = 0; i < ps.length; i++) {
     const p = ps[i]; if (p[0] < camL - 60 || p[0] > camL + vw + 60 || p[1] < camT - 60 || p[1] > camT + vh + 60) continue;
-    if (S.powGot && (S.powGot[p[3]] || 0) > now) continue;
+    if (pkGone(p[3])) continue;
     const bob = Math.sin(t * 2.4 + i) * 3, x = p[0], y = p[1] + bob, glow = 0.35 + 0.15 * Math.sin(t * 3 + i);
     const col = p[2] === 0 ? '127,240,255' : '255,122,184', gl = ctx.createRadialGradient(x, y, 2, x, y, R * 2.2); gl.addColorStop(0, 'rgba(' + col + ',' + (glow + 0.2) + ')'); gl.addColorStop(1, 'rgba(' + col + ',0)');
     ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, R * 2.2, 0, TAU); ctx.fill();
@@ -7782,12 +7810,12 @@ function drawPowers(camL, camT, vw, vh) {
   }
 }
 function drawCoins(camL, camT, vw, vh) {
-  const cs = S.map.coins, got = S.coinGot; if (!cs.length) return;
+  const cs = S.map.coins; if (!cs.length) return;
   let lo = 0, hi = cs.length; const xa = camL - 30;
   while (lo < hi) { const mid = (lo + hi) >> 1; if (cs[mid][0] < xa) lo = mid + 1; else hi = mid; }
   const t = S.t; ctx.lineWidth = 2; ctx.strokeStyle = INK;
   for (let i = lo; i < cs.length && cs[i][0] <= camL + vw + 30; i++) {
-    if (got[i]) continue;
+    if (pkGone('c' + i)) continue;
     if (buriedAt(cs[i][0], cs[i][1])) continue;   // (under built ground: hidden until it is dug out)
     const c = cs[i], y = c[1] + Math.sin(t * 3 + c[0] * 0.05) * 2.5;
     if (y < camT - 30 || y > camT + vh + 30) continue;
@@ -8327,7 +8355,7 @@ function drawMinimapBig() {
     if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) dotAt(q.x, q.y, o.color, dr >= 5 || settings.mmBigP ? sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length) : null, settings.mmBigP); });
   }
   if (z >= 1.5) { const ps = allPowers(), now = Date.now(), rr = Math.max(1.5, z * 0.22);   // (power-ups on the big map: drawn to scale like the coins, and gone at the same zoom as them)
-    for (let i = 0; i < ps.length; i++) { if (S.powGot && (S.powGot[ps[i][3]] || 0) > now) continue; const tx = ps[i][0] / TS, ty = ps[i][1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue;
+    for (let i = 0; i < ps.length; i++) { if (pkGone(ps[i][3])) continue; const tx = ps[i][0] / TS, ty = ps[i][1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue;
       if (rr >= 3.5) drawPowerIcon(g, X(tx), Y(ty), ps[i][2], rr * 2, 0); else { g.fillStyle = ps[i][2] ? '#ff7ab8' : '#7ff0ff'; g.beginPath(); g.arc(X(tx), Y(ty), rr, 0, TAU); g.fill(); } } }
   drawLinksOnMap(g, X, Y, 9, true, false);
   const v = S.view; if (v) { g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(X(v.l / TS), Y(v.t / TS), Math.max(6, v.w / TS * z), Math.max(6, v.h / TS * z)); }
@@ -8466,7 +8494,7 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, addGate, SONGS, ui: { start: () => startEdit(true), end: () => endEdit(), sel: (k, c) => uiSelect(k, c), size: v => uiResize(v), move: (k, x, y) => uiMoveBy(k, x, y), push: on => { settings.uiPush = on; relayUi(); }, rects: () => { const o = {}; for (const k in UIP) { const r = pieceRects(k)[0]; o[k] = r ? r.map(Math.round) : null; } o.feedTop = Math.round($("feed").getBoundingClientRect().top); o.lay = JSON.stringify(settings.uiL); return o; } }, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, hush: !!AU.hush, bar: AU.bar, t0: AU.songT0, ct: AU.ctx && AU.ctx.currentTime, prog: ($('npProg') || {}).style ? $('npProg').style.width : '', sbp: $('sbProg').style.width, npt: $('npTime').textContent, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
+if (params && params.get('test')) window.__d = { NET, addGate, pk: { buriedAt, pkGone, allPowers, pickShared, pend: () => pickPend.size, wal: () => wallet.c },  SONGS, ui: { start: () => startEdit(true), end: () => endEdit(), sel: (k, c) => uiSelect(k, c), size: v => uiResize(v), move: (k, x, y) => uiMoveBy(k, x, y), push: on => { settings.uiPush = on; relayUi(); }, rects: () => { const o = {}; for (const k in UIP) { const r = pieceRects(k)[0]; o[k] = r ? r.map(Math.round) : null; } o.feedTop = Math.round($("feed").getBoundingClientRect().top); o.lay = JSON.stringify(settings.uiL); return o; } }, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, hush: !!AU.hush, bar: AU.bar, t0: AU.songT0, ct: AU.ctx && AU.ctx.currentTime, prog: ($('npProg') || {}).style ? $('npProg').style.width : '', sbp: $('sbProg').style.width, npt: $('npTime').textContent, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
     const sg = SONGS[kind][idx], sr = 22050, secs = bars * songBeats(sg) * 60 / sg.bpm + 1.5, oc = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
     if (!AU.noiseBuf) auInit();
     const keep = { ctx: AU.ctx, mus: AU.mus, song: AU.song, style: AU.style, bar: AU.bar, melody: AU.melody };

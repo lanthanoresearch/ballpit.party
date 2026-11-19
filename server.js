@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 199;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 200;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -795,13 +795,25 @@ function simTick() {
 
 const okProp = q => (Array.isArray(q) && q.length === 3 && (q[0] | 0) >= 0 && (q[0] | 0) <= 7 && Number.isFinite(q[1]) && Number.isFinite(q[2]) ? [q[0] | 0, Math.round(q[1]), Math.round(q[2])] : null);
 const okGate = q => (Array.isArray(q) && q.length === 5 && q.every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 ? q.map(Math.round) : null);
-const okMisc = q => (Array.isArray(q) && q.length === 4 && (q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || q[0] === 'tl' || q[0] === 'pwr') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[0] === 'pwr' ? (q[3] ? 1 : 0) : Math.round(q[3])] : Array.isArray(q) && q.length === 4 && (q[0] === 'see' || q[0] === 'pad') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[3] < 0 ? -1 : q[3] > 0 ? 1 : 0] : (Array.isArray(q) && (q.length === 5 || q.length === 6) && q[0] === 'por' && q.slice(1).every(Number.isFinite) ? ['por', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])].concat(q.length === 6 ? [Math.max(0, Math.min(3, Math.round(q[5])))] : []) : null));
+const okMisc = q => Array.isArray(q) && q.length === 4 && q[0] === 'base' && q.slice(1).every(Number.isFinite) ? ['base', Math.round(q[1]), Math.round(q[2]), q[3] >>> 0]   // (a base, with its owner's number: it must come with the world, or nobody but the host would see it)
+  : Array.isArray(q) && q.length === 5 && q[0] === 'rope' && q.slice(1).every(Number.isFinite) ? ['rope', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])]
+  : (Array.isArray(q) && q.length === 4 && (q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || q[0] === 'tl' || q[0] === 'pwr') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[0] === 'pwr' ? (q[3] ? 1 : 0) : Math.round(q[3])] : Array.isArray(q) && q.length === 4 && (q[0] === 'see' || q[0] === 'pad') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[3] < 0 ? -1 : q[3] > 0 ? 1 : 0] : (Array.isArray(q) && (q.length === 5 || q.length === 6) && q[0] === 'por' && q.slice(1).every(Number.isFinite) ? ['por', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])].concat(q.length === 6 ? [Math.max(0, Math.min(3, Math.round(q[5])))] : []) : null));
 const okDel = q => (Array.isArray(q) && (((q[0] === 'b' || q[0] === 's' || q[0] === 'g' || q[0] === 'r') && q.length === 2 && Number.isFinite(q[1]) && q[1] >= 0 && q[1] < 4294967296) || ((q[0] === 'pad' || q[0] === 'por' || q[0] === 'c' || q[0] === 'base' || q[0] === 'pwr') && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2]))) ? (q.length === 2 ? [q[0], Math.round(q[1])] : [q[0], Math.round(q[1]), Math.round(q[2])]) : null);   // something removed with the delete tool
 const okCp = q => (Array.isArray(q) && q.length === 2 && Number.isFinite(q[0]) && Number.isFinite(q[1]) ? [Math.round(q[0]), Math.round(q[1])] : null);
 function send(p, obj) { if (p.ws.readyState === 1) p.ws.send(JSON.stringify(obj)); }
 function bcastFrom(room, from, obj) {   // something said by one player: to everyone else in the world, except anyone who blocked them (or whom they blocked)
   const s = JSON.stringify(obj);
   for (const q of room.players.values()) if (q !== from && q.ws.readyState === 1 && !(from.pub && q.pub && blocked(from.pub, q.pub))) q.ws.send(s);
+}
+/* ---------- coins, diamonds, sushi and flowers are shared in a world: whoever touches one first gets it, and it is gone for everybody until it comes back 10 minutes later ---------- */
+const PICK_BACK = 10 * 60000;
+const takenList = r => { const now = Date.now(), out = []; if (r.taken) for (const [k, t] of r.taken) { if (t > now) out.push([k, t]); else r.taken.delete(k); } return out; };
+function pickPos(r, k) {   // where a pick-up is: k is 'c<n>' (a coin or diamond of the map), 'w<n>' (sushi or flowers of the map) or 'p<tx>,<ty>' (power-ups somebody set down)
+  const m = roomMap(r);
+  if (/^c\d{1,6}$/.test(k)) { const c = m.coins[+k.slice(1)]; return c ? [c[0], c[1]] : null; }
+  if (/^w\d{1,4}$/.test(k)) { const q = (m.powers || [])[+k.slice(1)]; return q ? [q[0], q[1]] : null; }
+  if (/^p-?\d{1,6},-?\d{1,6}$/.test(k)) { const [tx, ty] = k.slice(1).split(',').map(Number); const w = r.world; if (!w) return [(tx + 0.5) * P.TS, (ty + 0.5) * P.TS]; const pw = (w.pwrs || []).find(q => q.tx === tx && q.ty === ty && !q.gone); return pw ? [pw.x, pw.y] : null; }
+  return null;
 }
 function broadcast(room, obj, except) {
   const s = JSON.stringify(obj);
@@ -925,7 +937,7 @@ wss.on('connection', (ws, req) => {
         if (online > peak) { peak = online; peakDirty = true; }
         if (online > usage.pkPl) { usage.pkPl = online; usage.pkPlAt = Date.now(); }
         send(p, {
-          t: 'welcome', id: p.id, room: room.id, mine: myFin && !room.priv ? myFin : 0, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
+          t: 'welcome', taken: takenList(room), id: p.id, room: room.id, mine: myFin && !room.priv ? myFin : 0, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), fk: room.fk | 0, next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
           build: room.priv ? undefined : bstate(room), priv: room.priv ? { back: room.priv.owner === p.id && room.priv.back ? 1 : 0, host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, ow: owBook(room.priv), hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub, nc: room.noCheats ? 1 : 0 } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, ot: o.otag || 0, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? Math.max(1, room.finishers.indexOf(o.id) + 1) : 0 }))   // (crown: what place they finished in)
@@ -991,6 +1003,14 @@ wss.on('connection', (ws, req) => {
       p.lastEmo = now;
       bcastFrom(p.room, p, { t: 'say', id: p.id, pub: p.pub, name: p.name, a, b });
       if (p.room.bots && p.room.bots.length) { const k = P.askKind('say', a, b); if (k) roomCtx(p.room).asks.push({ kind: k, x: p.x, y: p.y, id: p.id }); }
+    } else if (m.t === 'take') {   // picking something up: the first one there gets it (and only somebody really next to it)
+      const r = p.room; if (!r || p.dead || typeof m.k !== 'string' || m.k.length > 20) return;
+      const now = Date.now(); if (now - (p.takeT || 0) > 1000) { p.takeT = now; p.takeN = 0; } if (++p.takeN > 40) return;
+      const pos = pickPos(r, m.k); if (!pos) { send(p, { t: 'tookno', k: m.k }); return; }
+      const tk = r.taken || (r.taken = new Map());
+      if ((tk.get(m.k) || 0) > now || Math.hypot(pos[0] - p.x, pos[1] - p.y) > 420) { send(p, { t: 'tookno', k: m.k, back: tk.get(m.k) || 0 }); return; }
+      const back = now + PICK_BACK; tk.set(m.k, back);
+      broadcast(r, { t: 'took', k: m.k, back }, p); send(p, { t: 'took', k: m.k, back, mine: 1 });
     } else if (m.t === 'shup') {   // sharing one of your maps with friends: it comes in parts, then it is kept for each friend you picked
       if (!p.pub || typeof m.sid !== 'string' || !/^[a-z0-9]{6,16}$/.test(m.sid) || !Number.isFinite(m.n) || !Number.isFinite(m.i) || m.n < 1 || m.n > 30 || m.i < 0 || m.i >= m.n || typeof m.c !== 'string') return;
       const up = p.shUp || (p.shUp = {}); let u = up[m.sid];
@@ -1044,7 +1064,7 @@ wss.on('connection', (ws, req) => {
       const now = Date.now(); if (now - (p.lastPb || 0) < 180) return; p.lastPb = now;
       const B = bstate(r), e = {};
       const host = !!(r.priv && r.priv.owner === p.id), ow = {};   // (whose each one is: the builder's own, or, from the host of a private world, whoever the host's world says built it)
-      const take = (key, arr, ok, cap) => { if (!Array.isArray(m[key])) return; const out = [], os = [], given = host && m.ow && Array.isArray(m.ow[key]) ? m.ow[key] : null; m[key].slice(0, 25).forEach((q, i) => { const c = ok(q); if (c && arr.length < cap) { const t = given && Number.isFinite(given[i]) ? given[i] >>> 0 : p.otag >>> 0; arr.push(c); owAdd(B, P.BOOK_K[key], c, t); out.push(c); os.push(t); } }); if (out.length) { e[key] = out; ow[key] = os; } };
+      const take = (key, arr, ok, cap) => { if (!Array.isArray(m[key])) return; const out = [], os = [], given = host && m.ow && Array.isArray(m.ow[key]) ? m.ow[key] : null; m[key].slice(0, 25).forEach((q, i) => { const c0 = ok(q), c = c0 && c0[0] === 'base' && !host && c0[3] !== (p.otag >>> 0) ? null : c0;   /* (only the host's own world can bring somebody else's base) */ if (c && arr.length < cap) { const t = given && Number.isFinite(given[i]) ? given[i] >>> 0 : p.otag >>> 0; arr.push(c); owAdd(B, P.BOOK_K[key], c, t); out.push(c); os.push(t); } }); if (out.length) { e[key] = out; ow[key] = os; } };
       take('props', B.props, okProp, ROOM_PROPS); take('gates', B.gates, okGate, ROOM_GATES); take('misc', B.misc, okMisc, ROOM_MISC); take('cps', B.cps, okCp, ROOM_CPS); take('dels', B.dels, okDel, ROOM_DELS);
       (e.props || []).forEach(q => worldAdd.prop(r, q, true)); (e.gates || []).forEach(q => worldAdd.gate(r, q)); (e.misc || []).forEach(q => worldAdd.misc(r, q)); (e.dels || []).forEach(q => worldAdd.del(r, q));
       if (Object.keys(e).length) { e.ow = ow; e.t = 'pb'; broadcast(r, e, p); }
@@ -1122,7 +1142,7 @@ wss.on('connection', (ws, req) => {
       const take = (key, ok, cap) => { for (const q of (Array.isArray(o[key]) ? o[key] : []).slice(0, cap)) { const c = ok(q); if (c) B[key].push(c); } };
       take('props', okProp, ROOM_PROPS); take('gates', okGate, ROOM_GATES); take('misc', okMisc, ROOM_MISC); take('cps', okCp, ROOM_CPS); take('dels', okDel, ROOM_DELS);
       B.ow = o.ow && typeof o.ow === 'object' ? o.ow : {}; owFill(B, r.priv.hostTag >>> 0);   // (who built what comes with it; anything without an owner is the host's)
-      r.world = null; r.priv.ready = true;
+      r.world = null; r.priv.ready = true; r.taken = new Map();
       const b = bOut(B);
       for (const q of r.players.values()) { q.dver = null; q.sbh = q.sdh = null; if (q !== p) send(q, { t: 'rebuild', priv: 1, b }); }   // (anyone who came in before it had all arrived loads the world again, now complete)
     } else if (m.t === 'pseed') {   // the host of a private world says where everything is in it: their device is that world's memory
@@ -1479,6 +1499,7 @@ setInterval(() => {
     room.world = null; loadSaved(room); room.fk = pickFin(room.id);
     room.finishers = []; room.finPub = new Map();
     for (const p of room.players.values()) { p.has = false; p.dead = 0; p.moved = false; p.vis.clear(); p.dver = null; }
+    room.taken = new Map();   // (a new map: everything is there again)
     broadcast(room, { t: 'newmap', slot: curSlot, fk: room.fk | 0, next: nextAt(curSlot), now: Date.now(), build: bstate(room) });   // (with what was built on this map the last time it was played)
   }
   keepWorlds(false);
