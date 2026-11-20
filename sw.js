@@ -1,6 +1,6 @@
 /* ballpit.party service worker: lets the game install as an app and open without a network.
    Network first (so you always get the newest files), the saved copy is only the fallback. */
-const CACHE = 'ballpit-v205';
+const CACHE = 'ballpit-v206';
 const FILES = ['/', '/index.html', '/maps.js', '/physics.js', '/icon.svg', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES).catch(() => {})).then(() => self.skipWaiting())); });
 const META = 'ballpit-meta';   // (small notes kept across updates: whether the game is installed as an app on this device)

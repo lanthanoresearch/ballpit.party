@@ -893,6 +893,10 @@
   .dmlog .cm.pend{opacity:.6}.dmlog .cm.fail{opacity:.55;border:2px dashed rgba(255,207,138,.7)}
   .dmlog .dmhint{align-self:center;text-align:center;font-size:14px;opacity:.7;padding:20px 10px}
   .dmnote{text-align:center}
+  /* back (one step) and X (close everything): the back arrow only shows when there is something to go back to */
+  .chead>h3{flex:1;min-width:0}
+  .wback{flex:none;margin-right:8px}.chead .wback,.shead .wback{order:-1}.shead{gap:6px}.shead #shTitle{flex:1}
+  .profcard .phead .wback{align-self:center;margin-right:2px}
   @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   :is(#emoPop,#lvlModal,#nfModal,#profModal,#addModal,#shModal,#shIn,#wiModal):not(.hide)>.card{animation:cardIn .18s ease-out}
   @media (prefers-reduced-motion:reduce){:is(#emoPop,#lvlModal,#nfModal,#profModal,#addModal,#shModal,#shIn,#wiModal):not(.hide)>.card{animation:none}}
@@ -1000,7 +1004,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 205; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 206; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1214,7 +1218,7 @@
   <div id="feed"></div>
 </div></div>
 <div id="emoPop" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="chatTitle"><div class="card chatcard">
-  <div class="chead"><h3 id="chatTitle" class="ctitle">Chats</h3><div id="chatTabs" class="ctabs" role="tablist" aria-label="Chats"></div><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="chead"><button id="chatBack" class="btn dmback wback hide" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="chatTitle" class="ctitle">Chats</h3><div id="chatTabs" class="ctabs" role="tablist" aria-label="Chats"></div><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="cvWorld" class="cview">
   <div class="cvbar"><span id="chatWho" class="small dim">Everyone in this world</span></div>
   <div class="chatwrap"><div id="chatLog" class="chatlog" aria-live="polite"></div><button id="chatDown" class="chatdown hide" type="button" aria-label="Back to the newest message" title="Back to the newest message"><svg viewBox="0 0 24 24"><path d="M12 5v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><i></i></button></div>
@@ -1246,7 +1250,7 @@
 </div></div>
 <button id="dmToast" class="dmtoast hide" type="button"><span data-ic="chat"></span><span class="dmt"><b id="dmToastN"></b><span id="dmToastT"></span></span></button>
 <div id="nfModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="nfTitle"><div class="card nfcard">
-  <div class="chead"><h3 id="nfTitle">Choose friends</h3><button id="nfX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="chead"><button id="nfBack" class="btn dmback wback hide" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="nfTitle">Choose friends</h3><button id="nfX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="small dim" id="nfSub"></div>
   <div class="nfbar"><span id="nfCount" class="small"></span><button id="nfAll" class="btn sm" type="button">Select all</button></div>
   <div id="nfList" class="nflist"></div>
@@ -1284,7 +1288,7 @@
 
 <div id="sback"></div>
 <div id="settings" class="paper hide">
-  <div class="shead"><span id="shTitle">Settings</span><button id="btnCloseSet" class="xbtn" title="Close" data-ic="close"></button></div>
+  <div class="shead"><button id="setBack" class="btn dmback wback hide" type="button" aria-label="Back to the pause menu" title="Back to the pause menu"><svg class="ic"><use href="#i-left"/></svg></button><span id="shTitle">Settings</span><button id="btnCloseSet" class="xbtn" title="Close" data-ic="close"></button></div>
   <div class="tabs" id="tabs">
     <button data-tab="controls" class="on"><span data-ic="pad"></span><span>Controls</span></button>
     <button data-tab="display"><span data-ic="eye"></span><span>Display</span></button>
@@ -1539,7 +1543,7 @@
 </div></div>
 
 <div id="shModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="shTitle2"><div class="card shcard">
-  <div class="chead"><h3 id="shTitle2">Share</h3><button id="shmClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="chead"><button id="shBack" class="btn dmback wback hide" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="shTitle2">Share</h3><button id="shmClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <p class="small dim" id="shSub"></p>
   <div class="shbar"><b>Send to</b><button class="btn sm" id="shAll" type="button">Select all</button></div>
   <div id="shList" class="plist shlist"></div>
@@ -1555,7 +1559,7 @@
   <div class="btns"><button id="shInNo" type="button">Discard</button><button id="shInYes" class="go" type="button">Save it</button></div>
 </div></div>
 <div id="profModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="profName"><div class="card profcard">
-  <div class="phead"><span class="bdot pbig"><canvas id="profDot" class="pball" width="108" height="108"></canvas><i id="profLight" class="sdot"></i></span><div class="pwho"><h3 id="profName"></h3><div class="psub"><span id="profCode" class="code"></span><span id="profStatus" class="pstat"></span></div></div><button id="profClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="phead"><button id="profBack" class="btn dmback wback hide" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><span class="bdot pbig"><canvas id="profDot" class="pball" width="108" height="108"></canvas><i id="profLight" class="sdot"></i></span><div class="pwho"><h3 id="profName"></h3><div class="psub"><span id="profCode" class="code"></span><span id="profStatus" class="pstat"></span></div></div><button id="profClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="pbeat"><div class="pbl"><span data-ic="trophy"></span><b id="profBeat"></b><span id="profBeatOf"></span></div><div class="pbar"><i id="profBar"></i></div></div>
   <div id="profTiles" class="ptiles"></div>
   <div id="profMain" class="pmain"></div>
@@ -1564,7 +1568,7 @@
 </div></div>
 
 <div id="invModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="ivTitle"><div class="card lvcard">
-  <div class="chead"><h3 id="ivTitle">Invite friends</h3><button id="ivX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="chead"><button id="ivBack" class="btn dmback wback hide" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="ivTitle">Invite friends</h3><button id="ivX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="small dim" id="ivSub">Friends you invite get a message and can join your private game on this level. They see what you built, and can build too. They get it wherever they are, unless they are already in a private game with someone.</div>
   <label class="ivkeep"><input type="checkbox" id="ivKeep" checked><span>Keep the invitation open as long as the game is open<small>If you turn this off, a friend is only asked once and not again if they leave.</small></span></label>
   <div id="ivList"></div>
@@ -1572,7 +1576,7 @@
 </div></div>
 
 <div id="addModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="adTitle"><div class="card lvcard addcard">
-  <div class="chead"><h3 id="adTitle">Add a friend</h3><button id="adX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="chead"><button id="adBack" class="btn dmback wback hide" type="button" aria-label="Back to Friends" title="Back to Friends"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="adTitle">Add a friend</h3><button id="adX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="lpConn" class="small dim"></div>
   <input type="text" id="lpQ" maxlength="12" placeholder="Search by name or code (optional)" autocomplete="off" spellcheck="false">
   <div id="adBody">
@@ -1733,8 +1737,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=205"></script>
-<script src="physics.js?v=205"></script>
+<script src="maps.js?v=206"></script>
+<script src="physics.js?v=206"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -5098,7 +5102,7 @@ function chatShow() {   // show what the chat window is on
   else if (v === 'g') giveRender();
   if (chats && (v === 'l' || split)) dmListRender();
   if (v === 'd') { dmLastView = chatView; dmRender(true); if ($('dmToast').dataset.pub === chatView) $('dmToast').classList.add('hide'); }
-  chatTabsRender(); chatBadges();
+  chatTabsRender(); chatBadges(); if (typeof backRender === 'function') backRender();
   if (!touchActive()) setTimeout(() => { try { (v === 'w' ? $('chatIn') : v === 'd' ? $('dmIn') : null)?.focus({ preventScroll: true }); } catch (e) {} }, 30);
 }
 addEventListener('resize', () => { if (chatOpen && (chatView !== 'w' && chatView !== 'g') && !!document.querySelector('#emoPop .chatcard.split') !== chatSplit()) chatShow(); });
@@ -5116,7 +5120,7 @@ function dmListRender() {
     const w = el('span', 'dmw'), last = dmLast(l.pub); w.appendChild(el('b', '', who(l.name)));
     w.appendChild(el('small', '', last ? (last.me ? 'You: ' : '') + censorText(last.s) : statusOf(l).t || 'Say hi')); r.appendChild(w);
     const rt = el('span', 'dmr'); if (last) rt.appendChild(el('span', '', whenShort(last.a))); const n = dmUnread(l.pub); if (n) { const g = el('b', 'gb'); g.textContent = n > 99 ? '99+' : n; rt.appendChild(g); } r.appendChild(rt);
-    r.onclick = () => { sfx('ui'); chatView = l.pub; chatShow(); }; box.appendChild(r);
+    r.onclick = () => { sfx('ui'); chatFrom = ''; chatView = l.pub; chatShow(); }; box.appendChild(r);
   }
 }
 let dmNoteT = 0;
@@ -5124,7 +5128,7 @@ function dmNoteSet(t, warn) { const n = $('dmNote'); n.textContent = t; n.style.
 function dmNoteDefault() { const l = dmFriend(chatView); if (!l) return; const nm = who(l.name); dmNoteSet(offlineOn() ? 'You are offline. Messages need the server.' : !dmNet() ? 'Connecting… what you write sends by itself once connected.' : l.on && !l.hid ? 'Only ' + nm + ' sees this.' : 'Only ' + nm + ' sees this. They get it next time they play.'); }
 function dmRender(stick) {
   const pub = chatView, l = dmFriend(pub); if (!l) return; const d = dmOf(pub), nm = who(l.name);
-  { const h = $('dmHead'); h.textContent = ''; { const bk = iconBtn('btn dmback', 'left', 'Back to your chats', () => { sfx('ui'); chatView = 'l'; dmLastView = ''; chatShow(); }); h.appendChild(bk); } h.appendChild(ballDot(l)); const w = el('div', 'dmw'), st = statusOf(l); w.appendChild(el('b', '', nm)); w.appendChild(el('small', st.c === 'on' ? 'on' : '', st.t)); h.appendChild(w);
+  { const h = $('dmHead'); h.textContent = ''; { const bk = iconBtn('btn dmback', 'left', 'Back', () => { sfx('ui'); if (chatFrom === 'out' && typeof stacked === 'function' && stacked('emoPop')) { chatFrom = ''; toggleChat(false); return; } chatFrom = ''; chatView = 'l'; dmLastView = ''; chatShow(); }); h.appendChild(bk); } h.appendChild(ballDot(l)); const w = el('div', 'dmw'), st = statusOf(l); w.appendChild(el('b', '', nm)); w.appendChild(el('small', st.c === 'on' ? 'on' : '', st.t)); h.appendChild(w);
     h.appendChild(iconBtn('btn sm', 'user', 'See ' + nm + "'s profile", () => openProfile(Object.assign({}, l)), 'Profile')); }
   const L = $('dmLog'), atEnd = stick || L.scrollHeight - L.scrollTop - L.clientHeight < 60; L.textContent = '';
   if (!d.m.length) L.appendChild(el('div', 'dmhint', 'No messages yet. Say hi to ' + nm + '!'));
@@ -5148,7 +5152,7 @@ $('dmDown').onclick = () => { const L = $('dmLog'); L.scrollTo({ top: L.scrollHe
 $('dmIn').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') toggleChat(false); });
 function openDm(pub) {   // a chat with one friend: in the game it opens over the game, anywhere else on its own
   if (!dmFriend(pub)) return; if (typeof closeProfile === 'function') closeProfile();
-  chatView = pub; if (chatOpen) chatShow(); else toggleChat(true, pub);
+  if (!chatOpen) chatFrom = 'out'; chatView = pub; if (chatOpen) chatShow(); else toggleChat(true, pub);
 }
 const openChatTo = openDm;
 function onText(m) {
@@ -5992,7 +5996,7 @@ const LEVELS = 50;
 let profPub = '', profSnap = null;
 const profCache = {};   // what the server last said about each profile (and yours, as '@me')
 function profData(pub) { if (pub === '@me') return Object.assign(meEntry(), profCache['@me'] || {}, { me: 1, pub: '', name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, b: beatCount() }); if (profCache[pub] && !profCache[pub].blk) return Object.assign({}, (lks.filter(l => l.pub === pub)[0]) || (profSnap && profSnap.pub === pub ? profSnap : {}), profCache[pub]); return (lks.filter(l => l.pub === pub)[0]) || (lpFound.filter(f => f.pub === pub)[0]) || reqs.filter(r => r.pub === pub)[0] || myBlocks.filter(b => b.pub === pub)[0] || seenEntry(pub) || (profSnap && profSnap.pub === pub ? profSnap : null); }
-function openProfile(p) { if (!p) return; profPub = p.me || isMe(p) ? '@me' : p.pub; if (profPub) wsSend({ t: 'prof', to: profPub === '@me' ? 'me' : profPub }); profSnap = Object.assign({}, p); profRender(); $('profModal').classList.remove('hide'); const cd = document.querySelector('#profModal .profcard'); if (cd) cd.scrollTop = 0; setTimeout(() => { try { $('profClose').focus({ preventScroll: true }); } catch (e) {} if (cd) cd.scrollTop = 0; }, 30); }   // (it always opens at the top)
+function openProfile(p) { if (!p) return; profPub = p.me || isMe(p) ? '@me' : p.pub; if (profPub) wsSend({ t: 'prof', to: profPub === '@me' ? 'me' : profPub }); profSnap = Object.assign({}, p); profRender(); $('profModal').classList.remove('hide'); const cd = document.querySelector('#profModal .profcard'); if (cd) cd.scrollTop = 0; setTimeout(() => { if (cd) cd.scrollTop = 0; }, 30); }   // (it always opens at the top)
 function closeProfile() { profPub = ''; $('profModal').classList.add('hide'); }
 const isMe = p => !!p && (p.me || (!!myCode && String(p.code || '').toUpperCase().replace(/^#/, '') === String(myCode).toUpperCase().replace(/^#/, '')));
 const dateOf = t => { try { return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: new Date(t).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); } catch (e) { return ''; } };
@@ -7114,10 +7118,10 @@ let lvOptHome = null, lvStep = 'list';
 const lvSplit = () => (innerWidth >= 760 && innerHeight >= 520) || (innerWidth >= 640 && innerWidth > innerHeight * 1.4);   // (a big screen, or a phone on its side: list and level side by side)
 function lvLayout() {   // phones: the list, then one level (with a back arrow). A big screen: both at once
   const c = document.querySelector('#lvlModal .lvpick'), sp = lvSplit(), det = !sp && lvStep === 'detail';
-  c.classList.toggle('split', sp); c.classList.toggle('detail', det); $('lvBack').classList.toggle('hide', !det);
+  c.classList.toggle('split', sp); c.classList.toggle('detail', det); $('lvBack').classList.toggle('hide', !det && !(typeof stacked === 'function' && stacked('lvlModal')));
   $('lvTitle').textContent = det ? 'Level ' + (lvSel + 1) : inHome ? 'Pick a level' : 'Levels';
 }
-$('lvBack').onclick = () => { sfx('ui'); lvStep = 'list'; lvLayout(); setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s) try { s.scrollIntoView({ block: 'center' }); } catch (e) {} }, 0); };
+$('lvBack').onclick = () => { sfx('ui'); if (lvStep !== 'detail' || lvSplit()) { closeLevels(); return; } lvStep = 'list'; lvLayout(); setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s) try { s.scrollIntoView({ block: 'center' }); } catch (e) {} }, 0); };
 addEventListener('resize', () => { if (!$('lvlModal').classList.contains('hide')) lvLayout(); });
 function openLevels() {
   loadSolo(); lvBuild(); if (!lvOptHome) lvOptHome = { p: $('lvOptBox').parentNode, n: $('lvOptBox').nextSibling }; $('lvOptSlot').appendChild($('lvOptBox'));   // (the level's options come along into the list: look, set, then play)
@@ -7196,6 +7200,36 @@ $('cdIn').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode()
 $('codeModal').addEventListener('pointerdown', e => { if (e.target === $('codeModal')) closeCode(); });
 function onDoubleTap(el, fn) { let t = 0, x = 0, y = 0; el.addEventListener('click', e => { const n = performance.now(); if (n - t < 450 && Math.hypot(e.clientX - x, e.clientY - y) < 40) { t = 0; fn(); } else { t = n; x = e.clientX; y = e.clientY; } }); }
 /* (codes are typed only during a game: double-tap the coins in the game. The coins on the main menu do not open it) */
+
+/* ----- getting around the menus. The X closes everything, back to the main menu (or back to playing, in a game). The back arrow goes one step:
+   it shows only on a window that sits on top of another one, and closes just that window ----- */
+function shownEl(id) { const e = $(id); return !!e && !e.classList.contains('hide'); }
+var UNDER = { profModal: ['settings', 'addModal', 'emoPop', 'shModal', 'lvlModal', 'invModal', 'pause'], addModal: ['settings'], nfModal: ['settings'], invModal: ['pause', 'settings'], shModal: ['lvlModal', 'pause', 'settings'], lvlModal: ['settings', 'pause'], settings: ['pause'], emoPop: ['settings', 'profModal', 'addModal'] };
+function stacked(id) { return (UNDER[id] || []).some(u => u !== id && shownEl(u) && !(u === 'pause' && inHome)); }
+function closeAllMenus() {   // the X
+  sfx('ui');
+  try { if (shownEl('nfModal')) nfClose(); } catch (e) {} try { if (shownEl('addModal')) closeAdd(); } catch (e) {} try { if (shownEl('shareModal')) closeShareModal(); } catch (e) {}
+  try { if (paused && !inHome) resumeGame(); } catch (e) {} try { closeEverything(); } catch (e) {}
+  setTimeout(backRender, 0);
+}
+let chatFrom = '';   // 'out': the chat was opened straight onto one friend from another window, so back returns there
+function backRender() {
+  const set = (id, on) => { const b = $(id); if (b) b.classList.toggle('hide', !on); };
+  set('profBack', stacked('profModal')); set('adBack', stacked('addModal')); set('nfBack', stacked('nfModal')); set('ivBack', stacked('invModal')); set('shBack', stacked('shModal'));
+  set('setBack', !inHome && stacked('settings'));
+  set('chatBack', chatOpen && stacked('emoPop') && (chatView === 'l' || chatView === 'w' || chatView === 'g'));
+  if (shownEl('lvlModal') && typeof lvLayout === 'function') lvLayout();
+}
+{ const mo = new MutationObserver(() => backRender()); for (const id of ['settings', 'pause', 'profModal', 'addModal', 'nfModal', 'invModal', 'shModal', 'lvlModal', 'emoPop', 'shareModal']) { const e = $(id); if (e) mo.observe(e, { attributes: true, attributeFilter: ['class'] }); } }
+for (const id of ['profClose', 'adX', 'nfX', 'ivX', 'shmClose', 'lvX', 'btnCloseSet', 'chatClose', 'wiX', 'shX']) { const b = $(id); if (b) b.onclick = closeAllMenus; }
+$('profBack').onclick = () => { sfx('ui'); closeProfile(); };
+$('adBack').onclick = () => { sfx('ui'); closeAdd(); };
+$('nfBack').onclick = () => { sfx('ui'); nfClose(); };
+$('ivBack').onclick = () => { sfx('ui'); closeInvites(); };
+$('shBack').onclick = () => { sfx('ui'); shClose(); };
+$('setBack').onclick = () => { sfx('ui'); closeSettingsNow(); };
+$('chatBack').onclick = () => { sfx('ui'); toggleChat(false); };
+backRender();
 
 /* ================= networking ================= */
 /* The little bubble at the top says two plain things. The word is the kind of game: Public or Private. The dot is the connection: green = connected, orange = connecting, red = not connected. */
