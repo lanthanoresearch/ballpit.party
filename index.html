@@ -801,16 +801,15 @@
      note step aside so the messages get the room. (Computers and iPhones keep the pop-up in the middle.) */
   /* phones and tablets: the chat window is a sheet from the bottom of the screen */
   html.msheet #emoPop{align-items:flex-end;padding:0;bottom:auto;top:var(--vvt,0px);height:var(--vvh,100%)}
-  html.msheet #emoPop .chatcard{position:relative;zoom:1;width:100%;max-width:100%;height:min(92%,720px);max-height:100%;border-radius:22px 22px 0 0;border-bottom:none;box-shadow:0 -8px 24px rgba(0,0,0,.45);padding:10px 12px calc(10px + env(safe-area-inset-bottom));gap:8px;transition:height .15s}
-  html.msheet #emoPop .chatcard::before{content:'';position:absolute;left:50%;top:5px;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:rgba(232,220,192,.35)}
+  html.mfull #emoPop .chatcard{position:relative;zoom:1;width:100%;max-width:100%;height:100%;max-height:100%;border:0;border-radius:0;box-shadow:none;padding:calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));gap:8px;background:#1c1830}   /* (phones: the whole screen, edge to edge, nothing for the rounded screen corners to cut off) */
+  html.mfull #emoPop{background:#1c1830}
+  html.msheet:not(.mfull) #emoPop{align-items:center;padding:12px}html.msheet:not(.mfull) #emoPop .chatcard{max-height:100%}html.msheet.kbopen:not(.mfull) #emoPop .chatcard{height:100%}
   html.msheet #emoPop .chatlog{height:auto!important;min-height:60px;font-size:16px}
   html.msheet #emoPop .chatform input{font-size:17px;padding:11px 16px;border-radius:24px}
   html.msheet #emoPop .chatform button{width:50px;height:48px;border-radius:24px}
   html.msheet #emoPop .chatquick button{font-size:15px;padding:8px 14px}
-  html.msheet.landscape #emoPop .chatcard{height:100%}
   /* typing: the sheet sits right on the keyboard and shows only the messages and what you write */
-  html.msheet.kbopen #emoPop .chatcard{height:100%;border-radius:0;padding:6px 10px 6px;gap:6px;transition:none}
-  html.msheet.kbopen #emoPop .chatcard::before{display:none}
+  html.msheet.kbopen #emoPop .chatcard{padding:max(6px,env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) 6px calc(10px + env(safe-area-inset-left));gap:6px}
   html.msheet.kbopen #emoPop .chead,html.msheet.kbopen #emoPop .chatquick,html.msheet.kbopen #emoPop .cfoot,html.msheet.kbopen #emoPop .dmnote,html.msheet.kbopen #emoPop #gvHint,html.msheet.kbopen #emoPop .dmhead .btn:not(.dmback){display:none!important}
   html.msheet.kbopen #emoPop .cvbar{min-height:0}html.msheet.kbopen #emoPop .cvbar .small{font-size:12px}
   html.msheet.kbopen #emoPop .dmhead{padding:0}html.msheet.kbopen #emoPop .dmhead .dmw b{font-size:16px}html.msheet.kbopen #emoPop .dmhead .dmw small{font-size:12px}
@@ -894,6 +893,70 @@
   .dmlog .cm.pend{opacity:.6}.dmlog .cm.fail{opacity:.55;border:2px dashed rgba(255,207,138,.7)}
   .dmlog .dmhint{align-self:center;text-align:center;font-size:14px;opacity:.7;padding:20px 10px}
   .dmnote{text-align:center}
+  @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  :is(#emoPop,#lvlModal,#nfModal,#profModal,#addModal,#shModal,#shIn,#wiModal):not(.hide)>.card{animation:cardIn .18s ease-out}
+  @media (prefers-reduced-motion:reduce){:is(#emoPop,#lvlModal,#nfModal,#profModal,#addModal,#shModal,#shIn,#wiModal):not(.hide)>.card{animation:none}}
+  #wiModal .ndw{width:24px;display:flex;justify-content:center;align-items:center;flex:none}#wiModal .ndw i{display:block;width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.35)}#wiModal i.s-ok{background:#4ddc7a}#wiModal i.s-wait{background:#ffb347}#wiModal i.s-bad,#wiModal i.s-solo{background:#8a8399}
+  .xbtn:focus:not(:focus-visible){outline:none}
+  /* phones and tablets: the big windows all open the same way, filling the screen edge to edge (nothing for rounded screen corners to cut off), with the X at the top */
+  html.mfull :is(#profModal,#addModal,#invModal,#shModal,#wiModal){padding:0!important;background:#1c1830;align-items:stretch}
+  html.mfull :is(#profModal,#addModal,#invModal,#shModal,#wiModal)>.card{zoom:1;width:100%!important;max-width:100%!important;height:100%;max-height:100%!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow-y:auto;overscroll-behavior:contain;padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:calc(14px + env(safe-area-inset-bottom));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right))}
+  html.mfull #profModal .profcard{padding-top:0}html.mfull #profModal .profcard .phead{padding-top:calc(12px + env(safe-area-inset-top))}
+  html.mfull #settings{left:0!important;top:0!important;right:0!important;bottom:0!important;transform:none!important;width:100%!important;max-width:100%!important;height:100%!important;max-height:100%!important;border:0!important;border-radius:0!important;box-shadow:none!important;zoom:1;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  .dmlog .cm.cont{margin-top:-3px}.dmlog .cm.grp:not(.me){border-bottom-left-radius:5px}.dmlog .cm.grp.me{border-bottom-right-radius:5px}.dmlog .cm.cont:not(.me){border-top-left-radius:5px}.dmlog .cm.cont.me{border-top-right-radius:5px}
+  /* the main menu waits for the server: a full screen, like the loading screen, until it is back (or you choose to play offline) */
+  #homeGate{position:fixed;inset:0;z-index:13;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 40%,#2a2240 0%,#14111c 75%);color:var(--ink);font-family:var(--font);animation:hgIn .25s ease-out}
+  @keyframes hgIn{from{opacity:0}to{opacity:1}}
+  .hgbox{width:min(420px,100%);display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+  .hglogo{font-size:38px;letter-spacing:2px;font-weight:700}.hglogo b{color:#ff8a3d;font-weight:700}
+  .hgspin{width:44px;height:44px;border-radius:50%;border:5px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:ldspin .8s linear infinite}
+  #homeGate h3{margin:0;font-size:24px;font-weight:normal}.hgsub{font-size:15px;opacity:.75;max-width:340px}
+  .hgbtns{display:flex;flex-direction:column;gap:10px;width:min(300px,100%)}.hgbtns .btn{width:100%;padding:12px;font-size:18px;display:flex;align-items:center;justify-content:center;gap:8px}.hgbtns .btn .ic{width:20px;height:20px}
+  /* choosing which friends notify you: a pop-up with a switch for each friend */
+  #nfModal{z-index:14;background:rgba(10,8,16,.6)}.nfcard{width:min(440px,100%);max-height:min(640px,calc(100dvh - 24px));display:flex;flex-direction:column;gap:10px;text-align:left}
+  .nfbar{display:flex;align-items:center;justify-content:space-between;gap:8px}.nflist{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding:2px}
+  .nfrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#2c2644;border:2px solid rgba(232,220,192,.3);cursor:pointer;text-align:left;font:inherit;color:var(--ink);width:100%}
+  .nfrow .dmw{flex:1;min-width:0}.nfrow .dmw b{display:block;font-weight:normal;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nfrow .dmw small{font-size:12px;opacity:.7}
+  .nfrow .tg{width:46px;height:26px;border-radius:99px;background:#1b1726;border:2px solid rgba(232,220,192,.5);position:relative;flex:none;transition:background .15s}.nfrow .tg::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#e8dcc0;transition:transform .15s}
+  .nfrow.on .tg{background:#2fa463;border-color:#bff0d2}.nfrow.on .tg::after{transform:translateX(20px);background:#fff}
+  html.mfull #nfModal{padding:0}html.mfull #nfModal .nfcard{zoom:1;width:100%;max-width:100%;height:100%;max-height:100%;border:0;border-radius:0;box-shadow:none;padding:calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
+  /* the level picker: a list of levels, then one level with its options (side by side on a big screen) */
+  #lvlModal .lvpick{width:min(560px,100%);height:min(780px,calc(100dvh - 24px));max-height:none;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow:hidden}
+  #lvlModal .lvpick.split{width:min(960px,100%)}
+  #lvlModal .lvpick{zoom:1}#lvlModal .lvright>*,#lvlModal #lvOptSlot #lvOptBox>*{flex:none}
+  #lvlModal .lvpick .chead{gap:8px;margin:0}#lvlModal .lvpick .chead h3{flex:1;min-width:0;font-size:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #lvlModal .lvl{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+  #lvlModal .lvpick.split .lvl{flex-direction:row}
+  #lvlModal .lvleft{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;min-width:0}
+  #lvlModal .lvpick.split .lvleft{flex:0 0 340px;border-right:2px solid rgba(232,220,192,.15);padding-right:12px}
+  @media (max-height:520px){#lvlModal .lvpick{gap:6px;padding-top:8px;padding-bottom:8px}#lvlModal .lvpick.split .lvleft{flex-basis:290px}#lvlModal .lvpick .chead h3{font-size:20px}#lvlModal .lvb{padding:5px 8px;gap:8px}#lvlModal .lvb .lnum{width:28px;height:28px;font-size:13px}#lvlModal .lvb .nm{font-size:15px}
+    #lvlModal .lvstrip{height:8px}#lvlModal .lvhero{gap:4px;padding-bottom:8px}#lvlModal .lvhn b{font-size:19px}#lvlModal .lvhn span{font-size:12px}#lvlModal .lvtags span{font-size:11px}#lvlModal .lvstat{font-size:13px}#lvlModal #lvDescBtn{font-size:12px;padding:2px 8px}#lvlModal .lvright{gap:8px}#lvlModal .lvfoot #lvOk{padding:8px;font-size:17px}#lvOptSlot .lvsave button small{display:none}#lvlModal .lvfil{margin-bottom:4px}#lvlModal .lvfil button{padding:2px 8px;font-size:12px}}
+  #lvlModal .lvright{display:flex;flex-direction:column;gap:12px;min-height:0;min-width:0;overflow-y:auto;flex:1 1 auto;overscroll-behavior:contain;padding:2px 2px 6px}
+  #lvlModal .lvpick:not(.split):not(.detail) .lvright,#lvlModal .lvpick:not(.split):not(.detail) .lvfoot{display:none}
+  #lvlModal .lvpick.detail:not(.split) .lvleft{display:none}
+  #lvlModal .lvfil{margin:0 0 8px;flex:none}
+  #lvlModal #lvGrid{display:flex;flex-direction:column;gap:6px;max-height:none;flex:1 1 auto;min-height:0;overflow-y:auto;padding:3px 4px 3px 3px}
+  #lvlModal .lvb{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 10px;width:100%;border:2px solid rgba(232,220,192,.35);border-radius:14px;background:#2c2644;flex:none}
+  #lvlModal .lvb:hover{border-color:var(--line)}#lvlModal .lvb.hid{display:none}
+  #lvlModal .lvb .lnum{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#1b1726;border:2px solid rgba(232,220,192,.35);font-size:15px;font-weight:700;font-family:system-ui,sans-serif}
+  #lvlModal .lvb .lt{min-width:0;display:flex;flex-direction:column;gap:4px}#lvlModal .lvb .nm{font-size:17px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  #lvlModal .lvb .dots{margin:0}
+  #lvlModal .lvb .lst{display:flex;gap:5px;align-items:center;justify-content:flex-end}#lvlModal .lvb .lst .ic{width:18px;height:18px;color:#ffd23d}
+  .lvtag{font-size:11px;padding:2px 8px;border-radius:99px;white-space:nowrap;font-family:system-ui,sans-serif;font-weight:600}.lvtag.mine{background:#27603f;color:#bff0d2}.lvtag.got{background:#6a5415;color:#ffe9a0}.lvtag.cur{background:#3a3355;color:#fff;border:1px solid rgba(255,255,255,.5)}
+  #lvlModal .lvb.mine .lnum{border-color:#3fd37a}#lvlModal .lvb.got .lnum{border-color:#ffd23d}
+  #lvlModal .lvb.sel{border-color:#fff;background:#3a3355;box-shadow:none}#lvlModal .lvb.cur::after{display:none}
+  .lvhero{display:flex;flex-direction:column;gap:8px;padding:0 0 12px;border-radius:16px;background:#2c2644;overflow:hidden;flex:none}
+  .lvstrip{display:flex;height:16px}.lvstrip i{flex:1}
+  .lvhn{display:flex;flex-direction:column;padding:0 14px}.lvhn span{font-size:13px;opacity:.7}.lvhn b{font-weight:normal;font-size:24px;line-height:1.15}
+  .lvhero .lvtags{padding:0 14px;margin:0}
+  #lvlModal .lvsel{min-height:0;gap:6px;align-items:flex-start}.lvstat{font-size:14px;opacity:.85}
+  #lvOptSlot #lvOptBox{margin:0;border:0;padding:0;display:flex;flex-direction:column;gap:10px}#lvOptSlot #lvOptFor{display:none}
+  #lvOptSlot .lvsave{margin:0}#lvOptSlot .lvsave button{flex-direction:row;justify-content:center;gap:8px;padding:9px 8px;border-width:2px;flex-wrap:wrap}#lvOptSlot .lvsave button b{font-size:16px}#lvOptSlot .lvsave button small{flex-basis:100%;text-align:center}
+  #lvOptSlot #lvSaveNote{font-size:12px;margin-top:-4px}
+  #lvOptSlot .lvmode{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:14px;background:#241f36}
+  #lvOptSlot .sw2,#lvOptSlot .lvunl{margin:0;padding:8px 10px;border:2px solid rgba(232,220,192,.35);border-radius:14px;background:#2c2644}
+  #lvlModal .lvfoot{flex:none;margin:0}#lvlModal .lvfoot #lvOk{display:flex;align-items:center;justify-content:center;gap:8px;font-size:20px;padding:12px}#lvlModal .lvfoot #lvOk .ic{width:20px;height:20px}
+  html.mfull #lvlModal{padding:0;background:#1c1830}html.mfull #lvlModal .lvpick{zoom:1;width:100%!important;height:100%;border:0;border-radius:0;box-shadow:none;padding:calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
   #emoPop #chatLog{height:auto;margin:0;border:0;border-radius:12px;background:rgba(0,0,0,.25);padding:8px}   /* (the world chat looks like a friend chat) */
   .ctitle{flex:1;margin:0!important;font-size:24px}.chatcard.home .ctabs{display:none}.chatcard:not(.home) .ctitle{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   .cchats{flex:1;min-height:0;display:flex;gap:10px}.cchats>.cview{min-width:0}
@@ -937,7 +1000,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 204; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 205; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1037,7 +1100,7 @@
     if (Date.now() - last < 60000) return false;
     try { sessionStorage.setItem(k, String(Date.now())); } catch (e) {}
     msg('Updating to the newest version…'); fill(55);
-    var go = function () { location.replace(location.pathname + '?r=' + Date.now() + location.hash); };
+    var go = function () { location.replace(location.pathname + '?' + (/[?&]app=1(&|$)/.test(location.search) ? 'app=1&' : '') + 'r=' + Date.now() + location.hash); };
     try { Promise.all([navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0, window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k2) { return caches.delete(k2); })); }) : 0]).then(go, go); } catch (e) { go(); }
     setTimeout(go, 2500); return true;
   };
@@ -1054,7 +1117,7 @@
         if (Date.now() - last > 60000) {
           try { sessionStorage.setItem(k, String(Date.now())); } catch (e) {}
           msg('Updating to the newest version…'); fill(55);
-          var go = function () { location.replace(location.pathname + '?r=' + Date.now() + location.hash); };
+          var go = function () { location.replace(location.pathname + '?' + (/[?&]app=1(&|$)/.test(location.search) ? 'app=1&' : '') + 'r=' + Date.now() + location.hash); };
           try { Promise.all([navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0, window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (x) { return caches.delete(x); })); }) : 0]).then(go, go); } catch (e) { go(); }
           return;
         }
@@ -1175,13 +1238,19 @@
   <div id="cvList" class="cview hide"><div id="dmList" class="dmlist"></div></div>
   <div id="cvDm" class="cview hide">
     <div id="dmHead" class="dmhead"></div>
-    <div class="chatwrap"><div id="dmLog" class="chatlog dmlog" aria-live="polite"></div></div>
+    <div class="chatwrap"><div id="dmLog" class="chatlog dmlog" aria-live="polite"></div><button id="dmDown" class="chatdown hide" type="button" aria-label="Back to the newest message" title="Back to the newest message"><svg viewBox="0 0 24 24"><path d="M12 5v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><i></i></button></div>
     <form id="dmForm" class="chatform" autocomplete="off"><input id="dmIn" type="text" maxlength="200" placeholder="Message" enterkeyhint="send" spellcheck="true"><button id="dmSend" class="go" type="submit" aria-label="Send"><span data-ic="up"></span></button></form>
     <div class="small dim dmnote" id="dmNote"></div>
   </div>
   </div>
 </div></div>
 <button id="dmToast" class="dmtoast hide" type="button"><span data-ic="chat"></span><span class="dmt"><b id="dmToastN"></b><span id="dmToastT"></span></span></button>
+<div id="nfModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="nfTitle"><div class="card nfcard">
+  <div class="chead"><h3 id="nfTitle">Choose friends</h3><button id="nfX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="small dim" id="nfSub"></div>
+  <div class="nfbar"><span id="nfCount" class="small"></span><button id="nfAll" class="btn sm" type="button">Select all</button></div>
+  <div id="nfList" class="nflist"></div>
+</div></div>
 <div id="quickModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="qmTitle"><div class="card nmcard quickcard">
   <h3 id="qmTitle">Quick messages</h3>
   <div class="small dim">Up to 10. Tap one in the chat to send it right away. Leave a line empty to remove it.</div>
@@ -1333,7 +1402,7 @@
       <div class="small dim" id="lvSaveNote"></div>
       <button class="btn full hide" id="lvSaveNow" type="button"><span data-ic="down"></span>Save the level as it is now</button>
       <button class="btn full hide" id="lvShare" type="button"><span data-ic="share"></span>Share this map with friends</button>
-      <label class="sw2 ic2" id="noCheatRow"><span class="ti"><span data-ic="lock"></span><span><b>No cheats</b><small>Cheat codes do nothing in your private game, for everyone. The options here in Mode still work</small></span></span><input type="checkbox" id="setNoCheats"><i></i></label>
+      <label class="sw2 ic2" id="noCheatRow"><span class="ti"><span data-ic="lock"></span><span><b>No cheats</b><small>Cheat codes do nothing in your private game, for everyone</small></span></span><input type="checkbox" id="setNoCheats"><i></i></label>
       <label class="sw2 ic2 lvunl"><span class="ti"><span data-ic="gcoin"></span><span><b>Unlimited coins and diamonds</b><small id="lvMoney"></small></span></span><input type="checkbox" id="lvUnl"><i></i></label>
       <div class="lvmode">
         <div class="row todrow"><span data-ic="clock"></span><div id="selTod"></div></div>
@@ -1382,8 +1451,9 @@
       <label class="sw2 ic2"><span class="ti"><span data-ic="bell"></span><span><b>Notifications</b><small id="ntSub">Reach you here, even when the game is closed</small></span></span><input type="checkbox" id="setNotify"><i></i></label>
       <div id="ntKinds" class="ntkinds hide"><div class="small dim ntk">Tell me about:</div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Friends come online</b><small id="ntFrSub">Any of your friends starts playing</small></span></span><input type="checkbox" id="setNFriends"><i></i></label>
-        <div class="ntfr" id="ntFrBox"><button class="btn sm" id="ntFrBtn" type="button"><span data-ic="users"></span><span id="ntFrBtnT">Choose friends</span></button><div id="ntFrList" class="plist hide"></div></div>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Messages to you</b><small>A friend sends you a chat message</small></span></span><input type="checkbox" id="setNMsgs"><i></i></label>
+        <div class="ntfr" id="ntFrBox"><button class="btn sm" id="ntFrBtn" type="button"><span data-ic="users"></span><span id="ntFrBtnT">Choose friends</span></button></div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Messages to you</b><small id="ntMsSub">A friend sends you a chat message</small></span></span><input type="checkbox" id="setNMsgs"><i></i></label>
+        <div class="ntfr" id="ntMsBox"><button class="btn sm" id="ntMsBtn" type="button"><span data-ic="users"></span><span>Choose friends</span></button></div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Friend requests</b><small>Someone asks you, or answers you</small></span></span><input type="checkbox" id="setNRequests"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="share"></span><span><b>Game invites</b><small>Someone invites you to their private game</small></span></span><input type="checkbox" id="setNInvites"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Map changes</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
@@ -1421,12 +1491,20 @@
       <div class="small dim" id="homeModeNote"></div><button id="homeRetry" class="btn sm hide" type="button"><span data-ic="reset"></span>Try connecting again</button>
       <button id="homeLvl" class="btn lvrow" type="button"></button>
       <button id="homePlay" class="hplay" type="button">Play</button>
-      <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeFriends" type="button"><span data-ic="users"></span>Friends<span class="hbadge hide" id="homeFrN"></span></button><button class="btn" id="homeChat" type="button"><span data-ic="chat"></span>Chat<span class="hbadge hide" id="homeChN"></span></button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
+      <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeFriends" type="button"><span data-ic="users"></span>Friends<span class="hbadge hide" id="homeFrN"></span></button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
       <div class="hbtns"><button class="btn hide" id="homeInstall" type="button"><span data-ic="install"></span>Install the app</button></div>
     </div>
     <div class="small dim" id="homeOnline"></div>
   </div>
 </div>
+<div id="homeGate" class="hide" role="alertdialog" aria-live="polite" aria-labelledby="hgTitle"><div class="hgbox">
+  <div class="hglogo">BALL<b>PIT</b>.PARTY</div>
+  <div class="hgspin" id="hgSpin" aria-hidden="true"></div>
+  <h3 id="hgTitle">Connecting to the server…</h3>
+  <div class="hgsub" id="hgSub">Friends, chats and your games all need it. This only takes a moment.</div>
+  <div class="hgbtns hide" id="hgBtns"><button id="hgRetry" class="btn prim" type="button"><svg class="ic"><use href="#i-reset"/></svg>Try again</button><button id="hgOff" class="btn" type="button"><svg class="ic"><use href="#i-user"/></svg>Play offline</button></div>
+  <div class="hgsub hide" id="hgOffNote">Offline: the starting maps, just you and bots, saved on this device.</div>
+</div></div>
 <div id="netGate" class="overlay hide" role="alertdialog" aria-live="polite" aria-labelledby="ngTitle"><div class="card ngcard">
   <div class="ngspin" aria-hidden="true"></div>
   <h3 id="ngTitle">Connecting</h3>
@@ -1504,19 +1582,20 @@
   <div class="btns hide"><button id="adNo" type="button" class="go">Done</button></div>
 </div></div>
 
-<div id="lvlModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="lvTitle"><div class="card lvcard">
-  <div class="chead"><h3 id="lvTitle">Pick a level</h3><button id="lvX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+<div id="lvlModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="lvTitle"><div class="card lvcard lvpick">
+  <div class="chead"><button id="lvBack" class="btn dmback hide" type="button" aria-label="Back to all levels"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="lvTitle">Levels</h3><button id="lvX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="lvl">
     <div class="lvleft">
       <div class="lvfil" id="lvFil" role="group" aria-label="Show"><button type="button" data-f="all" class="on">All</button><button type="button" data-f="mine"><i class="k mine"></i>Built</button><button type="button" data-f="got"><i class="k got"></i>Saved</button><button type="button" data-f="beat"><span data-ic="crown"></span>Beaten</button></div>
       <div id="lvGrid" role="listbox" aria-label="Levels"></div>
     </div>
     <div class="lvright">
-      <div class="lvsel"><b id="lvName"></b><div class="lvtags" id="lvTags"></div><span class="small dim" id="lvNote"></span><div class="lvdesc hide" id="lvDesc"></div><button type="button" class="chip" id="lvDescBtn"><span>Add a description</span></button></div>
+      <div class="lvhero"><div class="lvstrip" id="lvStrip"></div><div class="lvhn"><span id="lvNum"></span><b id="lvName"></b></div><div class="lvtags" id="lvTags"></div></div>
+      <div class="lvsel"><span class="lvstat" id="lvNote"></span><div class="lvdesc hide" id="lvDesc"></div><button type="button" class="chip" id="lvDescBtn"><span>Add a description</span></button></div>
       <div id="lvOptSlot"></div>
     </div>
   </div>
-  <div class="btns"><button id="lvReset" type="button" class="danger hide" hidden>Reset level</button><button id="lvNo" type="button" class="hide">Close</button><button id="lvOk" type="button" class="go">Play</button></div>
+  <div class="btns lvfoot"><button id="lvReset" type="button" class="danger hide" hidden>Reset level</button><button id="lvNo" type="button" class="hide">Close</button><button id="lvOk" type="button" class="go"><svg class="ic"><use href="#i-play"/></svg><span id="lvOkT">Play</span></button></div>
 </div></div>
 
 <div id="codesModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="csTitle"><div class="card cscard">
@@ -1654,8 +1733,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=204"></script>
-<script src="physics.js?v=204"></script>
+<script src="maps.js?v=205"></script>
+<script src="physics.js?v=205"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1740,6 +1819,7 @@ function normalize() {
   settings.offline = false;   // the game always starts on the server: offline is only offered when the server cannot be reached
   { const q = settings.nQuiet && typeof settings.nQuiet === 'object' ? settings.nQuiet : {}, ok = v => Number.isInteger(v) && v >= 0 && v <= 1439; settings.nQuiet = { on: !!q.on, a: ok(q.a) ? q.a : 1320, b: ok(q.b) ? q.b : 420 }; }
   settings.nOff = Array.isArray(settings.nOff) ? settings.nOff.filter(x => /^[0-9a-f]{16}$/.test(x)).slice(0, 500) : [];
+  settings.nMsgOff = Array.isArray(settings.nMsgOff) ? settings.nMsgOff.filter(x => /^[0-9a-f]{16}$/.test(x)).slice(0, 500) : [];
   if (settings.share && typeof settings.share === 'object') { const o = {}; for (const k of ['on', 'last', 'beat', 'fr', 'since']) o[k] = settings.share[k] === 0 ? 0 : 1; settings.share = o; } else settings.share = null;
   ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
   settings.keys = cleanKeys(settings.keys);
@@ -4384,7 +4464,11 @@ $('keyReset').onclick = () => { settings.keys = defKeys(); keysDown.clear(); syn
 // little click sounds for buttons
 document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('button'); if (t && !t.id.startsWith('t') && t.id !== 'cfYes') sfx('ui'); });
 // install as an app
-const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+/* running as the app on the home screen? (it opens with ?app=1, and that is remembered for this window, even through reloads and full screen) */
+const isStandalone = (() => { let k = false; try { k = /[?&]app=1(&|$)/.test(location.search) || sessionStorage.getItem('bp_app') === '1'; } catch (e) {}
+  const st = () => (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: minimal-ui)').matches || matchMedia('(display-mode: window-controls-overlay)').matches)) || window.navigator.standalone === true || /^android-app:/.test(document.referrer || '');
+  if (k || st()) { k = true; try { sessionStorage.setItem('bp_app', '1'); } catch (e) {} }
+  return () => k || st(); })();
 // Install the game as an app (it stays a web app, so it is always the newest version). Chrome and Edge install it with one tap; iPhone/iPad and Mac Safari use the Share / File menu.
 let installEv = null;
 const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
@@ -4624,7 +4708,7 @@ function linkMsg(m) {
     case 'dm': dmIn(m); return true;
     case 'dmok': dmOk(m); return true;
     case 'dmno': dmNo(m); return true;
-    case 'pii': if (m.c && dmWait[m.c | 0]) dmPii(m); piiSays(m.why); return true;
+    case 'pii': if (m.id) dmPii(m); piiSays(m.why); return true;
     case 'emo': {
       const o = others.get(m.id), e = lkOf(m.pub);
       if (chatMuted || muteOf(m.pub) >= 2) return true;   // public chat muted, or that player is
@@ -4889,8 +4973,9 @@ function chatSend(quick) {
 }
 /* ----- messages between friends: each friend has a conversation of their own, kept on this device (and never mixed into the world chat).
    A friend who is not on gets your messages the next time they play. Only friends, never anyone blocked, and personal info never goes ----- */
+const dmNewId = () => (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).slice(-14);
 const DMKEY = 'ballrun4_dms', DM_KEEP = 20000;   // (kept on this device for good; only a conversation bigger than this loses its oldest lines)
-let dms = {}; try { const o = JSON.parse(localStorage.getItem(DMKEY) || '{}'); if (o && typeof o === 'object') for (const k in o) if (/^[0-9a-f]{16}$/.test(k) && o[k] && Array.isArray(o[k].m)) { dms[k] = { m: o[k].m.filter(x => x && typeof x.s === 'string').slice(-DM_KEEP), u: o[k].u | 0, n: typeof o[k].n === 'string' ? o[k].n.slice(0, 40) : '' }; dms[k].m.forEach(x => { if (x.st === 'p') x.st = 'f'; }); } } catch (e) {}   // (a message still on its way when the game closed did not go)
+let dms = {}; try { const o = JSON.parse(localStorage.getItem(DMKEY) || '{}'); if (o && typeof o === 'object') for (const k in o) if (/^[0-9a-f]{16}$/.test(k) && o[k] && Array.isArray(o[k].m)) { dms[k] = { m: o[k].m.filter(x => x && typeof x.s === 'string').slice(-DM_KEEP), u: o[k].u | 0, n: typeof o[k].n === 'string' ? o[k].n.slice(0, 40) : '' }; dms[k].m.forEach(x => { if (x.me && !x.id) x.id = dmNewId(); if (x.st === 'p') x.st = 'w'; }); } } catch (e) {}   // (a message still on its way when the game closed did not go)
 let dmSaveT = 0; const dmSave = () => { clearTimeout(dmSaveT); dmSaveT = setTimeout(dmSaveNow, 250); };
 function dmSaveNow() {   // (if the device ever runs out of room, the very oldest lines go first, never anything recent)
   for (let k = 0; k < 40; k++) { try { localStorage.setItem(DMKEY, JSON.stringify(dms)); return; } catch (e) { let big = null; for (const p in dms) if (!big || dms[p].m.length > dms[big].m.length) big = p; if (!big || dms[big].m.length < 50) return; dms[big].m.splice(0, Math.ceil(dms[big].m.length / 10)); } }
@@ -4912,7 +4997,7 @@ function gBadge(host, n, dot) {   // a little green number (or dot) on a button:
 }
 function chatBadges() {   // every place that says you have messages: the chat button in the game, Chat on the main menu, the tabs, your friends list and their profile
   const n = dmUnreadAll(); gBadge($('btnChat'), n, worldNew && !(chatOpen && chatView === 'w'));
-  { const h = $('homeChN'); if (h) { h.textContent = n > 99 ? '99+' : n; h.classList.toggle('hide', !n); h.title = n + ' new message' + (n === 1 ? '' : 's'); } }
+  homeFriendsN();   // (on the main menu, new messages show on Friends: every friend there has a Chat button)
   $('btnChat').title = n ? n + ' new message' + (n === 1 ? '' : 's') + ' from friends' : 'Chat';
   if (chatOpen) chatTabsRender();
   if (typeof friendsShown === 'function' && friendsShown()) lpRender(); else if (profPub) profRender();
@@ -4924,31 +5009,59 @@ function dmToast(pub, name, txt) {   // a green reminder at the top: tap it to o
 }
 $('dmToast').onclick = () => { const pub = $('dmToast').dataset.pub; $('dmToast').classList.add('hide'); if (pub && dmFriend(pub)) openDm(pub); };
 let dmLateT = 0; const dmLate = {};
+document.addEventListener('visibilitychange', () => { if (!document.hidden && chatOpen && dmFriend(chatView)) dmRender(); });   // (back to the game with a chat open: what came in is read)
 function dmIn(m) {   // a friend wrote to you
   if (!/^[0-9a-f]{16}$/.test(m.from || '') || blockedPub(m.from) || typeof m.s !== 'string') return; const l = lkOf(m.from); if (!l) return;
   const at = +m.at || nowMs(), d = dmOf(m.from), nm = who(m.name || l.name); l.dm = Math.max(l.dm || 0, at); if (m.name) d.n = String(m.name).slice(0, 40);
-  if (d.m.some(x => !x.me && x.a === at && x.s === m.s)) return;   // (the same one twice)
-  dmPush(m.from, { a: at, s: m.s.slice(0, 200) });
-  if (dmShowing(m.from)) { dmRender(true); sfx('ui'); return; }
+  if (d.m.some(x => !x.me && ((m.id && x.id === m.id) || (x.a === at && x.s === m.s)))) return;   // (the same one twice)
+  dmPush(m.from, m.id ? { a: at, s: m.s.slice(0, 200), id: String(m.id).slice(0, 16) } : { a: at, s: m.s.slice(0, 200) });
+  if (dmShowing(m.from)) { dmRender(); sfx('ui'); return; }   // (if you are reading further up, you stay there)
   d.u = (d.u | 0) + 1; dmSave(); chatBadges();
   if (m.late) {   // (what came while you were away arrives all at once: one reminder for it)
     dmLate[m.from] = (dmLate[m.from] || 0) + 1; clearTimeout(dmLateT);
     dmLateT = setTimeout(() => { const ks = Object.keys(dmLate), tot = ks.reduce((a, k) => a + dmLate[k], 0); if (ks.length === 1) { const k = ks[0], lk = lkOf(k); dmToast(k, who((lk && lk.name) || dms[k].n), dmLate[k] === 1 ? bubbleOf(dmLast(k).s) : dmLate[k] + ' new messages'); } else dmToast(ks[0], tot + ' new messages', 'from ' + ks.length + ' friends'); ks.forEach(k => delete dmLate[k]); sfx('ready'); }, 700);
   } else { dmToast(m.from, nm, bubbleOf(m.s)); sfx('ready'); }
-  sysNotify('nMsgs', nm, bubbleOf(m.s), 'dm-' + m.from);
+  if (!mOffHas(m.from)) sysNotify('nMsgs', nm, bubbleOf(m.s), 'dm-' + m.from);
 }
+/* sending: every message has its own id, so it can be sent again safely (the server and your friend each ignore a second copy).
+   Not connected? It waits here and goes by itself as soon as the connection is back */
+const dmFly = {};   // id -> { pub, msg, t } waiting for the server to say it got it
 function dmSend(pub, txt) {
   const l = dmFriend(pub); if (!l) return false;
-  if (!dmNet()) { dmNoteSet(offlineOn() ? 'You are offline. Messages need the server.' : 'Not connected to the server right now. Try again in a moment.', true); sfx('warn'); return false; }
-  const c = ++dmSeq, msg = { a: nowMs(), me: 1, s: txt, st: 'p', c }; dmPush(pub, msg); dmWait[c] = { pub, msg };
-  wsSend({ t: 'dm', to: pub, s: txt, c });
-  setTimeout(() => { if (dmWait[c]) { delete dmWait[c]; msg.st = 'f'; dmSave(); if (dmShowing(pub)) dmRender(); } }, 9000);   // (no answer: it did not go)
-  if (dmShowing(pub)) dmRender(true); return true;
+  if (offlineOn()) { dmNoteSet('You are offline. Messages need the server.', true); sfx('warn'); return false; }
+  const msg = { a: nowMs(), me: 1, s: txt, st: 'w', id: dmNewId() }; dmPush(pub, msg);
+  dmGo(pub, msg); if (dmShowing(pub)) dmRender(true); return true;
 }
-function dmOk(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; w.msg.st = m.q ? 'q' : ''; w.msg.a = +m.at || w.msg.a; delete w.msg.c; const l = lkOf(w.pub); if (l) l.dm = w.msg.a; dmSave(); if (dmShowing(w.pub)) dmRender(); }
-function dmNo(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; w.msg.st = 'f'; w.msg.why = m.why === 'full' ? 'full' : m.why === 'off' ? 'old' : m.why === 'slow' ? '' : 'friend'; if (m.why === 'slow') dmNoteSet('That was a lot at once. Wait a moment, then tap a message to send it again.', true); dmSave(); if (dmShowing(w.pub)) dmRender(); }
-function dmPii(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; const d = dms[w.pub]; if (d) { const i = d.m.indexOf(w.msg); if (i >= 0) d.m.splice(i, 1); dmSave(); } if (dmShowing(w.pub)) dmRender(); }
-function dmRetry(pub, msg) { const d = dms[pub]; if (!d) return; const i = d.m.indexOf(msg); if (i >= 0) d.m.splice(i, 1); if (!dmSend(pub, msg.s)) { if (i >= 0) d.m.splice(i, 0, msg); } dmRender(true); }
+const dmSentT = [];   // (when the last messages went: a long burst is paced so the server never has to turn one away)
+let dmPaceT = 0;
+function dmGo(pub, msg, inOrder) {
+  if (!dmNet() || !dmFriend(pub)) { msg.st = 'w'; dmSave(); return; }   // (it waits for the connection)
+  const d = dms[pub]; if (!inOrder && d && d.m.some(x => x !== msg && x.me && x.st === 'w' && x.a <= msg.a)) { msg.st = 'w'; dmSave(); dmFlushSoon(300); return; }   // (an earlier one is still waiting: keep the order)
+  const now = Date.now(); while (dmSentT.length && now - dmSentT[0] > 10000) dmSentT.shift();
+  if (dmSentT.length >= 24) { msg.st = 'w'; dmSave(); dmFlushSoon(10100 - (now - dmSentT[0])); return; }
+  dmSentT.push(now); msg.st = 'p'; dmFly[msg.id] = { pub, msg, t: now }; dmSave();
+  wsSend({ t: 'dm', to: pub, s: msg.s, id: msg.id, c: 0 });
+}
+function dmFlushSoon(ms) { if (dmPaceT) return; dmPaceT = setTimeout(() => { dmPaceT = 0; dmFlush(); }, Math.max(100, ms | 0)); }
+function dmFlush() {   // the connection is back: everything still waiting goes, oldest first
+  if (!dmNet()) return;
+  for (const pub in dms) { if (!dmFriend(pub)) continue; for (const m of dms[pub].m) if (m.me && (m.st === 'w' || (m.st === 'p' && !dmFly[m.id]))) { dmGo(pub, m, true); if (m.st === 'w') break; } }
+  for (const pub in dms) if (dmShowing(pub)) dmRender();
+}
+setInterval(() => {   // (no answer in 10 seconds: try again once the connection is good; after a few tries, show it as not sent)
+  const now = Date.now(); let ch = false;
+  for (const id in dmFly) { const f = dmFly[id]; if (now - f.t < 10000) continue; delete dmFly[id]; f.msg.n = (f.msg.n | 0) + 1; f.msg.st = f.msg.n >= 3 ? 'f' : 'w'; ch = true; if (dmShowing(f.pub)) dmRender(); }
+  if (ch) { dmSave(); setTimeout(dmFlush, 500); }
+}, 2000);
+const dmFind = m => { const f = m.id && dmFly[m.id]; if (f) { delete dmFly[m.id]; return f; } if (m.id) for (const pub in dms) { const x = dms[pub].m.find(q => q.me && q.id === m.id); if (x) return { pub, msg: x }; } return null; };
+function dmOk(m) { const w = dmFind(m); if (!w) return; w.msg.st = m.q ? 'q' : ''; w.msg.a = +m.at || w.msg.a; delete w.msg.n; const l = lkOf(w.pub); if (l) l.dm = Math.max(l.dm || 0, w.msg.a); dmSave(); if (dmShowing(w.pub)) dmRender(); }
+function dmNo(m) {
+  const w = dmFind(m); if (!w) return;
+  if (m.why === 'slow') { w.msg.st = 'w'; dmSave(); dmFlushSoon(4000); return; }   // (a lot at once: it goes again by itself in a moment)
+  w.msg.st = 'f'; w.msg.why = m.why === 'full' ? 'full' : m.why === 'off' ? 'old' : 'friend'; dmSave(); if (dmShowing(w.pub)) dmRender();
+}
+function dmPii(m) { const w = dmFind(m); if (!w) return; const d = dms[w.pub]; if (d) { const i = d.m.indexOf(w.msg); if (i >= 0) d.m.splice(i, 1); dmSave(); } if (dmShowing(w.pub)) dmRender(); }
+function dmRetry(pub, msg) { msg.n = 0; delete msg.why; dmGo(pub, msg); dmRender(true); }
 function piiSays(why) {
   const w = (P.PII_WHY && P.PII_WHY[why]) || 'personal info';
   const t = 'Not sent: that looks like ' + w + '. Phone numbers, emails, addresses, links and other apps can never be shared here, to keep everyone safe.';
@@ -5008,7 +5121,7 @@ function dmListRender() {
 }
 let dmNoteT = 0;
 function dmNoteSet(t, warn) { const n = $('dmNote'); n.textContent = t; n.style.color = warn ? '#ffcf8a' : ''; clearTimeout(dmNoteT); if (warn) dmNoteT = setTimeout(() => { n.style.color = ''; dmNoteDefault(); }, 6000); }
-function dmNoteDefault() { const l = dmFriend(chatView); if (!l) return; const nm = who(l.name); dmNoteSet(offlineOn() ? 'You are offline. Messages need the server.' : !dmNet() ? 'Connecting to the server…' : l.on && !l.hid ? 'Only ' + nm + ' sees this.' : 'Only ' + nm + ' sees this. They get it next time they play.'); }
+function dmNoteDefault() { const l = dmFriend(chatView); if (!l) return; const nm = who(l.name); dmNoteSet(offlineOn() ? 'You are offline. Messages need the server.' : !dmNet() ? 'Connecting… what you write sends by itself once connected.' : l.on && !l.hid ? 'Only ' + nm + ' sees this.' : 'Only ' + nm + ' sees this. They get it next time they play.'); }
 function dmRender(stick) {
   const pub = chatView, l = dmFriend(pub); if (!l) return; const d = dmOf(pub), nm = who(l.name);
   { const h = $('dmHead'); h.textContent = ''; { const bk = iconBtn('btn dmback', 'left', 'Back to your chats', () => { sfx('ui'); chatView = 'l'; dmLastView = ''; chatShow(); }); h.appendChild(bk); } h.appendChild(ballDot(l)); const w = el('div', 'dmw'), st = statusOf(l); w.appendChild(el('b', '', nm)); w.appendChild(el('small', st.c === 'on' ? 'on' : '', st.t)); h.appendChild(w);
@@ -5018,17 +5131,20 @@ function dmRender(stick) {
   let day = '', lastMine = -1; d.m.forEach((m, i) => { if (m.me) lastMine = i; });
   d.m.forEach((m, i) => {
     const dy = dayOf(m.a); if (dy !== day) { day = dy; L.appendChild(el('div', 'dday', dy)); }
-    const c = el('div', 'cm' + (m.me ? ' me' : '') + (m.st === 'p' ? ' pend' : m.st === 'f' ? ' fail' : '')); c.appendChild(document.createTextNode(censorText(m.s))); c.appendChild(el('span', 'ct', clock(m.a))); L.appendChild(c);
+    const c = el('div', 'cm' + (m.me ? ' me' : '') + (m.st === 'p' || m.st === 'w' ? ' pend' : m.st === 'f' ? ' fail' : '')); c.appendChild(document.createTextNode(censorText(m.s))); { const nx = d.m[i + 1], pv = d.m[i - 1]; if (!nx || !!nx.me !== !!m.me || nx.a - m.a > 300000 || dayOf(nx.a) !== dy) c.appendChild(el('span', 'ct', clock(m.a))); else c.classList.add('grp'); if (pv && !!pv.me === !!m.me && m.a - pv.a <= 300000 && dayOf(pv.a) === dy) c.classList.add('cont'); } L.appendChild(c);   // (a run of messages from the same person reads as one group, with the time once at the end)
     if (m.me && m.st === 'f') { const f = el('div', 'dst bad', m.why === 'friend' ? 'Not sent: you are not friends any more' : m.why === 'full' ? 'Not sent: ' + nm + ' already has 50 messages waiting. Send more once they have come on and got them' : m.why === 'old' ? 'Not sent: the game server needs updating for messages to friends who are away' : 'Not sent · tap to try again'); if (!m.why) { f.tabIndex = 0; f.setAttribute('role', 'button'); f.onclick = () => dmRetry(pub, m); } L.appendChild(f); }
-    else if (i === lastMine) L.appendChild(el('div', 'dst', m.st === 'p' ? 'Sending…' : m.st === 'q' && !(l.on || (l.last || 0) > m.a) ? 'Waiting for ' + nm + ' to come on' : 'Sent'));
+    else if (i === lastMine) L.appendChild(el('div', 'dst', m.st === 'w' ? (dmNet() ? 'Sending…' : 'Waiting for the connection… it sends by itself') : m.st === 'p' ? 'Sending…' : m.st === 'q' && !(l.on || (l.last || 0) > m.a) ? 'Waiting for ' + nm + ' to come on' : 'Sent'));
   });
-  if (atEnd) L.scrollTop = L.scrollHeight;
+  if (atEnd) { L.scrollTop = L.scrollHeight; $('dmDown').classList.add('hide'); } else if (d.m.length > (dmRender.n || 0) && dmRender.p === pub) { $('dmDown').classList.remove('hide'); $('dmDown').classList.add('new'); }   // (reading further up: you stay there, and an arrow says something new came)
+  dmRender.n = d.m.length; dmRender.p = pub;
   if (d.u) { d.u = 0; dmSave(); chatBadges(); }
-  $('dmIn').placeholder = 'Message ' + nm; const can = dmNet(); $('dmIn').disabled = offlineOn(); $('dmSend').disabled = !can; if (!dmNoteT) dmNoteDefault();
+  $('dmIn').placeholder = 'Message ' + nm; const can = dmNet(); $('dmIn').disabled = offlineOn(); $('dmSend').disabled = offlineOn(); void can; if (!dmNoteT) dmNoteDefault();
 }
 $('dmForm').onsubmit = ev => { ev.preventDefault(); const inp = $('dmIn'), txt = inp.value.replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt || !dmFriend(chatView)) return;
-  if (performance.now() < chatCool) return; { const why = P.piiCheck ? P.piiCheck(txt) : ''; if (why) { piiSays(why); return; } } chatCool = performance.now() + 400;
+  { const why = P.piiCheck ? P.piiCheck(txt) : ''; if (why) { piiSays(why); return; } }   // (no waiting between messages: every one you send goes, in order)
   if (dmSend(chatView, txt)) { inp.value = ''; sfx('ui'); } };
+$('dmLog').addEventListener('scroll', () => { const L = $('dmLog'); if (L.scrollHeight - L.scrollTop - L.clientHeight < 40) $('dmDown').classList.add('hide'); }, { passive: true });
+$('dmDown').onclick = () => { const L = $('dmLog'); L.scrollTo({ top: L.scrollHeight, behavior: 'smooth' }); $('dmDown').classList.add('hide'); };
 $('dmIn').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') toggleChat(false); });
 function openDm(pub) {   // a chat with one friend: in the game it opens over the game, anywhere else on its own
   if (!dmFriend(pub)) return; if (typeof closeProfile === 'function') closeProfile();
@@ -5125,11 +5241,12 @@ function toggleChat(on, view) {   // a pop-up in the middle of the screen: tap a
     chatShow();
   } else { try { $('chatIn').blur(); $('dmIn').blur(); } catch (e) {} chatBadges(); }
 }
-$('homeChat').onclick = () => toggleChat(true, 'l');
 $('btnChat').onclick = () => toggleChat(!chatOpen);
 /* phones and tablets: the chat is a sheet from the bottom. While you type, it sits right on top of the keyboard and shows only the conversation and what you are writing */
 const isAndroid = /Android/i.test(navigator.userAgent), isMobileUA = isAndroid || /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 if (isMobileUA) document.documentElement.classList.add('msheet');
+const mfullSet = () => document.documentElement.classList.toggle('mfull', isMobileUA && Math.min(innerWidth, innerHeight) < 600);   // (phones: big windows fill the screen. A tablet keeps them as cards in the middle)
+mfullSet(); addEventListener('resize', mfullSet);
 const vvNow = () => window.__vvFake || window.visualViewport;   // (tests can stand in a keyboard here)
 const TYPE_IDS = ['chatIn', 'dmIn', 'gvC', 'gvG'];
 function chatFit() {
@@ -5780,7 +5897,7 @@ const openFriends = () => {   // the friends screen: from the main menu (to look
   if ($('settings').classList.contains('hide')) { onlyPrev = curTab; $('settings').classList.add('only'); $('shTitle').textContent = 'Friends'; showTab('friends'); toggleSettings(); } else showTab('friends');
   lpRender();
 };
-function homeFriendsN() { const n = lks.filter(l => l.ok && l.on).length + reqs.length, b = $('homeFrN'); if (!b) return; b.textContent = reqs.length ? reqs.length + ' new' : n; b.classList.toggle('hide', !n); b.title = reqs.length ? 'Friend requests waiting' : n + ' online'; }
+function homeFriendsN() { const on = lks.filter(l => l.ok && l.on).length, msg = (() => { try { return dmUnreadAll(); } catch (e) { return 0; } })(), nw = reqs.length + msg, b = $('homeFrN'); if (!b) return; b.textContent = nw ? (nw > 99 ? '99+' : nw) : on; b.classList.toggle('hide', !nw && !on); b.title = [reqs.length ? reqs.length + ' friend request' + (reqs.length === 1 ? '' : 's') : '', msg ? msg + ' new message' + (msg === 1 ? '' : 's') : '', !nw ? on + ' online' : ''].filter(Boolean).join(', '); }
 $('homeFriends').onclick = () => { sfx('ui'); openFriends(); };
 $('linkpill').onclick = e => { e.stopPropagation(); openFriends(); };
 const friendsShown = () => !$('settings').classList.contains('hide') && $('settings').querySelector('.pane.on[data-pane="friends"]') !== null;
@@ -5938,6 +6055,7 @@ function blockPub(p) {   // (only somebody who is not your friend: unfriend firs
 $('profClose').onclick = closeProfile; $('profModal').addEventListener('pointerdown', e => { if (e.target === $('profModal')) closeProfile(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('profModal').classList.contains('hide')) { closeProfile(); e.stopPropagation(); e.preventDefault(); } }, true);
 function lpRender() {
+  if (typeof chatOpen !== 'undefined' && chatOpen && chatView !== 'w' && chatView !== 'g' && chatView !== 'l' && !dmFriend(chatView)) chatShow();   // (no longer friends: their chat closes)
   if (profPub) profRender();
   const rq = $('lreqs'); rq.textContent = '';
   reqs.slice(0, 3).forEach(r => { const c = el('div', 'paper lreqcard'); c.appendChild(reqCard(r)); rq.appendChild(c); });
@@ -6295,12 +6413,26 @@ function homeModeText() { netRender(); segRender(); const pub = $('homeMp').chec
   lvlRender(); }
 /* the server comes first: Private and Public both need it. If it cannot be reached in a few seconds, Offline is offered instead (and goes away again when the server is back) */
 var srvSt = 'wait', srvT = 0, srvPrev = '';   // (var: the menu asks for it before this line runs)
-function srvWait() { if (srvSt === 'ok') srvSt = 'wait'; if (srvSt === 'wait' && !srvT) srvT = setTimeout(() => { srvT = 0; if (srvSt !== 'ok') srvFail(); }, 9000); if (inHome) homeModeText(); }   // (one clock for the whole wait: each failed try does not start it again)
-function srvFail() { srvSt = 'fail'; if (inHome && !offlineOn()) { srvPrev = curMode(); setMode('off'); } if (inHome) homeModeText(); }
+function srvWait() { setTimeout(gateRender, 0); if (srvSt === 'ok') srvSt = 'wait'; if (srvSt === 'wait' && !srvT) srvT = setTimeout(() => { srvT = 0; if (srvSt !== 'ok') srvFail(); }, 9000); if (inHome) homeModeText(); }   // (one clock for the whole wait: each failed try does not start it again)
+function srvFail() { srvSt = 'fail'; if (inHome) homeModeText(); gateRender(); }
+/* on the main menu nothing works without the server: a full screen says so until it is back. If it stays away, you can play offline instead */
+let gateArm = 0, gateArmed = false;
+function gateRender() {
+  const need = inHome && !offlineOn() && srvSt !== 'ok';
+  if (!need) { clearTimeout(gateArm); gateArm = 0; gateArmed = false; $('homeGate').classList.add('hide'); return; }
+  if (!gateArmed) { if (!gateArm) gateArm = setTimeout(() => { gateArm = 0; gateArmed = true; gateRender(); }, 900); return; }   // (a quick blip never flashes a screen)
+  const fail = srvSt === 'fail'; $('homeGate').classList.remove('hide');
+  $('hgSpin').classList.toggle('hide', fail); $('hgBtns').classList.toggle('hide', !fail); $('hgOffNote').classList.toggle('hide', !fail);
+  $('hgTitle').textContent = fail ? 'Can\u2019t reach the server' : 'Connecting to the server…';
+  $('hgSub').textContent = fail ? 'Check your internet. It keeps trying in the background, and you go straight back in when it answers.' : 'Friends, chats and your games all need it. This only takes a moment.';
+}
+setInterval(gateRender, 1000);
+$('hgRetry').onclick = () => { sfx('ui'); srvSt = 'wait'; gateArmed = true; srvWait(); retryNow(); gateRender(); };
+$('hgOff').onclick = () => { sfx('ui'); srvPrev = curMode(); setMode('off'); gateRender(); };
 function srvOk() {
-  const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0;
+  const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0; setTimeout(() => { try { dmFlush(); } catch (e) {} }, 300);   // (messages written while away go now)
   if (inHome && settings.offline) { setMode(srvPrev === 'pub' ? 'pub' : 'priv'); if (was === 'fail') notice('Connected to the server', ''); }
-  if (inHome) homeModeText();
+  if (inHome) homeModeText(); gateRender();
 }
 $('homeRetry').onclick = () => { sfx('ui'); srvSt = 'wait'; srvWait(); retryNow(); homeModeText(); };
 setTimeout(srvWait, 0);
@@ -6755,16 +6887,36 @@ $('nqFrom').onclick = () => tpOpen('a'); $('nqTo').onclick = () => tpOpen('b');
 setInterval(() => { if ($('nqSub') && $('nqSub').offsetParent) quietRender(); }, 30000);
 const nOffHas = pub => Array.isArray(settings.nOff) && settings.nOff.indexOf(pub) >= 0;
 function nOffSet(pub, off) { const a = Array.isArray(settings.nOff) ? settings.nOff.filter(x => x !== pub) : []; if (off) a.push(pub); settings.nOff = a.slice(0, 500); save(); ntFrRender(); pushSyncSoon(); }
-let ntFrOpen = false;
-function ntFrRender() {   // under "Friends come online": which friends (all of them unless you turn some off)
-  const box = $('ntFrList'); if (!box) return; const fr = lks.filter(l => l.ok || l.name), off = fr.filter(l => nOffHas(l.pub)).length;
-  $('ntFrSub').textContent = !fr.length ? 'When a friend starts playing' : off === 0 ? 'All your friends' : off === fr.length ? 'None of your friends' : (fr.length - off) + ' of your ' + fr.length + ' friends';
-  $('ntFrBtnT').textContent = ntFrOpen ? 'Done' : 'Choose friends'; $('ntFrBox').classList.toggle('hide', !settings.nFriends || !fr.length);
-  box.classList.toggle('hide', !ntFrOpen); if (!ntFrOpen) return;
-  const k = JSON.stringify(fr.map(l => [l.pub, l.name, l.on, nOffHas(l.pub)])); if (box._k === k) return; box._k = k; box.textContent = '';
-  for (const l of fr) { const c = document.createElement('input'); c.type = 'checkbox'; c.checked = !nOffHas(l.pub); c.setAttribute('aria-label', 'Notify me when ' + who(l.name) + ' comes online'); c.onchange = () => nOffSet(l.pub, !c.checked); const r = personRow(l, '', [c], true); r.onclick = e => { if (e.target !== c) { c.checked = !c.checked; c.onchange(); } }; box.appendChild(r); }
+/* which friends you hear about: one list for coming online, one for messages. Picked in a pop-up, with a switch for each friend */
+const mOffHas = pub => Array.isArray(settings.nMsgOff) && settings.nMsgOff.indexOf(pub) >= 0;
+function mOffSet(pub, off) { const a = Array.isArray(settings.nMsgOff) ? settings.nMsgOff.filter(x => x !== pub) : []; if (off) a.push(pub); settings.nMsgOff = a.slice(0, 500); save(); ntFrRender(); pushSyncSoon(); }
+let nfKind = '';
+const nfFriends = () => lks.filter(l => (l.ok || l.name) && !isMe(l) && !blockedPub(l.pub)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+const nfOff = (k, pub) => k === 'm' ? mOffHas(pub) : nOffHas(pub);
+function nfSub(k) { const fr = nfFriends(), off = fr.filter(l => nfOff(k, l.pub)).length; return !fr.length ? '' : off === 0 ? 'All your friends' : off === fr.length ? 'None of your friends' : (fr.length - off) + ' of your ' + fr.length + ' friends'; }
+function ntFrRender() {
+  const fr = nfFriends();
+  $('ntFrSub').textContent = fr.length ? nfSub('f') : 'When a friend starts playing'; $('ntFrBox').classList.toggle('hide', !settings.nFriends || !fr.length);
+  $('ntMsSub').textContent = fr.length ? nfSub('m') : 'A friend sends you a chat message'; $('ntMsBox').classList.toggle('hide', !settings.nMsgs || !fr.length);
+  if (nfKind) nfRender();
 }
-$('ntFrBtn').onclick = () => { ntFrOpen = !ntFrOpen; sfx('ui'); ntFrRender(); };
+function nfOpen(k) { nfKind = k; $('nfTitle').textContent = k === 'm' ? 'Messages from' : 'Coming online'; $('nfSub').textContent = k === 'm' ? 'You get a notification when these friends send you a message.' : 'You get a notification when these friends start playing.'; nfRender(); $('nfModal').classList.remove('hide'); sfx('ui'); }
+function nfClose() { nfKind = ''; $('nfModal').classList.add('hide'); }
+function nfRender() {
+  const k = nfKind, fr = nfFriends(), box = $('nfList'); box.textContent = ''; let on = 0;
+  for (const l of fr) { const isOn = !nfOff(k, l.pub); if (isOn) on++;
+    const r = el('button', 'nfrow' + (isOn ? ' on' : '')); r.type = 'button'; r.setAttribute('role', 'switch'); r.setAttribute('aria-checked', isOn ? 'true' : 'false'); r.appendChild(ballDot(l)); const w = el('span', 'dmw'); w.appendChild(el('b', '', who(l.name))); w.appendChild(el('small', '', isOn ? 'On' : 'Off')); r.appendChild(w); r.appendChild(el('i', 'tg'));
+    r.onclick = () => { sfx(isOn ? 'off' : 'on'); if (k === 'm') mOffSet(l.pub, isOn); else nOffSet(l.pub, isOn); };
+    box.appendChild(r); }
+  if (!fr.length) box.appendChild(el('div', 'small dim', 'No friends yet.'));
+  $('nfCount').textContent = fr.length ? on + ' of ' + fr.length + ' on' : ''; $('nfAll').textContent = on === fr.length ? 'Turn all off' : 'Turn all on'; $('nfAll').classList.toggle('hide', !fr.length);
+}
+$('nfAll').onclick = () => { const fr = nfFriends(), allOn = fr.every(l => !nfOff(nfKind, l.pub)), key = nfKind === 'm' ? 'nMsgOff' : 'nOff'; const rest = (Array.isArray(settings[key]) ? settings[key] : []).filter(p => !fr.some(l => l.pub === p)); settings[key] = allOn ? rest.concat(fr.map(l => l.pub)).slice(0, 500) : rest; save(); sfx('ui'); ntFrRender(); pushSyncSoon(); };
+$('nfX').onclick = () => { sfx('ui'); nfClose(); };
+$('nfModal').addEventListener('pointerdown', e => { if (e.target === $('nfModal')) nfClose(); });
+$('ntFrBtn').onclick = () => nfOpen('f');
+$('ntMsBtn').onclick = () => nfOpen('m');
+$('setNMsgs').addEventListener('change', () => setTimeout(ntFrRender, 0));
 $('setNFriends').addEventListener('change', () => setTimeout(ntFrRender, 0));
 function ntRender() {
   const on = notifOK() ? Notification.permission !== 'denied' : false;
@@ -6793,8 +6945,10 @@ async function pushSync() {   // tell the server where to reach this device, and
     if (!vapidKey) throw 0;
     const want = b64uBytes(vapidKey); let sub = await reg.pushManager.getSubscription();
     if (sub) { const have = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null; if (!have || have.length !== want.length || have.some((v, i) => v !== want[i])) { await sub.unsubscribe(); sub = null; } }   // (the server's keys changed: subscribe again)
+    if (sub && isStandalone()) { let own = ''; try { own = localStorage.getItem('bp_subapp') || ''; } catch (e) {} if (own !== sub.endpoint) { try { await sub.unsubscribe(); } catch (e) {} sub = null; } }   // (in the app: sign up again from here, so the phone treats the notifications as the app's and a tap opens the app)
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
-    const prefs = { f: settings.nFriends ? 1 : 0, d: settings.nMsgs ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, mu: [...new Set(lks.filter(l => l.mute >= 1 || nOffHas(l.pub)).map(l => l.pub))].slice(0, 500), q: quietPrefs() };   // (friends you do not want to hear about)
+    if (isStandalone()) { try { localStorage.setItem('bp_subapp', sub.endpoint); } catch (e) {} }
+    const prefs = { f: settings.nFriends ? 1 : 0, d: settings.nMsgs ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, mu: [...new Set(lks.filter(l => l.mute >= 1 || nOffHas(l.pub)).map(l => l.pub))].slice(0, 500), mm: (Array.isArray(settings.nMsgOff) ? settings.nMsgOff : []).slice(0, 500), q: quietPrefs() };   // (friends you do not want to hear about)
     const j = sub.toJSON(), sig = JSON.stringify([j.endpoint, prefs]);
     pushState = 'on'; ntRender();
     if (sig === pushSig && pushSock === ws) return;
@@ -6892,7 +7046,8 @@ function lvBuild() {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lvb' + (i === soloLevel() ? ' cur' : ''); b.setAttribute('data-i', i); b.setAttribute('role', 'option');
     const kind = !hasSoloSave(i) ? '' : soloFrom(i) ? 'got' : soloBuilt(i) ? 'mine' : ''; if (kind) b.classList.add(kind);
     const th = (BallMaps.meta && BallMaps.meta[i] ? BallMaps.meta[i].th : []).map(biomeOf).filter(Boolean).slice(0, 5);
-    b.innerHTML = '<span class="n">Level ' + (i + 1) + '</span><span class="nm">' + BallMaps.names[i] + '</span><span class="dots">' + th.map(t => '<i style="background:' + t.top + '"></i>').join('') + '</span>' + (isBeaten(i) ? '<i class="lvk">' + ico('crown') + '</i>' : '');
+    b.innerHTML = '<span class="lnum">' + (i + 1) + '</span><span class="lt"><span class="nm">' + BallMaps.names[i] + '</span><span class="dots">' + th.map(t => '<i style="background:' + t.top + '"></i>').join('') + '</span></span><span class="lst">' + (i === soloLevel() ? '<span class="lvtag cur">Playing</span>' : '') + (kind === 'mine' ? '<span class="lvtag mine">Built</span>' : kind === 'got' ? '<span class="lvtag got">Saved</span>' : '') + (isBeaten(i) ? ico('crown') : '') + '</span>';
+    b.setAttribute('aria-label', 'Level ' + (i + 1) + ': ' + BallMaps.names[i]);
     b.setAttribute('data-k', kind + (isBeaten(i) ? ' beat' : '')); g.appendChild(b);
   }
   lvFilter();
@@ -6905,11 +7060,12 @@ function lvMoneyText(i) { const q = purseV[i]; return q && q.u ? 'Unlimited on t
 function lvSelect(i) {
   lvSel = i;
   document.querySelectorAll('#lvGrid .lvb').forEach(b => { const on = +b.getAttribute('data-i') === i; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
-  $('lvName').textContent = lvLabelOf(i);
+  $('lvName').textContent = BallMaps.names[i]; $('lvNum').textContent = 'Level ' + (i + 1) + ' of ' + BallMaps.count;
+  { const th = (BallMaps.meta && BallMaps.meta[i] ? BallMaps.meta[i].th : []).map(biomeOf).filter(Boolean); $('lvStrip').innerHTML = th.map(t => '<i style="background:' + t.top + '"></i>').join(''); }
   const mt = BallMaps.meta && BallMaps.meta[i], tags = $('lvTags'); tags.innerHTML = '';
   if (mt) { const len = lvLen(i); if (len) { const s = document.createElement('span'); s.textContent = len; tags.appendChild(s); } mt.th.slice(0, 5).map(biomeOf).filter(Boolean).forEach(t => { const s = document.createElement('span'); s.innerHTML = '<i style="background:' + t.top + '"></i>' + t.id.charAt(0).toUpperCase() + t.id.slice(1); tags.appendChild(s); }); }
   $('lvNote').textContent = (isBeaten(i) ? 'You have beaten this level. ' : 'Not beaten yet. ') + (soloFrom(i) ? 'A copy saved from ' + soloFrom(i) + '.' : soloBuilt(i) ? 'What you built here is saved.' : hasSoloSave(i) ? 'Your progress here is saved. Nothing built yet.' : 'Nothing saved yet.') ; { const t = lvDescOf(i), de = $('lvDesc'); de.textContent = t; de.classList.toggle('hide', !t); $('lvDescBtn').lastChild.textContent = t ? 'Edit description' : 'Add a description'; }
-  $('lvOk').textContent = inHome ? 'Play' : (i === soloLevel() ? 'Keep playing' : 'Play'); lvOptRender.k = ''; lvOptRender();
+  $('lvOkT').textContent = inHome ? 'Play ' + 'level ' + (i + 1) : (i === soloLevel() ? 'Keep playing' : 'Play level ' + (i + 1)); lvOptRender.k = ''; lvOptRender(); lvLayout();
 }
 $('lvFil').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { sfx('ui'); lvF = b.getAttribute('data-f'); lvFilter(); } });
 $('lvUnl').onchange = () => {   // every private map decides for itself: earn coins and diamonds there, or have them without limit
@@ -6954,10 +7110,18 @@ function lvOptRender() {   // the options of the level you picked live in the Mo
   $('lvOptFor').textContent = 'For ' + lvLabelOf(i) + ':'; $('lvUnl').checked = unlimitedAt(i); $('lvMoney').textContent = lvMoneyText(i); finRow(i);
 }
 function finApply() { if (!finChg) return; finChg = false; if (inHome || settings.mp || (party && party.role === 'guest')) return; hostLeaveWarn(() => rehost(() => soloGo(true)), 'move the finish'); }
-let lvOptHome = null;
+let lvOptHome = null, lvStep = 'list';
+const lvSplit = () => (innerWidth >= 760 && innerHeight >= 520) || (innerWidth >= 640 && innerWidth > innerHeight * 1.4);   // (a big screen, or a phone on its side: list and level side by side)
+function lvLayout() {   // phones: the list, then one level (with a back arrow). A big screen: both at once
+  const c = document.querySelector('#lvlModal .lvpick'), sp = lvSplit(), det = !sp && lvStep === 'detail';
+  c.classList.toggle('split', sp); c.classList.toggle('detail', det); $('lvBack').classList.toggle('hide', !det);
+  $('lvTitle').textContent = det ? 'Level ' + (lvSel + 1) : inHome ? 'Pick a level' : 'Levels';
+}
+$('lvBack').onclick = () => { sfx('ui'); lvStep = 'list'; lvLayout(); setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s) try { s.scrollIntoView({ block: 'center' }); } catch (e) {} }, 0); };
+addEventListener('resize', () => { if (!$('lvlModal').classList.contains('hide')) lvLayout(); });
 function openLevels() {
   loadSolo(); lvBuild(); if (!lvOptHome) lvOptHome = { p: $('lvOptBox').parentNode, n: $('lvOptBox').nextSibling }; $('lvOptSlot').appendChild($('lvOptBox'));   // (the level's options come along into the list: look, set, then play)
-  $('lvlModal').classList.remove('hide'); lvSelect(soloLevel()); $('lvNo').textContent = inHome ? 'Cancel' : 'Close';
+  lvStep = 'list'; $('lvlModal').classList.remove('hide'); lvSelect(soloLevel()); $('lvNo').textContent = inHome ? 'Cancel' : 'Close';
   setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }, 30);
 }
 function closeLevels() { $('lvlModal').classList.add('hide'); if (lvOptHome && $('lvOptBox').parentNode !== lvOptHome.p) lvOptHome.p.insertBefore($('lvOptBox'), lvOptHome.n); lvOptRender.k = ''; lvOptRender(); }
@@ -6968,7 +7132,7 @@ function askResetLevel(i, after, twice) {
     if (cur) { hostLeaveWarn(go, 'start the level over'); return; } go();
   }, { no: 'Keep it' });
 }
-$('lvGrid').addEventListener('click', e => { const b = e.target.closest('.lvb'); if (b) { sfx('ui'); lvSelect(+b.getAttribute('data-i')); } });
+$('lvGrid').addEventListener('click', e => { const b = e.target.closest('.lvb'); if (b) { sfx('ui'); lvStep = 'detail'; lvSelect(+b.getAttribute('data-i')); const r = document.querySelector('#lvlModal .lvright'); if (r) r.scrollTop = 0; } });
 $('lvNo').onclick = closeLevels;
 $('lvReset').onclick = () => askResetLevel(lvSel);
 $('lvOk').onclick = () => {

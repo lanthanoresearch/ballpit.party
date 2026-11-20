@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 204;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 205;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -234,7 +234,7 @@ function quietNow(q) {   // is it within their quiet hours, where they are?
   return q.a < q.b ? m >= q.a && m < q.b : m >= q.a || m < q.b;   // (a stretch over midnight, like 22:00 to 07:00, too)
 }
 function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map. Only to devices that are not connected right now.
-  const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !(kind === 'd' ? sub.d !== 0 : sub[kind]) || (live(here) && !here.hidden) || (from && sub.mu && sub.mu.indexOf(from) >= 0) || quietNow(sub.q)) return;
+  const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !(kind === 'd' ? sub.d !== 0 : sub[kind]) || (live(here) && !here.hidden) || (from && kind !== 'd' && sub.mu && sub.mu.indexOf(from) >= 0) || (from && kind === 'd' && sub.mm && sub.mm.indexOf(from) >= 0) || quietNow(sub.q)) return;
   const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : kind === 'd' ? 60000 : 30000; if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
   if (pushLast.size > 4000) { for (const [kk, v] of pushLast) if (t - v > 3600000) pushLast.delete(kk); }
   sendPush(pub, { title: String(n[0]).slice(0, 60), body: String(n[1]).slice(0, 100), tag });
@@ -250,7 +250,7 @@ try {
   for (const k in (o.pairs || {})) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k)) { const v = o.pairs[k] || {}; pairT.set(k, { s: +v.s || 0, m: +v.m || 0 }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
   if (o.vapid && o.vapid.pub && o.vapid.priv) vapid = makeVapid(o.vapid.pub, o.vapid.priv);
-  for (const k in (o.push || {})) if (PUB.test(k) && o.push[k] && okPushUrl(o.push[k].ep)) { const v = o.push[k]; pushSubs.set(k, { ep: String(v.ep), p: String(v.p).slice(0, 100), a: String(v.a).slice(0, 40), f: v.f ? 1 : 0, r: v.r ? 1 : 0, i: v.i ? 1 : 0, m: v.m ? 1 : 0, d: v.d === 0 ? 0 : 1, mu: Array.isArray(v.mu) ? v.mu.filter(x => PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(v.q), t: +v.t || 0 }); }
+  for (const k in (o.push || {})) if (PUB.test(k) && o.push[k] && okPushUrl(o.push[k].ep)) { const v = o.push[k]; pushSubs.set(k, { ep: String(v.ep), p: String(v.p).slice(0, 100), a: String(v.a).slice(0, 40), f: v.f ? 1 : 0, r: v.r ? 1 : 0, i: v.i ? 1 : 0, m: v.m ? 1 : 0, d: v.d === 0 ? 0 : 1, mu: Array.isArray(v.mu) ? v.mu.filter(x => PUB.test(x)).slice(0, 500) : [], mm: Array.isArray(v.mm) ? v.mm.filter(x => PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(v.q), t: +v.t || 0 }); }
   for (const e of (o.news || [])) if (Array.isArray(e) && PUB.test(e[0]) && Array.isArray(e[1])) news.set(e[0], e[1].filter(x => x && PUB.test(x.p) && Date.now() - x.t < REQ_TTL).map(x => ({ p: x.p, ok: x.ok ? 1 : 0, t: +x.t })).slice(-30));
   console.log('Restored ' + known.size + ' players, ' + [...links.values()].reduce((a, v) => a + v.size, 0) / 2 + ' friendships, ' + pend.size + ' waiting requests, from ' + LINKS_FILE);
 } catch (e) {}
@@ -309,15 +309,16 @@ function saveDms(sync) {
   try { const s = JSON.stringify({ box: Object.fromEntries(dmBox) }), tmp = DM_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, DM_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, DM_FILE, () => {}); }); } catch (e) {}
 }
 setInterval(saveDms, 15000);
-function dmQueue(to, from, name, s, at) {   // false when that friend's box is full of messages from this one
+const dmSeen = new Map();   // (the last message ids each player sent: a message sent twice goes once)
+function dmQueue(to, from, name, s, at, id) {   // false when that friend's box is full of messages from this one
   const l = dmBox.get(to) || []; if (l.filter(x => x.f === from).length >= DM_PER) return false;
-  l.push({ f: from, n: name, s, at }); dmBox.set(to, l); dmDirty = true; return true;
+  l.push(id ? { f: from, n: name, s, at, id } : { f: from, n: name, s, at }); dmBox.set(to, l); dmDirty = true; return true;
 }
 function dropDms(a, b) { for (const [x, y] of [[a, b], [b, a]]) { const l = dmBox.get(x); if (!l) continue; const n = l.filter(m => m.f !== y); if (n.length !== l.length) { dmDirty = true; if (n.length) dmBox.set(x, n); else dmBox.delete(x); } } }
 function sendDmBox(p) {   // what friends wrote while you were away
   const l = dmBox.get(p.pub); if (!l || !l.length) return; dmBox.delete(p.pub); dmDirty = true;
   const cl = claimsOf.get(p.pub) || new Set(), keep = [];
-  for (const x of l) if (blocked(p.pub, x.f)) continue; else if (!(linkSet(p.pub).has(x.f) || cl.has(x.f))) keep.push(x); else { const pi = peerInfo(x.f); send(p, { t: 'dm', from: x.f, name: pi.name || x.n, color: pi.color, s: x.s, at: x.at, late: 1 }); }
+  for (const x of l) if (blocked(p.pub, x.f)) continue; else if (!(linkSet(p.pub).has(x.f) || cl.has(x.f))) keep.push(x); else { const pi = peerInfo(x.f); send(p, { t: 'dm', from: x.f, name: pi.name || x.n, color: pi.color, s: x.s, at: x.at, id: x.id || undefined, late: 1 }); }
   if (keep.length) dmBox.set(p.pub, keep);   // (not friends again yet: kept until they are)
 }
 function sendShares(p) { const now = Date.now(), list = [], cl = claimsOf.get(p.pub) || new Set(); for (const v of shares.values()) if (v.to === p.pub && now - v.t <= SHARE_TTL && !blocked(v.from, v.to) && (linkSet(p.pub).has(v.from) || cl.has(v.from))) list.push(shareMeta(v)); if (list.length) send(p, { t: 'shr', list });
@@ -1318,7 +1319,7 @@ wss.on('connection', (ws, req) => {
       const k1 = unb64u(m.sub.keys.p256dh || ''), k2 = unb64u(m.sub.keys.auth || ''); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16) return;
       if (!pushSubs.has(p.pub) && pushSubs.size >= 8000) return;
       const pr = m.prefs && typeof m.prefs === 'object' ? m.prefs : {};
-      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, d: pr.d === 0 ? 0 : 1, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(pr.q), t: Date.now() };
+      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, d: pr.d === 0 ? 0 : 1, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], mm: Array.isArray(pr.mm) ? pr.mm.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(pr.q), t: Date.now() };
       pushSubs.set(p.pub, ent); linksDirty = true;
       for (const f of linkSet(p.pub)) { const q = byPub.get(f); if (q && live(q)) send(q, { t: 'fsub', pub: p.pub, s: ent }); }   // (your friends' devices keep where to reach yours: if this server ever forgets, they tell it again)
       send(p, { t: 'fsubs', l: [...linkSet(p.pub)].filter(f => pushSubs.has(f)).slice(0, 64).map(f => [f, pushSubs.get(f)]) });
@@ -1374,16 +1375,19 @@ wss.on('connection', (ws, req) => {
     } else if (m.t === 'dm') {   // a message to one friend, from anywhere (a game or the main menu): only to a friend, never to or from someone blocked, and never with personal info
       if (!p.pub || !live(p) || typeof m.to !== 'string' || !PUB.test(m.to) || typeof m.s !== 'string') return;
       const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
+      const mid = typeof m.id === 'string' && /^[a-z0-9]{6,16}$/.test(m.id) ? m.id : '', ids = mid ? (dmSeen.get(p.pub) || (dmSeen.set(p.pub, []), dmSeen.get(p.pub))) : null;
+      if (mid && ids.includes(mid)) { send(p, { t: 'dmok', to: m.to, s: '', at: Date.now(), c: m.c | 0, id: mid, q: 0 }); return; }   // (sent again after a lost answer: it already went once)
       const isFr = (a, b) => linkSet(a).has(b) || (claimsOf.get(a) || new Set()).has(b);   // (friends by the server's list, or by yours while it learns them back after a restart)
-      if (!isFr(p.pub, m.to) || blocked(p.pub, m.to)) { send(p, { t: 'dmno', to: m.to, why: 'friend', c: m.c | 0 }); return; }
-      { const why = P.piiCheck(txt); if (why) { send(p, { t: 'pii', why, to: m.to, c: m.c | 0 }); return; } }
-      const now = Date.now(); p.dmT = (p.dmT || []).filter(t => now - t < 10000); if (p.dmT.length >= 20) { send(p, { t: 'dmno', to: m.to, why: 'slow', c: m.c | 0 }); return; } p.dmT.push(now);   // (messages to friends: a lot at once is fine, just not a flood)
+      if (!isFr(p.pub, m.to) || blocked(p.pub, m.to)) { send(p, { t: 'dmno', to: m.to, why: 'friend', c: m.c | 0, id: mid }); return; }
+      { const why = P.piiCheck(txt); if (why) { send(p, { t: 'pii', why, to: m.to, c: m.c | 0, id: mid }); return; } }
+      const now = Date.now(); p.dmT = (p.dmT || []).filter(t => now - t < 10000); if (p.dmT.length >= 30) { send(p, { t: 'dmno', to: m.to, why: 'slow', c: m.c | 0, id: mid }); return; } p.dmT.push(now);   // (messages to friends: a lot at once is fine, just not a flood)
       const q = byPub.get(m.to), here = live(q);
-      if (!here && !dmQueue(m.to, p.pub, p.name, txt, now)) { send(p, { t: 'dmno', to: m.to, why: 'full', c: m.c | 0 }); return; }   // (not on: kept for them until they come back)
+      if (!here && !dmQueue(m.to, p.pub, p.name, txt, now, mid)) { send(p, { t: 'dmno', to: m.to, why: 'full', c: m.c | 0, id: mid }); return; }
+      if (mid) { ids.push(mid); if (ids.length > 300) ids.shift(); }   // (not on: kept for them until they come back)
       pairOf(p.pub, m.to).m = now; linksDirty = true;
-      if (here) send(q, { t: 'dm', from: p.pub, name: p.name, color: p.color, s: txt, at: now });
-      send(p, { t: 'dmok', to: m.to, s: txt, at: now, c: m.c | 0, q: here ? 0 : 1 });
-      pushTo(m.to, 'd', [p.name || 'A friend', txt], 'dm-' + p.pub);   // (only reaches them if they are away from the game)
+      if (here) send(q, { t: 'dm', from: p.pub, name: p.name, color: p.color, s: txt, at: now, id: mid || undefined });
+      send(p, { t: 'dmok', to: m.to, s: txt, at: now, c: m.c | 0, id: mid, q: here ? 0 : 1 });
+      pushTo(m.to, 'd', [p.name || 'A friend', txt], 'dm-' + p.pub, p.pub);   // (only reaches them if they are away from the game)
     } else if (m.t === 'prof') {   // everything shown on a player's profile, fresh (yours too)
       if (!p.pub) return; const now = Date.now(); if (now - (p.lastProf || 0) < 150) return; p.lastProf = now;
       const who = m.to === 'me' ? p.pub : m.to; if (typeof who !== 'string' || !PUB.test(who) || !known.has(who)) return;
