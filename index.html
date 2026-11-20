@@ -1004,7 +1004,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 206; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 207; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1737,8 +1737,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=206"></script>
-<script src="physics.js?v=206"></script>
+<script src="maps.js?v=207"></script>
+<script src="physics.js?v=207"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -4629,7 +4629,13 @@ function friendNote(e, nm, on) {   // a special heads-up when someone you track 
   const t = who(nm || e.name) + (on ? ' is online' : ' went offline');
   if (on && ![...others.values()].some(o => o.pub === e.pub)) notice('★ ' + t, '', 'human'); addFeed('★ ' + t, 'friend', true, 'human'); sfx(on ? 'join' : 'leave'); if (on && !nOffHas(e.pub)) sysNotify('nFriends', who(nm || e.name) + ' is online', 'Jump in and play together', 'on-' + e.pub);   // (coming online gets a pop-up, unless they came straight into your game: that has its own; going offline is just a line in the list)
 }
-const wsSend = o => { if (ws && ws.readyState === 1 && (online || lobbyOn)) ws.send(JSON.stringify(o)); };
+/* sending to the server. Things that change your friends or answers (requests, accepting, unfriending, blocking, answers to shared maps...) never get lost:
+   if the connection is down at that moment, they wait here (even through a reload) and go as soon as it is back, in the order you did them */
+const SURE_T = { treq: 1, tacc: 1, tden: 1, unl: 1, blk: 1, shans: 1, share: 1, giftack: 1 }, OUTBOX = 'ballrun4_outbox';
+let outbox = []; try { outbox = (JSON.parse(localStorage.getItem(OUTBOX) || '[]') || []).filter(o => o && SURE_T[o.t]).slice(-100); } catch (e) {}
+const outSave = () => { try { localStorage.setItem(OUTBOX, JSON.stringify(outbox)); } catch (e) {} };
+const wsSend = o => { if (ws && ws.readyState === 1 && (online || lobbyOn)) { try { ws.send(JSON.stringify(o)); return; } catch (e) {} } if (o && SURE_T[o.t]) { const k = JSON.stringify(o); if (!outbox.some(x => JSON.stringify(x) === k)) { outbox.push(o); outbox = outbox.slice(-100); outSave(); } } };
+function outFlush() { if (!(ws && ws.readyState === 1 && (online || lobbyOn)) || !outbox.length) return; const l = outbox; outbox = []; outSave(); for (const o of l) wsSend(o); }
 
 /* ----- players you have run into stay on this device for three months, so the list is there even if the server forgot them. Friends are kept for good. ----- */
 const SEENKEY = 'ballrun4_seen', WEEK = 90 * 86400000;
@@ -4669,7 +4675,8 @@ function linkMsg(m) {
       linksReady = true; saveLinks(); lpRender(); pushSyncSoon(); if (document.hidden) sendVis(); return true;
     }
     case 'treq':
-      if (!reqs.some(r => r.pub === m.pub)) reqs.push({ pub: m.pub, code: m.code || '', name: String(m.name || '').slice(0, 12), color: HEX.test(m.color) ? m.color : '#ccc', color2: m.color2, pat: m.pat | 0 });
+      if (reqs.some(r => r.pub === m.pub)) { lpRender(); return true; }   // (already showing: it came again after the game woke up)
+      reqs.push({ pub: m.pub, code: m.code || '', name: String(m.name || '').slice(0, 12), color: HEX.test(m.color) ? m.color : '#ccc', color2: m.color2, pat: m.pat | 0 });
       sfx('ready'); if (S.mode === 'play') notice('★ ' + who(m.name) + ' wants to be your friend', ''); else reqPopup(m.pub); sysNotify('nRequests', who(m.name) + ' wants to be your friend', 'Open ballpit.party to answer', 'req-' + m.pub); lpRender(); return true;
     case 'tres': {   // the answer to a request you sent: now, or while you were away
       const list = m.list || []; let yes = 0, no = 0, last = null;
@@ -4711,6 +4718,7 @@ function linkMsg(m) {
     }
     case 'dm': dmIn(m); return true;
     case 'dmok': dmOk(m); return true;
+    case 'dmsync': dmSync(m); return true;
     case 'dmno': dmNo(m); return true;
     case 'pii': if (m.id) dmPii(m); piiSays(m.why); return true;
     case 'emo': {
@@ -5018,7 +5026,7 @@ function dmIn(m) {   // a friend wrote to you
   if (!/^[0-9a-f]{16}$/.test(m.from || '') || blockedPub(m.from) || typeof m.s !== 'string') return; const l = lkOf(m.from); if (!l) return;
   const at = +m.at || nowMs(), d = dmOf(m.from), nm = who(m.name || l.name); l.dm = Math.max(l.dm || 0, at); if (m.name) d.n = String(m.name).slice(0, 40);
   if (d.m.some(x => !x.me && ((m.id && x.id === m.id) || (x.a === at && x.s === m.s)))) return;   // (the same one twice)
-  dmPush(m.from, m.id ? { a: at, s: m.s.slice(0, 200), id: String(m.id).slice(0, 16) } : { a: at, s: m.s.slice(0, 200) });
+  dmPush(m.from, m.id ? { a: at, s: m.s.slice(0, 200), id: String(m.id).slice(0, 16) } : { a: at, s: m.s.slice(0, 200) }); clearTimeout(dmSaveT); dmSaveNow();   // (kept on this device straight away, even if the phone puts the game to sleep a moment later)
   if (dmShowing(m.from)) { dmRender(); sfx('ui'); return; }   // (if you are reading further up, you stay there)
   d.u = (d.u | 0) + 1; dmSave(); chatBadges();
   if (m.late) {   // (what came while you were away arrives all at once: one reminder for it)
@@ -5030,6 +5038,27 @@ function dmIn(m) {   // a friend wrote to you
 /* sending: every message has its own id, so it can be sent again safely (the server and your friend each ignore a second copy).
    Not connected? It waits here and goes by itself as soon as the connection is back */
 const dmFly = {};   // id -> { pub, msg, t } waiting for the server to say it got it
+/* catching up: the server keeps every message, and this device asks for anything newer than its last catch-up (when it connects, and whenever
+   the game comes back to the screen). Nothing is ever lost because the phone was asleep, and the app and the browser both have everything */
+const DMSYNC = 'ballrun4_dmsync';
+function dmSyncReq() { if (!dmNet()) return; wsSend({ t: 'sync' }); for (const k in giftOut) giftGo(giftOut[k]); let at = 0; try { at = +localStorage.getItem(DMSYNC) || 0; } catch (e) {} wsSend({ t: 'dmsync', since: at ? Math.max(0, at - 120000) : 0 }); }
+function dmSync(m) {
+  const list = Array.isArray(m.list) ? m.list : []; let fresh = 0, show = false; const late = {};
+  for (const x of list) {
+    if (!x || !/^[0-9a-f]{16}$/.test(x.w || '') || typeof x.s !== 'string' || blockedPub(x.w)) continue;
+    const pub = x.w, me = x.f !== pub, at = +x.at || 0, d = dmOf(pub);
+    if (d.m.some(y => (x.id && y.id === x.id) || (y.a === at && y.s === x.s && !!y.me === me))) continue;   // (already here)
+    const msg = me ? { a: at, me: 1, s: x.s.slice(0, 200), st: '', id: x.id } : { a: at, s: x.s.slice(0, 200), id: x.id };
+    let i = d.m.length; while (i > 0 && (d.m[i - 1].a || 0) > at) i--; d.m.splice(i, 0, msg); if (d.m.length > DM_KEEP) d.m.splice(0, d.m.length - DM_KEEP);
+    const l = lkOf(pub); if (l) l.dm = Math.max(l.dm || 0, at);
+    if (!me) { if (dmShowing(pub)) show = true; else { d.u = (d.u | 0) + 1; late[pub] = (late[pub] || 0) + 1; fresh++; } } else if (dmShowing(pub)) show = true;
+  }
+  try { if (m.now) localStorage.setItem(DMSYNC, String(+m.now)); } catch (e) {}
+  if (!list.length) return;
+  dmSaveNow(); chatBadges(); if (show || (chatOpen && chatView === 'l')) chatShow();
+  if (fresh) { const ks = Object.keys(late); if (ks.length === 1) { const k = ks[0], lk = lkOf(k); dmToast(k, who((lk && lk.name) || dms[k].n), late[k] === 1 ? bubbleOf(dmLast(k).s) : late[k] + ' new messages'); } else dmToast(ks[0], fresh + ' new messages', 'from ' + ks.length + ' friends'); sfx('ready'); }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(dmSyncReq, 400); });   // (back from the background: anything that came while the game was asleep)
 function dmSend(pub, txt) {
   const l = dmFriend(pub); if (!l) return false;
   if (offlineOn()) { dmNoteSet('You are offline. Messages need the server.', true); sfx('warn'); return false; }
@@ -5211,13 +5240,32 @@ $('gvOk').onclick = () => {
   askConfirm('Give ' + nm + ' ' + what + '?', 'They come out of what you have and go straight to ' + nm + '. You cannot take them back.', 'Yes, give', () => {
     const o2 = others.get(id), mx2 = giveMax(); if (!o2 || !online || !ws || ws.readyState !== 1) { gvMsg('Could not give: they are not here, or you are not connected', 'bad'); return; }
     if (c > mx2.c || g > mx2.g) { gvMsg('You do not have that much any more', 'bad'); return; }
-    wallet.c -= c; wallet.g -= g; saveWallet(); wsSend({ t: 'gift', to: id, c, g }); sfx('coin'); chatAdd('', 'You gave ' + nm + ' ' + what, 'sys');
-    $('gvC').value = 0; $('gvG').value = 0; giveRender(); gvMsg('You gave ' + nm + ' ' + what, 'ok');
+    const before = { c: wallet.c, g: wallet.g }; wallet.c -= c; wallet.g -= g; saveWallet();
+    const gf = { gid: dmNewId(), to: id, toPub: o2.pub || '', c, g, nm, what, pk: settings.mp && !party ? 'p' : String(S.idx | 0), took: before.c >= 1e9 ? 0 : 1, t: Date.now(), n: 0 };
+    giftOut[gf.gid] = gf; giftSave(); giftGo(gf); sfx('coin');
+    $('gvC').value = 0; $('gvG').value = 0; giveRender(); gvMsg('Giving ' + what + ' to ' + nm + '…', '');
   }, { no: 'Cancel', yesClass: 'go' });
 };
+/* gifts, both ways, can never get lost: what you give waits here until the server has it (and comes back to you if it could not go);
+   what you get is counted once, and the server keeps it until this device says it has it */
+const GIFT_OUT = 'ballrun4_giftout', GIFT_GOT = 'ballrun4_giftgot';
+let giftOut = {}, giftGot = []; try { giftOut = JSON.parse(localStorage.getItem(GIFT_OUT) || '{}') || {}; giftGot = JSON.parse(localStorage.getItem(GIFT_GOT) || '[]') || []; } catch (e) {}
+const giftSave = () => { try { localStorage.setItem(GIFT_OUT, JSON.stringify(giftOut)); localStorage.setItem(GIFT_GOT, JSON.stringify(giftGot.slice(-300))); } catch (e) {} };
+const giftPurse = pk => pk === 'p' ? purseP : purseOf(+pk | 0);
+function giftGo(gf) { if (!(ws && ws.readyState === 1 && (online || lobbyOn))) return; gf.n++; gf.sent = Date.now(); wsSend({ t: 'gift', to: gf.to, toPub: gf.toPub, c: gf.c, g: gf.g, gid: gf.gid }); }   // (out of the world, the server answers no, and it all comes back)
+function giftOk(m) { const gf = m.gid && giftOut[m.gid]; if (!gf) return; delete giftOut[m.gid]; giftSave(); chatAdd('', 'You gave ' + gf.nm + ' ' + gf.what, 'sys'); if (chatOpen && chatView === 'g') gvMsg('You gave ' + gf.nm + ' ' + gf.what, 'ok'); }
+function giftNo(m) {   // could not go (they left, or you did): it all comes back to you
+  const gf = m.gid && giftOut[m.gid]; if (!gf) return; delete giftOut[m.gid];
+  if (gf.took) { const pu = giftPurse(gf.pk); pu.c += gf.c; pu.g += gf.g; saveWallet(); } giftSave();
+  const t = 'Could not give ' + gf.what + ' to ' + gf.nm + ': they were not there any more. You have them back.'; if (chatOpen && chatView === 'g') { gvMsg(t, 'bad'); giveRender(); } else notice(t, ''); sfx('warn');
+}
+setInterval(() => { const now = Date.now(); for (const k in giftOut) { const gf = giftOut[k]; if (now - (gf.sent || 0) > 6000) giftGo(gf); } }, 3000);   // (no answer yet: ask again, until the server says yes or no)
 function onGift(m) {
   const c = Math.max(0, m.c | 0), g = Math.max(0, m.g | 0); if (!(c + g)) return;
-  wallet.c += c; wallet.g += g; saveWallet(); sfx('gem');
+  if (m.gid && giftGot.includes(m.gid)) { wsSend({ t: 'giftack', gid: m.gid }); return; }   // (already counted)
+  { const pu = m.w === 'p' ? purseP : m.w === 'v' && (m.idx | 0) >= 0 ? purseOf(m.idx | 0) : purseNow(); pu.c += c; pu.g += g; }
+  if (m.gid) giftGot.push(m.gid); saveWallet(); giftSave(); if (m.gid) wsSend({ t: 'giftack', gid: m.gid }); sfx('gem');
+  lastCoinShown = lastGemShown = -1; try { homeWalletRender.k = ''; homeWalletRender(); } catch (e) {}
   const what = [c ? fmtN(c) + ' coin' + (c === 1 ? '' : 's') : '', g ? fmtN(g) + ' diamond' + (g === 1 ? '' : 's') : ''].filter(Boolean).join(' and ');
   notice(who(m.name) + ' gave you ' + what + '!', ''); chatAdd('', who(m.name) + ' gave you ' + what, 'sys');
 }
@@ -6434,7 +6482,7 @@ setInterval(gateRender, 1000);
 $('hgRetry').onclick = () => { sfx('ui'); srvSt = 'wait'; gateArmed = true; srvWait(); retryNow(); gateRender(); };
 $('hgOff').onclick = () => { sfx('ui'); srvPrev = curMode(); setMode('off'); gateRender(); };
 function srvOk() {
-  const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0; setTimeout(() => { try { dmFlush(); } catch (e) {} }, 300);   // (messages written while away go now)
+  const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0; setTimeout(() => { try { outFlush(); dmFlush(); dmSyncReq(); } catch (e) {} }, 300);   // (messages written while away go now, and anything missed comes in)
   if (inHome && settings.offline) { setMode(srvPrev === 'pub' ? 'pub' : 'priv'); if (was === 'fail') notice('Connected to the server', ''); }
   if (inHome) homeModeText(); gateRender();
 }
@@ -6982,6 +7030,7 @@ $('ntTest').onclick = async () => {
 };
 function partyInvited(m) {
   if (typeof m.pub !== 'string' || (mutes[m.pub] || 0) >= 2) return;
+  wsSend({ t: 'invseen', pub: m.pub });   // (it showed: the server does not need to send it again)
   sysNotify('nInvites', who(m.name) + ' invited you', 'Join their private game', 'inv-' + m.pub);
   if (!$('confirm').classList.contains('hide')) { notice(who(m.name) + ' invited you to their private game', ''); return; }
   sfx('notice');
@@ -7572,7 +7621,8 @@ function onMsg(m) {
     case 'rules': if (party) { const was = !!party.nc; party.nc = !!m.nc; if (party.role !== 'host' && was !== party.nc) notice(party.nc ? 'The maker turned on No cheats: codes do nothing in this game' : 'The maker turned off No cheats', ''); } break;
     case 'baseno': notice(m.why === 'ground' ? 'Your base has to stand on dirt or ice' : 'Clear the land first: there is ' + m.why + ' that is not yours in the circle', 'urgent'); break;
     case 'gift': onGift(m); break;
-    case 'giftok': break;
+    case 'giftok': giftOk(m); break;
+    case 'giftno': giftNo(m); break;
     case 'text': onText(m); break;
     case 'texthold': notice('Slow down a little: a few messages at a time', ''); break;
     case 'inv': partyInvited(m); break;

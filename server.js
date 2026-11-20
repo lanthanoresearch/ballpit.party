@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 206;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 207;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -309,7 +309,27 @@ function saveDms(sync) {
   try { const s = JSON.stringify({ box: Object.fromEntries(dmBox) }), tmp = DM_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, DM_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, DM_FILE, () => {}); }); } catch (e) {}
 }
 setInterval(saveDms, 15000);
-const dmSeen = new Map();   // (the last message ids each player sent: a message sent twice goes once)
+/* every message between two friends is kept here too (the newest 2000 of each pair), so each device can catch up on anything it missed:
+   a phone that was asleep, the app and the browser, a new device */
+const DMH_FILE = process.env.DMH_FILE || path.join(path.dirname(LINKS_FILE), 'dmhist.json'), DMH_KEEP = 2000;
+const dmHist = new Map(); let dmhDirty = false;
+try { const o = JSON.parse(fs.readFileSync(DMH_FILE, 'utf8')); for (const k in (o && o.h) || {}) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k) && Array.isArray(o.h[k])) dmHist.set(k, o.h[k].filter(x => x && PUB.test(x.f || '') && typeof x.s === 'string').slice(-DMH_KEEP)); console.log('Restored chats between ' + dmHist.size + ' pairs of friends'); } catch (e) {}
+function saveDmh(sync) {
+  if (!dmhDirty) return; dmhDirty = false;
+  try { const s = JSON.stringify({ h: Object.fromEntries(dmHist) }), tmp = DMH_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, DMH_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, DMH_FILE, () => {}); }); } catch (e) {}
+}
+setInterval(saveDmh, 10000);
+const pairKey = (a, b) => a < b ? a + '|' + b : b + '|' + a;
+function dmKeep(a, b, x) { const k = pairKey(a, b), l = dmHist.get(k) || []; l.push(x); if (l.length > DMH_KEEP) l.splice(0, l.length - DMH_KEEP); dmHist.set(k, l); dmhDirty = true; }
+const dmNewId = () => crypto.randomBytes(6).toString('hex');
+const dmSeen = new Map();
+/* coins and diamonds given to someone: kept until their device says it has them (sent again when they come back, or when the game wakes up) */
+const GIFT_FILE = process.env.GIFT_FILE || path.join(path.dirname(LINKS_FILE), 'gifts.json');
+const giftBox = new Map(), giftSeen = new Map(); let giftDirty = false;
+try { const o = JSON.parse(fs.readFileSync(GIFT_FILE, 'utf8')); for (const k in (o && o.box) || {}) if (PUB.test(k) && Array.isArray(o.box[k])) giftBox.set(k, o.box[k].filter(x => x && typeof x.gid === 'string').slice(-200)); } catch (e) {}
+function saveGifts(sync) { if (!giftDirty) return; giftDirty = false; try { const s = JSON.stringify({ box: Object.fromEntries(giftBox) }), tmp = GIFT_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, GIFT_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, GIFT_FILE, () => {}); }); } catch (e) {} }
+setInterval(saveGifts, 5000);
+function sendGifts(p) { const l = giftBox.get(p.pub); if (!l) return; for (const x of l) send(p, { t: 'gift', from: 0, name: x.n, c: x.c, g: x.g, gid: x.gid, w: x.w, idx: x.idx, late: 1 }); }   // (the last message ids each player sent: a message sent twice goes once)
 function dmQueue(to, from, name, s, at, id) {   // false when that friend's box is full of messages from this one
   const l = dmBox.get(to) || []; if (l.filter(x => x.f === from).length >= DM_PER) return false;
   l.push(id ? { f: from, n: name, s, at, id } : { f: from, n: name, s, at }); dmBox.set(to, l); dmDirty = true; return true;
@@ -998,7 +1018,7 @@ wss.on('connection', (ws, req) => {
         { const nl = news.get(p.pub); if (nl && nl.length) send(p, { t: 'tres', list: nl.map(x => { const pi = peerInfo(x.p); return { pub: x.p, code: pi.code, name: pi.name, ok: x.ok, t: x.t }; }) }); }   // answers to your requests that came while you were away
         { const out = []; pend.forEach((v, k) => { if (k.slice(0, 16) === p.pub) { const to = k.slice(17), pi = peerInfo(to); out.push({ pub: to, code: pi.code, name: pi.name, t: v.t }); } }); send(p, { t: 'tout', list: out }); }   // requests you sent that nobody has answered yet
         sendShares(p);   // (maps friends shared with you while you were away)
-        sendDmBox(p);
+        sendDmBox(p); sendGifts(p);
         pend.forEach((v, k) => {   // friend requests that arrived while you were away
           if (k.slice(17) !== p.pub) return;
           if (Date.now() - v.t > REQ_TTL) { pend.delete(k); return; }
@@ -1087,6 +1107,7 @@ wss.on('connection', (ws, req) => {
       r.priv.invited.add(m.to);
       const q = byPub.get(m.to), keep = m.keep !== false;   // 'keep open' (the default): they are asked again every time they come back, for as long as the game is open
       if (keep) { r.priv.keep.add(m.to); r.priv.once.delete(m.to); } else { r.priv.keep.delete(m.to); if (!live(q)) r.priv.once.add(m.to); }
+      (r.priv.seen || (r.priv.seen = new Set())).delete(m.to);   // (until their device says it showed the invitation)
       if (live(q)) send(q, { t: 'inv', pub: p.pub, name: p.name, idx: r.priv.idx }); pushTo(m.to, 'i', [(p.name || 'A friend') + ' invited you', 'Join their private game'], 'inv-' + p.pub);
       send(p, { t: 'invsent', pub: m.to, on: live(q) ? 1 : 0 });
     } else if (m.t === 'pb') {   // a bunch of builds at once (up to 25 of one kind): what somebody had built before joining this world
@@ -1363,9 +1384,25 @@ wss.on('connection', (ws, req) => {
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id) return;
       r.noCheats = !!m.nc; broadcast(r, { t: 'rules', nc: r.noCheats ? 1 : 0 });
     } else if (m.t === 'gift') {   // coins and diamonds from one player to another in the same world (the giver's device takes them off first)
-      const r = p.room; if (!r || !addOk(p)) return; const c = Math.max(0, Math.min(1e6, Math.floor(+m.c || 0))), g = Math.max(0, Math.min(1e4, Math.floor(+m.g || 0)));   // (never more than a million coins and ten thousand diamonds at once)
-      const q = r.players.get(m.to | 0); if (!q || q === p || !(c + g) || (p.pub && q.pub && blocked(p.pub, q.pub))) return;
-      send(q, { t: 'gift', from: p.id, name: p.name, c, g }); send(p, { t: 'giftok', to: q.id, c, g });
+      const gid = typeof m.gid === 'string' && /^[a-z0-9]{6,16}$/.test(m.gid) ? m.gid : '', c = Math.max(0, Math.min(1e6, Math.floor(+m.c || 0))), g = Math.max(0, Math.min(1e4, Math.floor(+m.g || 0)));   // (never more than a million coins and ten thousand diamonds at once)
+      const seen = p.pub ? (giftSeen.get(p.pub) || (giftSeen.set(p.pub, []), giftSeen.get(p.pub))) : [];
+      if (gid && seen.includes(gid)) { send(p, { t: 'giftok', gid, c, g }); return; }   // (sent again after a lost answer: it already went)
+      const r = p.room, q = r ? r.players.get(m.to | 0) : null;
+      if (!r || !addOk(p) || !q || q === p || !(c + g) || (typeof m.toPub === 'string' && m.toPub && q.pub !== m.toPub) || (p.pub && q.pub && blocked(p.pub, q.pub))) { send(p, { t: 'giftno', gid, c, g }); return; }   // (not there any more: the giver gets it all back)
+      const rec = { gid: gid || dmNewId(), n: p.name || '', c, g, w: r.priv ? 'v' : 'p', idx: r.priv ? (r.priv.idx | 0) : -1, at: Date.now() };
+      if (q.pub) { const l = giftBox.get(q.pub) || []; l.push(rec); giftBox.set(q.pub, l.slice(-200)); giftDirty = true; }   // (kept until their device says it has them)
+      send(q, { t: 'gift', from: p.id, name: p.name, c, g, gid: rec.gid, w: rec.w, idx: rec.idx });
+      if (gid) { seen.push(gid); if (seen.length > 200) seen.shift(); }
+      send(p, { t: 'giftok', to: q.id, gid, c, g });
+    } else if (m.t === 'giftack') {   // their device has the coins: done
+      if (!p.pub || typeof m.gid !== 'string') return; const l = giftBox.get(p.pub); if (!l) return; const n = l.filter(x => x.gid !== m.gid); if (n.length !== l.length) { giftDirty = true; if (n.length) giftBox.set(p.pub, n); else giftBox.delete(p.pub); }
+    } else if (m.t === 'invseen') {   // the invitation popped up on their screen
+      if (!p.pub || typeof m.pub !== 'string') return; const hp = byPub.get(m.pub), r = hp && hp.room; if (r && r.priv) (r.priv.seen || (r.priv.seen = new Set())).add(p.pub);
+    } else if (m.t === 'sync') {   // back on screen (a phone wakes the game up): anything that might have been missed while it was asleep comes again
+      if (!p.pub || !live(p)) return; const now = Date.now(); if (now - (p.lastSyncAll || 0) < 2000) return; p.lastSyncAll = now;
+      sendGifts(p); sendShares(p);
+      rooms.forEach(r => { if (r.priv && r !== p.room && r.priv.invited && r.priv.invited.has(p.pub) && (r.priv.keep.has(p.pub) || r.priv.once.has(p.pub) || !(r.priv.seen && r.priv.seen.has(p.pub))) && !(r.priv.seen && r.priv.seen.has(p.pub))) send(p, { t: 'inv', pub: r.priv.hostPub, name: (byPub.get(r.priv.hostPub) || {}).name || '', idx: r.priv.idx }); });   // (an invitation that never showed: it comes again)
+      pend.forEach((v, k) => { if (k.slice(17) !== p.pub || Date.now() - v.t > REQ_TTL) return; const from = k.slice(0, 16), pi = peerInfo(from); send(p, { t: 'treq', pub: from, code: pi.code, name: pi.name, color: pi.color, color2: pi.color2, pat: pi.pat, again: 1 }); });
     } else if (m.t === 'text') {   // a chat message: anything up to 200 characters, to everyone in your world
       const r = p.room; if (!r || typeof m.s !== 'string') return; const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
       { const why = P.piiCheck(txt); if (why) { send(p, { t: 'pii', why }); return; } }   // (phone numbers, emails, addresses, links and other apps never go out)
@@ -1382,12 +1419,18 @@ wss.on('connection', (ws, req) => {
       { const why = P.piiCheck(txt); if (why) { send(p, { t: 'pii', why, to: m.to, c: m.c | 0, id: mid }); return; } }
       const now = Date.now(); p.dmT = (p.dmT || []).filter(t => now - t < 10000); if (p.dmT.length >= 30) { send(p, { t: 'dmno', to: m.to, why: 'slow', c: m.c | 0, id: mid }); return; } p.dmT.push(now);   // (messages to friends: a lot at once is fine, just not a flood)
       const q = byPub.get(m.to), here = live(q);
-      if (!here && !dmQueue(m.to, p.pub, p.name, txt, now, mid)) { send(p, { t: 'dmno', to: m.to, why: 'full', c: m.c | 0, id: mid }); return; }
+      if (!here && !dmQueue(m.to, p.pub, p.name, txt, now, mid || (m._xid = dmNewId()))) { send(p, { t: 'dmno', to: m.to, why: 'full', c: m.c | 0, id: mid }); return; }
       if (mid) { ids.push(mid); if (ids.length > 300) ids.shift(); }   // (not on: kept for them until they come back)
       pairOf(p.pub, m.to).m = now; linksDirty = true;
-      if (here) send(q, { t: 'dm', from: p.pub, name: p.name, color: p.color, s: txt, at: now, id: mid || undefined });
+      const xid = mid || m._xid || dmNewId(); dmKeep(p.pub, m.to, { f: p.pub, s: txt, at: now, id: xid });   // (kept for good, for every device of both)
+      if (here) send(q, { t: 'dm', from: p.pub, name: p.name, color: p.color, s: txt, at: now, id: xid });
       send(p, { t: 'dmok', to: m.to, s: txt, at: now, c: m.c | 0, id: mid, q: here ? 0 : 1 });
       pushTo(m.to, 'd', [p.name || 'A friend', txt], 'dm-' + p.pub, p.pub);   // (only reaches them if they are away from the game)
+    } else if (m.t === 'dmsync') {   // catching up: every message with your friends since the newest one this device has
+      if (!p.pub || !live(p)) return; const now = Date.now(); if (now - (p.lastSync || 0) < 1500) return; p.lastSync = now;
+      const since = Math.max(0, +m.since || 0), cl = claimsOf.get(p.pub) || new Set(), fr = new Set([...linkSet(p.pub), ...cl]), out = [];
+      for (const w of fr) { if (blocked(p.pub, w)) continue; const l = dmHist.get(pairKey(p.pub, w)); if (!l) continue; for (let i = l.length - 1; i >= 0 && l[i].at > since; i--) out.push({ w, f: l[i].f, s: l[i].s, at: l[i].at, id: l[i].id }); }
+      out.sort((a, b) => a.at - b.at); send(p, { t: 'dmsync', list: out.slice(-600), now });
     } else if (m.t === 'prof') {   // everything shown on a player's profile, fresh (yours too)
       if (!p.pub) return; const now = Date.now(); if (now - (p.lastProf || 0) < 150) return; p.lastProf = now;
       const who = m.to === 'me' ? p.pub : m.to; if (typeof who !== 'string' || !PUB.test(who) || !known.has(who)) return;
@@ -1562,7 +1605,7 @@ setInterval(() => {
   }
 }, 25000);
 
-function shutdown() { savePeak(true); saveLinks(true); try { saveDms(true); } catch (e) {} try { sharesDirty = true; saveShares(); } catch (e) {} try { keepWorlds(true); } catch (e) {} process.exit(0); }
+function shutdown() { savePeak(true); saveLinks(true); try { saveDms(true); } catch (e) {} try { dmhDirty = true; saveDmh(true); } catch (e) {} try { giftDirty = true; saveGifts(true); } catch (e) {} try { sharesDirty = true; saveShares(); } catch (e) {} try { keepWorlds(true); } catch (e) {} process.exit(0); }
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
