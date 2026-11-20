@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 200;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 202;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -234,8 +234,8 @@ function quietNow(q) {   // is it within their quiet hours, where they are?
   return q.a < q.b ? m >= q.a && m < q.b : m >= q.a || m < q.b;   // (a stretch over midnight, like 22:00 to 07:00, too)
 }
 function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map. Only to devices that are not connected right now.
-  const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !sub[kind] || (live(here) && !here.hidden) || (from && sub.mu && sub.mu.indexOf(from) >= 0) || quietNow(sub.q)) return;
-  const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : 30000; if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
+  const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !(kind === 'd' ? sub.d !== 0 : sub[kind]) || (live(here) && !here.hidden) || (from && sub.mu && sub.mu.indexOf(from) >= 0) || quietNow(sub.q)) return;
+  const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : kind === 'd' ? 60000 : 30000; if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
   if (pushLast.size > 4000) { for (const [kk, v] of pushLast) if (t - v > 3600000) pushLast.delete(kk); }
   sendPush(pub, { title: String(n[0]).slice(0, 60), body: String(n[1]).slice(0, 100), tag });
 }
@@ -250,7 +250,7 @@ try {
   for (const k in (o.pairs || {})) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k)) { const v = o.pairs[k] || {}; pairT.set(k, { s: +v.s || 0, m: +v.m || 0 }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
   if (o.vapid && o.vapid.pub && o.vapid.priv) vapid = makeVapid(o.vapid.pub, o.vapid.priv);
-  for (const k in (o.push || {})) if (PUB.test(k) && o.push[k] && okPushUrl(o.push[k].ep)) { const v = o.push[k]; pushSubs.set(k, { ep: String(v.ep), p: String(v.p).slice(0, 100), a: String(v.a).slice(0, 40), f: v.f ? 1 : 0, r: v.r ? 1 : 0, i: v.i ? 1 : 0, m: v.m ? 1 : 0, mu: Array.isArray(v.mu) ? v.mu.filter(x => PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(v.q), t: +v.t || 0 }); }
+  for (const k in (o.push || {})) if (PUB.test(k) && o.push[k] && okPushUrl(o.push[k].ep)) { const v = o.push[k]; pushSubs.set(k, { ep: String(v.ep), p: String(v.p).slice(0, 100), a: String(v.a).slice(0, 40), f: v.f ? 1 : 0, r: v.r ? 1 : 0, i: v.i ? 1 : 0, m: v.m ? 1 : 0, d: v.d === 0 ? 0 : 1, mu: Array.isArray(v.mu) ? v.mu.filter(x => PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(v.q), t: +v.t || 0 }); }
   for (const e of (o.news || [])) if (Array.isArray(e) && PUB.test(e[0]) && Array.isArray(e[1])) news.set(e[0], e[1].filter(x => x && PUB.test(x.p) && Date.now() - x.t < REQ_TTL).map(x => ({ p: x.p, ok: x.ok ? 1 : 0, t: +x.t })).slice(-30));
   console.log('Restored ' + known.size + ' players, ' + [...links.values()].reduce((a, v) => a + v.size, 0) / 2 + ' friendships, ' + pend.size + ' waiting requests, from ' + LINKS_FILE);
 } catch (e) {}
@@ -278,22 +278,48 @@ function saveLinks(sync) {
 }
 const linkSet = pub => { let s = links.get(pub); if (!s) links.set(pub, s = new Set()); return s; };
 function addLink(a, b) { if (blocked(a, b)) return; if (!linkSet(a).has(b)) pairOf(a, b).s = Date.now(); linkSet(a).add(b); linkSet(b).add(a); linksDirty = true; }
-function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; dropShares(a, b); }
+function dropLink(a, b) { const sa = links.get(a), sb = links.get(b); if (sa) sa.delete(b); if (sb) sb.delete(a); linksDirty = true; dropShares(a, b); dropDms(a, b); }
 /* ---------- sharing maps: a player sends their version of one of their private maps to friends. The server holds it (on disk) until each friend
    answers, for up to three days like a friend request, and only ever hands it to that friend ---------- */
 const SHARE_FILE = process.env.SHARE_FILE || path.join(path.dirname(LINKS_FILE), 'shares.json');
-const SHARE_TTL = 3 * DAY, SHARE_MAX = 1500000, SHARE_PER_TO = 20, SHARE_ALL = 150 * 1000 * 1000;
-const shares = new Map(); let sharesDirty = false;
-try { const o = JSON.parse(fs.readFileSync(SHARE_FILE, 'utf8')); for (const v of (o && Array.isArray(o.list) ? o.list : [])) if (v && typeof v.id === 'string' && PUB.test(v.from || '') && PUB.test(v.to || '') && typeof v.data === 'string' && Date.now() - v.t < SHARE_TTL) shares.set(v.id, v); console.log('Restored ' + shares.size + ' shared maps'); } catch (e) {}
+const SHARE_TTL = +process.env.SHARE_TTL_MS || 3 * DAY, SHARE_MAX = 1500000, SHARE_PER_TO = 20, SHARE_ALL = 150 * 1000 * 1000;
+const shares = new Map(), shRes = new Map(); let sharesDirty = false;   // shRes: answers (saved, not saved, ran out) waiting for the one who shared, until they come back
+try { const o = JSON.parse(fs.readFileSync(SHARE_FILE, 'utf8')); for (const k in (o && o.res) || {}) if (PUB.test(k) && Array.isArray(o.res[k])) shRes.set(k, o.res[k].filter(x => x && PUB.test(x.pub || '') && Date.now() - x.t < SHARE_TTL + DAY).slice(-40)); for (const v of (o && Array.isArray(o.list) ? o.list : [])) if (v && typeof v.id === 'string' && PUB.test(v.from || '') && PUB.test(v.to || '') && typeof v.data === 'string' && Date.now() - v.t < SHARE_TTL) shares.set(v.id, v); console.log('Restored ' + shares.size + ' shared maps'); } catch (e) {}
+function shTell(from, r) {   // tell the one who shared what happened: now if they are on, or the next time they come on
+  const q = byPub.get(from); if (live(q)) { send(q, Object.assign({ t: 'shres' }, r)); return; }
+  const l = shRes.get(from) || []; l.push(Object.assign({}, r, { t: Date.now() })); shRes.set(from, l.slice(-40)); sharesDirty = true;
+}
 function saveShares() {
-  const now = Date.now(); for (const [id, v] of shares) if (now - v.t > SHARE_TTL) { shares.delete(id); sharesDirty = true; }
+  const now = Date.now(); for (const [id, v] of shares) if (now - v.t > SHARE_TTL) { shares.delete(id); sharesDirty = true; if (!blocked(v.from, v.to)) shTell(v.from, { pub: v.to, name: peerInfo(v.to).name || '', idx: v.idx, ok: -1 }); }   // (nobody answered in time: the one who shared is told)
+  for (const [k, l] of shRes) { const n = l.filter(x => now - x.t < SHARE_TTL + DAY); if (n.length !== l.length) { sharesDirty = true; if (n.length) shRes.set(k, n); else shRes.delete(k); } }
   if (!sharesDirty) return; sharesDirty = false;
-  try { const tmp = SHARE_FILE + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ list: [...shares.values()] })); fs.renameSync(tmp, SHARE_FILE); } catch (e) { console.warn('could not save shares: ' + e.message); }
+  try { const tmp = SHARE_FILE + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ list: [...shares.values()], res: Object.fromEntries(shRes) })); fs.renameSync(tmp, SHARE_FILE); } catch (e) { console.warn('could not save shares: ' + e.message); }
 }
 setInterval(saveShares, 20000);
 function dropShares(a, b) { for (const [id, v] of shares) if ((v.from === a && v.to === b) || (v.from === b && v.to === a)) { shares.delete(id); sharesDirty = true; } }
-const shareMeta = v => ({ id: v.id, from: v.from, name: (byPub.get(v.from) || {}).name || v.fromName || '', idx: v.idx, n: v.n, t: v.t });
-function sendShares(p) { const now = Date.now(), list = [], cl = claimsOf.get(p.pub) || new Set(); for (const v of shares.values()) if (v.to === p.pub && now - v.t <= SHARE_TTL && !blocked(v.from, v.to) && (linkSet(p.pub).has(v.from) || cl.has(v.from))) list.push(shareMeta(v)); if (list.length) send(p, { t: 'shr', list }); }   // (only from somebody you have as a friend too)
+const shareMeta = v => ({ id: v.id, from: v.from, name: (byPub.get(v.from) || {}).name || v.fromName || '', idx: v.idx, n: v.n, t: v.t, exp: v.t + SHARE_TTL });
+/* ---------- messages between friends: a friend who is not on gets them the next time they come on (kept up to 7 days, at most 60 from each friend) ---------- */
+const DM_FILE = process.env.DM_FILE || path.join(path.dirname(LINKS_FILE), 'dms.json');
+const DM_TTL = 7 * DAY, DM_PER = 60;
+const dmBox = new Map(); let dmDirty = false;
+try { const o = JSON.parse(fs.readFileSync(DM_FILE, 'utf8')); for (const k in (o && o.box) || {}) if (PUB.test(k) && Array.isArray(o.box[k])) dmBox.set(k, o.box[k].filter(x => x && PUB.test(x.f || '') && typeof x.s === 'string' && Date.now() - x.at < DM_TTL).slice(-DM_PER * 4)); console.log('Restored waiting messages for ' + dmBox.size + ' players'); } catch (e) {}
+function saveDms(sync) {
+  const now = Date.now(); for (const [k, l] of dmBox) { const n = l.filter(x => now - x.at < DM_TTL); if (n.length !== l.length) { dmDirty = true; if (n.length) dmBox.set(k, n); else dmBox.delete(k); } }
+  if (!dmDirty) return; dmDirty = false;
+  try { const s = JSON.stringify({ box: Object.fromEntries(dmBox) }), tmp = DM_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, DM_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, DM_FILE, () => {}); }); } catch (e) {}
+}
+setInterval(saveDms, 15000);
+function dmQueue(to, from, name, s, at) {   // false when that friend's box is full of messages from this one
+  const l = dmBox.get(to) || []; if (l.filter(x => x.f === from).length >= DM_PER) return false;
+  l.push({ f: from, n: name, s, at }); dmBox.set(to, l); dmDirty = true; return true;
+}
+function dropDms(a, b) { for (const [x, y] of [[a, b], [b, a]]) { const l = dmBox.get(x); if (!l) continue; const n = l.filter(m => m.f !== y); if (n.length !== l.length) { dmDirty = true; if (n.length) dmBox.set(x, n); else dmBox.delete(x); } } }
+function sendDmBox(p) {   // what friends wrote while you were away
+  const l = dmBox.get(p.pub); if (!l || !l.length) return; dmBox.delete(p.pub); dmDirty = true; const now = Date.now();
+  for (const x of l) if (now - x.at < DM_TTL && linkSet(p.pub).has(x.f) && !blocked(p.pub, x.f)) { const pi = peerInfo(x.f); send(p, { t: 'dm', from: x.f, name: pi.name || x.n, color: pi.color, s: x.s, at: x.at, late: 1 }); }
+}
+function sendShares(p) { const now = Date.now(), list = [], cl = claimsOf.get(p.pub) || new Set(); for (const v of shares.values()) if (v.to === p.pub && now - v.t <= SHARE_TTL && !blocked(v.from, v.to) && (linkSet(p.pub).has(v.from) || cl.has(v.from))) list.push(shareMeta(v)); if (list.length) send(p, { t: 'shr', list });
+  const rl = shRes.get(p.pub); if (rl && rl.length) { shRes.delete(p.pub); sharesDirty = true; for (const r of rl) send(p, { t: 'shres', pub: r.pub, name: r.name, idx: r.idx, ok: r.ok, late: 1 }); } }   // (and what happened to the maps you shared while you were away)   // (only from somebody you have as a friend too)
 const STALE_MS = 30 * 86400000;   // everybody who has played in the last 30 days is listed; anybody gone longer (and not somebody's friend or in a waiting request) is quietly forgotten
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
 function cleanShare(o) { const r = {}; for (const k in SHARE_DEF) r[k] = o && o[k] === 0 && (k === 'fr' || k === 'since') ? 0 : 1; return r; }   // (only how many friends you have and when you started can be kept private; the rest is always shown)
@@ -969,6 +995,7 @@ wss.on('connection', (ws, req) => {
         { const nl = news.get(p.pub); if (nl && nl.length) send(p, { t: 'tres', list: nl.map(x => { const pi = peerInfo(x.p); return { pub: x.p, code: pi.code, name: pi.name, ok: x.ok, t: x.t }; }) }); }   // answers to your requests that came while you were away
         { const out = []; pend.forEach((v, k) => { if (k.slice(0, 16) === p.pub) { const to = k.slice(17), pi = peerInfo(to); out.push({ pub: to, code: pi.code, name: pi.name, t: v.t }); } }); send(p, { t: 'tout', list: out }); }   // requests you sent that nobody has answered yet
         sendShares(p);   // (maps friends shared with you while you were away)
+        sendDmBox(p);
         pend.forEach((v, k) => {   // friend requests that arrived while you were away
           if (k.slice(17) !== p.pub) return;
           if (Date.now() - v.t > REQ_TTL) { pend.delete(k); return; }
@@ -1038,13 +1065,13 @@ wss.on('connection', (ws, req) => {
       send(p, { t: 'shsent', n: sent, idx });
     } else if (m.t === 'shget') {   // the friend it was shared with wants it: it comes in parts
       const v = typeof m.id === 'string' ? shares.get(m.id) : null; if (!v || v.to !== p.pub || blocked(v.from, v.to)) { send(p, { t: 'shgone', id: m.id }); return; }
-      const now = Date.now(); if (now - (p.lastShGet || 0) < 1500) return; p.lastShGet = now;
+      const now = Date.now(); if (now - (p.lastShGet || 0) < 400) return; p.lastShGet = now;
       const CH = 60000, n = Math.max(1, Math.ceil(v.data.length / CH));
       for (let i = 0; i < n; i++) send(p, { t: 'shd', id: v.id, n, i, c: v.data.slice(i * CH, (i + 1) * CH) });
     } else if (m.t === 'shans') {   // saved it or discarded it: either way it is done, and the one who shared it is told
       const v = typeof m.id === 'string' ? shares.get(m.id) : null; if (!v || v.to !== p.pub) return;
       shares.delete(v.id); sharesDirty = true; saveShares();
-      const q = byPub.get(v.from); if (live(q) && !blocked(v.from, v.to)) send(q, { t: 'shres', pub: p.pub, name: p.name || '', idx: v.idx, ok: m.ok ? 1 : 0 });
+      if (!blocked(v.from, v.to)) shTell(v.from, { pub: p.pub, name: p.name || '', idx: v.idx, ok: m.ok ? 1 : 0 });
     } else if (m.t === 'ask') {   // asking a friend in a private game if you can join them: they get a pop-up (the one who made the game can invite you)
       const now = Date.now(); if (now - (p.lastAsk || 0) < 3000) return; p.lastAsk = now;
       if (!p.pub || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to) || blocked(p.pub, m.to)) return;
@@ -1289,7 +1316,7 @@ wss.on('connection', (ws, req) => {
       const k1 = unb64u(m.sub.keys.p256dh || ''), k2 = unb64u(m.sub.keys.auth || ''); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16) return;
       if (!pushSubs.has(p.pub) && pushSubs.size >= 8000) return;
       const pr = m.prefs && typeof m.prefs === 'object' ? m.prefs : {};
-      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(pr.q), t: Date.now() };
+      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, d: pr.d === 0 ? 0 : 1, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(pr.q), t: Date.now() };
       pushSubs.set(p.pub, ent); linksDirty = true;
       for (const f of linkSet(p.pub)) { const q = byPub.get(f); if (q && live(q)) send(q, { t: 'fsub', pub: p.pub, s: ent }); }   // (your friends' devices keep where to reach yours: if this server ever forgets, they tell it again)
       send(p, { t: 'fsubs', l: [...linkSet(p.pub)].filter(f => pushSubs.has(f)).slice(0, 64).map(f => [f, pushSubs.get(f)]) });
@@ -1342,16 +1369,18 @@ wss.on('connection', (ws, req) => {
       const now = Date.now(); p.txT = (p.txT || []).filter(t => now - t < 10000); if (p.txT.length >= 6) { send(p, { t: 'texthold' }); return; } p.txT.push(now);   // (no more than 6 messages in 10 seconds)
       bcastFrom(r, p, { t: 'text', id: p.id, pub: p.pub, name: p.name, color: p.color, s: txt, at: now });
       if (r.bots && r.bots.length) { const k = P.askKind('text', txt); if (k) roomCtx(r).asks.push({ kind: k, x: p.x, y: p.y, id: p.id }); }
-    } else if (m.t === 'dm') {   // a message to one friend, from inside a game: only to a friend, never to or from someone blocked, and never with personal info
-      if (!p.pub || !p.room || typeof m.to !== 'string' || !PUB.test(m.to) || typeof m.s !== 'string') return;
+    } else if (m.t === 'dm') {   // a message to one friend, from anywhere (a game or the main menu): only to a friend, never to or from someone blocked, and never with personal info
+      if (!p.pub || !live(p) || typeof m.to !== 'string' || !PUB.test(m.to) || typeof m.s !== 'string') return;
       const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
       if (!linkSet(p.pub).has(m.to) || blocked(p.pub, m.to)) { send(p, { t: 'dmno', to: m.to, why: 'friend', c: m.c | 0 }); return; }
       { const why = P.piiCheck(txt); if (why) { send(p, { t: 'pii', why, to: m.to, c: m.c | 0 }); return; } }
       const now = Date.now(); p.txT = (p.txT || []).filter(t => now - t < 10000); if (p.txT.length >= 6) { send(p, { t: 'texthold' }); return; } p.txT.push(now);
-      const q = byPub.get(m.to); if (!live(q)) { send(p, { t: 'dmno', to: m.to, why: 'off', c: m.c | 0 }); return; }
+      const q = byPub.get(m.to), here = live(q);
+      if (!here && !dmQueue(m.to, p.pub, p.name, txt, now)) { send(p, { t: 'dmno', to: m.to, why: 'full', c: m.c | 0 }); return; }   // (not on: kept for them until they come back)
       pairOf(p.pub, m.to).m = now; linksDirty = true;
-      send(q, { t: 'dm', from: p.pub, name: p.name, color: p.color, s: txt, at: now });
-      send(p, { t: 'dmok', to: m.to, s: txt, at: now, c: m.c | 0 });
+      if (here) send(q, { t: 'dm', from: p.pub, name: p.name, color: p.color, s: txt, at: now });
+      send(p, { t: 'dmok', to: m.to, s: txt, at: now, c: m.c | 0, q: here ? 0 : 1 });
+      pushTo(m.to, 'd', [p.name || 'A friend', txt], 'dm-' + p.pub);   // (only reaches them if they are away from the game)
     } else if (m.t === 'prof') {   // everything shown on a player's profile, fresh (yours too)
       if (!p.pub) return; const now = Date.now(); if (now - (p.lastProf || 0) < 150) return; p.lastProf = now;
       const who = m.to === 'me' ? p.pub : m.to; if (typeof who !== 'string' || !PUB.test(who) || !known.has(who)) return;
@@ -1526,7 +1555,7 @@ setInterval(() => {
   }
 }, 25000);
 
-function shutdown() { savePeak(true); saveLinks(true); try { sharesDirty = true; saveShares(); } catch (e) {} try { keepWorlds(true); } catch (e) {} process.exit(0); }
+function shutdown() { savePeak(true); saveLinks(true); try { saveDms(true); } catch (e) {} try { sharesDirty = true; saveShares(); } catch (e) {} try { keepWorlds(true); } catch (e) {} process.exit(0); }
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 

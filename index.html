@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://ballpit-party.onrender.com" crossorigin>
 <script>/* the very first thing the page does: nudge the game server awake (a tiny request), so by the time the menu is up it is already answering */
-(function(){try{var h=location.hostname,own=/^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(h)||/onrender\.com$/.test(h);if(location.protocol==='file:')return;try{var o=JSON.parse(localStorage.getItem('ballrun4')||'{}');if(o.offline&&!o.mp)return;}catch(e){}fetch((own?'':'https://ballpit-party.onrender.com')+'/version',{cache:'no-store'}).catch(function(){});}catch(e){}})();</script>
+(function(){try{var h=location.hostname,own=/^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(h)||/onrender\.com$/.test(h);if(location.protocol==='file:')return;try{var o=JSON.parse(localStorage.getItem('ballrun4')||'{}');}catch(e){}fetch((own?'':'https://ballpit-party.onrender.com')+'/version',{cache:'no-store'}).catch(function(){});}catch(e){}})();</script>
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="ballpit.party">
 <title>ballpit.party</title>
@@ -860,6 +860,61 @@
   #tpopBack>#tpop .tl{margin:10px 0;gap:12px}#tpopBack>#tpop .tl svg{font-size:1.15em}
   #tpopBack>#tpop .nx{font-size:.85em;margin-top:12px;padding-top:10px}
   #tpopBack .tpx{position:absolute;top:12px;right:12px;width:42px;height:42px;border-radius:12px;border:2px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}#tpopBack .tpx svg{width:22px;height:22px}
+
+  /* v201: chat with tabs (the world here, your friends, one friend at a time), green reminders, tidy profiles */
+  .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .chatcard .chead{gap:8px}.ctabs{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}.ctabs::-webkit-scrollbar{display:none}
+  .ctab{flex:none;display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:15px;padding:5px 11px;border-radius:999px;border:2px solid rgba(232,220,192,.45);background:rgba(255,255,255,.05);color:var(--ink);cursor:pointer;white-space:nowrap;max-width:170px}
+  .ctab .ic{width:16px;height:16px;flex:none}.ctab .ctn{overflow:hidden;text-overflow:ellipsis}.ctab.on{background:#3a3355;border-color:var(--line)}
+  .ctab .cx{display:inline-flex;width:18px;height:18px;margin-right:-5px;border-radius:50%;align-items:center;justify-content:center;opacity:.7}.ctab .cx .ic{width:12px;height:12px}.ctab .cx:hover{opacity:1;background:rgba(255,255,255,.15)}
+  .ctab .gdt{width:9px;height:9px;border-radius:50%;background:#3ddc84;flex:none}.ctab .gdt.off{background:#8a8399}
+  .cview{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+  .cvbar{display:flex;align-items:center;gap:8px;justify-content:space-between}.cvbar .small{flex:1;min-width:0}
+  .gb{display:inline-block;min-width:19px;height:19px;line-height:19px;padding:0 5px;border-radius:99px;background:#2fa463;color:#fff;font-size:12px;font-weight:700;text-align:center;font-family:system-ui,sans-serif;flex:none}
+  .ibtn .gb{position:absolute;right:-6px;top:-6px;border:2px solid #fff;line-height:15px;height:19px;min-width:19px;padding:0 4px}.ibtn .gb.dot{min-width:0;width:13px;height:13px;padding:0;right:-3px;top:-3px}
+  #btnChat{position:relative}#btnChat.unread::after{display:none}
+  .chatdown i{background:#2fa463!important}
+  .dmlist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px}
+  .dmrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--wob);background:rgba(36,31,54,.7);border:2px solid rgba(232,220,192,.35);cursor:pointer;text-align:left;font:inherit;color:var(--ink);width:100%}
+  .dmrow:hover{border-color:var(--line)}.dmrow.new{border-color:#3ddc84;background:rgba(47,164,99,.16)}
+  .dmrow .dmw{flex:1;min-width:0}.dmrow .dmw b{display:block;font-size:17px;font-weight:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dmrow .dmw small{display:block;font-size:13px;opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dmrow.new .dmw small{opacity:1;color:#bff0d2}
+  .dmrow .dmr{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none;font-size:12px;opacity:.85}
+  .dmempty{text-align:center;padding:24px 10px;display:flex;flex-direction:column;gap:10px;align-items:center}.dmempty>.ic{width:34px;height:34px;opacity:.6}
+  .dmhead{display:flex;align-items:center;gap:10px;padding:2px 2px 0}.dmhead .dmw{flex:1;min-width:0}.dmhead .dmw b{display:block;font-size:18px;font-weight:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dmhead .dmw small{font-size:13px;opacity:.75}.dmhead .dmw small.on{color:#7be0a0;opacity:1}
+  .dmlog .cm.me{background:#2f7d55}.dmlog .cm{max-width:82%}.dmlog .cm .ct{display:block;font-size:11px;opacity:.6;margin-top:2px;text-align:right}
+  .dmlog .dday{align-self:center;font-size:12px;opacity:.6;padding:2px 10px;border-radius:99px;background:rgba(255,255,255,.06);margin:4px 0}
+  .dmlog .dst{align-self:flex-end;font-size:12px;opacity:.7;margin-top:-2px}.dmlog .dst.bad{opacity:1;color:#ffcf8a;cursor:pointer;text-decoration:underline}
+  .dmlog .cm.pend{opacity:.6}.dmlog .cm.fail{opacity:.55;border:2px dashed rgba(255,207,138,.7)}
+  .dmlog .dmhint{align-self:center;text-align:center;font-size:14px;opacity:.7;padding:20px 10px}
+  .dmnote{text-align:center}
+  .gvhave{display:flex;gap:14px;justify-content:center;font-size:17px}.gvhave span{display:inline-flex;align-items:center;gap:5px}.gvhave .ic{width:18px;height:18px}
+  .gvlist .dmrow.on{border-color:#3ddc84;background:rgba(47,164,99,.16)}
+  .gvform{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:2px solid var(--line);border-radius:var(--wob);background:#241f36}
+  .gvto{display:flex;align-items:center;justify-content:space-between;gap:8px}.gvto b{font-weight:normal;font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gvform .gvrow .ic{width:20px;height:20px}.gvform #gvOk{padding:9px 12px;font-size:16px}
+  #gvMsg{min-height:18px}#gvMsg.ok{color:#7be0a0}#gvMsg.bad{color:#ffcf8a}
+  .dmtoast{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top));transform:translateX(-50%);z-index:25;display:flex;align-items:center;gap:8px;max-width:min(92vw,440px);padding:7px 14px 7px 10px;border-radius:999px;border:2px solid #bff0d2;background:#2fa463;color:#fff;font:inherit;font-size:15px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);animation:popin .28s cubic-bezier(.2,1.5,.4,1)}
+  .dmtoast .ic{width:18px;height:18px;flex:none}.dmtoast .dmt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dmtoast b{margin-right:6px}
+  body.home .dmtoast{top:calc(64px + env(safe-area-inset-top))}
+  #homeRetry{margin:2px auto 0}
+  #homePlay:disabled{opacity:.6;cursor:default}#homePlay .btnspin{margin-right:12px;vertical-align:-2px}
+  #homeSeg button:disabled{opacity:.45;cursor:default}
+  /* the profile: a top bar that stays put (with the X), the levels as a bar, small figures, the main buttons side by side, quiet extras at the bottom */
+  .profcard{width:min(420px,100%);gap:10px;padding:0 16px 14px;overflow-y:auto;overscroll-behavior:contain}
+  .profcard .phead{position:sticky;top:0;z-index:3;background:#1c1830;padding:12px 0 8px;margin:0;border-bottom:2px solid rgba(232,220,192,.18)}
+  .profcard .phead .pwho{flex:1}.profcard .phead .xbtn{flex:none;align-self:flex-start}
+  .profcard .pbeat{display:flex;flex-direction:column;gap:6px;padding:9px 12px}.profcard .pbl{align-items:center}.profcard .pbl .ic{width:18px;height:18px;color:var(--accent)}
+  .pbar{height:10px;border-radius:99px;background:rgba(0,0,0,.35);overflow:hidden}.pbar i{display:block;height:100%;background:linear-gradient(90deg,#ffcc3d,#ff9f43);border-radius:99px;min-width:4px}
+  .profcard .ptiles{grid-template-columns:repeat(auto-fit,minmax(90px,1fr));margin:0}.profcard .ptiles>div{padding:5px 8px;text-align:center}.profcard .ptiles b{font-size:16px}
+  .pmain{display:flex;gap:8px;flex-wrap:wrap}.pmain:empty{display:none}.pmain .btn{flex:1 1 140px;padding:10px 12px;font-size:16px;position:relative}.pmain .btn .gb{margin-left:4px}
+  .profcard .psets{gap:0;border:2px solid rgba(232,220,192,.35);border-radius:var(--wob);background:#241f36;overflow:hidden}
+  .profcard .prow{background:transparent;border:0;border-radius:0;padding:8px 10px;flex-wrap:nowrap}.profcard .prow+.prow{border-top:1px solid rgba(232,220,192,.15)}
+  .profcard .prow .ptxt{flex:1;min-width:0}.profcard .prow .ptxt b{font-weight:normal;font-size:15px}.profcard .prow .ptxt small{display:block;font-size:12px;opacity:.6}
+  .profcard .prow .fopts{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+  .pfoot{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.pfoot .btn{flex:1 1 0;min-width:120px;padding:6px 10px;font-size:14px;background:transparent;border-color:rgba(232,220,192,.5)}.pfoot .btn:hover{border-color:var(--line)}.pfoot .btn{min-height:38px;box-shadow:none}.pfoot .btn.danger{border-color:rgba(224,86,107,.8);border-style:solid;color:#ff9aa8}
+  .profcard .prow{flex-wrap:wrap;row-gap:6px}.profcard .prow .fopts{flex:1 1 100%;justify-content:flex-start}
+  @media (max-height:520px) and (min-aspect-ratio:1/1){.profcard{display:flex!important;width:min(560px,100%)}.profcard .phead{grid-column:auto}}
 </style>
 </head>
 <body>
@@ -870,7 +925,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 200; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 202; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -963,7 +1018,7 @@
   fill(15);
   /* 1) is this the newest version? If the page came out of an old cache, wipe the caches and reload once. 2) maybe the game has moved: redirect. */
   if (!/^https?:$/.test(location.protocol)) return;
-  try { var so = JSON.parse(localStorage.getItem('ballrun4') || '{}'); if (so.offline && !so.mp) { fill(40); return; } } catch (e) {}
+  try { var so = JSON.parse(localStorage.getItem('ballrun4') || '{}'); } catch (e) {}
   var done = false, give = setTimeout(function () { done = true; }, 4000);
   var wipe = function (why) {   // (throw away every saved copy of the game and load it all again, once a minute at most)
     var k = 'bp_refresh', last = 0; try { last = +sessionStorage.getItem(k) || 0; } catch (e) {}
@@ -1084,27 +1139,42 @@
   <div id="feed"></div>
 </div></div>
 <div id="emoPop" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="chatTitle"><div class="card chatcard">
-  <div class="chead"><h3 id="chatTitle">Chat</h3><button id="chatPplBtn" class="chip" type="button"><span data-ic="users"></span><span id="chatPplN">People</span></button><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
-  <div id="chatPeople" class="chatppl hide"></div>
+  <div class="chead"><h3 id="chatTitle" class="vh">Chat</h3><div id="chatTabs" class="ctabs" role="tablist" aria-label="Chats"></div><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div id="cvWorld" class="cview">
+  <div class="cvbar"><span id="chatWho" class="small dim">Everyone in this world</span></div>
   <div class="chatwrap"><div id="chatLog" class="chatlog" aria-live="polite"></div><button id="chatDown" class="chatdown hide" type="button" aria-label="Back to the newest message" title="Back to the newest message"><svg viewBox="0 0 24 24"><path d="M12 5v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><i></i></button></div>
-  <div id="chatTo" class="chatto" role="group" aria-label="Who to send to"></div>
-  <div id="chatQuick" class="chatquick" aria-label="Quick messages"></div>
+    <div id="chatQuick" class="chatquick" aria-label="Quick messages"></div>
   <form id="chatForm" class="chatform" autocomplete="off"><input id="chatIn" type="text" maxlength="200" placeholder="Say something to everyone here" enterkeyhint="send" spellcheck="true"><button id="chatSend" class="go" type="submit" aria-label="Send"><span data-ic="up"></span></button></form>
-  <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim" id="chatNote">Everyone in your world sees it.</span></div>
+  <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim" id="chatNote">Messages fade after a minute.</span></div>
+  </div>
+  <div id="cvGive" class="cview hide">
+    <div class="gvhave" id="gvHave"></div>
+    <div class="small dim" id="gvHint">Pick who to give to. It comes out of what you have.</div>
+    <div id="gvPeople" class="dmlist gvlist"></div>
+    <div id="gvForm" class="gvform hide">
+      <div class="gvto"><b id="gvTitle">Give</b><button id="gvNo" class="btn sm" type="button">Change</button></div>
+      <label class="gvrow"><span data-ic="gcoin"></span><span>Coins</span><input id="gvC" type="number" min="0" step="1" inputmode="numeric" value="0"></label>
+      <label class="gvrow"><span data-ic="gem"></span><span>Diamonds</span><input id="gvG" type="number" min="0" step="1" inputmode="numeric" value="0"></label>
+      <button id="gvOk" type="button" class="btn prim"><span data-ic="gcoin"></span>Give</button>
+    </div>
+    <div class="small dmnote" id="gvMsg"></div>
+  </div>
+  <div id="cvList" class="cview hide"><div id="dmList" class="dmlist"></div></div>
+  <div id="cvDm" class="cview hide">
+    <div id="dmHead" class="dmhead"></div>
+    <div class="chatwrap"><div id="dmLog" class="chatlog dmlog" aria-live="polite"></div></div>
+    <form id="dmForm" class="chatform" autocomplete="off"><input id="dmIn" type="text" maxlength="200" placeholder="Message" enterkeyhint="send" spellcheck="true"><button id="dmSend" class="go" type="submit" aria-label="Send"><span data-ic="up"></span></button></form>
+    <div class="small dim dmnote" id="dmNote"></div>
+  </div>
 </div></div>
+<button id="dmToast" class="dmtoast hide" type="button"><span data-ic="chat"></span><span class="dmt"><b id="dmToastN"></b><span id="dmToastT"></span></span></button>
 <div id="quickModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="qmTitle"><div class="card nmcard quickcard">
   <h3 id="qmTitle">Quick messages</h3>
   <div class="small dim">Up to 10. Tap one in the chat to send it right away. Leave a line empty to remove it.</div>
   <div id="qmList" class="qmlist"></div>
   <div class="btns"><button id="qmReset" type="button">Defaults</button><button id="qmNo" type="button">Cancel</button><button id="qmOk" type="button" class="go">Save</button></div>
 </div></div>
-<div id="giveModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="gvTitle"><div class="card nmcard givecard">
-  <h3 id="gvTitle">Give</h3>
-  <div class="small dim" id="gvHave"></div>
-  <label class="gvrow"><span data-ic="gcoin"></span><span>Coins</span><input id="gvC" type="number" min="0" step="1" inputmode="numeric" value="0"></label>
-  <label class="gvrow"><span data-ic="gem"></span><span>Diamonds</span><input id="gvG" type="number" min="0" step="1" inputmode="numeric" value="0"></label>
-  <div class="btns"><button id="gvNo" type="button">Cancel</button><button id="gvOk" type="button" class="go">Give</button></div>
-</div></div>
+<div id="giveModal" class="hide"></div>
 <div id="pickPop" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="pickTitle"><div class="card pickcard">
   <div class="chead"><h3 id="pickTitle"></h3><button id="pickClose" class="xbtn" type="button" aria-label="Cancel"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="pickGrid" class="pickgrid"></div>
@@ -1299,10 +1369,10 @@
       <div id="ntKinds" class="ntkinds hide"><div class="small dim ntk">Tell me about:</div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Friends come online</b><small id="ntFrSub">Any of your friends starts playing</small></span></span><input type="checkbox" id="setNFriends"><i></i></label>
         <div class="ntfr" id="ntFrBox"><button class="btn sm" id="ntFrBtn" type="button"><span data-ic="users"></span><span id="ntFrBtnT">Choose friends</span></button><div id="ntFrList" class="plist hide"></div></div>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Friend requests</b><small>Someone asks you, or answers you</small></span></span><input type="checkbox" id="setNRequests"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Messages to you</b><small>A friend sends you a chat message</small></span></span><input type="checkbox" id="setNMsgs"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Friend requests</b><small>Someone asks you, or answers you</small></span></span><input type="checkbox" id="setNRequests"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="share"></span><span><b>Game invites</b><small>Someone invites you to their private game</small></span></span><input type="checkbox" id="setNInvites"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Map changes</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="play"></span><span><b>Not while I'm playing</b><small>Show a message in the game instead</small></span></span><input type="checkbox" id="setNInGame"><i></i></label>
         <label class="sw2 ic2 nqsw"><span class="ti"><span data-ic="clock"></span><span><b>Quiet hours</b><small id="nqSub">A time of day with no notifications, like at night</small></span></span><input type="checkbox" id="setNQuiet"><i></i></label>
         <div class="nqtimes hide" id="nqTimes"><div><span>From</span><button type="button" class="nqbtn" id="nqFrom" aria-label="Quiet hours start"><b>10:00 PM</b><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"/></svg></button></div><div><span>Until</span><button type="button" class="nqbtn" id="nqTo" aria-label="Quiet hours end"><b>7:00 AM</b><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"/></svg></button></div></div>
         <button class="btn full" id="ntTest" type="button"><span data-ic="bell"></span>Send a test notification</button>
@@ -1334,10 +1404,10 @@
       <div class="ned" id="ned1"></div>
       <input type="checkbox" id="homeMp" hidden>
       <div class="mpseg" id="homeSeg" role="tablist" aria-label="Where to play"><button type="button" role="tab" data-m="priv"><span data-ic="lock"></span>Private</button><button type="button" role="tab" data-m="pub"><span data-ic="globe"></span>Public</button><button type="button" role="tab" data-m="off"><span data-ic="user"></span>Offline</button></div>
-      <div class="small dim" id="homeModeNote"></div>
+      <div class="small dim" id="homeModeNote"></div><button id="homeRetry" class="btn sm hide" type="button"><span data-ic="reset"></span>Try connecting again</button>
       <button id="homeLvl" class="btn lvrow" type="button"></button>
       <button id="homePlay" class="hplay" type="button">Play</button>
-      <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeFriends" type="button"><span data-ic="users"></span>Friends<span class="hbadge hide" id="homeFrN"></span></button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
+      <div class="hbtns"><button class="btn" id="homeLook" type="button"><span data-ic="user"></span>Customize</button><button class="btn" id="homeFriends" type="button"><span data-ic="users"></span>Friends<span class="hbadge hide" id="homeFrN"></span></button><button class="btn" id="homeChat" type="button"><span data-ic="chat"></span>Chat<span class="hbadge hide" id="homeChN"></span></button><button class="btn" id="homeSet" type="button"><span data-ic="gear"></span>Settings</button><button class="btn" id="homeHelp" type="button"><span data-ic="help"></span>How to play</button></div>
       <div class="hbtns"><button class="btn hide" id="homeInstall" type="button"><span data-ic="install"></span>Install the app</button></div>
     </div>
     <div class="small dim" id="homeOnline"></div>
@@ -1382,7 +1452,7 @@
   <div class="shbar"><b>Send to</b><button class="btn sm" id="shAll" type="button">Select all</button></div>
   <div id="shList" class="plist shlist"></div>
   <p class="small dim" id="shmNote">Friends who are away get it next time they play. It waits for them for 3 days.</p>
-  <div class="btns"><button id="shNo" type="button">Cancel</button><button id="shGo" class="go" type="button" disabled>Share</button></div>
+  <div class="btns"><button id="shNo" class="hide" type="button">Cancel</button><button id="shGo" class="go" type="button" disabled>Share</button></div>
 </div></div>
 <div id="shIn" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="shInT"><div class="card shcard">
   <div class="chead"><h3 id="shInT">A friend shared a map</h3><button id="shInX" class="xbtn" type="button" aria-label="Decide later"><svg class="ic"><use href="#i-close"/></svg></button></div>
@@ -1393,36 +1463,35 @@
   <div class="btns"><button id="shInNo" type="button">Discard</button><button id="shInYes" class="go" type="button">Save it</button></div>
 </div></div>
 <div id="profModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="profName"><div class="card profcard">
-  <div class="phead"><span class="bdot pbig"><canvas id="profDot" class="pball" width="108" height="108"></canvas><i id="profLight" class="sdot"></i></span><div class="pwho"><h3 id="profName"></h3><div class="psub"><span id="profCode" class="code"></span><span id="profStatus" class="pstat"></span></div></div></div>
+  <div class="phead"><span class="bdot pbig"><canvas id="profDot" class="pball" width="108" height="108"></canvas><i id="profLight" class="sdot"></i></span><div class="pwho"><h3 id="profName"></h3><div class="psub"><span id="profCode" class="code"></span><span id="profStatus" class="pstat"></span></div></div><button id="profClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="pbeat"><div class="pbl"><span data-ic="trophy"></span><b id="profBeat"></b><span id="profBeatOf"></span></div><div class="pbar"><i id="profBar"></i></div></div>
   <div id="profTiles" class="ptiles"></div>
-  <div id="profMain" class="pacts"></div>
-  <div class="pbeat"><div class="pbl"><b id="profBeat"></b><span id="profBeatOf"></span></div><div class="pbar"><i id="profBar"></i></div></div>
+  <div id="profMain" class="pmain"></div>
   <div id="profSet" class="psets hide"></div>
-  <div id="profActs" class="pacts"></div>
-  <div class="cfoot"><button id="profClose" class="btn" type="button">Close</button></div>
+  <div id="profActs" class="pfoot"></div>
 </div></div>
 
 <div id="invModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="ivTitle"><div class="card lvcard">
-  <h3 id="ivTitle">Invite friends</h3>
+  <div class="chead"><h3 id="ivTitle">Invite friends</h3><button id="ivX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="small dim" id="ivSub">Friends you invite get a message and can join your private game on this level. They see what you built, and can build too. They get it wherever they are, unless they are already in a private game with someone.</div>
   <label class="ivkeep"><input type="checkbox" id="ivKeep" checked><span>Keep the invitation open as long as the game is open<small>If you turn this off, a friend is only asked once and not again if they leave.</small></span></label>
   <div id="ivList"></div>
-  <div class="btns"><button id="ivStop" type="button" class="danger hide">Stop sharing</button><button id="ivNo" type="button" class="go">Done</button></div>
+  <div class="btns"><button id="ivStop" type="button" class="danger hide">Stop sharing</button><button id="ivNo" type="button" class="go hide">Done</button></div>
 </div></div>
 
 <div id="addModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="adTitle"><div class="card lvcard addcard">
-  <h3 id="adTitle">Add a friend</h3>
+  <div class="chead"><h3 id="adTitle">Add a friend</h3><button id="adX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="lpConn" class="small dim"></div>
   <input type="text" id="lpQ" maxlength="12" placeholder="Search by name or code (optional)" autocomplete="off" spellcheck="false">
   <div id="adBody">
     <div class="small dim fhint" id="lpResH">Everyone who has played</div><div id="lpRes"></div>
     <h4 id="mutedH" class="hide"><span data-ic="bell-off"></span> Muted players</h4><div id="mutedList"></div>
   </div>
-  <div class="btns"><button id="adNo" type="button" class="go">Done</button></div>
+  <div class="btns hide"><button id="adNo" type="button" class="go">Done</button></div>
 </div></div>
 
 <div id="lvlModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="lvTitle"><div class="card lvcard">
-  <h3 id="lvTitle">Pick a level</h3>
+  <div class="chead"><h3 id="lvTitle">Pick a level</h3><button id="lvX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="lvl">
     <div class="lvleft">
       <div class="lvfil" id="lvFil" role="group" aria-label="Show"><button type="button" data-f="all" class="on">All</button><button type="button" data-f="mine"><i class="k mine"></i>Built</button><button type="button" data-f="got"><i class="k got"></i>Saved</button><button type="button" data-f="beat"><span data-ic="crown"></span>Beaten</button></div>
@@ -1433,7 +1502,7 @@
       <div id="lvOptSlot"></div>
     </div>
   </div>
-  <div class="btns"><button id="lvReset" type="button" class="danger hide" hidden>Reset level</button><button id="lvNo" type="button">Close</button><button id="lvOk" type="button" class="go">Play</button></div>
+  <div class="btns"><button id="lvReset" type="button" class="danger hide" hidden>Reset level</button><button id="lvNo" type="button" class="hide">Close</button><button id="lvOk" type="button" class="go">Play</button></div>
 </div></div>
 
 <div id="codesModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="csTitle"><div class="card cscard">
@@ -1460,7 +1529,7 @@
   <div class="agno hide" id="agNoMsg">Sorry, this game is only for players 18 and older.</div>
 </div></div>
 <div id="wiModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="wiTitle"><div class="card lvcard wicard">
-  <h3 id="wiTitle">The public world right now</h3>
+  <div class="chead"><h3 id="wiTitle">The public world right now</h3><button id="wiX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="wimap"><span data-ic="map"></span><span><b id="wiMap"></b><small id="wiNext"></small></span></div>
   <div class="wigrid">
     <div class="wirow"><span data-ic="clock"></span><span><small>New map</small><b id="wiChange"></b></span></div>
@@ -1469,7 +1538,7 @@
     <div class="wirow"><span data-ic="beacon"></span><span><small>Finish beacon</small><b id="wiBeacon"></b></span></div>
     <div class="wirow"><span data-ic="crown"></span><span><small>This map</small><b id="wiBeat"></b></span></div>
   </div>
-  <div class="btns"><button type="button" id="wiClose">Back</button><button type="button" id="wiPlay" class="go"><span data-ic="play"></span>Play now</button></div>
+  <div class="btns"><button type="button" id="wiClose" class="hide">Back</button><button type="button" id="wiPlay" class="go"><span data-ic="play"></span>Play now</button></div>
 </div></div>
 <div id="descModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="dsTitle"><div class="card nmcard">
   <h3 id="dsTitle">Describe this level</h3>
@@ -1489,10 +1558,10 @@
   <div class="btns"><button id="nmNo" type="button">Cancel</button><button id="nmOk" type="button" class="go">OK</button></div>
 </div></div>
 <div id="shareModal" class="overlay hide"><div class="card nmcard">
-  <h3>Share ballpit.party</h3>
+  <div class="chead"><h3>Share ballpit.party</h3><button id="shX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="small dim" id="shNote">Copy this link and send it to your friends.</div>
   <input type="text" id="shText" readonly spellcheck="false" autocomplete="off">
-  <div class="btns"><button id="shClose" type="button">Close</button><button id="shCopy" type="button" class="go">Copy link</button></div>
+  <div class="btns"><button id="shClose" type="button" class="hide">Close</button><button id="shCopy" type="button" class="go">Copy link</button></div>
 </div></div>
 <div id="tpModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="tpTitle"><div class="card tpcard">
   <div class="chead"><h3 id="tpTitle">Quiet hours start</h3><button id="tpClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
@@ -1571,8 +1640,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=200"></script>
-<script src="physics.js?v=200"></script>
+<script src="maps.js?v=202"></script>
+<script src="physics.js?v=202"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1618,7 +1687,7 @@ function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, nQuiet: { on: false, a: 1320, b: 420 }, nInGame: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
-    notify: false, nFriends: true, nRequests: true, nInvites: true, nMaps: true,
+    notify: false, nFriends: true, nMsgs: true, nRequests: true, nInvites: true, nMaps: true,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'random', musicVol: 0.5,
     boost: true, boostAuto: false, boostBtn: true, boostPull: false, joy: true, superBtn: true, btnMul: {},
@@ -1653,8 +1722,8 @@ function normalize() {
   if (typeof settings.musicOn !== 'boolean') settings.musicOn = true;
   if (settings.music === 'peaceful') settings.music = 'chill'; if (settings.music === 'funk') settings.music = 'phonk';
   if (['adaptive', 'random', 'chill', 'upbeat', 'exciting', 'phonk', 'dreamy'].indexOf(settings.music) < 0) settings.music = 'adaptive';
-  { const o = {}; if (settings.lvSave && typeof settings.lvSave === 'object') for (const k in settings.lvSave) if (/^\d+$/.test(k) && settings.lvSave[k]) o[k] = 1; settings.lvSave = o; }
-  settings.nInGame = settings.nInGame !== false;
+  for (const key of ['lvSave', 'lvSaveO']) { const o = {}; if (settings[key] && typeof settings[key] === 'object') for (const k in settings[key]) if (/^\d+$/.test(k) && settings[key][k]) o[k] = 1; settings[key] = o; }   // (private and offline levels each keep their own saved states)
+  settings.offline = false;   // the game always starts on the server: offline is only offered when the server cannot be reached
   { const q = settings.nQuiet && typeof settings.nQuiet === 'object' ? settings.nQuiet : {}, ok = v => Number.isInteger(v) && v >= 0 && v <= 1439; settings.nQuiet = { on: !!q.on, a: ok(q.a) ? q.a : 1320, b: ok(q.b) ? q.b : 420 }; }
   settings.nOff = Array.isArray(settings.nOff) ? settings.nOff.filter(x => /^[0-9a-f]{16}$/.test(x)).slice(0, 500) : [];
   if (settings.share && typeof settings.share === 'object') { const o = {}; for (const k of ['on', 'last', 'beat', 'fr', 'since']) o[k] = settings.share[k] === 0 ? 0 : 1; settings.share = o; } else settings.share = null;
@@ -2536,20 +2605,16 @@ function finishRun() {
 /* ----- your own world (multiplayer off): you choose the map and how long each one lasts ----- */
 const SOLOKEY_P = 'ballrun4_solo2', SOLOKEY_O = 'ballrun4_solo2_off', SOLO_BASE = 3000000;   // (your private maps and your offline maps are kept apart: each level can have one of each)
 let SOLOKEY = SOLOKEY_P;
-/* Your private maps and your offline maps are one and the same now: a level you built with friends is there when you play it offline, and the other way round.
-   (Once: anything that was only in the old offline maps moves into the one list, and the old list goes. Where both had the level, the one with more built in it is kept.) */
-try { const off = localStorage.getItem(SOLOKEY_O); if (off !== null) { const P0 = JSON.parse(localStorage.getItem(SOLOKEY_P) || '{}') || {}, O = JSON.parse(off || '{}') || {};
-  const size = o => !o ? -1 : ['buys', 'cps', 'gates', 'misc', 'dels'].reduce((n, k) => n + ((o[k] && o[k].length) | 0), 0);
-  for (const k in O) if (size(O[k]) > size(P0[k])) P0[k] = O[k];
-  localStorage.setItem(SOLOKEY_P, JSON.stringify(P0)); localStorage.removeItem(SOLOKEY_O); } } catch (e) {}
+/* Your private maps (on the server's side of things: friends can join them, maps can be shared) and your offline maps (only on this device, starting from the
+   game's own maps) are kept apart. Offline never sees anything from your private maps, and nothing built offline goes into them. */
 let solo2 = {};   // one saved world per level, until you reset that level: { levelNumber: what you built, moved, opened and collected }
 let party = null;   // a friend's world: { role: 'host' | 'guest', host: their id, name, priv }
 const inSolo = () => !settings.mp && !party;
 const offlineOn = () => !!settings.offline && !settings.mp && !party;   // a private game that never touches the server: no friends, no invites, nothing online
 const shared = () => !!party || (online && !inSolo() && S.slot >= 0 && S.slot < SOLO_BASE);   // is what you build shown to everyone in the room? (private games and public worlds)
-const soloKeyNow = () => SOLOKEY_P;   // (one list of your maps, for private and offline games alike)
+const soloKeyNow = () => offlineOn() ? SOLOKEY_O : SOLOKEY_P;
 const readSolo = key => { try { const o = JSON.parse(localStorage.getItem(key) || 'null'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } };
-function loadSolo() { SOLOKEY = soloKeyNow(); solo2 = readSolo(SOLOKEY); }   // (the maps of the mode you are in: private or offline)
+function loadSolo() { SOLOKEY = soloKeyNow(); solo2 = readSolo(SOLOKEY); try { loadPurses(); } catch (e) {} }   // (and that mode's purses; at start-up the purses load a little further down)   // (the maps of the mode you are in: private or offline)
 function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo2)); } catch (e) {} }
 const soloLevel = () => Math.max(0, Math.min(BallMaps.count - 1, +settings.soloMap || 0));
 const hasSoloSave = i => !!solo2[i];
@@ -2717,7 +2782,7 @@ function update(dt) {
 const WKEY = 'ballrun4_world', WALKEY = 'ballrun4_wallet', BEATKEY = 'ballrun4_beaten';
 /* Separate purses. Public worlds: the coins and diamonds you earn there, kept between visits. Every private map has a purse of its own, and each starts at zero
    (or, if you choose it for that map in the level picker, that map has unlimited coins and diamonds). `wallet` always means the purse for where you are. */
-const WALKEY_PRIV = 'ballrun4_wallet_map';
+const WALKEY_PRIV = 'ballrun4_wallet_map', walPrivKey = () => offlineOn() ? WALKEY_PRIV + '_off' : WALKEY_PRIV;   // (offline maps have purses of their own too)
 const purseP = { c: 0, g: 0 }, purseV = {};   // purseV: { levelNumber: { c, g, u } }
 let walletFresh = true;
 const lvKey = () => (inHome || !S.map) ? soloLevel() : S.idx;   // which private map's purse
@@ -2734,7 +2799,8 @@ const wallet = {
 const fmtW = v => v >= 1e9 ? '\u221e' : fmtN(v);   // (unlimited shows as the infinity sign)
 function loadPurses() {
   try { const o = JSON.parse(localStorage.getItem(WALKEY) || 'null'); if (o) { purseP.c = Math.max(0, o.c | 0); purseP.g = Math.max(0, o.g | 0); if (o.pre) purseP.pre = { c: Math.max(0, o.pre.c | 0), g: Math.max(0, o.pre.g | 0) }; walletFresh = false; } } catch (e) {}
-  try { const o = JSON.parse(localStorage.getItem(WALKEY_PRIV) || 'null'); if (o && typeof o === 'object') for (const k in o) { const q = o[k]; if (q && /^\d+$/.test(k) && +k < BallMaps.count) { purseV[k] = { c: Math.max(0, q.c | 0), g: Math.max(0, q.g | 0), u: q.u ? 1 : 0 }; if (q.pre) purseV[k].pre = { c: Math.max(0, q.pre.c | 0), g: Math.max(0, q.pre.g | 0) }; } } } catch (e) {}
+  for (const k in purseV) delete purseV[k];
+  try { const o = JSON.parse(localStorage.getItem(walPrivKey()) || 'null'); if (o && typeof o === 'object') for (const k in o) { const q = o[k]; if (q && /^\d+$/.test(k) && +k < BallMaps.count) { purseV[k] = { c: Math.max(0, q.c | 0), g: Math.max(0, q.g | 0), u: q.u ? 1 : 0 }; if (q.pre) purseV[k].pre = { c: Math.max(0, q.pre.c | 0), g: Math.max(0, q.pre.g | 0) }; } } } catch (e) {}
 }
 loadPurses();
 function cheatPre(p) { if (!p.pre) p.pre = { c: p.c, g: p.g }; }   // (the money you had before the first money code of this game, so it can go back at the next one)
@@ -2754,7 +2820,7 @@ function resetCheats() {   // a new game starts without cheats: no unlimited mon
   if (!keep) { try { localStorage.removeItem(PCK); } catch (e) {} }
   if (ch) saveWallet();
 }
-const saveWallet = () => { try { localStorage.setItem(WALKEY, JSON.stringify(purseP)); const o = {}; for (const k in purseV) { const q = purseV[k]; if (q.c || q.g || q.u) o[k] = q; } localStorage.setItem(WALKEY_PRIV, JSON.stringify(o)); } catch (e) {} };
+const saveWallet = () => { try { localStorage.setItem(WALKEY, JSON.stringify(purseP)); const o = {}; for (const k in purseV) { const q = purseV[k]; if (q.c || q.g || q.u) o[k] = q; } localStorage.setItem(walPrivKey(), JSON.stringify(o)); } catch (e) {} };
 const resetPurseOf = i => { const q = purseOf(i); q.c = 0; q.g = 0; saveWallet(); };
 const isBeaten = idx => { try { return !!JSON.parse(localStorage.getItem(BEATKEY) || '{}')[idx]; } catch (e) { return false; } };
 const beatCount = () => { try { return Object.keys(JSON.parse(localStorage.getItem(BEATKEY) || '{}')).length; } catch (e) { return 0; } };
@@ -3227,7 +3293,7 @@ function worldObj() {   // the world exactly as it is right now: everything buil
 }
 function saveWorld(force, snap) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
-  if (S.slot >= SOLO_BASE && !snap && settings.lvSave && settings.lvSave[S.idx]) return;   // (a level kept as a saved state only changes when you save it)
+  if (S.slot >= SOLO_BASE && !snap && lvSaveOn(S.idx)) return;   // (a level kept as a saved state only changes when you save it)
   if (snap) lastWorldStr = '';
   const o = worldObj(), pv = S.slot >= SOLO_BASE ? solo2[S.idx] : null; if (pv && pv.from) o.from = pv.from;   // (a copy saved from someone else stays marked as one)
   const str = JSON.stringify(o);
@@ -4208,7 +4274,7 @@ function buildLook() {
 function syncUI() {
   nameUI();
   [['setTags', 'tags'], ['setSongBar', 'songBar'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setShopBoth', 'shopBoth'], ['setFamily', 'family'], ['setMyName', 'myName'], ['setBaseArrow', 'baseArrow'], ['setBaseBig', 'baseBig'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
-    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
+    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   layoutCorner(); selMouse.set(settings.mouseMove); $('mouseDesc').textContent = MOUSE[settings.mouseMove][1]; applyUi();
@@ -4543,8 +4609,8 @@ function linkMsg(m) {
     }
     case 'dm': dmIn(m); return true;
     case 'dmok': dmOk(m); return true;
-    case 'dmno': chatAdd('', m.why === 'off' ? who(nameOf(m.to)) + ' is not online right now, so the message was not sent.' : 'Messages only go to your friends.', 'sys'); return true;
-    case 'pii': piiSays(m.why); return true;
+    case 'dmno': dmNo(m); return true;
+    case 'pii': if (m.c && dmWait[m.c | 0]) dmPii(m); piiSays(m.why); return true;
     case 'emo': {
       const o = others.get(m.id), e = lkOf(m.pub);
       if (chatMuted || muteOf(m.pub) >= 2) return true;   // public chat muted, or that player is
@@ -4774,11 +4840,11 @@ function sendEmo(i) {
 /* ----- chat: write anything. Family friendly mode hides rude words when it is shown (what was written is never changed) ----- */
 const chatLog = [];
 const CHAT_KEEP = 60000;   // (a message stays in the chat window for a minute, then it is gone for good)
-function chatPrune() { const cut = Date.now() - CHAT_KEEP; let n = 0; while (chatLog.length && chatLog[0].t < cut) { chatLog.shift(); n++; } if (!chatLog.some(m => m.cls !== 'sys')) $('btnChat').classList.remove('unread'); return n; }
+function chatPrune() { const cut = Date.now() - CHAT_KEEP; let n = 0; while (chatLog.length && chatLog[0].t < cut) { chatLog.shift(); n++; } if (!chatLog.some(m => m.cls !== 'sys') && worldNew) { worldNew = false; chatBadges(); } return n; }
 setInterval(() => { if (chatPrune() && chatOpen) chatRender(false); else if (chatOpen) { const now = Date.now(); for (const t of $('chatLog').querySelectorAll('.cmt')) { const left = Math.max(0, CHAT_KEEP - (now - +t.dataset.t)); t.textContent = Math.ceil(left / 1000) + 's'; if (left < 10000) t.parentNode.classList.add('soon'); } } }, 1000);
 function chatAdd(name, txt, cls, kind) {   // one line in the chat window (and, for 5 seconds, over their head and in the corner)
   chatPrune(); chatLog.push({ name, txt, cls: cls || '', kind: kind || '', t: Date.now(), dm: arguments[4] || '' }); while (chatLog.length > 120) chatLog.shift();
-  if (chatOpen) chatRender(cls === 'me'); else if (cls !== 'sys') { $('btnChat').classList.add('unread'); }
+  if (chatOpen && chatView === 'w') chatRender(cls === 'me'); else if (cls !== 'sys' && cls !== 'me') { worldNew = true; chatBadges(); }
 }
 function chatRender(stick) {
   const L = $('chatLog'), atEnd = stick || chatStick, keep = L.scrollTop, n0 = L.childElementCount; L.textContent = '';
@@ -4787,7 +4853,6 @@ function chatRender(stick) {
   for (const m of chatLog) { const d = document.createElement('div'); d.className = 'cm ' + m.cls + (m.kind === 'bot' ? ' bot' : '');
     { const left = Math.max(0, CHAT_KEEP - (now - m.t)), t = document.createElement('span'); t.className = 'cmt'; t.dataset.t = m.t; t.title = 'Disappears in'; t.textContent = Math.ceil(left / 1000) + 's'; d.appendChild(t);   // (how long until it disappears: a number and a bar that runs down)
       const bar = document.createElement('i'); bar.className = 'cmbar'; bar.style.animationDuration = (CHAT_KEEP / 1000) + 's'; bar.style.animationDelay = (-(now - m.t) / 1000) + 's'; d.appendChild(bar); if (left < 10000) d.classList.add('soon'); }
-    if (m.dm) { d.title = 'Tap to answer'; d.onclick = () => { chatTo = m.dm; chatToRender(); try { $('chatIn').focus(); } catch (e) {} }; }   // (a message to or from a friend: tap it to write back)
     if (m.cls !== 'sys') { const b = document.createElement('b'); b.textContent = m.name; d.appendChild(b); } d.appendChild(document.createTextNode(m.cls === 'sys' ? m.txt : censorText(m.txt))); L.appendChild(d); }
   if (atEnd) { L.scrollTop = L.scrollHeight; chatStick = true; $('chatDown').classList.add('hide', 'new'); $('chatDown').classList.remove('new'); }
   else { L.scrollTop = keep; if (L.childElementCount > n0) $('chatDown').classList.add('new'); chatDownSync(); }   // (reading older messages: you stay where you are, and the arrow shows there is something new)
@@ -4803,45 +4868,151 @@ function chatSend(quick) {
   if (performance.now() < chatCool) return;
   { const why = P.piiCheck ? P.piiCheck(txt) : ''; if (why) { piiSays(why); return; } }   // (it stays in the box, so you can change it)
   chatCool = performance.now() + 600;
-  if (chatTo) {   // to one friend: only they see it
-    const l = lkOf(chatTo); if (!l || !l.ok) { chatTo = ''; chatToRender(); return; }
-    if (!(online && ws && ws.readyState === 1)) { chatAdd('', 'Not connected, so the message was not sent.', 'sys'); return; }
-    const c = ++dmSeq; dmWait[c] = { to: chatTo, txt }; wsSend({ t: 'dm', to: chatTo, s: txt, c }); if (quick === undefined) inp.value = ''; sfx('ui'); return;
-  }
   if (online && ws && ws.readyState === 1) wsSend({ t: 'text', s: txt });
   if (quick === undefined) inp.value = ''; S.myEmo = { i: -1, txt: bubbleOf(txt), t: S.t, dur: 5 }; chatAdd('You', txt, 'me'); sfx('ui');
   try { localAsk('text', txt); } catch (e) {}
 }
-/* ----- messages to one friend: from inside a game, only to friends, never to or from anyone blocked. Personal info never goes (checked here and on the server) ----- */
-let chatTo = '', dmSeq = 0; const dmWait = {};
+/* ----- messages between friends: each friend has a conversation of their own, kept on this device (and never mixed into the world chat).
+   A friend who is not on gets your messages the next time they play. Only friends, never anyone blocked, and personal info never goes ----- */
+const DMKEY = 'ballrun4_dms', DM_KEEP = 150;
+let dms = {}; try { const o = JSON.parse(localStorage.getItem(DMKEY) || '{}'); if (o && typeof o === 'object') for (const k in o) if (/^[0-9a-f]{16}$/.test(k) && o[k] && Array.isArray(o[k].m)) { dms[k] = { m: o[k].m.filter(x => x && typeof x.s === 'string').slice(-DM_KEEP), u: o[k].u | 0, n: typeof o[k].n === 'string' ? o[k].n.slice(0, 40) : '' }; dms[k].m.forEach(x => { if (x.st === 'p') x.st = 'f'; }); } } catch (e) {}   // (a message still on its way when the game closed did not go)
+let dmSaveT = 0; const dmSave = () => { clearTimeout(dmSaveT); dmSaveT = setTimeout(() => { try { localStorage.setItem(DMKEY, JSON.stringify(dms)); } catch (e) {} }, 250); };
+addEventListener('storage', e => { if (e.key === DMKEY) { try { const o = JSON.parse(e.newValue || '{}'); if (o && typeof o === 'object') { dms = o; chatBadges(); if (chatOpen) chatShow(); } } catch (x) {} } });   // (another tab of the game got or sent a message)
+const dmOf = pub => dms[pub] || (dms[pub] = { m: [], u: 0, n: '' });
+let dmSeq = 0, chatView = 'w', dmTabs = [], worldNew = false; const dmWait = {};   // chatView: 'w' the world you are in, 'l' your friends, or one friend (their pub)
+const dmFriend = pub => { const l = lkOf(pub); return l && l.ok !== false && !blockedPub(pub) ? l : null; };
+const dmUnread = pub => (dms[pub] && dmFriend(pub) ? dms[pub].u | 0 : 0);
+const dmUnreadAll = () => Object.keys(dms).reduce((a, k) => a + dmUnread(k), 0);
+const dmLast = pub => { const d = dms[pub]; return d && d.m.length ? d.m[d.m.length - 1] : null; };
+const dmNet = () => !offlineOn() && !!ws && ws.readyState === 1 && (online || lobbyOn);
+const dmShowing = pub => chatOpen && chatView === pub && !document.hidden;
+function dmPush(pub, msg) { const d = dmOf(pub); d.m.push(msg); if (d.m.length > DM_KEEP) d.m.splice(0, d.m.length - DM_KEEP); dmSave(); }
+function gBadge(host, n, dot) {   // a little green number (or dot) on a button: something new to read
+  if (!host) return; let b = host.querySelector(':scope > .gb');
+  if (!n && !dot) { if (b) b.remove(); return; }
+  if (!b) { b = el('b', 'gb'); host.appendChild(b); } b.className = 'gb' + (n ? '' : ' dot'); b.textContent = n ? (n > 99 ? '99+' : String(n)) : '';
+}
+function chatBadges() {   // every place that says you have messages: the chat button in the game, Chat on the main menu, the tabs, your friends list and their profile
+  const n = dmUnreadAll(); gBadge($('btnChat'), n, worldNew && !(chatOpen && chatView === 'w'));
+  { const h = $('homeChN'); if (h) { h.textContent = n > 99 ? '99+' : n; h.classList.toggle('hide', !n); h.title = n + ' new message' + (n === 1 ? '' : 's'); } }
+  $('btnChat').title = n ? n + ' new message' + (n === 1 ? '' : 's') + ' from friends' : 'Chat';
+  if (chatOpen) chatTabsRender();
+  if (typeof friendsShown === 'function' && friendsShown()) lpRender(); else if (profPub) profRender();
+}
+function dmToast(pub, name, txt) {   // a green reminder at the top: tap it to open that chat
+  const t = $('dmToast'); $('dmToastN').textContent = name; $('dmToastT').textContent = txt; t.dataset.pub = pub; t.classList.remove('hide');
+  t.style.animation = 'none'; void t.offsetWidth; t.style.animation = '';
+  clearTimeout(dmToast.t); dmToast.t = setTimeout(() => t.classList.add('hide'), 6000);
+}
+$('dmToast').onclick = () => { const pub = $('dmToast').dataset.pub; $('dmToast').classList.add('hide'); if (pub && dmFriend(pub)) openDm(pub); };
+let dmLateT = 0; const dmLate = {};
+function dmIn(m) {   // a friend wrote to you
+  if (!/^[0-9a-f]{16}$/.test(m.from || '') || blockedPub(m.from) || typeof m.s !== 'string') return; const l = lkOf(m.from); if (!l) return;
+  const at = +m.at || nowMs(), d = dmOf(m.from), nm = who(m.name || l.name); l.dm = Math.max(l.dm || 0, at); if (m.name) d.n = String(m.name).slice(0, 40);
+  if (d.m.some(x => !x.me && x.a === at && x.s === m.s)) return;   // (the same one twice)
+  dmPush(m.from, { a: at, s: m.s.slice(0, 200) });
+  if (dmShowing(m.from)) { dmRender(true); sfx('ui'); return; }
+  d.u = (d.u | 0) + 1; dmSave(); chatBadges();
+  if (m.late) {   // (what came while you were away arrives all at once: one reminder for it)
+    dmLate[m.from] = (dmLate[m.from] || 0) + 1; clearTimeout(dmLateT);
+    dmLateT = setTimeout(() => { const ks = Object.keys(dmLate), tot = ks.reduce((a, k) => a + dmLate[k], 0); if (ks.length === 1) { const k = ks[0], lk = lkOf(k); dmToast(k, who((lk && lk.name) || dms[k].n), dmLate[k] === 1 ? bubbleOf(dmLast(k).s) : dmLate[k] + ' new messages'); } else dmToast(ks[0], tot + ' new messages', 'from ' + ks.length + ' friends'); ks.forEach(k => delete dmLate[k]); sfx('ready'); }, 700);
+  } else { dmToast(m.from, nm, bubbleOf(m.s)); sfx('ready'); }
+  sysNotify('nMsgs', nm, bubbleOf(m.s), 'dm-' + m.from);
+}
+function dmSend(pub, txt) {
+  const l = dmFriend(pub); if (!l) return false;
+  if (!dmNet()) { dmNoteSet(offlineOn() ? 'You are offline. Messages need the server.' : 'Not connected to the server right now. Try again in a moment.', true); sfx('warn'); return false; }
+  const c = ++dmSeq, msg = { a: nowMs(), me: 1, s: txt, st: 'p', c }; dmPush(pub, msg); dmWait[c] = { pub, msg };
+  wsSend({ t: 'dm', to: pub, s: txt, c });
+  setTimeout(() => { if (dmWait[c]) { delete dmWait[c]; msg.st = 'f'; dmSave(); if (dmShowing(pub)) dmRender(); } }, 9000);   // (no answer: it did not go)
+  if (dmShowing(pub)) dmRender(true); return true;
+}
+function dmOk(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; w.msg.st = m.q ? 'q' : ''; w.msg.a = +m.at || w.msg.a; delete w.msg.c; const l = lkOf(w.pub); if (l) l.dm = w.msg.a; dmSave(); if (dmShowing(w.pub)) dmRender(); }
+function dmNo(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; w.msg.st = 'f'; w.msg.why = m.why === 'full' ? 'full' : 'friend'; dmSave(); if (dmShowing(w.pub)) dmRender(); }
+function dmPii(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; const d = dms[w.pub]; if (d) { const i = d.m.indexOf(w.msg); if (i >= 0) d.m.splice(i, 1); dmSave(); } if (dmShowing(w.pub)) dmRender(); }
+function dmRetry(pub, msg) { const d = dms[pub]; if (!d) return; const i = d.m.indexOf(msg); if (i >= 0) d.m.splice(i, 1); if (!dmSend(pub, msg.s)) { if (i >= 0) d.m.splice(i, 0, msg); } dmRender(true); }
 function piiSays(why) {
   const w = (P.PII_WHY && P.PII_WHY[why]) || 'personal info';
   const t = 'Not sent: that looks like ' + w + '. Phone numbers, emails, addresses, links and other apps can never be shared here, to keep everyone safe.';
-  if (chatOpen) chatAdd('', t, 'sys'); else notice(t, 'urgent'); sfx('warn');
+  if (chatOpen && chatView !== 'w' && chatView !== 'l' && chatView !== 'g') dmNoteSet(t, true); else if (chatOpen) chatAdd('', t, 'sys'); else notice(t, 'urgent'); sfx('warn');
 }
-function dmIn(m) {   // a friend wrote to you
-  if (!/^[0-9a-f]{16}$/.test(m.from || '') || blockedPub(m.from)) return; const l = lkOf(m.from); if (!l) return;
-  l.dm = Math.max(l.dm || 0, +m.at || Date.now()); const nm = who(m.name || l.name);
-  if (inHome) { notice(nm + ' (to you): ' + bubbleOf(m.s), ''); sfx('ready'); return; }
-  chatAdd(nm + ' → you', m.s, 'dm', '', m.from); addFeedEmo(nm + ' (to you)', -1, 'dm', bubbleOf(m.s)); sfx('ready');
-  if (!chatOpen) $('btnChat').classList.add('unread');
+/* the chat window: tabs across the top. World (everyone in the world you are in: public, or that private game), Friends (everyone you can write to), then the friends you are writing to */
+const clock = t => { try { return new Date(t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
+function dayOf(t) { const d = new Date(t), n = new Date(), y = new Date(n.getFullYear(), n.getMonth(), n.getDate() - 1); if (d.toDateString() === n.toDateString()) return 'Today'; if (d.toDateString() === y.toDateString()) return 'Yesterday'; return dateOf(t); }
+function whenShort(t) { const n = nowMs(); if (n - t < 60000) return 'now'; if (new Date(t).toDateString() === new Date().toDateString()) return clock(t); return dateOf(t); }
+function chatTabsRender() {
+  const box = $('chatTabs'); box.textContent = ''; dmTabs = dmTabs.filter(p => dmFriend(p));
+  const tab = (id, label, icn, n, opts) => {
+    const b = el('button', 'ctab' + (chatView === id ? ' on' : '')); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', chatView === id ? 'true' : 'false');
+    if (icn) b.insertAdjacentHTML('beforeend', ic(icn)); else b.appendChild(el('i', 'gdt' + (opts.on ? '' : ' off')));
+    b.appendChild(el('span', 'ctn', label)); if (n || (opts && opts.dot)) { const g = el('b', 'gb' + (n ? '' : ' dot')); g.textContent = n ? (n > 99 ? '99+' : n) : ''; if (!n) g.style.cssText = 'width:9px;height:9px;min-width:0;padding:0'; b.appendChild(g); }
+    if (opts && opts.close) { const x = el('span', 'cx'); x.innerHTML = ic('close'); x.title = 'Close this chat'; x.setAttribute('aria-label', 'Close the chat with ' + label); x.onclick = e => { e.stopPropagation(); dmTabs = dmTabs.filter(p => p !== id); if (chatView === id) chatView = 'l'; sfx('ui'); chatShow(); }; b.appendChild(x); }
+    b.onclick = () => { if (chatView !== id) { chatView = id; sfx('ui'); chatShow(); } }; box.appendChild(b); return b;
+  };
+  if (!inHome) tab('w', 'World', 'globe', 0, { dot: worldNew && chatView !== 'w' });
+  if (!inHome) tab('g', 'Give', 'gcoin', 0);
+  const inTabs = new Set(dmTabs); tab('l', 'Friends', 'users', Object.keys(dms).filter(k => !inTabs.has(k)).reduce((a, k) => a + dmUnread(k), 0));
+  for (const pub of dmTabs) { const l = lkOf(pub); tab(pub, who(l.name), '', dmUnread(pub), { on: l.on && !l.hid, close: 1 }); }
+  const on = box.querySelector('.on'); if (on) try { on.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
 }
-function dmOk(m) { const w = dmWait[m.c | 0]; delete dmWait[m.c | 0]; const l = lkOf(m.to); if (l) l.dm = +m.at || Date.now(); chatAdd('You → ' + who(nameOf(m.to)), m.s || (w && w.txt) || '', 'me dm', '', m.to); }
-function openChatTo(pub) { const l = lkOf(pub); if (!l) return; if (paused) togglePause(); closeSettingsNow(); chatTo = pub; toggleChat(true); chatToRender(); setTimeout(() => { try { $('chatIn').focus(); } catch (e) {} }, 60); }
-function chatToRender() {   // who the next message goes to: everyone here, or one friend who is online
-  const box = $('chatTo'); if (!box) return; box.textContent = '';
-  const fr = lks.filter(l => l.ok && l.on && !blockedPub(l.pub)), canDm = online && !inHome && !offlineOn();
-  if (chatTo && !fr.some(l => l.pub === chatTo)) chatTo = '';
-  if (canDm && fr.length) {
-    box.appendChild(el('span', '', 'To:'));
-    const b0 = el('button', chatTo ? '' : 'on', 'Everyone here'); b0.type = 'button'; b0.onclick = () => { chatTo = ''; chatToRender(); }; box.appendChild(b0);
-    for (const l of fr) { const b = el('button', chatTo === l.pub ? 'on' : ''); b.type = 'button'; b.appendChild(el('i', 'gd')); b.appendChild(document.createTextNode(who(l.name))); b.title = 'Only ' + who(l.name) + ' sees it'; b.onclick = () => { chatTo = chatTo === l.pub ? '' : l.pub; chatToRender(); try { $('chatIn').focus(); } catch (e) {} }; box.appendChild(b); }
+function chatShow() {   // show what the chat window is on
+  if (chatView === 'w' && inHome) chatView = 'l';
+  if (chatView !== 'w' && chatView !== 'l' && chatView !== 'g' && !dmFriend(chatView)) chatView = inHome ? 'l' : 'w';
+  if (chatView === 'g' && inHome) chatView = 'l';
+  const v = chatView === 'w' ? 'w' : chatView === 'g' ? 'g' : chatView === 'l' ? 'l' : 'd';
+  $('cvWorld').classList.toggle('hide', v !== 'w'); $('cvGive').classList.toggle('hide', v !== 'g'); $('cvList').classList.toggle('hide', v !== 'l'); $('cvDm').classList.toggle('hide', v !== 'd');
+  if (v === 'w') { worldNew = false; chatRender(true); worldNote(); }
+  else if (v === 'g') giveRender();
+  else if (v === 'l') dmListRender();
+  else { if (!dmTabs.includes(chatView)) { dmTabs.unshift(chatView); if (dmTabs.length > 3) dmTabs.pop(); } dmRender(true); if ($('dmToast').dataset.pub === chatView) $('dmToast').classList.add('hide'); }
+  chatTabsRender(); chatBadges();
+  if (!touchActive()) setTimeout(() => { try { (v === 'w' ? $('chatIn') : v === 'd' ? $('dmIn') : null)?.focus({ preventScroll: true }); } catch (e) {} }, 30);
+}
+function worldNote() {
+  $('chatWho').textContent = offlineOn() ? 'Offline: just you and the bots' : party ? 'Everyone in this private game' : settings.mp ? 'Everyone in this public world' : 'Everyone in your world';
+}
+function dmListRender() {
+  const box = $('dmList'); box.textContent = '';
+  const fr = lks.filter(l => l.ok && !blockedPub(l.pub) && !isMe(l)).sort((a, b) => dmUnread(b.pub) - dmUnread(a.pub) || ((dmLast(b.pub) || {}).a || 0) - ((dmLast(a.pub) || {}).a || 0) || (b.on && !b.hid) - (a.on && !a.hid) || String(a.name).localeCompare(String(b.name)));
+  if (!fr.length) { const e = el('div', 'dmempty'); e.innerHTML = ic('chat'); e.appendChild(el('div', '', 'Add friends to chat with them. Messages between friends are private.')); const b = el('button', 'btn prim'); b.type = 'button'; b.innerHTML = ic('users') + '<span>Friends</span>'; b.onclick = () => { toggleChat(false); openFriends(); }; e.appendChild(b); box.appendChild(e); return; }
+  if (!dmNet()) box.appendChild(el('div', 'small dim dmnote', offlineOn() ? 'You are offline: you can read your chats, but not send.' : 'Connecting to the server…'));
+  for (const l of fr) {
+    const r = el('button', 'dmrow' + (dmUnread(l.pub) ? ' new' : '')); r.type = 'button'; r.appendChild(ballDot(l));
+    const w = el('span', 'dmw'), last = dmLast(l.pub); w.appendChild(el('b', '', who(l.name)));
+    w.appendChild(el('small', '', last ? (last.me ? 'You: ' : '') + censorText(last.s) : statusOf(l).t || 'Say hi')); r.appendChild(w);
+    const rt = el('span', 'dmr'); if (last) rt.appendChild(el('span', '', whenShort(last.a))); const n = dmUnread(l.pub); if (n) { const g = el('b', 'gb'); g.textContent = n > 99 ? '99+' : n; rt.appendChild(g); } r.appendChild(rt);
+    r.onclick = () => { sfx('ui'); chatView = l.pub; chatShow(); }; box.appendChild(r);
   }
-  box.classList.toggle('hide', !box.childNodes.length);
-  const l = chatTo ? lkOf(chatTo) : null;
-  $('chatIn').placeholder = l ? 'Message to ' + who(l.name) + ' (only they see it)' : 'Say something to everyone here';
-  $('chatNote').textContent = offlineOn() ? 'Offline: only the bots hear you.' : l ? 'Only ' + who(l.name) + ' sees this. You can only message friends.' : 'Everyone in your world sees it.';
 }
+let dmNoteT = 0;
+function dmNoteSet(t, warn) { const n = $('dmNote'); n.textContent = t; n.style.color = warn ? '#ffcf8a' : ''; clearTimeout(dmNoteT); if (warn) dmNoteT = setTimeout(() => { n.style.color = ''; dmNoteDefault(); }, 6000); }
+function dmNoteDefault() { const l = dmFriend(chatView); if (!l) return; const nm = who(l.name); dmNoteSet(offlineOn() ? 'You are offline. Messages need the server.' : !dmNet() ? 'Connecting to the server…' : l.on && !l.hid ? 'Only ' + nm + ' sees this.' : 'Only ' + nm + ' sees this. They get it next time they play.'); }
+function dmRender(stick) {
+  const pub = chatView, l = dmFriend(pub); if (!l) return; const d = dmOf(pub), nm = who(l.name);
+  { const h = $('dmHead'); h.textContent = ''; h.appendChild(ballDot(l)); const w = el('div', 'dmw'), st = statusOf(l); w.appendChild(el('b', '', nm)); w.appendChild(el('small', st.c === 'on' ? 'on' : '', st.t)); h.appendChild(w);
+    h.appendChild(iconBtn('btn sm', 'user', 'See ' + nm + "'s profile", () => openProfile(Object.assign({}, l)), 'Profile')); }
+  const L = $('dmLog'), atEnd = stick || L.scrollHeight - L.scrollTop - L.clientHeight < 60; L.textContent = '';
+  if (!d.m.length) L.appendChild(el('div', 'dmhint', 'No messages yet. Say hi to ' + nm + '!'));
+  let day = '', lastMine = -1; d.m.forEach((m, i) => { if (m.me) lastMine = i; });
+  d.m.forEach((m, i) => {
+    const dy = dayOf(m.a); if (dy !== day) { day = dy; L.appendChild(el('div', 'dday', dy)); }
+    const c = el('div', 'cm' + (m.me ? ' me' : '') + (m.st === 'p' ? ' pend' : m.st === 'f' ? ' fail' : '')); c.appendChild(document.createTextNode(censorText(m.s))); c.appendChild(el('span', 'ct', clock(m.a))); L.appendChild(c);
+    if (m.me && m.st === 'f') { const f = el('div', 'dst bad', m.why === 'friend' ? 'Not sent: you are not friends any more' : m.why === 'full' ? 'Not sent: ' + nm + ' has too many messages waiting' : 'Not sent · tap to try again'); if (!m.why) { f.tabIndex = 0; f.setAttribute('role', 'button'); f.onclick = () => dmRetry(pub, m); } L.appendChild(f); }
+    else if (i === lastMine) L.appendChild(el('div', 'dst', m.st === 'p' ? 'Sending…' : m.st === 'q' && !(l.on || (l.last || 0) > m.a) ? 'Waiting for ' + nm + ' to come on' : 'Sent'));
+  });
+  if (atEnd) L.scrollTop = L.scrollHeight;
+  if (d.u) { d.u = 0; dmSave(); chatBadges(); }
+  $('dmIn').placeholder = 'Message ' + nm; const can = dmNet(); $('dmIn').disabled = offlineOn(); $('dmSend').disabled = !can; if (!dmNoteT) dmNoteDefault();
+}
+$('dmForm').onsubmit = ev => { ev.preventDefault(); const inp = $('dmIn'), txt = inp.value.replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt || !dmFriend(chatView)) return;
+  if (performance.now() < chatCool) return; { const why = P.piiCheck ? P.piiCheck(txt) : ''; if (why) { piiSays(why); return; } } chatCool = performance.now() + 400;
+  if (dmSend(chatView, txt)) { inp.value = ''; sfx('ui'); } };
+$('dmIn').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') toggleChat(false); });
+function openDm(pub) {   // a chat with one friend: in the game it opens over the game, anywhere else on its own
+  if (!dmFriend(pub)) return; if (typeof closeProfile === 'function') closeProfile();
+  chatView = pub; if (chatOpen) chatShow(); else toggleChat(true, pub);
+}
+const openChatTo = openDm;
 function onText(m) {
   const o = others.get(m.id), e = lkOf(m.pub || (o && o.pub)); if (chatMuted || (o && muteOf(o.pub) >= 2) || (m.pub && muteOf(m.pub) >= 2)) return;
   if (o) o.emo = { i: -1, txt: bubbleOf(m.s), t: S.t, dur: 5 };
@@ -4866,38 +5037,40 @@ $('qmReset').onclick = () => { const ins = $('qmList').querySelectorAll('input')
 $('qmOk').onclick = () => { settings.chatQuick = [...$('qmList').querySelectorAll('input')].map(i => i.value.replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean).slice(0, 10); save(); quickRender(); $('quickModal').classList.add('hide'); };
 quickRender();
 $('chatIn').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') toggleChat(false); });
-/* ----- giving coins and diamonds to somebody in your world. Never more than you have, and it asks you first ----- */
-function chatPeople() {
-  const box = $('chatPeople'); box.textContent = ''; let n = 0;
-  others.forEach((o, id) => { if (o.bot) return; n++;
-    const g = document.createElement('button'); g.type = 'button'; g.className = 'btn sm'; g.innerHTML = ic('gcoin') + '<span>Give</span>'; g.onclick = () => openGive(id);
-    const lk = o.pub ? lkOf(o.pub) : null, sd = o.pub ? seenEntry(o.pub) : null, pp = Object.assign({ color: o.color, color2: o.color2, pat: o.pat }, sd || {}, lk || {}, { pub: o.pub || '', name: o.name, on: 1, w: typeof room !== 'undefined' && room ? room.id : 0 });
-    const m = lk && lk.ok ? iconBtn('btn sm', 'chat', 'Message ' + who(o.name), () => { chatTo = o.pub; $('chatPeople').classList.add('hide'); chatToRender(); }) : null;
-    box.appendChild(personRow(pp, lk ? 'Your friend · here with you' : 'Here with you', [m, g], !o.pub)); });
-  if (!n) { const e = document.createElement('div'); e.className = 'small dim'; e.textContent = offlineOn() ? 'Offline: nobody to give to.' : 'Nobody else is here right now.'; box.appendChild(e); }
-  $('chatPplN').textContent = 'People' + (n ? ' (' + n + ')' : '');
-}
-$('chatPplBtn').onclick = () => { const b = $('chatPeople'), on = b.classList.contains('hide'); b.classList.toggle('hide', !on); if (on) chatPeople(); sfx('ui'); };
+/* ----- giving coins and diamonds to somebody in your world: a tab of its own in the chat window. Never more than you have, and it asks you first ----- */
 let giveTo = null;
 const GIVE_C = 1000000, GIVE_G = 10000;   // (the most that can be given at once: coins from codes and unlimited money count like any other, up to this)
 function giveMax() { const c = Math.min(GIVE_C, Math.floor(wallet.c)), g = Math.min(GIVE_G, Math.floor(wallet.g)); return { c: Math.max(0, c), g: Math.max(0, g) }; }
-function openGive(id) {
-  const o = others.get(id); if (!o) return; giveTo = id; const mx = giveMax();
-  $('gvTitle').textContent = 'Give to ' + who(o.name); $('gvHave').textContent = 'You have ' + fmtN(mx.c) + ' coins and ' + fmtN(mx.g) + ' diamonds' + (wallet.c > GIVE_C || wallet.g > GIVE_G ? ' to give right now (the most at a time)' : '') + '.';
-  $('gvC').value = 0; $('gvG').value = 0; $('gvC').max = mx.c; $('gvG').max = mx.g; $('giveModal').classList.remove('hide'); setTimeout(() => { try { $('gvC').focus(); $('gvC').select(); } catch (e) {} }, 50);
+function gvMsg(t, cls) { const m = $('gvMsg'); m.textContent = t || ''; m.className = 'small dmnote' + (cls ? ' ' + cls : ''); }
+function giveRender() {
+  const mx = giveMax(); $('gvHave').innerHTML = '<span>' + ic('gcoin') + '<b></b></span><span>' + ic('gem') + '<b></b></span>'; $('gvHave').querySelectorAll('b')[0].textContent = fmtW(wallet.c); $('gvHave').querySelectorAll('b')[1].textContent = fmtW(wallet.g);
+  const box = $('gvPeople'); box.textContent = ''; let n = 0;
+  if (giveTo !== null && !others.has(giveTo)) giveTo = null;
+  others.forEach((o, id) => { if (o.bot) return; n++;
+    const lk = o.pub ? lkOf(o.pub) : null, sd = o.pub ? seenEntry(o.pub) : null, pp = Object.assign({ color: o.color, color2: o.color2, pat: o.pat }, sd || {}, lk || {}, { pub: o.pub || '', name: o.name, on: 1, w: typeof room !== 'undefined' && room ? room.id : 0 });
+    const r = el('button', 'dmrow' + (giveTo === id ? ' on' : '')); r.type = 'button'; r.appendChild(ballDot(pp)); const w = el('span', 'dmw'); w.appendChild(el('b', '', who(o.name))); w.appendChild(el('small', '', lk ? 'Your friend · here with you' : 'Here with you')); r.appendChild(w);
+    r.onclick = () => { sfx('ui'); giveTo = id; gvMsg(''); $('gvC').value = 0; $('gvG').value = 0; giveRender(); if (!touchActive()) setTimeout(() => { try { $('gvC').focus(); $('gvC').select(); } catch (e) {} }, 30); };
+    box.appendChild(r); });
+  box.classList.toggle('hide', giveTo !== null);   // (once somebody is picked, just them and the amounts)
+  if (!n) { const e = el('div', 'dmempty'); e.innerHTML = ic('gcoin'); e.appendChild(el('div', '', offlineOn() ? 'Offline: there is nobody to give to.' : 'Nobody else is here right now. You can give coins and diamonds to anyone in your world.')); box.appendChild(e); box.classList.remove('hide'); }
+  $('gvHint').classList.toggle('hide', !n || giveTo !== null);
+  const o = giveTo !== null ? others.get(giveTo) : null; $('gvForm').classList.toggle('hide', !o);
+  if (o) { $('gvTitle').textContent = 'Give to ' + who(o.name); $('gvC').max = mx.c; $('gvG').max = mx.g; }
 }
-$('gvNo').onclick = () => { $('giveModal').classList.add('hide'); giveTo = null; };
+$('gvNo').onclick = () => { sfx('ui'); giveTo = null; gvMsg(''); giveRender(); };
+setInterval(() => { if (chatOpen && chatView === 'g') { const a = document.activeElement; if (a !== $('gvC') && a !== $('gvG')) giveRender(); else if (giveTo !== null && !others.has(giveTo)) giveRender(); } }, 1500);   // (people come and go)
+for (const id of ['gvC', 'gvG']) $(id).addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') $('gvOk').click(); if (e.key === 'Escape') toggleChat(false); });
 $('gvOk').onclick = () => {
-  const o = others.get(giveTo), mx = giveMax(); if (!o) { $('giveModal').classList.add('hide'); notice('They are not here any more', ''); return; }
+  const o = others.get(giveTo), mx = giveMax(); if (!o) { giveTo = null; giveRender(); gvMsg('They are not here any more', 'bad'); return; }
   const c = Math.floor(+$('gvC').value || 0), g = Math.floor(+$('gvG').value || 0);
-  if (c < 0 || g < 0 || (!c && !g)) { sfx('warn'); notice('Pick how many to give', ''); return; }
-  if (c > mx.c || g > mx.g) { sfx('warn'); notice(c > GIVE_C || g > GIVE_G ? 'The most you can give at once is ' + fmtN(GIVE_C) + ' coins and ' + fmtN(GIVE_G) + ' diamonds' : 'You do not have that much', 'urgent'); return; }
+  if (c < 0 || g < 0 || (!c && !g)) { sfx('warn'); gvMsg('Pick how many to give', 'bad'); return; }
+  if (c > mx.c || g > mx.g) { sfx('warn'); gvMsg(c > GIVE_C || g > GIVE_G ? 'The most you can give at once is ' + fmtN(GIVE_C) + ' coins and ' + fmtN(GIVE_G) + ' diamonds' : 'You do not have that much', 'bad'); return; }
   const what = [c ? fmtN(c) + ' coin' + (c === 1 ? '' : 's') : '', g ? fmtN(g) + ' diamond' + (g === 1 ? '' : 's') : ''].filter(Boolean).join(' and '), nm = who(o.name), id = giveTo;
-  $('giveModal').classList.add('hide');
   askConfirm('Give ' + nm + ' ' + what + '?', 'They come out of what you have and go straight to ' + nm + '. You cannot take them back.', 'Yes, give', () => {
-    const o2 = others.get(id), mx2 = giveMax(); if (!o2 || !online || !ws || ws.readyState !== 1) { notice('Could not give: they are not here, or you are offline', 'urgent'); return; }
-    if (c > mx2.c || g > mx2.g) { notice('You do not have that much any more', 'urgent'); return; }
-    wallet.c -= c; wallet.g -= g; saveWallet(); wsSend({ t: 'gift', to: id, c, g }); sfx('coin'); chatAdd('', 'You gave ' + nm + ' ' + what, 'sys'); notice('You gave ' + nm + ' ' + what, '');
+    const o2 = others.get(id), mx2 = giveMax(); if (!o2 || !online || !ws || ws.readyState !== 1) { gvMsg('Could not give: they are not here, or you are not connected', 'bad'); return; }
+    if (c > mx2.c || g > mx2.g) { gvMsg('You do not have that much any more', 'bad'); return; }
+    wallet.c -= c; wallet.g -= g; saveWallet(); wsSend({ t: 'gift', to: id, c, g }); sfx('coin'); chatAdd('', 'You gave ' + nm + ' ' + what, 'sys');
+    $('gvC').value = 0; $('gvG').value = 0; giveRender(); gvMsg('You gave ' + nm + ' ' + what, 'ok');
   }, { no: 'Cancel', yesClass: 'go' });
 };
 function onGift(m) {
@@ -4920,13 +5093,17 @@ function openPick(title, opts, cur, onPick, onGone) {   // (onGone: called whene
 function closePick() { $('pickPop').classList.add('hide'); if (closeSelectFn === closePick) closeSelectFn = null; const f = pickGone; pickGone = null; if (f) setTimeout(f, 0); }
 $('pickClose').onclick = closePick;
 $('pickPop').addEventListener('pointerdown', e => { if (e.target === $('pickPop')) { e.preventDefault(); closePick(); } });
-function toggleChat(on) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it
-  if (on && inHome) return;
+function toggleChat(on, view) {   // a pop-up in the middle of the screen: tap anywhere outside it to close it
   chatOpen = on; $('emoPop').classList.toggle('hide', !on); if (!on && closeSelectFn) closeSelectFn(); if (on && shopOpen) toggleShop(false);
   chatFit();
-  if (on) { if (typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui'); $('btnChat').classList.remove('unread'); chatRender(true); if (!$('chatPeople').classList.contains('hide')) chatPeople(); chatToRender(); if (!touchActive()) setTimeout(() => { try { $('chatIn').focus(); } catch (e) {} }, 30); }
-  else { try { $('chatIn').blur(); } catch (e) {} }
+  if (on) {
+    if (!inHome && typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui');
+    if (view) chatView = view; else if (inHome && chatView === 'w') chatView = 'l';
+    else if (!inHome && chatView === 'l' && !dmUnreadAll()) chatView = 'w';   // (the chat button in a game opens on the world, unless you were writing to a friend)
+    chatShow();
+  } else { try { $('chatIn').blur(); $('dmIn').blur(); } catch (e) {} chatBadges(); }
 }
+$('homeChat').onclick = () => toggleChat(true, 'l');
 $('btnChat').onclick = () => toggleChat(!chatOpen);
 /* Android: keep the chat sheet right above the keyboard (the keyboard covers the page there instead of making it shorter) */
 const isAndroid = /Android/i.test(navigator.userAgent);
@@ -4934,11 +5111,11 @@ if (isAndroid) document.documentElement.classList.add('android');
 function chatFit() {
   if (!isAndroid) return; const vv = window.visualViewport, ep = $('emoPop'), H = vv ? vv.height : innerHeight;
   ep.style.setProperty('--vvh', Math.round(H) + 'px'); ep.style.setProperty('--vvt', Math.round(vv ? vv.offsetTop : 0) + 'px');
-  const kb = document.activeElement === $('chatIn') && (H < innerHeight * 0.85 || screen.height - H > 260 || (vv && vv.offsetTop > 0));
-  const was = document.documentElement.classList.contains('kbopen'); document.documentElement.classList.toggle('kbopen', chatOpen && (kb || document.activeElement === $('chatIn') && H < 560));
-  if (chatOpen) { const lg = $('chatLog'); if (lg && (was !== document.documentElement.classList.contains('kbopen') || lg.scrollHeight - lg.scrollTop - lg.clientHeight < 80)) lg.scrollTop = lg.scrollHeight; }
+  const ae = document.activeElement, typing = ae === $('chatIn') || ae === $('dmIn'), kb = typing && (H < innerHeight * 0.85 || screen.height - H > 260 || (vv && vv.offsetTop > 0));
+  const was = document.documentElement.classList.contains('kbopen'); document.documentElement.classList.toggle('kbopen', chatOpen && (kb || typing && H < 560));
+  if (chatOpen) { const lg = chatView === 'w' ? $('chatLog') : $('dmLog'); if (lg && (was !== document.documentElement.classList.contains('kbopen') || lg.scrollHeight - lg.scrollTop - lg.clientHeight < 80)) lg.scrollTop = lg.scrollHeight; }
 }
-if (isAndroid) { if (window.visualViewport) { visualViewport.addEventListener('resize', chatFit); visualViewport.addEventListener('scroll', chatFit); } addEventListener('resize', chatFit); $('chatIn').addEventListener('focus', () => setTimeout(chatFit, 50)); $('chatIn').addEventListener('blur', () => setTimeout(chatFit, 50)); }
+if (isAndroid) { if (window.visualViewport) { visualViewport.addEventListener('resize', chatFit); visualViewport.addEventListener('scroll', chatFit); } addEventListener('resize', chatFit); for (const id of ['chatIn', 'dmIn']) { $(id).addEventListener('focus', () => setTimeout(chatFit, 50)); $(id).addEventListener('blur', () => setTimeout(chatFit, 50)); } }
 $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop')) { e.preventDefault(); toggleChat(false); } });
 
 /* ----- the shop: spend coins (and diamonds) on things that appear right next to you. They are only yours: nobody else sees them. ----- */
@@ -5563,7 +5740,7 @@ setInterval(() => {
     }   // (anything that falls, rolls or is pushed into the start zone burns up: the physics does that, the same here and on the server, and it is shown like lava)
   }
 }, 120);
-addEventListener('storage', e => { if (e.key === WALKEY || e.key === WALKEY_PRIV) { loadPurses(); if (shopOpen) shopRender(); } });   // (another tab of the game spent or earned something)
+addEventListener('storage', e => { if (e.key === WALKEY || e.key === walPrivKey()) { loadPurses(); if (shopOpen) shopRender(); } });   // (another tab of the game spent or earned something)
 const openFriends = () => {   // the friends screen: from the main menu (to look, and to add friends), the pause menu, or the friends pill while playing
   if (chatOpen) toggleChat(false); if (!inHome && !paused) openPause();
   if ($('settings').classList.contains('hide')) { onlyPrev = curTab; $('settings').classList.add('only'); $('shTitle').textContent = 'Friends'; showTab('friends'); toggleSettings(); } else showTab('friends');
@@ -5584,7 +5761,7 @@ function trackVis() {
   $('linkpill').classList.toggle('hide', solo || n === 0);
   $('linkN').textContent = n === 1 ? '1 friend online' : n + ' friends online';
   $('lreqs').classList.toggle('hide', solo || !reqs.length || friendsShown());
-  if (inHome && chatOpen) toggleChat(false);
+  if (inHome && chatOpen && chatView === 'w') toggleChat(false);   // (the world chat belongs to a game; chats with friends work on the main menu too)
 }
 setInterval(trackVis, 500);
 function dot(o) {   // a little picture of the player's real ball: its colours and pattern, as it looks in the game
@@ -5632,10 +5809,11 @@ function personRow(p, sub, acts, noProf) {
   for (const a of (acts || [])) if (a) r.appendChild(a);
   return r;
 }
-const canMessage = l => !!l && l.ok && l.on && online && !inHome && !!ws && ws.readyState === 1;
+const canMessage = l => !!l && l.ok && !blockedPub(l.pub) && !offlineOn();
 function friendCard(l) {
-  const nm = who(l.name), msg = canMessage(l) ? iconBtn('btn sm', 'chat', 'Message ' + nm, () => openChatTo(l.pub), 'Message') : null;
-  return personRow(l, '', [msg]);   // (offline: when they were last on)
+  const nm = who(l.name), n = dmUnread(l.pub), msg = canMessage(l) || dms[l.pub] ? iconBtn('btn sm' + (n ? ' prim' : ''), 'chat', 'Chat with ' + nm, () => openDm(l.pub), 'Chat') : null;
+  if (msg && n) gBadge(msg, n);
+  return personRow(l, n ? n + ' new message' + (n === 1 ? '' : 's') : '', [msg]);   // (offline: when they were last on)
 }
 function meEntry() { const c = profCache['@me'] || {}; return { pub: '', me: 1, code: myCode, name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, on: online || lobbyOn ? 1 : 0, w: c.w || 0, b: beatCount(), fr: Math.max(lks.length, meInfo.fr | 0, c.fr | 0), first: c.first || meInfo.first, fe: c.fe }; }
 
@@ -5669,13 +5847,13 @@ const isMe = p => !!p && (p.me || (!!myCode && String(p.code || '').toUpperCase(
 const dateOf = t => { try { return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: new Date(t).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); } catch (e) { return ''; } };
 function profTiles(box, p, me) {   // the figures about a player, as far as they share them
   box.textContent = ''; const t = (k, v) => { if (v === null || v === undefined || v === '') return; const d = el('div'); d.appendChild(el('span', '', k)); d.appendChild(el('b', '', String(v))); box.appendChild(d); };
-  const lk = lkOf(p.pub);
-  if (p.b !== undefined && (p.b | 0) >= 0) t('Levels beaten', (p.b | 0) + ' of ' + LEVELS);
+  const lk = lkOf(p.pub), big = box.id === 'profTiles';
+  if (!big && p.b !== undefined && (p.b | 0) >= 0) t('Levels beaten', (p.b | 0) + ' of ' + LEVELS);   // (on a profile the levels are the bar above)
   if (p.fr !== undefined && p.fr >= 0) t('Friends', p.fr);
-  if (p.first) t('Playing since', dateOf(p.first) + (p.fe ? ' or earlier' : ''));
+  if (p.first) t(big ? 'Playing since' : 'Playing since', dateOf(p.first) + (p.fe && !big ? ' or earlier' : ''));
   if (lk && lk.since) t('Friends since', dateOf(lk.since));
-  if (lk) t('Last message', lk.dm ? ago(lk.dm) : 'None yet');
-  if (!me && !p.on && !p.hid && p.last) t('Last on', ago(p.last));
+  if (!big && lk) t('Last message', lk.dm ? ago(lk.dm) : 'None yet');
+  if (!me && !p.on && !p.hid && p.last) t('Last on', ago(p.last).replace(/ ago$/, ''));
 }
 function profRender() {
   if (!profPub) return; const p = profData(profPub); if (!p) { closeProfile(); return; }
@@ -5686,24 +5864,23 @@ function profRender() {
   $('profName').textContent = nm; $('profCode').textContent = '#' + (q.code || myCode || '');
   const st = blk ? { c: 'hid', t: 'Blocked' } : statusOf(Object.assign({}, q, { me: 0, code: me ? '' : q.code }));
   $('profStatus').textContent = st.t; $('profStatus').className = 'pstat' + (st.c === 'on' ? ' on' : ''); $('profLight').className = 'sdot ' + st.c;
-  const n = q.b | 0; $('profBeat').parentNode.parentNode.classList.add('hide');
+  { const n = Math.max(0, q.b | 0), has = q.b !== undefined && (q.b | 0) >= 0; $('profBeat').parentNode.parentNode.classList.toggle('hide', !has); $('profBeat').textContent = n; $('profBeatOf').textContent = 'of ' + LEVELS + ' levels beaten'; $('profBar').style.width = Math.min(100, n / LEVELS * 100) + '%'; }   // (the levels as a bar)
   profTiles($('profTiles'), q, me);
   const act = $('profActs'), main = $('profMain'); act.textContent = ''; main.textContent = '';
-  const add = (cls, txt, fn, dis, icn) => { const b = el('button', cls); b.type = 'button'; b.innerHTML = (icn ? ic(icn) : '') + '<span></span>'; b.lastChild.textContent = txt; if (dis) b.disabled = true; b.onclick = fn; (/\bprim\b/.test(cls) || /Unblock/.test(txt) ? main : act).appendChild(b); return b; };   // (the main thing to do sits right under the figures; the rest at the bottom)
+  const add = (cls, txt, fn, dis, icn, top) => { const b = el('button', cls); b.type = 'button'; b.innerHTML = (icn ? ic(icn) : '') + '<span></span>'; b.lastChild.textContent = txt; if (dis) b.disabled = true; b.onclick = fn; (top || /\bprim\b/.test(cls) ? main : act).appendChild(b); return b; };   // (the main things to do sit right under the figures, side by side; small extras at the bottom)
   const ps = $('profSet'); ps.textContent = '';
   const row = (label, note) => { const r = el('div', 'prow'); const t = el('div', 'ptxt'); t.appendChild(el('b', '', label)); if (note) t.appendChild(el('small', '', note)); r.appendChild(t); ps.appendChild(r); return r; };
   if (me) {}
   else if (linked) {   // everything about this one friend
-    if (canMessage(lk)) add('btn prim', 'Message ' + nm, () => { closeProfile(); openChatTo(p.pub); }, false, 'chat');
+    { const n = dmUnread(p.pub), b = add('btn prim', 'Chat', () => openDm(p.pub), !canMessage(lk) && !dms[p.pub], 'chat'); b.title = 'Chat with ' + nm; if (n) gBadge(b, n); }
     { const f = Object.assign({}, p, lk);   // a quick way to get together: what it does depends on where they are
-      if (f.ok && f.on && !f.hid && f.w > 0) { const here = !inHome && online && !party && settings.mp && room.id === f.w; add('btn prim', here ? 'You are in World ' + f.w + ' together' : 'Join public game', () => joinFriendPublic(f), here, 'play'); }
-      else if (f.ok && f.on && !f.hid && f.w < 0) { const there = !!party && party.host === p.pub; add('btn prim', there ? 'You are in their game' : 'Ask to join', () => { wsSend({ t: 'ask', to: p.pub }); sfx('ui'); }, there, 'users'); }
-      else if (f.ok && f.on && !f.hid) add('btn prim', nm + ' is on the main screen', () => {}, true, 'users'); }
+      if (f.ok && f.on && !f.hid && f.w > 0) { const here = !inHome && online && !party && settings.mp && room.id === f.w; add('btn', here ? 'In World ' + f.w + ' with you' : 'Join World ' + f.w, () => joinFriendPublic(f), here, 'play', true); }
+      else if (f.ok && f.on && !f.hid && f.w < 0) { const there = !!party && party.host === p.pub; add('btn', there ? 'In their game' : 'Ask to join', () => { wsSend({ t: 'ask', to: p.pub }); sfx('ui'); notice('Asked ' + nm + ' to let you join', ''); }, there, 'users', true); } }
     const m1 = row('On your map', 'How ' + nm + ' looks while you play'), o = el('div', 'fopts');
     o.appendChild(chip('Big and glowing', lk.big, () => { lk.big = !lk.big; saveLinks(); lpRender(); }, 'Show ' + nm + ' bigger and glowing on both maps'));
     o.appendChild(chip('Arrow and name', lk.arrow, () => { lk.arrow = !lk.arrow; saveLinks(); lpRender(); }, 'Point to ' + nm + ' with an arrow and a name tag'));
     m1.appendChild(o);
-    const k = lk.mute | 0, m2 = row('In the game', MUTE_NOTE[k]);
+    const k = lk.mute | 0, m2 = row('Alerts in the game', MUTE_NOTE[k]);
     m2.appendChild(iconBtn('bell b' + k, BELL[k].i, 'Alerts from ' + nm + ': ' + BELL[k].t + '. Tap to change.', () => { lk.mute = (k + 1) % 3; saveLinks(); lpRender(); pushSyncSoon(); }, BELL[k].t));
     if (settings.notify && settings.nFriends) { const on = !nOffHas(p.pub), m3 = row('Notifications', on ? 'You get a notification when ' + nm + ' comes online' : 'No notification when ' + nm + ' comes online'); m3.appendChild(chip(on ? 'On' : 'Off', on, () => { nOffSet(p.pub, on); profRender(); })); }
   } else if (!blk) {
@@ -5711,17 +5888,17 @@ function profRender() {
     m2.appendChild(iconBtn('bell ' + (muted ? 'b2' : 'b0'), muted ? 'bell-off' : 'bell', muted ? 'Alerts from ' + nm + ' are off. Tap to turn on.' : 'Alerts from ' + nm + ' are on. Tap to turn off.', () => { if (muted) delete mutes[p.pub]; else mutes[p.pub] = { n: p.name, c: p.code }; saveMutes(); lpRender(); profRender(); }, muted ? 'Muted' : 'On'));
   }
   ps.classList.toggle('hide', !ps.childNodes.length);
-  if (blk) add('btn', 'Unblock ' + nm, () => { wsSend({ t: 'blk', to: p.pub, on: 0 }); myBlocks = myBlocks.filter(b => b.pub !== p.pub); lpRender(); profRender(); notice(nm + ' is unblocked', ''); }, false, 'lock');
+  if (blk) add('btn', 'Unblock ' + nm, () => { wsSend({ t: 'blk', to: p.pub, on: 0 }); myBlocks = myBlocks.filter(b => b.pub !== p.pub); lpRender(); profRender(); notice(nm + ' is unblocked', ''); }, false, 'lock', true);
   else if (isReq) add('btn prim', 'Accept friend request', () => { wsSend({ t: 'tacc', to: p.pub }); reqs = reqs.filter(r => r.pub !== p.pub); lpRender(); profRender(); }, false, 'check');
   else if (!me && !linked) add('btn prim', sent ? 'Request sent' : lks.length >= MAXLINK ? 'You have ' + MAXLINK + ' friends already' : 'Add friend', () => { wsSend({ t: 'treq', to: p.pub, nm: p.name }); sentTo.add(p.pub); profRender(); }, sent || lks.length >= MAXLINK, 'plus');
-  add('btn quiet', me ? 'Copy my friend number' : 'Copy their friend number', () => { const t = '#' + (q.code || myCode); try { navigator.clipboard.writeText(t).then(() => notice('Copied ' + t, ''), () => notice(t, '')); } catch (e) { notice(t, ''); } });
-  if (linked) add('btn danger', 'Unfriend', () => { closeProfile(); askConfirm('Unfriend ' + nm + '?', 'You will stop seeing each other on the map and can no longer message each other. To be friends again, you both need to send and accept a new request.', 'Unfriend', () => disconnectLink(p.pub), { no: 'Keep ' + nm }); });
+  add('btn', 'Copy #' + (q.code || myCode), () => { const t = '#' + (q.code || myCode); try { navigator.clipboard.writeText(t).then(() => notice('Copied ' + t, ''), () => notice(t, '')); } catch (e) { notice(t, ''); } });
+  if (linked) add('btn danger', 'Unfriend', () => { const keep = Object.assign({}, q); askConfirm('Unfriend ' + nm + '?', 'You will stop seeing each other on the map and can no longer chat. To be friends again, you both need to send and accept a new request.', 'Unfriend', () => { disconnectLink(p.pub); dmTabs = dmTabs.filter(x => x !== p.pub); openProfile(Object.assign(keep, { ok: 0 })); }, { no: 'Keep ' + nm }); }, false, 'minus');
   main.classList.toggle('hide', !main.childNodes.length);
-  if (!me && !blk && p.pub) add('btn danger', 'Block ' + nm, () => { closeProfile(); askConfirm('Block ' + nm + '?', 'They will not be able to send you friend requests or messages, you will not see what they say in the chat, and if you are friends, you will not be any more. They are not told that you blocked them. You can unblock them in Friends.', 'Block', () => blockPub(p), { no: 'Cancel' }); });
+  if (!me && !blk && !linked && p.pub) add('btn danger', 'Block', () => { closeProfile(); askConfirm('Block ' + nm + '?', 'They will not be able to send you friend requests or messages, you will not see what they say in the chat, and if you are friends, you will not be any more. They are not told that you blocked them. You can unblock them in Friends.', 'Block', () => blockPub(p), { no: 'Cancel' }); });
 }
-function blockPub(p) {
+function blockPub(p) {   // (only somebody who is not your friend: unfriend first)
   wsSend({ t: 'blk', to: p.pub, on: 1 }); if (!blockedPub(p.pub)) myBlocks.push({ pub: p.pub, code: p.code || '', name: p.name || '', color: p.color, color2: p.color2, pat: p.pat | 0 });
-  const e = lkOf(p.pub); if (e) lks.splice(lks.indexOf(e), 1); reqs = reqs.filter(r => r.pub !== p.pub); sentTo.delete(p.pub); if (chatTo === p.pub) chatTo = '';
+  const e = lkOf(p.pub); if (e) lks.splice(lks.indexOf(e), 1); reqs = reqs.filter(r => r.pub !== p.pub); sentTo.delete(p.pub); dmTabs = dmTabs.filter(x => x !== p.pub); if (chatOpen) chatShow();
   saveLinks(); sfx('ui'); lpRender(); notice(who(p.name) + ' is blocked', '');
 }
 $('profClose').onclick = closeProfile; $('profModal').addEventListener('pointerdown', e => { if (e.target === $('profModal')) closeProfile(); });
@@ -5736,7 +5913,7 @@ function lpRender() {
   { const fm = $('fMe'); fm.className = 'fme'; const b = el('button', 'btn sm', 'Your profile'); b.onclick = () => openProfile(meEntry()); const k = JSON.stringify([settings.name, settings.color, settings.color2, settings.pat, myCode]); if (fm._k !== k) { fm._k = k; fm.textContent = ''; fm.appendChild(personRow(meEntry(), 'Your friend number. Friends can check it matches', [b], true)); } }
   { const off = offlineOn() || !(online || lobbyOn), n = $('fNote'); n.textContent = offlineOn() ? 'Offline mode is on, so this shows your friends as they were last time. Turn offline mode off to see who is on and to add friends.' : !(online || lobbyOn) ? 'Connecting to the server…' : ''; n.classList.toggle('hide', !off); $('btnAddF').disabled = offlineOn(); }
   const list = $('lpList'), order = lks.filter(l => !isMe(l)).slice().sort((a, b) => (b.ok && b.on) - (a.ok && a.on) || (b.last || 0) - (a.last || 0));
-  const lk = JSON.stringify(order.map(l => [l.pub, l.name, l.code, l.ok, l.on, l.hid, l.w, l.last && Math.floor(l.last / 60000), l.color, l.color2, l.pat, canMessage(l)])) + (online || lobbyOn);   // (only rebuilt when something in it changed, so it never jumps while you scroll)
+  const lk = JSON.stringify(order.map(l => [l.pub, l.name, l.code, l.ok, l.on, l.hid, l.w, l.last && Math.floor(l.last / 60000), l.color, l.color2, l.pat, canMessage(l), dmUnread(l.pub), !!dms[l.pub]])) + (online || lobbyOn);   // (only rebuilt when something in it changed, so it never jumps while you scroll)
   $('lpCount').textContent = '(' + lks.length + ')';
   if (list._k !== lk) { list._k = lk; list.textContent = '';
     if (!order.length) list.appendChild(el('div', 'small dim', 'No friends yet. Tap Add a friend to find players.'));
@@ -6062,7 +6239,7 @@ function homeStats() {
 window.__sprite = () => sprite(settings.color, settings.color2, settings.pat);   // the loading screen and the main screen show your real ball
 try { window.__scene($('homeScene'), 'home'); } catch (e) {}
 const curMode = () => settings.mp ? 'pub' : settings.offline ? 'off' : 'priv';
-function segRender() { const m = curMode(); document.querySelectorAll('#homeSeg button').forEach(b => { const on = b.getAttribute('data-m') === m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); }); document.body.classList.toggle('offl', m === 'off'); }
+function segRender() { const m = curMode(), fail = srvSt === 'fail'; $('homeSeg').style.gridTemplateColumns = fail ? '1fr' : '1fr 1fr'; document.querySelectorAll('#homeSeg button').forEach(b => { const k = b.getAttribute('data-m'), on = k === m; b.classList.toggle('hide', fail ? k !== 'off' : k === 'off'); b.disabled = k !== 'off' && srvSt !== 'ok'; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); }); document.body.classList.toggle('offl', m === 'off'); }
 /* three ways to play, picked on the main menu: Private (your own levels, on the server so friends can join you), Public (everyone online), Offline (your own levels, never online, with bots) */
 function setMode(m) {
   if (m === curMode()) return;
@@ -6072,11 +6249,27 @@ function setMode(m) {
   settings.mp = m === 'pub'; save(); homeMode = settings.mp; $('homeMp').checked = settings.mp; $('setMp').checked = settings.mp;
   if (off) setOffline(true); else if (wasOff) setOffline(false); else { retry = 0; connect(); }
   loadSolo();   // (private and offline each have their own maps)
+  if (inHome && S.slot >= SOLO_BASE) S.slot = -1;   // (so the next game loads that level from the right list)
   applyDeps(); syncUI(); segRender(); homeModeText(); lvlRender(); homeStats();
 }
 segRender();
 $('homeSeg').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (!b) return; sfx('ui'); setMode(b.getAttribute('data-m')); });
-function homeModeText() { netRender(); segRender(); const pub = $('homeMp').checked; $('homeModeNote').textContent = pub ? 'A public world. Everyone online shares it.' : offlineOn() ? 'Just you and bots, on this device. Nothing goes online.' : 'Your own world. Invite friends to play in it with you.'; lvlRender(); }
+function homeModeText() { netRender(); segRender(); const pub = $('homeMp').checked;
+  $('homeModeNote').textContent = srvSt === 'fail' ? 'Could not reach the server. You can play offline: the starting maps, just you and bots, saved on this device.' : srvSt === 'wait' && !offlineOn() ? 'Connecting to the server…' : pub ? 'A public world. Everyone online shares it.' : offlineOn() ? 'Just you and bots, on this device. Nothing goes online.' : 'Your own world. Invite friends to play in it with you.';
+  $('homeRetry').classList.toggle('hide', srvSt !== 'fail');
+  { const b = $('homePlay'), wait = srvSt !== 'ok' && !offlineOn(); b.disabled = wait; b.innerHTML = wait ? '<span class="btnspin"></span>Connecting…' : offlineOn() ? 'Play offline' : 'Play'; }
+  lvlRender(); }
+/* the server comes first: Private and Public both need it. If it cannot be reached in a few seconds, Offline is offered instead (and goes away again when the server is back) */
+var srvSt = 'wait', srvT = 0, srvPrev = '';   // (var: the menu asks for it before this line runs)
+function srvWait() { if (srvSt === 'ok') srvSt = 'wait'; if (srvSt === 'wait' && !srvT) srvT = setTimeout(() => { srvT = 0; if (srvSt !== 'ok') srvFail(); }, 9000); if (inHome) homeModeText(); }   // (one clock for the whole wait: each failed try does not start it again)
+function srvFail() { srvSt = 'fail'; if (inHome && !offlineOn()) { srvPrev = curMode(); setMode('off'); } if (inHome) homeModeText(); }
+function srvOk() {
+  const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0;
+  if (inHome && settings.offline) { setMode(srvPrev === 'pub' ? 'pub' : 'priv'); if (was === 'fail') notice('Connected to the server', ''); }
+  if (inHome) homeModeText();
+}
+$('homeRetry').onclick = () => { sfx('ui'); srvSt = 'wait'; srvWait(); retryNow(); homeModeText(); };
+setTimeout(srvWait, 0);
 function showHome() {
   if (S.map && S.slot >= 0 && !inHome) saveWorld(true);
   if (party) leaveParty();   // leaving a private game: if it was yours, it ends and everyone in it goes back to their own world
@@ -6095,6 +6288,7 @@ function enterGame(auto) {
   const v = settings.name || typed || randomName();   // everyone has a name
   if (v !== settings.name) { settings.name = v; save(); }   // the very first name is free
   inHome = false; document.body.classList.remove('home'); $('home').classList.add('hide');
+  if (offlineOn()) { clearTimeout(retryTimer); retryTimer = 0; if (ws) dropConnection(); }   // (an offline game never touches the server)
   resetTab();
   try { auWake(); } catch (e) {}
   if (settings.mp !== homeMode) setMultiplayer(settings.mp);
@@ -6148,7 +6342,7 @@ const soloDesc = (i, st) => {   // what is already saved on that level, in words
 /* writing a description: one box, or two when it goes to both your private and your offline maps and you want them different */
 let dsCb = null, saveBusy = false, saveAfter = null;
 function askDesc(o, cb) {
-  $('dsTitle').textContent = o.title || 'Describe this level'; $('dsNote').textContent = o.note || (o.save ? 'Your copy keeps everything built, moved and opened here. It shows up for this level in your private and offline games.' : '');
+  $('dsTitle').textContent = o.title || 'Describe this level'; $('dsNote').textContent = o.note || (o.save ? 'Your copy keeps everything built, moved and opened here. It shows up for this level in your private games.' : '');
   $('dsHad').textContent = o.had || ''; $('dsHad').classList.toggle('hide', !o.had); $('dsLab').classList.toggle('hide', !o.save); $('dsOk').className = o.okClass || 'go'; $('dsA').value = o.a || ''; $('dsB').value = o.b || '';
   $('dsSplitWrap').classList.toggle('hide', !o.both); $('dsSplit').checked = !!(o.both && o.b && o.b !== o.a); $('dsB').classList.toggle('hide', !$('dsSplit').checked); $('dsA').placeholder = o.both && $('dsSplit').checked ? 'For my private map' : 'A few words about this level';
   $('dsNo').textContent = o.no || 'Cancel'; $('dsOk').textContent = o.ok || 'Save'; dsCb = cb; $('descModal').classList.remove('hide');
@@ -6156,7 +6350,7 @@ function askDesc(o, cb) {
 function dsClose(ok) { $('descModal').classList.add('hide'); try { $('dsA').blur(); $('dsB').blur(); } catch (e) {} const f = dsCb; dsCb = null; if (f) f(ok ? { a: $('dsA').value, b: $('dsSplit').checked ? $('dsB').value : $('dsA').value } : null); }
 $('dsSplit').onchange = () => { const on = $('dsSplit').checked; $('dsB').classList.toggle('hide', !on); $('dsA').placeholder = on ? 'For my private map' : 'A few words about this level'; sfx(on ? 'on' : 'off'); };
 $('dsOk').onclick = () => { sfx('ui'); dsClose(true); }; $('dsNo').onclick = () => { sfx('ui'); dsClose(false); };
-$('lvDescBtn').onclick = () => { const i = lvSel; sfx('ui'); askDesc({ title: 'Describe ' + lvLabelOf(i), note: 'Only you see this. It shows for this level in private and offline games.', a: lvDescOf(i) }, r => { if (r) { setLvDesc(i, null, r.a); lvSelect(i); } }); };
+$('lvDescBtn').onclick = () => { const i = lvSel; sfx('ui'); askDesc({ title: 'Describe ' + lvLabelOf(i), note: offlineOn() ? 'Only you see this. It shows for this level in offline games.' : 'Only you see this. It shows for this level in private games.', a: lvDescOf(i) }, r => { if (r) { setLvDesc(i, null, r.a); lvSelect(i); } }); };
 /* ----- sharing a map: your version of one of your levels (everything built in it, and who built what) goes to the friends you pick.
    They get a pop-up the next time they play, for up to 3 days, and choose to save it or not (each asked twice) ----- */
 let shIdx = -1, shSel = new Set(), shSending = false, shTimer = 0, linksSeen = false, shOpenT = 0, shLoadT = 0;
@@ -6170,7 +6364,7 @@ function shareData(i) {   // what is shared: the level as it is now (or its save
   return { v: 1, idx: i, desc: lvDescOf(i), o };
 }
 function openShare(i) {
-  if (offlineOn()) { notice('Sharing needs the internet. Turn offline play off first', 'urgent'); return; }
+  if (offlineOn()) { notice('Sharing needs the server. Offline maps stay on this device', 'urgent'); return; }
   if (!ws || ws.readyState !== 1 || !(online || lobbyOn)) { notice('Not connected right now. Try again in a moment', 'urgent'); return; }
   if (!shareData(i)) { notice('Play this level first. There is nothing on it to share yet', 'urgent'); return; }
   shIdx = i; shSel = new Set(); shSending = false; shOpenT = Date.now(); sfx('ui');
@@ -6184,7 +6378,7 @@ function shRender() {
   if (loading) { const d = el('div', 'ldr'); d.setAttribute('role', 'status'); d.appendChild(document.createElement('i')); d.appendChild(el('span', '', Date.now() - shOpenT > 10000 ? 'Still loading. Check your internet' : 'Loading your friends…')); box.appendChild(d); clearTimeout(shLoadT); shLoadT = setTimeout(() => { if (!$('shModal').classList.contains('hide') && !linksSeen) shRender(); }, 10500); }
   else if (!fr.length) box.appendChild(el('div', 'shnone small', 'No friends to share with yet. Add friends in Friends on the main menu, then share.'));
   document.querySelector('#shModal .shbar').classList.toggle('hide', !fr.length);
-  $('shGo').classList.toggle('hide', !fr.length); $('shmNote').classList.toggle('hide', !fr.length); $('shNo').textContent = fr.length || loading ? 'Cancel' : 'Close';
+  $('shGo').classList.toggle('hide', !fr.length); $('shmNote').classList.toggle('hide', !fr.length); $('shNo').classList.add('hide');   // (the X at the top closes it, like every other window)
   for (const l of fr) {
     const c = document.createElement('input'); c.type = 'checkbox'; c.checked = shSel.has(l.pub); c.setAttribute('aria-label', 'Share with ' + who(l.name));
     c.onchange = () => { if (c.checked) shSel.add(l.pub); else shSel.delete(l.pub); sfx(c.checked ? 'on' : 'off'); shCount(); };
@@ -6196,6 +6390,7 @@ function shCount() { const n = shSel.size, all = shFriends().length; $('shGo').d
 $('shAll').onclick = () => { const fr = shFriends(); if (shSel.size === fr.length) shSel.clear(); else fr.forEach(l => shSel.add(l.pub)); sfx('ui'); shRender(); };
 const shClose = () => { $('shModal').classList.add('hide'); };
 $('shmClose').onclick = $('shNo').onclick = () => { sfx('ui'); shClose(); };
+for (const [x, to] of [['ivX', 'ivNo'], ['adX', 'adNo'], ['lvX', 'lvNo'], ['shX', 'shClose'], ['wiX', 'wiClose']]) $(x).onclick = () => $(to).click();   // (every window closes with the X at its top)
 $('shGo').onclick = () => {
   const d = shareData(shIdx), to = [...shSel].filter(p => lkOf(p)); if (!d || !to.length || shSending) return;
   const str = JSON.stringify(d), CH = 24000, n = Math.ceil(str.length / CH);   // (small parts: even full of quotes, each fits what the server takes in one go)
@@ -6211,9 +6406,14 @@ function shareSent(m) { clearTimeout(shTimer); shSending = false; shClose(); if 
 function shareRefused(m) { clearTimeout(shTimer); shSending = false; shCount(); notice(m.why === 'big' ? 'This map has too much in it to share' : 'Could not share this map. Try again', 'urgent'); }
 /* the other side: maps your friends shared with you */
 let shQ = [], shLater = new Set(), shCur = null, shGet = null;
+/* answers this device already gave: if the connection dropped before the server heard, it is told again (and you are never asked twice) */
+const SHDONE = 'ballrun4_shdone'; let shDone = {}; try { shDone = JSON.parse(localStorage.getItem(SHDONE) || '{}') || {}; for (const k in shDone) if (Date.now() - shDone[k].t > 5 * 86400000) delete shDone[k]; } catch (e) { shDone = {}; }
+const shDoneSave = () => { try { localStorage.setItem(SHDONE, JSON.stringify(shDone)); } catch (e) {} };
 function sharesIn(list) {
   let fresh = 0;
-  for (const v of list || []) { if (!v || typeof v.id !== 'string' || shQ.some(x => x.id === v.id) || blockedPub(v.from)) continue; shQ.push(v); fresh++; }
+  for (const v of list || []) { if (!v || typeof v.id !== 'string' || shQ.some(x => x.id === v.id) || blockedPub(v.from)) continue;
+    if (shDone[v.id]) { wsSend({ t: 'shans', id: v.id, ok: shDone[v.id].ok ? 1 : 0 }); continue; }   // (answered already: just tell the server again)
+    shQ.push(v); fresh++; }
   if (fresh && !inHome && S.mode === 'play' && !paused) { const v = shQ[shQ.length - 1]; notice('★ ' + who(v.name || nameOf(v.from) || 'A friend') + ' shared a map with you. Pause or go to the menu to see it', ''); sfx('ready'); }
   shTry();
 }
@@ -6226,9 +6426,9 @@ setInterval(shTry, 1200);
 function shShow(v) {
   $('shIn').classList.remove('loading'); shCur = v; const nm = who(v.name || nameOf(v.from) || 'A friend'), lab = lvLabelOf(v.idx | 0), had = hasSoloSave(v.idx | 0);
   $('shInT').textContent = nm + ' shared a map with you';
-  const wbox = $('shInWho'); wbox.textContent = ''; wbox.appendChild(personRow(lkOf(v.from) || { pub: v.from, name: v.name }, 'Shared ' + ago(v.t), [], true));
-  $('shInText').textContent = 'Their version of ' + lab + (v.n ? ', with ' + v.n + (v.n === 1 ? ' thing' : ' things') + ' built in it' : '') + '. Save it to your maps?';
-  $('shInMore').textContent = had ? 'Saving replaces your own ' + lab + ' (' + soloDesc(v.idx | 0, readSolo(SOLOKEY_P)) + ').' : 'It goes in your maps for ' + lab + '. Play it in a private or offline game.';
+  const wbox = $('shInWho'); wbox.textContent = ''; { const left = v.exp ? Math.max(0, v.exp - nowMs()) : 0, d = Math.ceil(left / 86400000), h = Math.ceil(left / 3600000), lt = !v.exp ? '' : h > 24 ? ' · waits ' + d + ' more day' + (d === 1 ? '' : 's') : ' · waits ' + h + ' more hour' + (h === 1 ? '' : 's'); wbox.appendChild(personRow(lkOf(v.from) || { pub: v.from, name: v.name }, 'Shared ' + ago(v.t) + lt, [], true)); }
+  $('shInText').textContent = 'Their version of ' + lab + (v.n ? ', with ' + v.n + (v.n === 1 ? ' thing' : ' things') + ' built in it' : '') + '. Save it to your private maps?';
+  $('shInMore').textContent = had ? 'Saving replaces your own ' + lab + ' (' + soloDesc(v.idx | 0, readSolo(SOLOKEY_P)) + ').' : 'It goes in your private maps as ' + lab + '. Play it in a private game, with friends too.';
   $('shIn').classList.remove('hide'); sfx('notice');
 }
 const shHide = () => { $('shIn').classList.add('hide'); };
@@ -6241,7 +6441,7 @@ $('shInNo').onclick = () => {
   const v = shCur; if (!v) return; const nm = who(v.name || nameOf(v.from) || 'your friend'); shHide(); sfx('ui');
   askConfirm('Discard ' + nm + '\'s map?', 'You will not be able to get it back. ' + nm + ' can share it again.', 'Discard', () => { shAnswer(v, false); notice('Discarded', ''); }, { no: 'Back', onNo: () => setTimeout(() => shShow(v), 60) });
 };
-function shAnswer(v, ok) { shQ = shQ.filter(x => x.id !== v.id); shCur = null; wsSend({ t: 'shans', id: v.id, ok: ok ? 1 : 0 }); setTimeout(shTry, 400); }
+function shAnswer(v, ok) { shQ = shQ.filter(x => x.id !== v.id); shCur = null; shDone[v.id] = { ok: ok ? 1 : 0, t: Date.now() }; shDoneSave(); wsSend({ t: 'shans', id: v.id, ok: ok ? 1 : 0 }); setTimeout(shTry, 400); }
 function shLoading(on) { $('shIn').classList.toggle('loading', on); if (on) $('shIn').classList.remove('hide'); else { $('shIn').classList.add('hide'); } }   // (the pop-up stays up with a spinner while the map comes in)
 function shFetch(v) {
   if (!ws || ws.readyState !== 1) { notice('Not connected right now. It will be there next time', 'urgent'); return; }
@@ -6266,17 +6466,22 @@ function shPart(m) {
   if (cur) hostLeaveWarn(go, 'load the map you saved'); else go();
 }
 function shareGone(m) { if (shGet && shGet.v.id === m.id) { clearTimeout(shGet.t); shGet = null; shLoading(false); } shQ = shQ.filter(x => x.id !== m.id); notice('That map is not there any more', 'urgent'); }
-function shareAnswered(m) { if (m.ok) { sfx('ready'); notice('★ ' + who(m.name || nameOf(m.pub) || 'Your friend') + ' saved your ' + lvLabelOf(m.idx | 0), ''); } }
+function shareAnswered(m) {   // what happened to a map you shared: saved, not saved, or it ran out after 3 days without an answer
+  const nm = who(m.name || nameOf(m.pub) || 'Your friend'), lab = lvLabelOf(m.idx | 0);
+  if (m.ok === 1) { sfx('ready'); notice('★ ' + nm + ' saved your ' + lab, ''); }
+  else if (m.ok === -1) notice(nm + ' did not answer in 3 days, so your ' + lab + ' was not sent. You can share it again', '');
+  else notice(nm + ' did not save your ' + lab, '');
+}
 $('pShare').onclick = () => { if (S.slot >= SOLO_BASE) openShare(S.idx); };
 $('lvShare').onclick = () => openShare(optIdx());
 function saveDone() { saveBusy = false; const f = saveAfter; saveAfter = null; if (f) setTimeout(f, 250); }
-$('pSave').onclick = () => {   // keep a copy of the world you are in as your own map of this level (private and offline games share it). The copy is taken right now, so it is safe even if the game closes while you write
+$('pSave').onclick = () => {   // keep a copy of the world you are in as your own private map of this level (offline maps are kept apart). The copy is taken right now, so it is safe even if the game closes while you write
   const snap = copySnap(); if (!snap) return;
   const idx = snap.idx, label = lvLabelOf(idx), st = readSolo(SOLOKEY_P), had = st[idx];
   sfx('ui'); saveBusy = true;
   askDesc({ title: 'Save ' + label, save: true, had: had ? 'You already have your own ' + label + ' (' + soloDesc(idx, st) + '). Saving replaces it with this world.' : '', a: lvDescOf(idx), ok: had ? 'Replace and save' : 'Save', okClass: had ? 'danger' : 'go', no: 'Cancel' }, r => {
     if (!r) { saveDone(); return; }
-    if (saveCopy(SOLOKEY_P, snap)) { setLvDesc(idx, SOLOKEY_P, r.a); notice('Saved to your maps. Play it in a private or offline game', ''); } else notice('Could not save on this device', 'urgent');
+    if (saveCopy(SOLOKEY_P, snap)) { setLvDesc(idx, SOLOKEY_P, r.a); notice('Saved to your private maps', ''); } else notice('Could not save on this device', 'urgent');
     loadSolo(); lvlRender(); saveDone();
   });
 };
@@ -6309,10 +6514,10 @@ addEventListener('popstate', () => {
   else if (guestsHere()) hostLeaveWarn(quitToHome);
   else askConfirm('Back to the main menu?', 'Your ball leaves this world and you go to the main menu.', 'Main menu', () => quitToHome(), { no: 'Keep playing', yesClass: 'go' });
 });
-$('homePlay').onclick = () => enterGame(false);
+$('homePlay').onclick = () => { if (srvSt !== 'ok' && !offlineOn()) { notice('Connecting to the server…', ''); return; } enterGame(false); };
 function setOffline(on) {
   settings.offline = on; save();
-  if (on) { clearTimeout(retryTimer); retryTimer = 0; if (ws) dropConnection(); lks.forEach(l => { l.on = 0; l.x = null; }); lpRender(); setNet('solo'); }
+  if (on) { if (!inHome) { clearTimeout(retryTimer); retryTimer = 0; if (ws) dropConnection(); } lks.forEach(l => { l.on = 0; l.x = null; }); lpRender(); setNet('solo'); }   // (on the main menu it keeps trying the server in the background)
   else { retry = 0; connect(); }
   netRender.k = ''; homeModeText(); netRender();
 }
@@ -6455,7 +6660,7 @@ async function showNow(title, body, tag) {   // true when the system accepted it
 function sysNotify(kind, title, body, tag) {   // a notification from the system, only when you are not looking at the game (the server sends the same one when the page is asleep; the same tag means you see it once)
   if (!notifOn() || !settings[kind] || quietNowC()) return;
   const looking = !document.hidden && document.hasFocus(), playing = !document.hidden && !inHome;   // (in a game, the game shows its own message instead, unless you asked for notifications there too)
-  if (settings.nInGame ? looking || playing : looking && inHome) return;
+  if (looking || playing) return;   // (never while you are playing, or looking at the game: the game shows its own message)
   showNow(title, body, tag);
 }
 /* ----- quiet hours: a stretch of the day with no notifications at all (for the night). The server is told your time zone so it keeps them too ----- */
@@ -6468,7 +6673,6 @@ function quietRender() {
   $('nqSub').textContent = q.on ? (q.a === q.b ? 'Pick two different times' : 'No notifications from ' + qClock(q.a) + ' to ' + qClock(q.b) + (quietNowC() ? ' (quiet right now)' : '')) : 'A time of day with no notifications, like at night';
 }
 const qClock = m => { try { const d = new Date(); d.setHours(Math.floor(m / 60), m % 60, 0, 0); return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); } catch (e) { return qHm(m); } };
-$('setNInGame').onchange = () => { settings.nInGame = $('setNInGame').checked; save(); sfx(settings.nInGame ? 'on' : 'off'); };
 $('setNQuiet').onchange = () => { settings.nQuiet = Object.assign({ a: 1320, b: 420 }, settings.nQuiet || {}, { on: $('setNQuiet').checked }); save(); sfx(settings.nQuiet.on ? 'on' : 'off'); quietRender(); pushSyncSoon(); };
 /* the time picker: big hour and minute with up and down arrows (hold to keep going, or drag the number up and down, or scroll it), AM and PM where your clock uses them, and a few quick picks */
 const tp = { k: 'a', m: 0, h12: (() => { try { const c = new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions(); return c.hourCycle ? /h1[12]/.test(c.hourCycle) : !!c.hour12; } catch (e) { return true; } })() };
@@ -6534,8 +6738,8 @@ function ntRender() {
   $('setNotify').disabled = !on && !settings.notify;
   $('ntSub').textContent = !notifOK() ? (/iPhone|iPad|iPod/.test(navigator.userAgent) ? 'Add the game to your Home Screen, open it from there, then turn this on' : 'Not available on this device or browser') : Notification.permission === 'denied' ? 'Blocked. Allow notifications for ballpit.party in your browser settings' : settings.notify && pushState === 'fail' ? 'On while the game is open. This browser cannot wake a closed game' : 'Reach you here, even when the game is closed';
   $('ntKinds').classList.toggle('hide', !(settings.notify && notifOn()));
-  [['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps']].forEach(p => { $(p[0]).checked = !!settings[p[1]]; });
-  ntFrRender(); quietRender(); $('setNInGame').checked = !!settings.nInGame;
+  [['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps']].forEach(p => { $(p[0]).checked = !!settings[p[1]]; });
+  ntFrRender(); quietRender();
 }
 const b64uBytes = s => { const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')), o = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; };
 let vapidKey = '', pushSock = null, pushSig = '', pushTimer = 0;
@@ -6556,7 +6760,7 @@ async function pushSync() {   // tell the server where to reach this device, and
     const want = b64uBytes(vapidKey); let sub = await reg.pushManager.getSubscription();
     if (sub) { const have = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null; if (!have || have.length !== want.length || have.some((v, i) => v !== want[i])) { await sub.unsubscribe(); sub = null; } }   // (the server's keys changed: subscribe again)
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
-    const prefs = { f: settings.nFriends ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, mu: [...new Set(lks.filter(l => l.mute >= 1 || nOffHas(l.pub)).map(l => l.pub))].slice(0, 500), q: quietPrefs() };   // (friends you do not want to hear about)
+    const prefs = { f: settings.nFriends ? 1 : 0, d: settings.nMsgs ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, mu: [...new Set(lks.filter(l => l.mute >= 1 || nOffHas(l.pub)).map(l => l.pub))].slice(0, 500), q: quietPrefs() };   // (friends you do not want to hear about)
     const j = sub.toJSON(), sig = JSON.stringify([j.endpoint, prefs]);
     pushState = 'on'; ntRender();
     if (sig === pushSig && pushSock === ws) return;
@@ -6567,7 +6771,7 @@ async function pushSync() {   // tell the server where to reach this device, and
 const pushSyncSoon = () => { clearTimeout(pushTimer); pushTimer = setTimeout(pushSync, 1200); };
 const sendVis = () => wsSend({ t: 'vis', h: document.hidden ? 1 : 0 });   // while the page is in the background the server sends your notifications as pushes
 document.addEventListener('visibilitychange', sendVis);
-[['setNFriends', 'nFriends'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps']].forEach(([id, k]) => { bindToggle(id, k); $(id).addEventListener('change', () => pushSyncSoon()); });   // (each switch keeps what you pick)
+[['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps']].forEach(([id, k]) => { bindToggle(id, k); $(id).addEventListener('change', () => pushSyncSoon()); });   // (each switch keeps what you pick)
 $('setNotify').onchange = async () => {
   const want = $('setNotify').checked;
   if (!want) { settings.notify = false; save(); sfx('off'); ntRender(); pushSyncSoon(); return; }
@@ -6693,9 +6897,9 @@ $('setNoCheats').onchange = () => { settings.noCheats = $('setNoCheats').checked
 const optIdx = () => !$('lvlModal').classList.contains('hide') && typeof lvSel === 'number' ? lvSel : soloLevel();   // (the level whose options are showing: the one picked in the level list while it is open)
 /* Live or saved state, for each of your levels. Live: the level stays as you leave it. Saved state: it starts from the same saved moment every time,
    whatever you did since, until you save it again */
-const lvSaveOn = i => !!(settings.lvSave && settings.lvSave[i]);
+const lvSKey = () => offlineOn() ? 'lvSaveO' : 'lvSave', lvSaveOn = i => !!(settings[lvSKey()] && settings[lvSKey()][i]);
 function lvSaveSet(i, on) {
-  const o = Object.assign({}, settings.lvSave || {}); if (on) o[i] = 1; else delete o[i]; settings.lvSave = o; save();
+  const k = lvSKey(), o = Object.assign({}, settings[k] || {}); if (on) o[i] = 1; else delete o[i]; settings[k] = o; save();
   if (on && S.slot >= SOLO_BASE && S.idx === i && !inHome && !S.guest) { saveWorld(true, true); notice('Saved state on. This level now starts just like this every time', ''); }
   else notice(on ? 'Saved state on. This level starts the same way every time' : 'Live: this level stays the way you leave it', '');
   sfx(on ? 'on' : 'off'); lvOptRender.k = ''; lvOptRender();
@@ -6858,7 +7062,7 @@ function joinWorld() {
 }
 function connect() {
   const lobby = wantLobby();
-  if (offlineOn()) { if (ws) dropConnection(); return; }
+  if (offlineOn() && !inHome) { if (ws) dropConnection(); return; }
   if (ws) return;
   if (!lobby && (!(settings.mp || party) || !settings.name)) return;
   if (location.protocol === 'file:' || !('WebSocket' in window)) { if (!lobby) setNet('offline'); return; }
@@ -6878,6 +7082,7 @@ function connect() {
     ws = null;
     if (online) addFeed('Disconnected, reconnecting…', 'bad', true);
     online = false; lobbyOn = false; others.clear(); lks.forEach(l => { l.on = 0; l.x = null; }); reqs = []; sentTo.clear(); lpRender();
+    srvWait();
     if (wantLobby()) scheduleRetry();
     else if (party) { setNet('connecting'); scheduleRetry(); }   // (a private game is not ended by a dropped connection: it reconnects, straight back into the same world)
     else if (settings.mp) { setNet('offline'); scheduleRetry(); }
@@ -6885,7 +7090,7 @@ function connect() {
   sock.onerror = () => {};
 }
 function scheduleRetry() {
-  if (offlineOn()) return;
+  if (offlineOn() && !inHome) return;
   if (retryTimer) return;
   retry++; retryTimer = setTimeout(() => { retryTimer = 0; connect(); }, Math.min(5000, Math.round(200 * Math.pow(1.45, retry - 1))));   // tries again almost at once, then eases off to every few seconds if the server stays away
 }
@@ -7068,6 +7273,7 @@ function onMsg(m) {
     case 'dr': applyDoors(m); return;
     case 'update': forceUpdate(); return;   // the server only lets people with the same version in
     case 'welcome':
+      srvOk();
       pickTaken = new Map(Array.isArray(m.taken) ? m.taken : []); pickPend.clear();
       { let u = null; try { u = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); } catch (e) {} if (u && u.m) setTimeout(() => wsSend({ t: 'use', u }), 600); }   // (the server's monthly counts, kept here in case it restarted and forgot them)
       { let c = null; try { c = JSON.parse(localStorage.getItem('ballrun4_fsub') || 'null'); } catch (e) {} if (c && typeof c === 'object') { const l = Object.keys(c).slice(0, 64).map(k => [k, c[k]]); if (l.length) setTimeout(() => wsSend({ t: 'fsubs', l }), 400); } }
