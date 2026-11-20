@@ -799,16 +799,22 @@
   .chatwrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}.chatwrap>.chatlog{flex:1}
   /* Android phones: the chat is a sheet along the bottom of the screen that always sits right on top of the keyboard. While typing, the quick messages and the
      note step aside so the messages get the room. (Computers and iPhones keep the pop-up in the middle.) */
-  html.android #emoPop{align-items:flex-end;padding:0;bottom:auto;top:var(--vvt,0px);height:var(--vvh,100%)}
-  html.android #emoPop .chatcard{zoom:1;width:100%;max-width:100%;height:min(92%,680px);max-height:100%;border-radius:20px 20px 0 0;border-bottom:none;box-shadow:0 -6px 18px rgba(0,0,0,.45);padding:10px 12px calc(10px + env(safe-area-inset-bottom));gap:8px}
-  html.android #emoPop .chatcard .chead h3{font-size:22px}
-  html.android #emoPop .chatlog{height:auto!important;min-height:70px;font-size:16px}
-  html.android #emoPop .chatform input{font-size:17px;padding:11px 14px;border-radius:22px}
-  html.android #emoPop .chatform button{width:52px;height:48px;border-radius:24px}
-  html.android #emoPop .chatquick button{font-size:15px;padding:8px 14px}
-  html.android.kbopen #emoPop .chatcard{height:100%;border-radius:0;padding-top:6px;padding-bottom:6px;gap:6px}
-  html.android.kbopen #emoPop .chatquick,html.android.kbopen #emoPop .cfoot,html.android.kbopen #emoPop #chatPeople{display:none!important}
-  html.android.kbopen #emoPop .chatcard .chead h3{font-size:18px}html.android.kbopen #emoPop .chatcard .chead .chip{padding-top:2px;padding-bottom:2px}
+  /* phones and tablets: the chat window is a sheet from the bottom of the screen */
+  html.msheet #emoPop{align-items:flex-end;padding:0;bottom:auto;top:var(--vvt,0px);height:var(--vvh,100%)}
+  html.msheet #emoPop .chatcard{position:relative;zoom:1;width:100%;max-width:100%;height:min(92%,720px);max-height:100%;border-radius:22px 22px 0 0;border-bottom:none;box-shadow:0 -8px 24px rgba(0,0,0,.45);padding:10px 12px calc(10px + env(safe-area-inset-bottom));gap:8px;transition:height .15s}
+  html.msheet #emoPop .chatcard::before{content:'';position:absolute;left:50%;top:5px;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:rgba(232,220,192,.35)}
+  html.msheet #emoPop .chatlog{height:auto!important;min-height:60px;font-size:16px}
+  html.msheet #emoPop .chatform input{font-size:17px;padding:11px 16px;border-radius:24px}
+  html.msheet #emoPop .chatform button{width:50px;height:48px;border-radius:24px}
+  html.msheet #emoPop .chatquick button{font-size:15px;padding:8px 14px}
+  html.msheet.landscape #emoPop .chatcard{height:100%}
+  /* typing: the sheet sits right on the keyboard and shows only the messages and what you write */
+  html.msheet.kbopen #emoPop .chatcard{height:100%;border-radius:0;padding:6px 10px 6px;gap:6px;transition:none}
+  html.msheet.kbopen #emoPop .chatcard::before{display:none}
+  html.msheet.kbopen #emoPop .chead,html.msheet.kbopen #emoPop .chatquick,html.msheet.kbopen #emoPop .cfoot,html.msheet.kbopen #emoPop .dmnote,html.msheet.kbopen #emoPop #gvHint,html.msheet.kbopen #emoPop .dmhead .btn:not(.dmback){display:none!important}
+  html.msheet.kbopen #emoPop .cvbar{min-height:0}html.msheet.kbopen #emoPop .cvbar .small{font-size:12px}
+  html.msheet.kbopen #emoPop .dmhead{padding:0}html.msheet.kbopen #emoPop .dmhead .dmw b{font-size:16px}html.msheet.kbopen #emoPop .dmhead .dmw small{font-size:12px}
+  html.msheet.kbopen #emoPop .chatform{padding-bottom:2px}
   .chatdown{position:absolute;right:10px;bottom:10px;width:44px;height:44px;border-radius:50%;border:2px solid #fff;background:#2fa463;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.45);cursor:pointer;padding:0}.chatdown svg{width:24px;height:24px}
   .chatdown i{position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#ff4d6d;border:2px solid #fff;display:none}.chatdown.new i{display:block}.chatlog .cm .cmt{float:right;margin-left:8px;font-size:12px;opacity:.6;font-variant-numeric:tabular-nums}
   .chatlog .cm .cmbar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:rgba(255,210,61,.75);transform-origin:left;animation:cmgo linear forwards}
@@ -888,6 +894,12 @@
   .dmlog .cm.pend{opacity:.6}.dmlog .cm.fail{opacity:.55;border:2px dashed rgba(255,207,138,.7)}
   .dmlog .dmhint{align-self:center;text-align:center;font-size:14px;opacity:.7;padding:20px 10px}
   .dmnote{text-align:center}
+  #emoPop #chatLog{height:auto;margin:0;border:0;border-radius:12px;background:rgba(0,0,0,.25);padding:8px}   /* (the world chat looks like a friend chat) */
+  .ctitle{flex:1;margin:0!important;font-size:24px}.chatcard.home .ctabs{display:none}.chatcard:not(.home) .ctitle{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .cchats{flex:1;min-height:0;display:flex;gap:10px}.cchats>.cview{min-width:0}
+  .chatcard.wide{width:min(860px,100%)}.chatcard.split #cvList{flex:0 0 280px;border-right:2px solid rgba(232,220,192,.15);padding-right:10px}.chatcard.split #cvDm{flex:1}
+  .chatcard.split .dmrow.sel{border-color:var(--line);background:#3a3355}
+  .dmback{flex:none;width:36px;height:34px;padding:0;display:flex;align-items:center;justify-content:center}.dmback .ic{width:20px;height:20px}.chatcard.split .dmback{display:none}
   .gvhave{display:flex;gap:14px;justify-content:center;font-size:17px}.gvhave span{display:inline-flex;align-items:center;gap:5px}.gvhave .ic{width:18px;height:18px}
   .gvlist .dmrow.on{border-color:#3ddc84;background:rgba(47,164,99,.16)}
   .gvform{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:2px solid var(--line);border-radius:var(--wob);background:#241f36}
@@ -925,7 +937,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 202; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 204; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1139,13 +1151,13 @@
   <div id="feed"></div>
 </div></div>
 <div id="emoPop" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="chatTitle"><div class="card chatcard">
-  <div class="chead"><h3 id="chatTitle" class="vh">Chat</h3><div id="chatTabs" class="ctabs" role="tablist" aria-label="Chats"></div><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="chead"><h3 id="chatTitle" class="ctitle">Chats</h3><div id="chatTabs" class="ctabs" role="tablist" aria-label="Chats"></div><button id="chatClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="cvWorld" class="cview">
   <div class="cvbar"><span id="chatWho" class="small dim">Everyone in this world</span></div>
   <div class="chatwrap"><div id="chatLog" class="chatlog" aria-live="polite"></div><button id="chatDown" class="chatdown hide" type="button" aria-label="Back to the newest message" title="Back to the newest message"><svg viewBox="0 0 24 24"><path d="M12 5v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><i></i></button></div>
     <div id="chatQuick" class="chatquick" aria-label="Quick messages"></div>
   <form id="chatForm" class="chatform" autocomplete="off"><input id="chatIn" type="text" maxlength="200" placeholder="Say something to everyone here" enterkeyhint="send" spellcheck="true"><button id="chatSend" class="go" type="submit" aria-label="Send"><span data-ic="up"></span></button></form>
-  <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim" id="chatNote">Messages fade after a minute.</span></div>
+  <div class="cfoot"><button id="chatMute" class="chip" type="button">Mute chat</button><span class="small dim" id="chatNote">World messages disappear after 5 minutes.</span></div>
   </div>
   <div id="cvGive" class="cview hide">
     <div class="gvhave" id="gvHave"></div>
@@ -1159,12 +1171,14 @@
     </div>
     <div class="small dmnote" id="gvMsg"></div>
   </div>
+  <div id="cvChats" class="cchats hide">
   <div id="cvList" class="cview hide"><div id="dmList" class="dmlist"></div></div>
   <div id="cvDm" class="cview hide">
     <div id="dmHead" class="dmhead"></div>
     <div class="chatwrap"><div id="dmLog" class="chatlog dmlog" aria-live="polite"></div></div>
     <form id="dmForm" class="chatform" autocomplete="off"><input id="dmIn" type="text" maxlength="200" placeholder="Message" enterkeyhint="send" spellcheck="true"><button id="dmSend" class="go" type="submit" aria-label="Send"><span data-ic="up"></span></button></form>
     <div class="small dim dmnote" id="dmNote"></div>
+  </div>
   </div>
 </div></div>
 <button id="dmToast" class="dmtoast hide" type="button"><span data-ic="chat"></span><span class="dmt"><b id="dmToastN"></b><span id="dmToastT"></span></span></button>
@@ -1640,8 +1654,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=202"></script>
-<script src="physics.js?v=202"></script>
+<script src="maps.js?v=204"></script>
+<script src="physics.js?v=204"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -4839,20 +4853,21 @@ function sendEmo(i) {
 }
 /* ----- chat: write anything. Family friendly mode hides rude words when it is shown (what was written is never changed) ----- */
 const chatLog = [];
-const CHAT_KEEP = 60000;   // (a message stays in the chat window for a minute, then it is gone for good)
+const CHAT_KEEP = 5 * 60000;   // (a message stays in the world chat for 5 minutes, then it is gone for good)
+const cdTxt = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 function chatPrune() { const cut = Date.now() - CHAT_KEEP; let n = 0; while (chatLog.length && chatLog[0].t < cut) { chatLog.shift(); n++; } if (!chatLog.some(m => m.cls !== 'sys') && worldNew) { worldNew = false; chatBadges(); } return n; }
-setInterval(() => { if (chatPrune() && chatOpen) chatRender(false); else if (chatOpen) { const now = Date.now(); for (const t of $('chatLog').querySelectorAll('.cmt')) { const left = Math.max(0, CHAT_KEEP - (now - +t.dataset.t)); t.textContent = Math.ceil(left / 1000) + 's'; if (left < 10000) t.parentNode.classList.add('soon'); } } }, 1000);
+setInterval(() => { if (chatPrune() && chatOpen) chatRender(false); else if (chatOpen) { const now = Date.now(); for (const t of $('chatLog').querySelectorAll('.cmt')) { const left = Math.max(0, CHAT_KEEP - (now - +t.dataset.t)); t.textContent = cdTxt(left); if (left < 30000) t.parentNode.classList.add('soon'); } } }, 1000);
 function chatAdd(name, txt, cls, kind) {   // one line in the chat window (and, for 5 seconds, over their head and in the corner)
   chatPrune(); chatLog.push({ name, txt, cls: cls || '', kind: kind || '', t: Date.now(), dm: arguments[4] || '' }); while (chatLog.length > 120) chatLog.shift();
   if (chatOpen && chatView === 'w') chatRender(cls === 'me'); else if (cls !== 'sys' && cls !== 'me') { worldNew = true; chatBadges(); }
 }
 function chatRender(stick) {
   const L = $('chatLog'), atEnd = stick || chatStick, keep = L.scrollTop, n0 = L.childElementCount; L.textContent = '';
-  if (!chatLog.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No messages in the last minute. Say hi!'; L.appendChild(e); }
+  if (!chatLog.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No messages in the last 5 minutes. Say hi!'; L.appendChild(e); }
   const now = Date.now();
   for (const m of chatLog) { const d = document.createElement('div'); d.className = 'cm ' + m.cls + (m.kind === 'bot' ? ' bot' : '');
-    { const left = Math.max(0, CHAT_KEEP - (now - m.t)), t = document.createElement('span'); t.className = 'cmt'; t.dataset.t = m.t; t.title = 'Disappears in'; t.textContent = Math.ceil(left / 1000) + 's'; d.appendChild(t);   // (how long until it disappears: a number and a bar that runs down)
-      const bar = document.createElement('i'); bar.className = 'cmbar'; bar.style.animationDuration = (CHAT_KEEP / 1000) + 's'; bar.style.animationDelay = (-(now - m.t) / 1000) + 's'; d.appendChild(bar); if (left < 10000) d.classList.add('soon'); }
+    { const left = Math.max(0, CHAT_KEEP - (now - m.t)), t = document.createElement('span'); t.className = 'cmt'; t.dataset.t = m.t; t.title = 'Disappears in'; t.textContent = cdTxt(left); d.appendChild(t);   // (how long until it disappears: a number and a bar that runs down)
+      const bar = document.createElement('i'); bar.className = 'cmbar'; bar.style.animationDuration = (CHAT_KEEP / 1000) + 's'; bar.style.animationDelay = (-(now - m.t) / 1000) + 's'; d.appendChild(bar); if (left < 30000) d.classList.add('soon'); }
     if (m.cls !== 'sys') { const b = document.createElement('b'); b.textContent = m.name; d.appendChild(b); } d.appendChild(document.createTextNode(m.cls === 'sys' ? m.txt : censorText(m.txt))); L.appendChild(d); }
   if (atEnd) { L.scrollTop = L.scrollHeight; chatStick = true; $('chatDown').classList.add('hide', 'new'); $('chatDown').classList.remove('new'); }
   else { L.scrollTop = keep; if (L.childElementCount > n0) $('chatDown').classList.add('new'); chatDownSync(); }   // (reading older messages: you stay where you are, and the arrow shows there is something new)
@@ -4874,13 +4889,16 @@ function chatSend(quick) {
 }
 /* ----- messages between friends: each friend has a conversation of their own, kept on this device (and never mixed into the world chat).
    A friend who is not on gets your messages the next time they play. Only friends, never anyone blocked, and personal info never goes ----- */
-const DMKEY = 'ballrun4_dms', DM_KEEP = 150;
+const DMKEY = 'ballrun4_dms', DM_KEEP = 20000;   // (kept on this device for good; only a conversation bigger than this loses its oldest lines)
 let dms = {}; try { const o = JSON.parse(localStorage.getItem(DMKEY) || '{}'); if (o && typeof o === 'object') for (const k in o) if (/^[0-9a-f]{16}$/.test(k) && o[k] && Array.isArray(o[k].m)) { dms[k] = { m: o[k].m.filter(x => x && typeof x.s === 'string').slice(-DM_KEEP), u: o[k].u | 0, n: typeof o[k].n === 'string' ? o[k].n.slice(0, 40) : '' }; dms[k].m.forEach(x => { if (x.st === 'p') x.st = 'f'; }); } } catch (e) {}   // (a message still on its way when the game closed did not go)
-let dmSaveT = 0; const dmSave = () => { clearTimeout(dmSaveT); dmSaveT = setTimeout(() => { try { localStorage.setItem(DMKEY, JSON.stringify(dms)); } catch (e) {} }, 250); };
+let dmSaveT = 0; const dmSave = () => { clearTimeout(dmSaveT); dmSaveT = setTimeout(dmSaveNow, 250); };
+function dmSaveNow() {   // (if the device ever runs out of room, the very oldest lines go first, never anything recent)
+  for (let k = 0; k < 40; k++) { try { localStorage.setItem(DMKEY, JSON.stringify(dms)); return; } catch (e) { let big = null; for (const p in dms) if (!big || dms[p].m.length > dms[big].m.length) big = p; if (!big || dms[big].m.length < 50) return; dms[big].m.splice(0, Math.ceil(dms[big].m.length / 10)); } }
+}
 addEventListener('storage', e => { if (e.key === DMKEY) { try { const o = JSON.parse(e.newValue || '{}'); if (o && typeof o === 'object') { dms = o; chatBadges(); if (chatOpen) chatShow(); } } catch (x) {} } });   // (another tab of the game got or sent a message)
 const dmOf = pub => dms[pub] || (dms[pub] = { m: [], u: 0, n: '' });
 let dmSeq = 0, chatView = 'w', dmTabs = [], worldNew = false; const dmWait = {};   // chatView: 'w' the world you are in, 'l' your friends, or one friend (their pub)
-const dmFriend = pub => { const l = lkOf(pub); return l && l.ok !== false && !blockedPub(pub) ? l : null; };
+const dmFriend = pub => { const l = lkOf(pub); return l && !isMe(l) && !blockedPub(pub) ? l : null; };   // (every friend on your list, online or not)
 const dmUnread = pub => (dms[pub] && dmFriend(pub) ? dms[pub].u | 0 : 0);
 const dmUnreadAll = () => Object.keys(dms).reduce((a, k) => a + dmUnread(k), 0);
 const dmLast = pub => { const d = dms[pub]; return d && d.m.length ? d.m[d.m.length - 1] : null; };
@@ -4928,7 +4946,7 @@ function dmSend(pub, txt) {
   if (dmShowing(pub)) dmRender(true); return true;
 }
 function dmOk(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; w.msg.st = m.q ? 'q' : ''; w.msg.a = +m.at || w.msg.a; delete w.msg.c; const l = lkOf(w.pub); if (l) l.dm = w.msg.a; dmSave(); if (dmShowing(w.pub)) dmRender(); }
-function dmNo(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; w.msg.st = 'f'; w.msg.why = m.why === 'full' ? 'full' : 'friend'; dmSave(); if (dmShowing(w.pub)) dmRender(); }
+function dmNo(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; w.msg.st = 'f'; w.msg.why = m.why === 'full' ? 'full' : m.why === 'off' ? 'old' : m.why === 'slow' ? '' : 'friend'; if (m.why === 'slow') dmNoteSet('That was a lot at once. Wait a moment, then tap a message to send it again.', true); dmSave(); if (dmShowing(w.pub)) dmRender(); }
 function dmPii(m) { const w = dmWait[m.c | 0]; if (!w) return; delete dmWait[m.c | 0]; const d = dms[w.pub]; if (d) { const i = d.m.indexOf(w.msg); if (i >= 0) d.m.splice(i, 1); dmSave(); } if (dmShowing(w.pub)) dmRender(); }
 function dmRetry(pub, msg) { const d = dms[pub]; if (!d) return; const i = d.m.indexOf(msg); if (i >= 0) d.m.splice(i, 1); if (!dmSend(pub, msg.s)) { if (i >= 0) d.m.splice(i, 0, msg); } dmRender(true); }
 function piiSays(why) {
@@ -4940,44 +4958,48 @@ function piiSays(why) {
 const clock = t => { try { return new Date(t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
 function dayOf(t) { const d = new Date(t), n = new Date(), y = new Date(n.getFullYear(), n.getMonth(), n.getDate() - 1); if (d.toDateString() === n.toDateString()) return 'Today'; if (d.toDateString() === y.toDateString()) return 'Yesterday'; return dateOf(t); }
 function whenShort(t) { const n = nowMs(); if (n - t < 60000) return 'now'; if (new Date(t).toDateString() === new Date().toDateString()) return clock(t); return dateOf(t); }
+const chatSplit = () => innerWidth >= 760 && innerHeight >= 420;
 function chatTabsRender() {
-  const box = $('chatTabs'); box.textContent = ''; dmTabs = dmTabs.filter(p => dmFriend(p));
-  const tab = (id, label, icn, n, opts) => {
-    const b = el('button', 'ctab' + (chatView === id ? ' on' : '')); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', chatView === id ? 'true' : 'false');
-    if (icn) b.insertAdjacentHTML('beforeend', ic(icn)); else b.appendChild(el('i', 'gdt' + (opts.on ? '' : ' off')));
-    b.appendChild(el('span', 'ctn', label)); if (n || (opts && opts.dot)) { const g = el('b', 'gb' + (n ? '' : ' dot')); g.textContent = n ? (n > 99 ? '99+' : n) : ''; if (!n) g.style.cssText = 'width:9px;height:9px;min-width:0;padding:0'; b.appendChild(g); }
-    if (opts && opts.close) { const x = el('span', 'cx'); x.innerHTML = ic('close'); x.title = 'Close this chat'; x.setAttribute('aria-label', 'Close the chat with ' + label); x.onclick = e => { e.stopPropagation(); dmTabs = dmTabs.filter(p => p !== id); if (chatView === id) chatView = 'l'; sfx('ui'); chatShow(); }; b.appendChild(x); }
-    b.onclick = () => { if (chatView !== id) { chatView = id; sfx('ui'); chatShow(); } }; box.appendChild(b); return b;
+  const box = $('chatTabs'); box.textContent = ''; const inChats = chatView === 'l' || (chatView !== 'w' && chatView !== 'g');
+  const tab = (id, label, icn, n, dot, on) => {
+    const b = el('button', 'ctab' + (on ? ' on' : '')); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.insertAdjacentHTML('beforeend', ic(icn)); b.appendChild(el('span', 'ctn', label));
+    if (n || dot) { const g = el('b', 'gb' + (n ? '' : ' dot')); g.textContent = n ? (n > 99 ? '99+' : n) : ''; if (!n) g.style.cssText = 'width:9px;height:9px;min-width:0;padding:0'; b.appendChild(g); }
+    b.onclick = () => { if (!on) { chatView = id === 'l' && dmLastView && dmFriend(dmLastView) ? dmLastView : id; sfx('ui'); chatShow(); } }; box.appendChild(b);
   };
-  if (!inHome) tab('w', 'World', 'globe', 0, { dot: worldNew && chatView !== 'w' });
-  if (!inHome) tab('g', 'Give', 'gcoin', 0);
-  const inTabs = new Set(dmTabs); tab('l', 'Friends', 'users', Object.keys(dms).filter(k => !inTabs.has(k)).reduce((a, k) => a + dmUnread(k), 0));
-  for (const pub of dmTabs) { const l = lkOf(pub); tab(pub, who(l.name), '', dmUnread(pub), { on: l.on && !l.hid, close: 1 }); }
-  const on = box.querySelector('.on'); if (on) try { on.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
+  tab('w', 'World', 'globe', 0, worldNew && chatView !== 'w', chatView === 'w');
+  tab('g', 'Give', 'gcoin', 0, false, chatView === 'g');
+  tab('l', 'Chats', 'chat', dmUnreadAll(), false, inChats);
 }
+let dmLastView = '';   // (the friend you were last writing to: Chats opens on them again)
 function chatShow() {   // show what the chat window is on
-  if (chatView === 'w' && inHome) chatView = 'l';
-  if (chatView !== 'w' && chatView !== 'l' && chatView !== 'g' && !dmFriend(chatView)) chatView = inHome ? 'l' : 'w';
-  if (chatView === 'g' && inHome) chatView = 'l';
-  const v = chatView === 'w' ? 'w' : chatView === 'g' ? 'g' : chatView === 'l' ? 'l' : 'd';
-  $('cvWorld').classList.toggle('hide', v !== 'w'); $('cvGive').classList.toggle('hide', v !== 'g'); $('cvList').classList.toggle('hide', v !== 'l'); $('cvDm').classList.toggle('hide', v !== 'd');
+  if (inHome && (chatView === 'w' || chatView === 'g')) chatView = 'l';
+  if (chatView !== 'w' && chatView !== 'l' && chatView !== 'g' && !dmFriend(chatView)) chatView = 'l';
+  const split = chatSplit(), card = document.querySelector('#emoPop .chatcard');
+  if (split && chatView === 'l') { const first = dmSorted()[0]; if (first) chatView = first.pub; }   // (side by side: a conversation is always open)
+  const v = chatView === 'w' ? 'w' : chatView === 'g' ? 'g' : chatView === 'l' ? 'l' : 'd', chats = v === 'l' || v === 'd';
+  card.classList.toggle('home', inHome); card.classList.toggle('split', split && chats); card.classList.toggle('wide', split);   // (on a wide screen the window keeps one size on every tab)
+  $('cvWorld').classList.toggle('hide', v !== 'w'); $('cvGive').classList.toggle('hide', v !== 'g'); $('cvChats').classList.toggle('hide', !chats);
+  $('cvList').classList.toggle('hide', !(v === 'l' || (split && chats))); $('cvDm').classList.toggle('hide', v !== 'd');
   if (v === 'w') { worldNew = false; chatRender(true); worldNote(); }
   else if (v === 'g') giveRender();
-  else if (v === 'l') dmListRender();
-  else { if (!dmTabs.includes(chatView)) { dmTabs.unshift(chatView); if (dmTabs.length > 3) dmTabs.pop(); } dmRender(true); if ($('dmToast').dataset.pub === chatView) $('dmToast').classList.add('hide'); }
+  if (chats && (v === 'l' || split)) dmListRender();
+  if (v === 'd') { dmLastView = chatView; dmRender(true); if ($('dmToast').dataset.pub === chatView) $('dmToast').classList.add('hide'); }
   chatTabsRender(); chatBadges();
   if (!touchActive()) setTimeout(() => { try { (v === 'w' ? $('chatIn') : v === 'd' ? $('dmIn') : null)?.focus({ preventScroll: true }); } catch (e) {} }, 30);
 }
+addEventListener('resize', () => { if (chatOpen && (chatView !== 'w' && chatView !== 'g') && !!document.querySelector('#emoPop .chatcard.split') !== chatSplit()) chatShow(); });
 function worldNote() {
   $('chatWho').textContent = offlineOn() ? 'Offline: just you and the bots' : party ? 'Everyone in this private game' : settings.mp ? 'Everyone in this public world' : 'Everyone in your world';
 }
+function dmSorted() { return lks.filter(l => dmFriend(l.pub)).sort((a, b) => dmUnread(b.pub) - dmUnread(a.pub) || ((dmLast(b.pub) || {}).a || 0) - ((dmLast(a.pub) || {}).a || 0) || (b.on && !b.hid) - (a.on && !a.hid) || String(a.name).localeCompare(String(b.name))); }
 function dmListRender() {
   const box = $('dmList'); box.textContent = '';
-  const fr = lks.filter(l => l.ok && !blockedPub(l.pub) && !isMe(l)).sort((a, b) => dmUnread(b.pub) - dmUnread(a.pub) || ((dmLast(b.pub) || {}).a || 0) - ((dmLast(a.pub) || {}).a || 0) || (b.on && !b.hid) - (a.on && !a.hid) || String(a.name).localeCompare(String(b.name)));
+  const fr = dmSorted();
   if (!fr.length) { const e = el('div', 'dmempty'); e.innerHTML = ic('chat'); e.appendChild(el('div', '', 'Add friends to chat with them. Messages between friends are private.')); const b = el('button', 'btn prim'); b.type = 'button'; b.innerHTML = ic('users') + '<span>Friends</span>'; b.onclick = () => { toggleChat(false); openFriends(); }; e.appendChild(b); box.appendChild(e); return; }
   if (!dmNet()) box.appendChild(el('div', 'small dim dmnote', offlineOn() ? 'You are offline: you can read your chats, but not send.' : 'Connecting to the server…'));
   for (const l of fr) {
-    const r = el('button', 'dmrow' + (dmUnread(l.pub) ? ' new' : '')); r.type = 'button'; r.appendChild(ballDot(l));
+    const r = el('button', 'dmrow' + (dmUnread(l.pub) ? ' new' : '') + (chatView === l.pub ? ' sel' : '')); r.type = 'button'; r.appendChild(ballDot(l));
     const w = el('span', 'dmw'), last = dmLast(l.pub); w.appendChild(el('b', '', who(l.name)));
     w.appendChild(el('small', '', last ? (last.me ? 'You: ' : '') + censorText(last.s) : statusOf(l).t || 'Say hi')); r.appendChild(w);
     const rt = el('span', 'dmr'); if (last) rt.appendChild(el('span', '', whenShort(last.a))); const n = dmUnread(l.pub); if (n) { const g = el('b', 'gb'); g.textContent = n > 99 ? '99+' : n; rt.appendChild(g); } r.appendChild(rt);
@@ -4989,7 +5011,7 @@ function dmNoteSet(t, warn) { const n = $('dmNote'); n.textContent = t; n.style.
 function dmNoteDefault() { const l = dmFriend(chatView); if (!l) return; const nm = who(l.name); dmNoteSet(offlineOn() ? 'You are offline. Messages need the server.' : !dmNet() ? 'Connecting to the server…' : l.on && !l.hid ? 'Only ' + nm + ' sees this.' : 'Only ' + nm + ' sees this. They get it next time they play.'); }
 function dmRender(stick) {
   const pub = chatView, l = dmFriend(pub); if (!l) return; const d = dmOf(pub), nm = who(l.name);
-  { const h = $('dmHead'); h.textContent = ''; h.appendChild(ballDot(l)); const w = el('div', 'dmw'), st = statusOf(l); w.appendChild(el('b', '', nm)); w.appendChild(el('small', st.c === 'on' ? 'on' : '', st.t)); h.appendChild(w);
+  { const h = $('dmHead'); h.textContent = ''; { const bk = iconBtn('btn dmback', 'left', 'Back to your chats', () => { sfx('ui'); chatView = 'l'; dmLastView = ''; chatShow(); }); h.appendChild(bk); } h.appendChild(ballDot(l)); const w = el('div', 'dmw'), st = statusOf(l); w.appendChild(el('b', '', nm)); w.appendChild(el('small', st.c === 'on' ? 'on' : '', st.t)); h.appendChild(w);
     h.appendChild(iconBtn('btn sm', 'user', 'See ' + nm + "'s profile", () => openProfile(Object.assign({}, l)), 'Profile')); }
   const L = $('dmLog'), atEnd = stick || L.scrollHeight - L.scrollTop - L.clientHeight < 60; L.textContent = '';
   if (!d.m.length) L.appendChild(el('div', 'dmhint', 'No messages yet. Say hi to ' + nm + '!'));
@@ -4997,7 +5019,7 @@ function dmRender(stick) {
   d.m.forEach((m, i) => {
     const dy = dayOf(m.a); if (dy !== day) { day = dy; L.appendChild(el('div', 'dday', dy)); }
     const c = el('div', 'cm' + (m.me ? ' me' : '') + (m.st === 'p' ? ' pend' : m.st === 'f' ? ' fail' : '')); c.appendChild(document.createTextNode(censorText(m.s))); c.appendChild(el('span', 'ct', clock(m.a))); L.appendChild(c);
-    if (m.me && m.st === 'f') { const f = el('div', 'dst bad', m.why === 'friend' ? 'Not sent: you are not friends any more' : m.why === 'full' ? 'Not sent: ' + nm + ' has too many messages waiting' : 'Not sent · tap to try again'); if (!m.why) { f.tabIndex = 0; f.setAttribute('role', 'button'); f.onclick = () => dmRetry(pub, m); } L.appendChild(f); }
+    if (m.me && m.st === 'f') { const f = el('div', 'dst bad', m.why === 'friend' ? 'Not sent: you are not friends any more' : m.why === 'full' ? 'Not sent: ' + nm + ' already has 50 messages waiting. Send more once they have come on and got them' : m.why === 'old' ? 'Not sent: the game server needs updating for messages to friends who are away' : 'Not sent · tap to try again'); if (!m.why) { f.tabIndex = 0; f.setAttribute('role', 'button'); f.onclick = () => dmRetry(pub, m); } L.appendChild(f); }
     else if (i === lastMine) L.appendChild(el('div', 'dst', m.st === 'p' ? 'Sending…' : m.st === 'q' && !(l.on || (l.last || 0) > m.a) ? 'Waiting for ' + nm + ' to come on' : 'Sent'));
   });
   if (atEnd) L.scrollTop = L.scrollHeight;
@@ -5098,24 +5120,36 @@ function toggleChat(on, view) {   // a pop-up in the middle of the screen: tap a
   chatFit();
   if (on) {
     if (!inHome && typeof closeSettingsNow === 'function') closeSettingsNow(); sfx('ui');
-    if (view) chatView = view; else if (inHome && chatView === 'w') chatView = 'l';
-    else if (!inHome && chatView === 'l' && !dmUnreadAll()) chatView = 'w';   // (the chat button in a game opens on the world, unless you were writing to a friend)
+    if (view) chatView = view; else if (inHome && (chatView === 'w' || chatView === 'g')) chatView = dmLastView && dmFriend(dmLastView) ? dmLastView : 'l';
+    else if (!inHome && chatView === 'g') chatView = 'w';
     chatShow();
   } else { try { $('chatIn').blur(); $('dmIn').blur(); } catch (e) {} chatBadges(); }
 }
 $('homeChat').onclick = () => toggleChat(true, 'l');
 $('btnChat').onclick = () => toggleChat(!chatOpen);
-/* Android: keep the chat sheet right above the keyboard (the keyboard covers the page there instead of making it shorter) */
-const isAndroid = /Android/i.test(navigator.userAgent);
-if (isAndroid) document.documentElement.classList.add('android');
+/* phones and tablets: the chat is a sheet from the bottom. While you type, it sits right on top of the keyboard and shows only the conversation and what you are writing */
+const isAndroid = /Android/i.test(navigator.userAgent), isMobileUA = isAndroid || /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+if (isMobileUA) document.documentElement.classList.add('msheet');
+const vvNow = () => window.__vvFake || window.visualViewport;   // (tests can stand in a keyboard here)
+const TYPE_IDS = ['chatIn', 'dmIn', 'gvC', 'gvG'];
 function chatFit() {
-  if (!isAndroid) return; const vv = window.visualViewport, ep = $('emoPop'), H = vv ? vv.height : innerHeight;
-  ep.style.setProperty('--vvh', Math.round(H) + 'px'); ep.style.setProperty('--vvt', Math.round(vv ? vv.offsetTop : 0) + 'px');
-  const ae = document.activeElement, typing = ae === $('chatIn') || ae === $('dmIn'), kb = typing && (H < innerHeight * 0.85 || screen.height - H > 260 || (vv && vv.offsetTop > 0));
-  const was = document.documentElement.classList.contains('kbopen'); document.documentElement.classList.toggle('kbopen', chatOpen && (kb || typing && H < 560));
-  if (chatOpen) { const lg = chatView === 'w' ? $('chatLog') : $('dmLog'); if (lg && (was !== document.documentElement.classList.contains('kbopen') || lg.scrollHeight - lg.scrollTop - lg.clientHeight < 80)) lg.scrollTop = lg.scrollHeight; }
+  const H0 = document.documentElement.classList;
+  if (!isMobileUA) { H0.remove('kbopen'); return; }
+  const vv = vvNow(), ep = $('emoPop'), H = vv ? vv.height : innerHeight, top = vv ? vv.offsetTop : 0;
+  ep.style.setProperty('--vvh', Math.round(H) + 'px'); ep.style.setProperty('--vvt', Math.round(top) + 'px');
+  const ae = document.activeElement, typing = chatOpen && TYPE_IDS.some(id => ae === $(id));
+  H0.toggle('landscape', innerWidth > innerHeight);
+  const was = H0.contains('kbopen'); H0.toggle('kbopen', typing);
+  if (chatOpen) { const lg = chatView === 'w' ? $('chatLog') : $('dmLog'); if (lg && (was !== typing || lg.scrollHeight - lg.scrollTop - lg.clientHeight < 120)) lg.scrollTop = lg.scrollHeight; }
 }
-if (isAndroid) { if (window.visualViewport) { visualViewport.addEventListener('resize', chatFit); visualViewport.addEventListener('scroll', chatFit); } addEventListener('resize', chatFit); for (const id of ['chatIn', 'dmIn']) { $(id).addEventListener('focus', () => setTimeout(chatFit, 50)); $(id).addEventListener('blur', () => setTimeout(chatFit, 50)); } }
+if (isMobileUA) {
+  if (window.visualViewport) { visualViewport.addEventListener('resize', chatFit); visualViewport.addEventListener('scroll', chatFit); }
+  addEventListener('resize', chatFit);
+  for (const id of TYPE_IDS) { $(id).addEventListener('focus', () => { chatFit(); setTimeout(chatFit, 120); setTimeout(chatFit, 400); }); $(id).addEventListener('blur', () => setTimeout(chatFit, 60)); }
+}
+/* tapping Send (or a quick message) keeps the keyboard up, so the box does not jump away from under your finger */
+for (const id of ['chatSend', 'dmSend', 'gvOk']) $(id).addEventListener('pointerdown', e => { if (TYPE_IDS.some(t => document.activeElement === $(t))) e.preventDefault(); });
+$('chatQuick').addEventListener('pointerdown', e => { if (e.target.closest('button') && document.activeElement === $('chatIn')) e.preventDefault(); });
 $('emoPop').addEventListener('pointerdown', e => { if (e.target === $('emoPop')) { e.preventDefault(); toggleChat(false); } });
 
 /* ----- the shop: spend coins (and diamonds) on things that appear right next to you. They are only yours: nobody else sees them. ----- */
@@ -5809,7 +5843,7 @@ function personRow(p, sub, acts, noProf) {
   for (const a of (acts || [])) if (a) r.appendChild(a);
   return r;
 }
-const canMessage = l => !!l && l.ok && !blockedPub(l.pub) && !offlineOn();
+const canMessage = l => !!l && !blockedPub(l.pub) && !offlineOn();
 function friendCard(l) {
   const nm = who(l.name), n = dmUnread(l.pub), msg = canMessage(l) || dms[l.pub] ? iconBtn('btn sm' + (n ? ' prim' : ''), 'chat', 'Chat with ' + nm, () => openDm(l.pub), 'Chat') : null;
   if (msg && n) gBadge(msg, n);
@@ -5892,13 +5926,13 @@ function profRender() {
   else if (isReq) add('btn prim', 'Accept friend request', () => { wsSend({ t: 'tacc', to: p.pub }); reqs = reqs.filter(r => r.pub !== p.pub); lpRender(); profRender(); }, false, 'check');
   else if (!me && !linked) add('btn prim', sent ? 'Request sent' : lks.length >= MAXLINK ? 'You have ' + MAXLINK + ' friends already' : 'Add friend', () => { wsSend({ t: 'treq', to: p.pub, nm: p.name }); sentTo.add(p.pub); profRender(); }, sent || lks.length >= MAXLINK, 'plus');
   add('btn', 'Copy #' + (q.code || myCode), () => { const t = '#' + (q.code || myCode); try { navigator.clipboard.writeText(t).then(() => notice('Copied ' + t, ''), () => notice(t, '')); } catch (e) { notice(t, ''); } });
-  if (linked) add('btn danger', 'Unfriend', () => { const keep = Object.assign({}, q); askConfirm('Unfriend ' + nm + '?', 'You will stop seeing each other on the map and can no longer chat. To be friends again, you both need to send and accept a new request.', 'Unfriend', () => { disconnectLink(p.pub); dmTabs = dmTabs.filter(x => x !== p.pub); openProfile(Object.assign(keep, { ok: 0 })); }, { no: 'Keep ' + nm }); }, false, 'minus');
+  if (linked) add('btn danger', 'Unfriend', () => { const keep = Object.assign({}, q); askConfirm('Unfriend ' + nm + '?', 'You will stop seeing each other on the map and can no longer chat. To be friends again, you both need to send and accept a new request.', 'Unfriend', () => { disconnectLink(p.pub); if (dmLastView === p.pub) dmLastView = ''; openProfile(Object.assign(keep, { ok: 0 })); }, { no: 'Keep ' + nm }); }, false, 'minus');
   main.classList.toggle('hide', !main.childNodes.length);
   if (!me && !blk && !linked && p.pub) add('btn danger', 'Block', () => { closeProfile(); askConfirm('Block ' + nm + '?', 'They will not be able to send you friend requests or messages, you will not see what they say in the chat, and if you are friends, you will not be any more. They are not told that you blocked them. You can unblock them in Friends.', 'Block', () => blockPub(p), { no: 'Cancel' }); });
 }
 function blockPub(p) {   // (only somebody who is not your friend: unfriend first)
   wsSend({ t: 'blk', to: p.pub, on: 1 }); if (!blockedPub(p.pub)) myBlocks.push({ pub: p.pub, code: p.code || '', name: p.name || '', color: p.color, color2: p.color2, pat: p.pat | 0 });
-  const e = lkOf(p.pub); if (e) lks.splice(lks.indexOf(e), 1); reqs = reqs.filter(r => r.pub !== p.pub); sentTo.delete(p.pub); dmTabs = dmTabs.filter(x => x !== p.pub); if (chatOpen) chatShow();
+  const e = lkOf(p.pub); if (e) lks.splice(lks.indexOf(e), 1); reqs = reqs.filter(r => r.pub !== p.pub); sentTo.delete(p.pub); if (dmLastView === p.pub) dmLastView = ''; if (chatOpen) chatShow();
   saveLinks(); sfx('ui'); lpRender(); notice(who(p.name) + ' is blocked', '');
 }
 $('profClose').onclick = closeProfile; $('profModal').addEventListener('pointerdown', e => { if (e.target === $('profModal')) closeProfile(); });

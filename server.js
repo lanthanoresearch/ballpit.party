@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 202;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 204;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -298,11 +298,11 @@ function saveShares() {
 setInterval(saveShares, 20000);
 function dropShares(a, b) { for (const [id, v] of shares) if ((v.from === a && v.to === b) || (v.from === b && v.to === a)) { shares.delete(id); sharesDirty = true; } }
 const shareMeta = v => ({ id: v.id, from: v.from, name: (byPub.get(v.from) || {}).name || v.fromName || '', idx: v.idx, n: v.n, t: v.t, exp: v.t + SHARE_TTL });
-/* ---------- messages between friends: a friend who is not on gets them the next time they come on (kept up to 7 days, at most 60 from each friend) ---------- */
+/* ---------- messages between friends: a friend who is not on gets them the next time they come on (kept until then, however long that is; at most 50 waiting from each friend) ---------- */
 const DM_FILE = process.env.DM_FILE || path.join(path.dirname(LINKS_FILE), 'dms.json');
-const DM_TTL = 7 * DAY, DM_PER = 60;
+const DM_TTL = Infinity, DM_PER = 50;
 const dmBox = new Map(); let dmDirty = false;
-try { const o = JSON.parse(fs.readFileSync(DM_FILE, 'utf8')); for (const k in (o && o.box) || {}) if (PUB.test(k) && Array.isArray(o.box[k])) dmBox.set(k, o.box[k].filter(x => x && PUB.test(x.f || '') && typeof x.s === 'string' && Date.now() - x.at < DM_TTL).slice(-DM_PER * 4)); console.log('Restored waiting messages for ' + dmBox.size + ' players'); } catch (e) {}
+try { const o = JSON.parse(fs.readFileSync(DM_FILE, 'utf8')); for (const k in (o && o.box) || {}) if (PUB.test(k) && Array.isArray(o.box[k])) dmBox.set(k, o.box[k].filter(x => x && PUB.test(x.f || '') && typeof x.s === 'string' && Date.now() - x.at < DM_TTL)); console.log('Restored waiting messages for ' + dmBox.size + ' players'); } catch (e) {}
 function saveDms(sync) {
   const now = Date.now(); for (const [k, l] of dmBox) { const n = l.filter(x => now - x.at < DM_TTL); if (n.length !== l.length) { dmDirty = true; if (n.length) dmBox.set(k, n); else dmBox.delete(k); } }
   if (!dmDirty) return; dmDirty = false;
@@ -315,8 +315,10 @@ function dmQueue(to, from, name, s, at) {   // false when that friend's box is f
 }
 function dropDms(a, b) { for (const [x, y] of [[a, b], [b, a]]) { const l = dmBox.get(x); if (!l) continue; const n = l.filter(m => m.f !== y); if (n.length !== l.length) { dmDirty = true; if (n.length) dmBox.set(x, n); else dmBox.delete(x); } } }
 function sendDmBox(p) {   // what friends wrote while you were away
-  const l = dmBox.get(p.pub); if (!l || !l.length) return; dmBox.delete(p.pub); dmDirty = true; const now = Date.now();
-  for (const x of l) if (now - x.at < DM_TTL && linkSet(p.pub).has(x.f) && !blocked(p.pub, x.f)) { const pi = peerInfo(x.f); send(p, { t: 'dm', from: x.f, name: pi.name || x.n, color: pi.color, s: x.s, at: x.at, late: 1 }); }
+  const l = dmBox.get(p.pub); if (!l || !l.length) return; dmBox.delete(p.pub); dmDirty = true;
+  const cl = claimsOf.get(p.pub) || new Set(), keep = [];
+  for (const x of l) if (blocked(p.pub, x.f)) continue; else if (!(linkSet(p.pub).has(x.f) || cl.has(x.f))) keep.push(x); else { const pi = peerInfo(x.f); send(p, { t: 'dm', from: x.f, name: pi.name || x.n, color: pi.color, s: x.s, at: x.at, late: 1 }); }
+  if (keep.length) dmBox.set(p.pub, keep);   // (not friends again yet: kept until they are)
 }
 function sendShares(p) { const now = Date.now(), list = [], cl = claimsOf.get(p.pub) || new Set(); for (const v of shares.values()) if (v.to === p.pub && now - v.t <= SHARE_TTL && !blocked(v.from, v.to) && (linkSet(p.pub).has(v.from) || cl.has(v.from))) list.push(shareMeta(v)); if (list.length) send(p, { t: 'shr', list });
   const rl = shRes.get(p.pub); if (rl && rl.length) { shRes.delete(p.pub); sharesDirty = true; for (const r of rl) send(p, { t: 'shres', pub: r.pub, name: r.name, idx: r.idx, ok: r.ok, late: 1 }); } }   // (and what happened to the maps you shared while you were away)   // (only from somebody you have as a friend too)
@@ -1372,9 +1374,10 @@ wss.on('connection', (ws, req) => {
     } else if (m.t === 'dm') {   // a message to one friend, from anywhere (a game or the main menu): only to a friend, never to or from someone blocked, and never with personal info
       if (!p.pub || !live(p) || typeof m.to !== 'string' || !PUB.test(m.to) || typeof m.s !== 'string') return;
       const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
-      if (!linkSet(p.pub).has(m.to) || blocked(p.pub, m.to)) { send(p, { t: 'dmno', to: m.to, why: 'friend', c: m.c | 0 }); return; }
+      const isFr = (a, b) => linkSet(a).has(b) || (claimsOf.get(a) || new Set()).has(b);   // (friends by the server's list, or by yours while it learns them back after a restart)
+      if (!isFr(p.pub, m.to) || blocked(p.pub, m.to)) { send(p, { t: 'dmno', to: m.to, why: 'friend', c: m.c | 0 }); return; }
       { const why = P.piiCheck(txt); if (why) { send(p, { t: 'pii', why, to: m.to, c: m.c | 0 }); return; } }
-      const now = Date.now(); p.txT = (p.txT || []).filter(t => now - t < 10000); if (p.txT.length >= 6) { send(p, { t: 'texthold' }); return; } p.txT.push(now);
+      const now = Date.now(); p.dmT = (p.dmT || []).filter(t => now - t < 10000); if (p.dmT.length >= 20) { send(p, { t: 'dmno', to: m.to, why: 'slow', c: m.c | 0 }); return; } p.dmT.push(now);   // (messages to friends: a lot at once is fine, just not a flood)
       const q = byPub.get(m.to), here = live(q);
       if (!here && !dmQueue(m.to, p.pub, p.name, txt, now)) { send(p, { t: 'dmno', to: m.to, why: 'full', c: m.c | 0 }); return; }   // (not on: kept for them until they come back)
       pairOf(p.pub, m.to).m = now; linksDirty = true;
