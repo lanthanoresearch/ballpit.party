@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 207;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 209;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -233,13 +233,32 @@ function quietNow(q) {   // is it within their quiet hours, where they are?
   if (m === undefined) { const d = new Date(Date.now() - q.off * 60000); m = d.getUTCHours() * 60 + d.getUTCMinutes(); }   // (no time zone name: by the clock offset the device gave)
   return q.a < q.b ? m >= q.a && m < q.b : m >= q.a || m < q.b;   // (a stretch over midnight, like 22:00 to 07:00, too)
 }
-function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map. Only to devices that are not connected right now.
+function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map, 'e' nobody playing (dev mode). Only to devices that are not connected right now.
   const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !(kind === 'd' ? sub.d !== 0 : sub[kind]) || (live(here) && !here.hidden) || (from && kind !== 'd' && sub.mu && sub.mu.indexOf(from) >= 0) || (from && kind === 'd' && sub.mm && sub.mm.indexOf(from) >= 0) || quietNow(sub.q)) return;
   const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : kind === 'd' ? 60000 : 30000; if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
   if (pushLast.size > 4000) { for (const [kk, v] of pushLast) if (t - v > 3600000) pushLast.delete(kk); }
   sendPush(pub, { title: String(n[0]).slice(0, 60), body: String(n[1]).slice(0, 100), tag });
 }
 
+/* "Nobody is playing" (a notification the game's maker turns on in dev mode): once every world has been empty for 2 minutes after someone played, they are
+   told, so they can update the game without throwing anyone out. Their own game does not count. At most every 20 minutes */
+const EMPTY_FOR = +process.env.EMPTY_FOR_MS || 120000, EMPTY_GAP = +process.env.EMPTY_GAP_MS || 20 * 60000, emptyWatch = new Map();   // pub -> { armed, since, last }
+function emptyTick() {
+  const now = Date.now();
+  for (const k of emptyWatch.keys()) { const s = pushSubs.get(k); if (!s || !s.e) emptyWatch.delete(k); }
+  pushSubs.forEach((sub, pub) => {
+    if (!sub.e) return;
+    let w = emptyWatch.get(pub); if (!w) { w = { armed: false, since: 0, last: 0 }; emptyWatch.set(pub, w); }
+    const me = byPub.get(pub), others = Math.max(0, online - (me && me.room ? 1 : 0));
+    if (others > 0) { w.armed = true; w.since = 0; return; }
+    if (!w.armed) return; if (!w.since) w.since = now;
+    if (now - w.since < EMPTY_FOR || now - w.last < EMPTY_GAP) return;
+    w.armed = false; w.since = 0; w.last = now;
+    if (live(me) && !me.hidden) send(me, { t: 'devempty' });   // (looking at the game: it says so there)
+    else pushTo(pub, 'e', ['Nobody is playing', 'Every world is empty: a good time to update the game'], 'empty');
+  });
+}
+setInterval(() => { try { emptyTick(); } catch (e) {} }, +process.env.EMPTY_TICK_MS || 15000).unref();
 try {
   const o = JSON.parse(fs.readFileSync(LINKS_FILE, 'utf8'));
   for (const k in (o.links || {})) if (PUB.test(k)) links.set(k, new Set((o.links[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));
@@ -250,7 +269,7 @@ try {
   for (const k in (o.pairs || {})) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k)) { const v = o.pairs[k] || {}; pairT.set(k, { s: +v.s || 0, m: +v.m || 0 }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
   if (o.vapid && o.vapid.pub && o.vapid.priv) vapid = makeVapid(o.vapid.pub, o.vapid.priv);
-  for (const k in (o.push || {})) if (PUB.test(k) && o.push[k] && okPushUrl(o.push[k].ep)) { const v = o.push[k]; pushSubs.set(k, { ep: String(v.ep), p: String(v.p).slice(0, 100), a: String(v.a).slice(0, 40), f: v.f ? 1 : 0, r: v.r ? 1 : 0, i: v.i ? 1 : 0, m: v.m ? 1 : 0, d: v.d === 0 ? 0 : 1, mu: Array.isArray(v.mu) ? v.mu.filter(x => PUB.test(x)).slice(0, 500) : [], mm: Array.isArray(v.mm) ? v.mm.filter(x => PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(v.q), t: +v.t || 0 }); }
+  for (const k in (o.push || {})) if (PUB.test(k) && o.push[k] && okPushUrl(o.push[k].ep)) { const v = o.push[k]; pushSubs.set(k, { ep: String(v.ep), p: String(v.p).slice(0, 100), a: String(v.a).slice(0, 40), f: v.f ? 1 : 0, r: v.r ? 1 : 0, i: v.i ? 1 : 0, m: v.m ? 1 : 0, e: v.e ? 1 : 0, d: v.d === 0 ? 0 : 1, mu: Array.isArray(v.mu) ? v.mu.filter(x => PUB.test(x)).slice(0, 500) : [], mm: Array.isArray(v.mm) ? v.mm.filter(x => PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(v.q), t: +v.t || 0 }); }
   for (const e of (o.news || [])) if (Array.isArray(e) && PUB.test(e[0]) && Array.isArray(e[1])) news.set(e[0], e[1].filter(x => x && PUB.test(x.p) && Date.now() - x.t < REQ_TTL).map(x => ({ p: x.p, ok: x.ok ? 1 : 0, t: +x.t })).slice(-30));
   console.log('Restored ' + known.size + ' players, ' + [...links.values()].reduce((a, v) => a + v.size, 0) / 2 + ' friendships, ' + pend.size + ' waiting requests, from ' + LINKS_FILE);
 } catch (e) {}
@@ -954,12 +973,12 @@ wss.on('connection', (ws, req) => {
         if (!p.pub) { send(p, { t: 'jno', why: 'nodev' }); return; }
         const key = privKey(p.pub), lv = m.host.m | 0;
         const hr0 = rooms.get(key);
-        if (hr0 && hr0.priv && hr0.priv.away && hr0.priv.hostPub === p.pub) { hr0.priv.owner = p.id; hr0.priv.away = 0; hr0.priv.back = 1; hr0.botsOn = !!m.host.bots; hr0.noCheats = !!m.host.nc; room = hr0; p.room = room; fr = { full: [] }; broadcast(room, { t: 'hostback', name: p.name }); }   // the host is back after their connection dropped: their world was kept open for everyone in it
+        if (hr0 && hr0.priv && hr0.priv.away && hr0.priv.hostPub === p.pub) { hr0.priv.owner = p.id; hr0.priv.away = 0; hr0.priv.back = 1; hr0.botsOn = !!m.host.bots; hr0.noCheats = !!m.host.nc; hr0.unl = !!m.host.ul; room = hr0; p.room = room; fr = { full: [] }; broadcast(room, { t: 'hostback', name: p.name }); }   // the host is back after their connection dropped: their world was kept open for everyone in it
         else if (hr0) { send(p, { t: 'jno', why: 'busy' }); return; }
         else {
         if (privFull()) { send(p, { t: 'jno', why: 'load' }); return; }   // (too many private games for this server to run well: the public world and offline games are still there)
         const props = [], gates = [], misc = [], cps = [], dels = [];   // (what the host built arrives right after, in small pieces)
-        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((genMap(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), botsOn: !!m.host.bots, noCheats: !!m.host.nc, priv: { hostTag: p.otag >>> 0, at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
+        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((genMap(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), botsOn: !!m.host.bots, noCheats: !!m.host.nc, unl: !!m.host.ul, priv: { hostTag: p.otag >>> 0, at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] };
         }
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
@@ -988,7 +1007,7 @@ wss.on('connection', (ws, req) => {
         send(p, {
           t: 'welcome', taken: takenList(room), id: p.id, room: room.id, mine: myFin && !room.priv ? myFin : 0, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), fk: room.fk | 0, next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
-          build: room.priv ? undefined : bstate(room), priv: room.priv ? { back: room.priv.owner === p.id && room.priv.back ? 1 : 0, host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, ow: owBook(room.priv), hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub, nc: room.noCheats ? 1 : 0 } : undefined,
+          build: room.priv ? undefined : bstate(room), priv: room.priv ? { back: room.priv.owner === p.id && room.priv.back ? 1 : 0, host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, ow: owBook(room.priv), hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub, nc: room.noCheats ? 1 : 0, ul: room.unl ? 1 : 0 } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, ot: o.otag || 0, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, crown: o.fin === rslot(room) ? Math.max(1, room.finishers.indexOf(o.id) + 1) : 0 }))   // (crown: what place they finished in)
         });
         p.dver = null; if (room.world) { send(p, doorPacket(room)); plankSend(room, room.world.see, p); }
@@ -1340,7 +1359,7 @@ wss.on('connection', (ws, req) => {
       const k1 = unb64u(m.sub.keys.p256dh || ''), k2 = unb64u(m.sub.keys.auth || ''); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16) return;
       if (!pushSubs.has(p.pub) && pushSubs.size >= 8000) return;
       const pr = m.prefs && typeof m.prefs === 'object' ? m.prefs : {};
-      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, d: pr.d === 0 ? 0 : 1, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], mm: Array.isArray(pr.mm) ? pr.mm.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(pr.q), t: Date.now() };
+      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, e: pr.e ? 1 : 0, d: pr.d === 0 ? 0 : 1, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], mm: Array.isArray(pr.mm) ? pr.mm.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(pr.q), t: Date.now() };
       pushSubs.set(p.pub, ent); linksDirty = true;
       for (const f of linkSet(p.pub)) { const q = byPub.get(f); if (q && live(q)) send(q, { t: 'fsub', pub: p.pub, s: ent }); }   // (your friends' devices keep where to reach yours: if this server ever forgets, they tell it again)
       send(p, { t: 'fsubs', l: [...linkSet(p.pub)].filter(f => pushSubs.has(f)).slice(0, 64).map(f => [f, pushSubs.get(f)]) });
@@ -1380,9 +1399,9 @@ wss.on('connection', (ws, req) => {
     } else if (m.t === 'bots') {   // the host switches the bots in their private world on or off
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id) return;
       r.botsOn = !!m.on;
-    } else if (m.t === 'rules') {   // the host of a private world turns "no cheats" on or off: everyone there is told
+    } else if (m.t === 'rules') {   // the host of a private world changes its game settings ("no cheats", unlimited coins): everyone there is told
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id) return;
-      r.noCheats = !!m.nc; broadcast(r, { t: 'rules', nc: r.noCheats ? 1 : 0 });
+      if (m.nc !== undefined) r.noCheats = !!m.nc; if (m.ul !== undefined) r.unl = !!m.ul; broadcast(r, { t: 'rules', nc: r.noCheats ? 1 : 0, ul: r.unl ? 1 : 0 });
     } else if (m.t === 'gift') {   // coins and diamonds from one player to another in the same world (the giver's device takes them off first)
       const gid = typeof m.gid === 'string' && /^[a-z0-9]{6,16}$/.test(m.gid) ? m.gid : '', c = Math.max(0, Math.min(1e6, Math.floor(+m.c || 0))), g = Math.max(0, Math.min(1e4, Math.floor(+m.g || 0)));   // (never more than a million coins and ten thousand diamonds at once)
       const seen = p.pub ? (giftSeen.get(p.pub) || (giftSeen.set(p.pub, []), giftSeen.get(p.pub))) : [];
@@ -1404,14 +1423,14 @@ wss.on('connection', (ws, req) => {
       rooms.forEach(r => { if (r.priv && r !== p.room && r.priv.invited && r.priv.invited.has(p.pub) && (r.priv.keep.has(p.pub) || r.priv.once.has(p.pub) || !(r.priv.seen && r.priv.seen.has(p.pub))) && !(r.priv.seen && r.priv.seen.has(p.pub))) send(p, { t: 'inv', pub: r.priv.hostPub, name: (byPub.get(r.priv.hostPub) || {}).name || '', idx: r.priv.idx }); });   // (an invitation that never showed: it comes again)
       pend.forEach((v, k) => { if (k.slice(17) !== p.pub || Date.now() - v.t > REQ_TTL) return; const from = k.slice(0, 16), pi = peerInfo(from); send(p, { t: 'treq', pub: from, code: pi.code, name: pi.name, color: pi.color, color2: pi.color2, pat: pi.pat, again: 1 }); });
     } else if (m.t === 'text') {   // a chat message: anything up to 200 characters, to everyone in your world
-      const r = p.room; if (!r || typeof m.s !== 'string') return; const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
+      const r = p.room; if (!r || typeof m.s !== 'string') return; const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200).replace(/[\uD800-\uDBFF]$/, ''); if (!txt) return;   // (200 characters at most, and never half an emoji)
       { const why = P.piiCheck(txt); if (why) { send(p, { t: 'pii', why }); return; } }   // (phone numbers, emails, addresses, links and other apps never go out)
       const now = Date.now(); p.txT = (p.txT || []).filter(t => now - t < 10000); if (p.txT.length >= 6) { send(p, { t: 'texthold' }); return; } p.txT.push(now);   // (no more than 6 messages in 10 seconds)
       bcastFrom(r, p, { t: 'text', id: p.id, pub: p.pub, name: p.name, color: p.color, s: txt, at: now });
       if (r.bots && r.bots.length) { const k = P.askKind('text', txt); if (k) roomCtx(r).asks.push({ kind: k, x: p.x, y: p.y, id: p.id }); }
     } else if (m.t === 'dm') {   // a message to one friend, from anywhere (a game or the main menu): only to a friend, never to or from someone blocked, and never with personal info
       if (!p.pub || !live(p) || typeof m.to !== 'string' || !PUB.test(m.to) || typeof m.s !== 'string') return;
-      const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); if (!txt) return;
+      const txt = m.s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200).replace(/[\uD800-\uDBFF]$/, ''); if (!txt) return;   // (200 characters at most, and never half an emoji)
       const mid = typeof m.id === 'string' && /^[a-z0-9]{6,16}$/.test(m.id) ? m.id : '', ids = mid ? (dmSeen.get(p.pub) || (dmSeen.set(p.pub, []), dmSeen.get(p.pub))) : null;
       if (mid && ids.includes(mid)) { send(p, { t: 'dmok', to: m.to, s: '', at: Date.now(), c: m.c | 0, id: mid, q: 0 }); return; }   // (sent again after a lost answer: it already went once)
       const isFr = (a, b) => linkSet(a).has(b) || (claimsOf.get(a) || new Set()).has(b);   // (friends by the server's list, or by yours while it learns them back after a restart)
