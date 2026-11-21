@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 209;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 210;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -88,17 +88,26 @@ const PROP_SHARE = Math.floor(1600 / MAX_PLAYERS);   // crates, balls and spring
 const PAID = CPU_LIMIT > 0.15, HOURS_LIMIT = +process.env.INSTANCE_HOURS || (PAID ? Infinity : 750);   // (a paid server has no monthly hour limit)
 const MEM_LIMIT = (() => { if (+process.env.MEM_MB) return +process.env.MEM_MB * 1048576; const v = +cgroupNum(['/sys/fs/cgroup/memory.max', '/sys/fs/cgroup/memory/memory.limit_in_bytes']); if (v > 0 && v < 1e15) return v; return process.env.RENDER ? 512 * 1048576 : require('os').totalmem(); })();
 const monthKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 7), dayKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 10);
-let usage = { m: monthKey(), out: 0, in: 0, sec: 0, day: dayKey(), dayOut: 0, pkCpu: 0, pkCpuAt: 0, pkMem: 0, pkPl: 0, pkPlAt: 0 };   // (pk: this month's highest processor use, memory and players)
+let usage = { m: monthKey(), out: 0, in: 0, sec: 0, day: dayKey(), dayOut: 0, pkCpu: 0, pkCpuAt: 0, pkMem: 0, pkPl: 0, pkPlAt: 0, pkRm: 0, pkRmAt: 0, pkMv: 0, pkMvAt: 0, pkTh: 0, pkOut: 0, pkOutAt: 0, pkCtx: null, days: [] };   // (pk: this month's highest processor use, memory, players, worlds in use, things moving and data going out; pkCtx: what was going on at the busiest moment; days: each day's highs)
 try { const u = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8')).usage; if (u && u.m === usage.m) usage = Object.assign(usage, u); } catch (e) {}
-function useRoll() { const m = monthKey(), d = dayKey(); if (usage.m !== m) usage = { m, out: 0, in: 0, sec: 0, day: d, dayOut: 0, pkCpu: 0, pkCpuAt: 0, pkMem: 0, pkPl: 0, pkPlAt: 0 }; if (usage.day !== d) { usage.day = d; usage.dayOut = 0; } }
+function useRoll() { const m = monthKey(), d = dayKey(); if (usage.m !== m) usage = { m, out: 0, in: 0, sec: 0, day: d, dayOut: 0, pkCpu: 0, pkCpuAt: 0, pkMem: 0, pkPl: 0, pkPlAt: 0, pkRm: 0, pkRmAt: 0, pkMv: 0, pkMvAt: 0, pkTh: 0, pkOut: 0, pkOutAt: 0, pkCtx: null, days: [] }; if (usage.day !== d) { usage.day = d; usage.dayOut = 0; } }
 function useOut(n) { usage.out += n; usage.dayOut += n; netNow.out += n; }
 function useIn(n) { usage.in += n; netNow.in += n; }
 function useMerge(u) {   // a player's device remembers the counts from before the server restarted
   if (!u || u.m !== usage.m || typeof u.out !== 'number') return;
   usage.out = Math.max(usage.out, Math.min(u.out, 1e13)); usage.in = Math.max(usage.in, Math.min(+u.in || 0, 1e13)); usage.sec = Math.max(usage.sec, Math.min(+u.sec || 0, 31 * 86400));
   if (u.day === usage.day) usage.dayOut = Math.max(usage.dayOut, Math.min(+u.dayOut || 0, 1e13));
-  if (+u.pkCpu > usage.pkCpu && +u.pkCpu < 5) { usage.pkCpu = +u.pkCpu; usage.pkCpuAt = +u.pkCpuAt || 0; } if (+u.pkMem > usage.pkMem && +u.pkMem < 1e12) usage.pkMem = +u.pkMem; if ((u.pkPl | 0) > usage.pkPl && (u.pkPl | 0) < 10000) { usage.pkPl = u.pkPl | 0; usage.pkPlAt = +u.pkPlAt || 0; }
+  if (+u.pkCpu > usage.pkCpu && +u.pkCpu < 5) { usage.pkCpu = +u.pkCpu; usage.pkCpuAt = +u.pkCpuAt || 0; usage.pkCtx = cleanCtx(u.pkCtx); }
+  for (const [k, a, mx] of [['pkRm', 'pkRmAt', 1e4], ['pkMv', 'pkMvAt', 1e6], ['pkOut', 'pkOutAt', 1e10], ['pkTh', '', 1e6]]) if (+u[k] > (usage[k] || 0) && +u[k] < mx) { usage[k] = +u[k]; if (a) usage[a] = +u[a] || 0; }
+  if (Array.isArray(u.days)) for (const e of u.days.slice(-40)) { const q = cleanDay(e); if (!q) continue; const i = usage.days.findIndex(x => x[0] === q[0]); if (i < 0) usage.days.push(q); else for (let k = 1; k < 5; k++) usage.days[i][k] = Math.max(usage.days[i][k], q[k]); }
+  usage.days.sort((a, b) => a[0] < b[0] ? -1 : 1); if (usage.days.length > 31) usage.days.splice(0, usage.days.length - 31); if (+u.pkMem > usage.pkMem && +u.pkMem < 1e12) usage.pkMem = +u.pkMem; if ((u.pkPl | 0) > usage.pkPl && (u.pkPl | 0) < 10000) { usage.pkPl = u.pkPl | 0; usage.pkPlAt = +u.pkPlAt || 0; }
 }
+const cleanCtx = c => c && typeof c === 'object' ? { pl: Math.max(0, Math.min(1e4, c.pl | 0)), rm: Math.max(0, Math.min(1e4, c.rm | 0)), mv: Math.max(0, Math.min(1e6, c.mv | 0)), th: Math.max(0, Math.min(1e6, c.th | 0)), out: Math.max(0, Math.min(1e10, +c.out || 0)), lv: Math.max(0, Math.min(3, c.lv | 0)), ev: Array.isArray(c.ev) ? c.ev.filter(x => typeof x === 'string').map(x => x.slice(0, 40)).slice(0, 4) : [] } : null;
+const cleanDay = e => Array.isArray(e) && /^\d{4}-\d{2}-\d{2}$/.test(e[0]) && e[0].slice(0, 7) === usage.m ? [e[0], Math.max(0, Math.min(5, +e[1] || 0)), Math.max(0, Math.min(1e4, e[2] | 0)), Math.max(0, Math.min(1e6, e[3] | 0)), Math.max(0, Math.min(1e12, +e[4] || 0))] : null;   // [day, highest processor use, most players, most things moving, data sent]
+/* What happened that takes the server a lot of work at once (a new map made, the worlds written down, players arriving), so the busiest moment can say why */
+const busyEv = []; function noteEv(k) { busyEv.push([Date.now(), k]); if (busyEv.length > 60) busyEv.shift(); }
+const ctxWin = [];   // (the last 10 seconds: players, worlds in use, things moving, things in the worlds, data out, to go with the 10-second processor figure)
+function dayRec() { const d = usage.day; let e = usage.days[usage.days.length - 1]; if (!e || e[0] !== d) { e = [d, 0, 0, 0, 0]; usage.days.push(e); if (usage.days.length > 31) usage.days.shift(); } return e; }
 const netNow = { out: 0, in: 0, t: Date.now(), rOut: 0, rIn: 0 };
 const health = { tickMs: [], late: [], lastTick: Date.now(), cpu: 0, cpuNow: 0, cpuHist: [], cpuT: process.cpuUsage(), cpuAt: Date.now(), level: 0, levelAt: 0, awake: 0, physMs: 0, physAvg: 0 };
 /* How hard it works: measured every second, but judged over the last 10 seconds. A single second can jump high and fall straight back (a new map being made,
@@ -113,7 +122,16 @@ setInterval(() => {
   health.cpu = health.cpuHist.reduce((a, b) => a + b, 0) / health.cpuHist.length;
   health.physAvg += (health.physMs / Math.max(0.2, dt) / 1000 - health.physAvg) * 0.3; health.physMs = 0;
   const lateP = pct(health.late, 0.95), load = health.cpu / CPU_LIMIT, rss = process.memoryUsage().rss;
-  if (health.cpuHist.length >= 10 && load > usage.pkCpu && process.uptime() > 30) { usage.pkCpu = +load.toFixed(3); usage.pkCpuAt = t; }   // (this month's highest, over 10 seconds; not counting the first half minute after a start, which is the engine warming up)
+  { let rm = 0, mv = 0, th = 0; for (const r of rooms.values()) { if (r.players.size) rm++; if (r.world) { mv += r.world.nAct || 0; th += r.world.dyn.length; } }   // (how busy it is right now, every second)
+    ctxWin.push({ pl: online, rm, mv, th, out: netNow.rOut }); if (ctxWin.length > 10) ctxWin.shift();
+    if (rm > (usage.pkRm || 0)) { usage.pkRm = rm; usage.pkRmAt = t; } if (mv > (usage.pkMv || 0)) { usage.pkMv = mv; usage.pkMvAt = t; } if (th > (usage.pkTh || 0)) usage.pkTh = th; if (netNow.rOut > (usage.pkOut || 0) && process.uptime() > 30) { usage.pkOut = Math.round(netNow.rOut); usage.pkOutAt = t; }
+    const e = dayRec(); if (online > e[2]) e[2] = online; if (mv > e[3]) e[3] = mv; e[4] = usage.dayOut;
+    if (health.cpuHist.length >= 10 && process.uptime() > 30 && load > e[1]) e[1] = +load.toFixed(3); }
+  if (health.cpuHist.length >= 10 && load > usage.pkCpu && process.uptime() > 30) {   // (this month's highest, over 10 seconds; not counting the first half minute after a start, which is the engine warming up)
+    usage.pkCpu = +load.toFixed(3); usage.pkCpuAt = t;
+    const mx = k => ctxWin.reduce((a, c) => Math.max(a, c[k]), 0), evs = [...new Set(busyEv.filter(q => t - q[0] < 12000).map(q => q[1]))];
+    usage.pkCtx = { pl: mx('pl'), rm: mx('rm'), mv: mx('mv'), th: mx('th'), out: Math.round(mx('out')), lv: health.level, ev: evs.slice(0, 4) };   // (what was going on at that moment)
+  }
   if (rss > usage.pkMem) usage.pkMem = rss;
   { const n = health.cpuHist.length, l3 = health.cpuHist.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, n || 1) / CPU_LIMIT, lt = health.late.slice(-60), lateNow = lt.length ? Math.max(...lt) : 0;
     if ((CPU_KNOWN && l3 > 0.85) || lateNow > 25) phys.bud = Math.max(30, phys.bud * 0.7);
@@ -142,7 +160,7 @@ function statusNow() {
     bandwidth: { used: usage.out, limit: bwLimit, inUsed: usage.in, today: usage.dayOut, perDayLeft: Math.max(0, (bwLimit - usage.out) / daysLeft), perDayAvg: perDay, lastsDays: +lasts.toFixed(1), outPerSec: Math.round(netNow.rOut), inPerSec: Math.round(netNow.rIn) },
     hours: { used: +(usage.sec / 3600).toFixed(2), limit: HOURS_LIMIT, upSec: Math.round(process.uptime()) },
     cpu: { used: +health.cpu.toFixed(4), now: +health.cpuNow.toFixed(4), limit: CPU_LIMIT, known: CPU_KNOWN }, mem: { used: rss, limit: MEM_LIMIT },
-    peaks: { players: usage.pkPl, playersAt: usage.pkPlAt, cpu: usage.pkCpu, cpuAt: usage.pkCpuAt, mem: Math.max(usage.pkMem, rss) }, record: peak,
+    peaks: { players: usage.pkPl, playersAt: usage.pkPlAt, cpu: usage.pkCpu, cpuAt: usage.pkCpuAt, mem: Math.max(usage.pkMem, rss), worlds: usage.pkRm || 0, worldsAt: usage.pkRmAt || 0, moving: usage.pkMv || 0, movingAt: usage.pkMvAt || 0, things: usage.pkTh || 0, outPerSec: usage.pkOut || 0, outAt: usage.pkOutAt || 0, ctx: usage.pkCtx || null }, days: usage.days || [], record: peak,
     capacity: { total: MAX_TOTAL, perWorld: MAX_PLAYERS, fullQuality: Math.max(1, Math.round(CPU_EFF * 40)) },
     tick: { ms: +tickMs.toFixed(2), budget: TICK_MS, lateMs: +lateP.toFixed(1), step: SIMDT > 0.01 ? 60 : 120 },
     players: online, maxPlayers: MAX_TOTAL, perWorld: MAX_PLAYERS, physBudget: physBudget(), physCostMs: +phys.cost.toFixed(4), rooms: [...rooms.values()].filter(r => r.players.size).length, things, moving: awake };
@@ -235,30 +253,31 @@ function quietNow(q) {   // is it within their quiet hours, where they are?
 }
 function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map, 'e' nobody playing (dev mode). Only to devices that are not connected right now.
   const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !(kind === 'd' ? sub.d !== 0 : sub[kind]) || (live(here) && !here.hidden) || (from && kind !== 'd' && sub.mu && sub.mu.indexOf(from) >= 0) || (from && kind === 'd' && sub.mm && sub.mm.indexOf(from) >= 0) || quietNow(sub.q)) return;
-  const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : kind === 'd' ? 60000 : 30000; if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
+  const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : kind === 'd' ? 60000 : kind === 'e' ? 0 : 30000;   // ('e', nobody playing: its own rule decides, once each time everyone has left) if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
   if (pushLast.size > 4000) { for (const [kk, v] of pushLast) if (t - v > 3600000) pushLast.delete(kk); }
   sendPush(pub, { title: String(n[0]).slice(0, 60), body: String(n[1]).slice(0, 100), tag });
 }
 
-/* "Nobody is playing" (a notification the game's maker turns on in dev mode): once every world has been empty for 2 minutes after someone played, they are
-   told, so they can update the game without throwing anyone out. Their own game does not count. At most every 20 minutes */
-const EMPTY_FOR = +process.env.EMPTY_FOR_MS || 120000, EMPTY_GAP = +process.env.EMPTY_GAP_MS || 20 * 60000, emptyWatch = new Map();   // pub -> { armed, since, last }
+/* "Nobody is playing" (a notification the game's maker turns on in dev mode): when the last player leaves every world, they are told once. Not again until
+   somebody comes into a world and everyone has left again. Their own game does not count. (It waits a few seconds first, so a player whose connection
+   blinks, or a game that restarts, is not taken for everyone leaving) */
+const EMPTY_FOR = +process.env.EMPTY_FOR_MS || 15000, emptyWatch = new Map();   // pub -> { armed, since }
 function emptyTick() {
   const now = Date.now();
-  for (const k of emptyWatch.keys()) { const s = pushSubs.get(k); if (!s || !s.e) emptyWatch.delete(k); }
-  pushSubs.forEach((sub, pub) => {
-    if (!sub.e) return;
-    let w = emptyWatch.get(pub); if (!w) { w = { armed: false, since: 0, last: 0 }; emptyWatch.set(pub, w); }
+  const want = new Set(); pushSubs.forEach((sub, pub) => { if (sub.e) want.add(pub); }); for (const [pub, q] of byPub) if (q.devEmpty && live(q)) want.add(pub);   // (asked for it: with notifications, or while the game is open)
+  for (const k of emptyWatch.keys()) if (!want.has(k)) emptyWatch.delete(k);
+  want.forEach(pub => {
+    let w = emptyWatch.get(pub); if (!w) { w = { armed: false, since: 0 }; emptyWatch.set(pub, w); }
     const me = byPub.get(pub), others = Math.max(0, online - (me && me.room ? 1 : 0));
-    if (others > 0) { w.armed = true; w.since = 0; return; }
+    if (others > 0) { w.armed = true; w.since = 0; return; }   // somebody is playing: the next time everyone has left, say so
     if (!w.armed) return; if (!w.since) w.since = now;
-    if (now - w.since < EMPTY_FOR || now - w.last < EMPTY_GAP) return;
-    w.armed = false; w.since = 0; w.last = now;
+    if (now - w.since < EMPTY_FOR) return;
+    w.armed = false; w.since = 0;   // (said once: not again until somebody plays and leaves again)
     if (live(me) && !me.hidden) send(me, { t: 'devempty' });   // (looking at the game: it says so there)
-    else pushTo(pub, 'e', ['Nobody is playing', 'Every world is empty: a good time to update the game'], 'empty');
+    else if (pushSubs.has(pub)) pushTo(pub, 'e', ['Nobody is playing', 'Every world is empty: a good time to update the game'], 'empty');
   });
 }
-setInterval(() => { try { emptyTick(); } catch (e) {} }, +process.env.EMPTY_TICK_MS || 15000).unref();
+setInterval(() => { try { emptyTick(); } catch (e) {} }, +process.env.EMPTY_TICK_MS || 3000).unref();
 try {
   const o = JSON.parse(fs.readFileSync(LINKS_FILE, 'utf8'));
   for (const k in (o.links || {})) if (PUB.test(k)) links.set(k, new Set((o.links[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));
@@ -553,7 +572,7 @@ const mapMemo = new Map();   // maps made here and kept: making one is the singl
 function genMap(i) {
   i = ((i | 0) % maps.count + maps.count) % maps.count;
   let m = mapMemo.get(i); if (m) { mapMemo.delete(i); mapMemo.set(i, m); return m; }
-  m = maps.generate(i); mapMemo.set(i, m);
+  m = maps.generate(i); mapMemo.set(i, m); noteEv('a new map was made');
   const keep = curSlot % maps.count; for (const k of mapMemo.keys()) { if (mapMemo.size <= 5) break; if (k !== keep) mapMemo.delete(k); }   // (the oldest go first, never the public one)
   return m;
 }
@@ -659,7 +678,8 @@ function snapRoom(r) {
 const wkey = id => (curSlot % maps.count) + ':' + id;   // a public world is remembered by its map and its room, never by when it was played
 const worldStr = new Map();   // each remembered world, already written out as text: only the worlds people are in are written out again
 let worldFileStr = '';
-function keepWorlds(sync) {
+function keepWorlds(sync) { const t0 = performance.now(); try { keepWorlds0(sync); } finally { if (performance.now() - t0 > 15) noteEv('the worlds were saved'); } }   // (noted only when it took a while)
+function keepWorlds0(sync) {
   for (const [id, r] of rooms) if (!r.priv && (r.world || r.snapDyn !== undefined || r.build)) {
     const k = wkey(id), sn = snapRoom(r), t = JSON.stringify(sn); savedWorlds.set(k, sn);
     if (worldStr.get(k) !== t) { worldStr.set(k, t); worldsDirty = true; }   // (nothing moved and nothing was built: nothing to write)
@@ -742,7 +762,7 @@ function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
   phys.busy = Math.max(1, phys.busyN); phys.busyN = 0;
   for (const room of rooms.values()) {
-    const act = [...room.players.values()].filter(p => p.has && !p.dead && !p.hidden && p.ws.readyState === 1);
+    const act = room.actL || (room.actL = []); act.length = 0; for (const p of room.players.values()) { if (p.has && !p.dead && !p.hidden && p.ws.readyState === 1) { act.push(p); p._act = room.tk + 1; } }   // (who is really playing here right now; reused, nothing new made each update)
     if (act.length) room.aloneT = 0; else room.aloneT = (room.aloneT || 0) + dtReal;
     if (!act.length && !(room.world && room.world.nAct > 0 && room.aloneT < 30)) continue;   // (with nobody there, the world still runs until everything that was moving has come to rest, and never more than 30 seconds)
     const w = roomWorld(room), slot = rslot(room) & 0xFFFF;
@@ -750,7 +770,7 @@ function simTick() {
     room.acc += dtReal;
     let n = 0; while (room.acc >= SIMDT && n < 12) { room.acc -= SIMDT; n++; }
     if (room.acc > SIMDT) room.acc = 0;
-    for (const p of room.players.values()) if (!act.includes(p)) p.qx = undefined;
+    for (const p of room.players.values()) if (p._act !== room.tk) p.qx = undefined;
     if (n) {
       roomBots(room, w, dtReal);
       { const fo = [], seen = new Set(), add = (x, y) => { const k = Math.floor(x / 48) * 100003 + Math.floor(y / 48); if (seen.has(k)) return; seen.add(k); fo.push({ x, y }); };   // (where the players are, one point for each little square: a crowd standing together counts once)
@@ -795,11 +815,11 @@ function simTick() {
     if (room.tk % 3 === 0) sendBots(room);
     // what changed, for the dyn things
     const stepped = act.length > 0 && n > 0, tickDt = Math.max(1, n) * SIMDT;   // (only after the world really moved on: a tick with no step in it must not report everything as standing still)
-    const chg = room.chg = room.chg || []; if (chg.length > 1500) { room.fullAll = true; chg.length = 0; }
+    const chg = room.chg = room.chg || []; if (chg.length > 1500) { room.fullAll = true; chg.length = 0; } room.cw = room.cw | 0;
     for (let i = 0; stepped && i < w.dyn.length; i++) {
       const d = w.dyn[i];
       if (d.sleep) {   // (a thing that went to sleep in the middle of a move is still told to everybody once, where it stopped)
-        if (!(d.burn > 0) && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || !d.lst)) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; if (d.ownT > 0) { d.lst = false; d.lvx = d.svx = d.vx; d.lvy = d.svy = d.vy; } else { d.lst = true; d.lvx = d.lvy = d.svx = d.svy = 0; } d.px = undefined; }
+        if (!(d.burn > 0) && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || !d.lst)) { d.ver = ++room.verN; if (d._cw !== room.cw) { d._cw = room.cw; chg.push(d); } d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; if (d.ownT > 0) { d.lst = false; d.lvx = d.svx = d.vx; d.lvy = d.svy = d.vy; } else { d.lst = true; d.lvx = d.lvy = d.svx = d.svy = 0; } d.px = undefined; }
         continue;
       }
       const bn = d.burn > 0;
@@ -811,7 +831,7 @@ function simTick() {
       d.sav = Math.abs((d.av || 0) - kr) > 0.5 ? kr : (d.av || 0);
       const still = !bn && ((Math.abs(d.svx) < 25 && Math.abs(d.svy) < 25) || dm < 0.4) && Math.abs(d.sav) < 0.3;
       const mv = !bn && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || still !== d.lst || (!still && (Math.abs(d.svx - d.lvx) + Math.abs(d.svy - d.lvy) > 60 || Math.abs(d.sav - (d.lav || 0)) > 0.5)));
-      if (bn !== d.lb || mv) { d.ver = ++room.verN; chg.push(d); d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; d.lst = still; d.lvx = d.svx; d.lvy = d.svy; d.lav = d.sav; }
+      if (bn !== d.lb || mv) { d.ver = ++room.verN; if (d._cw !== room.cw) { d._cw = room.cw; chg.push(d); } d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = bn; d.lst = still; d.lvx = d.svx; d.lvy = d.svy; d.lav = d.sav; }
     }
     // gates and triggers: tell everybody when any of them changes (and now and then anyway)
     const sig = doorSig(w);
@@ -820,9 +840,10 @@ function simTick() {
     const planks = []; for (const s of w.see) if (Math.abs(s.ang - s.lang) > 0.0004 || room.tk % 300 === 0) { planks.push(s); s.lang = s.ang; }
     if (planks.length) plankSend(room, planks);
     // crates and balls: each player is told about what changed near them
-    const resend = room.tk % 300 === 0;
+    const resend = room.tk % 300 === 0, sendNow = room.tk % sendEvery() === 0 || resend;   // (what changed is gathered up between the updates that go out: a player who is all set is only looked at when one goes to them)
     for (const p of room.players.values()) {
       if (!p.has || p.ws.readyState !== 1) continue;
+      if (!sendNow && p.looked0 && p.dver && !p.readyDue) continue;
       if (!p.dver) plankSend(room, w.see, p);   // (someone who has just arrived is told how every plank lies, along with everything else)
       if (!p.dver) { p.looked0 = false; if (p.pend) p.pend.clear(); }   // (a new look: they are told once it has all been sent)
       if (!p.dver || resend) { p.dver = new Map(); p.more = 1; }
@@ -833,13 +854,13 @@ function simTick() {
         for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (p.dver.get(d.uid) === d.ver) continue; const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y; if (p.looked0 && (Math.abs(x - p.x) > 1900 || Math.abs(y - p.y) > 1500)) continue; pend.add(d); }   // (someone who has just arrived is told where everything in the whole world is, once: their map shows every crate and ball that was ever built, where it really lies, not only what is near them. After that they hear about what is around them)
       } else for (let i = 0; i < chg.length; i++) { const d = chg[i]; if (p.dver.get(d.uid) === d.ver) continue; if (!(d.burn > 0) && p.dver.has(d.uid) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue; pend.add(d); }   // (what is far away is told only now and then, enough for the map: every few seconds at most)
       if (!pend.size) { if (!p.looked0 && full) { p.looked0 = true; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); } continue; }
-      if (!p.looked0 ? false : room.tk % sendEvery()) continue;   // (30 times a second, which each device fills in smoothly; a server that cannot keep up halves that. A player who has just arrived gets everything as fast as it goes)
+      if (!p.looked0 ? false : !sendNow) continue;   // (30 times a second, which each device fills in smoothly; a server that cannot keep up halves that. A player who has just arrived gets everything as fast as it goes)
       // each moment only so much is sent (a slow connection is never flooded): what has waited longest and what is closest goes first, so nothing is ever left waiting while other things are told again and again. In between, each device carries everything on along its path, falling as it falls
       const cap = !p.looked0 || pend.size > 200 ? 200 : SEND_CAP; let out;
       if (pend.size <= cap) { out = [...pend]; pend.clear(); }
       else {
         const L = []; for (const d of pend) { const dx = Math.abs(d.x - p.x), dy = Math.abs(d.y - p.y), near = dx < 450 && dy < 350 ? 4 : dx < 900 && dy < 700 ? 2 : 1; const ls = lastS.get(d); d._sc = (ls === undefined ? 1e6 : room.tk - ls) * near; L.push(d); }
-        L.sort((a, b) => b._sc - a._sc); out = L.slice(0, cap); for (const d of out) pend.delete(d);
+        out = topScored(L, cap); for (const d of out) pend.delete(d);
       }
       if (out.length >= 90) p.more = 0;   // (a big first look: the device knows more is on its way while it gets 90 or more at a time)
       if (!p.looked0 && !pend.size) { p.looked0 = true; p.readyDue = true; }   // (everything around them has now been sent: they may come in)
@@ -857,8 +878,14 @@ function simTick() {
       p.ws.send(buf, { binary: true });
       if (p.readyDue) { p.readyDue = false; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); }   // (planks told once more right before, so nothing is shown at an old angle)   // (the whole world around them has been sent: the loading screen can go)
     }
-    chg.length = 0; room.fullAll = false;
+    if (sendNow) { chg.length = 0; room.fullAll = false; room.cw = (room.cw | 0) + 1; }   // (between updates that go out, what changed keeps gathering)
   }
+}
+function topScored(L, cap) {   // the cap highest scores, highest first (picked out without sorting the whole list: hundreds can be waiting, a few dozen go)
+  if (L.length > cap * 2) { let lo = 0, hi = L.length - 1; const k = cap - 1;
+    while (lo < hi) { const pv = L[(lo + hi) >> 1]._sc; let i = lo, j = hi; while (i <= j) { while (L[i]._sc > pv) i++; while (L[j]._sc < pv) j--; if (i <= j) { const t = L[i]; L[i] = L[j]; L[j] = t; i++; j--; } } if (k <= j) hi = j; else if (k >= i) lo = i; else break; }
+    L.length = cap; }
+  L.sort((a, b) => b._sc - a._sc); return L.length > cap ? L.slice(0, cap) : L;
 }
 
 const okProp = q => (Array.isArray(q) && q.length === 3 && (q[0] | 0) >= 0 && (q[0] | 0) <= 7 && Number.isFinite(q[1]) && Number.isFinite(q[2]) ? [q[0] | 0, Math.round(q[1]), Math.round(q[2])] : null);
@@ -1001,7 +1028,7 @@ wss.on('connection', (ws, req) => {
         room.players.set(p.id, p);
         const myFin = p.pub && room.finPub && room.finPub.get(p.pub);   // (finished this round already, then left and came back: the crown and the place are still theirs)
         if (myFin && !room.priv) { p.fin = rslot(room); room.finishers[myFin - 1] = p.id; }
-        online++; statsDirty = true;
+        online++; statsDirty = true; noteEv('players arriving');
         if (online > peak) { peak = online; peakDirty = true; }
         if (online > usage.pkPl) { usage.pkPl = online; usage.pkPlAt = Date.now(); }
         send(p, {
@@ -1372,6 +1399,8 @@ wss.on('connection', (ws, req) => {
         const k1 = unb64u(String(s.p || '')), k2 = unb64u(String(s.a || '')); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16 || pushSubs.size >= 8000) continue;
         pushSubs.set(e[0], { ep: s.ep, p: b64u(k1), a: b64u(k2), f: s.f ? 1 : 0, r: s.r ? 1 : 0, i: s.i ? 1 : 0, m: s.m ? 1 : 0, mu: Array.isArray(s.mu) ? s.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(s.q), t: Date.now() }); linksDirty = true;
       }
+    } else if (m.t === 'devw') {   // dev mode: this game wants to hear when nobody is playing, while it is open
+      p.devEmpty = !!m.on;
     } else if (m.t === 'vis') {   // this page is in the background (or back): while it is, the server sends notifications as pushes
       p.hidden = m.h ? 1 : 0;
     } else if (m.t === 'punsub') {
@@ -1566,7 +1595,8 @@ function relayTick() {   // (runs right after each world update, in the same pac
     for (const p of list) { p.moved = false; if (p.hist) p.hist.length = 0; }
   }
 }
-setInterval(() => { useRoll(); const msg = JSON.stringify({ t: 'use', u: usage }); for (const r of rooms.values()) for (const p of r.players.values()) if (p.ws.readyState === 1) p.ws.send(msg); }, 30000).unref();   // (every player's device keeps a copy of the month's counts)
+let useRot = 0;
+setInterval(() => { useRoll(); const u = Object.assign({}, usage); delete u.days; const msg = JSON.stringify({ t: 'use', u }), all = []; for (const r of rooms.values()) for (const p of r.players.values()) if (p.ws.readyState === 1) all.push(p); if (!all.length) return; for (let k = 0; k < Math.min(4, all.length); k++) all[(useRot + k) % all.length].ws.send(msg); useRot = (useRot + 4) % Math.max(1, all.length); }, 30000).unref();   // (the month's counts go to a few players each time, in turn: their devices hand them back if the server restarts. Each day's highs are kept by the dev's device, from the status page)   // (every player's device keeps a copy of the month's counts)
 let lastTickAt = Date.now();
 setInterval(() => { const t0 = Date.now(), late = Math.max(0, t0 - lastTickAt - TICK_MS); lastTickAt = t0; const h0 = process.hrtime.bigint();
   corkAll(true); try { simTick(); } catch (e) { console.log('sim error', e && e.stack); } try { relayTick(); } catch (e) { console.log('relay error', e && e.stack); } corkAll(false);

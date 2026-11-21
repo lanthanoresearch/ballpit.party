@@ -684,7 +684,7 @@
   #cfText.pre{white-space:pre-line}
   .cfmid{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px}
   #srvStat{z-index:31;background:rgba(8,6,16,.8)}
-  .sscard{width:min(480px,100%);text-align:left;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+  .sscard{width:min(480px,100%);text-align:left;max-height:calc(100dvh - 24px);overflow:hidden;display:flex;flex-direction:column}.sscard>.chead{flex:none}.ssscroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}   /* (the title stays put; only the figures scroll under it) */
   .ssrate{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:2px solid var(--line);border-radius:var(--wob);margin:4px 0 10px;background:#262040}
   .ssrate b{font-size:24px;font-weight:normal;letter-spacing:.5px}.ssrate span{font-size:15px;opacity:.85}
   .ssrate.r-good{border-color:var(--good)}.ssrate.r-good b{color:var(--good)}
@@ -750,6 +750,10 @@
   .sscap{border:2px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 10px;background:#14111c}.sscap b{display:block;font-size:20px;font-weight:400}.sscap span{font-size:13px;opacity:.75;line-height:1.35}
   .ssgrid small{display:block;font-size:12px;opacity:.6}.ssgrid>div{display:block!important}.ssgrid>div b{display:block;font-size:19px;font-weight:400}.ssfoot{margin:4px 0 0}
   #ssLive{margin-top:8px}
+  .sspeak{margin:10px 0 2px;padding:9px 11px;border-radius:12px;background:rgba(255,210,61,.08);border:1.5px solid rgba(255,210,61,.35);font-size:13px;line-height:1.4}.sspeak b{display:block;font-size:14px;margin-bottom:2px}
+  .ssdays{margin:12px 0 14px;display:flex;flex-direction:column;gap:5px}.ssdays>b{font-size:14px;font-weight:600}
+  .ssday{display:grid;grid-template-columns:52px 1fr 38px;grid-template-rows:auto auto;column-gap:8px;align-items:center;font-size:12.5px}.ssday>span{opacity:.8}.ssday>em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}.ssday>small{grid-column:2 / 4;opacity:.6;font-size:11.5px}
+  .ssday .ssbar{display:block;height:8px;margin:0}
   #codeBox{z-index:32;background:rgba(8,6,16,.8)}.codecard{width:min(360px,100%);text-align:left}.codehint{margin:2px 0 8px;font-size:15px;opacity:.85}
   .codebad{color:var(--bad);font-size:14px;margin:6px 0 0}#codeBox .btns{margin-top:12px}
   #stLine{display:flex;flex-wrap:wrap;gap:2px 8px;align-self:flex-start;max-width:100%;padding:2px 7px;font-size:12px;line-height:1.3;color:var(--ink);background:rgba(20,17,30,.62);border-radius:7px;font-variant-numeric:tabular-nums;pointer-events:none;white-space:nowrap}
@@ -830,6 +834,7 @@
   .givecard{gap:10px}.gvrow{display:flex;align-items:center;gap:10px;font-size:17px}.gvrow>span:nth-child(2){flex:1}.gvrow input{width:130px;font:inherit;font-size:17px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;background:#120f1c;color:var(--ink);text-align:right}  .cscard{gap:10px;max-width:560px}.cscard h3 span{color:#ffd23d}.cscard{max-height:calc(100dvh - 24px);display:flex;flex-direction:column}.cslist{display:flex;flex-direction:column;gap:2px;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
   .csrow{display:grid;grid-template-columns:minmax(130px,40%) 1fr;gap:12px;align-items:center;padding:8px 0;border-top:2px solid rgba(255,255,255,.08)}
   .csrow code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:clamp(11px,3.3vw,16px);white-space:nowrap;letter-spacing:-.2px;background:#120f1c;border:2px solid #4b4161;border-radius:10px;padding:6px 4px;text-align:center;color:#7ff0ff;overflow:hidden}
+  .csnotes{margin-top:6px}.cscard .csnotes p{margin:3px 0;font-size:13px;line-height:1.35}
   .csrow b{display:block;font-size:16px;line-height:1.15}.csrow span{font-size:13.5px;opacity:.8;line-height:1.2;display:block}
   #codesModal{z-index:23;background:rgba(10,8,16,.6)}
 #giveModal,#quickModal{z-index:22;background:rgba(10,8,16,.6)}#giveModal .btns{display:flex;gap:10px}#giveModal .btns button{flex:1}
@@ -1000,6 +1005,7 @@
   .gvto{display:flex;align-items:center;justify-content:space-between;gap:8px}.gvto b{font-weight:normal;font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .gvform .gvrow .ic{width:20px;height:20px}.gvform #gvOk{padding:9px 12px;font-size:16px}
   #gvMsg{min-height:18px}#gvMsg.ok{color:#7be0a0}#gvMsg.bad{color:#ffcf8a}
+  .htoast{position:fixed;left:50%;top:calc(66px + env(safe-area-inset-top));transform:translateX(-50%);z-index:26;display:flex;align-items:center;gap:8px;width:max-content;max-width:min(92vw,560px);padding:7px 14px;border-radius:16px;background:#1c1830;color:var(--ink);border:2px solid rgba(125,255,168,.55);box-shadow:0 6px 18px rgba(0,0,0,.35);font:14px/1.3 system-ui,sans-serif;pointer-events:none;animation:cardIn .2s ease-out}.htoast.bad{border-color:#ffb36b}.htoast .ic{width:16px;height:16px;color:#7dffa8;flex:none}.htoast.bad .ic{color:#ffb36b}
   .dmtoast{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top));transform:translateX(-50%);z-index:25;display:flex;align-items:center;gap:8px;max-width:min(92vw,440px);padding:7px 14px 7px 10px;border-radius:999px;border:2px solid #bff0d2;background:#2fa463;color:#fff;font:inherit;font-size:15px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);animation:popin .28s cubic-bezier(.2,1.5,.4,1)}
   .dmtoast .ic{width:18px;height:18px;flex:none}.dmtoast .dmt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dmtoast b{margin-right:6px}
   body.home .dmtoast{top:calc(64px + env(safe-area-inset-top))}
@@ -1031,7 +1037,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 209; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 210; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
@@ -1275,6 +1281,7 @@
   </div>
   </div>
 </div></div>
+<div id="hToast" class="htoast hide" role="status" aria-live="polite"><span data-ic="bolt"></span><span id="hToastT"></span></div>
 <button id="dmToast" class="dmtoast hide" type="button"><span data-ic="chat"></span><span class="dmt"><b id="dmToastN"></b><span id="dmToastT"></span></span></button>
 <div id="nfModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="nfTitle"><div class="card nfcard">
   <div class="chead"><button id="nfBack" class="btn dmback wback hide" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="nfTitle">Choose friends</h3><button id="nfX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
@@ -1323,6 +1330,7 @@
     <button data-tab="online"><span data-ic="globe"></span><span>Mode</span></button>
     <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
     <button data-tab="notify"><span data-ic="bell"></span><span>Notifications</span></button>
+    <button data-tab="dev"><span data-ic="bolt"></span><span>Dev tools</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
   </div>
   <div class="sbody">
@@ -1402,7 +1410,6 @@
       <div class="dep sub" data-dep="tags"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Show my own name</b><small>Your name over your own ball. Others still see it</small></span></span><input type="checkbox" id="setMyName"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label>
       <div class="dep sub" data-dep="mmPlayers"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big player dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigP"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots on the mini-map</b><small>Bots on your screen, as little blips</small></span></span><input type="checkbox" id="setMmBots"><i></i></label>
       <div class="dep sub" data-dep="mmBots"><div><label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Big bot dots</b><small>Easier to spot on both maps</small></span></span><input type="checkbox" id="setMmBigB"><i></i></label></div></div></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="beacon"></span><span><b>Finish beacon</b><small>Every 30 minutes, for 15 seconds, an arrow points to the finish</small></span></span><input type="checkbox" id="setBeacon"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="flag"></span><span><b>Finish arrow in private worlds</b><small>On: an arrow on screen always points to the finish. Off: the finish only shows on the map</small></span></span><input type="checkbox" id="setFinArrow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Warning sign</b><small>A sign pops up over your ball near lava, edges and long falls</small></span></span><input type="checkbox" id="setFallWarn"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="skull"></span><span><b>Remember where I last died</b><small>A little X on the map</small></span></span><input type="checkbox" id="setDeathMark"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="spark"></span><span><b>Visual effects</b><small>Sparkles and bursts</small></span></span><input type="checkbox" id="setFx"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Low-power mode</b><small>30 fps, fewer effects. Good for old phones</small></span></span><input type="checkbox" id="setLow"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="full"></span><span><b>Full screen</b><small>Stays on until you turn it off. If you leave full screen, your next tap puts you back</small></span></span><input type="checkbox" id="setFs"><i></i></label>
-      <div id="devStats" class="hide"><label class="sw2 ic2"><span class="ti"><span data-ic="search"></span><span><b>Show stats<small class="devtag">Dev mode</small></b><small>Tiny numbers in the corner, under the map</small></span></span><input type="checkbox" id="setStats"><i></i></label><div class="dep sub" data-dep="stats"><div><label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Frame rate</b><small>How many pictures a second your screen draws</small></span></span><input type="checkbox" id="setStFps"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Ping</b><small>How long a message takes to the server and back</small></span></span><input type="checkbox" id="setStPing"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="clock"></span><span><b>Buffer</b><small>How far behind other players and things are shown, to keep them smooth</small></span></span><input type="checkbox" id="setStBuf"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Connection speed</b><small>Data coming in and going out each second</small></span></span><input type="checkbox" id="setStData"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="gear"></span><span><b>Server load</b><small>How hard the game server is working</small></span></span><input type="checkbox" id="setStSrv"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Conflicts</b><small>Times your screen and the server did not match</small></span></span><input type="checkbox" id="setStConf"><i></i></label></div></div></div>
       <h4><span data-ic="tag"></span> Name icons</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Robot icon on bots</b><small>Over a bot's ball in the game</small></span></span><input type="checkbox" id="setBotMark"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Person icon on players</b><small>Over every real player's ball in the game</small></span></span><input type="checkbox" id="setPeopleMark"><i></i></label>
@@ -1486,9 +1493,20 @@
         <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Map changes</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
         <label class="sw2 ic2 nqsw"><span class="ti"><span data-ic="clock"></span><span><b>Quiet hours</b><small id="nqSub">A time of day with no notifications, like at night</small></span></span><input type="checkbox" id="setNQuiet"><i></i></label>
         <div class="nqtimes hide" id="nqTimes"><div><span>From</span><button type="button" class="nqbtn" id="nqFrom" aria-label="Quiet hours start"><b>10:00 PM</b><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"/></svg></button></div><div><span>Until</span><button type="button" class="nqbtn" id="nqTo" aria-label="Quiet hours end"><b>7:00 AM</b><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"/></svg></button></div></div>
-        <label class="sw2 ic2 hide" id="ntEmptyRow"><span class="ti"><span data-ic="gear"></span><span><b>Nobody playing<small class="devtag">Dev mode</small></b><small>Every world has been empty for 2 minutes: a good time to update the game</small></span></span><input type="checkbox" id="setNEmpty"><i></i></label>
         <button class="btn full" id="ntTest" type="button"><span data-ic="bell"></span>Send a test notification</button>
       </div>
+    </section>
+    <section class="pane" data-pane="dev">
+      <div class="small dim" style="margin:2px 0 8px">Dev mode is on for this device. Each tool can be turned off here and dev mode stays on. Type the code in a game again to turn dev mode off.</div>
+      <h4><span data-ic="info"></span> Main menu</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="info"></span><span><b>Update button</b><small>The i button on the main menu: versions, updating, and the server's figures</small></span></span><input type="checkbox" id="setDevUpd"><i></i></label>
+      <h4><span data-ic="bolt"></span> Server</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Server health when the game opens</b><small>A short note at the top: how the server is doing now, and how it has been this month</small></span></span><input type="checkbox" id="setDevHealth"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Nobody playing</b><small>When everyone has left every world: a good time to update the game. Once, until someone plays and leaves again. With notifications on, even when the game is closed</small></span></span><input type="checkbox" id="setNEmpty"><i></i></label>
+      <button class="btn full" id="devStatus" type="button"><span data-ic="bolt"></span>Server figures</button>
+      <h4><span data-ic="search"></span> While you play</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Live stats panel</b><small>A panel you can drag anywhere: this device, the connection, the server, and what disagreed</small></span></span><input type="checkbox" id="setDevLive"><i></i></label>
+      <div id="devStats"><label class="sw2 ic2"><span class="ti"><span data-ic="search"></span><span><b>Show stats</b><small>Tiny numbers in the corner, under the map</small></span></span><input type="checkbox" id="setStats"><i></i></label><div class="dep sub" data-dep="stats"><div><label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Frame rate</b><small>How many pictures a second your screen draws</small></span></span><input type="checkbox" id="setStFps"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Ping</b><small>How long a message takes to the server and back</small></span></span><input type="checkbox" id="setStPing"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="clock"></span><span><b>Buffer</b><small>How far behind other players and things are shown, to keep them smooth</small></span></span><input type="checkbox" id="setStBuf"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Connection speed</b><small>Data coming in and going out each second</small></span></span><input type="checkbox" id="setStData"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="gear"></span><span><b>Server load</b><small>How hard the game server is working</small></span></span><input type="checkbox" id="setStSrv"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Conflicts</b><small>Times your screen and the server did not match</small></span></span><input type="checkbox" id="setStConf"><i></i></label></div></div></div>
     </section>
     <section class="pane" data-pane="more">
       <label class="sw2 ic2"><span class="ti"><span data-ic="help"></span><span><b>Show the welcome popup at start</b><small>The how-to-play card</small></span></span><input type="checkbox" id="setIntro"><i></i></label>
@@ -1649,9 +1667,9 @@
 </div></div>
 <div id="codesModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="csTitle"><div class="card cscard">
   <h3 id="csTitle">Secret <span>codes</span></h3>
-  <div class="small dim">Double-tap your coins, type a code, then OK. Every new game starts without cheats.</div>
-  <div class="cslist"><div class="csrow"><code>themaker#1</code><div><b>Unlimited coins and diamonds</b><span>Buy and build anything, as much as you like.</span></div></div><div class="csrow"><code>maker</code><div><b>10,000 coins and 500 diamonds</b><span>Sets your money to that amount (and turns unlimited off).</span></div></div><div class="csrow"><code>zeros</code><div><b>Back to zero</b><span>Coins and diamonds go to 0 (and unlimited turns off).</span></div></div><div class="csrow"><code>unlimitedpower</code><div><b>No building limits</b><span>Build as many of every item as you like. Type it again to turn the limits back on.</span></div></div><div class="csrow"><code>updates</code><div><b>Show the update button</b><span>Puts the update button on the main menu until you close the game. Again to hide it.</span></div></div><div class="csrow"><code>codes</code><div><b>See all the codes</b><span>Shows this list. It changes nothing.</span></div></div></div>
-  <div class="small dim">In a private game set to No cheats, the money and building codes do nothing.</div>
+  <div class="small dim">In a game, double-tap your coins, type a code, then OK.</div>
+  <div class="cslist" id="csList"></div>
+  <div class="small dim csnotes"><p>Cheats end when you leave the game. In a public world they last until the map changes.</p><p>When the money codes end, you keep what you have, but never more than you had before them.</p><p>In a private game set to No cheats, the money and building codes do nothing.</p></div>
   <div class="btns"><button id="csOk" type="button" class="go">Got it</button></div>
 </div></div>
 <div id="codeModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="cdTitle"><div class="card nmcard">
@@ -1726,10 +1744,12 @@
 
 <div id="srvStat" class="overlay hide"><div class="card sscard">
   <div class="chead"><h3>Server status</h3><button id="ssClose" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div class="ssscroll">
   <div class="ssrate" id="ssRate"><b id="ssWord">Checking…</b><span id="ssWhy"></span></div>
   <div id="ssBody"></div>
   <button id="ssLive" class="btn full go hide" type="button"><span data-ic="bolt"></span>Show live stats while playing</button>
   <p class="ssnote" id="ssNote">Counted by the game server since the start of the month (UTC). Render's dashboard has the exact figures.</p>
+  </div>
 </div></div>
 
 <div id="codeBox" class="overlay hide"><div class="card codecard">
@@ -1782,8 +1802,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=209"></script>
-<script src="physics.js?v=209"></script>
+<script src="maps.js?v=210"></script>
+<script src="physics.js?v=210"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1829,7 +1849,7 @@ function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, nQuiet: { on: false, a: 1320, b: 420 }, nInGame: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
-    notify: false, nFriends: true, nMsgs: true, nRequests: true, nInvites: true, nMaps: true, nEmpty: false,
+    notify: false, nFriends: true, nMsgs: true, nRequests: true, nInvites: true, nMaps: true, nEmpty: false, devUpd: true, devHealth: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'random', musicVol: 0.5,
     boost: true, boostAuto: false, boostBtn: true, boostPull: false, joy: true, superBtn: true, btnMul: {},
@@ -4345,8 +4365,8 @@ $('btnRespawn').onclick = () => { resetPress(); };
 // tabs
 const tabBtns = $('tabs').querySelectorAll('button');
 let curTab = 'controls', onlyPrev = '';
-const HOME_TABS = ['sound', 'online', 'friends', 'notify', 'more'];   // (on the main menu: sound, mode and more. Controls, display and friends are for when you are playing; more is only on the main menu)
-const tabLocked = n => (n === 'you' ? false : (typeof inHome !== 'undefined' && inHome) ? HOME_TABS.indexOf(n) < 0 : n === 'more') || (n === 'bots' && !!settings.mp);
+const HOME_TABS = ['sound', 'online', 'friends', 'notify', 'dev', 'more'];   // (on the main menu: sound, mode and more. Controls, display and friends are for when you are playing; more is only on the main menu)
+const tabLocked = n => (n === 'you' ? false : (typeof inHome !== 'undefined' && inHome) ? HOME_TABS.indexOf(n) < 0 : n === 'more') || (n === 'bots' && !!settings.mp) || (n === 'dev' && !(typeof devOn === 'function' && devOn()));   // (Dev tools only in dev mode)
 const firstTab = () => { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'); if (!tabLocked(n)) return n; } return 'controls'; };   // (Offline has no friends, Public has no bots: those tabs stay in their place, greyed out)
 function tabLocks() { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'), L = tabLocked(n); tabBtns[i].classList.toggle('locked', L); tabBtns[i].disabled = L; tabBtns[i].setAttribute('aria-disabled', L ? 'true' : 'false'); } if (tabLocked(curTab)) showTab(firstTab()); }
 function resetTab() { tabLocks(); showTab(firstTab()); }   // (each new game opens the settings on the first tab; inside one game they stay where you left them)
@@ -6321,7 +6341,12 @@ function ssShow(st, err) {   // the server's figures that matter over time: how 
   const tile = (k, v, sub) => '<div><span>' + k + '</span><b>' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>';
   let html = '<div class="sscap"><b>' + (cap.total || st.maxPlayers) + ' players at once</b><span>Across the whole site. Everyone in a game counts once, in a public world or a private one, and hosting a private game counts as one player too. Up to ' + (cap.perWorld || st.perWorld) + ' in any one world. When it is full, newcomers wait on the menu and get in as soon as someone leaves.' + (cap.fullQuality && cap.fullQuality < cap.total ? ' Past about ' + cap.fullQuality + ' busy players the server eases off a little (fewer updates a second) so it stays smooth for everyone.' : '') + '</span></div>';
   html += '<div class="ssgrid">' + tile('Most players this month', pk.players || 0, day(pk.playersAt)) + tile('Most ever', st.record || 0, '') +
-    tile('Highest server use', Math.round((pk.cpu || 0) * 100) + '%', pk.cpuAt ? day(pk.cpuAt) + ' · over 10 s' : 'this month · over 10 s') + tile('Most memory', ssFmtB(Math.max(pk.mem || 0, st.mem.used)), 'of ' + ssFmtB(st.mem.limit) + ' this month') + '</div>';
+    tile('Highest server use', Math.round((pk.cpu || 0) * 100) + '%', pk.cpuAt ? day(pk.cpuAt) + ' · over 10 s' : 'this month · over 10 s') + tile('Most memory', ssFmtB(Math.max(pk.mem || 0, st.mem.used)), 'of ' + ssFmtB(st.mem.limit) + ' this month') +
+    tile('Most worlds in use', pk.worlds || 0, day(pk.worldsAt)) + tile('Most things moving', fmtN(pk.moving || 0), (pk.things ? 'of up to ' + fmtN(pk.things) + ' in the worlds · ' : '') + day(pk.movingAt)) + tile('Most data going out', ssFmtB(pk.outPerSec || 0) + '/s', day(pk.outAt)) + tile('Right now', (st.players || 0) + ' playing', (st.rooms || 0) + ' world' + (st.rooms === 1 ? '' : 's') + ' · ' + fmtN(st.moving || 0) + ' moving') + '</div>';
+  if (pk.ctx && pk.cpu) { const c = pk.ctx, lv = ['', 'sending 20 updates a second instead of 30', 'sending 15 updates a second', 'also working the world out in coarser steps'][c.lv | 0];   // the busiest moment, and what was going on then
+    html += '<div class="sspeak"><b>The busiest moment: ' + Math.round(pk.cpu * 100) + '% on ' + day(pk.cpuAt) + '</b><span>' + c.pl + ' playing in ' + c.rm + ' world' + (c.rm === 1 ? '' : 's') + ', ' + fmtN(c.mv) + ' things moving (of ' + fmtN(c.th) + '), ' + ssFmtB(c.out) + '/s going out.' + (c.ev && c.ev.length ? ' At that moment: ' + c.ev.join(', ') + '.' : '') + (lv ? ' To keep up, the server was ' + lv + '.' : '') + '</span></div>'; }
+  if (Array.isArray(st.days) && st.days.length) {   // each day this month: its busiest moment, most players, most moving
+    const ds = st.days.slice(-14).reverse(); html += '<div class="ssdays"><b>Each day</b>' + ds.map(e => { const f = Math.max(0, Math.min(1, e[1] || 0)), cl = f >= 0.97 ? 'x' : f >= 0.85 ? 'h' : f >= 0.7 ? 'w' : ''; const d = new Date(e[0] + 'T12:00:00Z'); return '<div class="ssday"><span>' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + '</span><i class="ssbar"><i class="' + cl + '" style="width:' + (f * 100).toFixed(0) + '%"></i></i><em>' + Math.round(f * 100) + '%</em><small>' + (e[2] | 0) + ' playing · ' + fmtN(e[3] | 0) + ' moving · ' + ssFmtB(e[4] || 0) + '</small></div>'; }).join('') + '</div>'; }
   html += ssBar('Data this month', ssFmtB(bw.used) + ' of ' + ssFmtB(bw.limit) + ' · ' + Math.max(0, Math.round(100 - bwF * 100)) + '% left', bwF, lasts + ' · about ' + ssFmtB(bw.perDayLeft) + ' a day for the ' + ssFmtD(st.daysLeft) + ' left');
   if (h.limit) html += ssBar('Server hours this month', h.used.toFixed(1) + ' of ' + h.limit + ' h', hF, 'A free server sleeps 15 minutes after everyone leaves');
   else html += ssBar('Server hours this month', h.used.toFixed(1) + ' h · no limit', 0, '');
@@ -6335,7 +6360,7 @@ function ssPoll() {
   if (ssBusy) return; ssBusy = true;
   const ac = typeof AbortController === 'function' ? new AbortController() : null, to = setTimeout(() => { if (ac) ac.abort(); }, 5000), t0 = performance.now();
   fetch(homeBase() + '/status?x=' + Date.now(), { cache: 'no-store', signal: ac ? ac.signal : undefined }).then(r => r.ok ? r.json() : null)
-    .then(st => { ssShow(st && st.bandwidth ? st : null, st ? '' : 'down'); }).catch(() => ssShow(null, performance.now() - t0 > 4500 ? 'slow' : 'down'))
+    .then(st => { useKeepDays(st); ssShow(st && st.bandwidth ? st : null, st ? '' : 'down'); }).catch(() => ssShow(null, performance.now() - t0 > 4500 ? 'slow' : 'down'))
     .finally(() => { clearTimeout(to); ssBusy = false; });
 }
 function openStatus() {
@@ -6363,9 +6388,9 @@ const LH = { on: false, st: null, stAt: 0, stBusy: false, fr: [], lastF: 0, wors
 try { const q = JSON.parse(localStorage.getItem('ballrun4_hud') || 'null'); if (q && q.on && devOn()) LH.on = true; if (q && typeof q.x === 'number') { LH.x = q.x; LH.y = q.y; } } catch (e) {}
 function lhSave() { try { localStorage.setItem('ballrun4_hud', JSON.stringify({ on: LH.on, x: LH.x, y: LH.y })); } catch (e) {} }
 function lhPlace() { const el = $('liveHud'), r = el.getBoundingClientRect(), W = innerWidth, H = innerHeight; if (LH.x === null) return; const x = Math.max(4, Math.min(W - r.width - 4, LH.x)), y = Math.max(4, Math.min(H - Math.min(r.height, 60) - 4, LH.y)); el.style.left = x + 'px'; el.style.top = y + 'px'; }
-function showLive() { if (!devOn()) return; const was = LH.on; LH.on = true; lhSave(); $('liveHud').classList.remove('hide'); lhPlace(); lhDraw(); statsKick(); }
+function showLive() { if (!devOn()) return; try { $('setDevLive').checked = true; } catch (e) {} const was = LH.on; LH.on = true; lhSave(); $('liveHud').classList.remove('hide'); lhPlace(); lhDraw(); statsKick(); }
 $('ssLive').onclick = () => { sfx('ui'); $('srvStat').classList.add('hide'); $('codeBox').classList.add('hide'); if (typeof cfClose === 'function' && !$('confirm').classList.contains('hide')) cfClose(false); showLive(); };
-$('lhClose').onclick = e => { e.stopPropagation(); sfx('ui'); LH.on = false; lhSave(); $('liveHud').classList.add('hide'); };
+$('lhClose').onclick = e => { e.stopPropagation(); sfx('ui'); LH.on = false; lhSave(); $('liveHud').classList.add('hide'); try { $('setDevLive').checked = false; } catch (x) {} };
 { let drag = null; const hd = $('lhHead');
   hd.addEventListener('pointerdown', e => { if (e.target.closest('.lhx')) return; const r = $('liveHud').getBoundingClientRect(); drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId }; try { hd.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault(); e.stopPropagation(); });
   hd.addEventListener('pointermove', e => { if (!drag || e.pointerId !== drag.id) return; LH.x = e.clientX - drag.dx; LH.y = e.clientY - drag.dy; lhPlace(); e.preventDefault(); });
@@ -6558,7 +6583,7 @@ setInterval(gateRender, 1000);
 $('hgRetry').onclick = () => { sfx('ui'); srvSt = 'wait'; gateArmed = true; srvWait(); retryNow(); gateRender(); };
 $('hgOff').onclick = () => { sfx('ui'); srvPrev = curMode(); setMode('off'); gateRender(); };
 function srvOk() {
-  const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0; setTimeout(() => { try { outFlush(); dmFlush(); dmSyncReq(); } catch (e) {} }, 300);   // (messages written while away go now, and anything missed comes in)
+  const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0; setTimeout(() => { try { outFlush(); dmFlush(); dmSyncReq(); } catch (e) {} try { devwSend(); } catch (e) {} }, 300); setTimeout(() => { try { healthSay(); } catch (e) {} }, 1500);   // (messages written while away go now, and anything missed comes in)
   if (inHome && settings.offline) { setMode(srvPrev === 'pub' ? 'pub' : 'priv'); if (was === 'fail') notice('Connected to the server', ''); }
   if (inHome) homeModeText(); gateRender();
 }
@@ -6824,11 +6849,43 @@ function setOffline(on) {
 $('homeLook').onclick = () => { sfx('ui'); openLook(); };
 $('homeSet').onclick = () => toggleSettings();
 try { localStorage.removeItem('ballrun4_updbtn'); sessionStorage.removeItem('ballrun4_updbtn'); } catch (e) {}
-function devRender() { $('homeUpd').classList.toggle('hide', !devOn()); $('devStats').classList.toggle('hide', !devOn()); $('ntEmptyRow').classList.toggle('hide', !devOn()); }
+function devRender() {   // what dev mode shows, each of it switched on or off in Dev tools
+  $('homeUpd').classList.toggle('hide', !devOn() || settings.devUpd === false); $('devStats').classList.toggle('hide', !devOn());
+  $('setDevUpd').checked = settings.devUpd !== false; $('setDevHealth').checked = !!settings.devHealth; $('setDevLive').checked = !!LH.on; $('setNEmpty').checked = !!settings.nEmpty;
+  try { tabLocks(); } catch (e) {}
+}
+function devwSend() { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'devw', on: devOn() && settings.nEmpty ? 1 : 0 })); } catch (e) {} } }   // (the server tells this game when nobody is playing, while it is open)
+$('setDevUpd').onchange = () => { settings.devUpd = $('setDevUpd').checked; save(); sfx(settings.devUpd ? 'on' : 'off'); devRender(); };
+$('setDevHealth').onchange = () => { settings.devHealth = $('setDevHealth').checked; save(); sfx(settings.devHealth ? 'on' : 'off'); };
+$('setDevLive').onchange = () => { const on = $('setDevLive').checked && devOn(); sfx(on ? 'on' : 'off'); if (on) showLive(); else { LH.on = false; lhSave(); $('liveHud').classList.add('hide'); } };
+$('setNEmpty').addEventListener('change', () => devwSend());
+$('devStatus').onclick = () => { sfx('ui'); if (devOn()) openStatus(); };
+/* the server's health, in one short note when the game opens (dev mode, if switched on) */
+let healthSaid = false;
+function healthLine(st) {
+  if (!st || !st.bandwidth) return 'Server: not answering right now';
+  const load = st.cpu && st.cpu.limit ? st.cpu.used / st.cpu.limit : 0, pk = st.peaks || {}, c = pk.cpu || 0, day = t => t ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '', ctx = pk.ctx;
+  const now = st.rating === 'good' ? 'healthy' : st.rating === 'bad' ? 'working hard (' + Math.round(load * 100) + '%)' : st.rating === 'frozen' ? 'stuck' : 'struggling (' + Math.round(load * 100) + '%)';
+  const month = c < 0.6 ? 'fine all month' : c < 0.85 ? 'busiest this month ' + Math.round(c * 100) + '% (' + day(pk.cpuAt) + ')' : 'stretched this month: ' + Math.round(c * 100) + '% on ' + day(pk.cpuAt) + (ctx ? ', ' + ctx.pl + ' playing' : '');
+  const bw = st.bandwidth.used / st.bandwidth.limit;
+  return 'Server: ' + now + ' · ' + month + (bw >= 0.8 ? ' · ' + Math.round(bw * 100) + '% of the month\'s data used' : '');
+}
+function topNote(t, bad) {   // a short note at the top: a game message while playing, a small note of its own on the main menu (which shows no game messages)
+  if (!inHome) { notice(t, bad ? 'urgent' : ''); return; }
+  const h = $('hToast'); $('hToastT').textContent = t; h.classList.toggle('bad', !!bad); h.classList.remove('hide'); clearTimeout(topNote.t); topNote.t = setTimeout(() => h.classList.add('hide'), 8000);
+}
+function healthSay() {
+  if (healthSaid || !devOn() || !settings.devHealth || offlineOn()) return; healthSaid = true;
+  const say = topNote;
+  fetch(homeBase() + '/status?x=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(st => { useKeepDays(st); say(healthLine(st), !st || st.rating !== 'good'); }).catch(() => say(healthLine(null), true));
+}
+function useKeepDays(st) {   // each day's highs are kept on this device too (a server that restarts forgets them; it gets them back from here)
+  try { if (!st || !Array.isArray(st.days) || !st.month) return; let o = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); if (!o || o.m !== st.month) o = { m: st.month, out: 0, in: 0, sec: 0 }; o.days = st.days.slice(-31); localStorage.setItem('ballrun4_use', JSON.stringify(o)); } catch (e) {}   // (no copy yet: one that only carries the days; the server takes the larger of each figure)
+}
 function devSet(on) {   // dev mode on or off, for good on this device
   devMode = !!on; try { if (on) localStorage.setItem(DEVMODE_KEY, '1'); else localStorage.removeItem(DEVMODE_KEY); } catch (e) {}
-  if (!on) { LH.on = false; lhSave(); $('liveHud').classList.add('hide'); $('srvStat').classList.add('hide'); }
-  devRender(); try { statsKick(); } catch (e) {} try { pushSyncSoon(); } catch (e) {}
+  if (!on) { LH.on = false; lhSave(); $('liveHud').classList.add('hide'); $('srvStat').classList.add('hide'); if (curTab === 'dev') try { showTab(firstTab()); } catch (e) {} }
+  devRender(); try { statsKick(); } catch (e) {} try { pushSyncSoon(); } catch (e) {} devwSend();
 }
 devRender();
 $('homeHelp').onclick = () => showIntro();
@@ -7343,9 +7400,18 @@ let codeBack = null;
 const codeOk = () => !inHome && S.mode === 'play' && !!S.world && !paused && $('settings').classList.contains('hide') && $('lvlModal').classList.contains('hide');   // (codes are only typed in the middle of a game, never from the menus)
 function openCode() { if (!codeOk()) return; $('cdIn').value = ''; $('cdIn').classList.remove('bad'); $('cdNote').textContent = ''; $('codeModal').classList.remove('hide'); setTimeout(() => { try { $('cdIn').focus(); } catch (e) {} }, 30); }
 function closeCode() { $('codeModal').classList.add('hide'); try { $('cdIn').blur(); } catch (e) {} }
+/* the codes: this list is what the Codes window shows, and every one of them is handled just below (a test checks the two never drift apart) */
+const CODE_LIST = [
+  ['themaker#1', 'Unlimited coins and diamonds', 'Buy and build anything, as much as you like.'],
+  ['maker', '10,000 coins and 500 diamonds', 'Sets your money to exactly that, and turns unlimited off.'],
+  ['zeros', 'Back to zero', 'Your coins and diamonds go to 0, and unlimited turns off.'],
+  ['unlimitedpower', 'No building limits', 'Build as many of every item as you like. Type it again to turn the limits back on.'],
+  ['codes', 'See all the codes', 'Shows this list. It changes nothing.']
+];
+function codesRender() { const L = $('csList'); L.textContent = ''; for (const [c, t, d] of CODE_LIST) { const r = el('div', 'csrow'); r.appendChild(el('code', '', c)); const w = el('div'); w.appendChild(el('b', '', t)); w.appendChild(el('span', '', d)); r.appendChild(w); L.appendChild(r); } }
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
-  if (v === 'codes') { closeCode(); $('codesModal').classList.remove('hide'); sfx('ready'); return; }   // (only shows the list of codes)
+  if (v === 'codes') { closeCode(); codesRender(); $('codesModal').classList.remove('hide'); sfx('ready'); return; }   // (only shows the list of codes)
   if (v === 'gamedevsam') { const on = !devOn(); devSet(on); sfx('big'); closeCode(); notice(on ? 'Dev mode on: the update button, server figures, stats and the "nobody playing" notification. Type the code again to turn it off.' : 'Dev mode off', ''); return; }   // (dev mode: on for good, and the same code turns it off)
   if (cheatsOff() && (v === 'unlimitedpower' || v === 'themaker#1' || v === 'maker' || v === 'zeros')) { $('cdNote').textContent = 'This private game is set to no cheats. Codes do nothing here.'; sfx('warn'); return; }
   if (v === 'unlimitedpower') { if (noCaps) { noCaps = false; try { localStorage.removeItem('ballrun4_nocap'); } catch (e) {} notePubCheat(); sfx('big'); closeCode(); notice('Building limits are back on', ''); try { shopRender(); } catch (e) {} return; }   // (the same code again turns it off)
@@ -7774,7 +7840,7 @@ function onMsg(m) {
     case 'wsnap': if (!party) saveSnap(m); break;
     case 'ready': S.worldReady = true; break;
     case 'pong': if (typeof m.c === 'number') { const r = performance.now() - m.c; if (r >= 0 && r < 5000) { NET.rtt = NET.rtt * 0.7 + r * 0.3; NET.rttLo = Math.min(NET.rttLo, r); NET.rttLast = r; } if (m.c > NET.pongC) { NET.pongC = m.c; NET.pongAt = performance.now(); } } break;   // (how long a message takes to the server and back)   // (the server has sent everything around you: the world is complete)
-    case 'use': { let o = null; try { o = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); } catch (e) {} const u = m.u; if (u && u.m && (!o || !o.m || u.m > o.m || (u.m === o.m && u.out >= (o.out || 0)))) { try { localStorage.setItem('ballrun4_use', JSON.stringify(u)); } catch (e) {} } break; }
+    case 'use': { let o = null; try { o = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); } catch (e) {} const u = m.u; if (u && u.m && (!o || !o.m || u.m > o.m || (u.m === o.m && u.out >= (o.out || 0)))) { if (o && o.m === u.m && Array.isArray(o.days) && !u.days) u.days = o.days; try { localStorage.setItem('ballrun4_use', JSON.stringify(u)); } catch (e) {} } break; }   // (each day's highs, which only the dev's device keeps, stay with it)
     case 'fsub': case 'fsubs': {   // where the server reaches friends' devices: kept here too, so a server that was restarted can be told again
       let c = {}; try { c = JSON.parse(localStorage.getItem('ballrun4_fsub') || '{}') || {}; } catch (e) { c = {}; }
       if (m.t === 'fsub' && typeof m.pub === 'string') c[m.pub] = m.s; else (m.l || []).forEach(e => { if (Array.isArray(e) && typeof e[0] === 'string') c[e[0]] = e[1]; });
@@ -7793,7 +7859,7 @@ function onMsg(m) {
       S.pendingBuild = { slot: S.slot, b: m.b }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break;
     case 'took': pickAnswer(m, !!m.mine); break;
     case 'tookno': pickAnswer(m, false); break;
-    case 'devempty': if (devOn() && settings.nEmpty) { notice('Nobody is playing right now: a good time to update the game', ''); sysNotify('nEmpty', 'Nobody is playing', 'Every world is empty: a good time to update the game', 'empty'); } break;
+    case 'devempty': if (devOn() && settings.nEmpty) { topNote('Nobody is playing right now: a good time to update the game'); sysNotify('nEmpty', 'Nobody is playing', 'Every world is empty: a good time to update the game', 'empty'); } break;
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
       clockOff = m.now - Date.now(); pickTaken = new Map(); pickPend.clear(); setNetFk(m.slot, m.fk); if (forcedLeft === null) S.nextAt = m.next; if (m.build && !party) S.pendingBuild = { slot: m.slot, b: m.build }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; startTransition(m.slot, m.next); break;   // (a map that comes back has everything that was built on it, and is shown once the server has said where it all is)
     case 'bj': case 'bl': case 'bp': remoteBotMsg(m); break;
