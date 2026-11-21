@@ -285,7 +285,7 @@
     #mm{width:110px;height:74px}
     #settings{right:6px;top:50px;top:calc(50px + env(safe-area-inset-top));width:min(380px,calc(100vw - 12px));max-height:calc(100% - 56px)}
     .tabs button span{font-size:11px}
-    .tabs button[data-tab="notify"] span:last-child{font-size:9px;letter-spacing:-.2px}
+    
     #timer.final{transform:scale(1.9)}
     #notice{top:80px;font-size:14px}
     .card{padding:14px 16px}.card h1{font-size:28px}.card p{font-size:15px}
@@ -563,7 +563,7 @@
   @media (max-height:520px) and (min-aspect-ratio:1/1){.profcard{width:min(600px,100%);display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;padding:10px 16px}.profcard .phead,.profcard .pbeat{grid-column:1}.profcard .psets{grid-column:2;grid-row:1}.profcard .pacts{grid-column:2;grid-row:2;justify-content:center}.profcard .cfoot{grid-column:1/-1}.profcard .ptxt small{display:none}.profcard .prow{padding:5px 8px}.profcard .psets{gap:5px}.profcard .pacts{flex-direction:row;flex-wrap:wrap}.profcard .pacts .btn{width:auto;flex:1 1 40%;padding:6px 8px;font-size:15px}.profcard .pball{width:42px;height:42px}.profcard h3{font-size:22px}}
   #settings.only .tabs{display:none}
   @media (max-height:520px) and (min-aspect-ratio:1/1){#settings.only{grid-template-columns:minmax(0,1fr)!important;width:min(560px,calc(100vw - 20px))!important}#settings.only .sbody{grid-column:1!important;grid-row:2!important}}
-.btnrow{display:flex;gap:8px;margin:8px 0}.btnrow .btn{flex:1}.btnrow .btn+.btn{flex:none}
+.btnrow{display:flex;gap:8px;margin:8px 0}.btnrow .btn{flex:1}.btnrow .btn{flex:1 1 0;min-width:0}
   #edZone{position:fixed;inset:0;z-index:4;pointer-events:none}
   #edZone .zr{position:fixed;box-sizing:border-box;border:2px dashed rgba(255,90,90,.95);border-radius:10px;background:repeating-linear-gradient(135deg,rgba(220,40,40,.22) 0 10px,rgba(220,40,40,.36) 10px 20px)}
   #msgDemo{padding:7px 16px;font-size:15px;background:rgba(255,210,61,.18);border:2px dashed #ffd23d;color:#fff;border-radius:var(--wob)}
@@ -765,7 +765,7 @@
   #touch #tj.edit{background:rgba(255,204,61,.25)}
   #nameModal,#shareModal,#codeModal,#profModal,#lvlModal,#invModal,#addModal{z-index:12;background:rgba(10,8,16,.55)}#shText{font-size:17px}#confirm{z-index:30}#descModal{z-index:20;background:rgba(10,8,16,.72)}
   #descModal .nmcard{width:min(440px,100%);gap:12px}.dsnote{font-size:14px;line-height:1.4;opacity:.8}.dshad{font-size:14px;line-height:1.4;padding:8px 10px;border-radius:8px;background:rgba(255,120,70,.12);border:1.5px solid rgba(255,150,80,.55)}.dslab{font-size:14px;margin:0 0 -6px}#descModal .btns{display:flex;gap:10px}#descModal .btns button{flex:1}
-  #ageGate{z-index:60;background:rgba(10,8,16,.94)}.agcard{width:min(560px,100%);display:flex;flex-direction:column;gap:10px;text-align:left}.agcard h2{display:flex;align-items:center;gap:10px;margin:0;font-weight:400}.agcard p{margin:0;line-height:1.45;font-size:16px}.agcard .btns{display:flex;gap:10px;margin-top:6px}.agcard .btns button{flex:1}.agno{padding:10px 12px;border-radius:10px;background:rgba(255,90,74,.15);border:2px solid rgba(255,120,100,.6);text-align:center}
+  #ageGate{z-index:60;background:rgba(10,8,16,.94)}#confirm.cftop{z-index:70}.agcard{width:min(560px,100%);display:flex;flex-direction:column;gap:10px;text-align:left}.agcard h2{display:flex;align-items:center;gap:10px;margin:0;font-weight:400}.agcard p{margin:0;line-height:1.45;font-size:16px}.agcard .btns{display:flex;gap:10px;margin-top:6px}.agcard .btns button{flex:1}.agno{padding:10px 12px;border-radius:10px;background:rgba(255,90,74,.15);border:2px solid rgba(255,120,100,.6);text-align:center}
   #btnChat.unread{position:relative}#btnChat.unread::after{content:'';position:absolute;right:-3px;top:-3px;width:11px;height:11px;border-radius:50%;background:#ff5a4a;border:2px solid #fff}
   .chatcard{width:min(560px,100%);height:min(560px,calc(100vh - 40px));display:flex;flex-direction:column;gap:8px;text-align:left;padding:12px 14px}.chatcard .chead{display:flex;align-items:center;gap:8px}.chatcard .chead h3{flex:1;margin:0}
   .chatlog{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:5px;padding:8px;border-radius:12px;background:rgba(0,0,0,.25);-webkit-user-select:text;user-select:text}
@@ -886,7 +886,7 @@
   /* back (one step) and X (close everything): the back arrow only shows when there is something to go back to */
   .chead>h3{flex:1;min-width:0}
   .wback{flex:none;margin-right:8px}.chead .wback,.shead .wback{order:-1}.shead{gap:6px}.shead #shTitle{flex:1}
-  .profcard .phead .wback{align-self:center;margin-right:2px}
+  .profcard .phead .wback{align-self:flex-start;margin-right:2px}
   @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   :is(#emoPop,#lvlModal,#nfModal,#msModal,#profModal,#addModal,#shModal,#shIn,#wiModal):not(.hide)>.card{animation:cardIn .18s ease-out}
   @media (prefers-reduced-motion:reduce){:is(#emoPop,#lvlModal,#nfModal,#msModal,#profModal,#addModal,#shModal,#shIn,#wiModal):not(.hide)>.card{animation:none}}
@@ -1016,6 +1016,22 @@
   .pfoot{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.pfoot .btn{flex:1 1 0;min-width:120px;padding:6px 10px;font-size:14px;background:transparent;border-color:rgba(232,220,192,.5)}.pfoot .btn:hover{border-color:var(--line)}.pfoot .btn{min-height:38px;box-shadow:none}.pfoot .btn.danger{border-color:rgba(224,86,107,.8);border-style:solid;color:#ff9aa8}
   .profcard .prow{flex-wrap:wrap;row-gap:6px}.profcard .prow .fopts{flex:1 1 100%;justify-content:flex-start}
   @media (max-height:520px) and (min-aspect-ratio:1/1){.profcard{display:flex!important;width:min(560px,100%)}.profcard .phead{grid-column:auto}}
+/* buttons side by side are one size. Every icon button at the top of a window (the back arrow, the X, the big map's tools) is the same box,
+   and the chat's tabs are as tall as its X */
+.xbtn,.btn.dmback,#mmbig .mmtools .btn{width:36px;height:34px;min-width:36px;min-height:34px;padding:0;display:flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box}
+.ctabs button{min-height:34px;box-sizing:border-box}
+button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: its gap above is for the box, never for a button, which would then sit lower than the one beside it) */
+/* phones: the settings tabs use short names where the long ones do not fit, all in one size of type */
+.tabs button span[data-short]{white-space:nowrap}
+@media (max-width:640px),(max-height:520px) and (min-aspect-ratio:1/1){
+  .tabs button span[data-short]{font-size:0!important;letter-spacing:0!important}
+  .tabs button span[data-short]::after{content:attr(data-short);font-size:11px}
+}
+@media (max-width:400px){   /* (the narrowest phones: the tabs give their names a little more room, all alike) */
+  .tabs{gap:0;padding-left:4px;padding-right:4px}
+  .tabs button{padding-left:0;padding-right:0}
+  .tabs button span:last-child,.tabs button span[data-short]::after{font-size:10.5px;letter-spacing:-.1px}
+}
 </style>
 </head>
 <body>
@@ -1028,7 +1044,7 @@
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 211; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 212; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1124,6 +1140,14 @@
     fill(100); msg('Ready!'); try { bootTips.stop(); } catch (e) {}
     setTimeout(function () { var b = $('boot'); if (b) { b.classList.add('gone'); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 800); } }, left + 250);
   };
+  /* before the page loads itself again (a newer version, a backup), it steps back down to its first history entry and stops asking "Leave site?".
+     The game keeps a few spare history entries for the Back button (see the end of p6b): loading again on top of them would leave old copies of the page behind Back */
+  window.__toBase = function (f) {
+    window.__bpQuiet = true; window.__noAsk = true;
+    var done = false, go = function () { if (done) return; done = true; f(); };
+    var k = 0; try { k = history.state && typeof history.state.bp === 'number' ? history.state.bp | 0 : 0; } catch (e) {}
+    if (k > 0 && k <= 50) { addEventListener('popstate', go); setTimeout(go, 700); try { history.go(-k); } catch (e) { go(); } } else go();
+  };
   fill(15);
   /* 1) is this the newest version? If the page came out of an old cache, wipe the caches and reload once. 2) maybe the game has moved: redirect. */
   if (!/^https?:$/.test(location.protocol)) return;
@@ -1134,7 +1158,7 @@
     if (Date.now() - last < 60000) return false;
     try { sessionStorage.setItem(k, String(Date.now())); } catch (e) {}
     msg('Updating to the newest version…'); fill(55);
-    var go = function () { location.replace(location.pathname + '?' + (/[?&]app=1(&|$)/.test(location.search) ? 'app=1&' : '') + 'r=' + Date.now() + location.hash); };
+    var go = function () { window.__toBase(function () { location.replace(location.pathname + '?' + (/[?&]app=1(&|$)/.test(location.search) ? 'app=1&' : '') + 'r=' + Date.now() + location.hash); }); };
     try { Promise.all([navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0, window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k2) { return caches.delete(k2); })); }) : 0]).then(go, go); } catch (e) { go(); }
     setTimeout(go, 2500); return true;
   };
@@ -1145,13 +1169,13 @@
     fetch('/version?x=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (v) {
       clearTimeout(give); if (!v || !v.build) { fill(40); return; }
       fill(35);
-      if (v.home && v.home.replace(/\/$/, '') !== location.origin && !/^(localhost|127\.)/.test(location.hostname)) { msg('Taking you to the newest address…'); fill(60); location.replace(v.home.replace(/\/$/, '') + location.pathname + location.search + location.hash); return; }
+      if (v.home && v.home.replace(/\/$/, '') !== location.origin && !/^(localhost|127\.)/.test(location.hostname)) { msg('Taking you to the newest address…'); fill(60); window.__toBase(function () { location.replace(v.home.replace(/\/$/, '') + location.pathname + location.search + location.hash); }); return; }
       if (BUILD.charAt(0) !== '_' && v.build !== BUILD) {
         var k = 'bp_refresh', last = 0; try { last = +sessionStorage.getItem(k) || 0; } catch (e) {}
         if (Date.now() - last > 60000) {
           try { sessionStorage.setItem(k, String(Date.now())); } catch (e) {}
           msg('Updating to the newest version…'); fill(55);
-          var go = function () { location.replace(location.pathname + '?' + (/[?&]app=1(&|$)/.test(location.search) ? 'app=1&' : '') + 'r=' + Date.now() + location.hash); };
+          var go = function () { window.__toBase(function () { location.replace(location.pathname + '?' + (/[?&]app=1(&|$)/.test(location.search) ? 'app=1&' : '') + 'r=' + Date.now() + location.hash); }); };
           try { Promise.all([navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0, window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (x) { return caches.delete(x); })); }) : 0]).then(go, go); } catch (e) { go(); }
           return;
         }
@@ -1326,8 +1350,8 @@
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Mode</span></button>
     <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
-    <button data-tab="notify"><span data-ic="bell"></span><span>Notifications</span></button>
-    <button data-tab="dev"><span data-ic="bolt"></span><span>Dev tools</span></button>
+    <button data-tab="notify" aria-label="Notifications"><span data-ic="bell"></span><span data-short="Alerts">Notifications</span></button>
+    <button data-tab="dev" aria-label="Dev tools"><span data-ic="bolt"></span><span data-short="Dev">Dev tools</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
   </div>
   <div class="sbody">
@@ -1799,8 +1823,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=211"></script>
-<script src="physics.js?v=211"></script>
+<script src="maps.js?v=212"></script>
+<script src="physics.js?v=212"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3505,7 +3529,8 @@ function restoreWorld(slot) {
   } catch (e) {}
 }
 setInterval(() => { if (S.mode === 'play' && !S.away) saveWorld(); }, 4000);
-addEventListener('beforeunload', () => { saveWorld(true); if (party && ws && ws.readyState === 1) { try { ws.send('{"t":"bye"}'); } catch (e) {} } });   // (closing the page for good ends a private game you host; turning the screen off does not)
+addEventListener('beforeunload', () => saveWorld(true));
+addEventListener('pagehide', () => { if (party && ws && ws.readyState === 1) { try { ws.send('{"t":"bye"}'); } catch (e) {} } });   // (closing the page for good ends a private game you host; turning the screen off does not. Not on beforeunload: you can still say Stay there)
 addEventListener('pagehide', () => saveWorld(true)); document.addEventListener('visibilitychange', () => { if (document.hidden) saveWorld(true); });   // (whatever way you leave, the world is kept exactly as it is)
 
 /* leaving the screen = you are gone; coming back = fresh start at the spawn */
@@ -4274,6 +4299,7 @@ function askConfirm(title, text, yes, cb, o) {
   $('cfYes').className = o.yesClass || 'danger'; cfCb = cb; cfOptCb = o.onCheck || null; cfNoCb = o.onNo || null;
   $('cfOptWrap').classList.toggle('hide', !o.check); $('cfOptText').textContent = o.check || ''; $('cfOpt').checked = false;
   $('cfMid').classList.toggle('hide', !o.mid); if (o.mid) { $('cfMid').innerHTML = (o.midIc ? '<span data-ic="' + o.midIc + '"></span>' : '') + o.mid; fillIcons($('cfMid')); } cfMidCb = o.onMid || null;
+  $('confirm').dataset.k = o.k || ''; $('confirm').classList.toggle('cftop', !!o.top);   // (k: which question this is, for the Back button. top: over the age check)
   $('confirm').classList.remove('hide');
 }
 function cfClose(yes) {
@@ -4589,7 +4615,7 @@ $('importFile').onchange = () => {
     askConfirm('Load this backup?', 'Everything on this device is replaced by the backup' + (o.name ? ' of ' + o.name : '') + ' from ' + when + ': profile, friends, settings, coins and your own worlds. The game then starts again.', 'Load backup', () => {
       try { localStorage.clear(); for (const k in o.data) if (typeof o.data[k] === 'string') localStorage.setItem(k, o.data[k]); } catch (e) { notice('There was no room to load all of it on this device', 'urgent'); }
       try { Storage.prototype.setItem = function () {}; } catch (e) {}   // (nothing from the game running now may write over it before it starts again)
-      location.reload();
+      window.__toBase(() => location.reload());
     }, { yesClass: 'go' });
   };
   rd.readAsText(f);
@@ -6263,7 +6289,7 @@ const UPLOG = 'bp_updates', UPRES = 'bp_resume';
 let updating = false;
 function resumeAfterUpdate() { try { const v = sessionStorage.getItem(UPRES); sessionStorage.removeItem(UPRES); return v === '1'; } catch (e) { return false; } }
 function wipeAndReload() {
-  const go = () => { let q = ''; try { const u = new URLSearchParams(location.search); u.delete('r'); u.set('r', Date.now()); q = '?' + u.toString(); } catch (e) { q = '?r=' + Date.now(); } location.replace(location.pathname + q + location.hash); };   // (any other settings in the address stay)
+  const go = () => { let q = ''; try { const u = new URLSearchParams(location.search); u.delete('r'); u.set('r', Date.now()); q = '?' + u.toString(); } catch (e) { q = '?r=' + Date.now(); } window.__toBase(() => location.replace(location.pathname + q + location.hash)); };   // (any other settings in the address stay)
   try {
     Promise.all([
       navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(rs => Promise.all(rs.map(r => r.unregister()))) : 0,
@@ -6816,27 +6842,88 @@ $('pHome').onclick = () => { sfx('ui'); hostLeaveWarn(quitToHome); };
 $('ngSolo').onclick = () => { sfx('ui'); gateOn = false; $('netGate').classList.add('hide'); if (party && party.role === 'host') quietUnhost(); else setMultiplayer(false); };
 setInterval(() => { if (gateOn && inHome) { gateOn = false; $('netGate').classList.add('hide'); } }, 400);
 $('pause').addEventListener('pointerdown', e => { if (e.target === $('pause') && $('settings').classList.contains('hide')) { e.preventDefault(); resumeGame(); } });
-/* ----- the Back button (phone or browser) never just throws you out: in a game it asks about the main menu, on the main menu it asks about leaving ----- */
-let leavingPage = false;
-try { history.replaceState({ bp: 0 }, ''); history.pushState({ bp: 1 }, ''); } catch (e) {}
+/* ----- the Back button (phone or browser). It goes back one step, like the back arrows: the window on top closes, then the one under it.
+   In a game, Back asks before you leave it. On the main menu, Back asks before you leave the game, and then Back once more leaves.
+   How: the page keeps some spare history entries above its first one ({ bp: 0 }). Each Back uses one up, and every tap or key press tops them up again.
+   They are only ever added during a tap or a key press. Browsers skip entries a page adds on its own (and every entry of that page with them),
+   so adding them anywhere else would let a second Back throw you straight out of the game ----- */
+var BP_SPARE = 12, bpK = 0, bpLeaving = false, bpSelf = 0, bpSelfT = 0;
+function bpOf(s) { return s && typeof s.bp === 'number' && s.bp >= 0 && s.bp <= 50 ? s.bp | 0 : -1; }
+try { const k = bpOf(history.state); if (k < 0) history.replaceState({ bp: 0 }, ''); bpK = Math.max(0, k); } catch (e) {}
+function exitShown() { return shownEl('confirm') && $('confirm').dataset.k === 'exit'; }
+function bpTop(e) {   // (only from a real tap or key press that just happened: the browser does not count one from before the last Back)
+  if (bpLeaving || bpSelf || window.__bpQuiet || exitShown()) return;   // (while "Leave BALLPIT.PARTY?" is up, the page stays on its first entry so the next Back really leaves)
+  if (e) { if (!e.isTrusted) return;
+    if (e.type === 'keydown') { if (e.altKey || e.ctrlKey || e.metaKey || e.repeat || /^(Escape|Alt|AltGraph|Control|Meta|Shift|OS|BrowserBack|BrowserForward|F\d+)$/.test(e.key)) return; }   // (Alt+Left is the browser's own Back)
+    else if (e.type === 'pointerdown') { if (e.pointerType !== 'mouse' || e.button !== 0) return; }   // (a mouse's own back button is not a tap)
+    else if (e.type === 'pointerup') { if (e.pointerType === 'mouse') return; } }
+  if (navigator.userActivation && !navigator.userActivation.isActive) return;
+  try { const k = Math.max(0, bpOf(history.state)); if (k >= BP_SPARE) return; for (let i = k + 1; i <= BP_SPARE; i++) history.pushState({ bp: i }, ''); bpK = BP_SPARE; } catch (er) {}
+}
+for (const ev of ['keydown', 'pointerdown', 'pointerup', 'touchend']) addEventListener(ev, bpTop, true);   // (the events that count as you doing something)
+const isUp = id => { const e = $(id); if (!e || e.classList.contains('hide')) return false; const cs = getComputedStyle(e); return cs.display !== 'none' && cs.visibility !== 'hidden'; };
+const BACK = {   // what Back does to each window: the same as its back arrow, or its X when it has no back arrow
+  confirm: () => { if (exitShown()) exitGo(); else $('cfNo').click(); },   // (a question: Back says no. "Leave BALLPIT.PARTY?": Back again leaves)
+  ageGate: () => askExit(),
+  codeBox: () => $('codeBox').classList.add('hide'), srvStat: () => $('srvStat').classList.add('hide'),
+  tpModal: () => tpClose(), codesModal: () => $('codesModal').classList.add('hide'), quickModal: () => $('quickModal').classList.add('hide'),
+  giveModal: () => $('giveModal').classList.add('hide'), wiModal: () => $('wiModal').classList.add('hide'), descModal: () => dsClose(false),
+  shIn: () => $('shInX').click(), profModal: () => closeProfile(), shModal: () => shClose(), msModal: () => msClose(), nfModal: () => nfClose(),
+  pickPop: () => closePick(), mmbig: () => toggleMmBig(false), shopPop: () => toggleShop(false), intro: () => $('btnOk').click(),
+  addModal: () => closeAdd(), invModal: () => closeInvites(), lvlModal: () => closeLevels(), codeModal: () => closeCode(), nameModal: () => closeNameModal(), shareModal: () => closeShareModal(),
+  emoPop: () => { const bk = $('dmHead').querySelector('.dmback');   // (in a conversation: its own back arrow. Giving: back to who to give to)
+    if (chatView === 'g' && isUp('gvForm') && $('gvForm').offsetParent) $('gvNo').click(); else if (chatView !== 'w' && chatView !== 'l' && chatView !== 'g' && bk && bk.offsetParent) bk.click(); else toggleChat(false); },
+  settings: () => closeSettingsNow(), pause: () => resumeGame(),
+  netGate: () => { if (inHome) askExit(); else askLeave(); }
+};
+function topWin() {   // the window on top: the highest one on the screen (the later one in the page when two are level)
+  let best = null, bz = -1e9;
+  for (const id in BACK) { if (!isUp(id) || (id === 'pause' && inHome)) continue; const e = $(id), z = parseInt(getComputedStyle(e).zIndex, 10) || 0;
+    if (!best || z > bz || (z === bz && (best.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING))) { best = e; bz = z; } }
+  return best ? best.id : '';
+}
+function backStep() {
+  if (closeSelectFn) { closeSelectFn(); return; }   // (an open drop-down list or picker)
+  if (CP.open) { closePicker(); return; }
+  const top = topWin();
+  if (top) { try { BACK[top](); } catch (e) { $(top).classList.add('hide'); } setTimeout(backRender, 0); return; }
+  if (edSess) { $('editDone').click(); return; }
+  if (placing) { cancelPlacing(); return; }
+  if (inHome) askExit(); else askLeave();
+}
+function askLeave() {   // Back in a game: are you sure?
+  if (guestsHere()) { hostLeaveWarn(quitToHome); return; }   // (your private game with friends in it: it closes for them, and it says so)
+  const t = settings.mp && !party ? 'Leave the public world?' : party && party.role === 'guest' ? 'Leave ' + who(party.name) + "'s game?" : 'Leave this game?';
+  askConfirm(t, 'You go back to the main menu.', 'Leave', () => quitToHome(), { no: 'Keep playing', yesClass: 'danger', k: 'leave' });
+}
+function askExit() {   // Back on the main menu: leave the game?
+  askConfirm('Leave BALLPIT.PARTY?', isMobileUA ? 'Press Back again to leave.' : 'Press Back again, or close this tab, to leave.', 'Leave', exitGo, { no: 'Stay', yesClass: 'danger', k: 'exit', top: isUp('ageGate'), onNo: () => bpTop() });
+  const k = bpOf(history.state); if (k > 0) { bpSelf++; clearTimeout(bpSelfT); bpSelfT = setTimeout(() => { bpSelf = 0; }, 1500); try { history.go(-k); } catch (e) { bpSelf = 0; } }   // (down to the first entry: the next Back leaves the game for real)
+}
+function exitGo() {   // leave: back to the page before the game, or close the app
+  bpLeaving = true; window.__noAsk = true;
+  let n = Math.max(0, bpOf(history.state));
+  try { if (window.navigation && navigation.currentEntry && navigation.entries) {   // (count every copy of the game below this one, old ones too)
+    const es = navigation.entries(), here = location.origin + location.pathname; n = 0;
+    for (let i = navigation.currentEntry.index - 1; i >= 0; i--) { let u = null; try { u = new URL(es[i].url); } catch (e) {} if (!u || u.origin + u.pathname !== here) break; n++; } } } catch (e) {}
+  try { history.go(-(n + 1)); } catch (e) {}
+  setTimeout(() => { try { window.close(); } catch (e) {} }, 200);
+  setTimeout(() => { bpLeaving = false; window.__noAsk = false; topNote(isMobileUA ? 'Press Back to leave' : 'Close this tab to leave'); }, 1200);   // (still here: nothing came before the game and this browser does not let a page close itself)
+}
 addEventListener('popstate', () => {
-  if (leavingPage) return;
-  try { history.pushState({ bp: 1 }, ''); } catch (e) {}   // keep something to go back to, so the next Back is caught too
-  if (!$('confirm').classList.contains('hide')) { $('cfNo').click(); return; }
-  if (!$('descModal').classList.contains('hide')) { dsClose(false); return; }
-  /* (the window on top goes first: a profile, then sharing, Map settings and the friend pickers, then the other windows, the chat, and Settings last) */
-  if (!$('profModal').classList.contains('hide')) { closeProfile(); return; }
-  if (!$('shModal').classList.contains('hide')) { shClose(); return; }
-  if (!$('msModal').classList.contains('hide')) { msClose(); return; }
-  if (!$('nfModal').classList.contains('hide')) { nfClose(); return; }
-  for (const id of ['addModal', 'invModal', 'lvlModal', 'codeModal', 'nameModal', 'shareModal', 'shopPop', 'mmbig', 'intro']) {
-    const m = $(id); if (m && !m.classList.contains('hide')) { try { m.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); } catch (e) {} if (!m.classList.contains('hide') && id === 'intro') { const ok = m.querySelector('.ok'); if (ok) ok.click(); } return; }
-  }
-  if (chatOpen) { toggleChat(false); return; }
-  if (!$('settings').classList.contains('hide')) { closeSettingsNow(); return; }
-  if (inHome) askConfirm('Leave ballpit.party?', 'Going back will take you out of the game.', 'Leave', () => { leavingPage = true; try { history.go(-2); } catch (e) {} setTimeout(() => { leavingPage = false; try { window.close(); } catch (e) {} }, 600); }, { no: 'Stay', yesClass: 'danger' });
-  else if (guestsHere()) hostLeaveWarn(quitToHome);
-  else askConfirm('Back to the main menu?', 'Your ball leaves this world and you go to the main menu.', 'Main menu', () => quitToHome(), { no: 'Keep playing', yesClass: 'go' });
+  const k = bpOf(history.state);
+  if (window.__bpQuiet) return;
+  if (bpSelf) { bpSelf--; bpK = Math.max(0, k); return; }   // (the page's own step down)
+  if (bpLeaving) return;
+  if (k < 0) return;
+  const was = bpK; bpK = k;
+  if (k >= was) return;   // (Forward: nothing to do)
+  { const bt = $('boot'); if (bt && !bt.classList.contains('gone')) return; }   // (still loading: nothing to go back from yet)
+  backStep();
+});
+addEventListener('beforeunload', e => {   // closing or reloading the page: the browser's own "Leave site?" (no page may show its own one here)
+  if (window.__noAsk || bpLeaving || exitShown() || (params && params.get('test') && !params.get('ask'))) return;
+  e.preventDefault(); e.returnValue = '';
 });
 $('homePlay').onclick = () => { if (srvSt !== 'ok' && !offlineOn()) { notice('Connecting to the server…', ''); return; } enterGame(false); };
 function setOffline(on) {
