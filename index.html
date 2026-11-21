@@ -1016,6 +1016,60 @@
   .pfoot{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.pfoot .btn{flex:1 1 0;min-width:120px;padding:6px 10px;font-size:14px;background:transparent;border-color:rgba(232,220,192,.5)}.pfoot .btn:hover{border-color:var(--line)}.pfoot .btn{min-height:38px;box-shadow:none}.pfoot .btn.danger{border-color:rgba(224,86,107,.8);border-style:solid;color:#ff9aa8}
   .profcard .prow{flex-wrap:wrap;row-gap:6px}.profcard .prow .fopts{flex:1 1 100%;justify-content:flex-start}
   @media (max-height:520px) and (min-aspect-ratio:1/1){.profcard{display:flex!important;width:min(560px,100%)}.profcard .phead{grid-column:auto}}
+/* ----- the game admin (dev mode with the admin key) ----- */
+.admkey{display:flex;gap:8px;align-items:stretch;margin:6px 0 4px}
+.admkey input{flex:1 1 auto;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:#1b1726;color:var(--ink)}
+.admkey .btn{flex:none;min-width:96px}
+#admPlayers .admn{margin-left:auto;font-size:13px;opacity:.75}
+.admforget{margin-top:6px;opacity:.85}
+#admModal{z-index:15;background:rgba(10,8,16,.6)}
+html.mfull #admModal{padding:0}
+html.mfull #admModal .amcard{zoom:1;width:100%;max-width:100%;height:100%;max-height:100%;border:0;border-radius:0;box-shadow:none;padding:calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
+.amcard{width:min(480px,100%);max-height:min(720px,calc(100dvh - 24px))}
+.amview{display:flex;flex-direction:column;gap:10px;min-height:0;flex:1 1 auto}
+#amOneView{overflow-y:auto;overscroll-behavior:contain;padding:2px}
+.amtabs{display:flex;gap:6px}
+.amtabs button{flex:1 1 0;min-width:0;min-height:34px;box-sizing:border-box;font:inherit;font-size:14px;padding:6px 8px;border-radius:12px;border:2px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amtabs button.on{background:#3a2f63;border-color:#e8dcc0}
+.amtabs button b{font-weight:normal;opacity:.75;margin-left:5px}
+#amFind{font:inherit;font-size:16px;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:#1b1726;color:var(--ink);width:100%;box-sizing:border-box}
+.amrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#2c2644;border:2px solid rgba(232,220,192,.3);cursor:pointer;text-align:left;font:inherit;color:var(--ink);width:100%}
+.amrow .dmw{flex:1;min-width:0}
+.amrow .dmw b{display:block;font-weight:normal;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.amrow .dmw small{display:block;font-size:12px;opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.amtags{display:flex;gap:4px;flex:none}
+.amtag{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,.08)}
+.amtag .ic{width:15px;height:15px}
+.amtag.fr{background:#2fa463}
+.amtag.no{background:#8a2a33}
+.amtag.ad{background:#6b4fd0}
+.amempty{padding:18px 6px;text-align:center}
+.amwho{display:flex;align-items:center;gap:12px}
+.amwho .bdot{transform:scale(1.35);margin:4px 6px}
+.amwn{flex:1;min-width:0}
+.amwn b{display:block;font-weight:normal;font-size:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.amwn small{font-size:13px;opacity:.7}
+.amfr{display:inline-flex;align-items:center;gap:5px;flex:none;font-size:13px;padding:4px 9px;border-radius:99px;background:#2fa463;color:#fff}
+.amfr .ic{width:15px;height:15px}
+.amnote{padding:10px 12px;border-radius:12px;background:rgba(107,79,208,.25);border:2px solid rgba(190,170,255,.5);font-size:14px}
+.amban{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(168,40,28,.28);border:2px solid rgba(224,86,107,.75);font-size:14px}
+.amban span{flex:1;min-width:0}
+.amban .btn{flex:none}
+.ammoney{display:flex;gap:8px}
+.ammoney label{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:13px;opacity:.95}
+.ammoney input{font:inherit;font-size:17px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:#1b1726;color:var(--ink);width:100%;box-sizing:border-box;min-width:0}
+.amdur{display:flex;gap:6px}
+.amdur button{flex:1 1 0;min-width:0;min-height:38px;box-sizing:border-box;font:inherit;font-size:14px;padding:6px 4px;border-radius:12px;border:2px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer;white-space:nowrap}
+.amdur button.on{background:#8a2a33;border-color:#ffb3bd}
+#amBanBox{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+#amBanBox.hide{display:none}
+.btn.amred{background:#a8281c;border-color:#ff9aa8;color:#fff}
+#amCtl{display:flex;flex-direction:column;gap:8px}
+#amCtl h4{margin:8px 0 0}
+#amCtl.off{opacity:.45;pointer-events:none}
+.shopmod{margin:0 0 8px;font-size:14px}
+.shopmod.hide{display:none}
+
 /* buttons side by side are one size. Every icon button at the top of a window (the back arrow, the X, the big map's tools) is the same box,
    and the chat's tabs are as tall as its X */
 .xbtn,.btn.dmback,#mmbig .mmtools .btn{width:36px;height:34px;min-width:36px;min-height:34px;padding:0;display:flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box}
@@ -1044,7 +1098,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 212; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 213; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1310,6 +1364,37 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   <div class="nfbar"><span id="nfCount" class="small"></span><button id="nfAll" class="btn sm" type="button">Select all</button></div>
   <div id="nfList" class="nflist"></div>
 </div></div>
+<div id="admModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="amTitle"><div class="card nfcard amcard">
+  <div class="chead"><button id="amBack" class="btn dmback wback hide" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="amTitle">Players</h3><button id="amX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
+  <div id="amListView" class="amview">
+    <div class="amtabs" role="tablist"><button type="button" data-am="on" role="tab">Online<b id="amNOn"></b></button><button type="button" data-am="recent" role="tab">Recent</button><button type="button" data-am="ban" role="tab">Banned<b id="amNBan"></b></button></div>
+    <input id="amFind" type="search" placeholder="Find by name or code" aria-label="Find a player" autocomplete="off" spellcheck="false" maxlength="40">
+    <div id="amList" class="nflist amlist"></div>
+  </div>
+  <div id="amOneView" class="amview hide">
+    <div class="amwho"><span id="amDot"></span><div class="amwn"><b id="amName"></b><small id="amCode"></small></div><span id="amFr" class="amfr hide"><svg class="ic"><use href="#i-users"/></svg>Friend</span></div>
+    <div class="small dim" id="amWhere"></div>
+    <div id="amAdminNote" class="amnote hide">This is a game admin's device. Nothing here can be changed for it.</div>
+    <div id="amBanned" class="amban hide"><span id="amBanTxt"></span><button class="btn sm" id="amUnban" type="button">Unban</button></div>
+    <div id="amCtl">
+      <h4><span data-ic="gcoin"></span> Money in the public world</h4>
+      <div class="ammoney"><label><span>Coins</span><input id="amC" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Coins"></label><label><span>Diamonds</span><input id="amG" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Diamonds"></label></div>
+      <div class="small dim" id="amMoneyNote"></div>
+      <button class="btn full" id="amSet" type="button"><span data-ic="check"></span>Set their money</button>
+      <h4><span data-ic="gear"></span> Allowed</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Can build</b><small>In the public world and in private games with friends. The server turns away anything they try to build</small></span></span><input type="checkbox" id="amCanB"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="key"></span><span><b>Can use codes</b><small>Codes like themaker#1. Turning this off also ends any code they are using now</small></span></span><input type="checkbox" id="amCanC"><i></i></label>
+      <h4><span data-ic="warn"></span> Out of the game</h4>
+      <div class="btnrow"><button class="btn" id="amBoot" type="button"><span data-ic="back"></span>Boot</button><button class="btn" id="amBanGo" type="button"><span data-ic="lock"></span>Ban</button></div>
+      <div class="small dim" id="amOutNote">Boot sends them to the main menu: they can come straight back. A ban keeps them out of online play until it ends.</div>
+      <div id="amBanBox" class="hide">
+        <div class="amdur" role="radiogroup" aria-label="How long"><button type="button" data-h="1">1 hour</button><button type="button" data-h="24">24 hours</button><button type="button" data-h="168">7 days</button><button type="button" data-h="-1">For good</button></div>
+        <label class="sw2 ic2" id="amIpRow"><span class="ti"><span data-ic="globe"></span><span><b>Also their network</b><small id="amIpNote">Stops a new account from the same Wi-Fi or phone network too</small></span></span><input type="checkbox" id="amIp"><i></i></label>
+        <button class="btn full amred" id="amBanOk" type="button"><span data-ic="lock"></span>Ban them</button>
+      </div>
+    </div>
+  </div>
+</div></div>
 <div id="quickModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="qmTitle"><div class="card nmcard quickcard">
   <h3 id="qmTitle">Quick messages</h3>
   <div class="small dim">Up to 10. Tap one in the chat to send it right away. Leave a line empty to remove it.</div>
@@ -1525,6 +1610,16 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Server health when the game opens</b><small>A short note at the top: how the server is doing now, and how it has been this month</small></span></span><input type="checkbox" id="setDevHealth"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Nobody playing</b><small>When everyone has left every world: a good time to update the game. Once, until someone plays and leaves again. With notifications on, even when the game is closed</small></span></span><input type="checkbox" id="setNEmpty"><i></i></label>
       <button class="btn full" id="devStatus" type="button"><span data-ic="bolt"></span>Server figures</button>
+      <h4><span data-ic="lock"></span> Game admin</h4>
+      <div id="admKeyBox">
+        <div class="small dim" id="admKeyNote">To manage players, type the admin key. It is set on the server, not in the game, so only you have it.</div>
+        <form class="admkey" id="admKeyForm" autocomplete="off"><input id="admKeyIn" type="password" maxlength="200" placeholder="Admin key" aria-label="Admin key" autocomplete="off" spellcheck="false"><button class="btn" id="admKeyGo" type="submit">Unlock</button></form>
+      </div>
+      <div id="admOnBox" class="hide">
+        <button class="btn full" id="admPlayers" type="button"><span data-ic="users"></span>Players<span class="admn" id="admPlN"></span></button>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="lock"></span><span><b>Close the game to everyone</b><small>Everyone but you goes back to the main menu and cannot play online until you turn this off. Offline games still work</small></span></span><input type="checkbox" id="admLockSw"><i></i></label>
+        <button class="btn sm admforget" id="admForget" type="button">Forget the admin key on this device</button>
+      </div>
       <h4><span data-ic="search"></span> While you play</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Live stats panel</b><small>A panel you can drag anywhere: this device, the connection, the server, and what disagreed</small></span></span><input type="checkbox" id="setDevLive"><i></i></label>
       <div id="devStats"><label class="sw2 ic2"><span class="ti"><span data-ic="search"></span><span><b>Show stats</b><small>Tiny numbers in the corner, under the map</small></span></span><input type="checkbox" id="setStats"><i></i></label><div class="dep sub" data-dep="stats"><div><label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Frame rate</b><small>How many pictures a second your screen draws</small></span></span><input type="checkbox" id="setStFps"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Ping</b><small>How long a message takes to the server and back</small></span></span><input type="checkbox" id="setStPing"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="clock"></span><span><b>Buffer</b><small>How far behind other players and things are shown, to keep them smooth</small></span></span><input type="checkbox" id="setStBuf"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Connection speed</b><small>Data coming in and going out each second</small></span></span><input type="checkbox" id="setStData"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="gear"></span><span><b>Server load</b><small>How hard the game server is working</small></span></span><input type="checkbox" id="setStSrv"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Conflicts</b><small>Times your screen and the server did not match</small></span></span><input type="checkbox" id="setStConf"><i></i></label></div></div></div>
@@ -1823,8 +1918,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=212"></script>
-<script src="physics.js?v=212"></script>
+<script src="maps.js?v=213"></script>
+<script src="physics.js?v=213"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2893,7 +2988,7 @@ function startTransition(slot, next) {
 let placing = null;   // the item you are building right now (a ghost that follows you until you tap Place)
 let inHome = true, paused = false;   // the main screen is up: nothing in the game listens to the keyboard or the touch controls
 const typing = () => { const a = document.activeElement; return a && ((a.tagName === 'INPUT' && a.type === 'text') || a.tagName === 'TEXTAREA') && !a.readOnly; };
-const blocked = () => !$('ageGate').classList.contains('hide') || !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('profModal').classList.contains('hide') || !$('lvlModal').classList.contains('hide') || !$('msModal').classList.contains('hide') || !$('invModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
+const blocked = () => !$('ageGate').classList.contains('hide') || !$('intro').classList.contains('hide') || inHome || paused || !$('emoPop').classList.contains('hide') || !$('shopPop').classList.contains('hide') || !$('codeModal').classList.contains('hide') || !$('profModal').classList.contains('hide') || !$('lvlModal').classList.contains('hide') || !$('msModal').classList.contains('hide') || !$('invModal').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('admModal').classList.contains('hide') || !$('mmbig').classList.contains('hide') || typing() || editMode;
 
 const pushC = { x: 0, y: 0, vx: 0, vy: 0, ground: false };
 let gateT = 0, gateOn = false;
@@ -3696,7 +3791,7 @@ function kbNav(box, e, passGo) {
   if (best) { cur.classList.remove('kbf'); best.classList.add('kbf'); if (best.scrollIntoView) best.scrollIntoView({ block: 'nearest' }); }
   return true;
 }
-const KB_BOXES = ['ageGate', 'codesModal', 'quickModal', 'giveModal', 'wiModal', 'pickPop', 'confirm', 'descModal', 'shIn', 'profModal', 'shModal', 'msModal', 'nfModal', 'nameModal', 'codeModal', 'shareModal', 'addModal', 'invModal', 'lvlModal', 'emoPop', 'intro', 'settings', 'pause', 'tpModal'];   // (the window on top first)
+const KB_BOXES = ['ageGate', 'codesModal', 'quickModal', 'giveModal', 'wiModal', 'pickPop', 'confirm', 'admModal', 'descModal', 'shIn', 'profModal', 'shModal', 'msModal', 'nfModal', 'nameModal', 'codeModal', 'shareModal', 'addModal', 'invModal', 'lvlModal', 'emoPop', 'intro', 'settings', 'pause', 'tpModal'];   // (the window on top first)
 addEventListener('pointerdown', () => { if (kbBox) { document.querySelectorAll('.kbf').forEach(x => x.classList.remove('kbf')); kbBox = null; } }, true);
 addEventListener('keydown', e => {
   if (keyCapture || typing() || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -5501,6 +5596,7 @@ let shopOpen = false;
 function shopRender() {
   { let k = $('shopKeys'); if (!k) { k = document.createElement('div'); k.id = 'shopKeys'; k.className = 'small dim'; $('shopList').parentNode.appendChild(k); } const L = a => ((settings.mkeys || {})[a] || []).slice(0, 2).map(keyLabel).join('/') || '–'; k.textContent = L('tprev') + ' ' + L('tnext') + ' tab   ' + L('mup') + ' ' + L('mdown') + ' item   1–9 or ' + L('mok') + ': buy   ' + [((settings.keys.build || [])[0] && keyLabel(settings.keys.build[0])), 'Esc'].filter(Boolean).join(' or ') + ': close'; k.classList.toggle('hide', touchActive()); }
   $('shopWallet').innerHTML = '<span>' + ico('gcoin') + fmtW(wallet.c) + '</span><span>' + ico('gem') + fmtW(wallet.g) + '</span>';
+  { let n = $('shopMod'); if (!n) { n = el('div', 'amnote shopmod', 'A game admin turned off building for you.'); n.id = 'shopMod'; $('shopList').parentNode.insertBefore(n, $('shopList')); } n.classList.toggle('hide', modBuildOk()); }   // (an admin stopped this player building)
   const T = $('shopTabs'); T.innerHTML = '';
   if (shopTab === 'gates') shopTab = 'gadgets';
   SHOP_TABS.forEach(([id, name]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = name; b.className = id === shopTab ? 'on' : ''; b.onclick = () => { shopTab = id; sfx('ui'); shopRender(); const l = $('shopList'); l.scrollTop = 0; }; T.appendChild(b); });
@@ -5510,7 +5606,7 @@ function shopRender() {
     const row = document.createElement('div'); row.className = 'shopitem';
     const full = atLimit(it), ok = wallet.c >= it.c && wallet.g >= it.g && !full;
     row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + (it.max && !noCaps ? ' <span class="lim' + (full ? ' full' : '') + '">' + ownCount(it) + '/' + it.max + '</span>' : '') + '</b><small>' + it.info + '</small></div>';
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.disabled = !ok;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.disabled = !ok || !modBuildOk();
     b.innerHTML = (it.c ? '<span class="pr">' + ico('gcoin') + it.c + '</span>' : '') + (it.g ? '<span class="pr">' + ico('gem') + it.g + '</span>' : '');
     b.onclick = () => buyItem(it); row.appendChild(b); L.appendChild(row);
   });
@@ -6043,6 +6139,7 @@ function placeFlagAt(tx, found) {   // on the ground where the ghost stood: it i
 }
 function buyItem(it) {
   if (!canShop() || !it) return;
+  if (!modBuildOk()) { notice('A game admin turned off building for you', 'urgent'); return; }   // (the server would turn it away anyway)
   if (wallet.c < it.c || wallet.g < it.g) { notice('Not enough yet', 'urgent'); shopRender(); return; }
   if (it.give) { wallet.g -= it.g; wallet.c += it.give; saveWallet(); sfx('gem'); shopRender(); return; }   // a trade, not a thing: the shop stays open
   if (atLimit(it)) { notice(limitNote(it), 'urgent'); shopRender(); return; }
@@ -6598,16 +6695,17 @@ function gateRender() {
   const need = inHome && !offlineOn() && srvSt !== 'ok';
   if (!need) { clearTimeout(gateArm); gateArm = 0; gateArmed = false; $('homeGate').classList.add('hide'); if (gateTips) gateTips.stop(); return; }
   if (!gateArmed) { if (!gateArm) gateArm = setTimeout(() => { gateArm = 0; gateArmed = true; gateRender(); }, 900); return; }   // (a quick blip never flashes a screen)
-  const fail = srvSt === 'fail'; $('homeGate').classList.remove('hide');
+  const bar = barred && barred.why !== 'boot' ? barred : null, fail = srvSt === 'fail' || !!bar; $('homeGate').classList.remove('hide');
   if (!gateTips && window.__tips) try { gateTips = window.__tips($('hgTip'), $('hgTipBox')); } catch (e) {} if (gateTips) gateTips.start();   // (the same tips as the loading screen)
-  $('hgSpin').classList.toggle('hide', fail); $('hgBtns').classList.toggle('hide', !fail); $('hgOffNote').classList.toggle('hide', !fail);
-  $('hgTitle').textContent = fail ? 'Can\u2019t reach the server' : 'Connecting to the server…';
-  $('hgSub').textContent = fail ? 'Check your internet. It keeps trying in the background, and you go straight back in when it answers.' : 'Friends, chats and your games all need it. This only takes a moment.';
+  $('hgSpin').classList.toggle('hide', fail && !(bar && bar.why === 'closed')); $('hgBtns').classList.toggle('hide', !fail); $('hgOffNote').classList.toggle('hide', !fail || !!bar);
+  $('hgTitle').textContent = bar ? barTitle() : fail ? 'Can\u2019t reach the server' : 'Connecting to the server…';
+  $('hgSub').textContent = bar ? barSub() : fail ? 'Check your internet. It keeps trying in the background, and you go straight back in when it answers.' : 'Friends, chats and your games all need it. This only takes a moment.';
 }
 setInterval(gateRender, 1000);
-$('hgRetry').onclick = () => { sfx('ui'); srvSt = 'wait'; gateArmed = true; srvWait(); retryNow(); gateRender(); };
+$('hgRetry').onclick = () => { sfx('ui'); if (barred) barred.next = 0; srvSt = 'wait'; gateArmed = true; srvWait(); retryNow(); gateRender(); };
 $('hgOff').onclick = () => { sfx('ui'); srvPrev = curMode(); setMode('off'); gateRender(); };
 function srvOk() {
+  barred = null;   // (let in again: a ban or a closed game is over)
   const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0; setTimeout(() => { try { outFlush(); dmFlush(); dmSyncReq(); } catch (e) {} try { devwSend(); } catch (e) {} }, 300); setTimeout(() => { try { healthSay(); } catch (e) {} }, 1500);   // (messages written while away go now, and anything missed comes in)
   if (inHome && settings.offline) { setMode(srvPrev === 'pub' ? 'pub' : 'priv'); if (was === 'fail') notice('Connected to the server', ''); }
   if (inHome) homeModeText(); gateRender();
@@ -6866,7 +6964,7 @@ const BACK = {   // what Back does to each window: the same as its back arrow, o
   confirm: () => { if (exitShown()) exitGo(); else $('cfNo').click(); },   // (a question: Back says no. "Leave BALLPIT.PARTY?": Back again leaves)
   ageGate: () => askExit(),
   codeBox: () => $('codeBox').classList.add('hide'), srvStat: () => $('srvStat').classList.add('hide'),
-  tpModal: () => tpClose(), codesModal: () => $('codesModal').classList.add('hide'), quickModal: () => $('quickModal').classList.add('hide'),
+  admModal: () => admBackStep(), tpModal: () => tpClose(), codesModal: () => $('codesModal').classList.add('hide'), quickModal: () => $('quickModal').classList.add('hide'),
   giveModal: () => $('giveModal').classList.add('hide'), wiModal: () => $('wiModal').classList.add('hide'), descModal: () => dsClose(false),
   shIn: () => $('shInX').click(), profModal: () => closeProfile(), shModal: () => shClose(), msModal: () => msClose(), nfModal: () => nfClose(),
   pickPop: () => closePick(), mmbig: () => toggleMmBig(false), shopPop: () => toggleShop(false), intro: () => $('btnOk').click(),
@@ -6938,7 +7036,7 @@ try { localStorage.removeItem('ballrun4_updbtn'); sessionStorage.removeItem('bal
 function devRender() {   // what dev mode shows, each of it switched on or off in Dev tools
   $('homeUpd').classList.toggle('hide', !devOn() || settings.devUpd === false); $('devStats').classList.toggle('hide', !devOn());
   $('setDevUpd').checked = settings.devUpd !== false; $('setDevHealth').checked = !!settings.devHealth; $('setDevLive').checked = !!LH.on; $('setNEmpty').checked = !!settings.nEmpty;
-  try { tabLocks(); } catch (e) {}
+  try { tabLocks(); } catch (e) {} try { admRender(); } catch (e) {}
 }
 function devwSend() { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'devw', on: devOn() && settings.nEmpty ? 1 : 0 })); } catch (e) {} } }   // (the server tells this game when nobody is playing, while it is open)
 $('setDevUpd').onchange = () => { settings.devUpd = $('setDevUpd').checked; save(); sfx(settings.devUpd ? 'on' : 'off'); devRender(); };
@@ -6970,8 +7068,182 @@ function useKeepDays(st) {   // each day's highs are kept on this device too (a 
 }
 function devSet(on) {   // dev mode on or off, for good on this device
   devMode = !!on; try { if (on) localStorage.setItem(DEVMODE_KEY, '1'); else localStorage.removeItem(DEVMODE_KEY); } catch (e) {}
-  if (!on) { LH.on = false; lhSave(); $('liveHud').classList.add('hide'); $('srvStat').classList.add('hide'); if (curTab === 'dev') try { showTab(firstTab()); } catch (e) {} }
+  if (!on) { try { admClose(); if (admSt === 'ok') wsSend({ t: 'admoff' }); admSt = ''; } catch (e) {} LH.on = false; lhSave(); $('liveHud').classList.add('hide'); $('srvStat').classList.add('hide'); if (curTab === 'dev') try { showTab(firstTab()); } catch (e) {} }
   devRender(); try { statsKick(); } catch (e) {} try { pushSyncSoon(); } catch (e) {} devwSend();
+}
+/* ----- the game admin (Dev tools, with the admin key). Dev mode only shows these tools: the server does nothing for them without the key,
+   which lives on the server (ADMIN_KEY), so a player who finds the dev code still cannot touch anybody. This device keeps the key once it worked,
+   and a copy of the bans and switches, which it hands back if the server restarts having forgotten them ----- */
+const ADMKEY_K = 'ballrun4_admkey', ADMSNAP_K = 'ballrun4_admsnap', MOD_K = 'ballrun4_mod';
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} };
+let admSt = '', admLock = 0, admPend = '', admData = null, admView = 'list', admTab = 'on', admOne = null, admTimer = 0, admLockSaid = false;
+const admKey = () => devOn() ? (lsGet(ADMKEY_K) || '') : '';
+const isAdmin = () => devOn() && admSt === 'ok';
+function admRender() {   // the Game admin part of Dev tools
+  const on = isAdmin(); $('admKeyBox').classList.toggle('hide', on); $('admOnBox').classList.toggle('hide', !on);
+  $('admLockSw').checked = !!admLock;
+  $('admPlN').textContent = admData ? admData.on.length + ' online' : '';
+  const n = $('admKeyNote');
+  n.textContent = admSt === 'bad' ? 'That key is not the one on the server. Check it and try again.' : admSt === 'off' ? 'This server has no admin key yet. Add ADMIN_KEY to the server’s settings (on Render: Environment), then type it here.' : admSt === 'wait' ? 'Too many wrong keys. Try again in 15 minutes.' : admSt === 'slow' ? 'One moment, then try again.' : 'To manage players, type the admin key. It is set on the server, not in the game, so only you have it.';
+  n.classList.toggle('dim', !(admSt === 'bad' || admSt === 'off' || admSt === 'wait' || admSt === 'slow'));
+}
+$('admKeyForm').addEventListener('submit', e => {
+  e.preventDefault(); const k = $('admKeyIn').value.trim(); if (!k) { $('admKeyIn').focus(); return; }
+  if (!(ws && ws.readyState === 1 && (online || lobbyOn))) { notice('Not connected to the server', 'urgent'); return; }
+  admPend = k; sfx('ui'); wsSend({ t: 'adm', key: k });
+});
+$('admForget').onclick = () => { sfx('off'); lsSet(ADMKEY_K, null); admSt = ''; admData = null; wsSend({ t: 'admoff' }); admClose(); admRender(); notice('The admin key is gone from this device', ''); };
+$('admLockSw').onchange = () => {
+  const on = $('admLockSw').checked; $('admLockSw').checked = !!admLock;   // (it changes when the server says so)
+  if (!isAdmin()) return;
+  if (on) askConfirm('Close the game to everyone?', 'Everyone but you goes back to the main menu right now, and nobody can play online until you open it again. Offline games still work.', 'Close it', () => wsSend({ t: 'admlock', on: 1 }), { no: 'Cancel', yesClass: 'danger' });
+  else { sfx('on'); wsSend({ t: 'admlock', on: 0 }); }
+};
+$('admPlayers').onclick = () => { sfx('ui'); admOpen(); };
+function admOpen() { if (!isAdmin()) return; admView = 'list'; admOne = null; $('admModal').classList.remove('hide'); admShow(); admAsk(); clearInterval(admTimer); admTimer = setInterval(() => { if (!shownEl('admModal') || !isAdmin()) { clearInterval(admTimer); admTimer = 0; return; } admAsk(); if (admView === 'one' && admOne) wsSend({ t: 'admp', pub: admOne.pub }); }, 3000); }
+function admClose() { clearInterval(admTimer); admTimer = 0; $('admModal').classList.add('hide'); admOne = null; admView = 'list'; }
+function admBackStep() { sfx('ui'); if (admView === 'one') { admView = 'list'; admOne = null; admShow(); admListRender(); } else admClose(); }
+const admAsk = () => wsSend({ t: 'admls' });
+$('amBack').onclick = admBackStep;
+$('amX').onclick = () => closeAllMenus();
+$('admModal').addEventListener('pointerdown', e => { if (e.target === $('admModal')) admBackStep(); });
+document.querySelectorAll('.amtabs [data-am]').forEach(b => b.onclick = () => { admTab = b.dataset.am; sfx('ui'); admListRender(); });
+$('amFind').addEventListener('input', () => admListRender());
+function admShow() { $('amBack').classList.remove('hide');   /* (always over Settings: back goes one step) */ $('amListView').classList.toggle('hide', admView !== 'list'); $('amOneView').classList.toggle('hide', admView !== 'one'); $('amTitle').textContent = admView === 'one' && admOne ? who(admOne.name) : 'Players'; }
+const whenTxt = t => { if (t === -1) return 'for good'; const d = new Date(t), far = t - Date.now() > 6 * 86400000; return 'until ' + d.toLocaleString([], far ? { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' } : { weekday: 'short', hour: 'numeric', minute: '2-digit' }); };
+const forTxt = ms => { const m = Math.max(1, Math.round(ms / 60000)); return m < 60 ? m + ' min' : m < 1440 ? Math.round(m / 60) + ' h' : Math.round(m / 1440) + ' d'; };
+function admWhere(e) {
+  if (e.on === 0 || (!e.w && e.last)) return 'Last played ' + ago(e.last);
+  const w = e.w === 'pub' ? 'In the public world' : e.w === 'priv' ? (e.host ? 'In ' + who(e.host) + '’s private game' : 'In their own private game') : 'On the main menu';
+  return w + (e.since ? ' · ' + forTxt(Date.now() - e.since) : '');
+}
+function admTag(cls, ic, title) { const t = el('span', 'amtag ' + cls); t.title = title; t.setAttribute('aria-label', title); t.innerHTML = '<svg class="ic"><use href="#i-' + ic + '"/></svg>'; return t; }
+function admListRender() {
+  document.querySelectorAll('.amtabs [data-am]').forEach(b => { b.classList.toggle('on', b.dataset.am === admTab); b.setAttribute('aria-selected', b.dataset.am === admTab ? 'true' : 'false'); });
+  const d = admData || { on: [], recent: [], bans: [] };
+  $('amNOn').textContent = d.on.length; $('amNBan').textContent = d.bans.length || '';
+  const q = $('amFind').value.trim().toLowerCase().replace(/^#/, '');
+  const src = admTab === 'on' ? d.on : admTab === 'ban' ? d.bans : d.recent;
+  const list = src.filter(e => !q || (e.name || '').toLowerCase().includes(q) || (e.code || '').toLowerCase().includes(q));
+  const box = $('amList'); box.textContent = '';
+  for (const e of list) {
+    const r = el('button', 'amrow'); r.type = 'button'; r.appendChild(dot(e));
+    const w = el('span', 'dmw'); w.appendChild(el('b', '', who(e.name) + (e.me ? ' (you)' : ''))); w.appendChild(el('small', '', '#' + e.code + ' · ' + (admTab === 'ban' ? 'Banned ' + whenTxt(e.until) : admWhere(e)))); r.appendChild(w);
+    const tags = el('span', 'amtags');
+    if (e.fr) tags.appendChild(admTag('fr', 'users', 'Your friend'));
+    if (e.ad) tags.appendChild(admTag('ad', 'lock', 'Game admin'));
+    if (e.nb) tags.appendChild(admTag('no', 'plus', 'Cannot build'));
+    if (e.nc) tags.appendChild(admTag('no', 'key', 'Cannot use codes'));
+    if (e.ban && admTab !== 'ban') tags.appendChild(admTag('no', 'lock', 'Banned'));
+    if (tags.childNodes.length) r.appendChild(tags);
+    r.onclick = () => { sfx('ui'); admOpenOne(e); };
+    box.appendChild(r);
+  }
+  if (!list.length) box.appendChild(el('div', 'small dim amempty', !admData ? 'Loading…' : q ? 'Nobody by that name or code.' : admTab === 'on' ? 'Nobody is playing right now.' : admTab === 'ban' ? 'Nobody is banned.' : 'Nobody else played in the last three days.'));
+}
+function admOpenOne(e) { admOne = Object.assign({ pub: e.pub }, e); admView = 'one'; $('amC').value = ''; $('amG').value = ''; $('amBanBox').classList.add('hide'); $('amMoneyNote').textContent = ''; admShow(); admOneRender(); wsSend({ t: 'admp', pub: e.pub }); }
+function admOneRender() {
+  const o = admOne; if (!o) return;
+  $('amDot').textContent = ''; $('amDot').appendChild(dot(o)); $('amName').textContent = who(o.name); $('amCode').textContent = '#' + (o.code || ''); $('amTitle').textContent = who(o.name);
+  $('amFr').classList.toggle('hide', !o.fr);
+  $('amWhere').textContent = o.on ? admWhere(o) : o.last ? 'Not playing now · last played ' + ago(o.last) : 'Not playing now';
+  const locked = !!(o.ad || o.me); $('amAdminNote').classList.toggle('hide', !locked); $('amAdminNote').textContent = o.me ? 'This is you. Nothing here can be changed for your own device.' : 'This is a game admin’s device. Nothing here can be changed for it.';
+  $('amCtl').classList.toggle('off', locked);
+  const b = o.ban; $('amBanned').classList.toggle('hide', !b); if (b) $('amBanTxt').textContent = 'Banned ' + whenTxt(b.until) + (b.ip ? ', with their network' : '');
+  $('amCanB').checked = !o.nb; $('amCanC').checked = !o.nc;
+  $('amBoot').disabled = !o.on || locked; $('amBanGo').textContent = ''; $('amBanGo').innerHTML = '<svg class="ic"><use href="#i-lock"/></svg>' + (b ? 'Ban again' : 'Ban');
+  $('amOutNote').textContent = o.on ? 'Boot sends them to the main menu: they can come straight back. A ban keeps them out of online play until it ends.' : 'They are not playing now. A ban starts at once and stops them coming in.';
+  $('amIpRow').classList.toggle('hide', !o.ipOk); $('amIpNote').textContent = o.net ? 'Stops a new account from the same Wi-Fi or phone network too. ' + o.net + ' other player' + (o.net === 1 ? ' is' : 's are') + ' on it right now and would be out too' : 'Stops a new account from the same Wi-Fi or phone network too';
+  if (!o.on) $('amMoneyNote').textContent = o.pend ? 'Waiting to be set the next time they play: ' + fmtN(o.pend.c) + ' coins, ' + fmtN(o.pend.g) + ' diamonds.' : 'Their money is on their own device. What you set here is put there the next time they play.';
+  document.querySelectorAll('.amdur [data-h]').forEach(x => x.classList.toggle('on', +x.dataset.h === (admOne.banH || 24)));
+}
+$('amSet').onclick = () => {
+  if (!admOne) return; const c = Math.floor(+$('amC').value), g = Math.floor(+$('amG').value);
+  if (!($('amC').value !== '' && $('amG').value !== '' && c >= 0 && g >= 0 && c <= 1e9 && g <= 1e9)) { notice('Type both amounts: whole numbers from 0', 'urgent'); return; }
+  sfx('ui'); wsSend({ t: 'admset', pub: admOne.pub, c, g });
+};
+$('amCanB').onchange = () => { if (!admOne) return; const on = $('amCanB').checked; sfx(on ? 'on' : 'off'); admOne.nb = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'b', on: on ? 1 : 0 }); };
+$('amCanC').onchange = () => { if (!admOne) return; const on = $('amCanC').checked; sfx(on ? 'on' : 'off'); admOne.nc = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'c', on: on ? 1 : 0 }); };
+$('amBoot').onclick = () => { const o = admOne; if (!o || !o.on) return; askConfirm('Boot ' + who(o.name) + '?', 'They go back to the main menu. They can come straight back in.', 'Boot', () => wsSend({ t: 'admboot', pub: o.pub }), { no: 'Cancel', yesClass: 'danger' }); };
+$('amBanGo').onclick = () => { if (!admOne) return; sfx('ui'); $('amBanBox').classList.toggle('hide'); admOneRender(); };
+document.querySelectorAll('.amdur [data-h]').forEach(x => x.onclick = () => { if (!admOne) return; admOne.banH = +x.dataset.h; sfx('ui'); admOneRender(); });
+$('amBanOk').onclick = () => {
+  const o = admOne; if (!o) return; const h = o.banH || 24, ip = !$('amIpRow').classList.contains('hide') && $('amIp').checked;
+  const len = h === -1 ? 'for good' : h === 1 ? 'for 1 hour' : h === 24 ? 'for 24 hours' : 'for 7 days';
+  askConfirm('Ban ' + who(o.name) + ' ' + len + '?', (o.on ? 'They are taken out now. ' : '') + 'They cannot play online ' + (h === -1 ? 'again until you unban them.' : 'until it ends.') + (ip ? ' Nobody else on their network can either.' : ''), 'Ban', () => wsSend({ t: 'admban', pub: o.pub, h, ip: ip ? 1 : 0 }), { no: 'Cancel', yesClass: 'danger' });
+};
+$('amUnban').onclick = () => { const o = admOne; if (!o) return; sfx('ui'); wsSend({ t: 'admunban', pub: o.pub }); };
+/* ----- what an admin decided about this player ----- */
+let modState = (() => { try { const o = JSON.parse(lsGet(MOD_K) || 'null'); return { b: o && o.b === 0 ? 0 : 1, c: o && o.c === 0 ? 0 : 1 }; } catch (e) { return { b: 1, c: 1 }; } })();
+const modBuildOk = () => modState.b !== 0 || offlineOn() || (!settings.mp && !party);   // (stops building where others play: the public world and private games with friends. Offline and on your own it is your own world)
+const modCodesOk = () => modState.c !== 0;
+function modCheatsOff() {   // codes turned off by an admin: whatever codes were on stop now, and money from them goes back to what it was before
+  try { infMoney = false; noCaps = false; ['ballrun4_inf', 'ballrun4_nocap', PCK].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  for (const q of [purseP, ...Object.values(purseV)]) if (q.pre) { q.c = Math.min(q.c, q.pre.c); q.g = Math.min(q.g, q.pre.g); delete q.pre; }
+  saveWallet(); try { homeWalletRender.k = ''; homeWalletRender(); } catch (e) {} try { if (shopOpen) shopRender(); } catch (e) {}
+}
+let barred = null;   // { why: 'boot' | 'ban' | 'closed', until, next }: the server sent this device out. Until next, it does not try to come back in
+function barHold() {
+  if (!barred) return false; const now = Date.now(); if (now >= barred.next) return false;
+  clearTimeout(barHold.t); barHold.t = setTimeout(() => { if (barred && Date.now() >= barred.next) retryNow(); }, barred.next - now + 50);
+  return true;
+}
+function barTitle() { return !barred ? '' : barred.why === 'ban' ? 'You can’t play online right now' : 'The game is closed for a moment'; }
+function barSub() { return !barred ? '' : barred.why === 'ban' ? 'A game admin banned this device ' + whenTxt(barred.until) + '. You can still play offline.' : 'It is being looked after. It opens again soon, and you go straight back in. Offline games still work.'; }
+function admIn(m) {   // messages for the admin tools, and the ones an admin sends a player: true when handled here
+  switch (m.t) {
+    case 'adm': {
+      const was = admSt; admSt = m.st || ''; admLock = m.lock ? 1 : 0;
+      if (admSt === 'ok') { if (admPend) { lsSet(ADMKEY_K, admPend); admPend = ''; $('admKeyIn').value = ''; sfx('big'); notice('Admin tools unlocked', ''); }
+        if (was !== 'ok') { const sn = lsGet(ADMSNAP_K); if (sn) { try { wsSend({ t: 'admsnap', snap: JSON.parse(sn) }); } catch (e) {} } admAsk(); }   // (the server keeps it if it has forgotten everything)
+        if (admLock && !admLockSaid) { admLockSaid = true; topNote('The game is closed to everyone. Open it in Settings, Dev tools', true); }
+      } else { if (admPend) { admPend = ''; sfx('warn'); } else if (admSt === 'bad') lsSet(ADMKEY_K, null); if (shownEl('admModal')) admClose(); }   // (a key that stopped working: the server's key changed)
+      admRender(); return true;
+    }
+    case 'admlist': if (!isAdmin()) return true; admData = { on: m.on || [], recent: m.recent || [], bans: m.bans || [] }; admLock = m.lock ? 1 : 0; if (m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap));
+      admRender(); if (shownEl('admModal') && admView === 'list') admListRender(); return true;
+    case 'admsnapv': if (isAdmin() && m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap)); return true;   // (the bans and switches, kept here in case the server forgets them)
+    case 'admp': if (!admOne || m.pub !== admOne.pub) return true;
+      { const keep = { banH: admOne.banH, code: admOne.code, color: admOne.color, color2: admOne.color2, pat: admOne.pat, fr: admOne.fr, w: admOne.w, host: admOne.host, since: admOne.since };
+        const fresh = (admData && [...admData.on, ...admData.recent, ...admData.bans].find(e => e.pub === m.pub)) || {};
+        admOne = Object.assign({}, keep, fresh, m, { banH: keep.banH, last: m.last || fresh.last }); if (!m.on) { admOne.w = ''; admOne.since = 0; } }
+      admOneRender(); return true;
+    case 'admw': if (admOne && m.pub === admOne.pub) { if (document.activeElement !== $('amC') && document.activeElement !== $('amG')) { $('amC').value = m.c; $('amG').value = m.g; } $('amMoneyNote').textContent = 'On their device now: ' + fmtN(m.c) + ' coins, ' + fmtN(m.g) + ' diamonds' + (m.inf ? '. They have unlimited money on from a code: setting it turns that off.' : '.'); } return true;
+    case 'admok': {
+      const t = { money: 'Their money is set', moneylater: 'Their money is set for the next time they play', nob1: 'They can build again', nob0: 'They can’t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a game admin: nothing changed' }[m.what];
+      if (t) notice(t, m.what === 'admin' ? 'urgent' : ''); admAsk(); if (admOne && m.pub === admOne.pub) wsSend({ t: 'admp', pub: admOne.pub });
+      if (m.what === 'ban' || m.what === 'unban') $('amBanBox').classList.add('hide');
+      return true;
+    }
+    case 'mod': {   // what an admin allows this player (also on every hello)
+      const was = modState; modState = { b: m.b === 0 ? 0 : 1, c: m.c === 0 ? 0 : 1 }; lsSet(MOD_K, JSON.stringify(modState));
+      if (modState.c === 0 && (was.c !== 0 || infMoney || noCaps)) { modCheatsOff(); }
+      if (modState.b === 0) { try { if (placing && !modBuildOk()) cancelPlacing(true); } catch (e) {} }
+      if (m.again) notice('A game admin turned off building for you', 'urgent');
+      else { if (was.b !== modState.b) notice(modState.b ? 'You can build again' : 'A game admin turned off building for you', modState.b ? '' : 'urgent'); if (was.c !== modState.c) notice(modState.c ? 'You can use codes again' : 'A game admin turned off codes for you', modState.c ? '' : 'urgent'); }
+      try { if (shopOpen) shopRender(); } catch (e) {}
+      return true;
+    }
+    case 'mwal': wsSend({ t: 'mwal', c: purseP.c | 0, g: purseP.g | 0, inf: infMoney ? 1 : 0 }); return true;   // (an admin is looking: the public money on this device)
+    case 'mset': {   // an admin set this player's public money
+      const c = Math.max(0, Math.min(1e9, Math.floor(+m.c) || 0)), g = Math.max(0, Math.min(1e9, Math.floor(+m.g) || 0));
+      purseP.c = c; purseP.g = g; delete purseP.pre;
+      try { infMoney = false; localStorage.removeItem('ballrun4_inf'); const o = JSON.parse(localStorage.getItem(PCK) || 'null'); if (o) { o.inf = 0; localStorage.setItem(PCK, JSON.stringify(o)); } } catch (e) {}
+      saveWallet(); try { homeWalletRender.k = ''; homeWalletRender(); } catch (e) {} try { if (shopOpen) shopRender(); } catch (e) {}
+      notice('A game admin set your public-world money: ' + fmtN(c) + ' coins, ' + fmtN(g) + ' diamonds', '');
+      wsSend({ t: 'mwal', c, g, inf: 0 }); return true;
+    }
+    case 'barred': {   // the server is sending this device out: booted (back in at once), banned, or the game is closed for now
+      const why = m.why === 'ban' ? 'ban' : m.why === 'closed' ? 'closed' : 'boot', now = Date.now();
+      const until = why === 'ban' ? (m.until === -1 ? -1 : +m.until || now + 3600000) : 0;
+      barred = { why, until, next: why === 'boot' ? now + 1500 : why === 'closed' ? now + 20000 : until === -1 ? now + 60000 : Math.min(until + 500, now + 60000) };
+      try { if (!inHome) { closeEverything(); showHome(); } else closeEverything(); } catch (e) {}
+      if (why === 'boot') askConfirm('You were taken out of the game', 'A game admin sent you back to the main menu. You can play again whenever you like.', 'OK', null, { single: true, yesClass: 'go' });
+      else if (why === 'ban') askConfirm('You are banned from online play', 'A game admin banned this device ' + whenTxt(until) + '. You can still play offline.', 'OK', null, { single: true, yesClass: 'go' });
+      gateRender(); return true;
+    }
+  }
+  return false;
 }
 devRender();
 $('homeHelp').onclick = () => showIntro();
@@ -7069,7 +7341,7 @@ function askedToJoin(m) {   // a friend would like to join your private game
 }
 function closeEverything() {   // going to a friend's game: every menu, page and pop-up closes, and you are straight in
   try { closeProfile(); } catch (e) {} try { closeInvites(); } catch (e) {} try { if (shownEl('msModal')) { $('msModal').classList.add('hide'); msIdx = -1; } } catch (e) {} try { closeLevels(); } catch (e) {} try { toggleChat(false); } catch (e) {} try { toggleShop(false); } catch (e) {}
-  try { if (!$('settings').classList.contains('hide')) closeSettingsNow(); } catch (e) {}
+  try { if (!$('settings').classList.contains('hide')) closeSettingsNow(); } catch (e) {} try { admClose(); } catch (e) {}
   for (const id of ['shModal', 'shIn', 'addModal', 'quickModal', 'giveModal', 'pickPop', 'codesModal', 'codeModal', 'wiModal', 'descModal', 'shareModal', 'tpModal', 'confirm', 'intro', 'srvStat', 'codeBox']) { const e = $(id); if (e) e.classList.add('hide'); }
   try { if (!$('mmbig').classList.contains('hide')) $('mmbig').classList.add('hide'); } catch (e) {}
   if (paused) { paused = false; $('pause').classList.add('hide'); clearInput(); }
@@ -7498,6 +7770,7 @@ function codesRender() { const L = $('csList'); L.textContent = ''; for (const [
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
   if (v === 'codes') { closeCode(); codesRender(); $('codesModal').classList.remove('hide'); sfx('ready'); return; }   // (only shows the list of codes)
+  if (!modCodesOk() && v !== 'gamedevsam') { $('cdNote').textContent = 'A game admin turned off codes for you.'; sfx('warn'); return; }
   if (v === 'gamedevsam') { const on = !devOn(); devSet(on); sfx('big'); closeCode(); notice(on ? 'Dev mode on: the update button, server figures, stats and the "nobody playing" notification. Type the code again to turn it off.' : 'Dev mode off', ''); return; }   // (dev mode: on for good, and the same code turns it off)
   if (cheatsOff() && (v === 'unlimitedpower' || v === 'themaker#1' || v === 'maker' || v === 'zeros')) { $('cdNote').textContent = 'This private game is set to no cheats. Codes do nothing here.'; sfx('warn'); return; }
   if (v === 'unlimitedpower') { if (noCaps) { noCaps = false; try { localStorage.removeItem('ballrun4_nocap'); } catch (e) {} notePubCheat(); sfx('big'); closeCode(); notice('Building limits are back on', ''); try { shopRender(); } catch (e) {} return; }   // (the same code again turns it off)
@@ -7523,7 +7796,7 @@ function onDoubleTap(el, fn) { let t = 0, x = 0, y = 0; el.addEventListener('cli
 /* ----- getting around the menus. The X closes everything, back to the main menu (or back to playing, in a game). The back arrow goes one step:
    it shows only on a window that sits on top of another one, and closes just that window ----- */
 function shownEl(id) { const e = $(id); return !!e && !e.classList.contains('hide'); }
-var UNDER = { profModal: ['settings', 'addModal', 'emoPop', 'shModal', 'lvlModal', 'invModal', 'pause'], addModal: ['settings'], nfModal: ['settings'], msModal: ['lvlModal', 'settings'], invModal: ['pause', 'settings'], shModal: ['msModal', 'lvlModal', 'pause', 'settings'], lvlModal: ['settings', 'pause'], settings: ['pause'], emoPop: ['settings', 'profModal', 'addModal'] };
+var UNDER = { profModal: ['settings', 'addModal', 'emoPop', 'shModal', 'lvlModal', 'invModal', 'pause'], addModal: ['settings'], nfModal: ['settings'], admModal: ['settings'], msModal: ['lvlModal', 'settings'], invModal: ['pause', 'settings'], shModal: ['msModal', 'lvlModal', 'pause', 'settings'], lvlModal: ['settings', 'pause'], settings: ['pause'], emoPop: ['settings', 'profModal', 'addModal'] };
 function stacked(id) { return (UNDER[id] || []).some(u => u !== id && shownEl(u) && !(u === 'pause' && inHome)); }
 function closeAllMenus() {   // the X
   sfx('ui');
@@ -7603,6 +7876,7 @@ function setMultiplayer(on) {
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
+  { const k = admKey(); if (k) o.ak = k; }   // (the game admin's key, with dev mode on: see Dev tools)
   if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), fk: soloFin(soloLevel()), bots: settings.botsPriv ? 1 : 0, nc: settings.noCheats ? 1 : 0, ul: settings.unl ? 1 : 0 }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   if (!lobby && !party && wantW > 0) o.pw = wantW;   // (joining a friend's public world from their profile)
   return JSON.stringify(o);
@@ -7615,6 +7889,7 @@ function connect() {
   const lobby = wantLobby();
   if (offlineOn() && !inHome) { if (ws) dropConnection(); return; }
   if (ws) return;
+  if (barHold()) return;   // (sent out by the server: it waits before trying again)
   if (!lobby && (!(settings.mp || party) || !settings.name)) return;
   if (location.protocol === 'file:' || !('WebSocket' in window)) { if (!lobby) setNet('offline'); return; }
   let sock;
@@ -7823,6 +8098,7 @@ function showWorldPop(id, full) {   // "You're in World 1" or "World 1 was too f
 $('worldpop').onclick = () => $('worldpop').classList.add('hide');
 function onMsg(m) {
   if (linkMsg(m)) return;
+  if (admIn(m)) return;   // (the game admin's tools, and what an admin sends a player)
   switch (m.t) {
     case 'dr': applyDoors(m); return;
     case 'update': forceUpdate(); return;   // the server only lets people with the same version in
