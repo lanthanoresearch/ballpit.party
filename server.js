@@ -1,7 +1,7 @@
 // ballpit.party - multiplayer relay server.   Run with:  npm install && npm start
 // Optional environment variables:
 //   PORT              port to listen on (hosts like Render/Railway set this for you)
-//   MAX_PLAYERS      players per world (default 20). When a world is full, new players open World 2, 3, ...
+//   MAX_PLAYERS      players in the public world (default: everyone the server can take, so there is just one). Set by hand, a full world opens World 2, 3, ...
 //   MAX_TOTAL         players on the whole site at once (default: 40 per processor core, see below). Past that, people wait on the menu for a place
 //   MAP_OFFSET_HOURS  shift the 3-hour map schedule (default 0 => switches every 3 hours on UTC multiples of 3,
 //                     which is 12, 3, 6, 9 o'clock US Central *Standard* Time; use -1 during daylight time)
@@ -23,7 +23,7 @@ const P = require('./physics.js');
 const PORT = process.env.PORT || 3000;
 // what one world can hold of what people build (shared by everyone in it). Each player has their own, lower limits per item; these keep a full world quick.
 const ROOM_PROPS = 1600, ROOM_GATES = 200, ROOM_MISC = 12000, ROOM_CPS = 150, ROOM_DELS = 20000;   // (deleting is not limited for a player: the world just has to remember what was deleted)
-const MAX_PLAYERS_ENV = Math.max(2, parseInt(process.env.MAX_PLAYERS, 10) || 20);   // (the real number is worked out from what this server can run, below)
+const MAX_PLAYERS_ENV = parseInt(process.env.MAX_PLAYERS, 10) > 1 ? parseInt(process.env.MAX_PLAYERS, 10) : 0;   // (unset: the public world takes everyone the server can, see below)
 const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
 const TICK_MS = 16, SEND_CAP = 36;   // SEND_CAP: crates and balls told to each player per update at most (about 50 KB a second even when hundreds are moving)                                      // up to 60 updates per second (the world steps and is told about every 1/60 s), and only for players who actually sent something new (the client fills in the motion between them)
@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 210;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 211;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -83,8 +83,8 @@ const CPU_LIMIT = (() => { if (+process.env.CPU_LIMIT) return +process.env.CPU_L
    So: 40 players for each full core, but never fewer than 20 (on a small plan the server eases off as it fills up), and 20 in any one world. MAX_TOTAL and MAX_PLAYERS set them by hand. */
 const CPU_EFF = Math.max(0.05, Math.min(1, CPU_LIMIT));   // (one game server only ever uses one core)
 const MAX_TOTAL = Math.max(2, parseInt(process.env.MAX_TOTAL, 10) || Math.max(20, Math.min(200, Math.round(CPU_EFF * 40))));   // (never fewer than 20: past what the processor can do at full quality, the server eases off step by step, see health)
-const MAX_PLAYERS = Math.min(MAX_PLAYERS_ENV, MAX_TOTAL);
-const PROP_SHARE = Math.floor(1600 / MAX_PLAYERS);   // crates, balls and springs every player in a world is always sure of (80 with 20 players)   // players per world: few enough that a world full of builds stays smooth for everyone
+const MAX_PLAYERS = MAX_PLAYERS_ENV ? Math.min(MAX_PLAYERS_ENV, MAX_TOTAL) : MAX_TOTAL;   // one public world for everybody: it holds everyone the server can take. Past that, people wait on the menu for a place (never a second world)
+const propShare = r => Math.floor(1600 / Math.max(20, r.players.size));   // crates, balls and springs every player in a world is always sure of: 80 each with up to 20 there, less when more share the world (it never holds more than 1600)
 const PAID = CPU_LIMIT > 0.15, HOURS_LIMIT = +process.env.INSTANCE_HOURS || (PAID ? Infinity : 750);   // (a paid server has no monthly hour limit)
 const MEM_LIMIT = (() => { if (+process.env.MEM_MB) return +process.env.MEM_MB * 1048576; const v = +cgroupNum(['/sys/fs/cgroup/memory.max', '/sys/fs/cgroup/memory/memory.limit_in_bytes']); if (v > 0 && v < 1e15) return v; return process.env.RENDER ? 512 * 1048576 : require('os').totalmem(); })();
 const monthKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 7), dayKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 10);
@@ -419,7 +419,7 @@ const rooms = new Map();
 const slotNow = () => maps.slotOf(Date.now() - OFFSET_MS);
 const nextAt = s => maps.slotStart(s + 1) + OFFSET_MS;
 let curSlot = slotNow();
-const PRIV_BASE = 3000000, PRIV_MAX = MAX_PLAYERS;   // a friend's own world (their solo level, with the things they built) is a private room; its slot is the same number the solo game uses
+const PRIV_BASE = 3000000, PRIV_MAX = Math.min(20, MAX_PLAYERS);   // a friend's own world (their solo level, with the things they built) is a private room; its slot is the same number the solo game uses
 /* the owner book (see physics.js): who built each thing in a world, by their own number. Kept with the world, sent with it, saved with it */
 const owBook = B => {
   if (B.ow && typeof B.ow === 'object') return B.ow;
@@ -1315,11 +1315,11 @@ wss.on('connection', (ws, req) => {
       if (m.t === 'padd') {
         const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
         if (roomWorld(r) && (P.zoneP(r.world.map, m.x, m.y, P.TS * 0.6) || bLock(r.world, m.x, m.y, p.otag))) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y) }); return; }
-        { // a fair share for everybody: each player in the world always has room for PROP_SHARE crates, balls and springs of their own; past that they may go on building only while that leaves every other player here their share
+        { // a fair share for everybody: each player in the world always has room for their share of crates, balls and springs of their own; past that they may go on building only while that leaves every other player here their share
           const B = bstate(r), own = owCounts(B, 'p', 'props'), mine = own.get(p.otag >>> 0) || 0; let used = B.props.length, keep = 0;   // (counted from who really built each one, so leaving and coming back changes nothing)
           for (const e of B.dels) if (e[0] === 'b') used--;
-          for (const q of r.players.values()) if (q !== p) keep += Math.max(0, PROP_SHARE - (own.get(q.otag >>> 0) || 0));
-          if (B.props.length >= ROOM_PROPS * 2 || used >= ROOM_PROPS || (mine >= PROP_SHARE && used + keep >= ROOM_PROPS)) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y), full: used >= ROOM_PROPS ? 1 : 0 }); return; }
+          const share = propShare(r); for (const q of r.players.values()) if (q !== p) keep += Math.max(0, share - (own.get(q.otag >>> 0) || 0));
+          if (B.props.length >= ROOM_PROPS * 2 || used >= ROOM_PROPS || (mine >= share && used + keep >= ROOM_PROPS)) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y), full: used >= ROOM_PROPS ? 1 : 0 }); return; }
         }
         const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); owAdd(bstate(r), 'p', e, p.otag >>> 0); const nd = worldAdd.prop(r, e), nu = nd ? nd.uid : undefined; if (nd) { nd.ownPub = p.pub; nd.ownTag = p.otag >>> 0; } { const B = bstate(r); (B.po || (B.po = {}))[e.join(',')] = p.otag >>> 0; } broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2], u: nu, o: p.otag >>> 0 }, p); if (nu !== undefined) send(p, { t: 'puid', k: e[0], x: e[1], y: e[2], u: nu });   // (the server's name for it goes to everyone, so two things put down on the very same spot can never be mixed up)
       } else {

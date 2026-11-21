@@ -37,13 +37,13 @@
   html[data-vs=smooth] *{font-size-adjust:0.42}
   html[data-vs=smooth] .lvb .nm{white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.15}
   html[data-vs=smooth] #worldpop{white-space:normal}
-  html[data-vs=smooth] #home h1 b,html[data-vs=smooth] #boot h1 b{font-weight:800}
+  html[data-vs=smooth] #home h1 b{font-weight:800}
   html[data-vs=smooth] #home h1{text-shadow:0 2px 0 rgba(255,250,235,.7)}
   html[data-vs=smooth] .tabs button{font-size:11px;letter-spacing:0}
   html[data-vs=smooth] #onl{font-size:11px}
   .btns button.danger{margin-top:0;border:2px solid var(--line)}
   .epcard{overflow-y:auto!important}
-  html[data-vs=smooth] #boot h1,html[data-vs=smooth] #home h1{animation:none;font-weight:800;letter-spacing:1px}
+  html[data-vs=smooth] #home h1{animation:none;font-weight:800;letter-spacing:1px}
   html[data-vs=smooth] .scene .sun{animation:none}
   .hide{display:none!important}
   svg.ic{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
@@ -91,26 +91,7 @@
   .fnote{font-size:12px;opacity:.6;width:100%}
   #netstat i.s-ok{background:#4ddc7a}#netstat i.s-bad{background:#ff5b4a}#netstat i.s-wait{background:#ffb347}#netstat i.s-solo{background:#8fb8ff}
 
-  #boot{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 40%,#2a2240 0%,#14111c 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--ink);font-family:var(--font);transition:opacity .6s ease,visibility .6s;overflow:hidden;padding:20px;text-align:center}
-  #boot.gone{opacity:0;visibility:hidden;pointer-events:none}
-  #boot h1{margin:0;font-size:clamp(34px,9vw,64px);letter-spacing:3px;font-weight:400;text-shadow:3px 4px 0 rgba(0,0,0,.45);animation:bwob 3.2s ease-in-out infinite}
-  #boot h1 b{color:var(--accent);font-weight:400}
   @keyframes bwob{0%,100%{transform:rotate(-1.2deg)}50%{transform:rotate(1.2deg) translateY(-3px)}}
-  #bootTrack{position:relative;width:min(420px,80vw);height:64px}
-  #bootTrack:before{content:'';position:absolute;left:0;right:0;bottom:6px;height:6px;border-radius:4px;background:repeating-linear-gradient(90deg,#8a6a46 0 14px,#6e5236 14px 18px);box-shadow:0 3px 0 rgba(0,0,0,.35)}
-  #bootBall{position:absolute;left:0;bottom:12px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8f8f,#ff4d4d 60%,#c92a2a);border:3px solid #16100c;animation:broll 2.4s cubic-bezier(.45,0,.55,1) infinite alternate}
-  #bootBall:after{content:'';position:absolute;left:50%;top:50%;width:46%;height:3px;background:#16100c;border-radius:2px;transform:translate(-10%,-50%);opacity:.55}
-  @keyframes broll{0%{transform:translateX(0) rotate(0)}100%{transform:translateX(calc(min(420px,80vw) - 36px)) rotate(720deg)}}
-  #bootBall{--h:0}
-  #bootHop{position:absolute;inset:0;animation:bhop 1.2s ease-in-out infinite}
-  @keyframes bhop{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
-  #bootBar{width:min(300px,70vw);height:12px;border:2px solid var(--line);border-radius:var(--wob);overflow:hidden;background:rgba(0,0,0,.35)}
-  #bootBar i{display:block;height:100%;width:8%;background:repeating-linear-gradient(135deg,var(--accent) 0 10px,#ffb347 10px 20px);transition:width .5s ease}
-  #bootMsg{font-size:19px;min-height:24px}
-  #bootTip{font-size:15px;opacity:.6;max-width:min(420px,86vw);min-height:40px}
-  .bb{position:absolute;top:-40px;border-radius:50%;border:3px solid #16100c;opacity:.85;animation:bfall linear infinite}
-  @keyframes bfall{to{transform:translateY(calc(100vh + 120px)) rotate(360deg)}}
-  @media (prefers-reduced-motion:reduce){.bb,#bootBall,#bootHop,#boot h1{animation:none}}
   #hl{position:fixed;left:10px;top:10px;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));z-index:3;pointer-events:none}
   #mapname{display:block;font-size:15px;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000}
   #onl{display:block;font-size:12px;opacity:.85;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000}
@@ -630,8 +611,7 @@
   @media (pointer:coarse){#tlab,.clab{display:none}}
 
   /* ----- one look for the loading screen and the main screen: the game's own sunny, hand-drawn paper world ----- */
-  #boot,#home{background:#f7d39b;color:#2b1d12;overflow:hidden}
-  #boot{justify-content:flex-start;padding-top:max(7vh,28px);--p:0}
+  #home{background:#f7d39b;color:#2b1d12;overflow:hidden}
   .scene{position:absolute;inset:0;overflow:hidden;--gh:24vh;background:linear-gradient(#fbe6b8 0%,#f7d39b 55%,#efbd82 100%)}
   .scene:after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.32;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .1 0 0 0 .5 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
   .scene .sun{position:absolute;right:7%;top:6%;width:clamp(70px,13vw,120px);animation:sunwob 7s ease-in-out infinite}
@@ -645,14 +625,10 @@
   .sball .sb{width:100%;height:100%;border-radius:50%;background:var(--bc,#6c7bff);border:3px solid #2b1d12;box-shadow:0 5px 0 rgba(43,29,18,.18);position:relative}
   .sball .sb:after{content:'';position:absolute;left:50%;top:50%;width:46%;height:3px;background:#2b1d12;border-radius:2px;transform:translate(-10%,-50%);opacity:.5}
   .sball.hop{animation:shop .7s cubic-bezier(.3,.8,.4,1)}@keyframes shop{0%,100%{transform:translateY(0)}45%{transform:translateY(-90px) scale(.96,1.05)}}
-  #boot .sball{left:calc(8% + 78% * var(--p,0));transition:left .7s cubic-bezier(.45,0,.2,1)}#boot .sball .sb{transform:rotate(calc(var(--p,0) * 1500deg));transition:transform .7s cubic-bezier(.45,0,.2,1)}
   #home .sball{left:20%;animation:sidle 1.9s ease-in-out infinite}@keyframes sidle{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
   #home .sball.hop{animation:shop .7s cubic-bezier(.3,.8,.4,1)}
-  #boot .bwrap{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:10px}
-  #boot h1,#home h1{color:#2b1d12;text-shadow:3px 3px 0 rgba(255,250,235,.75);animation:bwob 3.2s ease-in-out infinite}
-  #boot h1 b,#home h1 b{color:#e0701a}
-  #bootMsg{font-size:21px;color:#2b1d12;min-height:26px}#bootTip{color:#2b1d12;opacity:.7;font-size:16px;max-width:min(440px,86vw);min-height:42px}
-  #bootHint{position:absolute;z-index:3;left:0;right:0;bottom:calc(var(--gh,24vh) * .45);text-align:center;font-size:15px;color:#2b1d12;opacity:.55;pointer-events:none}
+  #home h1{color:#2b1d12;text-shadow:3px 3px 0 rgba(255,250,235,.75);animation:bwob 3.2s ease-in-out infinite}
+  #home h1 b{color:#e0701a}
   #home .hsub{color:#2b1d12;opacity:.8}#home>.hbox>.small{color:#2b1d12;opacity:.7;text-shadow:0 1px 0 rgba(255,250,235,.7)}
   #home .hbox{padding-bottom:calc(var(--gh,24vh) * .25)}
   /* the name box: you see your name, and a little pencil. Nothing changes until you tap OK. */
@@ -831,9 +807,11 @@
   .chatlog .cm.soon .cmt{opacity:1;color:#ffb36b}
   @keyframes cmgo{from{transform:scaleX(1)}to{transform:scaleX(0)}}
   .quickcard{gap:10px}.qmlist{display:flex;flex-direction:column;gap:6px;max-height:min(52vh,420px);overflow-y:auto}.qmlist input{font:inherit;font-size:16px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;background:#120f1c;color:var(--ink);width:100%;box-sizing:border-box}
-  .givecard{gap:10px}.gvrow{display:flex;align-items:center;gap:10px;font-size:17px}.gvrow>span:nth-child(2){flex:1}.gvrow input{width:130px;font:inherit;font-size:17px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;background:#120f1c;color:var(--ink);text-align:right}  .cscard{gap:10px;max-width:560px}.cscard h3 span{color:#ffd23d}.cscard{max-height:calc(100dvh - 24px);display:flex;flex-direction:column}.cslist{display:flex;flex-direction:column;gap:2px;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-  .csrow{display:grid;grid-template-columns:minmax(130px,40%) 1fr;gap:12px;align-items:center;padding:8px 0;border-top:2px solid rgba(255,255,255,.08)}
+  .givecard{gap:10px}.gvrow{display:flex;align-items:center;gap:10px;font-size:17px}.gvrow>span:nth-child(2){flex:1}.gvrow input{width:130px;font:inherit;font-size:17px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;background:#120f1c;color:var(--ink);text-align:right}  .cscard{gap:10px;max-width:560px}.cscard h3 span{color:#ffd23d}.cscard{max-height:calc(100dvh - 24px);display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain}.cscard>*{flex:none}.cslist{display:flex;flex-direction:column;gap:0}   /* (every code on show: the list never hides rows in a box of its own; on a very short screen the whole window scrolls) */
+  @media (min-width:700px) and (max-height:560px){.cslist{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}.cscard{max-width:760px;width:min(760px,100%)}.cscard h3{font-size:22px}}
+  .csrow{display:grid;grid-template-columns:minmax(118px,38%) 1fr;gap:12px;align-items:center;padding:7px 0;border-top:2px solid rgba(255,255,255,.08)}
   .csrow code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:clamp(11px,3.3vw,16px);white-space:nowrap;letter-spacing:-.2px;background:#120f1c;border:2px solid #4b4161;border-radius:10px;padding:6px 4px;text-align:center;color:#7ff0ff;overflow:hidden}
+  @media (max-width:420px){.csrow{grid-template-columns:1fr;gap:3px;padding:8px 0}.csrow code{justify-self:start;padding:3px 10px;font-size:14px}}   /* (a narrow phone: each code above what it does) */
   .csnotes{margin-top:6px}.cscard .csnotes p{margin:3px 0;font-size:13px;line-height:1.35}
   .csrow b{display:block;font-size:16px;line-height:1.15}.csrow span{font-size:13.5px;opacity:.8;line-height:1.2;display:block}
   #codesModal{z-index:23;background:rgba(10,8,16,.6)}
@@ -921,7 +899,18 @@
   html.mfull #settings{left:0!important;top:0!important;right:0!important;bottom:0!important;transform:none!important;width:100%!important;max-width:100%!important;height:100%!important;max-height:100%!important;border:0!important;border-radius:0!important;box-shadow:none!important;zoom:1;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
   .dmlog .cm.cont{margin-top:-3px}.dmlog .cm.grp:not(.me){border-bottom-left-radius:5px}.dmlog .cm.grp.me{border-bottom-right-radius:5px}.dmlog .cm.cont:not(.me){border-top-left-radius:5px}.dmlog .cm.cont.me{border-top-right-radius:5px}
   /* the main menu waits for the server: a full screen, like the loading screen, until it is back (or you choose to play offline) */
-  #homeGate{position:fixed;inset:0;z-index:13;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 40%,#2a2240 0%,#14111c 75%);color:var(--ink);font-family:var(--font);animation:hgIn .25s ease-out}
+  /* ----- the loading screen, and the same screen while the game waits for the server: the name, a spinner, what is happening, and a tip ----- */
+  #boot,#homeGate{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:max(24px,env(safe-area-inset-top)) 20px max(18px,env(safe-area-inset-bottom));background:radial-gradient(ellipse at 50% 40%,#2a2240 0%,#14111c 75%);color:var(--ink);font-family:var(--font);overflow:hidden}
+  #boot{z-index:100;transition:opacity .45s ease,visibility .45s}#boot.gone{opacity:0;visibility:hidden;pointer-events:none}
+  #homeGate{z-index:13;animation:hgIn .25s ease-out}#homeGate.hide{display:none}
+  #boot .hgbox,#homeGate .hgbox{margin:auto 0}#boot h3{margin:0;font-size:24px;font-weight:normal;min-height:30px}
+  .ldbar{width:min(200px,56vw);height:4px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}.ldbar i{display:block;height:100%;width:calc(var(--p,0) * 100%);background:var(--accent);border-radius:4px;transition:width .5s ease}
+  .ldtip{flex:none;margin-top:16px;width:min(460px,100%);display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 14px;background:none;border:0;color:var(--ink);font:inherit;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .ldtip b{font:600 11px/1 system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--accent)}
+  .ldtip span{font-size:15.5px;line-height:1.4;opacity:.78;min-height:2.8em;transition:opacity .35s ease}.ldtip.fade span{opacity:0}
+  #homeGate{overflow-y:auto}   /* (a very short screen: it scrolls, nothing is ever out of reach) */
+  @media (max-height:460px){#boot,#homeGate{padding-top:max(10px,env(safe-area-inset-top))}.ldtip{margin-top:6px;padding:4px 14px}.ldtip span{min-height:1.4em}#boot .hgbox,#homeGate .hgbox{gap:8px;width:min(560px,100%)}#boot .hglogo,#homeGate .hglogo{font-size:28px}#homeGate h3{font-size:20px}#homeGate .hgsub{font-size:13.5px;max-width:520px}#hgOffNote{display:none}#homeGate .hgbtns{flex-direction:row;width:min(460px,100%)}#homeGate .hgbtns .btn{padding:8px;font-size:16px}}
+  @media (prefers-reduced-motion:reduce){.ldtip span{transition:none}}
   @keyframes hgIn{from{opacity:0}to{opacity:1}}
   .hgbox{width:min(420px,100%);display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
   .hglogo{font-size:38px;letter-spacing:2px;font-weight:700}.hglogo b{color:#ff8a3d;font-weight:700}
@@ -1030,16 +1019,25 @@
 </style>
 </head>
 <body>
-<div id="boot"><div class="scene" id="bootScene"></div>
-  <div class="bwrap"><h1>BALL<b>PIT</b>.PARTY</h1><div id="bootMsg">Checking for the newest version…</div><div id="bootTip"></div></div>
-  <div id="bootHint">Tap the ball to make it hop</div>
-</div>
+<div id="boot"><div class="hgbox">
+  <div class="hglogo">BALL<b>PIT</b>.PARTY</div>
+  <div class="hgspin" aria-hidden="true"></div>
+  <h3 id="bootMsg" aria-live="polite">Checking for the newest version…</h3>
+  <div class="ldbar" aria-hidden="true"><i></i></div>
+</div><button class="ldtip" id="bootTipBox" type="button" title="Next tip"><b>Tip</b><span id="bootTip"></span></button></div>
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 210; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the ring fills. Then jump again for an extra tall jump.', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Roll one way long enough and a ring fills: then boost!', 'Add friends in Settings to always see where they are.', 'Tap the chat button to send an emoji or a quick message to your world.', 'Water is safe. Lava is not.', 'Crates in the start area can be pushed around. Go play!', 'The finish flag moves between a few spots on every map. Look around!'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 211; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
-  try { $('bootTip').textContent = tips[Math.floor(Math.random() * tips.length)]; } catch (e) {}
+  window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
+    var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
+    var next = function (now) { var t = tips[o[k++ % o.length]]; if (now) { el.textContent = t; return; } box.classList.add('fade'); setTimeout(function () { el.textContent = t; box.classList.remove('fade'); }, 330); };
+    var go = function () { clearTimeout(tm); if (run) tm = setTimeout(function () { next(false); go(); }, 7000); };
+    next(true); box.onclick = function () { next(false); go(); };
+    return { start: function () { if (!run) { run = true; go(); } }, stop: function () { run = false; clearTimeout(tm); } };
+  };
+  var bootTips = null; try { bootTips = window.__tips($('bootTip'), $('bootTipBox')); bootTips.start(); } catch (e) {}
   /* the one scene that both this loading screen and the main screen are drawn on: the same sunny, hand-drawn paper world as the game.
      The ball is YOUR ball (colour and pattern), it rolls along the real shape of the ground, and the props are things you meet in the game. */
   var INK = '#2b1d12', GROUND = 'M0 22C45 8 95 34 140 20S225 2 275 22S365 30 400 12';
@@ -1120,11 +1118,10 @@
     requestAnimationFrame(sceneLoop);
   }
   requestAnimationFrame(sceneLoop);
-  try { window.__scene($('bootScene'), 'boot'); } catch (e) {}
   var steps = 8; window.__bootStep = function (m, p) { if (m) msg(m); fill(p); };
   window.__bootHide = function () {   // the game calls this once its first frame is on screen
     var left = Math.max(0, 1300 - (Date.now() - t0));
-    fill(100); msg('Ready!');
+    fill(100); msg('Ready!'); try { bootTips.stop(); } catch (e) {}
     setTimeout(function () { var b = $('boot'); if (b) { b.classList.add('gone'); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 800); } }, left + 250);
   };
   fill(15);
@@ -1464,7 +1461,7 @@
         <div class="small dim">Bots are all different: racers (some great, some not), explorers, builders who put up little towers, and some who just hang out. Ask them for things in the chat ("Can you open the gate?", "Follow me", "I need dirt") and sometimes one will help.</div>
       </div></div>
           </div></div>
-      <div class="dep" data-dep="mp"><div><div class="small dim">Public worlds are only real people. Bots can play in your private world or offline.</div></div></div>
+      <div class="dep" data-dep="mp"><div><div class="small dim">The public world is only real people. Bots can play in your private world or offline.</div></div></div>
       <h4><span data-ic="chat"></span> Messages</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="trophy"></span><span><b>Announce winners</b><small>"Someone won the level!" messages</small></span></span><input type="checkbox" id="setAnnounce"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="chat"></span><span><b>Join / leave messages</b><small>When people come and go</small></span></span><input type="checkbox" id="setJoinMsg"><i></i></label>
@@ -1550,7 +1547,7 @@
   <div class="hgsub" id="hgSub">Friends, chats and your games all need it. This only takes a moment.</div>
   <div class="hgbtns hide" id="hgBtns"><button id="hgRetry" class="btn prim" type="button"><svg class="ic"><use href="#i-reset"/></svg>Try again</button><button id="hgOff" class="btn" type="button"><svg class="ic"><use href="#i-user"/></svg>Play offline</button></div>
   <div class="hgsub hide" id="hgOffNote">Offline: the starting maps, just you and bots, saved on this device.</div>
-</div></div>
+</div><button class="ldtip" id="hgTipBox" type="button" title="Next tip"><b>Tip</b><span id="hgTip"></span></button></div>
 <div id="netGate" class="overlay hide" role="alertdialog" aria-live="polite" aria-labelledby="ngTitle"><div class="card ngcard">
   <div class="ngspin" aria-hidden="true"></div>
   <h3 id="ngTitle">Connecting</h3>
@@ -1669,7 +1666,7 @@
   <h3 id="csTitle">Secret <span>codes</span></h3>
   <div class="small dim">In a game, double-tap your coins, type a code, then OK.</div>
   <div class="cslist" id="csList"></div>
-  <div class="small dim csnotes"><p>Cheats end when you leave the game. In a public world they last until the map changes.</p><p>When the money codes end, you keep what you have, but never more than you had before them.</p><p>In a private game set to No cheats, the money and building codes do nothing.</p></div>
+  <div class="small dim csnotes"><p>Cheats end when you leave the game (in a public world, when the map changes). Then you keep the money you have, but never more than before. In a private game set to No cheats, the cheats do nothing.</p></div>
   <div class="btns"><button id="csOk" type="button" class="go">Got it</button></div>
 </div></div>
 <div id="codeModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="cdTitle"><div class="card nmcard">
@@ -1802,8 +1799,8 @@
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=210"></script>
-<script src="physics.js?v=210"></script>
+<script src="maps.js?v=211"></script>
+<script src="physics.js?v=211"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -4402,7 +4399,7 @@ function applyUi() { const k = Math.round(uiScaleNow() * 100) / 100, st = docume
 addEventListener('resize', applyUi);
 const selMouse = makeSelect($('selMouse'), Object.keys(MOUSE).map(k => ({ v: k, label: MOUSE[k][0] })), v => { settings.mouseMove = v; save(); $('mouseDesc').textContent = MOUSE[v][1]; });
 const selVs = makeSelect($('selVs'), Object.keys(VSS).map(k => ({ v: k, label: VSS[k][0] })), v => { settings.vs = v; save(); applyVs(); $('vsDesc').textContent = VSS[v][1]; });
-const TODS = { live: 'Follows the real clock, like the public worlds.', morning: 'It is always morning in your private world.', midday: 'It is always midday in your private world.', night: 'It is always night in your private world.' };
+const TODS = { live: 'Follows the real clock, like the public world.', morning: 'It is always morning in your private world.', midday: 'It is always midday in your private world.', night: 'It is always night in your private world.' };
 const selTod = makeSelect($('selTod'), [{ v: 'live', label: 'Time of day: Live' }, { v: 'morning', label: 'Time of day: Morning' }, { v: 'midday', label: 'Time of day: Midday' }, { v: 'night', label: 'Time of day: Night' }],
   v => { settings.tod = v; save(); $('todDesc').textContent = TODS[v]; });
 const selMusic = makeSelect($('selMusic'), [{ v: 'adaptive', label: 'Fits the moment' }, { v: 'random', label: 'Random' }, { v: 'chill', label: 'Chill' }, { v: 'upbeat', label: 'Upbeat' }, { v: 'exciting', label: 'Exciting' }, { v: 'phonk', label: 'Phonk' }, { v: 'dreamy', label: 'Dreamy' }],
@@ -6092,7 +6089,7 @@ const blockedPub = pub => myBlocks.some(b => b.pub === pub);
 function statusOf(p) {
   if (!p) return { c: 'off', t: '' };
   if (isMe(p)) return { c: 'on', t: 'This is you' };
-  if (p.on) return { c: 'on', t: p.w < 0 ? 'Online · in a private game' : p.w > 0 ? 'Online · World ' + p.w : 'Online · on the main menu' };
+  if (p.on) return { c: 'on', t: p.w < 0 ? 'Online · in a private game' : p.w > 0 ? 'Online · ' + (wNum(p.w) ? 'World ' + p.w : 'in the public world') : 'Online · on the main menu' };
   if (p.hid) return { c: 'hid', t: 'Keeps their online status private' };
   return { c: 'off', t: p.last ? lastOn(p.last) : 'Offline' };
 }
@@ -6172,7 +6169,7 @@ function profRender() {
   else if (linked) {   // everything about this one friend
     { const n = dmUnread(p.pub), b = add('btn prim', 'Chat', () => openDm(p.pub), !canMessage(lk) && !dms[p.pub], 'chat'); b.title = 'Chat with ' + nm; if (n) gBadge(b, n); }
     { const f = Object.assign({}, p, lk);   // a quick way to get together: what it does depends on where they are
-      if (f.ok && f.on && !f.hid && f.w > 0) { const here = !inHome && online && !party && settings.mp && room.id === f.w; add('btn', here ? 'In World ' + f.w + ' with you' : 'Join World ' + f.w, () => joinFriendPublic(f), here, 'play', true); }
+      if (f.ok && f.on && !f.hid && f.w > 0) { const here = !inHome && online && !party && settings.mp && room.id === f.w; add('btn', here ? (wNum(f.w) ? 'In World ' + f.w + ' with you' : 'Playing with you') : wNum(f.w) ? 'Join World ' + f.w : 'Join them', () => joinFriendPublic(f), here, 'play', true); }
       else if (f.ok && f.on && !f.hid && f.w < 0) { const there = !!party && party.host === p.pub; add('btn', there ? 'In their game' : 'Ask to join', () => { wsSend({ t: 'ask', to: p.pub }); sfx('ui'); notice('Asked ' + nm + ' to let you join', ''); }, there, 'users', true); } }
     const m1 = row('On your map', 'How ' + nm + ' looks while you play'), o = el('div', 'fopts');
     o.appendChild(chip('Big and glowing', lk.big, () => { lk.big = !lk.big; saveLinks(); lpRender(); }, 'Show ' + nm + ' bigger and glowing on both maps'));
@@ -6570,11 +6567,13 @@ function srvWait() { setTimeout(gateRender, 0); if (srvSt === 'ok') srvSt = 'wai
 function srvFail() { srvSt = 'fail'; if (inHome) homeModeText(); gateRender(); }
 /* on the main menu nothing works without the server: a full screen says so until it is back. If it stays away, you can play offline instead */
 let gateArm = 0, gateArmed = false;
+let gateTips = null;
 function gateRender() {
   const need = inHome && !offlineOn() && srvSt !== 'ok';
-  if (!need) { clearTimeout(gateArm); gateArm = 0; gateArmed = false; $('homeGate').classList.add('hide'); return; }
+  if (!need) { clearTimeout(gateArm); gateArm = 0; gateArmed = false; $('homeGate').classList.add('hide'); if (gateTips) gateTips.stop(); return; }
   if (!gateArmed) { if (!gateArm) gateArm = setTimeout(() => { gateArm = 0; gateArmed = true; gateRender(); }, 900); return; }   // (a quick blip never flashes a screen)
   const fail = srvSt === 'fail'; $('homeGate').classList.remove('hide');
+  if (!gateTips && window.__tips) try { gateTips = window.__tips($('hgTip'), $('hgTipBox')); } catch (e) {} if (gateTips) gateTips.start();   // (the same tips as the loading screen)
   $('hgSpin').classList.toggle('hide', fail); $('hgBtns').classList.toggle('hide', !fail); $('hgOffNote').classList.toggle('hide', !fail);
   $('hgTitle').textContent = fail ? 'Can\u2019t reach the server' : 'Connecting to the server…';
   $('hgSub').textContent = fail ? 'Check your internet. It keeps trying in the background, and you go straight back in when it answers.' : 'Friends, chats and your games all need it. This only takes a moment.';
@@ -7383,7 +7382,7 @@ function openWorldInfo() {
   wiFill(); $('wiModal').classList.remove('hide'); clearInterval(wiTimer); wiTimer = setInterval(() => { if ($('wiModal').classList.contains('hide')) { clearInterval(wiTimer); return; } wiFill(); }, 1000);
   if (location.protocol !== 'file:') fetch(homeBase() + '/stats', { cache: 'no-store' }).then(r => r.json()).then(j => {
     const n = j.online | 0, rs = Array.isArray(j.rooms) ? j.rooms.filter(r => r.players > 0) : [];
-    $('wiPlayers').textContent = n > 0 ? n + (n === 1 ? ' player' : ' players') + ' online' + (rs.length > 1 ? ' · ' + rs.map(r => 'World ' + r.id + ': ' + r.players).join(', ') : '') : 'Nobody yet. Be the first!';
+    pubMany = rs.length > 1; $('wiPlayers').textContent = n > 0 ? n + (n === 1 ? ' player' : ' players') + ' online' + (rs.length > 1 ? ' · ' + rs.map(r => 'World ' + r.id + ': ' + r.players).join(', ') : '') : 'Nobody yet. Be the first!';
   }).catch(() => { $('wiPlayers').textContent = 'Could not reach the server just now'; });
 }
 $('wiClose').onclick = () => { sfx('ui'); $('wiModal').classList.add('hide'); };
@@ -7713,11 +7712,14 @@ function onBin(buf) {   // compact position update: [1][slot u16] then per playe
 }
 let lastWorldShown = 0, worldPopT = 0;
 const leftText = ms => { const m = Math.max(1, Math.round(ms / 60000)); return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60 ? (m % 60) + 'm' : '') : m + ' min'; };
+/* there is one public world for everybody: it has no number. Only if the server ever had to open a second one do worlds show their numbers again */
+let pubMany = false;
+const wNum = id => pubMany || id > 1, wName = id => wNum(id) ? 'World ' + id : 'the public world', WName = id => wNum(id) ? 'World ' + id : 'The public world';
 function announceEntry(o) {   // when you arrive somewhere: which map, how long is left, how many are there. (No 'change' screen: that is only for a map that swaps while you are in it.)
   const idx = ((o.slot % BallMaps.count) + BallMaps.count) % BallMaps.count, mapT = lvLabelOf(idx); let title, sub;
   if (party) { title = party.role === 'host' ? 'Your private game' : who(party.name) + "'s private game"; sub = mapT + (o.n ? ' · ' + o.n + ' here' : ''); }
   else if (o.slot >= SOLO_BASE || inSolo()) { title = 'Your private world'; sub = mapT + ' · no time limit · only you'; }
-  else { title = 'Public World ' + (room.id || ''); sub = mapT + ' · ' + leftText((o.next || S.nextAt) - nowMs()) + ' left · ' + (o.n || room.n) + ' player' + ((o.n || room.n) === 1 ? '' : 's'); }
+  else { title = WName(room.id || 1); sub = mapT + ' · ' + leftText((o.next || S.nextAt) - nowMs()) + ' left · ' + (o.n || room.n) + ' player' + ((o.n || room.n) === 1 ? '' : 's'); }
   const el = $('worldpop'); el.innerHTML = '<b></b><span></span>'; el.firstChild.textContent = title; el.lastChild.textContent = sub; el.classList.remove('hide');
   clearTimeout(worldPopT); worldPopT = setTimeout(() => el.classList.add('hide'), 5000);
 }
@@ -7727,7 +7729,7 @@ function showWorldPop(id, full) {   // "You're in World 1" or "World 1 was too f
   if (list.length) {
     const was = list.length === 1 ? 'World ' + list[0] + ' was' : 'Worlds ' + list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1] + ' were';
     h = '<b>' + was + ' too full</b>You\'ve been pushed to World ' + id + '. Each world holds up to ' + room.max + ' players, so a new one opens when the others fill up.';
-  } else h = '<b>Public World ' + id + '</b>Everyone here plays the same map. Each world holds up to ' + room.max + ' players.';
+  } else h = '<b>' + WName(id) + '</b>' + (wNum(id) ? 'Everyone here plays the same map. Each world holds up to ' + room.max + ' players.' : 'Everyone online plays here, on the same map.');
   el.innerHTML = h; el.classList.remove('hide'); sfx('notice');
   clearTimeout(worldPopT); worldPopT = setTimeout(() => el.classList.add('hide'), list.length ? 10000 : 6000);
 }
@@ -7764,7 +7766,7 @@ function onMsg(m) {
       others.clear();
       m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; o.ot = p.ot >>> 0; others.set(p.id, o); noteSeen(o.pub, p.name, p.color, p.code, undefined, undefined, p.color2, p.pat); }); saveSeen();
       setNet('online');
-      if (m.priv) { if (party.role !== 'host') addFeed('You joined ' + who(party.name) + "'s private game", 'join', true); } else addFeed('You joined World ' + m.room, 'join', true);
+      if (m.priv) { if (party.role !== 'host') addFeed('You joined ' + who(party.name) + "'s private game", 'join', true); } else addFeed('You joined ' + wName(m.room), 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
       if (!m.priv || (party && party.role === 'guest')) setNetFk(m.slot, m.fk);
       if (party && party.role === 'guest') { loadMap(m.slot, m.next); }
@@ -7772,6 +7774,7 @@ function onMsg(m) {
       else if ((m.slot !== S.slot && forced === null) || (!m.priv && m.slot === S.slot && (m.fk | 0) !== S.fk)) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
       if (!m.priv && m.build) { S.pubRoom = m.room; if (S.slot === m.slot && S.world && S.mode !== 'fade') pubSync(m.build); else S.pendingBuild = { slot: m.slot, b: m.build }; }
       if (!m.priv && m.fresh) offerSnap(m.slot, m.room);
+      if (!m.priv) pubMany = m.room > 1 || (m.full || []).length > 0;   // (only one public world: no numbers)
       if (m.priv) announceEntry({ slot: m.priv.idx, n: m.n }); else if ((m.full || []).length) showWorldPop(m.room, m.full); else announceEntry({ slot: m.slot, next: m.next, n: m.n });
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
@@ -9087,7 +9090,7 @@ const clockStr = ms => new Date(ms - clockOff).toLocaleTimeString([], { hour: 'n
 function worldText() {
   if (party && online) { const n = room.n + bots.length; return party.role === 'host' ? 'Private game · ' + n + ' here' : who(party.name) + "'s private game · " + n + ' here'; }   // (bots count as players here too)
   if (inSolo()) return '';
-  if (online) return 'World ' + room.id + ' · ' + room.n + ' player' + (room.n === 1 ? '' : 's');
+  if (online) return (wNum(room.id) ? 'World ' + room.id + ' · ' : '') + room.n + ' player' + (room.n === 1 ? '' : 's') + (wNum(room.id) ? '' : ' here');   // with one world, "Public" above already says where you are
   return '';
 }
 function hudTick() {
@@ -9126,7 +9129,7 @@ function hudTick() {
     const over = () => pl.clientWidth && (pl.scrollWidth > pl.clientWidth + 1 || Math.max($('gemN').getBoundingClientRect().right, $('coinN').getBoundingClientRect().right) > pl.getBoundingClientRect().right - (parseFloat(getComputedStyle(pl).paddingRight) || 0) + 0.5);
     for (let n = 0; n < 12 && over(); n++) { const f = parseFloat(getComputedStyle(pl).fontSize) || 14; if (f <= 8.5) break; pl.style.fontSize = (f - 0.5) + 'px'; } }   // (big numbers: the text gets a little smaller until it fits in its box)
   $('coinpill').title = 'Your coins and diamonds. Spend them in the shop (the + button).';
-  $('mpstats').textContent = online && party ? worldText() + '.' : online ? 'You are in World ' + room.id + ' with ' + room.n + ' of ' + room.max + ' players. Online across all worlds: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : '');
+  $('mpstats').textContent = online && party ? worldText() + '.' : online ? 'You are in ' + wName(room.id) + ' with ' + room.n + ' player' + (room.n === 1 ? '' : 's') + '. Online: ' + net.online + '. Most ever: ' + net.peak + '.' : (settings.mp ? 'Not connected right now.' : '');
   if (!$('tpop').classList.contains('hide')) fillTimerPop(rem);
 }
 setInterval(hudTick, 250);
@@ -9137,7 +9140,7 @@ function fillTimerPop(rem) {
   $('tpChange').textContent = endless ? 'This level stays until you pick another' : 'New map at ' + clockStr(S.nextAt) + ' (in ' + fmtClock(rem) + ')';
   $('tpCoins').textContent = isBeaten(S.idx) ? 'You have beaten this map' : 'Not beaten yet';
   $('tpNet').textContent = netDetail(); $('tpDot').className = 's-' + netView().st;
-  $('tpWorld').textContent = party ? worldText() : sl ? 'Private world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? 'Public world ' + room.id + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
+  $('tpWorld').textContent = party ? worldText() : sl ? 'Private world' + (bots.length ? ' · ' + bots.length + ' bots with you' : '') : online ? WName(room.id) + ': ' + room.n + ' player' + (room.n === 1 ? '' : 's') + (bots.length ? ' (+' + bots.length + ' bots on your screen only)' : '') : (bots.length ? 'Offline · ' + bots.length + ' bots with you' : 'Offline');
   $('tpNext').textContent = endless ? '' : 'Up next: ' + BallMaps.names[(S.slot + 1) % BallMaps.count];
   const bi = beaconInfo(nowMs()), on = !!(beaconOK() && S.mode === 'play' && !S.finished && bi.on), ar = $('tpArrow');
   $('tpBeacon').textContent = privWorld() ? (beaconOK() ? 'The finish is always shown' : 'The finish shows on the map') : !beaconOK() ? 'Finish beacon is off' : on ? 'Beacon is on! Follow the arrow' : 'Finish beacon in ' + fmtClock(bi.next);
