@@ -1668,6 +1668,10 @@
   const PII_NUM = { zero: '0', oh: '0', o: '0', one: '1', won: '1', two: '2', three: '3', four: '4', fore: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', niner: '9', ten: '10', eleven: '11', twelve: '12', thirteen: '13', fourteen: '14', fifteen: '15', sixteen: '16', seventeen: '17', eighteen: '18', nineteen: '19', twenty: '20', thirty: '30', forty: '40', fourty: '40', fifty: '50', sixty: '60', seventy: '70', eighty: '80', ninety: '90', hundred: '00', thousand: '000', double: '', triple: '' };
   const PII_SOFT = { oh: 1, o: 1, won: 1, fore: 1, double: 1, triple: 1 };   // (only count as numbers right next to other numbers)
   const PII_GAP = { and: 1, dash: 1, dot: 1, then: 1, space: 1, hyphen: 1, x: 1, ext: 1, area: 1, code: 1, is: 1, its: 1, plus: 1, number: 1, num: 1, no: 1 };
+  /* names only the game's own team may look like they have: a player cannot call themselves Admin or Dev (the real team shows a Dev badge instead).
+     Each word of the name is checked, so Devon or Modesto are fine, Admin123 and Mod_Sam are not */
+  const RESERVED = ['admin', 'admins', 'administrator', 'owner', 'moderator', 'mod', 'mods', 'staff', 'official', 'dev', 'devs', 'developer', 'support', 'system', 'ballpit', 'ballpitparty'];
+  function nameReserved(n) { const w = String(n || '').toLowerCase().split(/[^a-z]+/).filter(Boolean); return w.some(x => RESERVED.indexOf(x) >= 0) || RESERVED.indexOf(w.join('')) >= 0; }
   function piiCheck(raw) {
     let s = String(raw == null ? '' : raw); try { s = s.normalize('NFKC'); } catch (e) {}
     s = s.toLowerCase().replace(/[​-‏⁠﻿]/g, '');
@@ -1704,7 +1708,7 @@
     return '';
   }
   const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
-  const api = { VERSION: 214, OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 216, OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

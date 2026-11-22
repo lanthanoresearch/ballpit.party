@@ -1021,6 +1021,8 @@
 .devme{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:#2c2644;border:2px solid rgba(232,220,192,.35);margin:2px 0 6px}
 .devrole{flex:none;font-size:13px;padding:4px 10px;border-radius:99px;background:#c9a227;color:#1b1726}
 .devrole.dev{background:#6b4fd0;color:#fff}
+.devpill{display:inline-block;vertical-align:2px;margin-left:6px;padding:0 6px;border-radius:99px;background:#6b4fd0;color:#fff;font:800 10px/15px "Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;flex:none}
+.chatlog .cm .devpill{margin:0 6px 0 -2px}#profName .devpill{vertical-align:middle;font-size:11px;line-height:17px;padding:0 7px}
 .devmet{flex:1;min-width:0}
 .devmet b{display:block;font-weight:normal;font-size:17px}
 .devmet small{display:block;font-size:13px;opacity:.75}
@@ -1103,8 +1105,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 214; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
-  var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 216; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
     var next = function (now) { var t = tips[o[k++ % o.length]]; if (now) { el.textContent = t; return; } box.classList.add('fade'); setTimeout(function () { el.textContent = t; box.classList.remove('fade'); }, 330); };
@@ -1194,9 +1196,9 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   }
   requestAnimationFrame(sceneLoop);
   var steps = 8; window.__bootStep = function (m, p) { if (m) msg(m); fill(p); };
-  window.__bootHide = function () {   // the game calls this once its first frame is on screen
+  window.__bootHide = function (m) {   // the game calls this once its first frame is on screen and the server has answered (or cannot be reached)
     var left = Math.max(0, 1300 - (Date.now() - t0));
-    fill(100); msg('Ready!'); try { bootTips.stop(); } catch (e) {}
+    fill(100); msg(m || 'Ready!'); try { bootTips.stop(); } catch (e) {}
     setTimeout(function () { var b = $('boot'); if (b) { b.classList.add('gone'); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 800); } }, left + 250);
   };
   /* before the page loads itself again (a newer version, a backup), it steps back down to its first history entry and stops asking "Leave site?".
@@ -1239,7 +1241,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
           return;
         }
       }
-      msg('Loading the game…'); fill(50);
+      if (pMax < 50) { msg('Loading the game…'); fill(50); }
     }).catch(function () { fill(40); });
   } catch (e) {}
 })();
@@ -1625,6 +1627,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
     <section class="pane" data-pane="dev">
       <div class="devme" id="devMe"><span class="devrole" id="devRoleTag">Owner</span><div class="devmet"><b id="devMeT"></b><small id="devMeS"></small></div></div>
       <div class="devmebtn"><button class="btn sm" id="devOut" type="button"></button></div>
+      <label class="sw2 ic2" id="devShowRow"><span class="ti"><span data-ic="eye"></span><span><b>Show that I'm a dev <span class="devpill">Dev</span></b><small>Other players see this badge by your name: over your ball, in the chat, in their friends list and on your profile</small></span></span><input type="checkbox" id="setDevShow"><i></i></label>
       <h4><span data-ic="users"></span> Players</h4>
       <button class="btn full" id="admPlayers" type="button"><span data-ic="users"></span>Players<span class="admn" id="admPlN"></span></button>
       <label class="sw2 ic2" id="admLockRow"><span class="ti"><span data-ic="lock"></span><span><b>Close the game to everyone</b><small>Everyone but owners and devs goes back to the main menu and cannot play online until this is off. Offline games still work</small></span></span><input type="checkbox" id="admLockSw"><i></i></label>
@@ -1935,8 +1938,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=214"></script>
-<script src="physics.js?v=214"></script>
+<script src="maps.js?v=216"></script>
+<script src="physics.js?v=216"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1982,7 +1985,7 @@ function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, nQuiet: { on: false, a: 1320, b: 420 }, nInGame: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
-    notify: false, nFriends: true, nMsgs: true, nRequests: true, nInvites: true, nMaps: true, nEmpty: false, devUpd: true, devHealth: false,
+    notify: false, nFriends: true, nMsgs: true, nRequests: true, nInvites: true, nMaps: true, nEmpty: false, devUpd: true, devHealth: false, devShow: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'random', musicVol: 0.5,
     boost: true, boostAuto: false, boostBtn: true, boostPull: false, joy: true, superBtn: true, btnMul: {},
@@ -1995,6 +1998,8 @@ let settings = defaults();
 const DEVROLE_KEY = 'ballrun4_devrole';   // (never 'ballrun4_dev': that is this device's own number)
 let devRole = ''; try { devRole = localStorage.getItem(DEVROLE_KEY) || ''; if (devRole !== 'owner' && devRole !== 'dev') devRole = ''; localStorage.removeItem('ballrun4_devmode'); } catch (e) {}   // (the old dev code's switch is gone)
 const devOn = () => !!devRole;
+let devShSrv = 0;   // (the server shows this player's Dev badge to others right now: only ever after it checked they are an owner or a dev)
+const devShown = () => devOn() && !!settings.devShow && !!devShSrv;
 try { const o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
 function normalize() {
   const d = defaults();
@@ -2765,6 +2770,13 @@ function drawTag(name, x, y) {
   ctx.lineWidth = 3.5; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(0,0,0,.75)'; ctx.strokeText(name, x, y);
   ctx.fillStyle = '#fff'; ctx.fillText(name, x, y);
 }
+const DEVPILL_W = 28; let devPillN = 0;
+function drawDevPill(cx, cy, g) {   // the small purple Dev badge by the name of an owner or dev who chose to show it (the same badge for both)
+  g = g || ctx; g.save(); devPillN++; const w = DEVPILL_W, h = 14, x = cx - w / 2, y = cy - h / 2;
+  g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, 7); else g.rect(x, y, w, h);
+  g.fillStyle = '#6b4fd0'; g.fill(); g.lineWidth = 1.5; g.strokeStyle = 'rgba(0,0,0,.6)'; g.stroke();
+  g.font = 'bold 10px ' + FONT_SMOOTH; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff'; g.fillText('DEV', cx, cy + 0.5); g.restore();
+}
 function drawBotMark(x, y) {   // a robot-head icon: players can't get this, so it always means "bot"
   ctx.save(); ctx.translate(x, y);
   ctx.strokeStyle = '#06323b'; ctx.lineWidth = 2; ctx.fillStyle = '#22d3ee';
@@ -2780,10 +2792,14 @@ function drawPersonMark(x, y) {   // a little person icon (head and shoulders): 
   ctx.beginPath(); ctx.moveTo(-6.5, 3); ctx.quadraticCurveTo(-6.5, -3, 0, -3); ctx.quadraticCurveTo(6.5, -3, 6.5, 3); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.restore();
 }
-function drawLabel(name, isBot, crown, x, y, isPerson, lift) {
+function drawLabel(name, isBot, crown, x, y, isPerson, lift, dev) {
   let top = y - R - 6 - (lift || 0);
   if (crown && settings.crowns) { drawCrown(x, top + 2, crown); top -= crownH(crown); }
-  if (settings.tags && name) { drawTag(name, x, top); top -= 16; }
+  if (settings.tags && name) {
+    if (dev) { ctx.font = '15px ' + FONT; const w = ctx.measureText(name).width, tx = x - (DEVPILL_W + 5) / 2; drawTag(name, tx, top); drawDevPill(tx + w / 2 + 5 + DEVPILL_W / 2, top - 5); }   // (the name and the badge side by side, centred together)
+    else drawTag(name, x, top);
+    top -= 16;
+  } else if (dev) { drawDevPill(x, top - 6); top -= 16; }   // (name tags off: the badge alone)
   if (isBot && settings.botMark) drawBotMark(x, top - 3);
   else if (isPerson && settings.peopleMark) drawPersonMark(x, top - 2);
   return top;   // (the height just above the name and crown: what pops up over your head goes there)
@@ -2803,8 +2819,8 @@ const net = { online: 0, peak: 0 };
 let myId = 0, online = false, lobbyOn = false, ws = null, clockOff = 0, retry = 0, retryTimer = 0, room = { id: 0, n: 1, max: 200 };
 let netState = 'connecting', lastSent = '', botAsked = false;
 let params = null; try { params = new URLSearchParams(location.search); } catch (e) {}
-const forced = params ? params.get('map') : null;      // testing only: ?map=1
-const forcedLeft = params ? params.get('left') : null; // testing only: ?left=75 (seconds until session end)
+const forced = params && params.get('test') ? params.get('map') : null;      // testing only: ?test=1&map=1 (a link somebody sends cannot change your game)
+const forcedLeft = params && params.get('test') ? params.get('left') : null; // testing only: ?test=1&left=75 (seconds until session end)
 const nowMs = () => Date.now() + clockOff;
 
 const TH_COUNT = THEMES.length;
@@ -4884,7 +4900,7 @@ function linkMsg(m) {
       for (const o of list) {
         seen.add(o.pub); let e = lkOf(o.pub);
         if (!e) { if (lks.length >= MAXLINK) continue; e = { pub: o.pub, code: '', name: '', color: '#ccc', last: 0, ok: false, on: 0, x: null, big: true, arrow: true, mute: 0 }; lks.push(e); if (linksReady) notice(who(o.name) + ' added you back. You are friends now', ''); }
-        e.ok = true; e.code = o.code; e.name = o.name; e.color = o.color; e.color2 = o.color2; e.pat = o.pat | 0; e.last = o.last; e.w = o.w; e.b = o.b | 0; e.hid = o.hid | 0; e.fr = o.fr; e.first = o.first || 0; e.since = o.since || 0; e.dm = Math.max(e.dm || 0, o.dm || 0);
+        e.ok = true; e.code = o.code; e.name = o.name; e.color = o.color; e.color2 = o.color2; e.pat = o.pat | 0; e.last = o.last; e.w = o.w; e.b = o.b | 0; e.hid = o.hid | 0; e.fr = o.fr; e.first = o.first || 0; e.since = o.since || 0; e.dm = Math.max(e.dm || 0, o.dm || 0); e.dv = o.dv ? 1 : 0;
         if (o.on) e.on = 1; else { e.on = 0; e.x = null; }
       }
       for (const e of lks) if (!seen.has(e.pub)) { e.ok = false; e.on = 0; e.x = null; }
@@ -4942,14 +4958,14 @@ function linkMsg(m) {
       if (chatMuted || muteOf(m.pub) >= 2) return true;   // public chat muted, or that player is
       if ((m.i | 0) < 0 || (m.i | 0) >= CHATN) return true;
       if (o) o.emo = { i: m.i | 0, t: S.t };
-      addFeedEmo(who(m.name), m.i | 0, e ? 'friend' : ''); chatAdd(who(m.name), EMO[m.i | 0] ? EMO[m.i | 0].n : (PHRASES[(m.i | 0) - EMO.length] || ''), e ? 'friend' : '');
+      addFeedEmo(who(m.name), m.i | 0, e ? 'friend' : ''); chatAdd(who(m.name), EMO[m.i | 0] ? EMO[m.i | 0].n : (PHRASES[(m.i | 0) - EMO.length] || ''), e ? 'friend' : '', '', '', o && o.dv);
       return true;
     }
     case 'say': {
       const o = others.get(m.id), e = lkOf(m.pub), txt = sayText(m.a, m.b);
       if (chatMuted || muteOf(m.pub) >= 2 || txt === null) return true;
       if (o) o.emo = { i: -1, txt, t: S.t };
-      addFeedEmo(who(m.name), -1, e ? 'friend' : '', txt); chatAdd(who(m.name), txt, e ? 'friend' : '');
+      addFeedEmo(who(m.name), -1, e ? 'friend' : '', txt); chatAdd(who(m.name), txt, e ? 'friend' : '', '', '', o && o.dv);
       return true;
     }
     case 'found': lpFound = (m.list || []).filter(f => !blockedPub(f.pub)); if (!m.q) { for (const f of lpFound) noteSeen(f.pub, f.name, f.color, f.code, f.last, f.b, f.color2, f.pat); saveSeen(); } lpRender(); return true;
@@ -5038,13 +5054,13 @@ function drawTrack(camL, camT, vw, vh, sc) {
   for (const e of L) {
     trackFollow(e);
     if (!e.arrow) continue;
-    const dx = e.sx - vx, dy = e.sy - vy, name = e.name || 'Friend'; let crown = 0; if (settings.crowns) others.forEach(q => { if (q.pub === e.pub && q.crown) crown = q.crown; });   // (a friend who has finished wears their crown on the pin too, on screen and on the arrow at the edge)
+    const dx = e.sx - vx, dy = e.sy - vy, name = e.name || 'Friend'; let crown = 0, dv = 0; others.forEach(q => { if (q.pub === e.pub) { if (q.crown && settings.crowns) crown = q.crown; if (q.dv) dv = 1; } });   // (a friend who has finished wears their crown on the pin too, on screen and on the arrow at the edge)
     ctx.save();
     if (Math.abs(dx) < vw / 2 - 20 && Math.abs(dy) < vh / 2 - 20) {   // on screen: a pin over their head
       ctx.translate(e.sx, e.sy - R - 30 + bob); ctx.scale(z, z);
       ctx.fillStyle = e.color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(-6, 6); ctx.lineTo(6, 6); ctx.lineTo(0, 17); ctx.closePath(); ctx.fill(); ctx.stroke();
       drawPerson(ctx, 0, -2, 11, e.color);
-      ctx.font = '16px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText(name, 0, -20); ctx.fillStyle = '#fff'; ctx.fillText(name, 0, -20); if (crown) drawCrown(0, -36, crown);
+      ctx.font = '16px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)'; if (dv) { const w = ctx.measureText(name).width, tx = -(DEVPILL_W + 5) / 2; ctx.strokeText(name, tx, -20); ctx.fillStyle = '#fff'; ctx.fillText(name, tx, -20); drawDevPill(tx + w / 2 + 5 + DEVPILL_W / 2, -25.5); } else { ctx.strokeText(name, 0, -20); ctx.fillStyle = '#fff'; ctx.fillText(name, 0, -20); } if (crown) drawCrown(0, -36, crown);
     } else {
       const mg = 74 / Math.max(0.45, sc), k = Math.min((vw / 2 - mg) / (Math.abs(dx) || 1), (vh / 2 - mg * 0.8) / (Math.abs(dy) || 1)), a = Math.atan2(dy, dx), ax = vx + dx * k, ay = vy + dy * k;
       ctx.translate(ax, ay); ctx.scale(z, z);
@@ -5053,7 +5069,7 @@ function drawTrack(camL, camT, vw, vh, sc) {
       drawPerson(ctx, 0, 0, 14, e.color);
       const d = ft(e.sx - S.b.x, e.sy - S.b.y), tx = 0, ty = Math.sin(a) > 0.2 ? -26 : 30;
       ctx.font = '15px ' + FONT; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
-      const txt = name + ' · ' + d + 'b'; ctx.strokeText(txt, tx, ty); ctx.fillStyle = '#fff'; ctx.fillText(txt, tx, ty); if (crown) drawCrown(0, ty < 0 ? ty - 16 : -18, crown);
+      const txt = name + ' · ' + d + 'b'; if (dv) { const w = ctx.measureText(txt).width, x0 = tx - (DEVPILL_W + 5) / 2; ctx.strokeText(txt, x0, ty); ctx.fillStyle = '#fff'; ctx.fillText(txt, x0, ty); drawDevPill(x0 + w / 2 + 5 + DEVPILL_W / 2, ty - 5); } else { ctx.strokeText(txt, tx, ty); ctx.fillStyle = '#fff'; ctx.fillText(txt, tx, ty); } if (crown) drawCrown(0, ty < 0 ? ty - 16 : -18, crown);
     }
     ctx.restore();
   }
@@ -5169,8 +5185,8 @@ const CHAT_KEEP = 5 * 60000;   // (a message stays in the world chat for 5 minut
 const cdTxt = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 function chatPrune() { const cut = Date.now() - CHAT_KEEP; let n = 0; while (chatLog.length && chatLog[0].t < cut) { chatLog.shift(); n++; } if (!chatLog.some(m => m.cls !== 'sys') && worldNew) { worldNew = false; chatBadges(); } return n; }
 setInterval(() => { if (chatPrune() && chatOpen) chatRender(false); else if (chatOpen) { const now = Date.now(); for (const t of $('chatLog').querySelectorAll('.cmt')) { const left = Math.max(0, CHAT_KEEP - (now - +t.dataset.t)); t.textContent = cdTxt(left); if (left < 30000) t.parentNode.classList.add('soon'); } } }, 1000);
-function chatAdd(name, txt, cls, kind) {   // one line in the chat window (and, for 5 seconds, over their head and in the corner)
-  chatPrune(); chatLog.push({ name, txt, cls: cls || '', kind: kind || '', t: Date.now(), dm: arguments[4] || '' }); while (chatLog.length > 120) chatLog.shift();
+function chatAdd(name, txt, cls, kind, dm, dv) {   // one line in the chat window (and, for 5 seconds, over their head and in the corner). dv: an owner or dev showing the Dev badge
+  chatPrune(); chatLog.push({ name, txt, cls: cls || '', kind: kind || '', t: Date.now(), dm: dm || '', dv: dv ? 1 : 0 }); while (chatLog.length > 120) chatLog.shift();
   if (chatOpen && chatView === 'w') chatRender(cls === 'me'); else if (cls !== 'sys' && cls !== 'me') { worldNew = true; chatBadges(); }
 }
 function chatRender(stick) {
@@ -5180,7 +5196,7 @@ function chatRender(stick) {
   for (const m of chatLog) { const d = document.createElement('div'); d.className = 'cm ' + m.cls + (m.kind === 'bot' ? ' bot' : '');
     { const left = Math.max(0, CHAT_KEEP - (now - m.t)), t = document.createElement('span'); t.className = 'cmt'; t.dataset.t = m.t; t.title = 'Disappears in'; t.textContent = cdTxt(left); d.appendChild(t);   // (how long until it disappears: a number and a bar that runs down)
       const bar = document.createElement('i'); bar.className = 'cmbar'; bar.style.animationDuration = (CHAT_KEEP / 1000) + 's'; bar.style.animationDelay = (-(now - m.t) / 1000) + 's'; d.appendChild(bar); if (left < 30000) d.classList.add('soon'); }
-    if (m.cls !== 'sys') { const b = document.createElement('b'); b.textContent = m.name; d.appendChild(b); } d.appendChild(document.createTextNode(m.cls === 'sys' ? m.txt : censorText(m.txt))); L.appendChild(d); }
+    if (m.cls !== 'sys') { const b = document.createElement('b'); b.textContent = m.name; d.appendChild(b); if (m.dv) d.appendChild(devPill()); } d.appendChild(document.createTextNode(m.cls === 'sys' ? m.txt : censorText(m.txt))); L.appendChild(d); }
   if (atEnd) { L.scrollTop = L.scrollHeight; chatStick = true; $('chatDown').classList.add('hide', 'new'); $('chatDown').classList.remove('new'); }
   else { L.scrollTop = keep; if (L.childElementCount > n0) $('chatDown').classList.add('new'); chatDownSync(); }   // (reading older messages: you stay where you are, and the arrow shows there is something new)
 }
@@ -5199,7 +5215,7 @@ function chatSend(quick) {
   { const why = P.piiCheck ? P.piiCheck(txt) : ''; if (why) { piiSays(why); return; } }   // (it stays in the box, so you can change it)
   chatCool = performance.now() + 600;
   if (online && ws && ws.readyState === 1) wsSend({ t: 'text', s: txt });
-  if (quick === undefined) { inp.value = ''; ccRender(inp, $('chatCount')); } S.myEmo = { i: -1, txt: bubbleOf(txt), t: S.t, dur: 5 }; chatAdd('You', txt, 'me'); sfx('ui');
+  if (quick === undefined) { inp.value = ''; ccRender(inp, $('chatCount')); } S.myEmo = { i: -1, txt: bubbleOf(txt), t: S.t, dur: 5 }; chatAdd('You', txt, 'me', '', '', devShown()); sfx('ui');
   try { localAsk('text', txt); } catch (e) {}
 }
 /* ----- messages between friends: each friend has a conversation of their own, kept on this device (and never mixed into the world chat).
@@ -5407,7 +5423,7 @@ const openChatTo = openDm;
 function onText(m) {
   const o = others.get(m.id), e = lkOf(m.pub || (o && o.pub)); if (chatMuted || (o && muteOf(o.pub) >= 2) || (m.pub && muteOf(m.pub) >= 2)) return;
   if (o) o.emo = { i: -1, txt: bubbleOf(m.s), t: S.t, dur: 5 };
-  chatAdd(who(m.name), m.s, e ? 'friend' : ''); addFeedEmo(who(m.name), -1, e ? 'friend' : '', bubbleOf(m.s));
+  chatAdd(who(m.name), m.s, e ? 'friend' : '', '', '', m.dv || (o && o.dv)); addFeedEmo(who(m.name), -1, e ? 'friend' : '', bubbleOf(m.s));
 }
 $('chatForm').onsubmit = ev => { ev.preventDefault(); chatSend(); };
 /* ----- quick messages: up to 10 of your own, one tap sends ----- */
@@ -6239,7 +6255,7 @@ function personRow(p, sub, acts, noProf) {
   const r = el('div', 'prs'); r.appendChild(ballDot(p));
   const n = el('div', 'lname' + (noProf ? '' : ' lbtn'));
   if (!noProf) { n.tabIndex = 0; n.setAttribute('role', 'button'); n.setAttribute('aria-label', 'See ' + who(p.name) + "'s profile"); n.onclick = () => openProfile(p); n.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProfile(p); } }; }
-  n.appendChild(el('b', '', isMe(p) ? who(p.name) + ' (you)' : who(p.name)));
+  { const nb = el('b', '', isMe(p) ? who(p.name) + ' (you)' : who(p.name)); if (p.dv && (isMe(p) || (p.on && !p.hid))) nb.appendChild(devPill()); n.appendChild(nb); }   // (the Dev badge, while an owner or dev who chose to show it is on)
   const st = statusOf(p), sb = el('div', 'lsub'); if (p.code) sb.appendChild(codeTag(p.code));
   sb.appendChild(el('span', 'st ' + (sub ? '' : st.c), sub || st.t)); n.appendChild(sb); r.appendChild(n);
   for (const a of (acts || [])) if (a) r.appendChild(a);
@@ -6251,7 +6267,7 @@ function friendCard(l) {
   if (msg && n) gBadge(msg, n);
   return personRow(l, n ? n + ' new message' + (n === 1 ? '' : 's') : '', [msg]);   // (offline: when they were last on)
 }
-function meEntry() { const c = profCache['@me'] || {}; return { pub: '', me: 1, code: myCode, name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, on: online || lobbyOn ? 1 : 0, w: c.w || 0, b: beatCount(), fr: Math.max(lks.length, meInfo.fr | 0, c.fr | 0), first: c.first || meInfo.first, fe: c.fe }; }
+function meEntry() { const c = profCache['@me'] || {}; return { pub: '', me: 1, dv: devShown() ? 1 : 0, code: myCode, name: settings.name, color: settings.color, color2: settings.color2, pat: settings.pat, on: online || lobbyOn ? 1 : 0, w: c.w || 0, b: beatCount(), fr: Math.max(lks.length, meInfo.fr | 0, c.fr | 0), first: c.first || meInfo.first, fe: c.fe }; }
 
 /* ----- what you share: your name and ball always; when you are on, when you were last on, levels beaten, number of friends, when you started can each be kept private ----- */
 const SHARE_ALL = { on: 1, last: 1, beat: 1, fr: 1, since: 1 };
@@ -6297,7 +6313,7 @@ function profRender() {
   const q = me ? meEntry() : linked ? Object.assign({}, p, lk) : p;
   const c1 = me ? settings.color : q.color, c2 = me ? settings.color2 : q.color2, pt = me ? settings.pat : q.pat;
   { const cv = $('profDot'), g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); g.drawImage(sprite(HEX.test(c1) ? c1 : '#ccc', HEX.test(c2) ? c2 : '#ffffff', (pt | 0) % PATTERNS.length), 0, 0, cv.width, cv.height); }   // the ball exactly as it looks in the game
-  $('profName').textContent = nm; $('profCode').textContent = '#' + (q.code || myCode || '');
+  $('profName').textContent = nm; if (me ? devShown() : q.dv && q.on && !q.hid) $('profName').appendChild(devPill()); $('profCode').textContent = '#' + (q.code || myCode || '');
   const st = blk ? { c: 'hid', t: 'Blocked' } : statusOf(Object.assign({}, q, { me: 0, code: me ? '' : q.code }));
   $('profStatus').textContent = st.t; $('profStatus').className = 'pstat' + (st.c === 'on' ? ' on' : ''); $('profLight').className = 'sdot ' + st.c;
   { const n = Math.max(0, q.b | 0), has = q.b !== undefined && (q.b | 0) >= 0; $('profBeat').parentNode.parentNode.classList.toggle('hide', !has); $('profBeat').textContent = n; $('profBeatOf').textContent = 'of ' + LEVELS + ' levels beaten'; $('profBar').style.width = Math.min(100, n / LEVELS * 100) + '%'; }   // (the levels as a bar)
@@ -6347,10 +6363,10 @@ function lpRender() {
   trackVis(); homeFriendsN(); ntFrRender();
   if (!friendsShown()) return;
   showMyCode();
-  { const fm = $('fMe'); fm.className = 'fme'; const b = el('button', 'btn sm', 'Your profile'); b.onclick = () => openProfile(meEntry()); const k = JSON.stringify([settings.name, settings.color, settings.color2, settings.pat, myCode]); if (fm._k !== k) { fm._k = k; fm.textContent = ''; fm.appendChild(personRow(meEntry(), 'Your friend number. Friends can check it matches', [b], true)); } }
+  { const fm = $('fMe'); fm.className = 'fme'; const b = el('button', 'btn sm', 'Your profile'); b.onclick = () => openProfile(meEntry()); const k = JSON.stringify([settings.name, settings.color, settings.color2, settings.pat, myCode, devShown()]); if (fm._k !== k) { fm._k = k; fm.textContent = ''; fm.appendChild(personRow(meEntry(), 'Your friend number. Friends can check it matches', [b], true)); } }
   { const off = offlineOn() || !(online || lobbyOn), n = $('fNote'); n.textContent = offlineOn() ? 'Offline mode is on, so this shows your friends as they were last time. Turn offline mode off to see who is on and to add friends.' : !(online || lobbyOn) ? 'Connecting to the server…' : ''; n.classList.toggle('hide', !off); $('btnAddF').disabled = offlineOn(); }
   const list = $('lpList'), order = lks.filter(l => !isMe(l)).slice().sort((a, b) => (b.ok && b.on) - (a.ok && a.on) || (b.last || 0) - (a.last || 0));
-  const lk = JSON.stringify(order.map(l => [l.pub, l.name, l.code, l.ok, l.on, l.hid, l.w, l.last && Math.floor(l.last / 60000), l.color, l.color2, l.pat, canMessage(l), dmUnread(l.pub), !!dms[l.pub]])) + (online || lobbyOn);   // (only rebuilt when something in it changed, so it never jumps while you scroll)
+  const lk = JSON.stringify(order.map(l => [l.pub, l.name, l.code, l.ok, l.on, l.hid, l.w, l.last && Math.floor(l.last / 60000), l.color, l.color2, l.pat, canMessage(l), dmUnread(l.pub), !!dms[l.pub], l.dv])) + (online || lobbyOn);   // (only rebuilt when something in it changed, so it never jumps while you scroll)
   $('lpCount').textContent = '(' + lks.length + ')';
   if (list._k !== lk) { list._k = lk; list.textContent = '';
     if (!order.length) list.appendChild(el('div', 'small dim', 'No friends yet. Tap Add a friend to find players.'));
@@ -6460,6 +6476,12 @@ $('homeUpd').onclick = () => { sfx('ui'); openVersion(); };
 
 /* ----- server status: how much of this month's allowance is left, how hard the server is working, and how it is doing overall ----- */
 let ssTimer = 0, ssBusy = false;
+const escH = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+function plainJ(o, d) {   // the server's figures, with every bit of text in them made safe to show (they are put together as a page): numbers stay numbers, nothing in them can ever run as code
+  d = d | 0; if (typeof o === 'string') return escH(o.slice(0, 200)); if (!o || typeof o !== 'object' || d > 6) return typeof o === 'number' || typeof o === 'boolean' ? o : null;
+  if (Array.isArray(o)) return o.slice(0, 400).map(v => plainJ(v, d + 1));
+  const r = {}; for (const k of Object.keys(o).slice(0, 200)) if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') r[k] = plainJ(o[k], d + 1); return r;
+}
 const ssFmtB = b => b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(b >= 104857600 ? 0 : 1) + ' MB' : Math.round(b / 1024) + ' KB';
 const ssFmtD = d => d >= 99 ? 'the rest of the month' : d >= 1 ? Math.floor(d) + (Math.floor(d) === 1 ? ' day' : ' days') : Math.max(1, Math.round(d * 24)) + ' h';
 function ssBar(title, right, frac, sub, warnAt) {   // one row: a name, a figure, a bar that fills up (green, then yellow, orange and red as it gets close)
@@ -6498,7 +6520,7 @@ function ssPoll() {
   if (ssBusy) return; ssBusy = true;
   const ac = typeof AbortController === 'function' ? new AbortController() : null, to = setTimeout(() => { if (ac) ac.abort(); }, 5000), t0 = performance.now();
   fetch(homeBase() + '/status?x=' + Date.now(), { cache: 'no-store', signal: ac ? ac.signal : undefined }).then(r => r.ok ? r.json() : null)
-    .then(st => { useKeepDays(st); ssShow(st && st.bandwidth ? st : null, st ? '' : 'down'); }).catch(() => ssShow(null, performance.now() - t0 > 4500 ? 'slow' : 'down'))
+    .then(st => { st = plainJ(st); useKeepDays(st); ssShow(st && st.bandwidth ? st : null, st ? '' : 'down'); }).catch(() => ssShow(null, performance.now() - t0 > 4500 ? 'slow' : 'down'))
     .finally(() => { clearTimeout(to); ssBusy = false; });
 }
 function openStatus() {
@@ -6547,7 +6569,7 @@ function lhPoll() {
   if (dt >= 0.9) { LH.down = (NET.inB - LH.inB0) / dt; LH.up = (NET.outB - LH.outB0) / dt; LH.pks = (NET.inPk - LH.pk0) / dt; LH.inB0 = NET.inB; LH.outB0 = NET.outB; LH.pk0 = NET.inPk; LH.rateT = t; }
   else if (!LH.rateT) { LH.rateT = t; LH.inB0 = NET.inB; LH.outB0 = NET.outB; LH.pk0 = NET.inPk; }
   if ((LH.on || (stOn() && settings.stSrv)) && t - LH.stAt > 2000 && !LH.stBusy && !offlineOn()) { LH.stBusy = true; LH.stAt = t; const ac = typeof AbortController === 'function' ? new AbortController() : null, to = setTimeout(() => { if (ac) ac.abort(); }, 4000);
-    fetch(homeBase() + '/status?x=' + Date.now(), { cache: 'no-store', signal: ac ? ac.signal : undefined }).then(r => r.ok ? r.json() : null).then(st => { LH.st = st && st.bandwidth ? st : null; LH.stOk = !!LH.st; }).catch(() => { LH.st = null; LH.stOk = false; }).finally(() => { clearTimeout(to); LH.stBusy = false; }); }
+    fetch(homeBase() + '/status?x=' + Date.now(), { cache: 'no-store', signal: ac ? ac.signal : undefined }).then(r => r.ok ? r.json() : null).then(st => { st = plainJ(st); LH.st = st && st.bandwidth ? st : null; LH.stOk = !!LH.st; }).catch(() => { LH.st = null; LH.stOk = false; }).finally(() => { clearTimeout(to); LH.stBusy = false; }); }
   lhDraw(); stDraw();
 }
 function lhFps() { const fr = LH.fr, n = fr.length; return n > 1 ? Math.round((n - 1) * 1000 / Math.max(1, fr[n - 1][0] - fr[0][0])) : 0; }
@@ -6662,6 +6684,7 @@ $('nameModal').addEventListener('pointerdown', e => { if (e.target === $('nameMo
 $('nmOk').onclick = () => {
   const v = cleanNm($('nmIn').value); if (!v) { try { $('nmIn').focus(); } catch (e) {} return; }
   if (v === settings.name) { closeNameModal(); return; }
+  if (!devOn() && P.nameReserved && P.nameReserved(v)) { $('nmNote').textContent = 'Names like Admin, Mod or Dev are only for the game\u2019s team. Please pick another.'; sfx('warn'); try { $('nmIn').focus(); } catch (e) {} return; }
   if (!settings.name) { commitName(v); sfx('ui'); closeNameModal(); return; }   // the very first name is free
   askConfirm('Change your name to ' + v + '?', "You can only do this once per day. You won't be able to change your name again for 24 hours.", 'Change name', () => { commitName(v); sfx('ui'); closeNameModal(); }, { no: 'Go back', yesClass: 'go' });
 };
@@ -6705,7 +6728,15 @@ function homeModeText() { netRender(); segRender(); const pub = $('homeMp').chec
 /* the server comes first: Private and Public both need it. If it cannot be reached in a few seconds, Offline is offered instead (and goes away again when the server is back) */
 var srvSt = 'wait', srvT = 0, srvPrev = '';   // (var: the menu asks for it before this line runs)
 function srvWait() { setTimeout(gateRender, 0); if (srvSt === 'ok') srvSt = 'wait'; if (srvSt === 'wait' && !srvT) srvT = setTimeout(() => { srvT = 0; if (srvSt !== 'ok') srvFail(); }, 9000); if (inHome) homeModeText(); }   // (one clock for the whole wait: each failed try does not start it again)
-function srvFail() { srvSt = 'fail'; if (inHome) homeModeText(); gateRender(); }
+function srvFail() { srvSt = 'fail'; if (inHome) homeModeText(); gateRender(); bootTry(); }
+/* one loading screen: it stays up while the game connects, and goes once the server has answered, so the main menu never shows a second "Connecting" screen
+   right after it. If the server cannot be reached (9 seconds), the same-looking screen below it says so and offers offline play */
+var bootFrame = false, bootDone = false;
+function bootTry() {
+  if (bootDone || !bootFrame) return;
+  if (inHome && !offlineOn() && srvSt === 'wait' && !barred) { if (window.__bootStep) window.__bootStep('Connecting to the server…', 92); return; }
+  bootDone = true; if (window.__bootHide) window.__bootHide(srvSt === 'ok' || !inHome || offlineOn() ? '' : ' ');
+}
 /* on the main menu nothing works without the server: a full screen says so until it is back. If it stays away, you can play offline instead */
 let gateArm = 0, gateArmed = false;
 let gateTips = null;
@@ -6719,7 +6750,7 @@ function gateRender() {
   $('hgTitle').textContent = bar ? barTitle() : fail ? 'Can\u2019t reach the server' : 'Connecting to the server…';
   $('hgSub').textContent = bar ? barSub() : fail ? 'Check your internet. It keeps trying in the background, and you go straight back in when it answers.' : 'Friends, chats and your games all need it. This only takes a moment.';
 }
-setInterval(gateRender, 1000);
+setInterval(() => { gateRender(); bootTry(); }, 1000);
 $('hgRetry').onclick = () => { sfx('ui'); if (barred) barred.next = 0; srvSt = 'wait'; gateArmed = true; srvWait(); retryNow(); gateRender(); };
 $('hgOff').onclick = () => { sfx('ui'); srvPrev = curMode(); setMode('off'); gateRender(); };
 function srvOk() {
@@ -6727,7 +6758,7 @@ function srvOk() {
   barred = null;   // (let in again: a ban or a closed game is over)
   const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0; setTimeout(() => { try { outFlush(); dmFlush(); dmSyncReq(); } catch (e) {} try { devwSend(); } catch (e) {} }, 300); setTimeout(() => { try { healthSay(); } catch (e) {} }, 1500);   // (messages written while away go now, and anything missed comes in)
   if (inHome && settings.offline) { setMode(srvPrev === 'pub' ? 'pub' : 'priv'); if (was === 'fail') notice('Connected to the server', ''); }
-  if (inHome) homeModeText(); gateRender();
+  if (inHome) homeModeText(); gateRender(); bootTry();
 }
 $('homeRetry').onclick = () => { sfx('ui'); srvSt = 'wait'; srvWait(); retryNow(); homeModeText(); };
 setTimeout(srvWait, 0);
@@ -6918,7 +6949,7 @@ function shPart(m) {
   if (!d || !d.o || typeof d.o !== 'object' || !Array.isArray(d.o.buys) || (d.idx | 0) !== i) { notice('That map could not be read. It was discarded', 'urgent'); shAnswer(v, false); return; }
   const nm = who(v.name || nameOf(v.from) || 'a friend'), cur = !inHome && S.slot === SOLO_BASE + i && !(party && party.role === 'guest');
   const go = () => {
-    const o = d.o; o.from = nm; delete o.slot;
+    const o = cleanShared(d.o); o.from = nm;
     const was = S.slot === SOLO_BASE + i; if (was) S.slot = -1;   // (the old world of this level, even the one behind the main menu, is never saved over what you just got)
     if (!saveCopy(SOLOKEY_P, { o, idx: i })) { notice('Could not save: there is no room left on this device', 'urgent'); if (was) S.slot = SOLO_BASE + i; return; }
     if (typeof d.desc === 'string' && d.desc && !lvDescOf(i, SOLOKEY_P)) setLvDesc(i, SOLOKEY_P, d.desc);
@@ -6926,6 +6957,15 @@ function shPart(m) {
     if (cur) rehost(() => { lastWorldStr = ''; loadMap(SOLO_BASE + i, soloNext()); });
   };
   if (cur) hostLeaveWarn(go, 'load the map you saved'); else go();
+}
+function cleanShared(o) {   // a world from somebody else: only well-formed records go into your maps; anything else in it is left out (the game checks each thing again when it loads)
+  const num = v => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 5e9,   /* (owner tags are big whole numbers) */ list = (a, max, ok) => Array.isArray(a) ? a.slice(0, max).filter(ok) : [];
+  const nums = (q, a, b) => Array.isArray(q) && q.length >= a && q.length <= b && q.every(num), tagged = (q, a, b) => Array.isArray(q) && q.length >= a && q.length <= b && typeof q[0] === 'string' && q[0].length <= 8 && q.slice(1).every(num);
+  const r = { buys: list(o.buys, 20000, q => nums(q, 3, 3)), cps: list(o.cps, 2000, q => nums(q, 2, 2)), gates: list(o.gates, 2000, q => nums(q, 5, 6)), misc: list(o.misc, 20000, q => tagged(q, 4, 6)), dels: list(o.dels, 20000, q => tagged(q, 2, 5) || nums(q, 2, 5)),
+    dyn: list(o.dyn, 20000, q => nums(q, 4, 8)), see: list(o.see, 2000, q => nums(q, 1, 3)), doors: list(o.doors, 2000, v => v === 0 || v === 1), btns: list(o.btns, 2000, v => v === 0 || v === 1), got: [], n: 0, own: {}, pickT: {} };
+  r.rcv = r.buys.length + r.gates.length + r.misc.length;   // (everything in it counts as already there, as with a copy you save yourself)
+  try { if (o.ow && typeof o.ow === 'object' && !Array.isArray(o.ow)) r.ow = P.bookClean(o.ow, { props: r.buys, gates: r.gates, misc: r.misc, cps: r.cps, dels: r.dels }); } catch (e) {}
+  return r;
 }
 function shareGone(m) { if (shGet && shGet.v.id === m.id) { clearTimeout(shGet.t); shGet = null; shLoading(false); } shQ = shQ.filter(x => x.id !== m.id); notice('That map is not there any more', 'urgent'); }
 function shareAnswered(m) {   // what happened to a map you shared: saved, not saved, or it ran out after 3 days without an answer
@@ -7054,10 +7094,11 @@ $('homeSet').onclick = () => toggleSettings();
 try { localStorage.removeItem('ballrun4_updbtn'); sessionStorage.removeItem('ballrun4_updbtn'); } catch (e) {}
 function devRender() {   // what dev mode shows, each of it switched on or off in Dev tools
   $('homeUpd').classList.toggle('hide', !devOn() || settings.devUpd === false); $('devStats').classList.toggle('hide', !devOn());
-  $('setDevUpd').checked = settings.devUpd !== false; $('setDevHealth').checked = !!settings.devHealth; $('setDevLive').checked = !!LH.on; $('setNEmpty').checked = !!settings.nEmpty;
+  $('setDevShow').checked = !!settings.devShow; $('setDevUpd').checked = settings.devUpd !== false; $('setDevHealth').checked = !!settings.devHealth; $('setDevLive').checked = !!LH.on; $('setNEmpty').checked = !!settings.nEmpty;
   try { tabLocks(); } catch (e) {} try { admRender(); } catch (e) {}
 }
 function devwSend() { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'devw', on: devOn() && settings.nEmpty ? 1 : 0 })); } catch (e) {} } }   // (the server tells this game when nobody is playing, while it is open)
+$('setDevShow').onchange = () => { const on = $('setDevShow').checked && devOn(); settings.devShow = on; save(); sfx(on ? 'on' : 'off'); wsSend({ t: 'admshow', on: on ? 1 : 0 }); devRender(); };   // (the server shows it to others; nothing changes until it says so)
 $('setDevUpd').onchange = () => { settings.devUpd = $('setDevUpd').checked; save(); sfx(settings.devUpd ? 'on' : 'off'); devRender(); };
 $('setDevHealth').onchange = () => { settings.devHealth = $('setDevHealth').checked; save(); sfx(settings.devHealth ? 'on' : 'off'); };
 $('setDevLive').onchange = () => { const on = $('setDevLive').checked && devOn(); sfx(on ? 'on' : 'off'); if (on) showLive(); else { LH.on = false; lhSave(); $('liveHud').classList.add('hide'); } };
@@ -7080,14 +7121,14 @@ function topNote(t, bad) {   // a short note at the top: a game message while pl
 function healthSay() {
   if (healthSaid || !devOn() || !settings.devHealth || offlineOn()) return; healthSaid = true;
   const say = topNote;
-  fetch(homeBase() + '/status?x=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(st => { useKeepDays(st); say(healthLine(st), !st || st.rating !== 'good'); }).catch(() => say(healthLine(null), true));
+  fetch(homeBase() + '/status?x=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(st => { st = plainJ(st); useKeepDays(st); say(healthLine(st), !st || st.rating !== 'good'); }).catch(() => say(healthLine(null), true));
 }
 function useKeepDays(st) {   // each day's highs are kept on this device too (a server that restarts forgets them; it gets them back from here)
   try { if (!st || !Array.isArray(st.days) || !st.month) return; let o = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); if (!o || o.m !== st.month) o = { m: st.month, out: 0, in: 0, sec: 0 }; o.days = st.days.slice(-31); localStorage.setItem('ballrun4_use', JSON.stringify(o)); } catch (e) {}   // (no copy yet: one that only carries the days; the server takes the larger of each figure)
 }
 function devSet(role) {   // owner, dev or nobody: what the server said. Kept on this device so the tools are there at once next time
   role = role === 'owner' || role === 'dev' ? role : ''; const was = devRole; devRole = role; try { if (role) localStorage.setItem(DEVROLE_KEY, role); else localStorage.removeItem(DEVROLE_KEY); } catch (e) {}
-  if (!role && was) { try { admClose(); } catch (e) {} LH.on = false; lhSave(); $('liveHud').classList.add('hide'); $('srvStat').classList.add('hide'); if (curTab === 'dev') try { showTab(firstTab()); } catch (e) {} }
+  if (!role && was) { try { admClose(); } catch (e) {} if (settings.devShow) { settings.devShow = false; save(); } devShSrv = 0; LH.on = false; lhSave(); $('liveHud').classList.add('hide'); $('srvStat').classList.add('hide'); if (curTab === 'dev') try { showTab(firstTab()); } catch (e) {} }
   devRender(); if (!!was !== !!role) { try { statsKick(); } catch (e) {} try { pushSyncSoon(); } catch (e) {} devwSend(); }
 }
 /* ----- dev tools: owners and devs. Everything here is decided by the server: this page only shows it. An owner typed the server's key in the code box
@@ -7095,6 +7136,7 @@ function devSet(role) {   // owner, dev or nobody: what the server said. Kept on
    This device keeps the key (owners), and a copy of the bans, the dev team and the switches, which it hands back if the server restarts having forgotten them ----- */
 const ADMKEY_K = 'ballrun4_admkey', ADMSNAP_K = 'ballrun4_admsnap', MOD_K = 'ballrun4_mod';
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} };
+function devPill() { const s = el('span', 'devpill', 'Dev'); s.title = 'Owner or dev of ballpit.party'; return s; }   // (the Dev badge, in the chat, the friends list and a profile)
 let admSt = '', admPerms = {}, admLock = 0, admPend = '', admData = null, admView = 'list', admTab = 'on', admOne = null, admTimer = 0, admLockSaid = false;
 const admKey = () => lsGet(ADMKEY_K) || '';
 const isAdmin = () => devOn() && admSt === 'ok';   // (the server said so on this connection)
@@ -7242,7 +7284,7 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
       const was = admSt, wasRole = devRole, typed = !!(m.try && admPend), key = admPend;
       if (m.try) { admPend = ''; clearTimeout(tryKey.t); }
       if (m.st === 'slow') { if (typed) { $('cdNote').textContent = 'One moment, then try again.'; sfx('warn'); } return true; }
-      admSt = m.st === 'ok' ? 'ok' : ''; admPerms = m.perms && typeof m.perms === 'object' ? m.perms : {}; admLock = m.lock ? 1 : 0;
+      admSt = m.st === 'ok' ? 'ok' : ''; admPerms = m.perms && typeof m.perms === 'object' ? m.perms : {}; admLock = m.lock ? 1 : 0; devShSrv = m.sh ? 1 : 0;
       if (m.kst === 'bad' && !typed) lsSet(ADMKEY_K, null);   // (the key this device kept stopped working: the server has a new one)
       if (typed && m.kst === 'ok') lsSet(ADMKEY_K, key);   // (the right key, typed in the code box: kept on this device)
       devSet(admSt === 'ok' ? m.role : '');
@@ -7253,6 +7295,7 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
       if (admSt === 'ok') {
         if (was !== 'ok' && devRole === 'owner') { const sn = lsGet(ADMSNAP_K); if (sn) { try { wsSend({ t: 'admsnap', snap: JSON.parse(sn) }); } catch (e) {} } }   // (the server keeps it if it has forgotten everything)
         if (was !== 'ok' || curTab === 'dev') admAsk();
+        if (!!settings.devShow !== !!devShSrv) wsSend({ t: 'admshow', on: settings.devShow ? 1 : 0 });   // (the server and this device disagree about the Dev badge: this device's switch wins)
         if (admLock && !admLockSaid) { admLockSaid = true; topNote('The game is closed to everyone. Open it in Settings, Dev tools', true); }
       } else if (shownEl('admModal')) admClose();
       admRender(); if (shownEl('admModal')) { if (admView === 'one') admOneRender(); else admListRender(); } return true;
@@ -7260,6 +7303,7 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
     case 'admchg': if (!isAdmin()) return true; if (m.lock !== undefined) admLock = m.lock ? 1 : 0; admAsk(); if (admOne) wsSend({ t: 'admp', pub: admOne.pub }); admRender(); return true;   // (something changed: the team, a switch)
     case 'admlist': if (!isAdmin()) return true; admData = { on: m.on || [], recent: m.recent || [], bans: m.bans || [], devs: m.devs || [] }; admLock = m.lock ? 1 : 0; if (m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap));
       admRender(); if (shownEl('admModal') && admView === 'list') admListRender(); return true;
+    case 'admsh': devShSrv = m.on ? 1 : 0; devRender(); try { lpRender(); } catch (e) {} if (chatOpen && chatView === 'w') chatRender(false); return true;   // (the Dev badge: shown or hidden, as the server now has it)
     case 'admsnapv': if (isAdmin() && devRole === 'owner' && m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap)); return true;   // (the bans, the dev team and the switches, kept here in case the server forgets them)
     case 'admp': if (!admOne || m.pub !== admOne.pub) return true;
       { const keep = { banH: admOne.banH, code: admOne.code, color: admOne.color, color2: admOne.color2, pat: admOne.pat, fr: admOne.fr, w: admOne.w, host: admOne.host, since: admOne.since };
@@ -7936,7 +7980,7 @@ function setMultiplayer(on) {
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
-  { const k = admKey(); if (k) o.ak = k; if (devOn()) o.dv = 1; }   // (an owner's key, kept on this device; dv: this device has dev tools, and must hear if that changed)
+  { const k = admKey(); if (k) o.ak = k; if (devOn()) o.dv = 1; if (devOn() && settings.devShow) o.dsh = 1; }   // (dsh: show the Dev badge to other players, only if this owner or dev turned it on)   // (an owner's key, kept on this device; dv: this device has dev tools, and must hear if that changed)
   if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), fk: soloFin(soloLevel()), bots: settings.botsPriv ? 1 : 0, nc: settings.noCheats ? 1 : 0, ul: settings.unl ? 1 : 0 }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   if (!lobby && !party && wantW > 0) o.pw = wantW;   // (joining a friend's public world from their profile)
   return JSON.stringify(o);
@@ -8146,12 +8190,12 @@ function announceEntry(o) {   // when you arrive somewhere: which map, how long 
   clearTimeout(worldPopT); worldPopT = setTimeout(() => el.classList.add('hide'), 5000);
 }
 function showWorldPop(id, full) {   // "You're in World 1" or "World 1 was too full, you've been pushed to World 2"
-  const el = $('worldpop'), list = full.slice().sort((a, b) => a - b);
+  id = id | 0; const el = $('worldpop'), list = (Array.isArray(full) ? full : []).map(n => n | 0).sort((a, b) => a - b);   // (only numbers ever go into it)
   let h;
   if (list.length) {
     const was = list.length === 1 ? 'World ' + list[0] + ' was' : 'Worlds ' + list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1] + ' were';
-    h = '<b>' + was + ' too full</b>You\'ve been pushed to World ' + id + '. Each world holds up to ' + room.max + ' players, so a new one opens when the others fill up.';
-  } else h = '<b>' + WName(id) + '</b>' + (wNum(id) ? 'Everyone here plays the same map. Each world holds up to ' + room.max + ' players.' : 'Everyone online plays here, on the same map.');
+    h = '<b>' + was + ' too full</b>You\'ve been pushed to World ' + id + '. Each world holds up to ' + (room.max | 0) + ' players, so a new one opens when the others fill up.';
+  } else h = '<b>' + WName(id) + '</b>' + (wNum(id) ? 'Everyone here plays the same map. Each world holds up to ' + (room.max | 0) + ' players.' : 'Everyone online plays here, on the same map.');
   el.innerHTML = h; el.classList.remove('hide'); sfx('notice');
   clearTimeout(worldPopT); worldPopT = setTimeout(() => el.classList.add('hide'), list.length ? 10000 : 6000);
 }
@@ -8187,7 +8231,7 @@ function onMsg(m) {
       lastSent = infoMsg();
       if (m.mine && !m.priv) { S.myFin = { slot: m.slot, r: m.mine }; if (S.slot === m.slot && S.mode === 'play') { S.crown = m.mine; S.done = true; } }   // (you finished this round before: still yours)
       others.clear();
-      m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; o.ot = p.ot >>> 0; others.set(p.id, o); noteSeen(o.pub, p.name, p.color, p.code, undefined, undefined, p.color2, p.pat); }); saveSeen();
+      m.players.forEach(p => { const o = newOther(p.name, p.color, p.color2, p.pat, p.crown); o.pub = p.pub || ''; o.ot = p.ot >>> 0; o.dv = p.dv ? 1 : 0; others.set(p.id, o); noteSeen(o.pub, p.name, p.color, p.code, undefined, undefined, p.color2, p.pat); }); saveSeen();
       setNet('online');
       if (m.priv) { if (party.role !== 'host') addFeed('You joined ' + who(party.name) + "'s private game", 'join', true); } else addFeed('You joined ' + wName(m.room), 'join', true);
       if (forcedLeft === null) S.nextAt = m.next;
@@ -8202,13 +8246,13 @@ function onMsg(m) {
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
-    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat, m.crown || 0); o.pub = m.pub || ''; o.ot = m.ot >>> 0; others.set(m.id, o); noteSeen(o.pub, m.name, m.color, m.code, undefined, undefined, m.color2, m.pat); saveSeen(); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } else if ((q.mute | 0) < 1 && !m.quiet) { notice('★ ' + who(m.name) + ' joined your game', '', 'human'); addFeed('★ ' + who(m.name) + ' joined your game', 'friend', true, 'human'); sfx('join'); } botNote(); break; }
+    case 'join': { const o = newOther(m.name, m.color, m.color2, m.pat, m.crown || 0); o.pub = m.pub || ''; o.ot = m.ot >>> 0; o.dv = m.dv ? 1 : 0; others.set(m.id, o); noteSeen(o.pub, m.name, m.color, m.code, undefined, undefined, m.color2, m.pat); saveSeen(); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' joined', 'join', false, 'human'); if (settings.joinMsg) sfx('join'); } else if ((q.mute | 0) < 1 && !m.quiet) { notice('★ ' + who(m.name) + ' joined your game', '', 'human'); addFeed('★ ' + who(m.name) + ' joined your game', 'friend', true, 'human'); sfx('join'); } botNote(); break; }
     case 'leave': { others.delete(m.id); room.n = m.n; const q = lkOf(m.pub); if (!(q && q.ok)) { addFeed(who(m.name) + ' left', 'leave', false, 'human'); if (settings.joinMsg) sfx('leave'); } botNote(); break; }
     case 'info': {   // someone changed how they look: show a clear little transformation
       const o = others.get(m.id);
       if (o) {
         const changed = (HEX.test(m.color) && m.color !== o.color) || (HEX.test(m.color2) && m.color2 !== o.color2) || (m.pat | 0) !== o.pat;
-        o.name = m.name; if (HEX.test(m.color)) o.color = m.color; if (HEX.test(m.color2)) o.color2 = m.color2; o.pat = m.pat | 0;
+        o.name = m.name; if (HEX.test(m.color)) o.color = m.color; if (HEX.test(m.color2)) o.color2 = m.color2; o.pat = m.pat | 0; o.dv = m.dv ? 1 : 0;
         if (changed) { o.morph = 1; if (o.seen && nearMe(o.cx, o.cy)) { ring(o.cx, o.cy, o.color, 6, 48, 0.55); burst(o.cx, o.cy, [o.color, o.color2, '#fff'], 16, 220, 120); } }
       }
       break;
@@ -9228,8 +9272,8 @@ function renderInner(dt, nowT) {
       let sc2 = 1; if (o.morph > 0) { o.morph = Math.max(0, o.morph - dt * 1.6); sc2 = 1 + 0.35 * Math.sin(o.morph * 3.14); }
       drawBall(nx, ny, o.rot, o.color, o.color2, o.pat, 0.88, false, sc2);
       const pinned = pinShown(o.pub);
-      if (!pinned) drawLabel(o.name, false, o.crown, nx, ny, true);
-      if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 + (o.crown && settings.crowns ? 26 : 0) : settings.tags && o.name ? 38 : 22) - (o.crown && settings.crowns ? crownH(o.crown) : 0));
+      if (!pinned) drawLabel(o.name, false, o.crown, nx, ny, true, 0, o.dv);
+      if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 + (o.crown && settings.crowns ? 26 : 0) : (settings.tags && o.name) || o.dv ? 38 : 22) - (o.crown && settings.crowns ? crownH(o.crown) : 0));
     });
     for (let i = 0; i < bots.length; i++) {
       const bt = bots[i], bb = bt.b;
@@ -9242,7 +9286,7 @@ function renderInner(dt, nowT) {
       let s = 1; if (S.spawnT > 0) { const p = 1 - S.spawnT / 0.6; s = 0.25 + 0.75 * Math.min(1, p * 1.25) + 0.12 * Math.sin(p * 3.14); }
       drawTrail(b);
       drawBall(b.x, b.y, b.rot, settings.color, settings.color2, settings.pat, 1, true, s);
-      const lift = meterUp(b); S.lblTop = drawLabel(settings.myName ? censor(settings.name) : '', false, S.crown, b.x, b.y, false, 0);   // (name and crown stay put; the meters pop up above them)
+      const lift = meterUp(b); S.lblTop = drawLabel(settings.myName ? censor(settings.name) : '', false, S.crown, b.x, b.y, false, 0, settings.myName && devShown());   // (name and crown stay put; the meters pop up above them)
       drawSuper(b);
       if (settings.boost || b.pSpeed > 0) drawBoost(b);
       if (S.myEmo) drawEmoBubble(S.myEmo, b.x, S.lblTop - 16 - lift);
@@ -9602,7 +9646,7 @@ if (params && params.get('test')) window.__d = { NET, addGate, pk: { buriedAt, p
     AU.ctx = oc; AU.mus = out; AU.song = sg; AU.style = kind; AU.melody = genMelody(sg, MOOD[kind]);
     try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += songBeats(sg) * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
     const buf = await oc.startRendering(); return Array.from(buf.getChannelData(0));
-  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
+  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, dvb: () => ({ others: [...others.values()].map(o => ({ name: o.name, dv: o.dv | 0, pub: o.pub, color: o.color, x: o.cx || o.x, y: o.cy || o.y })), devShow: !!settings.devShow, shown: devShown(), devOn: devOn(), pills: devPillN, me: S.b ? { x: S.b.x, y: S.b.y } : null }), openProfile: p => openProfile(p), mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();
@@ -9616,7 +9660,7 @@ newBotTarget();
 hudTick();
 requestAnimationFrame(frame);
 if (window.__bootStep) window.__bootStep('Rolling out the map…', 85);
-let bootSeen = 0; (function waitFirst() { if (S.map && S.b && ++bootSeen > 6) { if (window.__bootHide) window.__bootHide(); } else requestAnimationFrame(waitFirst); })();
+let bootSeen = 0; (function waitFirst() { if (S.map && S.b && ++bootSeen > 6) { bootFrame = true; bootTry(); } else requestAnimationFrame(waitFirst); })();
 try { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !(params && params.get('test'))) navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
 /* tell the service worker whether this is the app on your home screen, so tapping a notification opens the app (and not a browser tab) when it is installed */
 function swMode(installed) { try { if (!('serviceWorker' in navigator)) return; navigator.serviceWorker.ready.then(r => { const w = navigator.serviceWorker.controller || r.active; if (w) w.postMessage(installed ? { t: 'installed' } : { t: 'mode', app: isStandalone() }); }).catch(() => {}); } catch (e) {} }
