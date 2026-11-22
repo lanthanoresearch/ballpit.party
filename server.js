@@ -53,7 +53,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 213;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 214;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -953,21 +953,33 @@ function leave(p, toLobby) {
   if (p.pub && byPub.get(p.pub) === p) { byPub.delete(p.pub); const hid = !shareOf(p.pub).on; for (const b of (links.get(p.pub) || [])) { const q = byPub.get(b); if (q) { if (!hid) send(q, { t: 'loff', pub: p.pub, name: p.name }); sendLinks(q); } } }
 }
 
-/* ----- the game admin. Dev mode on a device only shows the tools: the server lets them do anything only with the admin key, ADMIN_KEY,
-   which is set on the server itself (on Render: the service's Environment) and is never in the game's own files. Without it, nobody is an admin.
-   An admin can see every player, set a player's money, stop them building or using codes, boot them, ban them, and close the game to everyone.
-   Admins themselves can never be booted, banned or closed out ----- */
-const ADMIN_KEY = String(process.env.ADMIN_KEY || '');
+/* ----- dev tools: owners and devs.
+   OWNER: anyone who typed the server's key (ADMIN_KEY) into the game's code box. Owners can do everything, and choose who else is a dev.
+   DEV: a player an owner put on the dev team, with the powers that owner picked for them (money, building and codes, boot, ban, closing the game).
+   A dev needs no key: the server knows them, on every device of theirs and every visit. Nobody can boot, ban, close out or change an owner or a dev.
+   The key: ADMIN_KEY on the server (on Render: the service's Environment). Without it the server makes one, keeps it in admin-key.txt and
+   writes it in its log at every start ----- */
+const KEY_FILE = process.env.KEY_FILE || path.join(path.dirname(LINKS_FILE), 'admin-key.txt');
+const ADMIN_KEY = (() => {
+  const env = String(process.env.ADMIN_KEY || '').trim(); if (env) { console.log('Dev tools key: the one set in ADMIN_KEY'); return env; }
+  let k = ''; try { k = fs.readFileSync(KEY_FILE, 'utf8').trim(); } catch (e) {}
+  if (!/^[a-z0-9-]{12,80}$/.test(k)) { const ch = 'abcdefghjkmnpqrstuvwxyz23456789', r = crypto.randomBytes(16); k = [0, 1, 2, 3].map(g => [...r.subarray(g * 4, g * 4 + 4)].map(x => ch[x % ch.length]).join('')).join('-'); try { fs.writeFileSync(KEY_FILE, k); } catch (e) {} }
+  console.log('Dev tools key (made by the server; set ADMIN_KEY in Render’s Environment to choose your own): ' + k);
+  return k;
+})();
 const MODS_FILE = process.env.MODS_FILE || path.join(path.dirname(LINKS_FILE), 'mods.json');
 const BAN_HOURS = [1, 24, 168, -1];   // (one hour, a day, a week, for good)
-let mods = { bans: {}, nob: {}, noc: {}, pend: {}, lock: 0, lockAt: 0 }, modsDirty = false, modsFresh = true;   // modsFresh: nothing was loaded and no admin has changed anything yet (an admin's device may then hand back what it remembers)
+const PERMS = ['m', 'b', 'boot', 'ban', 'lock'];   // money; building and codes; boot; ban; close the game
+let mods = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, lock: 0, lockAt: 0 }, modsDirty = false, modsFresh = true;   // modsFresh: nothing was loaded and no owner has changed anything yet (an owner's device may then hand back what it remembers)
 const banLive = b => !!b && (b.until === -1 || b.until > Date.now());
-function cleanMods(o) {   // only well-formed records, whatever the file or an admin's device says
-  const r = { bans: {}, nob: {}, noc: {}, pend: {}, lock: o && o.lock ? 1 : 0, lockAt: Math.max(0, +(o && o.lockAt) || 0) };
+const cleanPerms = o => { const r = {}; for (const k of PERMS) if (o && o[k]) r[k] = 1; return r; };
+function cleanMods(o) {   // only well-formed records, whatever the file or an owner's device says
+  const r = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, lock: o && o.lock ? 1 : 0, lockAt: Math.max(0, +(o && o.lockAt) || 0) };
   const ipOk = v => typeof v === 'string' && v.length <= 64 && /^[0-9a-f:.]+$/i.test(v);
   for (const k in (o && o.bans) || {}) { const b = o.bans[k]; if (!PUB.test(k) || !b) continue; const until = b.until === -1 ? -1 : Math.max(0, +b.until || 0); const v = { until, at: Math.max(0, +b.at || 0), name: cleanName(b.name) }; if (ipOk(b.ip)) v.ip = b.ip; if (banLive(v)) r.bans[k] = v; }
   for (const k of ['nob', 'noc']) for (const q in (o && o[k]) || {}) if (PUB.test(q) && o[k][q]) r[k][q] = 1;
   for (const q in (o && o.pend) || {}) { const v = o.pend[q]; if (PUB.test(q) && v) r.pend[q] = { c: Math.max(0, Math.min(1e9, Math.floor(+v.c) || 0)), g: Math.max(0, Math.min(1e9, Math.floor(+v.g) || 0)) }; }
+  for (const q in (o && o.devs) || {}) { const v = o.devs[q]; if (PUB.test(q) && v) r.devs[q] = { name: cleanName(v.name), p: cleanPerms(v.p), at: Math.max(0, +v.at || 0) }; }
   return r;
 }
 try { mods = cleanMods(JSON.parse(fs.readFileSync(MODS_FILE, 'utf8'))); modsFresh = false; } catch (e) {}
@@ -977,7 +989,7 @@ function saveMods(sync) {
   try { if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, MODS_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, MODS_FILE, () => {}); }); } catch (e) {}
 }
 let modsTellT = 0;
-function modsChanged() { modsDirty = true; modsFresh = false; if (!modsTellT) modsTellT = setTimeout(() => { modsTellT = 0; admTell({ t: 'admsnapv', snap: mods }); }, 300); }   // (every admin's device keeps a copy, to hand back after a restart that lost the file)
+function modsChanged() { modsDirty = true; modsFresh = false; if (!modsTellT) modsTellT = setTimeout(() => { modsTellT = 0; for (const q of allConns()) if (q.role === 'owner') send(q, { t: 'admsnapv', snap: mods }); }, 300); }   // (every owner's device keeps a copy, to hand back after a restart that lost the file)
 setInterval(() => { for (const k in mods.bans) if (!banLive(mods.bans[k])) { delete mods.bans[k]; modsDirty = true; } saveMods(false); }, 10000).unref();
 const privIp = ip => !ip || ip === '?' || /^(10\.|127\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|::1$|::$|f[cd][0-9a-f]{2}:|fe80:|::ffff:(10|127|192\.168|172\.(1[6-9]|2\d|3[01]))\.)/i.test(ip);   // (an address inside a network, or the server's own: never banned, it could be everybody's)
 function banOf(pub, ip) {   // a live ban on this device, or on the network it comes from
@@ -986,19 +998,26 @@ function banOf(pub, ip) {   // a live ban on this device, or on the network it c
   return null;
 }
 const admFails = new Map();   // ip -> { n, at }: wrong keys. Five in a quarter of an hour and that network is not even asked again until it has passed
-function admCheck(key, ip) {   // 'ok', 'off' (no key on this server), 'bad' (wrong key), or 'wait' (too many wrong ones)
-  if (!ADMIN_KEY) return 'off';
+function admCheck(key, ip) {   // 'ok', 'bad' (wrong key), or 'wait' (too many wrong ones)
   const now = Date.now(), f = admFails.get(ip);
   if (f && f.n >= 5 && now - f.at < 15 * 60000) return 'wait';
-  const a = crypto.createHash('sha256').update(String(key || '').slice(0, 300)).digest(), b = crypto.createHash('sha256').update(ADMIN_KEY).digest();
+  const a = crypto.createHash('sha256').update(String(key || '').trim().slice(0, 300)).digest(), b = crypto.createHash('sha256').update(ADMIN_KEY).digest();
   if (crypto.timingSafeEqual(a, b)) { admFails.delete(ip); return 'ok'; }
   const g = f && now - f.at < 15 * 60000 ? f : { n: 0, at: now }; g.n++; g.at = now; admFails.set(ip, g); return 'bad';
 }
 setInterval(() => { const t = Date.now(); for (const [k, v] of admFails) if (t - v.at > 15 * 60000) admFails.delete(k); }, 60000).unref();
 const lastIp = new Map();   // pub -> the network they last came from (only while this server runs: for banning a network after they have left)
+const ALLP = { m: 1, b: 1, boot: 1, ban: 1, lock: 1 };
+function setRole(p) {   // owner (proved the key on this connection), dev (on the team), or nobody
+  p.role = p.keyOk ? 'owner' : p.pub && mods.devs[p.pub] ? 'dev' : '';
+  p.perms = p.role === 'owner' ? ALLP : p.role === 'dev' ? mods.devs[p.pub].p : {};
+  p.admin = !!p.role;   // (staff: let in when the game is closed, never banned, booted or changed)
+}
+const roleMsg = p => ({ t: 'adm', st: p.role ? 'ok' : 'none', role: p.role || '', perms: p.perms || {}, lock: p.role ? mods.lock : 0 });   // (kst, added where a key was tried: 'ok', 'bad' or 'wait')
+const can = (p, k) => p.role === 'owner' || (p.role === 'dev' && !!(p.perms && p.perms[k]));
 const modOf = pub => ({ t: 'mod', b: pub && mods.nob[pub] ? 0 : 1, c: pub && mods.noc[pub] ? 0 : 1 });
 const noBuild = p => !p.admin && !!(p.pub && mods.nob[p.pub]);
-function buildNo(p) {   // somebody an admin stopped from building tried anyway: nothing is added, and their device gets the world as it really is
+function buildNo(p) {   // somebody a dev stopped from building tried anyway: nothing is added, and their device gets the world as it really is
   const r = p.room, now = Date.now(); if (!r || !bstate(r) || now - (p.bnoAt || 0) < 1500) return; p.bnoAt = now;
   send(p, { t: 'mod', b: 0, c: mods.noc[p.pub] ? 0 : 1, again: 1 });
   p.rsAt = now; p.dver = null; p.sbh = p.sdh = null; send(p, { t: 'rebuild', rs: 1, priv: r.priv ? 1 : 0, b: bOut(bstate(r)) });
@@ -1008,14 +1027,14 @@ function barOut(q, why, until) {   // out of the game, with a reason their game 
   send(q, { t: 'barred', why, until });
   setTimeout(() => { try { q.ws.close(4003, why); } catch (e) {} }, 300);
 }
-function admList(a) {   // every player now, the ones seen in the last three days, and every ban
+function admList(a) {   // every player now, the ones seen in the last three days, the bans and the dev team
   const now = Date.now(), fr = links.get(a.pub) || new Set(), on = [], seen = new Set();
-  const look = (pub, x) => ({ pub, code: codeOf(pub), name: x.name || '', color: HEX.test(x.color) ? x.color : '#ff4d4d', color2: HEX.test(x.color2) ? x.color2 : '#ffffff', pat: x.pat | 0, fr: fr.has(pub) ? 1 : 0, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(mods.bans[pub]) ? 1 : 0 });
+  const look = (pub, x) => ({ pub, code: codeOf(pub), name: x.name || '', color: HEX.test(x.color) ? x.color : '#ff4d4d', color2: HEX.test(x.color2) ? x.color2 : '#ffffff', pat: x.pat | 0, fr: fr.has(pub) ? 1 : 0, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(mods.bans[pub]) ? 1 : 0, dev: mods.devs[pub] ? 1 : 0 });
   for (const q of allConns()) {
     if (!q.pub || seen.has(q.pub) || !live(q)) continue; seen.add(q.pub);
     const r = q.room, e = look(q.pub, q);
     e.w = r ? (r.priv ? 'priv' : 'pub') : 'menu'; if (r && r.priv && r.priv.hostPub !== q.pub) e.host = (known.get(r.priv.hostPub) || {}).name || '';
-    e.since = q.since || now; e.ad = q.admin ? 1 : 0; e.me = q === a ? 1 : 0; on.push(e);
+    e.since = q.since || now; e.role = q.role || ''; e.me = q === a ? 1 : 0; on.push(e);
   }
   const recent = [];
   for (const [k, v] of known) { if (seen.has(k) || !v.last || now - v.last > 3 * DAY) continue; const e = look(k, v); e.last = v.last; recent.push(e); }
@@ -1023,41 +1042,59 @@ function admList(a) {   // every player now, the ones seen in the last three day
   const bans = [];
   for (const k in mods.bans) { const b = mods.bans[k]; if (!banLive(b)) continue; const e = look(k, known.get(k) || { name: b.name }); e.name = e.name || b.name || ''; e.until = b.until; e.at = b.at; e.ip = b.ip ? 1 : 0; bans.push(e); }
   bans.sort((x, y) => y.at - x.at);
-  return { t: 'admlist', on, recent, bans, lock: mods.lock, lockAt: mods.lockAt, snap: mods };
+  const devs = []; for (const k in mods.devs) { const d = mods.devs[k], kn = known.get(k) || {}, q = byPub.get(k), e = look(k, kn); e.name = (live(q) && q.name) || kn.name || d.name || ''; e.p = d.p; e.on = live(q) ? 1 : 0; e.last = kn.last; devs.push(e); }
+  devs.sort((x, y) => (x.name || '').localeCompare(y.name || ''));
+  const out = { t: 'admlist', on, recent, bans, devs, lock: mods.lock, lockAt: mods.lockAt };
+  if (a.role === 'owner') out.snap = mods;   // (only owners keep a copy: it has network addresses in it)
+  return out;
 }
-function admTell(obj) { for (const q of allConns()) if (q.admin) send(q, obj); }
+function staffTell(obj) { for (const q of allConns()) if (q.role) send(q, obj); }
 function admMsg(p, m, ip) {
   const now = Date.now();
-  if (m.t === 'adm') {   // unlocking with the key
-    if (p.admin) { send(p, { t: 'adm', st: 'ok', lock: mods.lock }); return; }
-    if (now - (p.admTry || 0) < 400) { send(p, { t: 'adm', st: 'slow', lock: 0 }); return; } p.admTry = now;   // (one try at a time; the real limit is per network, below)
-    const st = admCheck(m.key, ip); p.admin = st === 'ok'; send(p, { t: 'adm', st, lock: mods.lock });
-    if (p.admin) console.log('admin unlocked from', ip);
-    return;
+  if (m.t === 'adm') {   // the key, typed in the code box
+    if (p.keyOk) { send(p, roleMsg(p)); return; }
+    if (now - (p.admTry || 0) < 400) { send(p, { t: 'adm', st: 'slow', role: p.role || '', perms: p.perms || {}, try: 1 }); return; } p.admTry = now;   // (one try at a time; the real limit is per network)
+    const st = admCheck(m.key, ip); if (st === 'ok') { p.keyOk = true; console.log('dev tools: an owner signed in from', ip); }
+    setRole(p); const r = roleMsg(p); r.try = 1; r.kst = st; send(p, r); return;
   }
-  if (m.t === 'admoff') { p.admin = false; return; }   // (dev mode turned off, or the key forgotten, on that device)
-  if (!p.admin) return;   // (everything else is only ever for an admin)
-  if (m.t === 'admsnap') {   // after a restart with nothing remembered: the admin's device hands back the bans and switches it last saw
-    if (!modsFresh || !m.snap || typeof m.snap !== 'object') return;
-    const c = cleanMods(m.snap); mods = c; modsChanged(); saveMods(false); admTell({ t: 'adm', st: 'ok', lock: mods.lock }); return;
+  if (m.t === 'admoff') { p.keyOk = false; setRole(p); send(p, roleMsg(p)); return; }   // (an owner forgot the key on that device: they are a dev if they are on the team, or nobody)
+  if (m.t === 'admleave') { if (p.role === 'dev' && p.pub && mods.devs[p.pub]) { delete mods.devs[p.pub]; modsChanged(); saveMods(false); } setRole(p); send(p, roleMsg(p)); staffTell({ t: 'admchg' }); return; }   // (a dev leaves the team)
+  if (!p.role) return;   // (everything else is only ever for owners and devs)
+  const no = () => send(p, { t: 'admok', what: 'noperm' });
+  if (m.t === 'admsnap') {   // after a restart with nothing remembered: an owner's device hands back the bans, the dev team and the switches it last saw
+    if (p.role !== 'owner' || !modsFresh || !m.snap || typeof m.snap !== 'object') return;
+    mods = cleanMods(m.snap); modsChanged(); saveMods(false);
+    for (const q of allConns()) { const was = q.role; setRole(q); if (q.role !== was) send(q, roleMsg(q)); }
+    staffTell({ t: 'admchg', lock: mods.lock }); return;
   }
   if (m.t === 'admls') { if (now - (p.admLs || 0) < 600) return; p.admLs = now; send(p, admList(p)); return; }
-  if (m.t === 'admlock') {   // close the game to everyone but admins, or open it again
+  if (m.t === 'admlock') {   // close the game to everyone but owners and devs, or open it again
+    if (!can(p, 'lock')) return no();
     mods.lock = m.on ? 1 : 0; mods.lockAt = now; modsChanged(); saveMods(false);
     if (mods.lock) for (const q of allConns()) if (!q.admin && (live(q) || q.pub)) barOut(q, 'closed');
-    admTell({ t: 'adm', st: 'ok', lock: mods.lock }); send(p, { t: 'admok', what: mods.lock ? 'closed' : 'opened' }); return;
+    staffTell({ t: 'admchg', lock: mods.lock }); send(p, { t: 'admok', what: mods.lock ? 'closed' : 'opened' }); return;
   }
   const pub = typeof m.pub === 'string' && PUB.test(m.pub) ? m.pub : ''; if (!pub) return;
-  const q = byPub.get(pub), on = live(q), k = known.get(pub);
-  if (on && q.admin && m.t !== 'admp') { send(p, { t: 'admok', what: 'admin', pub }); return; }   // (an admin's device: nobody can change anything about it)
+  const q = byPub.get(pub), on = live(q), k = known.get(pub), qStaff = (on && q.role) || mods.devs[pub] ? (on && q.role === 'owner' ? 'owner' : 'dev') : '';
   if (m.t === 'admp') {   // one player: what there is to know, and their money from their own device
-    const b = mods.bans[pub], net = on && q.ip && !privIp(q.ip) ? allConns().filter(x => x !== q && x.ip === q.ip && live(x)).length : 0;
-    send(p, { t: 'admp', pub, on: on ? 1 : 0, ad: on && q.admin ? 1 : 0, me: q === p ? 1 : 0, name: (on ? q.name : k && k.name) || (b && b.name) || '', last: k && k.last, first: k && k.first, beat: k && k.beat | 0, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(b) ? { until: b.until, ip: b.ip ? 1 : 0 } : null, net, ipOk: (on ? q.ip : lastIp.get(pub)) && !privIp(on ? q.ip : lastIp.get(pub)) ? 1 : 0, pend: mods.pend[pub] || null });
-    if (on && !q.admin) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mwal' }); }
+    const b = mods.bans[pub], who = on ? q.ip : lastIp.get(pub), net = can(p, 'ban') && on && q.ip && !privIp(q.ip) ? allConns().filter(x => x !== q && x.ip === q.ip && live(x)).length : 0;
+    send(p, { t: 'admp', pub, on: on ? 1 : 0, role: qStaff, me: q === p ? 1 : 0, name: (on ? q.name : k && k.name) || (b && b.name) || (mods.devs[pub] && mods.devs[pub].name) || '', last: k && k.last, first: k && k.first, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(b) ? { until: b.until, ip: b.ip ? 1 : 0 } : null, net, ipOk: can(p, 'ban') && who && !privIp(who) ? 1 : 0, pend: can(p, 'm') ? mods.pend[pub] || null : null, dev: mods.devs[pub] ? { p: mods.devs[pub].p } : null });
+    if (on && !q.role && can(p, 'm')) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mwal' }); }
     return;
   }
-  if (q === p) return;   // (not on yourself)
+  if (q === p) return;   // (never on yourself)
+  if (m.t === 'admdev') {   // owners only: put a player on the dev team with chosen powers, change them, or take them off
+    if (p.role !== 'owner') return no();
+    if (on && q.role === 'owner') { send(p, { t: 'admok', what: 'owner', pub }); return; }
+    if (m.on) { mods.devs[pub] = { name: (on ? q.name : k && k.name) || '', p: cleanPerms(m.p), at: (mods.devs[pub] && mods.devs[pub].at) || now }; delete mods.nob[pub]; delete mods.noc[pub]; delete mods.bans[pub]; }   // (a dev is never also restricted or banned)
+    else delete mods.devs[pub];
+    modsChanged(); saveMods(false);
+    if (on) { const was = q.role; setRole(q); send(q, roleMsg(q)); if (q.role && !was) send(q, modOf(pub)); }
+    staffTell({ t: 'admchg' }); send(p, { t: 'admok', what: m.on ? 'dev1' : 'dev0', pub }); return;
+  }
+  if (qStaff) { send(p, { t: 'admok', what: qStaff === 'owner' ? 'owner' : 'admin', pub }); return; }   // (an owner or a dev: nobody can change anything about them)
   if (m.t === 'admset') {   // their money: set on their device now, or the next time they come in
+    if (!can(p, 'm')) return no();
     const c = Math.max(0, Math.min(1e9, Math.floor(+m.c))), g = Math.max(0, Math.min(1e9, Math.floor(+m.g)));
     if (!Number.isFinite(c) || !Number.isFinite(g)) return;
     if (on) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mset', c, g }); delete mods.pend[pub]; }
@@ -1065,13 +1102,15 @@ function admMsg(p, m, ip) {
     modsChanged(); send(p, { t: 'admok', what: on ? 'money' : 'moneylater', pub }); return;
   }
   if (m.t === 'admflag') {   // b: may build. c: may use codes
+    if (!can(p, 'b')) return no();
     const key = m.k === 'b' ? 'nob' : m.k === 'c' ? 'noc' : ''; if (!key) return;
     if (m.on) delete mods[key][pub]; else mods[key][pub] = 1; modsChanged();
     if (on) send(q, modOf(pub));
     send(p, { t: 'admok', what: key + (m.on ? '1' : '0'), pub }); return;
   }
-  if (m.t === 'admboot') { if (!on) return; barOut(q, 'boot'); send(p, { t: 'admok', what: 'boot', pub }); return; }
+  if (m.t === 'admboot') { if (!can(p, 'boot')) return no(); if (!on) return; barOut(q, 'boot'); send(p, { t: 'admok', what: 'boot', pub }); return; }
   if (m.t === 'admban') {
+    if (!can(p, 'ban')) return no();
     const h = BAN_HOURS.includes(+m.h) ? +m.h : 24, until = h < 0 ? -1 : now + h * 3600000;
     const ipNow = on ? q.ip : lastIp.get(pub), b = { until, at: now, name: (on ? q.name : k && k.name) || '' };
     if (m.ip && ipNow && !privIp(ipNow)) b.ip = ipNow;
@@ -1080,11 +1119,11 @@ function admMsg(p, m, ip) {
     if (b.ip) for (const x of allConns()) if (x !== q && !x.admin && x.ip === b.ip && live(x)) barOut(x, 'ban', until);   // (the same network: everyone on it is out until the ban is over)
     send(p, { t: 'admok', what: 'ban', pub }); return;
   }
-  if (m.t === 'admunban') { if (mods.bans[pub]) { delete mods.bans[pub]; modsChanged(); saveMods(false); } send(p, { t: 'admok', what: 'unban', pub }); return; }
+  if (m.t === 'admunban') { if (!can(p, 'ban')) return no(); if (mods.bans[pub]) { delete mods.bans[pub]; modsChanged(); saveMods(false); } send(p, { t: 'admok', what: 'unban', pub }); return; }
 }
-function walBack(p, m) {   // a player's device answering with its money: only when an admin just asked, and only to that admin
+function walBack(p, m) {   // a player's device answering with its money: only when a dev just asked, and only to that dev
   const a = p.walAsk; if (!a || Date.now() - a.at > 8000) return; p.walAsk = null;
-  const to = allConns().find(x => x.id === a.by); if (!to || !to.admin) return;
+  const to = allConns().find(x => x.id === a.by); if (!to || !to.role) return;
   const n = v => Math.max(0, Math.min(1e9, Math.floor(+v) || 0));
   send(to, { t: 'admw', pub: p.pub, c: n(m.c), g: n(m.g), inf: m.inf ? 1 : 0 });
 }
@@ -1134,7 +1173,8 @@ wss.on('connection', (ws, req) => {
       const lobby = m.lobby || capped ? 1 : 0, wasOn = p.lobby;   // lobby: the player is only on the main menu. Connected for friends, but not in any world and nobody sees them
       p.color = cleanColor(m.color, '#ff4d4d'); p.color2 = cleanColor(m.color2, '#ffffff'); p.pat = cleanPat(m.pat);
       if (typeof m.dev === 'string' && DEV.test(m.dev)) { p.pub = pubOf(m.dev); p.otag = P.hash32('o:' + m.dev) & 0xffffff; }   // (otag: whose base is whose, the same number the player's device works out)
-      if (!p.admin && !p.akDone && typeof m.ak === 'string' && m.ak) { p.akDone = true; p.admSt = admCheck(m.ak, ip); p.admin = p.admSt === 'ok'; }   // (an admin's device sends its key with hello: it is let in even when the game is closed)
+      if (!p.keyOk && !p.akDone && typeof m.ak === 'string' && m.ak) { p.akDone = true; p.admSt = admCheck(m.ak, ip); p.keyOk = p.admSt === 'ok'; }   // (an owner's device sends its key with hello: it is let in even when the game is closed)
+      setRole(p); if (p.role || m.dv) p.admTell = true;   // (an owner or a dev; m.dv: this device thinks it is one, and must hear if that changed)
       if (p.pub) { lastIp.delete(p.pub); lastIp.set(p.pub, ip); if (lastIp.size > 20000) lastIp.delete(lastIp.keys().next().value); }
       if (!p.admin) {
         const ban = banOf(p.pub, ip); if (ban) { barOut(p, 'ban', ban.until); return; }   // banned: told until when, and not let in
@@ -1189,7 +1229,7 @@ wss.on('connection', (ws, req) => {
       } else {
         send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
       }
-      if (p.admSt) { send(p, { t: 'adm', st: p.admSt, lock: mods.lock }); p.admSt = ''; }   // (the admin key that came with hello: right or wrong)
+      if (p.admTell || p.admSt) { const r = roleMsg(p); if (p.admSt) r.kst = p.admSt; send(p, r); p.admTell = false; p.admSt = ''; }   // (owner, dev or nobody, and whether the key this device keeps still works)
       if (p.pub) {
         { const old = byPub.get(p.pub); if (old && old !== p && Date.now() - (old.lastMsg || 0) > 5000) { try { old.ws.terminate(); } catch (e) {} } }   // (the same player's old connection that went quiet, from a phone that slept or a network that changed: it goes at once, so no frozen copy of them stands about in the world)
         byPub.set(p.pub, p);

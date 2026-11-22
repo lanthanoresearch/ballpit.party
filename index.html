@@ -1017,11 +1017,16 @@
   .profcard .prow{flex-wrap:wrap;row-gap:6px}.profcard .prow .fopts{flex:1 1 100%;justify-content:flex-start}
   @media (max-height:520px) and (min-aspect-ratio:1/1){.profcard{display:flex!important;width:min(560px,100%)}.profcard .phead{grid-column:auto}}
 /* ----- the game admin (dev mode with the admin key) ----- */
-.admkey{display:flex;gap:8px;align-items:stretch;margin:6px 0 4px}
-.admkey input{flex:1 1 auto;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:#1b1726;color:var(--ink)}
-.admkey .btn{flex:none;min-width:96px}
 #admPlayers .admn{margin-left:auto;font-size:13px;opacity:.75}
-.admforget{margin-top:6px;opacity:.85}
+.devme{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:#2c2644;border:2px solid rgba(232,220,192,.35);margin:2px 0 6px}
+.devrole{flex:none;font-size:13px;padding:4px 10px;border-radius:99px;background:#c9a227;color:#1b1726}
+.devrole.dev{background:#6b4fd0;color:#fff}
+.devmet{flex:1;min-width:0}
+.devmet b{display:block;font-weight:normal;font-size:17px}
+.devmet small{display:block;font-size:13px;opacity:.75}
+.devmebtn{display:flex;justify-content:flex-end;margin:0 0 4px}
+.devteam{flex:none;max-height:none;overflow:visible;margin-top:6px}
+#amDevBox .dep.sub>div{margin-bottom:0}
 #admModal{z-index:15;background:rgba(10,8,16,.6)}
 html.mfull #admModal{padding:0}
 html.mfull #admModal .amcard{zoom:1;width:100%;max-width:100%;height:100%;max-height:100%;border:0;border-radius:0;box-shadow:none;padding:calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
@@ -1075,16 +1080,16 @@ html.mfull #admModal .amcard{zoom:1;width:100%;max-width:100%;height:100%;max-he
 .xbtn,.btn.dmback,#mmbig .mmtools .btn{width:36px;height:34px;min-width:36px;min-height:34px;padding:0;display:flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box}
 .ctabs button{min-height:34px;box-sizing:border-box}
 button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: its gap above is for the box, never for a button, which would then sit lower than the one beside it) */
-/* phones: the settings tabs use short names where the long ones do not fit, all in one size of type */
-.tabs button span[data-short]{white-space:nowrap}
-@media (max-width:640px),(max-height:520px) and (min-aspect-ratio:1/1){
-  .tabs button span[data-short]{font-size:0!important;letter-spacing:0!important}
-  .tabs button span[data-short]::after{content:attr(data-short);font-size:11px}
-}
-@media (max-width:400px){   /* (the narrowest phones: the tabs give their names a little more room, all alike) */
-  .tabs{gap:0;padding-left:4px;padding-right:4px}
-  .tabs button{padding-left:0;padding-right:0}
-  .tabs button span:last-child,.tabs button span[data-short]::after{font-size:10.5px;letter-spacing:-.1px}
+/* the settings tabs: always the same ones, always in the same places (Dev tools last, so nothing moves when it shows). Four to a row, in two rows,
+   on every screen; down the side on a phone held sideways */
+#settings .tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 6px;padding:4px 8px 8px}
+#settings .tabs button{min-width:0;padding:5px 2px 4px;gap:2px}
+#settings .tabs button span:last-child{font-size:12px;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@media (max-width:400px){#settings .tabs{gap:4px 2px;padding:4px 4px 8px}#settings .tabs button span:last-child{font-size:11px;letter-spacing:-.15px}}   /* (the narrowest phones: every name still fits) */
+@media (max-height:520px) and (min-aspect-ratio:1/1){
+  #settings{grid-template-columns:128px minmax(0,1fr)}
+  #settings .tabs{display:flex;flex-direction:column;gap:2px;padding:4px 6px 6px}
+  #settings .tabs button span:last-child{font-size:13px}
 }
 </style>
 </head>
@@ -1098,7 +1103,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 213; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 214; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, fill = function (p) { var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, p / 100))); }, msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1374,16 +1379,30 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   <div id="amOneView" class="amview hide">
     <div class="amwho"><span id="amDot"></span><div class="amwn"><b id="amName"></b><small id="amCode"></small></div><span id="amFr" class="amfr hide"><svg class="ic"><use href="#i-users"/></svg>Friend</span></div>
     <div class="small dim" id="amWhere"></div>
-    <div id="amAdminNote" class="amnote hide">This is a game admin's device. Nothing here can be changed for it.</div>
+    <div id="amAdminNote" class="amnote hide"></div>
     <div id="amBanned" class="amban hide"><span id="amBanTxt"></span><button class="btn sm" id="amUnban" type="button">Unban</button></div>
     <div id="amCtl">
+      <div id="amDevBox"><h4><span data-ic="crown"></span> Dev team</h4>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Dev</b><small>Dev tools on every device of theirs. Nobody can boot, ban or limit a dev</small></span></span><input type="checkbox" id="amDev"><i></i></label>
+        <div class="dep sub" id="amDevPerms"><div>
+          <label class="sw2 ic2"><span class="ti"><span data-ic="gcoin"></span><span><b>Money</b><small>See and set players’ coins and diamonds</small></span></span><input type="checkbox" data-perm="m"><i></i></label>
+          <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Building and codes</b><small>Stop players building or using codes</small></span></span><input type="checkbox" data-perm="b"><i></i></label>
+          <label class="sw2 ic2"><span class="ti"><span data-ic="back"></span><span><b>Boot</b><small>Send players back to the main menu</small></span></span><input type="checkbox" data-perm="boot"><i></i></label>
+          <label class="sw2 ic2"><span class="ti"><span data-ic="lock"></span><span><b>Ban</b><small>Keep players out of online play, and unban them</small></span></span><input type="checkbox" data-perm="ban"><i></i></label>
+          <label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Close the game</b><small>Close the game to everyone, and open it again</small></span></span><input type="checkbox" data-perm="lock"><i></i></label>
+        </div></div></div>
+      <div id="amMoneyBox">
       <h4><span data-ic="gcoin"></span> Money in the public world</h4>
       <div class="ammoney"><label><span>Coins</span><input id="amC" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Coins"></label><label><span>Diamonds</span><input id="amG" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Diamonds"></label></div>
       <div class="small dim" id="amMoneyNote"></div>
       <button class="btn full" id="amSet" type="button"><span data-ic="check"></span>Set their money</button>
+      </div>
+      <div id="amAllowBox">
       <h4><span data-ic="gear"></span> Allowed</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Can build</b><small>In the public world and in private games with friends. The server turns away anything they try to build</small></span></span><input type="checkbox" id="amCanB"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="key"></span><span><b>Can use codes</b><small>Codes like themaker#1. Turning this off also ends any code they are using now</small></span></span><input type="checkbox" id="amCanC"><i></i></label>
+      </div>
+      <div id="amOutBox">
       <h4><span data-ic="warn"></span> Out of the game</h4>
       <div class="btnrow"><button class="btn" id="amBoot" type="button"><span data-ic="back"></span>Boot</button><button class="btn" id="amBanGo" type="button"><span data-ic="lock"></span>Ban</button></div>
       <div class="small dim" id="amOutNote">Boot sends them to the main menu: they can come straight back. A ban keeps them out of online play until it ends.</div>
@@ -1391,6 +1410,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
         <div class="amdur" role="radiogroup" aria-label="How long"><button type="button" data-h="1">1 hour</button><button type="button" data-h="24">24 hours</button><button type="button" data-h="168">7 days</button><button type="button" data-h="-1">For good</button></div>
         <label class="sw2 ic2" id="amIpRow"><span class="ti"><span data-ic="globe"></span><span><b>Also their network</b><small id="amIpNote">Stops a new account from the same Wi-Fi or phone network too</small></span></span><input type="checkbox" id="amIp"><i></i></label>
         <button class="btn full amred" id="amBanOk" type="button"><span data-ic="lock"></span>Ban them</button>
+      </div>
       </div>
     </div>
   </div>
@@ -1435,9 +1455,9 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
     <button data-tab="sound"><span data-ic="music"></span><span>Sound</span></button>
     <button data-tab="online"><span data-ic="globe"></span><span>Mode</span></button>
     <button data-tab="friends"><span data-ic="users"></span><span>Friends</span></button>
-    <button data-tab="notify" aria-label="Notifications"><span data-ic="bell"></span><span data-short="Alerts">Notifications</span></button>
-    <button data-tab="dev" aria-label="Dev tools"><span data-ic="bolt"></span><span data-short="Dev">Dev tools</span></button>
+    <button data-tab="notify"><span data-ic="bell"></span><span>Notifications</span></button>
     <button data-tab="more"><span data-ic="more"></span><span>More</span></button>
+    <button data-tab="dev"><span data-ic="bolt"></span><span>Dev tools</span></button>
   </div>
   <div class="sbody">
     <section class="pane" data-pane="you">
@@ -1603,23 +1623,20 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       </div>
     </section>
     <section class="pane" data-pane="dev">
-      <div class="small dim" style="margin:2px 0 8px">Dev mode is on for this device. Each tool can be turned off here and dev mode stays on. Type the code in a game again to turn dev mode off.</div>
-      <h4><span data-ic="info"></span> Main menu</h4>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="info"></span><span><b>Update button</b><small>The i button on the main menu: versions, updating, and the server's figures</small></span></span><input type="checkbox" id="setDevUpd"><i></i></label>
+      <div class="devme" id="devMe"><span class="devrole" id="devRoleTag">Owner</span><div class="devmet"><b id="devMeT"></b><small id="devMeS"></small></div></div>
+      <div class="devmebtn"><button class="btn sm" id="devOut" type="button"></button></div>
+      <h4><span data-ic="users"></span> Players</h4>
+      <button class="btn full" id="admPlayers" type="button"><span data-ic="users"></span>Players<span class="admn" id="admPlN"></span></button>
+      <label class="sw2 ic2" id="admLockRow"><span class="ti"><span data-ic="lock"></span><span><b>Close the game to everyone</b><small>Everyone but owners and devs goes back to the main menu and cannot play online until this is off. Offline games still work</small></span></span><input type="checkbox" id="admLockSw"><i></i></label>
+      <div id="devTeamBox"><h4><span data-ic="crown"></span> Dev team</h4>
+        <div class="small dim" id="devTeamNote">To add someone, open Players, pick them, and turn on Dev. You choose what each dev can do.</div>
+        <div id="devTeam" class="nflist devteam"></div></div>
       <h4><span data-ic="bolt"></span> Server</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="bolt"></span><span><b>Server health when the game opens</b><small>A short note at the top: how the server is doing now, and how it has been this month</small></span></span><input type="checkbox" id="setDevHealth"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Nobody playing</b><small>When everyone has left every world: a good time to update the game. Once, until someone plays and leaves again. With notifications on, even when the game is closed</small></span></span><input type="checkbox" id="setNEmpty"><i></i></label>
       <button class="btn full" id="devStatus" type="button"><span data-ic="bolt"></span>Server figures</button>
-      <h4><span data-ic="lock"></span> Game admin</h4>
-      <div id="admKeyBox">
-        <div class="small dim" id="admKeyNote">To manage players, type the admin key. It is set on the server, not in the game, so only you have it.</div>
-        <form class="admkey" id="admKeyForm" autocomplete="off"><input id="admKeyIn" type="password" maxlength="200" placeholder="Admin key" aria-label="Admin key" autocomplete="off" spellcheck="false"><button class="btn" id="admKeyGo" type="submit">Unlock</button></form>
-      </div>
-      <div id="admOnBox" class="hide">
-        <button class="btn full" id="admPlayers" type="button"><span data-ic="users"></span>Players<span class="admn" id="admPlN"></span></button>
-        <label class="sw2 ic2"><span class="ti"><span data-ic="lock"></span><span><b>Close the game to everyone</b><small>Everyone but you goes back to the main menu and cannot play online until you turn this off. Offline games still work</small></span></span><input type="checkbox" id="admLockSw"><i></i></label>
-        <button class="btn sm admforget" id="admForget" type="button">Forget the admin key on this device</button>
-      </div>
+      <h4><span data-ic="info"></span> Main menu</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="info"></span><span><b>Update button</b><small>The i button on the main menu: versions, updating, and the server's figures</small></span></span><input type="checkbox" id="setDevUpd"><i></i></label>
       <h4><span data-ic="search"></span> While you play</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Live stats panel</b><small>A panel you can drag anywhere: this device, the connection, the server, and what disagreed</small></span></span><input type="checkbox" id="setDevLive"><i></i></label>
       <div id="devStats"><label class="sw2 ic2"><span class="ti"><span data-ic="search"></span><span><b>Show stats</b><small>Tiny numbers in the corner, under the map</small></span></span><input type="checkbox" id="setStats"><i></i></label><div class="dep sub" data-dep="stats"><div><label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Frame rate</b><small>How many pictures a second your screen draws</small></span></span><input type="checkbox" id="setStFps"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="globe"></span><span><b>Ping</b><small>How long a message takes to the server and back</small></span></span><input type="checkbox" id="setStPing"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="clock"></span><span><b>Buffer</b><small>How far behind other players and things are shown, to keep them smooth</small></span></span><input type="checkbox" id="setStBuf"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="down"></span><span><b>Connection speed</b><small>Data coming in and going out each second</small></span></span><input type="checkbox" id="setStData"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="gear"></span><span><b>Server load</b><small>How hard the game server is working</small></span></span><input type="checkbox" id="setStSrv"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Conflicts</b><small>Times your screen and the server did not match</small></span></span><input type="checkbox" id="setStConf"><i></i></label></div></div></div>
@@ -1790,7 +1807,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 </div></div>
 <div id="codeModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="cdTitle"><div class="card nmcard">
   <h3 id="cdTitle">Enter a code</h3>
-  <input type="text" id="cdIn" maxlength="24" placeholder="Code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <input type="text" id="cdIn" maxlength="100" placeholder="Code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   <div class="small dim" id="cdNote"></div>
   <div class="btns"><button id="cdNo" type="button">Cancel</button><button id="cdOk" type="button" class="go">OK</button></div>
 </div></div>
@@ -1918,8 +1935,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=213"></script>
-<script src="physics.js?v=213"></script>
+<script src="maps.js?v=214"></script>
+<script src="physics.js?v=214"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1972,10 +1989,12 @@ function defaults() {
     keys: defKeys(), mkeys: defMKeys(), inputMode: 'auto', scheme: 'swipebtn', btnSize: 1, preset: 'moveleft', presetP: 'moveleft', btnPos: null, btnPosP: null, btnMulP: {} };
 }
 let settings = defaults();
-/* dev mode: the code "gamedevsam" (typed in a game) turns it on for good on this device, and the same code turns it off. It shows the update button on the
-   main menu, the server's figures, the stats you can show in a game, and a notification for when nobody is playing (the moment to update the game) */
-const DEVMODE_KEY = 'ballrun4_devmode'; let devMode = false; try { devMode = localStorage.getItem(DEVMODE_KEY) === '1'; } catch (e) {}   // (not 'ballrun4_dev': that is this device's own number)
-const devOn = () => devMode;
+/* dev tools: for owners (who typed the server's key in the code box) and devs (an owner put them on the dev team). The server says which, on every
+   visit; this device keeps the last answer so the tools are there at once, and drops them the moment the server says otherwise. No code in this page
+   unlocks anything (it is all here for anyone to read) */
+const DEVROLE_KEY = 'ballrun4_devrole';   // (never 'ballrun4_dev': that is this device's own number)
+let devRole = ''; try { devRole = localStorage.getItem(DEVROLE_KEY) || ''; if (devRole !== 'owner' && devRole !== 'dev') devRole = ''; localStorage.removeItem('ballrun4_devmode'); } catch (e) {}   // (the old dev code's switch is gone)
+const devOn = () => !!devRole;
 try { const o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
 function normalize() {
   const d = defaults();
@@ -4483,8 +4502,7 @@ $('btnRespawn').onclick = () => { resetPress(); };
 // tabs
 const tabBtns = $('tabs').querySelectorAll('button');
 let curTab = 'controls', onlyPrev = '';
-const HOME_TABS = ['sound', 'online', 'friends', 'notify', 'dev', 'more'];   // (on the main menu: sound, mode and more. Controls, display and friends are for when you are playing; more is only on the main menu)
-const tabLocked = n => (n === 'you' ? false : (typeof inHome !== 'undefined' && inHome) ? HOME_TABS.indexOf(n) < 0 : n === 'more') || (n === 'bots' && !!settings.mp) || (n === 'dev' && !(typeof devOn === 'function' && devOn()));   // (Dev tools only in dev mode)
+const tabLocked = n => n === 'dev' && !(typeof devOn === 'function' && devOn());   // (the same tabs everywhere, on the main menu and in a game. Dev tools only for owners and devs)
 const firstTab = () => { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'); if (!tabLocked(n)) return n; } return 'controls'; };   // (Offline has no friends, Public has no bots: those tabs stay in their place, greyed out)
 function tabLocks() { for (let i = 0; i < tabBtns.length; i++) { const n = tabBtns[i].getAttribute('data-tab'), L = tabLocked(n); tabBtns[i].classList.toggle('locked', L); tabBtns[i].disabled = L; tabBtns[i].setAttribute('aria-disabled', L ? 'true' : 'false'); } if (tabLocked(curTab)) showTab(firstTab()); }
 function resetTab() { tabLocks(); showTab(firstTab()); }   // (each new game opens the settings on the first tab; inside one game they stay where you left them)
@@ -6705,6 +6723,7 @@ setInterval(gateRender, 1000);
 $('hgRetry').onclick = () => { sfx('ui'); if (barred) barred.next = 0; srvSt = 'wait'; gateArmed = true; srvWait(); retryNow(); gateRender(); };
 $('hgOff').onclick = () => { sfx('ui'); srvPrev = curMode(); setMode('off'); gateRender(); };
 function srvOk() {
+  if (barred && barred.why === 'ban' && shownEl('confirm') && $('confirm').dataset.k === 'barred') $('confirm').classList.add('hide');   // (let back in: the old "you are banned" goes)
   barred = null;   // (let in again: a ban or a closed game is over)
   const was = srvSt; srvSt = 'ok'; clearTimeout(srvT); srvT = 0; setTimeout(() => { try { outFlush(); dmFlush(); dmSyncReq(); } catch (e) {} try { devwSend(); } catch (e) {} }, 300); setTimeout(() => { try { healthSay(); } catch (e) {} }, 1500);   // (messages written while away go now, and anything missed comes in)
   if (inHome && settings.offline) { setMode(srvPrev === 'pub' ? 'pub' : 'priv'); if (was === 'fail') notice('Connected to the server', ''); }
@@ -7066,41 +7085,50 @@ function healthSay() {
 function useKeepDays(st) {   // each day's highs are kept on this device too (a server that restarts forgets them; it gets them back from here)
   try { if (!st || !Array.isArray(st.days) || !st.month) return; let o = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); if (!o || o.m !== st.month) o = { m: st.month, out: 0, in: 0, sec: 0 }; o.days = st.days.slice(-31); localStorage.setItem('ballrun4_use', JSON.stringify(o)); } catch (e) {}   // (no copy yet: one that only carries the days; the server takes the larger of each figure)
 }
-function devSet(on) {   // dev mode on or off, for good on this device
-  devMode = !!on; try { if (on) localStorage.setItem(DEVMODE_KEY, '1'); else localStorage.removeItem(DEVMODE_KEY); } catch (e) {}
-  if (!on) { try { admClose(); if (admSt === 'ok') wsSend({ t: 'admoff' }); admSt = ''; } catch (e) {} LH.on = false; lhSave(); $('liveHud').classList.add('hide'); $('srvStat').classList.add('hide'); if (curTab === 'dev') try { showTab(firstTab()); } catch (e) {} }
-  devRender(); try { statsKick(); } catch (e) {} try { pushSyncSoon(); } catch (e) {} devwSend();
+function devSet(role) {   // owner, dev or nobody: what the server said. Kept on this device so the tools are there at once next time
+  role = role === 'owner' || role === 'dev' ? role : ''; const was = devRole; devRole = role; try { if (role) localStorage.setItem(DEVROLE_KEY, role); else localStorage.removeItem(DEVROLE_KEY); } catch (e) {}
+  if (!role && was) { try { admClose(); } catch (e) {} LH.on = false; lhSave(); $('liveHud').classList.add('hide'); $('srvStat').classList.add('hide'); if (curTab === 'dev') try { showTab(firstTab()); } catch (e) {} }
+  devRender(); if (!!was !== !!role) { try { statsKick(); } catch (e) {} try { pushSyncSoon(); } catch (e) {} devwSend(); }
 }
-/* ----- the game admin (Dev tools, with the admin key). Dev mode only shows these tools: the server does nothing for them without the key,
-   which lives on the server (ADMIN_KEY), so a player who finds the dev code still cannot touch anybody. This device keeps the key once it worked,
-   and a copy of the bans and switches, which it hands back if the server restarts having forgotten them ----- */
+/* ----- dev tools: owners and devs. Everything here is decided by the server: this page only shows it. An owner typed the server's key in the code box
+   (the key lives on the server, ADMIN_KEY, never in this page). A dev was put on the team by an owner, with the powers that owner picked.
+   This device keeps the key (owners), and a copy of the bans, the dev team and the switches, which it hands back if the server restarts having forgotten them ----- */
 const ADMKEY_K = 'ballrun4_admkey', ADMSNAP_K = 'ballrun4_admsnap', MOD_K = 'ballrun4_mod';
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} };
-let admSt = '', admLock = 0, admPend = '', admData = null, admView = 'list', admTab = 'on', admOne = null, admTimer = 0, admLockSaid = false;
-const admKey = () => devOn() ? (lsGet(ADMKEY_K) || '') : '';
-const isAdmin = () => devOn() && admSt === 'ok';
-function admRender() {   // the Game admin part of Dev tools
-  const on = isAdmin(); $('admKeyBox').classList.toggle('hide', on); $('admOnBox').classList.toggle('hide', !on);
-  $('admLockSw').checked = !!admLock;
-  $('admPlN').textContent = admData ? admData.on.length + ' online' : '';
-  const n = $('admKeyNote');
-  n.textContent = admSt === 'bad' ? 'That key is not the one on the server. Check it and try again.' : admSt === 'off' ? 'This server has no admin key yet. Add ADMIN_KEY to the server’s settings (on Render: Environment), then type it here.' : admSt === 'wait' ? 'Too many wrong keys. Try again in 15 minutes.' : admSt === 'slow' ? 'One moment, then try again.' : 'To manage players, type the admin key. It is set on the server, not in the game, so only you have it.';
-  n.classList.toggle('dim', !(admSt === 'bad' || admSt === 'off' || admSt === 'wait' || admSt === 'slow'));
+let admSt = '', admPerms = {}, admLock = 0, admPend = '', admData = null, admView = 'list', admTab = 'on', admOne = null, admTimer = 0, admLockSaid = false;
+const admKey = () => lsGet(ADMKEY_K) || '';
+const isAdmin = () => devOn() && admSt === 'ok';   // (the server said so on this connection)
+const canDo = k => isAdmin() && (devRole === 'owner' || !!admPerms[k]);
+const PERM_NAMES = { m: 'money', b: 'building and codes', boot: 'boot', ban: 'ban', lock: 'close the game' };
+const permText = p => { const l = Object.keys(PERM_NAMES).filter(k => p && p[k]).map(k => PERM_NAMES[k]); return l.length ? l.join(', ') : 'see players only'; };
+function admRender() {   // the top of Dev tools: who you are and what you can do, then players, the dev team
+  if (!devOn()) return;
+  const owner = devRole === 'owner', live = isAdmin();
+  $('devRoleTag').textContent = owner ? 'Owner' : 'Dev'; $('devRoleTag').classList.toggle('dev', !owner);
+  $('devMeT').textContent = owner ? 'You have the server key' : 'You are on the dev team';
+  $('devMeS').textContent = !live ? 'Connecting to the server to check…' : owner ? 'You can do everything here, and choose who else is a dev.' : 'You can: ' + permText(admPerms) + '.';
+  $('devOut').textContent = owner ? 'Sign out of dev tools on this device' : 'Leave the dev team';
+  $('admPlayers').disabled = !live; $('admPlN').textContent = admData && live ? admData.on.length + ' online' : '';
+  $('admLockRow').classList.toggle('hide', !canDo('lock')); $('admLockSw').checked = !!admLock;
+  $('devTeamBox').classList.toggle('hide', !(owner && live)); if (owner && live) devTeamRender();
 }
-$('admKeyForm').addEventListener('submit', e => {
-  e.preventDefault(); const k = $('admKeyIn').value.trim(); if (!k) { $('admKeyIn').focus(); return; }
-  if (!(ws && ws.readyState === 1 && (online || lobbyOn))) { notice('Not connected to the server', 'urgent'); return; }
-  admPend = k; sfx('ui'); wsSend({ t: 'adm', key: k });
-});
-$('admForget').onclick = () => { sfx('off'); lsSet(ADMKEY_K, null); admSt = ''; admData = null; wsSend({ t: 'admoff' }); admClose(); admRender(); notice('The admin key is gone from this device', ''); };
+function devTeamRender() {
+  const box = $('devTeam'); box.textContent = ''; const L = (admData && admData.devs) || [];
+  for (const e of L) { const r = el('button', 'amrow'); r.type = 'button'; r.appendChild(dot(e)); const w = el('span', 'dmw'); w.appendChild(el('b', '', who(e.name))); w.appendChild(el('small', '', (e.on ? 'Online · ' : '') + permText(e.p))); r.appendChild(w); r.onclick = () => { sfx('ui'); admOpen(); admOpenOne(e); }; box.appendChild(r); }
+  if (!L.length) box.appendChild(el('div', 'small dim amempty', admData ? 'No devs yet: just owners.' : 'Loading…'));
+}
+$('devOut').onclick = () => {
+  if (devRole === 'owner') askConfirm('Sign out of dev tools?', 'This device forgets the server key. To sign in again, type the key in the code box in a game.', 'Sign out', () => { lsSet(ADMKEY_K, null); lsSet(ADMSNAP_K, null); wsSend({ t: 'admoff' }); if (!(ws && ws.readyState === 1)) devSet(''); sfx('off'); }, { no: 'Cancel', yesClass: 'danger' });
+  else askConfirm('Leave the dev team?', 'Your dev tools go away on all your devices. An owner can put you back.', 'Leave', () => { wsSend({ t: 'admleave' }); sfx('off'); }, { no: 'Cancel', yesClass: 'danger' });
+};
 $('admLockSw').onchange = () => {
   const on = $('admLockSw').checked; $('admLockSw').checked = !!admLock;   // (it changes when the server says so)
-  if (!isAdmin()) return;
-  if (on) askConfirm('Close the game to everyone?', 'Everyone but you goes back to the main menu right now, and nobody can play online until you open it again. Offline games still work.', 'Close it', () => wsSend({ t: 'admlock', on: 1 }), { no: 'Cancel', yesClass: 'danger' });
+  if (!canDo('lock')) return;
+  if (on) askConfirm('Close the game to everyone?', 'Everyone but owners and devs goes back to the main menu right now, and nobody can play online until it is open again. Offline games still work.', 'Close it', () => wsSend({ t: 'admlock', on: 1 }), { no: 'Cancel', yesClass: 'danger' });
   else { sfx('on'); wsSend({ t: 'admlock', on: 0 }); }
 };
 $('admPlayers').onclick = () => { sfx('ui'); admOpen(); };
-function admOpen() { if (!isAdmin()) return; admView = 'list'; admOne = null; $('admModal').classList.remove('hide'); admShow(); admAsk(); clearInterval(admTimer); admTimer = setInterval(() => { if (!shownEl('admModal') || !isAdmin()) { clearInterval(admTimer); admTimer = 0; return; } admAsk(); if (admView === 'one' && admOne) wsSend({ t: 'admp', pub: admOne.pub }); }, 3000); }
+function admOpen() { if (!isAdmin()) return; if (shownEl('admModal')) return; admView = 'list'; admOne = null; $('admModal').classList.remove('hide'); admShow(); admListRender(); admAsk(); clearInterval(admTimer); admTimer = setInterval(() => { if (!shownEl('admModal') || !isAdmin()) { clearInterval(admTimer); admTimer = 0; return; } admAsk(); if (admView === 'one' && admOne) wsSend({ t: 'admp', pub: admOne.pub }); }, 3000); }
 function admClose() { clearInterval(admTimer); admTimer = 0; $('admModal').classList.add('hide'); admOne = null; admView = 'list'; }
 function admBackStep() { sfx('ui'); if (admView === 'one') { admView = 'list'; admOne = null; admShow(); admListRender(); } else admClose(); }
 const admAsk = () => wsSend({ t: 'admls' });
@@ -7131,7 +7159,7 @@ function admListRender() {
     const w = el('span', 'dmw'); w.appendChild(el('b', '', who(e.name) + (e.me ? ' (you)' : ''))); w.appendChild(el('small', '', '#' + e.code + ' · ' + (admTab === 'ban' ? 'Banned ' + whenTxt(e.until) : admWhere(e)))); r.appendChild(w);
     const tags = el('span', 'amtags');
     if (e.fr) tags.appendChild(admTag('fr', 'users', 'Your friend'));
-    if (e.ad) tags.appendChild(admTag('ad', 'lock', 'Game admin'));
+    if (e.role === 'owner') tags.appendChild(admTag('ad', 'crown', 'Owner')); else if (e.role === 'dev' || e.dev) tags.appendChild(admTag('ad', 'bolt', 'Dev'));
     if (e.nb) tags.appendChild(admTag('no', 'plus', 'Cannot build'));
     if (e.nc) tags.appendChild(admTag('no', 'key', 'Cannot use codes'));
     if (e.ban && admTab !== 'ban') tags.appendChild(admTag('no', 'lock', 'Banned'));
@@ -7141,22 +7169,34 @@ function admListRender() {
   }
   if (!list.length) box.appendChild(el('div', 'small dim amempty', !admData ? 'Loading…' : q ? 'Nobody by that name or code.' : admTab === 'on' ? 'Nobody is playing right now.' : admTab === 'ban' ? 'Nobody is banned.' : 'Nobody else played in the last three days.'));
 }
-function admOpenOne(e) { admOne = Object.assign({ pub: e.pub }, e); admView = 'one'; $('amC').value = ''; $('amG').value = ''; $('amBanBox').classList.add('hide'); $('amMoneyNote').textContent = ''; admShow(); admOneRender(); wsSend({ t: 'admp', pub: e.pub }); }
+function admOpenOne(e) { admOne = Object.assign({ pub: e.pub }, e); if (e.p && !admOne.dev) admOne.dev = { p: e.p }; admView = 'one'; $('amC').value = ''; $('amG').value = ''; $('amBanBox').classList.add('hide'); $('amMoneyNote').textContent = ''; admShow(); admOneRender(); wsSend({ t: 'admp', pub: e.pub }); }
 function admOneRender() {
-  const o = admOne; if (!o) return;
+  const o = admOne; if (!o) return; const owner = devRole === 'owner';
   $('amDot').textContent = ''; $('amDot').appendChild(dot(o)); $('amName').textContent = who(o.name); $('amCode').textContent = '#' + (o.code || ''); $('amTitle').textContent = who(o.name);
   $('amFr').classList.toggle('hide', !o.fr);
   $('amWhere').textContent = o.on ? admWhere(o) : o.last ? 'Not playing now · last played ' + ago(o.last) : 'Not playing now';
-  const locked = !!(o.ad || o.me); $('amAdminNote').classList.toggle('hide', !locked); $('amAdminNote').textContent = o.me ? 'This is you. Nothing here can be changed for your own device.' : 'This is a game admin’s device. Nothing here can be changed for it.';
-  $('amCtl').classList.toggle('off', locked);
-  const b = o.ban; $('amBanned').classList.toggle('hide', !b); if (b) $('amBanTxt').textContent = 'Banned ' + whenTxt(b.until) + (b.ip ? ', with their network' : '');
+  const staff = o.me ? 'me' : o.role === 'owner' ? 'owner' : (o.role === 'dev' || o.dev) ? 'dev' : '';
+  $('amAdminNote').classList.toggle('hide', !staff); $('amAdminNote').textContent = staff === 'me' ? 'This is you.' : staff === 'owner' ? 'An owner: they have the server key. Nobody can change anything for them.' : staff === 'dev' ? 'On the dev team' + (o.dev ? ': ' + permText(o.dev.p) : '') + '. Nobody can boot, ban or limit a dev.' : '';
+  // the dev team: owners choose who is a dev, and what each dev can do
+  const showDev = owner && staff !== 'me' && staff !== 'owner'; $('amDevBox').classList.toggle('hide', !showDev);
+  if (showDev) { const isDev = !!o.dev; $('amDev').checked = isDev; $('amDevPerms').classList.toggle('off', !isDev); document.querySelectorAll('#amDevPerms [data-perm]').forEach(x => { x.checked = !!(o.dev && o.dev.p && o.dev.p[x.dataset.perm]); }); }
+  const plain = !staff;   // (everything below only for ordinary players)
+  $('amMoneyBox').classList.toggle('hide', !(plain && canDo('m'))); $('amAllowBox').classList.toggle('hide', !(plain && canDo('b'))); $('amOutBox').classList.toggle('hide', !(plain && (canDo('boot') || canDo('ban'))));
+  const b = o.ban; $('amBanned').classList.toggle('hide', !b); if (b) $('amBanTxt').textContent = 'Banned ' + whenTxt(b.until) + (b.ip ? ', with their network' : ''); $('amUnban').classList.toggle('hide', !canDo('ban'));
   $('amCanB').checked = !o.nb; $('amCanC').checked = !o.nc;
-  $('amBoot').disabled = !o.on || locked; $('amBanGo').textContent = ''; $('amBanGo').innerHTML = '<svg class="ic"><use href="#i-lock"/></svg>' + (b ? 'Ban again' : 'Ban');
-  $('amOutNote').textContent = o.on ? 'Boot sends them to the main menu: they can come straight back. A ban keeps them out of online play until it ends.' : 'They are not playing now. A ban starts at once and stops them coming in.';
+  $('amBoot').classList.toggle('hide', !canDo('boot')); $('amBanGo').classList.toggle('hide', !canDo('ban'));
+  $('amBoot').disabled = !o.on; $('amBanGo').innerHTML = '<svg class="ic"><use href="#i-lock"/></svg>' + (b ? 'Ban again' : 'Ban');
+  $('amOutNote').textContent = o.on ? (canDo('boot') ? 'Boot sends them to the main menu: they can come straight back. ' : '') + (canDo('ban') ? 'A ban keeps them out of online play until it ends.' : '') : 'They are not playing now.' + (canDo('ban') ? ' A ban starts at once and stops them coming in.' : '');
   $('amIpRow').classList.toggle('hide', !o.ipOk); $('amIpNote').textContent = o.net ? 'Stops a new account from the same Wi-Fi or phone network too. ' + o.net + ' other player' + (o.net === 1 ? ' is' : 's are') + ' on it right now and would be out too' : 'Stops a new account from the same Wi-Fi or phone network too';
   if (!o.on) $('amMoneyNote').textContent = o.pend ? 'Waiting to be set the next time they play: ' + fmtN(o.pend.c) + ' coins, ' + fmtN(o.pend.g) + ' diamonds.' : 'Their money is on their own device. What you set here is put there the next time they play.';
   document.querySelectorAll('.amdur [data-h]').forEach(x => x.classList.toggle('on', +x.dataset.h === (admOne.banH || 24)));
 }
+const devPermsNow = () => { const p = {}; document.querySelectorAll('#amDevPerms [data-perm]').forEach(x => { if (x.checked) p[x.dataset.perm] = 1; }); return p; };
+$('amDev').onchange = () => { const o = admOne; if (!o) return; const on = $('amDev').checked; $('amDev').checked = !!o.dev;
+  if (on) askConfirm('Make ' + who(o.name) + ' a dev?', 'They get dev tools on every device of theirs, with the powers you pick below. You can change that, or take it away, any time.', 'Make dev', () => { const p = devPermsNow(); o.dev = { p }; wsSend({ t: 'admdev', pub: o.pub, on: 1, p }); admOneRender(); }, { no: 'Cancel', yesClass: 'go' });
+  else askConfirm('Take ' + who(o.name) + ' off the dev team?', 'Their dev tools go away at once, on all their devices.', 'Take off', () => { o.dev = null; wsSend({ t: 'admdev', pub: o.pub, on: 0 }); admOneRender(); }, { no: 'Cancel', yesClass: 'danger' });
+};
+document.querySelectorAll('#amDevPerms [data-perm]').forEach(x => x.onchange = () => { const o = admOne; if (!o || !o.dev) return; sfx(x.checked ? 'on' : 'off'); const p = devPermsNow(); o.dev = { p }; wsSend({ t: 'admdev', pub: o.pub, on: 1, p }); });
 $('amSet').onclick = () => {
   if (!admOne) return; const c = Math.floor(+$('amC').value), g = Math.floor(+$('amG').value);
   if (!($('amC').value !== '' && $('amG').value !== '' && c >= 0 && g >= 0 && c <= 1e9 && g <= 1e9)) { notice('Type both amounts: whole numbers from 0', 'urgent'); return; }
@@ -7170,9 +7210,15 @@ document.querySelectorAll('.amdur [data-h]').forEach(x => x.onclick = () => { if
 $('amBanOk').onclick = () => {
   const o = admOne; if (!o) return; const h = o.banH || 24, ip = !$('amIpRow').classList.contains('hide') && $('amIp').checked;
   const len = h === -1 ? 'for good' : h === 1 ? 'for 1 hour' : h === 24 ? 'for 24 hours' : 'for 7 days';
-  askConfirm('Ban ' + who(o.name) + ' ' + len + '?', (o.on ? 'They are taken out now. ' : '') + 'They cannot play online ' + (h === -1 ? 'again until you unban them.' : 'until it ends.') + (ip ? ' Nobody else on their network can either.' : ''), 'Ban', () => wsSend({ t: 'admban', pub: o.pub, h, ip: ip ? 1 : 0 }), { no: 'Cancel', yesClass: 'danger' });
+  askConfirm('Ban ' + who(o.name) + ' ' + len + '?', (o.on ? 'They are taken out now. ' : '') + 'They cannot play online ' + (h === -1 ? 'again until they are unbanned.' : 'until it ends.') + (ip ? ' Nobody else on their network can either.' : ''), 'Ban', () => wsSend({ t: 'admban', pub: o.pub, h, ip: ip ? 1 : 0 }), { no: 'Cancel', yesClass: 'danger' });
 };
 $('amUnban').onclick = () => { const o = admOne; if (!o) return; sfx('ui'); wsSend({ t: 'admunban', pub: o.pub }); };
+function tryKey(raw) {   // a code nobody knows: maybe the server's key. Only the server can tell
+  if (!(ws && ws.readyState === 1 && (online || lobbyOn)) || raw.length < 6) return false;
+  admPend = raw; wsSend({ t: 'adm', key: raw }); $('cdNote').textContent = 'Checking…'; $('cdIn').classList.remove('bad');
+  clearTimeout(tryKey.t); tryKey.t = setTimeout(() => { if (admPend) { admPend = ''; codeBad(raw); } }, 6000); return true;
+}
+function codeBad(v) { $('cdIn').classList.remove('bad'); void $('cdIn').offsetWidth; $('cdIn').classList.add('bad'); $('cdNote').textContent = v ? "That code doesn't work" : 'Type a code first'; sfx('warn'); }
 /* ----- what an admin decided about this player ----- */
 let modState = (() => { try { const o = JSON.parse(lsGet(MOD_K) || 'null'); return { b: o && o.b === 0 ? 0 : 1, c: o && o.c === 0 ? 0 : 1 }; } catch (e) { return { b: 1, c: 1 }; } })();
 const modBuildOk = () => modState.b !== 0 || offlineOn() || (!settings.mp && !party);   // (stops building where others play: the public world and private games with friends. Offline and on your own it is your own world)
@@ -7192,26 +7238,39 @@ function barTitle() { return !barred ? '' : barred.why === 'ban' ? 'You can’t 
 function barSub() { return !barred ? '' : barred.why === 'ban' ? 'A game admin banned this device ' + whenTxt(barred.until) + '. You can still play offline.' : 'It is being looked after. It opens again soon, and you go straight back in. Offline games still work.'; }
 function admIn(m) {   // messages for the admin tools, and the ones an admin sends a player: true when handled here
   switch (m.t) {
-    case 'adm': {
-      const was = admSt; admSt = m.st || ''; admLock = m.lock ? 1 : 0;
-      if (admSt === 'ok') { if (admPend) { lsSet(ADMKEY_K, admPend); admPend = ''; $('admKeyIn').value = ''; sfx('big'); notice('Admin tools unlocked', ''); }
-        if (was !== 'ok') { const sn = lsGet(ADMSNAP_K); if (sn) { try { wsSend({ t: 'admsnap', snap: JSON.parse(sn) }); } catch (e) {} } admAsk(); }   // (the server keeps it if it has forgotten everything)
+    case 'adm': {   // owner, dev or nobody, from the server (on every visit, and whenever it changes)
+      const was = admSt, wasRole = devRole, typed = !!(m.try && admPend), key = admPend;
+      if (m.try) { admPend = ''; clearTimeout(tryKey.t); }
+      if (m.st === 'slow') { if (typed) { $('cdNote').textContent = 'One moment, then try again.'; sfx('warn'); } return true; }
+      admSt = m.st === 'ok' ? 'ok' : ''; admPerms = m.perms && typeof m.perms === 'object' ? m.perms : {}; admLock = m.lock ? 1 : 0;
+      if (m.kst === 'bad' && !typed) lsSet(ADMKEY_K, null);   // (the key this device kept stopped working: the server has a new one)
+      if (typed && m.kst === 'ok') lsSet(ADMKEY_K, key);   // (the right key, typed in the code box: kept on this device)
+      devSet(admSt === 'ok' ? m.role : '');
+      if (typed) { if (m.kst === 'ok') { $('cdIn').value = ''; closeCode(); sfx('big'); notice('Dev tools unlocked: Settings, Dev tools', ''); } else codeBad(key); }
+      else if (admSt === 'ok' && wasRole !== devRole && wasRole) notice(devRole === 'owner' ? 'You are an owner on this device' : 'You are on the dev team', '');
+      else if (admSt === 'ok' && !wasRole) notice(devRole === 'owner' ? 'Dev tools are on: Settings, Dev tools' : 'An owner put you on the dev team: Settings, Dev tools', '');
+      else if (!admSt && wasRole) notice('Your dev tools are off on this device', '');
+      if (admSt === 'ok') {
+        if (was !== 'ok' && devRole === 'owner') { const sn = lsGet(ADMSNAP_K); if (sn) { try { wsSend({ t: 'admsnap', snap: JSON.parse(sn) }); } catch (e) {} } }   // (the server keeps it if it has forgotten everything)
+        if (was !== 'ok' || curTab === 'dev') admAsk();
         if (admLock && !admLockSaid) { admLockSaid = true; topNote('The game is closed to everyone. Open it in Settings, Dev tools', true); }
-      } else { if (admPend) { admPend = ''; sfx('warn'); } else if (admSt === 'bad') lsSet(ADMKEY_K, null); if (shownEl('admModal')) admClose(); }   // (a key that stopped working: the server's key changed)
-      admRender(); return true;
+      } else if (shownEl('admModal')) admClose();
+      admRender(); if (shownEl('admModal')) { if (admView === 'one') admOneRender(); else admListRender(); } return true;
     }
-    case 'admlist': if (!isAdmin()) return true; admData = { on: m.on || [], recent: m.recent || [], bans: m.bans || [] }; admLock = m.lock ? 1 : 0; if (m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap));
+    case 'admchg': if (!isAdmin()) return true; if (m.lock !== undefined) admLock = m.lock ? 1 : 0; admAsk(); if (admOne) wsSend({ t: 'admp', pub: admOne.pub }); admRender(); return true;   // (something changed: the team, a switch)
+    case 'admlist': if (!isAdmin()) return true; admData = { on: m.on || [], recent: m.recent || [], bans: m.bans || [], devs: m.devs || [] }; admLock = m.lock ? 1 : 0; if (m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap));
       admRender(); if (shownEl('admModal') && admView === 'list') admListRender(); return true;
-    case 'admsnapv': if (isAdmin() && m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap)); return true;   // (the bans and switches, kept here in case the server forgets them)
+    case 'admsnapv': if (isAdmin() && devRole === 'owner' && m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap)); return true;   // (the bans, the dev team and the switches, kept here in case the server forgets them)
     case 'admp': if (!admOne || m.pub !== admOne.pub) return true;
       { const keep = { banH: admOne.banH, code: admOne.code, color: admOne.color, color2: admOne.color2, pat: admOne.pat, fr: admOne.fr, w: admOne.w, host: admOne.host, since: admOne.since };
-        const fresh = (admData && [...admData.on, ...admData.recent, ...admData.bans].find(e => e.pub === m.pub)) || {};
+        const fresh = (admData && [...admData.on, ...admData.recent, ...admData.bans, ...(admData.devs || [])].find(e => e.pub === m.pub)) || {};
         admOne = Object.assign({}, keep, fresh, m, { banH: keep.banH, last: m.last || fresh.last }); if (!m.on) { admOne.w = ''; admOne.since = 0; } }
       admOneRender(); return true;
     case 'admw': if (admOne && m.pub === admOne.pub) { if (document.activeElement !== $('amC') && document.activeElement !== $('amG')) { $('amC').value = m.c; $('amG').value = m.g; } $('amMoneyNote').textContent = 'On their device now: ' + fmtN(m.c) + ' coins, ' + fmtN(m.g) + ' diamonds' + (m.inf ? '. They have unlimited money on from a code: setting it turns that off.' : '.'); } return true;
     case 'admok': {
-      const t = { money: 'Their money is set', moneylater: 'Their money is set for the next time they play', nob1: 'They can build again', nob0: 'They can’t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a game admin: nothing changed' }[m.what];
-      if (t) notice(t, m.what === 'admin' ? 'urgent' : ''); admAsk(); if (admOne && m.pub === admOne.pub) wsSend({ t: 'admp', pub: admOne.pub });
+      const t = { money: 'Their money is set', moneylater: 'Their money is set for the next time they play', nob1: 'They can build again', nob0: 'They can\u2019t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a dev: nothing changed', owner: 'That is an owner: nothing changed', noperm: 'You can\u2019t do that: ask an owner', dev1: 'Saved: they are on the dev team', dev0: 'They are off the dev team' }[m.what];
+      if (t) notice(t, m.what === 'admin' || m.what === 'owner' || m.what === 'noperm' ? 'urgent' : '');
+      admAsk(); if (admOne && m.pub === admOne.pub) wsSend({ t: 'admp', pub: admOne.pub });
       if (m.what === 'ban' || m.what === 'unban') $('amBanBox').classList.add('hide');
       return true;
     }
@@ -7238,8 +7297,8 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
       const until = why === 'ban' ? (m.until === -1 ? -1 : +m.until || now + 3600000) : 0;
       barred = { why, until, next: why === 'boot' ? now + 1500 : why === 'closed' ? now + 20000 : until === -1 ? now + 60000 : Math.min(until + 500, now + 60000) };
       try { if (!inHome) { closeEverything(); showHome(); } else closeEverything(); } catch (e) {}
-      if (why === 'boot') askConfirm('You were taken out of the game', 'A game admin sent you back to the main menu. You can play again whenever you like.', 'OK', null, { single: true, yesClass: 'go' });
-      else if (why === 'ban') askConfirm('You are banned from online play', 'A game admin banned this device ' + whenTxt(until) + '. You can still play offline.', 'OK', null, { single: true, yesClass: 'go' });
+      if (why === 'boot') askConfirm('You were taken out of the game', 'A game admin sent you back to the main menu. You can play again whenever you like.', 'OK', null, { single: true, yesClass: 'go', k: 'barred' });
+      else if (why === 'ban') askConfirm('You are banned from online play', 'A game admin banned this device ' + whenTxt(until) + '. You can still play offline.', 'OK', null, { single: true, yesClass: 'go', k: 'barred' });
       gateRender(); return true;
     }
   }
@@ -7770,8 +7829,9 @@ function codesRender() { const L = $('csList'); L.textContent = ''; for (const [
 function submitCode() {
   const v = $('cdIn').value.trim().toLowerCase();
   if (v === 'codes') { closeCode(); codesRender(); $('codesModal').classList.remove('hide'); sfx('ready'); return; }   // (only shows the list of codes)
-  if (!modCodesOk() && v !== 'gamedevsam') { $('cdNote').textContent = 'A game admin turned off codes for you.'; sfx('warn'); return; }
-  if (v === 'gamedevsam') { const on = !devOn(); devSet(on); sfx('big'); closeCode(); notice(on ? 'Dev mode on: the update button, server figures, stats and the "nobody playing" notification. Type the code again to turn it off.' : 'Dev mode off', ''); return; }   // (dev mode: on for good, and the same code turns it off)
+  const known = v === 'themaker#1' || v === 'maker' || v === 'zeros' || v === 'unlimitedpower';
+  if (!known) { const raw = $('cdIn').value.trim(); if (!tryKey(raw)) codeBad(v); return; }   // (not one of the codes: perhaps the server's key, for dev tools)
+  if (!modCodesOk()) { $('cdNote').textContent = 'A game admin turned off codes for you.'; sfx('warn'); return; }
   if (cheatsOff() && (v === 'unlimitedpower' || v === 'themaker#1' || v === 'maker' || v === 'zeros')) { $('cdNote').textContent = 'This private game is set to no cheats. Codes do nothing here.'; sfx('warn'); return; }
   if (v === 'unlimitedpower') { if (noCaps) { noCaps = false; try { localStorage.removeItem('ballrun4_nocap'); } catch (e) {} notePubCheat(); sfx('big'); closeCode(); notice('Building limits are back on', ''); try { shopRender(); } catch (e) {} return; }   // (the same code again turns it off)
     noCaps = true; try { localStorage.setItem('ballrun4_nocap', '1'); } catch (e) {} notePubCheat(); sfx('big'); closeCode(); notice('No building limits: build as much of everything as you like', ''); try { shopRender(); } catch (e) {} return; }
@@ -7876,7 +7936,7 @@ function setMultiplayer(on) {
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
-  { const k = admKey(); if (k) o.ak = k; }   // (the game admin's key, with dev mode on: see Dev tools)
+  { const k = admKey(); if (k) o.ak = k; if (devOn()) o.dv = 1; }   // (an owner's key, kept on this device; dv: this device has dev tools, and must hear if that changed)
   if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), fk: soloFin(soloLevel()), bots: settings.botsPriv ? 1 : 0, nc: settings.noCheats ? 1 : 0, ul: settings.unl ? 1 : 0 }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   if (!lobby && !party && wantW > 0) o.pw = wantW;   // (joining a friend's public world from their profile)
   return JSON.stringify(o);
