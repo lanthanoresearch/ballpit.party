@@ -55,7 +55,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 217;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 219;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -155,8 +155,8 @@ function statusNow() {
   let rating = 'good', why = 'Running smoothly';
   if (lateP > 40 || (CPU_KNOWN && load > 0.9) || rss > MEM_LIMIT * 0.85) { rating = 'bad'; why = load > 0.9 ? 'Working at the edge of what this server is allowed to use' : rss > MEM_LIMIT * 0.85 ? 'Nearly out of memory' : 'Running a little behind'; }
   if (lateP > 100 || (CPU_KNOWN && load > 1.2)) { rating = 'really bad'; why = 'Falling behind: things in the world can look laggy'; }
-  if (PAID && bwPct >= 1 && rating === 'good') { rating = 'bad'; why = 'Over the 5 GB of data included this month: more costs about $0.15 a GB'; }
-  if (lateP > 300 || (bwPct >= 1 && !PAID) || hrsPct >= 1 || rss > MEM_LIMIT * 0.97) { rating = 'unusable'; why = bwPct >= 1 && !PAID ? 'Out of data for this month: Render stops free servers that go over' : hrsPct >= 1 ? 'Out of server hours for this month' : rss > MEM_LIMIT * 0.97 ? 'Out of memory' : 'Far behind: the game will be very laggy'; }
+  if (PAID && bwPct >= 1 && rating === 'good') { rating = 'bad'; why = 'Over the ' + BW_GB + ' GB of data set for this month (BANDWIDTH_GB): check the host\'s dashboard for extra charges'; }
+  if (lateP > 300 || (bwPct >= 1 && !PAID) || hrsPct >= 1 || rss > MEM_LIMIT * 0.97) { rating = 'unusable'; why = bwPct >= 1 && !PAID ? 'Out of data for this month: a free server can be stopped when it goes over' : hrsPct >= 1 ? 'Out of server hours for this month' : rss > MEM_LIMIT * 0.97 ? 'Out of memory' : 'Far behind: the game will be very laggy'; }
   if (stale > 2000) { rating = 'frozen'; why = 'The world has not moved for ' + Math.round(stale / 1000) + ' s'; }
   let awake = 0, things = 0; for (const r of rooms.values()) if (r.world) { things += r.world.dyn.length; awake += r.world.nAct || 0; }
   return { v: GAME_V, rating, why, level: health.level, now: t, month: usage.m, daysInMonth: dim, daysLeft: +daysLeft.toFixed(2),

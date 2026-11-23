@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <script>/* the very first thing the page does: nudge the game server awake (a tiny request), so by the time the menu is up it is already answering. The server is
    the built-in address, the page's own (when a game server handed it out), or the new address a moved server gave this device (see srvBase) */
-(function(){try{var h=location.hostname,b='__BUILD__',own=/^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(h)||/onrender\.com$/.test(h)||b.charAt(0)!=='_',s='';if(location.protocol==='file:')return;try{s=localStorage.getItem('ballrun4_srv')||'';}catch(e){}if(!/^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(s))s='';var u=s||(own?'':'https://ballpit-party.onrender.com');if(u){var l=document.createElement('link');l.rel='preconnect';l.href=u;l.crossOrigin='';document.head.appendChild(l);}fetch(u+'/version',{cache:'no-store'}).catch(function(){});}catch(e){}})();</script>
+(function(){try{var h=location.hostname,b='__BUILD__',own=/^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(h)||/onrender\.com$/.test(h)||b.charAt(0)!=='_',s='';if(location.protocol==='file:')return;try{s=localStorage.getItem('ballrun4_srv')||'';}catch(e){}if(!/^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(s))s='';var u=s||(own?'':'https://play.ballpit.party');if(u){var l=document.createElement('link');l.rel='preconnect';l.href=u;l.crossOrigin='';document.head.appendChild(l);}fetch(u+'/version',{cache:'no-store'}).catch(function(){});}catch(e){}})();</script>
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="ballpit.party">
 <title>ballpit.party</title>
@@ -1105,7 +1105,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 217; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 219; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1884,7 +1884,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   <div class="ssrate" id="ssRate"><b id="ssWord">Checking…</b><span id="ssWhy"></span></div>
   <div id="ssBody"></div>
   <button id="ssLive" class="btn full go hide" type="button"><span data-ic="bolt"></span>Show live stats while playing</button>
-  <p class="ssnote" id="ssNote">Counted by the game server since the start of the month (UTC). Render's dashboard has the exact figures.</p>
+  <p class="ssnote" id="ssNote">Counted by the game server since the start of the month (UTC), or since it moved here. Vultr's dashboard (the server's Usage Graphs) has the exact figures.</p>
   </div>
 </div></div>
 
@@ -1938,8 +1938,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=217"></script>
-<script src="physics.js?v=217"></script>
+<script src="maps.js?v=219"></script>
+<script src="physics.js?v=219"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2001,7 +2001,7 @@ const devOn = () => !!devRole;
 /* ---------- where the game server is. One place for it: the built-in address, unless the page came from a game server itself (it then talks to that one),
    or a server that has moved told this device its new address (kept here, so the game always finds it; if that address stops answering for a minute,
    the game goes back to the built-in one, which sends it on again if it really has moved) ---------- */
-const SRV_DEFAULT = 'https://ballpit-party.onrender.com', SRV_KEY = 'ballrun4_srv';
+const SRV_DEFAULT = 'https://play.ballpit.party', SRV_KEY = 'ballrun4_srv';   // (since 218: the Vultr server in Dallas. The old Render server only sends people on here)
 const srvLocal = () => /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(location.hostname);
 const srvClean = u => { u = String(u || '').trim().replace(/\/+$/, ''); return /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+(:\d{2,5})?$/i.test(u) || (srvLocal() && /^http:\/\/(localhost|127\.0\.0\.1)(:\d{2,5})?$/.test(u)) ? u : ''; };
 function srvBase() {   // '' = the page's own address
@@ -6506,7 +6506,7 @@ function plainJ(o, d) {   // the server's figures, with every bit of text in the
   if (Array.isArray(o)) return o.slice(0, 400).map(v => plainJ(v, d + 1));
   const r = {}; for (const k of Object.keys(o).slice(0, 200)) if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') r[k] = plainJ(o[k], d + 1); return r;
 }
-const ssFmtB = b => b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(b >= 104857600 ? 0 : 1) + ' MB' : Math.round(b / 1024) + ' KB';
+const ssFmtB = b => b >= 107374182400 ? Math.round(b / 1073741824).toLocaleString('en-US') + ' GB' : b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(b >= 104857600 ? 0 : 1) + ' MB' : Math.round(b / 1024) + ' KB';
 const ssFmtD = d => d >= 99 ? 'the rest of the month' : d >= 1 ? Math.floor(d) + (Math.floor(d) === 1 ? ' day' : ' days') : Math.max(1, Math.round(d * 24)) + ' h';
 function ssBar(title, right, frac, sub, warnAt) {   // one row: a name, a figure, a bar that fills up (green, then yellow, orange and red as it gets close)
   const f = Math.max(0, Math.min(1, frac || 0)), w = warnAt || 0.7, cl = f >= 0.97 ? 'x' : f >= (1 + w) / 2 ? 'h' : f >= w ? 'w' : '';
@@ -7375,7 +7375,7 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
 devRender();
 $('homeHelp').onclick = () => showIntro();
 /* Share: 1) the system share sheet, 2) copy the link automatically, 3) a pop-up with the link to copy by hand, 4) say we can't. The first one that works stops the chain. */
-const shareUrl = () => (/onrender\.com$|^localhost$|^127\./.test(location.hostname) ? 'https://ballpit.party' : location.origin) + '/';
+const shareUrl = () => (/onrender\.com$|^play\.ballpit\.party$|^localhost$|^127\./.test(location.hostname) ? 'https://ballpit.party' : location.origin) + '/';   // (a link always goes to the website, never to a game server's own address)
 async function copyText(t) {
   try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(t); return true; } } catch (e) {}
   try { const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, t.length); const ok = document.execCommand('copy'); ta.remove(); return !!ok; } catch (e) {}
