@@ -44,7 +44,7 @@
   }
 
   function newBody(x, y) {
-    return { x, y, vx: 0, vy: 0, hold: 0, hdir: 0, bcharge: 0, jm: 0, jmt: 0, noJm: true, boost: false, bdir: 0, btime: 0, bReq: false, bAuto: false, fall: 0, rot: 0, ground: false, flat: false, gType: 0, coyote: 0, jbuf: 0, water: false, swimCool: 0, holdLeft: 0, bnc: false, bncV: 0, bnx: 0, bny: -1 };
+    return { x, y, vx: 0, vy: 0, hold: 0, hdir: 0, bcharge: 0, jm: 0, jmt: 0, noJm: true, boost: false, bdir: 0, btime: 0, bReq: false, bAuto: false, fall: 0, rot: 0, ground: false, flat: false, gType: 0, coyote: 0, jbuf: 0, water: false, swimCool: 0, holdLeft: 0, bnc: false, bncV: 0, bnx: 0, bny: -1, kicked: null };
   }
 
   // Circle vs. square tiles. Because the ball is round, standing on an edge with your
@@ -981,7 +981,7 @@
       const rx = h[0] - d.x, ry = h[1] - d.y, rn = rx * ny - ry * nx, rt = rx * -nx - ry * ny;
       const vbx = d.vx - (d.av || 0) * ry, vby = d.vy + (d.av || 0) * rx, vx0 = b.vx, vy0 = b.vy;
       const vn = (b.vx - vbx) * nx + (b.vy - vby) * ny;
-      let free = !held;
+      let free = !held; const spr = d.k === 'b' && (d.kind === 5 || d.kind === 6), svx = d.vx, svy = d.vy, sav = d.av || 0;   // (a spring's own speed before this touch: if it throws you, its push back is its own, measured)
       if (free && d.nap) { if (vn < -60 || (ny > -0.6 && vn < -12)) { d.nap = false; d.st = 0; } else free = false; }   // (something resting is only woken by a real knock or push, not by you standing on it)
       if (vn < 0) {
         const im = free ? d.im : 0, ii = free ? d.ii : 0, e = d.k === 'o' && vn < -120 ? 0.15 : 0;
@@ -994,7 +994,7 @@
           cap = F_PUSH * (b.dt || 1 / 60);   // (how hard you can push)
           const vlim = MAXV / (1 + 0.08 * (d.m - 1) + 0.2 * Math.max(0, load - d.m)), vb = -(vbx * nx + vby * ny), kb = im + ii * rn * rn;   // (and a heavy load only goes so fast)
           if (Math.abs(nx) > 0.5 && kb > 0) cap = Math.min(cap, Math.max(0, (vlim - vb) / kb));
-        }
+        } else if (free && ny > -0.5) { const kb = im + ii * rn * rn; if (kb > 0) cap = KNOCK_MAX / kb; }   // (a hard knock from the side or below sends it flying, but only so fast: never off across the whole map. Landing on top of it is not capped: what is under it takes that)
         const j = Math.min(jf, cap);
         if (free) { d.vx -= j * nx * im; d.vy -= j * ny * im; d.av -= j * rn * ii; if (vn < -40 || (Math.abs(nx) > 0.5 && Math.abs(b.vx) > 20)) d.st = 0; }   // (only a real knock or push keeps it from settling: just standing or leaning on a pile lets it come to rest under you)
         b.vx += j * nx / pm; b.vy += j * ny / pm;
@@ -1033,18 +1033,27 @@
       if (ny < -0.6) {   // standing on it
         b.ground = true; if (ny < -0.92) { b.flat = true; b.gType = 1; }
       }
-      if (d.k === 'b' && (d.kind === 5 || d.kind === 6)) {   // a spring: touch its top and it throws you out the way its top faces (up, sideways, down or anything between: it tumbles and lands like a crate). A super spring: very far
+      if (spr) {   // a spring: touch its top and it throws you out the way its top faces (up, sideways, down or anything between: it tumbles and lands like a crate). A super spring: very far
         const ux = Math.sin(d.rot || 0), uy = -Math.cos(d.rot || 0), nu = nx * ux + ny * uy;
         let sx = 0, sy = 0; if (nu > 0.6) { sx = ux; sy = uy; } else if (nu < -0.6 && uy > 0.75) { sx = -ux; sy = -uy; }   // (its top; or, standing on its head, its bottom: pressed into the ground it squashes and throws you up all the same)
         const vs = vx0 * sx + vy0 * sy;
-        if ((sx || sy) && (sy < -0.75 ? vs <= 0 : vs < -25)) { b.bnc = true; b.bnx = sx; b.bny = sy; b.bncV = d.kind === 6 ? SUPER_BOUNCE : 0; d.sq = 0.25; d.sqb = nu < 0 ? 1 : 0; }   // (throwing you up, or nearly: land on it or roll onto it, as always. Any other way: only going into it)
+        if ((sx || sy) && (sy < -0.75 ? vs <= 0 : vs < -25)) { b.bnc = true; b.bnx = sx; b.bny = sy; b.bncV = d.kind === 6 ? SUPER_BOUNCE : 0; d.sq = 0.25; d.sqb = nu < 0 ? 1 : 0;
+          if (!kin && !b.remote && b.kicked !== d) {   // and it is pushed back the other way (once per throw): standing up on the ground that goes into the ground, lying on its side it slides off across it
+            b.kicked = d; if (!held) { d.vx = svx; d.vy = svy; d.av = sav; springKick(d, sx, sy, h[0], h[1]); }   // (not the whole weight of your ball slamming into it as well: a light spring would fly off across the map)
+            if (w.follow) (w.kicks || (w.kicks = [])).push([d.uid >>> 0, Math.round(sx * 1000) / 1000, Math.round(sy * 1000) / 1000, Math.round(h[0] - d.x), Math.round(h[1] - d.y)]);   // (in a shared world the server is told, and does the same)
+          }
+        }   // (throwing you up, or nearly: land on it or roll onto it, as always. Any other way: only going into it)
       }
       d.touch = true;
     }
     if (sL && sR && sU) { b.ground = true; b.flat = true; b.gType = 1; }   // (resting in a V between two things is as good as level ground: you sit still)
   }
 
-  const SUPER_BOUNCE = 1900, OBJ_BOUNCE = 950, OBJ_SUPER = 1500, BNC_KEEP = 900, SUB_PX = 10;   // a super spring throws you about 900px up (more than 20 tiles)
+  const SUPER_BOUNCE = 1900, OBJ_BOUNCE = 950, OBJ_SUPER = 1500, BNC_KEEP = 900, SUB_PX = 10, SPR_KICK = 300, SPR_KICK_SUPER = 400, KNOCK_MAX = 700;
+  function springKick(d, sx, sy, px, py) {   // a spring that throws something is pushed back the other way, at the point it was touched (hit off centre, it turns a little too). sx, sy: the way it threw
+    const c = -(d.vx * sx + d.vy * sy), J = d.m * Math.max(0, (d.kind === 6 ? SPR_KICK_SUPER : SPR_KICK) - c), Px = -sx * J, Py = -sy * J, rx = px - d.x, ry = py - d.y;   // (up to that speed, never more: thrown again and again, it does not keep getting faster)
+    d.vx += Px * d.im; d.vy += Py * d.im; d.av += 0.5 * d.ii * (rx * Py - ry * Px); d.nap = false; d.st = 0; d.sleep = false;
+  }   // a super spring throws you about 900px up (more than 20 tiles)
   const ACC = 1800;   // about 0.15 s to top speed: crisp, but a very short tap still only moves you a few pixels
   const SJ_MUL = 1.42, JM_FILL = 0.345, JM_DRAIN = 7, JM_GRACE = 0.13, JM_HOLD = 0.2;   // the tall jump is about twice as high (height grows with speed squared). Two quick jumps fill the meter; it waits half a second at full
   const BOOST_T = 1.6, BOOST_V = MAXV * 2;   // seconds of steady rolling to fill the ring, and the boosted top speed (double)
@@ -1145,9 +1154,11 @@
     }
 
     const sub = Math.max(Math.abs(b.vx), Math.abs(b.vy)) * dt, ns = sub > SUB_PX ? Math.min(8, Math.ceil(sub / SUB_PX)) : 1;   // fast: the move is cut into short pieces, each one checked against the ground, so even a super spring or a very long fall never takes you into a block or through a platform
-    b.bnc = false; b.bncV = 0; b.bnx = 0; b.bny = -1; let lava = false; const dyn = !b.ghost && w.dyn.length > 0;
+    b.bnc = false; b.bncV = 0; b.bnx = 0; b.bny = -1; b.kicked = null; let lava = false; const dyn = !b.ghost && w.dyn.length > 0;
     b.dt = dt / ns;   // (each piece pushes things for its own share of the moment, so pushing is the same however the move was cut up)
-    for (let k = 0; k < ns; k++) { b.x += b.vx * dt / ns; b.y += b.vy * dt / ns; if (collide(b, w)) lava = true; if (dyn && k < ns - 1) collideDyn(b, w); }   // (crates, balls and springs too, along the way: the last piece meets them below, as always)
+    let gr = false, gfl = false, gty = 0;
+    for (let k = 0; k < ns; k++) { b.x += b.vx * dt / ns; b.y += b.vy * dt / ns; if (collide(b, w)) lava = true; if (dyn && k < ns - 1) collideDyn(b, w); if (b.ground) { gr = true; gfl = b.flat; gty = b.gType; } }   // (crates, balls and springs too, along the way: the last piece meets them below, as always)
+    if (gr && !b.ground) { b.ground = true; b.flat = gfl; b.gType = gty; }   // (on the ground in any piece of the move is on the ground: rolling fast, the last piece can just skim it without pressing into it)
     if (b.jfill) { if (b.ground) b.jfill = false; else b.jm = Math.max(b.jm, Math.min(1, b.jm0 + JM_FILL * clamp((b.jy0 - b.y - 130) / 70, 0, 1))); }   // only a full-height jump fills the meter (a third of it), and only if you jump again within a split second of landing: three perfect jumps in a row make the tall one   // two full-height jumps fill the whole meter; a small hop fills a little
     b.rot += (b.vx * dt) / R;
     b.onSee = null;
@@ -1768,7 +1779,7 @@
     return '';
   }
   const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
-  const api = { VERSION: 220, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 221, springKick, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

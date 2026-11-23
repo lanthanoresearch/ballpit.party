@@ -57,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 220;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 221;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -1172,20 +1172,30 @@ function admMsg(p, m, ip) {
   if (m.t === 'admp') {   // one player: what there is to know, and their money from their own device
     const b = mods.bans[pub], who = on ? q.ip : lastIp.get(pub), net = can(p, 'ban') && on && q.ip && !privIp(q.ip) ? allConns().filter(x => x !== q && x.ip === q.ip && live(x)).length : 0;
     send(p, { t: 'admp', pub, on: on ? 1 : 0, role: qStaff, me: q === p ? 1 : 0, name: (on ? q.name : k && k.name) || (b && b.name) || (mods.devs[pub] && mods.devs[pub].name) || '', last: k && k.last, first: k && k.first, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(b) ? { until: b.until, ip: b.ip ? 1 : 0 } : null, net, ipOk: can(p, 'ban') && who && !privIp(who) ? 1 : 0, pend: can(p, 'm') ? mods.pend[pub] || null : null, dev: mods.devs[pub] ? { p: mods.devs[pub].p } : null, pk: perkOf(pub) });
-    if (on && !q.role && can(p, 'm')) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mwal' }); }
+    if (on && can(p, 'm') && (q === p || !qStaff || (p.role === 'owner' && qStaff !== 'owner'))) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mwal' }); }
     return;
   }
-  if (m.t === 'admperk') {   // extras for good: unlimited coins and diamonds (k 'c', with the money power), no building limits (k 'b', with the building power). Owners can give them to anyone, themselves too; a dev only to players
+  const posOk = q === p || !qStaff || (p.role === 'owner' && qStaff !== 'owner');   // good things (money, extras): for players, for yourself, and an owner for devs too. Never anything against an owner or a dev, and never anything against yourself
+  if (m.t === 'admperk') {   // extras for good: unlimited coins and diamonds (k 'c', with the money power), no building limits (k 'b', with the building power)
     const k = m.k === 'c' ? 'c' : m.k === 'b' ? 'b' : ''; if (!k) return;
     if (!can(p, k === 'c' ? 'm' : 'b')) return no();
-    if (p.role !== 'owner' && (q === p || qStaff)) { send(p, { t: 'admok', what: qStaff === 'owner' ? 'owner' : 'admin', pub }); return; }
+    if (!posOk) { send(p, { t: 'admok', what: qStaff === 'owner' ? 'owner' : 'admin', pub }); return; }
     const e = Object.assign({}, mods.perk[pub]); if (m.on) e[k] = 1; else delete e[k];
     if (e.c || e.b) mods.perk[pub] = e; else delete mods.perk[pub];
     modsChanged(); saveMods(false);
     if (on) send(q, modOf(pub));
     send(p, { t: 'admok', what: 'pk' + k + (m.on ? '1' : '0'), pub }); return;
   }
-  if (q === p) return;   // (never on yourself)
+  if (m.t === 'admset') {   // their money (or your own): set on their device now, or the next time they come in
+    if (!can(p, 'm')) return no();
+    if (!posOk) { send(p, { t: 'admok', what: qStaff === 'owner' ? 'owner' : 'admin', pub }); return; }
+    const c = Math.max(0, Math.min(1e9, Math.floor(+m.c))), g = Math.max(0, Math.min(1e9, Math.floor(+m.g)));
+    if (!Number.isFinite(c) || !Number.isFinite(g)) return;
+    if (on) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mset', c, g, self: q === p ? 1 : 0 }); delete mods.pend[pub]; }
+    else mods.pend[pub] = { c, g };
+    modsChanged(); send(p, { t: 'admok', what: on ? (q === p ? 'moneyme' : 'money') : 'moneylater', pub }); return;
+  }
+  if (q === p) return;   // (nothing else on yourself: no booting, banning or limiting yourself)
   if (m.t === 'admdev') {   // owners only: put a player on the dev team with chosen powers, change them, or take them off
     if (p.role !== 'owner') return no();
     if (on && q.role === 'owner') { send(p, { t: 'admok', what: 'owner', pub }); return; }
@@ -1196,14 +1206,6 @@ function admMsg(p, m, ip) {
     staffTell({ t: 'admchg' }); send(p, { t: 'admok', what: m.on ? 'dev1' : 'dev0', pub }); return;
   }
   if (qStaff) { send(p, { t: 'admok', what: qStaff === 'owner' ? 'owner' : 'admin', pub }); return; }   // (an owner or a dev: nobody can change anything about them)
-  if (m.t === 'admset') {   // their money: set on their device now, or the next time they come in
-    if (!can(p, 'm')) return no();
-    const c = Math.max(0, Math.min(1e9, Math.floor(+m.c))), g = Math.max(0, Math.min(1e9, Math.floor(+m.g)));
-    if (!Number.isFinite(c) || !Number.isFinite(g)) return;
-    if (on) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mset', c, g }); delete mods.pend[pub]; }
-    else mods.pend[pub] = { c, g };
-    modsChanged(); send(p, { t: 'admok', what: on ? 'money' : 'moneylater', pub }); return;
-  }
   if (m.t === 'admflag') {   // b: may build. c: may use codes
     if (!can(p, 'b')) return no();
     const key = m.k === 'b' ? 'nob' : m.k === 'c' ? 'noc' : ''; if (!key) return;
@@ -1325,7 +1327,7 @@ wss.on('connection', (ws, req) => {
         if (online > peak) { peak = online; peakDirty = true; }
         if (online > usage.pkPl) { usage.pkPl = online; usage.pkPlAt = Date.now(); }
         send(p, {
-          t: 'welcome', taken: takenList(room), id: p.id, room: room.id, mine: myFin && !room.priv ? myFin : 0, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
+          t: 'welcome', v: GAME_V, taken: takenList(room), id: p.id, room: room.id, mine: myFin && !room.priv ? myFin : 0, n: room.players.size, max: MAX_PLAYERS, full: fr.full, fresh: roomFresh(room) ? 1 : 0,
           name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: rslot(room), fk: room.fk | 0, next: room.priv ? Date.now() + 3e11 : nextAt(curSlot), now: Date.now(), online, peak,
           build: room.priv ? undefined : bstate(room), priv: room.priv ? { back: room.priv.owner === p.id && room.priv.back ? 1 : 0, host: room.priv.owner === p.id ? 1 : 0, idx: room.priv.idx, props: room.priv.props, cps: room.priv.cps, gates: room.priv.gates, misc: room.priv.misc, dels: room.priv.dels, ow: owBook(room.priv), hostName: (byPub.get(room.priv.hostPub) || {}).name || '', hostPub: room.priv.hostPub, nc: room.noCheats ? 1 : 0, ul: room.unl ? 1 : 0 } : undefined,
           players: [...room.players.values()].filter(o => o !== p).map(o => ({ id: o.id, pub: o.pub, ot: o.otag || 0, code: o.pub ? codeOf(o.pub) : '', name: o.name, color: o.color, color2: o.color2, pat: o.pat, dv: dvOf(o), crown: o.fin === rslot(room) ? Math.max(1, room.finishers.indexOf(o.id) + 1) : 0 }))   // (crown: what place they finished in)
@@ -1335,7 +1337,7 @@ wss.on('connection', (ws, req) => {
         if (room.botTl && room.botTl.size) for (const q of room.botTl.values()) send(p, { t: 'pobj', g: q, bot: 1, bulk: 1 });
         broadcast(room, { t: 'join', id: p.id, pub: p.pub, ot: p.otag || 0, code: p.pub ? codeOf(p.pub) : '', name: p.name, color: p.color, color2: p.color2, pat: p.pat, dv: dvOf(p), n: room.players.size, crown: myFin && !room.priv ? myFin : 0 }, p);
       } else {
-        send(p, { t: 'welcome', lobby: 1, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
+        send(p, { t: 'welcome', lobby: 1, v: GAME_V, id: p.id, name: p.name, code: p.pub ? codeOf(p.pub) : '', nameLeft, slot: curSlot, next: nextAt(curSlot), now: Date.now(), online, peak });
       }
       if (p.admTell || p.admSt) { const r = roleMsg(p); if (p.admSt) r.kst = p.admSt; send(p, r); p.admTell = false; p.admSt = ''; }   // (owner, dev or nobody, and whether the key this device keeps still works)
       if (p.pub) {
@@ -1515,6 +1517,18 @@ wss.on('connection', (ws, req) => {
         if (!(d.ownT > 0) && !again && Math.abs(q[1] - d.x) + Math.abs(q[2] - d.y) > 150 + Math.max(Math.abs(d.vx) + Math.abs(d.vy), Math.abs(q[3]) + Math.abs(q[4])) * 0.45) continue;   // (taking something over starts from where it really is: a device whose picture of it is far off is not believed, and gives in to the server's)
         if (w.see.length && P.plankCross(w, d.x, d.y, q[1], q[2], d.r || Math.max(d.hw, d.hh))) continue;   // (never taken through a teeter-totter: the two devices must have seen the plank differently, and the server's side of it stands)
         d.x = q[1]; d.y = q[2]; d.vx = Math.max(-1400, Math.min(1400, q[3])); d.vy = Math.max(-1400, Math.min(1400, q[4])); d.rot = q[5]; d.av = Math.max(-28, Math.min(28, q[6])); d.ownBy = p.id; d.ownT = 1.2; d.ownLeft = Date.now(); d.ownTouch = q.length === 8 ? (q[7] ? 1 : 0) : 1; d.nap = false; d.st = 0;   // (held for a moment longer than the gap between two reports, so a short stall on a bad connection never hands it back half-way)
+      }
+    } else if (m.t === 'kick') {   // a spring threw this player, so it was pushed back the other way: the same here (their own screen already shows it). Only springs right by them, the push worked out here, never taken from the message
+      const r = p.room; if (!r || !r.world || m.s !== rslot(r) || !Array.isArray(m.k)) return;
+      const w = r.world, now = Date.now(), ka = r.kickAt || (r.kickAt = new Map());
+      if (ka.size > 2000) ka.clear();
+      for (const q of m.k.slice(0, 4)) {
+        if (!Array.isArray(q) || q.length !== 5 || !q.every(Number.isFinite)) continue;
+        const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone || d.burn > 0 || d.k !== 'b' || (d.kind !== 5 && d.kind !== 6)) continue;
+        if (Math.abs(d.x - p.x) > 420 || Math.abs(d.y - p.y) > 420) continue;   // (near them: by the time this arrives they may already be flying away from it at full speed)
+        if (now - (ka.get(d.uid) || 0) < 80) continue; ka.set(d.uid, now);
+        const ux = Math.sin(d.rot || 0), uy = -Math.cos(d.rot || 0), dir = q[1] * ux + q[2] * uy >= 0 ? 1 : -1;   // (straight out of its top, or out of its bottom, as the spring lies here)
+        P.springKick(d, ux * dir, uy * dir, d.x + Math.max(-40, Math.min(40, q[3])), d.y + Math.max(-40, Math.min(40, q[4])));
       }
     } else if (m.t === 'resync') {   // this device noticed its world is not the same as the server's: it gets the whole of it again
       const r = p.room, B = r && bstate(r); if (!B) return; const now = Date.now(); if (now - (p.rsAt || 0) < 15000) return; p.rsAt = now;

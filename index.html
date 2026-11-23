@@ -1105,7 +1105,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 220; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 221; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1394,7 +1394,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
           <label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Close the game</b><small>Close the game to everyone, and open it again</small></span></span><input type="checkbox" data-perm="lock"><i></i></label>
         </div></div></div>
       <div id="amMoneyBox">
-      <h4><span data-ic="gcoin"></span> Money in the public world</h4>
+      <h4><span data-ic="gcoin"></span> <span id="amMoneyH">Money in the public world</span></h4>
       <div class="ammoney"><label><span>Coins</span><input id="amC" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Coins"></label><label><span>Diamonds</span><input id="amG" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Diamonds"></label></div>
       <div class="small dim" id="amMoneyNote"></div>
       <button class="btn full" id="amSet" type="button"><span data-ic="check"></span>Set their money</button>
@@ -1632,6 +1632,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
     <section class="pane" data-pane="dev">
       <div class="devme" id="devMe"><span class="devrole" id="devRoleTag">Owner</span><div class="devmet"><b id="devMeT"></b><small id="devMeS"></small></div></div>
       <div class="devmebtn"><button class="btn sm" id="devOut" type="button"></button></div>
+      <div class="amnote hide" id="devVerNote"></div>
       <label class="sw2 ic2" id="devShowRow"><span class="ti"><span data-ic="eye"></span><span><b>Show that I'm a dev <span class="devpill">Dev</span></b><small>Other players see this badge by your name: over your ball, in the chat, in their friends list and on your profile</small></span></span><input type="checkbox" id="setDevShow"><i></i></label>
       <h4><span data-ic="users"></span> Players</h4>
       <button class="btn full" id="admPlayers" type="button"><span data-ic="users"></span>Players<span class="admn" id="admPlN"></span></button>
@@ -1943,8 +1944,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=220"></script>
-<script src="physics.js?v=220"></script>
+<script src="maps.js?v=221"></script>
+<script src="physics.js?v=221"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3368,8 +3369,9 @@ function followWorld(dt) {
     else { d.x += ex * k; d.y += ey * k; }
     d._tx = tx; d._ty = ty; d._tT = t;
     if (d.k === 'o') { if (!mine) { d.rot += (d.x - x0) / d.r; d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; } continue; }   // (a ball's turning is only how it looks: it always turns the way it is seen to roll, never back toward the server's angle)
-    if (!mine) { d.rot += (tr - d.rot) * (1 - Math.exp(-18 * dt)); d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; }
-    else if (Math.abs(tr - d.rot) > 0.01) d.rot += (tr - d.rot) * (1 - Math.exp(-(calm ? 8 : err < 14 ? 2 : 5) * dt));
+    const per = d.kind === 5 || d.kind === 6 ? Math.PI * 2 : Math.PI / 2; let dr = tr - d.rot; dr -= Math.round(dr / per) * per;   // (turned toward the server's angle the short way round: never spun all the way round, or a quarter turn for a crate, which looks the same every quarter turn)
+    if (!mine) { d.rot += dr * (1 - Math.exp(-18 * dt)); d.vx = s.vx; d.vy = s.vy; d.av = s.av || 0; d.nap = false; d.st = 0; }
+    else if (Math.abs(dr) > 0.01) d.rot += dr * (1 - Math.exp(-(calm ? 8 : err < 14 ? 2 : 5) * dt));
   }
   if (w.see.length) P.seeOut(w, d => d.mineT > 0 || d.keep > 0);
   if (S.b && S.mode === 'play' && !(S.dead > 0)) P.outOfBall(w, S.b, d => d.mineT > 0 || d.keep > 0);
@@ -6478,7 +6480,7 @@ function checkBuild() {
   try { fetch('/version?x=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(v => { if (v && v.build && v.build !== B) forceUpdate(); }).catch(() => {}); } catch (e) {}
 }
 /* Versions: this game (the page and its physics), the copy on the website, and the game server. All three should match. */
-const GAME_V = window.GAME_V || 0;
+const GAME_V = window.GAME_V || 0; let srvGameV = 0;   // (the game server's version, from its welcome)
 const physV = () => (P && P.VERSION) || 0;
 function siteVersion() { return fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => { const m = /GAME_V = (\d+)/.exec(t || ''); return m ? +m[1] : 0; }).catch(() => 0); }
 function serverVersion() { return fetch(homeBase() + '/version?x=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(v => (v && v.v) || (v ? -1 : 0)).catch(() => 0); }
@@ -7126,6 +7128,8 @@ $('homeSet').onclick = () => toggleSettings();
 try { localStorage.removeItem('ballrun4_updbtn'); sessionStorage.removeItem('ballrun4_updbtn'); } catch (e) {}
 function devRender() {   // what dev mode shows, each of it switched on or off in Dev tools
   $('homeUpd').classList.toggle('hide', !devOn() || settings.devUpd === false); $('devStats').classList.toggle('hide', !devOn());
+  { const old = srvGameV > 0 && srvGameV < GAME_V, nw = srvGameV > GAME_V; $('devVerNote').classList.toggle('hide', !(devOn() && (old || nw)));   // (the game and its server on different versions: say so, so nothing new is tried before the server has it)
+    $('devVerNote').textContent = old ? 'The game server is still on version ' + srvGameV + ' (this game is ' + GAME_V + '). It updates itself a few minutes after the new files go on GitHub; until then, what is new may not work yet.' : nw ? 'The game server is on version ' + srvGameV + ', newer than this game (' + GAME_V + '). Update the game: Settings, More, Version.' : ''; }
   $('setDevShow').checked = !!settings.devShow; $('setDevUpd').checked = settings.devUpd !== false; $('setDevHealth').checked = !!settings.devHealth; $('setDevLive').checked = !!LH.on; $('setNEmpty').checked = !!settings.nEmpty;
   try { tabLocks(); } catch (e) {} try { admRender(); } catch (e) {}
 }
@@ -7255,17 +7259,19 @@ function admOneRender() {
   const showDev = owner && staff !== 'me' && staff !== 'owner'; $('amDevBox').classList.toggle('hide', !showDev);
   if (showDev) { const isDev = !!o.dev; $('amDev').checked = isDev; $('amDevPerms').classList.toggle('off', !isDev); document.querySelectorAll('#amDevPerms [data-perm]').forEach(x => { x.checked = !!(o.dev && o.dev.p && o.dev.p[x.dataset.perm]); }); }
   const plain = !staff;   // (everything below only for ordinary players)
-  $('amMoneyBox').classList.toggle('hide', !(plain && canDo('m'))); $('amAllowBox').classList.toggle('hide', !(plain && canDo('b'))); $('amOutBox').classList.toggle('hide', !(plain && (canDo('boot') || canDo('ban'))));
+  const good = plain || staff === 'me' || (owner && staff === 'dev');   // (good things, money and extras: for players, for yourself, and an owner for a dev too. Nothing against yourself, an owner or a dev)
+  $('amMoneyBox').classList.toggle('hide', !(good && canDo('m'))); $('amMoneyH').textContent = staff === 'me' ? 'Your money in the public world' : 'Money in the public world'; $('amSet').lastChild.textContent = staff === 'me' ? 'Set my money' : 'Set their money'; $('amAllowBox').classList.toggle('hide', !(plain && canDo('b'))); $('amOutBox').classList.toggle('hide', !(plain && (canDo('boot') || canDo('ban'))));
   const b = o.ban; $('amBanned').classList.toggle('hide', !b); if (b) $('amBanTxt').textContent = 'Banned ' + whenTxt(b.until) + (b.ip ? ', with their network' : ''); $('amUnban').classList.toggle('hide', !canDo('ban'));
   $('amCanB').checked = !o.nb; $('amCanC').checked = !o.nc;
-  { const pkOk = plain || (owner && staff !== 'owner') || (owner && staff === 'me'), pc = pkOk && canDo('m'), pb = pkOk && canDo('b');   // (extras for good: anyone for an owner, themselves too; only players for a dev)
+  { const pc = good && canDo('m'), pb = good && canDo('b');
     $('amPerkBox').classList.toggle('hide', !(pc || pb)); $('amPkCRow').classList.toggle('hide', !pc); $('amPkBRow').classList.toggle('hide', !pb);
-    const pk = o.pk || {}; $('amPkC').checked = !!pk.c; $('amPkB').checked = !!pk.b; }
+    const pk = Object.assign({}, o.pk || {}), pd = o.pkPend || {}; for (const k of ['c', 'b']) if (pd[k] && Date.now() - pd[k].at < 6000) pk[k] = pd[k].on;   // (just switched: shown as you set it until the server has it)
+    $('amPkC').checked = !!pk.c; $('amPkB').checked = !!pk.b; }
   $('amBoot').classList.toggle('hide', !canDo('boot')); $('amBanGo').classList.toggle('hide', !canDo('ban'));
   $('amBoot').disabled = !o.on; $('amBanGo').innerHTML = '<svg class="ic"><use href="#i-lock"/></svg>' + (b ? 'Ban again' : 'Ban');
   $('amOutNote').textContent = o.on ? (canDo('boot') ? 'Boot sends them to the main menu: they can come straight back. ' : '') + (canDo('ban') ? 'A ban keeps them out of online play until it ends.' : '') : 'They are not playing now.' + (canDo('ban') ? ' A ban starts at once and stops them coming in.' : '');
   $('amIpRow').classList.toggle('hide', !o.ipOk); $('amIpNote').textContent = o.net ? 'Stops a new account from the same Wi-Fi or phone network too. ' + o.net + ' other player' + (o.net === 1 ? ' is' : 's are') + ' on it right now and would be out too' : 'Stops a new account from the same Wi-Fi or phone network too';
-  if (!o.on) $('amMoneyNote').textContent = o.pend ? 'Waiting to be set the next time they play: ' + fmtN(o.pend.c) + ' coins, ' + fmtN(o.pend.g) + ' diamonds.' : 'Their money is on their own device. What you set here is put there the next time they play.';
+  if (!o.on && !o.me) $('amMoneyNote').textContent = o.pend ? 'Waiting to be set the next time they play: ' + fmtN(o.pend.c) + ' coins, ' + fmtN(o.pend.g) + ' diamonds.' : 'Their money is on their own device. What you set here is put there the next time they play.';
   document.querySelectorAll('.amdur [data-h]').forEach(x => x.classList.toggle('on', +x.dataset.h === (admOne.banH || 24)));
 }
 const devPermsNow = () => { const p = {}; document.querySelectorAll('#amDevPerms [data-perm]').forEach(x => { if (x.checked) p[x.dataset.perm] = 1; }); return p; };
@@ -7279,7 +7285,10 @@ $('amSet').onclick = () => {
   if (!($('amC').value !== '' && $('amG').value !== '' && c >= 0 && g >= 0 && c <= 1e9 && g <= 1e9)) { notice('Type both amounts: whole numbers from 0', 'urgent'); return; }
   sfx('ui'); wsSend({ t: 'admset', pub: admOne.pub, c, g });
 };
-['C', 'B'].forEach(K => { $('amPk' + K).onchange = () => { if (!admOne) return; const on = $('amPk' + K).checked, k = K.toLowerCase(); sfx(on ? 'on' : 'off'); admOne.pk = Object.assign({}, admOne.pk, { [k]: on ? 1 : 0 }); wsSend({ t: 'admperk', pub: admOne.pub, k, on: on ? 1 : 0 }); }; });
+['C', 'B'].forEach(K => { $('amPk' + K).onchange = () => { if (!admOne) return; const on = $('amPk' + K).checked, k = K.toLowerCase(), o = admOne; sfx(on ? 'on' : 'off');
+  o.pkPend = Object.assign({}, o.pkPend, { [k]: { on: on ? 1 : 0, at: Date.now() } }); wsSend({ t: 'admperk', pub: o.pub, k, on: on ? 1 : 0 });
+  setTimeout(() => { const p = admOne && admOne.pub === o.pub && admOne.pkPend && admOne.pkPend[k]; if (!p || p.on !== (on ? 1 : 0)) return; delete admOne.pkPend[k]; admOneRender();   // (no word from the server after 6 seconds: shown as the server really has it, and said why)
+    if (!!(admOne.pk || {})[k] !== on) notice(srvGameV && srvGameV < GAME_V ? 'The game server is still on version ' + srvGameV + ', which cannot do that yet. It updates itself a few minutes after new files go on GitHub: try again then' : 'The server did not take that. Try again in a moment', 'urgent'); }, 6500); }; });
 $('amCanB').onchange = () => { if (!admOne) return; const on = $('amCanB').checked; sfx(on ? 'on' : 'off'); admOne.nb = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'b', on: on ? 1 : 0 }); };
 $('amCanC').onchange = () => { if (!admOne) return; const on = $('amCanC').checked; sfx(on ? 'on' : 'off'); admOne.nc = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'c', on: on ? 1 : 0 }); };
 $('amBoot').onclick = () => { const o = admOne; if (!o || !o.on) return; askConfirm('Boot ' + who(o.name) + '?', 'They go back to the main menu. They can come straight back in.', 'Boot', () => wsSend({ t: 'admboot', pub: o.pub }), { no: 'Cancel', yesClass: 'danger' }); };
@@ -7342,13 +7351,13 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
     case 'admsh': devShSrv = m.on ? 1 : 0; devRender(); try { lpRender(); } catch (e) {} if (chatOpen && chatView === 'w') chatRender(false); return true;   // (the Dev badge: shown or hidden, as the server now has it)
     case 'admsnapv': if (isAdmin() && devRole === 'owner' && m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap)); return true;   // (the bans, the dev team and the switches, kept here in case the server forgets them)
     case 'admp': if (!admOne || m.pub !== admOne.pub) return true;
-      { const keep = { banH: admOne.banH, code: admOne.code, color: admOne.color, color2: admOne.color2, pat: admOne.pat, fr: admOne.fr, w: admOne.w, host: admOne.host, since: admOne.since };
+      { const keep = { pkPend: admOne.pkPend, banH: admOne.banH, code: admOne.code, color: admOne.color, color2: admOne.color2, pat: admOne.pat, fr: admOne.fr, w: admOne.w, host: admOne.host, since: admOne.since };
         const fresh = (admData && [...admData.on, ...admData.recent, ...admData.bans, ...(admData.devs || [])].find(e => e.pub === m.pub)) || {};
         admOne = Object.assign({}, keep, fresh, m, { banH: keep.banH, last: m.last || fresh.last }); if (!m.on) { admOne.w = ''; admOne.since = 0; } }
       admOneRender(); return true;
-    case 'admw': if (admOne && m.pub === admOne.pub) { if (document.activeElement !== $('amC') && document.activeElement !== $('amG')) { $('amC').value = m.c; $('amG').value = m.g; } $('amMoneyNote').textContent = 'On their device now: ' + fmtN(m.c) + ' coins, ' + fmtN(m.g) + ' diamonds' + (m.pk ? '. They have unlimited coins and diamonds for good (see Extras below), so this only matters once that is off.' : m.inf ? '. They have unlimited money on from a code: setting it turns that off.' : '.'); } return true;
+    case 'admw': if (admOne && m.pub === admOne.pub) { if (document.activeElement !== $('amC') && document.activeElement !== $('amG')) { $('amC').value = m.c; $('amG').value = m.g; } $('amMoneyNote').textContent = (admOne.me ? 'You have now: ' : 'On their device now: ') + fmtN(m.c) + ' coins, ' + fmtN(m.g) + ' diamonds' + (m.pk ? (admOne.me ? '. You have' : '. They have') + ' unlimited coins and diamonds for good (see Extras below), so this only matters once that is off.' : m.inf ? (admOne.me ? '. You have' : '. They have') + ' unlimited money on from a code: setting it turns that off.' : '.'); } return true;
     case 'admok': {
-      const t = { money: 'Their money is set', moneylater: 'Their money is set for the next time they play', pkc1: 'Unlimited coins and diamonds for them, for good', pkc0: 'Their unlimited coins and diamonds are off', pkb1: 'No building limits for them, for good', pkb0: 'Their building limits are back', nob1: 'They can build again', nob0: 'They can\u2019t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a dev: nothing changed', owner: 'That is an owner: nothing changed', noperm: 'You can\u2019t do that: ask an owner', dev1: 'Saved: they are on the dev team', dev0: 'They are off the dev team' }[m.what];
+      const t = { money: 'Their money is set', moneyme: 'Your money is set', moneylater: 'Their money is set for the next time they play', pkc1: 'Unlimited coins and diamonds for them, for good', pkc0: 'Their unlimited coins and diamonds are off', pkb1: 'No building limits for them, for good', pkb0: 'Their building limits are back', nob1: 'They can build again', nob0: 'They can\u2019t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a dev: nothing changed', owner: 'That is an owner: nothing changed', noperm: 'You can\u2019t do that: ask an owner', dev1: 'Saved: they are on the dev team', dev0: 'They are off the dev team' }[m.what];
       if (t) notice(t, m.what === 'admin' || m.what === 'owner' || m.what === 'noperm' ? 'urgent' : '');
       admAsk(); if (admOne && m.pub === admOne.pub) wsSend({ t: 'admp', pub: admOne.pub });
       if (m.what === 'ban' || m.what === 'unban') $('amBanBox').classList.add('hide');
@@ -7374,7 +7383,7 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
       purseP.c = c; purseP.g = g; delete purseP.pre;
       try { infMoney = false; localStorage.removeItem('ballrun4_inf'); const o = JSON.parse(localStorage.getItem(PCK) || 'null'); if (o) { o.inf = 0; localStorage.setItem(PCK, JSON.stringify(o)); } } catch (e) {}
       saveWallet(); try { homeWalletRender.k = ''; homeWalletRender(); } catch (e) {} try { if (shopOpen) shopRender(); } catch (e) {}
-      notice('A game admin set your public-world money: ' + fmtN(c) + ' coins, ' + fmtN(g) + ' diamonds', '');
+      if (!m.self) notice('A game admin set your public-world money: ' + fmtN(c) + ' coins, ' + fmtN(g) + ' diamonds', '');
       wsSend({ t: 'mwal', c, g, inf: 0 }); return true;
     }
     case 'barred': {   // the server is sending this device out: booted (back in at once), banned, or the game is closed for now
@@ -8249,6 +8258,7 @@ function onMsg(m) {
     case 'update': forceUpdate(); return;   // the server only lets people with the same version in
     case 'welcome':
       srvOk();
+      if (Number.isFinite(m.v) && m.v !== srvGameV) { srvGameV = m.v; try { devRender(); } catch (e) {} }   // (the server's version: Dev tools says when it is not this game's)
       pickTaken = new Map(Array.isArray(m.taken) ? m.taken : []); pickPend.clear();
       { let u = null; try { u = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); } catch (e) {} if (u && u.m) setTimeout(() => wsSend({ t: 'use', u }), 600); }   // (the server's monthly counts, kept here in case it restarted and forgot them)
       { let c = null; try { c = JSON.parse(localStorage.getItem('ballrun4_fsub') || 'null'); } catch (e) {} if (c && typeof c === 'object') { const l = Object.keys(c).slice(0, 64).map(k => [k, c[k]]); if (l.length) setTimeout(() => wsSend({ t: 'fsubs', l }), 400); } }
@@ -8447,6 +8457,11 @@ setInterval(() => {
   if (!out.length && !pl.length && !lost.length) return;
   for (let i = 0; i < Math.max(1, out.length) && i < 24; i += 12) { const m = { t: 'own', s: S.slot, b: out.slice(i, i + 12) }; if (i === 0 && pl.length) m.pl = pl; if (i === 0 && lost.length) m.lost = lost.slice(0, 12); try { ws.send(JSON.stringify(m)); } catch (e) {} }
 }, 50);
+setInterval(() => {   // a spring that threw you was pushed back the other way: the server is told, and pushes it the same way for everybody
+  const w = S.world; if (!w || !w.kicks || !w.kicks.length) return;
+  const k = w.kicks.splice(0, w.kicks.length); if (!w.follow || !online || !ws || ws.readyState !== 1 || S.mode !== 'play') return;
+  try { ws.send(JSON.stringify({ t: 'kick', s: S.slot, k: k.slice(-4) })); } catch (e) {}
+}, 30);
 /* ================= drawing (hand-drawn look, flat colours) ================= */
 const ICE = '#7fdcff', LAVA = '#ff4a1c', INK = 'rgba(22,15,12,.85)';
 function jx(cx, cy) { return (hsh(cx, cy, 1) - 0.5) * 2.6; }
