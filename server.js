@@ -24,10 +24,12 @@ const P = require('./physics.js');
 
 const PORT = process.env.PORT || 3000;
 // what one world can hold of what people build (shared by everyone in it). Each player has their own, lower limits per item; these keep a full world quick.
+const TEST_HOOKS = process.env.TEST_HOOKS === '1' && !process.env.MOVED_TO;   // (a test server only)
 const ROOM_PROPS = 1600, ROOM_GATES = 200, ROOM_MISC = 12000, ROOM_CPS = 150, ROOM_DELS = 20000;   // (deleting is not limited for a player: the world just has to remember what was deleted)
 const MAX_PLAYERS_ENV = parseInt(process.env.MAX_PLAYERS, 10) > 1 ? parseInt(process.env.MAX_PLAYERS, 10) : 0;   // (unset: the public world takes everyone the server can, see below)
 const SLOT_MS = 3 * 60 * 60 * 1000;                       // a map "session" lasts 3 hours (12, 3, 6, 9 o'clock)
 const OFFSET_MS = (parseFloat(process.env.MAP_OFFSET_HOURS) || 0) * 3600 * 1000;
+const SEE_X = 2600, SEE_Y = 1800;   // (how far each player hears about every move of every crate and ball: past the edge of the screen zoomed all the way out, so nothing on it ever stops in mid-air waiting for the next full look)
 const TICK_MS = 16, SEND_CAP = 36;   // SEND_CAP: crates and balls told to each player per update at most (about 50 KB a second even when hundreds are moving)                                      // up to 60 updates per second (the world steps and is told about every 1/60 s), and only for players who actually sent something new (the client fills in the motion between them)
 const RANGE = 3000;                                       // you only receive players within this many pixels of you (more than a screen)
 const MAX_PER_IP = parseInt(process.env.MAX_PER_IP, 10) || 10;
@@ -55,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 219;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 220;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -510,6 +512,10 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
     return res.end(b);
   }
+  if (TEST_HOOKS && url === '/__t/dyn') {   // (tests only, never on a real server: every crate, ball and spring in every world, as the server has it)
+    const out = []; for (const r of rooms.values()) if (r.world) out.push({ id: r.id, priv: r.priv ? 1 : 0, n: r.players.size, d: r.world.dyn.map(d => [d.uid >>> 0, d.kind, Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.rot * 1000) / 1000, d.burn > 0 ? 1 : 0, d.nap ? 1 : 0, d.gone ? 1 : 0, Math.round(d.vx), Math.round(d.vy), P._sup && !(d.burn > 0) ? (P._sup(r.world, d) ? 1 : 0) : -1]) });
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); return res.end(JSON.stringify(out));
+  }
   if (url === '/version') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
     return res.end(JSON.stringify({ build: BUILD, home: HOME_URL, v: GAME_V }));
@@ -896,8 +902,8 @@ function simTick() {
       const pend = p.pend || (p.pend = new Set()), lastS = p.lastS || (p.lastS = new Map());
       if (full) {   // (a full look: first time, every few seconds, or after moving far: everything around them that they do not have the latest word on yet)
         p.sv = room.verN; p.sx = p.x; p.sy = p.y; p.more = 0;
-        for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (p.dver.get(d.uid) === d.ver) continue; const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y; if (p.looked0 && (Math.abs(x - p.x) > 1900 || Math.abs(y - p.y) > 1500)) continue; pend.add(d); }   // (someone who has just arrived is told where everything in the whole world is, once: their map shows every crate and ball that was ever built, where it really lies, not only what is near them. After that they hear about what is around them)
-      } else for (let i = 0; i < chg.length; i++) { const d = chg[i]; if (p.dver.get(d.uid) === d.ver) continue; if (!(d.burn > 0) && p.dver.has(d.uid) && (Math.abs(d.x - p.x) > 1900 || Math.abs(d.y - p.y) > 1500)) continue; pend.add(d); }   // (what is far away is told only now and then, enough for the map: every few seconds at most)
+        for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (p.dver.get(d.uid) === d.ver) continue; const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y; if (p.looked0 && (Math.abs(x - p.x) > SEE_X || Math.abs(y - p.y) > SEE_Y)) continue; pend.add(d); }   // (someone who has just arrived is told where everything in the whole world is, once: their map shows every crate and ball that was ever built, where it really lies, not only what is near them. After that they hear about what is around them)
+      } else for (let i = 0; i < chg.length; i++) { const d = chg[i]; if (p.dver.get(d.uid) === d.ver) continue; if (!(d.burn > 0) && p.dver.has(d.uid) && (Math.abs(d.x - p.x) > SEE_X || Math.abs(d.y - p.y) > SEE_Y)) continue; pend.add(d); }   // (what is far away is told only now and then, enough for the map: every few seconds at most)
       if (!pend.size) { if (!p.looked0 && full) { p.looked0 = true; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); } continue; }
       if (!p.looked0 ? false : !sendNow) continue;   // (30 times a second, which each device fills in smoothly; a server that cannot keep up halves that. A player who has just arrived gets everything as fast as it goes)
       // each moment only so much is sent (a slow connection is never flooded): what has waited longest and what is closest goes first, so nothing is ever left waiting while other things are told again and again. In between, each device carries everything on along its path, falling as it falls
@@ -910,7 +916,7 @@ function simTick() {
       if (out.length >= 90) p.more = 0;   // (a big first look: the device knows more is on its way while it gets 90 or more at a time)
       if (!p.looked0 && !pend.size) { p.looked0 = true; p.readyDue = true; }   // (everything around them has now been sent: they may come in)
       for (const d of out) lastS.set(d, room.tk);
-      if (lastS.size > 4000) { for (const [d] of lastS) if (d.burn > 0 || Math.abs(d.x - p.x) > 2500) lastS.delete(d); }
+      if (lastS.size > 4000) { for (const [d] of lastS) if (d.burn > 0 || Math.abs(d.x - p.x) > SEE_X + 600) lastS.delete(d); }
       if (!out.length) continue;
       const buf = Buffer.allocUnsafe(8 + out.length * 23); buf[0] = 9; buf.writeUInt16LE(slot, 1); buf[3] = out.length; buf.writeUInt32LE(Date.now() % 4294967296, 4);   // (type 9: as type 6 (type 4, plus how fast each one is turning), plus the moment on the server it was true, so every device can replay the world's motion exactly as it happened)
       out.forEach((d, k) => {
@@ -1039,16 +1045,17 @@ const ADMIN_KEY = (() => {
 const MODS_FILE = process.env.MODS_FILE || path.join(path.dirname(LINKS_FILE), 'mods.json');
 const BAN_HOURS = [1, 24, 168, -1];   // (one hour, a day, a week, for good)
 const PERMS = ['m', 'b', 'boot', 'ban', 'lock'];   // money; building and codes; boot; ban; close the game
-let mods = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, lock: 0, lockAt: 0 }, modsDirty = false, modsFresh = true;   // modsFresh: nothing was loaded and no owner has changed anything yet (an owner's device may then hand back what it remembers)
+let mods = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, perk: {}, lock: 0, lockAt: 0 }, modsDirty = false, modsFresh = true;   // modsFresh: nothing was loaded and no owner has changed anything yet (an owner's device may then hand back what it remembers)
 const banLive = b => !!b && (b.until === -1 || b.until > Date.now());
 const cleanPerms = o => { const r = {}; for (const k of PERMS) if (o && o[k]) r[k] = 1; return r; };
 function cleanMods(o) {   // only well-formed records, whatever the file or an owner's device says
-  const r = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, lock: o && o.lock ? 1 : 0, lockAt: Math.max(0, +(o && o.lockAt) || 0) };
+  const r = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, perk: {}, lock: o && o.lock ? 1 : 0, lockAt: Math.max(0, +(o && o.lockAt) || 0) };
   const ipOk = v => typeof v === 'string' && v.length <= 64 && /^[0-9a-f:.]+$/i.test(v);
   for (const k in (o && o.bans) || {}) { const b = o.bans[k]; if (!PUB.test(k) || !b) continue; const until = b.until === -1 ? -1 : Math.max(0, +b.until || 0); const v = { until, at: Math.max(0, +b.at || 0), name: cleanName(b.name) }; if (ipOk(b.ip)) v.ip = b.ip; if (banLive(v)) r.bans[k] = v; }
   for (const k of ['nob', 'noc']) for (const q in (o && o[k]) || {}) if (PUB.test(q) && o[k][q]) r[k][q] = 1;
   for (const q in (o && o.pend) || {}) { const v = o.pend[q]; if (PUB.test(q) && v) r.pend[q] = { c: Math.max(0, Math.min(1e9, Math.floor(+v.c) || 0)), g: Math.max(0, Math.min(1e9, Math.floor(+v.g) || 0)) }; }
   for (const q in (o && o.devs) || {}) { const v = o.devs[q]; if (PUB.test(q) && v) r.devs[q] = { name: cleanName(v.name), p: cleanPerms(v.p), at: Math.max(0, +v.at || 0) }; }
+  for (const q in (o && o.perk) || {}) { const v = o.perk[q]; if (!PUB.test(q) || !v) continue; const e = {}; if (v.c) e.c = 1; if (v.b) e.b = 1; if (e.c || e.b) r.perk[q] = e; }   // (extras an admin gave for good: c unlimited coins and diamonds, b no building limits)
   return r;
 }
 try { mods = cleanMods(JSON.parse(fs.readFileSync(MODS_FILE, 'utf8'))); modsFresh = false; } catch (e) {}
@@ -1095,7 +1102,8 @@ function dvSync(p) {   // the badge came or went: everyone in their world sees i
 }
 const roleMsg = p => ({ t: 'adm', st: p.role ? 'ok' : 'none', role: p.role || '', perms: p.perms || {}, lock: p.role ? mods.lock : 0, sh: dvOf(p) });   // (kst, added where a key was tried: 'ok', 'bad' or 'wait')
 const can = (p, k) => p.role === 'owner' || (p.role === 'dev' && !!(p.perms && p.perms[k]));
-const modOf = pub => ({ t: 'mod', b: pub && mods.nob[pub] ? 0 : 1, c: pub && mods.noc[pub] ? 0 : 1 });
+const perkOf = pub => { const e = pub && mods.perk[pub]; return { c: e && e.c ? 1 : 0, b: e && e.b ? 1 : 0 }; };   // (unlimited coins and diamonds, no building limits: for good, on every device of theirs)
+const modOf = pub => ({ t: 'mod', b: pub && mods.nob[pub] ? 0 : 1, c: pub && mods.noc[pub] ? 0 : 1, pk: perkOf(pub) });
 const noBuild = p => !p.admin && !!(p.pub && mods.nob[p.pub]);
 function buildNo(p) {   // somebody a dev stopped from building tried anyway: nothing is added, and their device gets the world as it really is
   const r = p.room, now = Date.now(); if (!r || !bstate(r) || now - (p.bnoAt || 0) < 1500) return; p.bnoAt = now;
@@ -1163,9 +1171,19 @@ function admMsg(p, m, ip) {
   const q = byPub.get(pub), on = live(q), k = known.get(pub), qStaff = (on && q.role) || mods.devs[pub] ? (on && q.role === 'owner' ? 'owner' : 'dev') : '';
   if (m.t === 'admp') {   // one player: what there is to know, and their money from their own device
     const b = mods.bans[pub], who = on ? q.ip : lastIp.get(pub), net = can(p, 'ban') && on && q.ip && !privIp(q.ip) ? allConns().filter(x => x !== q && x.ip === q.ip && live(x)).length : 0;
-    send(p, { t: 'admp', pub, on: on ? 1 : 0, role: qStaff, me: q === p ? 1 : 0, name: (on ? q.name : k && k.name) || (b && b.name) || (mods.devs[pub] && mods.devs[pub].name) || '', last: k && k.last, first: k && k.first, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(b) ? { until: b.until, ip: b.ip ? 1 : 0 } : null, net, ipOk: can(p, 'ban') && who && !privIp(who) ? 1 : 0, pend: can(p, 'm') ? mods.pend[pub] || null : null, dev: mods.devs[pub] ? { p: mods.devs[pub].p } : null });
+    send(p, { t: 'admp', pub, on: on ? 1 : 0, role: qStaff, me: q === p ? 1 : 0, name: (on ? q.name : k && k.name) || (b && b.name) || (mods.devs[pub] && mods.devs[pub].name) || '', last: k && k.last, first: k && k.first, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(b) ? { until: b.until, ip: b.ip ? 1 : 0 } : null, net, ipOk: can(p, 'ban') && who && !privIp(who) ? 1 : 0, pend: can(p, 'm') ? mods.pend[pub] || null : null, dev: mods.devs[pub] ? { p: mods.devs[pub].p } : null, pk: perkOf(pub) });
     if (on && !q.role && can(p, 'm')) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mwal' }); }
     return;
+  }
+  if (m.t === 'admperk') {   // extras for good: unlimited coins and diamonds (k 'c', with the money power), no building limits (k 'b', with the building power). Owners can give them to anyone, themselves too; a dev only to players
+    const k = m.k === 'c' ? 'c' : m.k === 'b' ? 'b' : ''; if (!k) return;
+    if (!can(p, k === 'c' ? 'm' : 'b')) return no();
+    if (p.role !== 'owner' && (q === p || qStaff)) { send(p, { t: 'admok', what: qStaff === 'owner' ? 'owner' : 'admin', pub }); return; }
+    const e = Object.assign({}, mods.perk[pub]); if (m.on) e[k] = 1; else delete e[k];
+    if (e.c || e.b) mods.perk[pub] = e; else delete mods.perk[pub];
+    modsChanged(); saveMods(false);
+    if (on) send(q, modOf(pub));
+    send(p, { t: 'admok', what: 'pk' + k + (m.on ? '1' : '0'), pub }); return;
   }
   if (q === p) return;   // (never on yourself)
   if (m.t === 'admdev') {   // owners only: put a player on the dev team with chosen powers, change them, or take them off
@@ -1210,7 +1228,7 @@ function walBack(p, m) {   // a player's device answering with its money: only w
   const a = p.walAsk; if (!a || Date.now() - a.at > 8000) return; p.walAsk = null;
   const to = allConns().find(x => x.id === a.by); if (!to || !to.role) return;
   const n = v => Math.max(0, Math.min(1e9, Math.floor(+v) || 0));
-  send(to, { t: 'admw', pub: p.pub, c: n(m.c), g: n(m.g), inf: m.inf ? 1 : 0 });
+  send(to, { t: 'admw', pub: p.pub, c: n(m.c), g: n(m.g), inf: m.inf ? 1 : 0, pk: perkOf(p.pub).c });
 }
 
 const ipCount = new Map();
@@ -1595,7 +1613,8 @@ wss.on('connection', (ws, req) => {
           const B = bstate(r), own = owCounts(B, 'p', 'props'), mine = own.get(p.otag >>> 0) || 0; let used = B.props.length, keep = 0;   // (counted from who really built each one, so leaving and coming back changes nothing)
           for (const e of B.dels) if (e[0] === 'b') used--;
           const share = propShare(r); for (const q of r.players.values()) if (q !== p) keep += Math.max(0, share - (own.get(q.otag >>> 0) || 0));
-          if (B.props.length >= ROOM_PROPS * 2 || used >= ROOM_PROPS || (mine >= share && used + keep >= ROOM_PROPS)) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y), full: used >= ROOM_PROPS ? 1 : 0 }); return; }
+          const free = p.admin || perkOf(p.pub).b;   // (an owner, a dev, or someone given no building limits: only the world's own limit)
+          if (B.props.length >= ROOM_PROPS * 2 || used >= ROOM_PROPS || (!free && mine >= share && used + keep >= ROOM_PROPS)) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y), full: used >= ROOM_PROPS ? 1 : 0 }); return; }
         }
         const e = [k, Math.round(m.x), Math.round(m.y)]; bstate(r).props.push(e); owAdd(bstate(r), 'p', e, p.otag >>> 0); const nd = worldAdd.prop(r, e), nu = nd ? nd.uid : undefined; if (nd) { nd.ownPub = p.pub; nd.ownTag = p.otag >>> 0; } { const B = bstate(r); (B.po || (B.po = {}))[e.join(',')] = p.otag >>> 0; } broadcast(r, { t: 'padd', k: e[0], x: e[1], y: e[2], u: nu, o: p.otag >>> 0 }, p); if (nu !== undefined) send(p, { t: 'puid', k: e[0], x: e[1], y: e[2], u: nu });   // (the server's name for it goes to everyone, so two things put down on the very same spot can never be mixed up)
       } else {

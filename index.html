@@ -1105,7 +1105,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 219; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 220; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1398,6 +1398,11 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       <div class="ammoney"><label><span>Coins</span><input id="amC" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Coins"></label><label><span>Diamonds</span><input id="amG" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Diamonds"></label></div>
       <div class="small dim" id="amMoneyNote"></div>
       <button class="btn full" id="amSet" type="button"><span data-ic="check"></span>Set their money</button>
+      </div>
+      <div id="amPerkBox">
+      <h4><span data-ic="spark"></span> Extras, for good</h4>
+      <label class="sw2 ic2" id="amPkCRow"><span class="ti"><span data-ic="gem"></span><span><b>Unlimited coins and diamonds</b><small>Everywhere they play, on every device of theirs, until you turn it off</small></span></span><input type="checkbox" id="amPkC"><i></i></label>
+      <label class="sw2 ic2" id="amPkBRow"><span class="ti"><span data-ic="plus"></span><span><b>No building limits</b><small>As many of everything as they like, and no fair-share limit in busy worlds. A world still holds only so much in all</small></span></span><input type="checkbox" id="amPkB"><i></i></label>
       </div>
       <div id="amAllowBox">
       <h4><span data-ic="gear"></span> Allowed</h4>
@@ -1938,8 +1943,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=219"></script>
-<script src="physics.js?v=219"></script>
+<script src="maps.js?v=220"></script>
+<script src="physics.js?v=220"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3143,9 +3148,11 @@ const cheatsOff = () => !settings.mp && !offlineOn() && (party ? (party.role ===
 const unlimitedNow = () => !settings.mp && (party && party.role === 'guest' ? !!party.ul : unlimitedSet());   // (in a friend's game, their game settings decide. No cheats only blocks the codes)
 const purseNow = () => settings.mp ? purseP : purseOf(lvKey());
 let infMoney = false; try { infMoney = localStorage.getItem('ballrun4_inf') === '1'; } catch (e) {}   // (the code "themaker1": coins and diamonds never run out again, on this device)
+let perkC = false, perkB = false; try { const o = JSON.parse(localStorage.getItem('ballrun4_perk') || 'null'); perkC = !!(o && o.c); perkB = !!(o && o.b); } catch (e) {}   // (given for good by a game admin, on every device of yours: unlimited coins and diamonds, no building limits. The server says so on every hello)
+const moneyFree = () => ((infMoney || perkC) && !cheatsOff()) || unlimitedNow();
 const wallet = {
-  get c() { return (infMoney && !cheatsOff()) || unlimitedNow() ? 1e9 : purseNow().c; }, set c(v) { if (!(infMoney && !cheatsOff()) && !unlimitedNow()) purseNow().c = v; },
-  get g() { return (infMoney && !cheatsOff()) || unlimitedNow() ? 1e9 : purseNow().g; }, set g(v) { if (!(infMoney && !cheatsOff()) && !unlimitedNow()) purseNow().g = v; }
+  get c() { return moneyFree() ? 1e9 : purseNow().c; }, set c(v) { if (!moneyFree()) purseNow().c = v; },
+  get g() { return moneyFree() ? 1e9 : purseNow().g; }, set g(v) { if (!moneyFree()) purseNow().g = v; }
 };
 const fmtW = v => v >= 1e9 ? '\u221e' : fmtN(v);   // (unlimited shows as the infinity sign)
 function loadPurses() {
@@ -5663,7 +5670,7 @@ function shopRender() {
   SHOP.filter(it => it.cat === shopTab && !(it.give && unlimitedNow())).forEach(it => {   // (nothing to trade for when coins never run out)
     const row = document.createElement('div'); row.className = 'shopitem';
     const full = atLimit(it), ok = wallet.c >= it.c && wallet.g >= it.g && !full;
-    row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + (it.max && !noCaps ? ' <span class="lim' + (full ? ' full' : '') + '">' + ownCount(it) + '/' + it.max + '</span>' : '') + '</b><small>' + it.info + '</small></div>';
+    row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + (it.max && !capsOff() ? ' <span class="lim' + (full ? ' full' : '') + '">' + ownCount(it) + '/' + it.max + '</span>' : '') + '</b><small>' + it.info + '</small></div>';
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.disabled = !ok || !modBuildOk();
     b.innerHTML = (it.c ? '<span class="pr">' + ico('gcoin') + it.c + '</span>' : '') + (it.g ? '<span class="pr">' + ico('gem') + it.g + '</span>' : '');
     b.onclick = () => buyItem(it); row.appendChild(b); L.appendChild(row);
@@ -5680,7 +5687,8 @@ $('shopClose').onclick = () => toggleShop(false);
 $('chatClose').onclick = () => toggleChat(false);
 const ownCount = it => ownTally()[it.id] | 0;   // how many of this you have built on this map, counted from who built what (what others built does not count; leaving and coming back changes nothing)
 let noCaps = false; try { noCaps = localStorage.getItem('ballrun4_nocap') === '1'; } catch (e) {}   // (the code "unlimitedpower": no building limits at all, on this device)
-const atLimit = it => it.base ? !!myBase() : !(noCaps && !cheatsOff()) && !!it.max && ownCount(it) >= it.max;
+const capsOff = () => (noCaps || perkB) && !cheatsOff();   // (the code "unlimitedpower", or no building limits given for good by a game admin)
+const atLimit = it => it.base ? !!myBase() : !capsOff() && !!it.max && ownCount(it) >= it.max;
 const limitNote = it => it.base ? 'You already have a base. Delete its glowing centre to put it somewhere else' : it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : it.portal ? 'You have both portal pairs. Delete one to move it' : it.id === 'flag' ? 'You already have a checkpoint flag. Delete it to put one somewhere else' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
 // 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
@@ -6111,7 +6119,7 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (key === placeUIKey) return; placeUIKey = key;
   $('placeBar').classList.toggle('hide', !on); applyTouchUI();
   if (!on) return;
-  $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; if (g.it.max && !noCaps) $('placeName').textContent += ' · ' + ownCount(g.it) + ' of ' + g.it.max + ' placed'; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
+  $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; if (g.it.max && !capsOff()) $('placeName').textContent += ' · ' + ownCount(g.it) + ' of ' + g.it.max + ' placed'; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Delete' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Delete' : 'Place');
   $('placeHint').textContent = g.off ? g.bwhy : g.it.base ? (g.ok ? 'Your base goes right here, with you in the middle' : g.bwhy) : g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space');
 }
@@ -7250,6 +7258,9 @@ function admOneRender() {
   $('amMoneyBox').classList.toggle('hide', !(plain && canDo('m'))); $('amAllowBox').classList.toggle('hide', !(plain && canDo('b'))); $('amOutBox').classList.toggle('hide', !(plain && (canDo('boot') || canDo('ban'))));
   const b = o.ban; $('amBanned').classList.toggle('hide', !b); if (b) $('amBanTxt').textContent = 'Banned ' + whenTxt(b.until) + (b.ip ? ', with their network' : ''); $('amUnban').classList.toggle('hide', !canDo('ban'));
   $('amCanB').checked = !o.nb; $('amCanC').checked = !o.nc;
+  { const pkOk = plain || (owner && staff !== 'owner') || (owner && staff === 'me'), pc = pkOk && canDo('m'), pb = pkOk && canDo('b');   // (extras for good: anyone for an owner, themselves too; only players for a dev)
+    $('amPerkBox').classList.toggle('hide', !(pc || pb)); $('amPkCRow').classList.toggle('hide', !pc); $('amPkBRow').classList.toggle('hide', !pb);
+    const pk = o.pk || {}; $('amPkC').checked = !!pk.c; $('amPkB').checked = !!pk.b; }
   $('amBoot').classList.toggle('hide', !canDo('boot')); $('amBanGo').classList.toggle('hide', !canDo('ban'));
   $('amBoot').disabled = !o.on; $('amBanGo').innerHTML = '<svg class="ic"><use href="#i-lock"/></svg>' + (b ? 'Ban again' : 'Ban');
   $('amOutNote').textContent = o.on ? (canDo('boot') ? 'Boot sends them to the main menu: they can come straight back. ' : '') + (canDo('ban') ? 'A ban keeps them out of online play until it ends.' : '') : 'They are not playing now.' + (canDo('ban') ? ' A ban starts at once and stops them coming in.' : '');
@@ -7268,6 +7279,7 @@ $('amSet').onclick = () => {
   if (!($('amC').value !== '' && $('amG').value !== '' && c >= 0 && g >= 0 && c <= 1e9 && g <= 1e9)) { notice('Type both amounts: whole numbers from 0', 'urgent'); return; }
   sfx('ui'); wsSend({ t: 'admset', pub: admOne.pub, c, g });
 };
+['C', 'B'].forEach(K => { $('amPk' + K).onchange = () => { if (!admOne) return; const on = $('amPk' + K).checked, k = K.toLowerCase(); sfx(on ? 'on' : 'off'); admOne.pk = Object.assign({}, admOne.pk, { [k]: on ? 1 : 0 }); wsSend({ t: 'admperk', pub: admOne.pub, k, on: on ? 1 : 0 }); }; });
 $('amCanB').onchange = () => { if (!admOne) return; const on = $('amCanB').checked; sfx(on ? 'on' : 'off'); admOne.nb = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'b', on: on ? 1 : 0 }); };
 $('amCanC').onchange = () => { if (!admOne) return; const on = $('amCanC').checked; sfx(on ? 'on' : 'off'); admOne.nc = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'c', on: on ? 1 : 0 }); };
 $('amBoot').onclick = () => { const o = admOne; if (!o || !o.on) return; askConfirm('Boot ' + who(o.name) + '?', 'They go back to the main menu. They can come straight back in.', 'Boot', () => wsSend({ t: 'admboot', pub: o.pub }), { no: 'Cancel', yesClass: 'danger' }); };
@@ -7334,9 +7346,9 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
         const fresh = (admData && [...admData.on, ...admData.recent, ...admData.bans, ...(admData.devs || [])].find(e => e.pub === m.pub)) || {};
         admOne = Object.assign({}, keep, fresh, m, { banH: keep.banH, last: m.last || fresh.last }); if (!m.on) { admOne.w = ''; admOne.since = 0; } }
       admOneRender(); return true;
-    case 'admw': if (admOne && m.pub === admOne.pub) { if (document.activeElement !== $('amC') && document.activeElement !== $('amG')) { $('amC').value = m.c; $('amG').value = m.g; } $('amMoneyNote').textContent = 'On their device now: ' + fmtN(m.c) + ' coins, ' + fmtN(m.g) + ' diamonds' + (m.inf ? '. They have unlimited money on from a code: setting it turns that off.' : '.'); } return true;
+    case 'admw': if (admOne && m.pub === admOne.pub) { if (document.activeElement !== $('amC') && document.activeElement !== $('amG')) { $('amC').value = m.c; $('amG').value = m.g; } $('amMoneyNote').textContent = 'On their device now: ' + fmtN(m.c) + ' coins, ' + fmtN(m.g) + ' diamonds' + (m.pk ? '. They have unlimited coins and diamonds for good (see Extras below), so this only matters once that is off.' : m.inf ? '. They have unlimited money on from a code: setting it turns that off.' : '.'); } return true;
     case 'admok': {
-      const t = { money: 'Their money is set', moneylater: 'Their money is set for the next time they play', nob1: 'They can build again', nob0: 'They can\u2019t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a dev: nothing changed', owner: 'That is an owner: nothing changed', noperm: 'You can\u2019t do that: ask an owner', dev1: 'Saved: they are on the dev team', dev0: 'They are off the dev team' }[m.what];
+      const t = { money: 'Their money is set', moneylater: 'Their money is set for the next time they play', pkc1: 'Unlimited coins and diamonds for them, for good', pkc0: 'Their unlimited coins and diamonds are off', pkb1: 'No building limits for them, for good', pkb0: 'Their building limits are back', nob1: 'They can build again', nob0: 'They can\u2019t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a dev: nothing changed', owner: 'That is an owner: nothing changed', noperm: 'You can\u2019t do that: ask an owner', dev1: 'Saved: they are on the dev team', dev0: 'They are off the dev team' }[m.what];
       if (t) notice(t, m.what === 'admin' || m.what === 'owner' || m.what === 'noperm' ? 'urgent' : '');
       admAsk(); if (admOne && m.pub === admOne.pub) wsSend({ t: 'admp', pub: admOne.pub });
       if (m.what === 'ban' || m.what === 'unban') $('amBanBox').classList.add('hide');
@@ -7344,6 +7356,11 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
     }
     case 'mod': {   // what an admin allows this player (also on every hello)
       const was = modState; modState = { b: m.b === 0 ? 0 : 1, c: m.c === 0 ? 0 : 1 }; lsSet(MOD_K, JSON.stringify(modState));
+      if (m.pk && typeof m.pk === 'object') {   // extras a game admin gave for good (or took back): unlimited coins and diamonds, no building limits
+        const c = !!m.pk.c, b = !!m.pk.b, wc = perkC, wb = perkB; perkC = c; perkB = b; lsSet('ballrun4_perk', JSON.stringify({ c: c ? 1 : 0, b: b ? 1 : 0 }));
+        if (c !== wc) notice(c ? 'A game admin gave you unlimited coins and diamonds, for good' : 'Your unlimited coins and diamonds have ended', '');
+        if (b !== wb) notice(b ? 'A game admin took away your building limits, for good: build as much as you like' : 'Your building limits are back', '');
+      }
       if (modState.c === 0 && (was.c !== 0 || infMoney || noCaps)) { modCheatsOff(); }
       if (modState.b === 0) { try { if (placing && !modBuildOk()) cancelPlacing(true); } catch (e) {} }
       if (m.again) notice('A game admin turned off building for you', 'urgent');
@@ -7351,7 +7368,7 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
       try { if (shopOpen) shopRender(); } catch (e) {}
       return true;
     }
-    case 'mwal': wsSend({ t: 'mwal', c: purseP.c | 0, g: purseP.g | 0, inf: infMoney ? 1 : 0 }); return true;   // (an admin is looking: the public money on this device)
+    case 'mwal': wsSend({ t: 'mwal', c: purseP.c | 0, g: purseP.g | 0, inf: infMoney ? 1 : 0, pk: perkC ? 1 : 0 }); return true;   // (an admin is looking: the public money on this device)
     case 'mset': {   // an admin set this player's public money
       const c = Math.max(0, Math.min(1e9, Math.floor(+m.c) || 0)), g = Math.max(0, Math.min(1e9, Math.floor(+m.g) || 0));
       purseP.c = c; purseP.g = g; delete purseP.pre;
@@ -9170,7 +9187,7 @@ function drawDyn(camL, camT, vw, vh) {
       d._pv = d.vy;
     }
     if (d.k === 'b' && (d.kind === 5 || d.kind === 6)) {   // a spring (the shop's super spring is purple with a gold top): a base, a coil and a springy top that squashes when you land on it
-      const sq = d.sq > 0 ? Math.sin(Math.min(1, d.sq / 0.25) * Math.PI) * 0.45 : 0, bh = 8, topH = 7, coil = (d.hh * 2 - bh - topH) * (1 - sq), x0 = d.x - d.hw, yb = d.y + d.hh;
+      const sq = d.sq > 0 ? Math.sin(Math.min(1, d.sq / 0.25) * Math.PI) * 0.45 : 0, bh = 8, topH = 7, full = d.hh * 2 - bh - topH, coil = full * (1 - sq), x0 = d.x - d.hw, yb = d.y + d.hh - (d.sqb ? full - coil : 0);   // (landed on its bottom, upside down: the bottom squashes in toward the top, which is pressed on the ground)
       ctx.save(); if (d.rot) { ctx.translate(d.x, d.y); ctx.rotate(d.rot); ctx.translate(-d.x, -d.y); }
       ctx.fillStyle = d.kind === 6 ? '#7a3dd6' : '#3fa66b'; wob(x0, yb - bh, d.hw * 2, bh, 1.4, i); ctx.fill(); ctx.stroke();
       ctx.lineWidth = 3.2; ctx.beginPath(); const cy0 = yb - bh, n = 4;
@@ -9670,7 +9687,7 @@ if (params && params.get('test')) window.__d = { NET, addGate, pk: { buriedAt, p
     AU.ctx = oc; AU.mus = out; AU.song = sg; AU.style = kind; AU.melody = genMelody(sg, MOOD[kind]);
     try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += songBeats(sg) * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
     const buf = await oc.startRendering(); return Array.from(buf.getChannelData(0));
-  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, dvb: () => ({ others: [...others.values()].map(o => ({ name: o.name, dv: o.dv | 0, pub: o.pub, color: o.color, x: o.cx || o.x, y: o.cy || o.y })), devShow: !!settings.devShow, shown: devShown(), devOn: devOn(), pills: devPillN, me: S.b ? { x: S.b.x, y: S.b.y } : null }), openProfile: p => openProfile(p), mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
+  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, dvb: () => ({ others: [...others.values()].map(o => ({ name: o.name, dv: o.dv | 0, pub: o.pub, color: o.color, x: o.cx || o.x, y: o.cy || o.y })), devShow: !!settings.devShow, shown: devShown(), devOn: devOn(), pills: devPillN, me: S.b ? { x: S.b.x, y: S.b.y } : null }), openProfile: p => openProfile(p), mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), put: (k, x, y) => placeProp(k, [x, y]), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();
