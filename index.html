@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#14111c">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="preconnect" href="https://ballpit-party.onrender.com" crossorigin>
-<script>/* the very first thing the page does: nudge the game server awake (a tiny request), so by the time the menu is up it is already answering */
-(function(){try{var h=location.hostname,own=/^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(h)||/onrender\.com$/.test(h);if(location.protocol==='file:')return;try{var o=JSON.parse(localStorage.getItem('ballrun4')||'{}');}catch(e){}fetch((own?'':'https://ballpit-party.onrender.com')+'/version',{cache:'no-store'}).catch(function(){});}catch(e){}})();</script>
+<script>/* the very first thing the page does: nudge the game server awake (a tiny request), so by the time the menu is up it is already answering. The server is
+   the built-in address, the page's own (when a game server handed it out), or the new address a moved server gave this device (see srvBase) */
+(function(){try{var h=location.hostname,b='__BUILD__',own=/^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(h)||/onrender\.com$/.test(h)||b.charAt(0)!=='_',s='';if(location.protocol==='file:')return;try{s=localStorage.getItem('ballrun4_srv')||'';}catch(e){}if(!/^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(s))s='';var u=s||(own?'':'https://ballpit-party.onrender.com');if(u){var l=document.createElement('link');l.rel='preconnect';l.href=u;l.crossOrigin='';document.head.appendChild(l);}fetch(u+'/version',{cache:'no-store'}).catch(function(){});}catch(e){}})();</script>
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="ballpit.party">
 <title>ballpit.party</title>
@@ -1105,7 +1105,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 216; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 217; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1938,8 +1938,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=216"></script>
-<script src="physics.js?v=216"></script>
+<script src="maps.js?v=217"></script>
+<script src="physics.js?v=217"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1998,6 +1998,30 @@ let settings = defaults();
 const DEVROLE_KEY = 'ballrun4_devrole';   // (never 'ballrun4_dev': that is this device's own number)
 let devRole = ''; try { devRole = localStorage.getItem(DEVROLE_KEY) || ''; if (devRole !== 'owner' && devRole !== 'dev') devRole = ''; localStorage.removeItem('ballrun4_devmode'); } catch (e) {}   // (the old dev code's switch is gone)
 const devOn = () => !!devRole;
+/* ---------- where the game server is. One place for it: the built-in address, unless the page came from a game server itself (it then talks to that one),
+   or a server that has moved told this device its new address (kept here, so the game always finds it; if that address stops answering for a minute,
+   the game goes back to the built-in one, which sends it on again if it really has moved) ---------- */
+const SRV_DEFAULT = 'https://ballpit-party.onrender.com', SRV_KEY = 'ballrun4_srv';
+const srvLocal = () => /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(location.hostname);
+const srvClean = u => { u = String(u || '').trim().replace(/\/+$/, ''); return /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+(:\d{2,5})?$/i.test(u) || (srvLocal() && /^http:\/\/(localhost|127\.0\.0\.1)(:\d{2,5})?$/.test(u)) ? u : ''; };
+function srvBase() {   // '' = the page's own address
+  let m = ''; try { m = srvClean(localStorage.getItem(SRV_KEY)); } catch (e) {}
+  if (m) return m === location.origin ? '' : m;
+  if (srvLocal() || /onrender\.com$/.test(location.hostname) || String(window.__BUILD || '_').charAt(0) !== '_') return '';   // (on this computer, or the page was handed out by a game server)
+  return SRV_DEFAULT;
+}
+const srvWs = () => { const b = srvBase(); return b ? b.replace(/^http/, 'ws') : (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host; };
+let srvMissAt = 0, srvMissN = 0;
+function srvMoved(to) {   // the server says it has moved: remember the new address, and go there now
+  to = srvClean(to); if (!to) return false;
+  try { if (to === location.origin && String(window.__BUILD || '_').charAt(0) !== '_') localStorage.removeItem(SRV_KEY); else localStorage.setItem(SRV_KEY, to); } catch (e) {}
+  srvMissAt = 0; srvMissN = 0; return true;
+}
+function srvMiss() {   // a connection that never got an answer: a remembered address that stays silent for a minute is forgotten
+  let m = ''; try { m = localStorage.getItem(SRV_KEY) || ''; } catch (e) {} if (!m) return;
+  const now = Date.now(); if (!srvMissAt) srvMissAt = now; srvMissN++;
+  if (srvMissN >= 6 && now - srvMissAt > (/[?&]test=1/.test(location.search) ? 8000 : 60000)) { try { localStorage.removeItem(SRV_KEY); } catch (e) {} srvMissAt = 0; srvMissN = 0; }
+}
 let devShSrv = 0;   // (the server shows this player's Dev badge to others right now: only ever after it checked they are an owner or a dev)
 const devShown = () => devOn() && !!settings.devShow && !!devShSrv;
 try { const o = JSON.parse(localStorage.getItem('ballrun4') || 'null'); if (o && typeof o === 'object') Object.assign(settings, o); } catch (e) {}
@@ -6693,7 +6717,7 @@ function nameUI() { (NEDS || []).forEach(n => n.refresh()); }
 
 /* ----- the main screen: where you land, and where Pause > Main menu brings you back ----- */
 let homeMode = settings.mp, firstEntry = true, reenter = false, askedName = false;
-function homeBase() { return /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(location.hostname) || /onrender\.com$/.test(location.hostname) ? '' : 'https://ballpit-party.onrender.com'; }
+function homeBase() { return srvBase(); }   // (where the game server is: see srvBase)
 function homeStats() {
   const o = $('homeOnline');
   if (location.protocol === 'file:') return;
@@ -7997,19 +8021,18 @@ function connect() {
   if (!lobby && (!(settings.mp || party) || !settings.name)) return;
   if (location.protocol === 'file:' || !('WebSocket' in window)) { if (!lobby) setNet('offline'); return; }
   let sock;
-  // the game server lives on Render. Any other address (like ballpit.party) still talks to it; only your own computer talks to itself.
-  const home = /^(localhost|127\.|10\.|192\.168\.|\[?::1)/.test(location.hostname) || /onrender\.com$/.test(location.hostname);
-  try { sock = home ? new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host) : new WebSocket('wss://ballpit-party.onrender.com'); }
+  // the game server: the built-in address, the page's own server, or wherever a moved server sent this device (srvWs)
+  try { sock = new WebSocket(srvWs()); }
   catch (e) { scheduleRetry(); return; }
   ws = sock; sock.binaryType = 'arraybuffer';
   { const os = sock.send.bind(sock); sock.send = d => { NET.outB += (typeof d === 'string' ? d.length : d.byteLength || 0) + 6; return os(d); }; }   // (counted for the live stats)
   setTimeout(() => { if (sock === ws && sock.readyState === 0) { try { sock.close(); } catch (e) {} } }, 6000);   // a connection that is stuck gets dropped and tried again
   if (!lobby && netState !== 'online') setNet('connecting');
   sock.onopen = () => { if (sock === ws) sock.send(helloMsg(wantLobby())); };
-  sock.onmessage = e => { if (sock !== ws) return; NET.inB += (typeof e.data === 'string' ? e.data.length : e.data.byteLength) + 4; NET.inPk++; if (typeof e.data !== 'string') { onBin(e.data); return; } let m; try { m = JSON.parse(e.data); } catch (x) { return; } { const rawN = m && m.name; censorIn(m); if (typeof rawN === 'string' && rawN === settings.name) m.name = rawN; } onMsg(m); };
+  sock.onmessage = e => { if (sock !== ws) return; sock.heard = 1; srvMissAt = 0; srvMissN = 0; NET.inB += (typeof e.data === 'string' ? e.data.length : e.data.byteLength) + 4; NET.inPk++; if (typeof e.data !== 'string') { onBin(e.data); return; } let m; try { m = JSON.parse(e.data); } catch (x) { return; } { const rawN = m && m.name; censorIn(m); if (typeof rawN === 'string' && rawN === settings.name) m.name = rawN; } onMsg(m); };
   sock.onclose = () => {
     if (sock !== ws) return;
-    ws = null;
+    ws = null; if (!sock.heard) srvMiss();
     if (online) addFeed('Disconnected, reconnecting…', 'bad', true);
     online = false; lobbyOn = false; others.clear(); lks.forEach(l => { l.on = 0; l.x = null; }); reqs = []; sentTo.clear(); lpRender();
     srvWait();
@@ -8201,6 +8224,7 @@ function showWorldPop(id, full) {   // "You're in World 1" or "World 1 was too f
 }
 $('worldpop').onclick = () => $('worldpop').classList.add('hide');
 function onMsg(m) {
+  if (m.t === 'moved') { if (srvMoved(m.to) && ws) { const s = ws; retry = 0; try { s.close(); } catch (e) {} } return; }   // (the server has moved: straight on to the new one, remembered on this device)
   if (linkMsg(m)) return;
   if (admIn(m)) return;   // (the game admin's tools, and what an admin sends a player)
   switch (m.t) {

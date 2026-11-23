@@ -9,6 +9,8 @@
 //   HOME_URL          optional: visitors who arrive on any other address are sent here (e.g. https://ballpit.party)
 //   LINKS_FILE        where tracking links are saved (default ./links.json)
 //   MAX_PER_IP        max simultaneous connections from one address (default 10)
+//   MOVED_TO          this server has moved: every player is sent to this address (e.g. https://play.ballpit.party). Set by itself when a new
+//                     server copies everything over (see move-in.js); set it by hand too, so the old server keeps sending people on after a restart
 //   VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY   keys for phone and desktop notifications. Set both so they never change (otherwise they are made once and
 //                     kept in the links file). VAPID_SUBJECT is an optional contact address, e.g. mailto:you@example.com
 const http = require('http');
@@ -53,7 +55,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 216;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 217;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -452,8 +454,45 @@ const bstate = r => { if (!r) return null; const b = r.priv || (r.build = r.buil
 const rslot = r => (r && r.priv ? r.priv.slot : curSlot);
 const privKey = pub => 'p' + pub;
 
+/* ---------- moving to a new server. The new one asks for everything with the dev tools key (move-in.js): the old one saves, hands over all its files
+   (friends, messages, requests, shared maps, gifts, the world, bans and the dev team, notifications), and from that moment sends every player to the
+   new address. Players' games remember it, so nobody starts again ---------- */
+const MOVE_HTTP = process.env.MOVE_ALLOW_HTTP === '1';   // (tests only: a new server on this computer, without https)
+const cleanTo = u => { u = String(u || '').trim().replace(/\/+$/, ''); return /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+(:\d{2,5})?$/i.test(u) || (MOVE_HTTP && /^http:\/\/(localhost|127\.0\.0\.1)(:\d{2,5})?$/.test(u)) ? u : ''; };
+const MOVE_FILE = path.join(path.dirname(LINKS_FILE), 'moved.json');
+let movedTo = cleanTo(process.env.MOVED_TO); if (!movedTo) { try { movedTo = cleanTo(JSON.parse(fs.readFileSync(MOVE_FILE, 'utf8')).to); } catch (e) {} }
+if (movedTo) console.log('this server has moved: every player is sent to ' + movedTo);
+const ipOf = req => String(req.headers['x-forwarded-for'] || '').split(',')[0].trim().slice(0, 64) || req.socket.remoteAddress || '?';
+function tellMoved(ws) {   // a game from 217 on goes straight there (and hangs up itself); an older page still open is asked to reload, which gets it the newest one
+  try { ws.send(JSON.stringify({ t: 'moved', to: movedTo })); } catch (e) {}
+  setTimeout(() => { if (ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'update' })); } catch (e) {} } }, 500);
+  setTimeout(() => { try { ws.close(4010, 'moved'); } catch (e) {} }, 1200);
+}
+function moveOut(req, res) {
+  let body = '', big = false;
+  req.on('data', c => { body += c; if (body.length > 4096) { big = true; req.destroy(); } });
+  req.on('end', async () => {
+    const out = (code, o) => { try { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(o)); } catch (e) {} };
+    if (big) return;
+    let m = {}; try { m = JSON.parse(body) || {}; } catch (e) {}
+    const st = admCheck(typeof m.key === 'string' ? m.key : '', ipOf(req));
+    if (st !== 'ok') return out(403, { error: st === 'wait' ? 'Too many wrong keys: try again in 15 minutes.' : 'That is not this server\'s key (ADMIN_KEY).' });
+    const to = cleanTo(m.to); if (!to) return out(400, { error: 'The new address must look like https://play.example.com' });
+    if (movedTo && movedTo !== to) return out(409, { error: 'This server has already moved to ' + movedTo });
+    try { await fetch(to + '/version', { signal: AbortSignal.timeout(10000), cache: 'no-store' }); }   // (any answer at all: its address and certificate work, so players sent there can reach it)
+    catch (e) { return out(502, { error: 'Nothing answers at ' + to + ' yet. Is its DNS record set, and has it got its certificate?' }); }
+    saveAll();
+    const files = {}; for (const [n, f] of [['links.json', LINKS_FILE], ['stats.json', STATS_FILE], ['shares.json', SHARE_FILE], ['dms.json', DM_FILE], ['dmhist.json', DMH_FILE], ['gifts.json', GIFT_FILE], ['world.json', WORLD_FILE], ['mods.json', MODS_FILE]]) { try { files[n] = fs.readFileSync(f, 'utf8'); } catch (e) {} }
+    out(200, { v: GAME_V, at: Date.now(), files, players: known.size });
+    if (m.dry) { console.log('move: everything was copied to ' + to + ' (a trial: players stay here)'); return; }
+    movedTo = to; try { fs.writeFileSync(MOVE_FILE, JSON.stringify({ to, at: Date.now() })); } catch (e) {}
+    console.log('moved: everything was copied to ' + to + ', and every player is sent there from now on');
+    for (const ws of wss.clients) tellMoved(ws);
+  });
+}
 const server = http.createServer((req, res) => {
   const url = req.url.split('?')[0];
+  if (url === '/move-out' && req.method === 'POST') return moveOut(req, res);
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   if (url === '/stats') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
@@ -1178,7 +1217,8 @@ const ipCount = new Map();
 const MAX_CONN = parseInt(process.env.MAX_CONN, 10) || Math.max(300, MAX_TOTAL * 4);   // (every connection at once, players and main menus together: past this, nobody new until some go. Far above what the game ever needs)
 let findBudget = { n: 0, at: 0 };   // (searches for players, for the whole server: each one looks through everybody)
 wss.on('connection', (ws, req) => {
-  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim().slice(0, 64) || req.socket.remoteAddress || '?';
+  if (movedTo) { ws.on('error', () => {}); tellMoved(ws); return; }   // (this server has moved: the game goes to the new one, and remembers it)
+  const ip = ipOf(req);
   const c = (ipCount.get(ip) || 0) + 1;
   if (c > MAX_PER_IP || wss.clients.size > MAX_CONN) { ws.close(1013, 'busy'); return; }
   ipCount.set(ip, c);
@@ -1896,7 +1936,8 @@ setInterval(() => {
   }
 }, 25000);
 
-function shutdown() { savePeak(true); saveLinks(true); try { modsDirty = true; saveMods(true); } catch (e) {} try { saveDms(true); } catch (e) {} try { dmhDirty = true; saveDmh(true); } catch (e) {} try { giftDirty = true; saveGifts(true); } catch (e) {} try { sharesDirty = true; saveShares(); } catch (e) {} try { keepWorlds(true); } catch (e) {} process.exit(0); }
+function saveAll() { savePeak(true); saveLinks(true); try { modsDirty = true; saveMods(true); } catch (e) {} try { saveDms(true); } catch (e) {} try { dmhDirty = true; saveDmh(true); } catch (e) {} try { giftDirty = true; saveGifts(true); } catch (e) {} try { sharesDirty = true; saveShares(); } catch (e) {} try { keepWorlds(true); } catch (e) {} }
+function shutdown() { saveAll(); process.exit(0); }
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
