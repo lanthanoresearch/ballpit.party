@@ -1105,7 +1105,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 221; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 223; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1397,6 +1397,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       <h4><span data-ic="gcoin"></span> <span id="amMoneyH">Money in the public world</span></h4>
       <div class="ammoney"><label><span>Coins</span><input id="amC" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Coins"></label><label><span>Diamonds</span><input id="amG" type="number" min="0" max="1000000000" step="1" inputmode="numeric" aria-label="Diamonds"></label></div>
       <div class="small dim" id="amMoneyNote"></div>
+      <div class="amnote hide" id="amMoneyInf"></div>
       <button class="btn full" id="amSet" type="button"><span data-ic="check"></span>Set their money</button>
       </div>
       <div id="amPerkBox">
@@ -1944,8 +1945,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=221"></script>
-<script src="physics.js?v=221"></script>
+<script src="maps.js?v=223"></script>
+<script src="physics.js?v=223"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3207,18 +3208,19 @@ const POW_INFO = [['Sushi!', 'Your boost is full for a minute: boost any time'],
 /* pick-ups are shared in an online world: once somebody takes one it is gone for everyone until it comes back (the server says who got it first) */
 let pickTaken = new Map(); const pickPend = new Map();
 const pickShared = () => !!(online && ws && ws.readyState === 1 && shared() && S.slot >= 0 && !inHome);
-function pkGone(k) {
-  if (pickShared()) { if (pickPend.has(k)) return true; const t = pickTaken.get(k); return !!t && t > nowMs(); }
+function pkGone(k) {   // (in a shared world: what the server says, and what this device remembers being taken here, so nothing you took ever shows again before it is due back)
+  if (pickShared()) { if (pickPend.has(k)) return true; const t = pickTaken.get(k); if (t && t > nowMs()) return true; }
   const t = S.pickLoc && S.pickLoc[k]; return !!t && t > Date.now();
 }
+function pickMem(k, back) { if (!Number.isFinite(back)) return; const t = back - clockOff; if (t <= Date.now() || t > Date.now() + PICK_BACK + 60000) return; S.pickLoc = S.pickLoc || {}; if (!(S.pickLoc[k] >= t)) { S.pickLoc[k] = t; wDirty = true; } }   // (the server's time for it to come back, as this device's clock has it)
 function pickLocal(k, award) { S.pickLoc = S.pickLoc || {}; S.pickLoc[k] = Date.now() + PICK_BACK; wDirty = true; award(); }
 function pickGet(k, award) {   // the burst and sound come at once; what you get is given when the server says you were first
   if (!pickShared()) { pickLocal(k, award); return; }
-  pickPend.set(k, { award, t: Date.now() }); wsSend({ t: 'take', k });
+  pickPend.set(k, { award, t: Date.now() }); try { sendPos(true); } catch (e) {} wsSend({ t: 'take', k });   // (where you are goes first, so the server sees you right by it even straight after a portal or a fast move)
 }
 function pickAnswer(m, ok) {
   const p = pickPend.get(m.k); pickPend.delete(m.k);
-  if (m.back) pickTaken.set(m.k, m.back);
+  if (m.back) { pickTaken.set(m.k, m.back); pickMem(m.k, m.back); }
   if (!p) return;
   if (ok) p.award();
   else if (!m.back) pickLocal(m.k, p.award);   // (the server could not place it: just yours, so nothing is lost)
@@ -3402,8 +3404,11 @@ function syncDoors() {   // gates open at once for you (when you step on a trigg
   for (let i = 0; i < w.doors.length; i++) {
     const d = w.doors[i], f = m.get(d.uid); if (f === undefined) continue;
     if (f & 2) d.latched = true; else if (Date.now() - (d.predT || 0) > 1200) d.latched = false;   // (what the server says; your own button press is believed for a moment, until it has been told)
+    if (f & 1) d.srvT = Date.now();
     if ((f & 1) && !d.open) { P.setDoorTiles(w, d, true); w.ev.push({ k: 'door', open: true, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
-    else if (!(f & 1) && d.open && Date.now() - (d.predT || 0) > 700) { P.doorShut(w, d, S.b && !S.away ? S.b : null); w.ev.push({ k: 'door', open: false, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
+    else if (!(f & 1) && d.open && Date.now() - (d.predT || 0) > 700) {
+      if ((d.srvT || 0) < (d.predT || 0)) d.noPred = Date.now() + 1500;   // (opened here, and the server never agreed: what it says goes for a moment, so the gate never keeps opening here while it is shut everywhere else)
+      P.doorShut(w, d, S.b && !S.away ? S.b : null); w.ev.push({ k: 'door', open: false, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
   }
 }
 function applyDoors(m) {
@@ -3431,12 +3436,12 @@ const mapTile = (tx, ty) => P.zoneT(S.map, tx, ty);   // (only the start and fin
 const mapBlock = (px, py, m) => P.zoneP(S.map, px, py, m === undefined ? TS * 0.6 : m);   // (in the wide no-build circle around the start or the finish)
 const startBlock = (px, py, m) => { m = m === undefined ? TS * 0.6 : m; return P.zoneP(S.world || S.map, px, py, m, typeof myTag === 'function' ? myTag() : undefined); };   // (your own base is yours to build in)   // (a little extra room, so nothing can hang over the edge of it)
 const PORC = [['#ffd23d', '#3da5ff'], ['#ff4a3d', '#a45cff'], ['#3ddc6a', '#ff6fc8'], ['#ff9a2e', '#2ee6d6']];   // the colours of portal pairs: yellow and blue, then red and purple, then green and pink, then orange and teal
-const validMisc = q => Array.isArray(q) && ((q[0] === 'base' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q[0] === 'pwr' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[3], q[4])));
-function setBouncePad(w, tx, r, n) { for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 6; } }
+const validMisc = q => Array.isArray(q) && ((q[0] === 'base' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q[0] === 'pwr' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'sspr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[3], q[4])));
+function setBouncePad(w, tx, r, n, sup) { P.setPad(w, tx, r, n, sup); }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
   for (let i = w.drops.length - 1; i >= 0; i--) {
     const d = w.drops[i]; d.v += 1900 * dt; d.y += d.v * dt;
-    if (d.y >= d.r * TS) { setBouncePad(w, d.tx, d.r, d.n); w.drops.splice(i, 1); const cx = (d.tx + d.n / 2) * TS; sfx('thud'); ring(cx, d.r * TS, '#35e0c2', 5, 46, 0.35); burst(cx, d.r * TS - 4, ['#35e0c2', '#fff'], 8, 140, 60); }
+    if (d.y >= d.r * TS) { setBouncePad(w, d.tx, d.r, d.n, d.sup); w.drops.splice(i, 1); const cx = (d.tx + d.n / 2) * TS, cc = d.sup ? '#ffd23d' : '#35e0c2'; sfx('thud'); ring(cx, d.r * TS, cc, 5, 46, 0.35); burst(cx, d.r * TS - 4, [cc, '#fff'], 8, 140, 60); }
   }
 }
 function mmUpdate(tx, r) {   // redo the mini-map block (2 x 2 tiles) that holds this tile, the same way it was first worked out
@@ -3455,7 +3460,7 @@ function setTerrain(w, tx, r, to, anim) {   // lava, ice, water or grey rock, on
   const rock = w.rock && w.rock[i];
   if (to === 1 && S.tg && w === S.world) { for (const j of [i + w.W, i - 1, i + 1, i - w.W]) if (j >= 0 && j < w.grid.length && w.grid[j] === 1) { S.tg[i] = S.tg[j]; break; } }   // new dirt looks like the ground it grows from: same colours and scenery as that part of the map
   if (to === 7) { w.grid[i] = 1; (w.rock = w.rock || new Uint8Array(w.W * w.H))[i] = 1; } else { w.grid[i] = to; if (w.rock) w.rock[i] = 0; }
-  if (w.grid[i] === 1 || w.grid[i] === 3) P.liftOut(w, tx, r);
+  if (w.grid[i] === 1 || w.grid[i] === 3) P.liftOut(w, tx, r); else P.wakeAround(w, tx * TS - 4, r * TS - 4, (tx + 1) * TS + 4, (r + 1) * TS + 4);
   if (w === S.world) mmUpdate(tx, r);   // the maps show what was built or dug
   if (!anim) return;
   const x = (tx + 0.5) * TS, y = r * TS + TS / 2;
@@ -3474,7 +3479,7 @@ function dropTileRecords(tx, r) {   // forget what was built or dug on this one 
   const gone = []; for (let k = S.boughtMisc.length - 1; k >= 0; k--) { const q = S.boughtMisc[k]; if (q[0] === 'tl' && q[1] === tx && q[2] === r) { gone.push(q); S.boughtMisc.splice(k, 1); } } return gone;
 }
 function addMisc(w, q, anim) {   // ['see', column, ground row, 0]: a teeter-totter standing on the ground, centre over the two tiles from that column.  ['pad', column, ground row, direction]: a floor booster, 2 tiles wide
-  if (q[0] === 'bnc' || q[0] === 'spr') { const n = q[0] === 'spr' ? 1 : 2; if (anim && q[2] - q[3] > 1) (w.drops = w.drops || []).push({ tx: q[1], r: q[2], y: q[3] * TS, v: 0, n }); else setBouncePad(w, q[1], q[2], n); }
+  if (q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'sspr') { const n = q[0] === 'bnc' ? 2 : 1, sup = q[0] === 'sspr'; if (anim && q[2] - q[3] > 1) (w.drops = w.drops || []).push({ tx: q[1], r: q[2], y: q[3] * TS, v: 0, n, sup }); else setBouncePad(w, q[1], q[2], n, sup); }
   else if (q[0] === 'tl') { if (q[3] === -1) restoreTile(w, q[1], q[2], anim); else setTerrain(w, q[1], q[2], q[3], anim); }
   else if (q[0] === 'lav') { { const i = q[2] * w.W + q[1]; if (q[2] < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) w.grid[i] = 2; } if (anim) { burst((q[1] + 0.5) * TS, q[2] * TS - 6, ['#ff4d2e', '#ff8a3d', '#ffd23d'], 16, 200, 160); ring((q[1] + 0.5) * TS, q[2] * TS, '#ff8a3d', 5, 50, 0.4); sfx('lava'); } }
   else if (q[0] === 'see') { const cx = (q[1] + 1) * TS, cy = q[2] * TS - 46; w.see.push({ cx, cy, hl: (q[3] === 1 ? 5 : 3) * TS, tilt: 0, ang: 0, av: 0, tq: 0, uid: P.hash32('s' + Math.round(cx) + ',' + Math.round(cy)) }); }
@@ -3504,9 +3509,9 @@ function bookOut() { const b = {}, L = ownLists(); for (const n in P.BOOK_K) for
 function ownApply(L, book, dflt) { const rd = P.bookReader(book); for (const n in P.BOOK_K) for (const q of (L[n] || [])) { if (!Array.isArray(q)) continue; const t = rd(P.BOOK_K[n], q); ownSet(q, t !== undefined ? t : dflt); } }
 function recItemId(k, q) {   // which shop item a record is
   if (k === 'p') { const it = SHOP.find(s => s.kind === q[0] && !s.misc && !s.gate && !s.portal); return it && it.id; }
-  if (k === 'g') { const it = SHOP.find(s => s.gate === q[2]); return it && it.id; }
+  if (k === 'g') return P.gateBtn(q) ? 'gateB' : 'gate';   // (a plate gate of any height: one under a low ceiling is shorter, and the small gates that are no longer sold count as gates too)
   if (k === 'c') return 'flag'; if (k === 'd') return 'dig';
-  const m = q[0]; return m === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : m === 'pad' ? 'pad' : m === 'por' ? 'portal' : m === 'bnc' || m === 'spr' ? 'bnc' : m === 'lav' ? 'lava' : m === 'pwr' ? (q[3] ? 'pw1' : 'pw0') : m === 'rope' ? 'rope' : m === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null;
+  const m = q[0]; return m === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : m === 'pad' ? 'pad' : m === 'por' ? 'portal' : m === 'bnc' || m === 'spr' ? 'bnc' : m === 'sspr' ? 'bncS' : m === 'lav' ? 'lava' : m === 'pwr' ? (q[3] ? 'pw1' : 'pw0') : m === 'rope' ? 'rope' : m === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null;
 }
 const whoCache = new WeakMap();
 function savedWho(o) {   // who built each thing in a saved world. Saves from before the owner book: as many of each as the save said were yours are yours (so your limits are just as they were), the rest nobody's
@@ -3564,13 +3569,11 @@ function delWhere(q) {   // where a deleted thing was (for the little puff)
   if (q[0] === 'c') return [(q[1] + 0.5) * TS, q[2] * TS - 30];
   return null;
 }
-const validGate = q => Array.isArray(q) && q.length >= 5 && q.slice(0, 5).every(Number.isFinite) && q[2] >= 2 && q[2] <= 8 && !mapTile(q[0], q[1]) && !mapTile(q[3], q[4]);
-function addGate(w, q, quiet) {   // q = [column, top row, height in tiles, trigger column, trigger row]: a gate (shut), and a 2-wide trigger plate that holds it open while something is on it
-  const id = w.doors.length, d = { id, uid: P.hash32('g' + q.slice(0, 5).join(',')), x: q[0], y: q[1], w: 1, h: q[2], open: false, latched: false };
-  w.doors.push(d); P.setDoorTiles(w, d, false);
-  const pl = { x: q[3], y: q[4], w: 2, to: [id], on: false };
-  if (!quiet) pl.fall = { y: (q[5] !== undefined ? q[5] : q[4] * TS - 80), v: 0 };   // (a trigger placed over nothing falls and then stays where it lands)
-  w.plates.push(pl); return d;
+const validGate = q => Array.isArray(q) && q.length >= 5 && q.slice(0, 5).every(Number.isFinite) && P.gateOkH(q[2]) && !mapTile(q[0], q[1]) && !mapTile(q[3], q[4]);
+function addGate(w, q, quiet) {   // q = [column, top row, height in tiles (+100: a red button), trigger column, trigger row]: a gate (shut), and its trigger: a 2-wide plate that holds it open while something is on it, or a red button that opens it for a minute
+  const r = P.addBuiltGate(w, q);
+  if (!quiet && !P.gateBtn(q)) r.t.fall = { y: (q[5] !== undefined ? q[5] : q[4] * TS - 80), v: 0 };   // (a plate placed over nothing falls and then stays where it lands)
+  return r.d;
 }
 const pkey = (k, q) => k + JSON.stringify(q);
 function pubSync(pv) {   // you arrive in a public world: you get what the room has, and the room gets what you built before that it does not have yet
@@ -3604,7 +3607,7 @@ function hostSeed(nb) {   // your own world, opened for friends: the server take
   const w = S.world; if (!w) return;
   const d = []; for (const o of w.dyn) { if (o.burn === UNK) continue; if (o.burn >= 1e9) d.push([o.uid >>> 0, 0, 0, 0, 1]); else if (!(o.burn > 0) && (Math.abs(o.x - o.hx) > 1 || Math.abs(o.y - o.hy) > 1 || Math.abs(o.rot) > 0.005)) d.push([o.uid >>> 0, Math.round(o.x * 10) / 10, Math.round(o.y * 10) / 10, Math.round(o.rot * 1000) / 1000]); }
   const s = w.see.filter(q => Math.abs(q.ang) > 0.001).map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]);
-  for (let i = 0; i === 0 || i < d.length; i += 500) { const msg = { t: 'pseed', d: d.slice(i, i + 500), s: i ? [] : s }; if (nb < 0) { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } } else setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (nb + 1) + 200 + 100 * (i / 500)); }   // (nb < 0: right now, straight after the world itself)
+  for (let i = 0; i === 0 || i < d.length; i += 500) { const msg = { t: 'pseed', d: d.slice(i, i + 500), s: i ? [] : s, last: i + 500 >= d.length ? 1 : 0 }; if (nb < 0) { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } } else setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (nb + 1) + 200 + 100 * (i / 500)); }   // (nb < 0: right now, straight after the world itself)
 }
 function sendBulk(lists) {   // tell the world what you have built, 25 things at a time (a big build is no big message)
   const out = [];
@@ -3637,7 +3640,7 @@ function deriveOwn() {   // saves from before every item had its own count: work
   const o = {}, add = id => { if (id) o[id] = (o[id] | 0) + 1; };
   S.bought.forEach(r => { const it = SHOP.find(s => s.kind === r[0] && !s.misc && !s.gate && !s.portal); add(it && it.id); });
   S.boughtGates.forEach(q => { const it = SHOP.find(s => s.gate === q[2]); add(it && it.id); });
-  S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'lav' ? 'lava' : k === 'pwr' ? (q[3] ? 'pw1' : 'pw0') : k === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
+  S.boughtMisc.forEach(q => { const k = q[0]; add(k === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : k === 'pad' ? 'pad' : k === 'por' ? 'portal' : k === 'bnc' || k === 'spr' ? 'bnc' : k === 'sspr' ? 'bncS' : k === 'lav' ? 'lava' : k === 'pwr' ? (q[3] ? 'pw1' : 'pw0') : k === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null); });
   S.boughtCps.forEach(() => add('flag')); (S.dels || []).forEach(() => add('dig')); return o;
 }
 function worldObj() {   // the world exactly as it is right now: everything built, where everything is and how it is moving
@@ -4492,9 +4495,9 @@ const GUIDE = [
   ['coin', 'Coin', 'Roll through it. Coins buy things to build.', 1], ['gem', 'Diamond', 'Rarer. Needed for the bigger builds.', 1], ['checkpoint', 'Checkpoint', 'Touch it: your next fall brings you back here.', 1], ['finish', 'Finish flag', 'Reach it to win the level.', 1],
   ['crate', 'Crate', 'Push it, stack it, climb it.', 1], ['ball', 'Ball', 'Rolls when you bump it.', 1], ['ring', 'No-build circle', 'Around the start and the finish. Nothing can be built or left inside it.', 1], ['sushi', 'Sushi', 'For a minute your boost is always full: boost whenever you like. The ring turns cyan and ticks down. You can buy one too (Special).', 1], ['flowers', 'Flower bouquet', 'A minute where every jump can be an extra tall one. The ring turns pink. You can buy one too (Special).', 1],
   ['bigcoin', 'Big coin', 'Worth more than a small one.', 0], ['bigcrate', 'Big crate', 'Heavy: takes a run-up to shove.', 0], ['bigball', 'Big ball', 'Heavy and rolls far.', 0],
-  ['spring', 'Spring', 'Land on it to bounce high.', 0], ['superspring', 'Super spring', 'Bounces you very, very high.', 0], ['booster', 'Floor booster', 'Roll over it and it throws you forward.', 0], ['groundspring', 'Ground spring', 'Set in the ground: land on it to bounce up.', 0],
+  ['spring', 'Spring', 'Land on it to bounce high.', 0], ['superspring', 'Super spring', 'Bounces you very, very high.', 0], ['booster', 'Floor booster', 'Roll over it and it throws you forward.', 0], ['groundspring', 'Ground spring', 'Set in the ground: land on it to bounce up. The purple and gold super one throws you as high as the super spring.', 0],
   ['teeter', 'Teeter-totter', 'Tips with whatever is on it.', 0], ['bigteeter', 'Big teeter-totter', 'Longer: reaches further and flings harder.', 0], ['portal', 'Portals', 'Roll into one, come out of its partner.', 0],
-  ['gate', 'Gate and plate', 'Stand on the plate (or press the red button) and the gate opens.', 0], ['rope', 'Rope bridge', 'Sways as you cross.', 0]];
+  ['gate', 'Gates', 'Stand on the plate and the gate opens while you are on it. Press a red button and it opens for a minute.', 0], ['rope', 'Rope bridge', 'Sways as you cross.', 0]];
 function guideRender() {
   const kb = showKb(), tch = showTouch(), K = a => (settings.keys[a] || []).slice(0, 2).map(c => '<kbd>' + keyLabel(c).replace(/[<>&]/g, '') + '</kbd>').join(' '), rows = [];
   const row = (k, t) => rows.push('<div><span class="gk">' + k + '</span><span>' + t + '</span></div>');
@@ -4829,6 +4832,11 @@ function baseMine(k, q) {   // is this yours (for setting a base over it)? The m
   if (k === 'b') { if (!q.bought) return false; if (!shared() || (party && party.role === 'host')) return true; return q.ownTag === undefined ? true : (q.ownTag >>> 0) === myTag(); }
   if (k === 'c') return !!S.boughtCps.find(c => c[0] === q[0] && c[1] === q[1]);
   if (k === 'btn' || k === 'plate') return !q.mm;
+  if (k === 'por' || k === 'r') {   // (a portal, or a rope bridge: either end in the circle counts, and in a shared world it has to be yours)
+    if (!shared() || (party && party.role === 'host')) return true;
+    const rec = ownLists().misc.find(r => k === 'por' ? r[0] === 'por' && (r[1] + 1) * TS === q.a.x && r[2] * TS === q.a.y && (r[3] + 1) * TS === q.b.x && r[4] * TS === q.b.y : r[0] === 'rope' && P.ropeQ(r).length && Math.abs((P.ropeQ(r)[0] + 1) * TS - q.ax) < 1 && Math.abs(P.ropeQ(r)[1] * TS - q.ay) < 1);
+    const t = rec ? recOwn.get(rec) : undefined; return t === undefined ? true : t === myTag();
+  }
   return true;
 }
 const otherBase = (x, y) => !!(S.world && S.world.bases && S.world.bases.some(b => (b.o >>> 0) !== myTag() && (x - b.cx) * (x - b.cx) + (y - b.cy) * (y - b.cy) <= b.r * b.r));   // (inside somebody else's base: hands off)
@@ -5616,13 +5624,14 @@ const SHOP = [
   { cat: 'blocks', id: 'ball1', max: 150, name: 'Small ball', info: 'A small rolling ball.', c: 50, g: 0, kind: 2 },
   { cat: 'blocks', id: 'ball2', max: 120, name: 'Big ball', info: 'A big rolling ball.', c: 100, g: 0, kind: 3 },
   { cat: 'gadgets', id: 'gate', max: 40, name: 'Gate', info: 'A tall gate with a trigger plate.', c: 200, g: 2, gate: 7 },
-  { cat: 'gadgets', id: 'gateS', max: 40, name: 'Small gate', info: 'A short gate with a trigger plate.', c: 200, g: 2, gate: 4 },
+  { cat: 'gadgets', id: 'gateB', max: 40, name: 'Button gate', info: 'A tall gate with a red button: press it and the gate stays open for a minute.', c: 200, g: 2, gate: 7, btn: 1 },
   { cat: 'gadgets', id: 'see', max: 25, name: 'Small teeter-totter', info: 'A plank that tips.', c: 500, g: 5, misc: 'see' },
   { cat: 'gadgets', id: 'seeb', max: 25, name: 'Big teeter-totter', info: 'A long plank that tips and flings.', c: 500, g: 5, misc: 'see', big: true },
   { cat: 'gadgets', id: 'rope', max: 40, name: 'Rope bridge', info: 'A bridge to the next ground.', c: 1000, g: 1, misc: 'rope' },
   { cat: 'gadgets', id: 'pad', max: 100, name: 'Floor booster', info: 'Throws you forward.', c: 100, g: 0, misc: 'pad' },
   { cat: 'travel', id: 'portal', max: 2, name: 'Portals', info: 'Go in one, come out the other.', c: 1000, g: 20, portal: true },
   { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Bounces you up from the ground.', c: 100, g: 0, misc: 'spr' },
+  { cat: 'gadgets', id: 'bncS', max: 60, name: 'Super ground spring', info: 'Set into the ground. Bounces you as high as the super spring.', c: 400, g: 4, misc: 'spr', sup: 1 },
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns ground into lava.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
   { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Adds ground next to other ground.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
@@ -5640,6 +5649,7 @@ const shopIcon = id => {
   if (id === 'pw0') return '<svg viewBox="0 0 40 40"><ellipse cx="20" cy="25" rx="14" ry="8" fill="#fff" ' + st + '/><path d="M7 22Q20 8 33 22Q20 18 7 22Z" fill="#ff8a6a" ' + st + '/><rect x="17" y="15" width="6" height="18" fill="#24303a" ' + st + '/></svg>';
   if (id === 'pw1') return '<svg viewBox="0 0 40 40"><path d="M20 36L14 18M20 36V16M20 36L26 18" fill="none" stroke="#3c9b4a" stroke-width="2.600" stroke-linecap="round"/><circle cx="13" cy="15" r="5.500" fill="#ff7ab8" ' + st + '/><circle cx="27" cy="15" r="5.500" fill="#ffd23d" ' + st + '/><circle cx="20" cy="10" r="5.500" fill="#b98cff" ' + st + '/><path d="M13 34H27L24 28H16Z" fill="#fff3d6" ' + st + '/></svg>';
   if (id === 'flag') return '<svg viewBox="0 0 40 40"><path d="M11 36V5" fill="none" ' + st + '/><path d="M11 6H31L25 12L31 18H11Z" fill="#ff8a1f" ' + st + '/></svg>';
+  if (id === 'gateB') return '<svg viewBox="0 0 40 40"><rect x="5" y="5" width="4" height="26" fill="#b8862b" ' + st + '/><rect x="13" y="5" width="4" height="26" fill="#b8862b" ' + st + '/><rect x="21" y="5" width="4" height="26" fill="#b8862b" ' + st + '/><rect x="3" y="2" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="28" y="32" width="10" height="4" fill="#666" ' + st + '/><path d="M29.500 32Q33 24 36.500 32Z" fill="#ff5b4a" ' + st + '/></svg>';
   if (id === 'gate' || id === 'gateS') { const h = id === 'gate' ? 26 : 13; return '<svg viewBox="0 0 40 40"><rect x="7" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="15" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="23" y="' + (31 - h) + '" width="4" height="' + h + '" fill="#b8862b" ' + st + '/><rect x="5" y="' + (28 - h) + '" width="24" height="5" fill="#5b4a3a" ' + st + '/><rect x="29" y="32" width="9" height="4" fill="#e0a93c" ' + st + '/></svg>'; }
   if (id === 'dig') return '<svg viewBox="0 0 40 40"><path d="M9 9L31 31M31 9L9 31" fill="none" stroke="#16100c" stroke-width="9" stroke-linecap="round"/><path d="M9 9L31 31M31 9L9 31" fill="none" stroke="#ff4a3d" stroke-width="5" stroke-linecap="round"/></svg>';
   if (id === 'dirt') return '<svg viewBox="0 0 40 40"><rect x="3" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="24" width="14" height="13" fill="#8a6a46" ' + st + '/><rect x="17" y="9" width="14" height="15" fill="#b07a45" ' + st + '/><rect x="17" y="9" width="14" height="5" fill="#d9a064" ' + st + '/><circle cx="22" cy="19" r="1.400" fill="#7a4e28"/><circle cx="27" cy="17" r="1.100" fill="#7a4e28"/><circle cx="8" cy="30" r="1.300" fill="#5a3e22"/><circle cx="24" cy="31" r="1.300" fill="#5a3e22"/><path d="M35 12h4M37 10v4" stroke="#fff" stroke-width="2" fill="none"/></svg>';
@@ -5647,6 +5657,7 @@ const shopIcon = id => {
   if (id === 'water') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#2e7be6" ' + st + '/><path d="M16 26q2-3 4 0t4 0" fill="none" stroke="#bfe0ff" stroke-width="1.6"/><path d="M20 6c4 6 6 9 6 12a6 6 0 0 1-12 0c0-3 2-6 6-12z" fill="#4a95f0" ' + st + ' stroke-width="1.6"/></svg>';
   if (id === 'lava') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="24" y="22" width="12" height="12" fill="#8a6a46" ' + st + '/><rect x="16" y="22" width="8" height="12" fill="#ff4a1c" ' + st + '/><circle cx="20" cy="19" r="2.4" fill="#ffb02e"/><circle cx="17" cy="14" r="1.6" fill="#ff8a3d"/><circle cx="23" cy="11" r="1.3" fill="#ffd23d"/></svg>';
   if (id === 'bnc') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="32" height="12" fill="#8a6a46" ' + st + '/><rect x="8" y="22" width="24" height="7" fill="#1c7f78" ' + st + '/><rect x="5" y="17" width="30" height="6" fill="#35e0c2" ' + st + '/><path d="M15 21l5-4 5 4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/></svg>';
+  if (id === 'bncS') return '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="32" height="12" fill="#8a6a46" ' + st + '/><rect x="8" y="22" width="24" height="7" fill="#7a3dd6" ' + st + '/><rect x="5" y="17" width="30" height="6" fill="#ffd23d" ' + st + '/><path d="M15 21l5-4 5 4" fill="none" stroke="#7a3dd6" stroke-width="2.2" stroke-linejoin="round"/></svg>';
   if (id === 'portal') return '<svg viewBox="0 0 40 40"><ellipse cx="12" cy="30" rx="10" ry="4" fill="#ffd23d" ' + st + '/><ellipse cx="12" cy="30" rx="5" ry="1.8" fill="#7a5a00"/><ellipse cx="29" cy="30" rx="10" ry="4" fill="#3da5ff" ' + st + '/><ellipse cx="29" cy="30" rx="5" ry="1.8" fill="#0b2f6b"/><path d="M12 24c0-9 17-9 17 0" fill="none" stroke="#16100c" stroke-width="2" stroke-dasharray="3 3"/></svg>';
   if (id === 'seeb') return '<svg viewBox="0 0 40 40"><polygon points="20,23 14,35 26,35" fill="#6b6b78" ' + st + '/><rect x="0.5" y="18" width="39" height="4.5" fill="#e8923a" transform="rotate(-9 20 20)" ' + st + '/></svg>';
   if (id === 'see') return '<svg viewBox="0 0 40 40"><polygon points="20,22 11,35 29,35" fill="#6b6b78" ' + st + '/><rect x="8" y="17" width="24" height="5" fill="#e8923a" transform="rotate(-12 20 20)" ' + st + '/></svg>';
@@ -5714,7 +5725,7 @@ function ghostSpot(kind, side, pull) {   // a set distance beside you, on the si
   if (pull.down) { let y = y0; while (y - y0 < MAXUP && fits(y + 2)) y += 2; return [x, y, s]; }
   return [x, y0, s];
 }
-const adjTx = (b, s, n) => s > 0 ? Math.ceil((b.x + R + 6) / TS) : Math.floor((b.x - R - 6) / TS) - n + 1;   // the first column right beside your ball on that side, for a thing n blocks wide (never on top of you)
+const adjTx = (b, s, n) => s > 0 ? Math.ceil((b.x + R + 6) / TS) : Math.floor((b.x - R - 6) / TS) - n;   // the first column right beside your ball on that side, for a thing n blocks wide (never on top of you: facing left, the whole thing is left of your ball too, as it is facing right)
 function flagSpot(side) {   // a checkpoint flag stands on the ground beside you, like every other thing you place
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
@@ -5840,6 +5851,7 @@ function delTarget(side, pull) {
   for (const q of w.portals) if (!q.gone) { const rec = ['por', Math.round(q.a.x / TS) - 1, Math.round(q.a.y / TS)]; for (const e of [q.a, q.b]) offer(e.x - 30, e.y - 24, e.x + 30, e.y + 6, rec, 'pair of portals'); }
   for (const d of w.doors) if (!d.gone) offer(d.x * TS, d.y * TS, (d.x + d.w) * TS, (d.y + d.h) * TS, ['g', d.uid >>> 0], 'gate');
   for (const q of w.plates) if (!q.gone && q.to && q.to.length === 1 && w.doors[q.to[0]] && !w.doors[q.to[0]].gone) offer(q.x * TS, q.y * TS - 12, (q.x + q.w) * TS, q.y * TS + 4, ['g', w.doors[q.to[0]].uid >>> 0], 'gate');
+  for (const q of w.btns) if (!q.gone && !q.mm && q.to && q.to.length === 1 && w.doors[q.to[0]] && !w.doors[q.to[0]].gone && !w.doors[q.to[0]].mm) offer(q.x * TS, q.y * TS - 22, (q.x + 1) * TS, q.y * TS + 4, ['g', w.doors[q.to[0]].uid >>> 0], 'gate');   // (a button gate's button)
   for (const q of (w.pwrs || [])) if (!q.gone) offer(q.x - 24, q.y - 24, q.x + 24, q.y + 24, ['pwr', q.tx, q.ty], q.t ? 'flower bouquet' : 'sushi');
   { const mb = myBase(); if (mb) offer(mb.cx - 24, mb.cy - 40, mb.cx + 24, mb.cy + 26, ['base', mb.tx, mb.ty], 'base'); }   // (only your own base: its glowing centre)
   for (const c of S.map.checkpoints) if (c[0] > -1000) offer((c[0] + 0.5) * TS - 22, c[1] * TS - 66, (c[0] + 0.5) * TS + 22, c[1] * TS, ['c', c[0], c[1]], 'flag');
@@ -5856,6 +5868,7 @@ function delThing(q) {   // delete it here, and for everyone in this world
   if (q[0] === 'por' && S.world && S.own && S.own.porC) { const p = S.world.portals.find(e => !e.gone && Math.round(e.a.x / TS) - 1 === q[1] && Math.round(e.a.y / TS) === q[2]); if (p) { const i = S.own.porC.indexOf(p.c | 0); if (i >= 0) S.own.porC.splice(i, 1); else id = null; } }   // (only one of your own pairs gives you a pair back)
   if (q[0] === 'pwr' && S.world) { const e = (S.world.pwrs || []).find(o => !o.gone && o.tx === q[1] && o.ty === q[2]); id = e ? (e.t ? 'pw1' : 'pw0') : null; }
   if (q[0] === 's' && S.world) { const e = S.world.see.find(o => o.uid === (q[1] >>> 0)); if (e && e.hl > 3 * TS + 1) id = 'seeb'; }
+  if (q[0] === 'g' && S.world) { const i = S.world.doors.findIndex(o => o.uid === (q[1] >>> 0)); if (i >= 0 && S.world.btns.some(b => !b.mm && b.to && b.to.indexOf(i) >= 0)) id = 'gateB'; }   // (a button gate gives a button gate back)
   if (q[0] === 'b' && S.world) { const d = S.world.dynBy.get(q[1] >>> 0), it = d && SHOP.find(s => s.kind === d.kind && !s.misc && !s.gate); if (it) id = it.id; if (d && d.bought && !d.local && shared()) id = null; }   // (somebody else's: they get it back, not you)
   if (applyDelRec(q, true)) { delBook(q, myTag()); partyBuild({ t: 'pdel', g: q }); wDirty = true; sfx('pop'); if (id && S.own && S.own[id] > 0) S.own[id]--; }   // (deleting something gives you that one back to build again)
 }
@@ -5915,7 +5928,7 @@ function ropeSpot(side) {   // a rope bridge: tied to the edge of the dirt you s
 }
 function portalClash(g, sp, cx) {   // nothing can be made on top of a portal, and a portal cannot go under anything
   const it = g.it;
-  if (it.portal) return underSomething(cx, TS, sp.gr) || (g.stage === 2 && g.pA ? false : false);
+  if (it.portal) return underSomething(cx, TS, sp.gr) || !!(g.stage === 2 && g.pA && Math.abs(sp.tx - g.pA.tx) < 3 && Math.abs(sp.gr - g.pA.gr) < 3);   // (both ends are things: the second never goes on or right beside the first)
   if (it.id === 'flag') return portalHere(cx, 20, sp.row);
   if (it.gate) return g.stage === 2 ? portalHere(cx, TS, sp.row) : portalHere(cx, 20, sp.gr);
   const w = S.world, seeAt = (half) => w.see.some(s => !s.gone && Math.abs(s.cx - cx) < s.hl + half && Math.abs(s.cy - (sp.gr * TS - 46)) < 90), padAt = (half) => w.pads.some(p => !p.gone && p.y === sp.gr && Math.abs((p.x + 1) * TS - cx) < half + TS);
@@ -5924,6 +5937,11 @@ function portalClash(g, sp, cx) {   // nothing can be made on top of a portal, a
   if (it.misc === 'spr') return portalHere((sp.tx + 0.5) * TS, 20, sp.r);
   if (it.misc === 'ter') return portalHere(cx, 20, sp.gr);
   return false;
+}
+function portalIn(x0, y0, x1, y1, g) {   // does this box touch either end of any portal (each end is a thing of its own: the doorway and the air above it)
+  const ends = []; for (const q of S.world.portals) if (!q.gone) ends.push(q.a, q.b);
+  if (g && g.it.portal && g.stage === 2 && g.pA) ends.push({ x: (g.pA.tx + 1) * TS, y: g.pA.gr * TS });
+  return ends.some(e => e.x + 26 > x0 && e.x - 26 < x1 && e.y > y0 && e.y - 70 < y1);
 }
 function playerIn(x0, y0, x1, y1, notMe) {   // is anybody's ball on this box: yours, or anybody else's you can see (with a little room around each, so nothing is ever built onto a player)
   const now = performance.now(), near = (x, y, m) => { const cx = Math.max(x0, Math.min(x, x1)), cy = Math.max(y0, Math.min(y, y1)), dx = x - cx, dy = y - cy; return dx * dx + dy * dy < m * m; };
@@ -5988,7 +6006,8 @@ function computeGhost() {
       else if (g.it.misc === 'rope') rc = [-1e7, -1e7, -1e7 + 1, -1e7 + 1];   // (checked along its whole length in ropeSpot)
       else rc = [g.gtx * TS, (g.ggr - g.gh) * TS, (g.gtx + 1) * TS, g.ggr * TS];
       const nm = g.it.ter === 'dig';   // (deleting the ground right beside you is fine: only building is kept off players)
-      if (playerIn(rc[0], rc[1], rc[2], rc[3], nm) || (g.it.misc === 'ter' && (g.mex || []).some(e => playerIn(e[0] * TS, e[1] * TS, (e[0] + 1) * TS, (e[1] + 1) * TS, nm)))) { g.ok = false; g.pb = true; }
+      if (!g.it.portal && g.it.ter !== 'dig' && portalIn(rc[0], rc[1], rc[2], rc[3], g)) { g.ok = false; g.pc = true; }   // (nothing goes on either end of a portal, or on the first end of one being placed)
+      else if (playerIn(rc[0], rc[1], rc[2], rc[3], nm) || (g.it.misc === 'ter' && (g.mex || []).some(e => playerIn(e[0] * TS, e[1] * TS, (e[0] + 1) * TS, (e[1] + 1) * TS, nm)))) { g.ok = false; g.pb = true; }
       else if (g.it.ter !== 'dig' && (P.bodyOverlaps(S.world, rc[0], rc[1], rc[2], rc[3], -2) || (g.it.misc === 'ter' && (g.mex || []).some(e => P.bodyOverlaps(S.world, e[0] * TS, e[1] * TS, (e[0] + 1) * TS, (e[1] + 1) * TS, -2))))) { g.ok = false; g.pb = true; }   // (nor on top of a crate or ball: one simple rule, it goes red and will not go down)
     }
     if (sp && sp.bad && g.it.misc === 'rope') { g.ok = false; g.pb = true; }
@@ -6036,6 +6055,12 @@ function gateShape(x, top, h, alpha, bad) {   // bars between two beams, as draw
   ctx.fillStyle = bad ? '#ff7a6a' : '#5b4a3a'; ctx.fillRect(x - 3, top, TS + 6, TS); ctx.strokeRect(x - 3, top, TS + 6, TS);
   ctx.restore();
 }
+function btnShape(x, y, alpha, bad) {   // a red button, as the real ones are drawn (x: its middle, y: the ground under it)
+  ctx.save(); ctx.globalAlpha = alpha; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.strokeStyle = '#16100c';
+  ctx.fillStyle = '#555'; ctx.fillRect(x - 14, y - 5, 28, 5); ctx.strokeRect(x - 14, y - 5, 28, 5);
+  ctx.beginPath(); ctx.moveTo(x - 10, y - 5); ctx.quadraticCurveTo(x, y - 27, x + 10, y - 5); ctx.closePath(); ctx.fillStyle = bad ? '#ff9a8a' : '#ff5b4a'; ctx.fill(); ctx.stroke(); ctx.restore();
+}
+function trigShape(it, x, y, alpha, bad) { if (it.btn) btnShape(x + TS / 2, y, alpha, bad); else plateShape(x, y, alpha, bad); }   // (x: the left edge of the two tiles it was given; a button takes the first)
 function plateShape(x, y, alpha, bad) {
   ctx.save(); ctx.globalAlpha = alpha; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.strokeStyle = '#16100c'; ctx.fillStyle = bad ? '#ff7a6a' : '#e0a93c';
   ctx.fillRect(x + 3, y - 8, TS * 2 - 6, 8); ctx.strokeRect(x + 3, y - 8, TS * 2 - 6, 8); ctx.restore();
@@ -6084,9 +6109,9 @@ function drawTileGhost(g, nowT) {
   } else if (g.it.misc === 'spr') {
     const fall = !bad && g.mgr - g.mr0 > 1, y = bad ? g.dy - TS / 2 : (fall ? g.mr0 : g.mgr) * TS;
     ctx.globalAlpha = pulse;
-    drawPad((bad ? Math.floor(g.dx / TS) : g.mtx) * TS, y, 0);
+    drawPad((bad ? Math.floor(g.dx / TS) : g.mtx) * TS, y, 0, g.it.sup);
     if (bad) { ctx.fillStyle = 'rgba(255,90,74,.45)'; ctx.fillRect(Math.floor(g.dx / TS) * TS, y, TS, TS); }
-    if (fall) { ctx.globalAlpha = 0.9; ctx.setLineDash([5, 5]); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(g.dx, y + TS + 2); ctx.lineTo(g.dx, g.mgr * TS - 4); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 0.45; drawPad(g.mtx * TS, g.mgr * TS, g.mtx); }
+    if (fall) { ctx.globalAlpha = 0.9; ctx.setLineDash([5, 5]); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(g.dx, y + TS + 2); ctx.lineTo(g.dx, g.mgr * TS - 4); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 0.45; drawPad(g.mtx * TS, g.mgr * TS, g.mtx, g.it.sup); }
   } else if (g.it.misc === 'see') {
     const cx = g.dx, cy = g.dy; ctx.globalAlpha = pulse; ctx.lineWidth = 2.4; ctx.strokeStyle = '#16100c';
     ctx.fillStyle = bad ? '#ff7a6a' : '#6b6b78'; ctx.beginPath(); ctx.moveTo(cx, cy + 4); ctx.lineTo(cx - 24, cy + 46); ctx.lineTo(cx + 24, cy + 46); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -6106,9 +6131,9 @@ function drawTileGhost(g, nowT) {
     gateShape(g.gate.tx * TS, (g.gate.gr - g.gate.h) * TS, g.gate.h, 0.9, false);   // the gate you just placed
     if (!bad) {
       const x = g.dx - TS, land = g.prow * TS;
-      plateShape(x, g.dy, pulse, false);
-      if (land - g.dy > 14) { ctx.globalAlpha = 0.9; ctx.setLineDash([5, 5]); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(g.dx, g.dy + 4); ctx.lineTo(g.dx, land - 10); ctx.stroke(); ctx.setLineDash([]); plateShape((g.ptx) * TS, land, 0.45, false); }
-    } else plateShape(g.dx - TS, g.dy, pulse, true);
+      trigShape(g.it, x, g.dy, pulse, false);
+      if (land - g.dy > 14) { ctx.globalAlpha = 0.9; ctx.setLineDash([5, 5]); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(g.dx, g.dy + 4); ctx.lineTo(g.dx, land - 10); ctx.stroke(); ctx.setLineDash([]); trigShape(g.it, (g.ptx) * TS, land, 0.45, false); }
+    } else trigShape(g.it, g.dx - TS, g.dy, pulse, true);
   } else {
     const hh = bad ? g.it.gate : g.gh, top = bad ? g.dy - hh * TS / 2 : (g.ggr - hh) * TS, x = bad ? g.dx - TS / 2 : g.gtx * TS;
     gateShape(x, top, hh, pulse, bad);
@@ -6121,7 +6146,7 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (key === placeUIKey) return; placeUIKey = key;
   $('placeBar').classList.toggle('hide', !on); applyTouchUI();
   if (!on) return;
-  $('placeName').textContent = g.it.gate ? (g.stage === 2 ? 'Step 2 of 2: the trigger' : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; if (g.it.max && !capsOff()) $('placeName').textContent += ' · ' + ownCount(g.it) + ' of ' + g.it.max + ' placed'; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
+  $('placeName').textContent = g.it.gate ? (g.stage === 2 ? (g.it.btn ? 'Step 2 of 2: the button' : 'Step 2 of 2: the trigger') : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; if (g.it.max && !capsOff()) $('placeName').textContent += ' · ' + ownCount(g.it) + ' of ' + g.it.max + ' placed'; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Delete' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Delete' : 'Place');
   $('placeHint').textContent = g.off ? g.bwhy : g.it.base ? (g.ok ? 'Your base goes right here, with you in the middle' : g.bwhy) : g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space');
 }
@@ -6147,12 +6172,12 @@ function finishPlacing() {
     burst((q[1] + 1) * TS, q[2] * TS - 8, [PORC[c][0], '#fff'], 14, 160, 60); burst((q[3] + 1) * TS, q[4] * TS - 8, [PORC[c][1], '#fff'], 14, 160, 60);
   } else if (it.gate && g.stage === 1) { g.gate = { tx: g.gtx, gr: g.ggr, h: g.gh }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   else if (it.gate) {
-    const q = [g.gate.tx, g.gate.gr - g.gate.h, g.gate.h, g.ptx, g.prow, Math.round(g.py0)];
+    const q = [g.gate.tx, g.gate.gr - g.gate.h, g.gate.h + (it.btn ? 100 : 0), g.ptx, g.prow, Math.round(g.py0)];   // (a button gate: its height plus 100. The button sits where it lands, on the first of the two tiles)
     addGate(S.world, q); S.boughtGates.push(ownMe(q.slice(0, 5))); partyBuild({ t: 'pgate', g: q.slice(0, 5) }); wDirty = true;
     burst((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[0] + 0.5) * TS, (q[1] + q[2] / 2) * TS, '#fff', 4, 40, 0.4);
   } else if (it.misc === 'rope') { const q = g.rq.slice(); addMisc(S.world, q); S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('big');
   } else if (it.misc) {
-    const q = [it.misc === 'ter' ? 'tl' : it.misc, g.mtx, g.mgr, it.misc === 'ter' ? g.mto : it.misc === 'pad' ? ((g.mside || g.side) < 0 ? -1 : 1) : it.misc === 'spr' ? g.mr0 : it.big ? 1 : 0];
+    const q = [it.misc === 'ter' ? 'tl' : it.sup && it.misc === 'spr' ? 'sspr' : it.misc, g.mtx, g.mgr, it.misc === 'ter' ? g.mto : it.misc === 'pad' ? ((g.mside || g.side) < 0 ? -1 : 1) : it.misc === 'spr' ? g.mr0 : it.big ? 1 : 0];
     addMisc(S.world, q, true);
     const exSend = [];
     if (q[0] === 'tl') for (const e of (g.mex || [])) {   // what the water did to its neighbours (melted ice, lava turned to rock)
@@ -7192,7 +7217,7 @@ function admRender() {   // the top of Dev tools: who you are and what you can d
 }
 function devTeamRender() {
   const box = $('devTeam'); box.textContent = ''; const L = (admData && admData.devs) || [];
-  for (const e of L) { const r = el('button', 'amrow'); r.type = 'button'; r.appendChild(dot(e)); const w = el('span', 'dmw'); w.appendChild(el('b', '', who(e.name))); w.appendChild(el('small', '', (e.on ? 'Online · ' : '') + permText(e.p))); r.appendChild(w); r.onclick = () => { sfx('ui'); admOpen(); admOpenOne(e); }; box.appendChild(r); }
+  for (const e of L) { const r = el('button', 'amrow'); r.type = 'button'; r.appendChild(dot(e)); const w = el('span', 'dmw'); w.appendChild(el('b', '', admNm(e))); w.appendChild(el('small', '', (e.on ? 'Online · ' : '') + permText(e.p))); r.appendChild(w); r.onclick = () => { sfx('ui'); admOpen(); admOpenOne(e); }; box.appendChild(r); }
   if (!L.length) box.appendChild(el('div', 'small dim amempty', admData ? 'No devs yet: just owners.' : 'Loading…'));
 }
 $('devOut').onclick = () => {
@@ -7218,6 +7243,7 @@ $('amFind').addEventListener('input', () => admListRender());
 function admShow() { $('amBack').classList.remove('hide');   /* (always over Settings: back goes one step) */ $('amListView').classList.toggle('hide', admView !== 'list'); $('amOneView').classList.toggle('hide', admView !== 'one'); $('amTitle').textContent = admView === 'one' && admOne ? who(admOne.name) : 'Players'; }
 const whenTxt = t => { if (t === -1) return 'for good'; const d = new Date(t), far = t - Date.now() > 6 * 86400000; return 'until ' + d.toLocaleString([], far ? { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' } : { weekday: 'short', hour: 'numeric', minute: '2-digit' }); };
 const forTxt = ms => { const m = Math.max(1, Math.round(ms / 60000)); return m < 60 ? m + ' min' : m < 1440 ? Math.round(m / 60) + ' h' : Math.round(m / 1440) + ' d'; };
+const admNm = e => censor(e.name || '') || ('Player #' + (e.code || '?'));   // (somebody who never picked a name is shown by their friend code)
 function admWhere(e) {
   if (e.on === 0 || (!e.w && e.last)) return 'Last played ' + ago(e.last);
   const w = e.w === 'pub' ? 'In the public world' : e.w === 'priv' ? (e.host ? 'In ' + who(e.host) + '’s private game' : 'In their own private game') : 'On the main menu';
@@ -7234,7 +7260,7 @@ function admListRender() {
   const box = $('amList'); box.textContent = '';
   for (const e of list) {
     const r = el('button', 'amrow'); r.type = 'button'; r.appendChild(dot(e));
-    const w = el('span', 'dmw'); w.appendChild(el('b', '', who(e.name) + (e.me ? ' (you)' : ''))); w.appendChild(el('small', '', '#' + e.code + ' · ' + (admTab === 'ban' ? 'Banned ' + whenTxt(e.until) : admWhere(e)))); r.appendChild(w);
+    const w = el('span', 'dmw'); w.appendChild(el('b', '', admNm(e) + (e.me ? ' (you)' : ''))); w.appendChild(el('small', '', '#' + e.code + ' · ' + (admTab === 'ban' ? 'Banned ' + whenTxt(e.until) : admWhere(e)))); r.appendChild(w);
     const tags = el('span', 'amtags');
     if (e.fr) tags.appendChild(admTag('fr', 'users', 'Your friend'));
     if (e.role === 'owner') tags.appendChild(admTag('ad', 'crown', 'Owner')); else if (e.role === 'dev' || e.dev) tags.appendChild(admTag('ad', 'bolt', 'Dev'));
@@ -7247,10 +7273,10 @@ function admListRender() {
   }
   if (!list.length) box.appendChild(el('div', 'small dim amempty', !admData ? 'Loading…' : q ? 'Nobody by that name or code.' : admTab === 'on' ? 'Nobody is playing right now.' : admTab === 'ban' ? 'Nobody is banned.' : 'Nobody else played in the last three days.'));
 }
-function admOpenOne(e) { admOne = Object.assign({ pub: e.pub }, e); if (e.p && !admOne.dev) admOne.dev = { p: e.p }; admView = 'one'; $('amC').value = ''; $('amG').value = ''; $('amBanBox').classList.add('hide'); $('amMoneyNote').textContent = ''; admShow(); admOneRender(); wsSend({ t: 'admp', pub: e.pub }); }
+function admOpenOne(e) { admOne = Object.assign({ pub: e.pub }, e); if (e.p && !admOne.dev) admOne.dev = { p: e.p }; admView = 'one'; $('amC').value = ''; $('amG').value = ''; $('amBanBox').classList.add('hide'); $('amMoneyNote').textContent = ''; $('amMoneyInf').classList.add('hide'); admShow(); admOneRender(); wsSend({ t: 'admp', pub: e.pub }); }
 function admOneRender() {
   const o = admOne; if (!o) return; const owner = devRole === 'owner';
-  $('amDot').textContent = ''; $('amDot').appendChild(dot(o)); $('amName').textContent = who(o.name); $('amCode').textContent = '#' + (o.code || ''); $('amTitle').textContent = who(o.name);
+  $('amDot').textContent = ''; $('amDot').appendChild(dot(o)); $('amName').textContent = admNm(o); $('amCode').textContent = '#' + (o.code || ''); $('amTitle').textContent = admNm(o);
   $('amFr').classList.toggle('hide', !o.fr);
   $('amWhere').textContent = o.on ? admWhere(o) : o.last ? 'Not playing now · last played ' + ago(o.last) : 'Not playing now';
   const staff = o.me ? 'me' : o.role === 'owner' ? 'owner' : (o.role === 'dev' || o.dev) ? 'dev' : '';
@@ -7271,19 +7297,33 @@ function admOneRender() {
   $('amBoot').disabled = !o.on; $('amBanGo').innerHTML = '<svg class="ic"><use href="#i-lock"/></svg>' + (b ? 'Ban again' : 'Ban');
   $('amOutNote').textContent = o.on ? (canDo('boot') ? 'Boot sends them to the main menu: they can come straight back. ' : '') + (canDo('ban') ? 'A ban keeps them out of online play until it ends.' : '') : 'They are not playing now.' + (canDo('ban') ? ' A ban starts at once and stops them coming in.' : '');
   $('amIpRow').classList.toggle('hide', !o.ipOk); $('amIpNote').textContent = o.net ? 'Stops a new account from the same Wi-Fi or phone network too. ' + o.net + ' other player' + (o.net === 1 ? ' is' : 's are') + ' on it right now and would be out too' : 'Stops a new account from the same Wi-Fi or phone network too';
-  if (!o.on && !o.me) $('amMoneyNote').textContent = o.pend ? 'Waiting to be set the next time they play: ' + fmtN(o.pend.c) + ' coins, ' + fmtN(o.pend.g) + ' diamonds.' : 'Their money is on their own device. What you set here is put there the next time they play.';
+  admMoneyRender();
   document.querySelectorAll('.amdur [data-h]').forEach(x => x.classList.toggle('on', +x.dataset.h === (admOne.banH || 24)));
 }
 const devPermsNow = () => { const p = {}; document.querySelectorAll('#amDevPerms [data-perm]').forEach(x => { if (x.checked) p[x.dataset.perm] = 1; }); return p; };
 $('amDev').onchange = () => { const o = admOne; if (!o) return; const on = $('amDev').checked; $('amDev').checked = !!o.dev;
-  if (on) askConfirm('Make ' + who(o.name) + ' a dev?', 'They get dev tools on every device of theirs, with the powers you pick below. You can change that, or take it away, any time.', 'Make dev', () => { const p = devPermsNow(); o.dev = { p }; wsSend({ t: 'admdev', pub: o.pub, on: 1, p }); admOneRender(); }, { no: 'Cancel', yesClass: 'go' });
-  else askConfirm('Take ' + who(o.name) + ' off the dev team?', 'Their dev tools go away at once, on all their devices.', 'Take off', () => { o.dev = null; wsSend({ t: 'admdev', pub: o.pub, on: 0 }); admOneRender(); }, { no: 'Cancel', yesClass: 'danger' });
+  if (on) askConfirm('Make ' + admNm(o) + ' a dev?', 'They get dev tools on every device of theirs, with the powers you pick below. You can change that, or take it away, any time.', 'Make dev', () => { const p = devPermsNow(); o.dev = { p }; wsSend({ t: 'admdev', pub: o.pub, on: 1, p }); admOneRender(); }, { no: 'Cancel', yesClass: 'go' });
+  else askConfirm('Take ' + admNm(o) + ' off the dev team?', 'Their dev tools go away at once, on all their devices.', 'Take off', () => { o.dev = null; wsSend({ t: 'admdev', pub: o.pub, on: 0 }); admOneRender(); }, { no: 'Cancel', yesClass: 'danger' });
 };
 document.querySelectorAll('#amDevPerms [data-perm]').forEach(x => x.onchange = () => { const o = admOne; if (!o || !o.dev) return; sfx(x.checked ? 'on' : 'off'); const p = devPermsNow(); o.dev = { p }; wsSend({ t: 'admdev', pub: o.pub, on: 1, p }); });
+function admMoneyRender() {   // a player's money on their page: what they have (live from their device, or as it last said), and whether they play with unlimited money just now
+  const o = admOne; if (!o || $('amMoneyBox').classList.contains('hide')) return;
+  const me = !!o.me, live = o.wl && Date.now() - o.wl.at < 12000 ? o.wl : null, w = live || o.mw || null;
+  const fill = !o.on && o.pend ? o.pend : w;   // (away, with an amount waiting for them: that amount)
+  if (fill && !o.mTyped && document.activeElement !== $('amC') && document.activeElement !== $('amG')) { $('amC').value = fill.c; $('amG').value = fill.g; }
+  const amt = w ? fmtN(w.c) + ' coins and ' + fmtN(w.g) + ' diamonds' : '';
+  let t = live ? (me ? 'You have ' : 'They have ') + amt + ' right now.' : w ? (me ? 'You had ' : 'They had ') + amt + (o.on ? ' a moment ago.' : ' when they last played (' + ago(w.at) + ').') : o.on ? 'Asking their device…' : 'Not known yet: their device has not said since this was added. It will the next time they play.';
+  if (!o.on && !me) t += o.pend ? ' Waiting to be set the next time they play: ' + fmtN(o.pend.c) + ' coins, ' + fmtN(o.pend.g) + ' diamonds.' : ' What you set here goes on their device the next time they play.';
+  $('amMoneyNote').textContent = t;
+  const pkc = !!(o.pk && o.pk.c), inf = !!(w && w.inf), box = $('amMoneyInf');
+  box.classList.toggle('hide', !(pkc || inf));
+  box.textContent = pkc ? (me ? 'You are' : 'They are') + ' playing with unlimited coins and diamonds (Extras, below). The amounts above are ' + (me ? 'your' : 'their') + ' own, kept for when that is off.' : inf ? (me ? 'You are' : 'They are') + ' playing with unlimited coins and diamonds from a code. The amounts above are ' + (me ? 'your' : 'their') + ' own; setting them turns the code off.' : '';
+}
+['amC', 'amG'].forEach(id => { $(id).oninput = () => { if (admOne) admOne.mTyped = true; }; });   // (typing: the amounts are left as you type them, not refreshed over)
 $('amSet').onclick = () => {
   if (!admOne) return; const c = Math.floor(+$('amC').value), g = Math.floor(+$('amG').value);
   if (!($('amC').value !== '' && $('amG').value !== '' && c >= 0 && g >= 0 && c <= 1e9 && g <= 1e9)) { notice('Type both amounts: whole numbers from 0', 'urgent'); return; }
-  sfx('ui'); wsSend({ t: 'admset', pub: admOne.pub, c, g });
+  sfx('ui'); wsSend({ t: 'admset', pub: admOne.pub, c, g }); admOne.mTyped = false; if (admOne.on) { admOne.wl = null; admOne.mw = { c, g, inf: 0, at: Date.now() }; } else admOne.pend = { c, g };
 };
 ['C', 'B'].forEach(K => { $('amPk' + K).onchange = () => { if (!admOne) return; const on = $('amPk' + K).checked, k = K.toLowerCase(), o = admOne; sfx(on ? 'on' : 'off');
   o.pkPend = Object.assign({}, o.pkPend, { [k]: { on: on ? 1 : 0, at: Date.now() } }); wsSend({ t: 'admperk', pub: o.pub, k, on: on ? 1 : 0 });
@@ -7291,13 +7331,13 @@ $('amSet').onclick = () => {
     if (!!(admOne.pk || {})[k] !== on) notice(srvGameV && srvGameV < GAME_V ? 'The game server is still on version ' + srvGameV + ', which cannot do that yet. It updates itself a few minutes after new files go on GitHub: try again then' : 'The server did not take that. Try again in a moment', 'urgent'); }, 6500); }; });
 $('amCanB').onchange = () => { if (!admOne) return; const on = $('amCanB').checked; sfx(on ? 'on' : 'off'); admOne.nb = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'b', on: on ? 1 : 0 }); };
 $('amCanC').onchange = () => { if (!admOne) return; const on = $('amCanC').checked; sfx(on ? 'on' : 'off'); admOne.nc = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'c', on: on ? 1 : 0 }); };
-$('amBoot').onclick = () => { const o = admOne; if (!o || !o.on) return; askConfirm('Boot ' + who(o.name) + '?', 'They go back to the main menu. They can come straight back in.', 'Boot', () => wsSend({ t: 'admboot', pub: o.pub }), { no: 'Cancel', yesClass: 'danger' }); };
+$('amBoot').onclick = () => { const o = admOne; if (!o || !o.on) return; askConfirm('Boot ' + admNm(o) + '?', 'They go back to the main menu. They can come straight back in.', 'Boot', () => wsSend({ t: 'admboot', pub: o.pub }), { no: 'Cancel', yesClass: 'danger' }); };
 $('amBanGo').onclick = () => { if (!admOne) return; sfx('ui'); $('amBanBox').classList.toggle('hide'); admOneRender(); };
 document.querySelectorAll('.amdur [data-h]').forEach(x => x.onclick = () => { if (!admOne) return; admOne.banH = +x.dataset.h; sfx('ui'); admOneRender(); });
 $('amBanOk').onclick = () => {
   const o = admOne; if (!o) return; const h = o.banH || 24, ip = !$('amIpRow').classList.contains('hide') && $('amIp').checked;
   const len = h === -1 ? 'for good' : h === 1 ? 'for 1 hour' : h === 24 ? 'for 24 hours' : 'for 7 days';
-  askConfirm('Ban ' + who(o.name) + ' ' + len + '?', (o.on ? 'They are taken out now. ' : '') + 'They cannot play online ' + (h === -1 ? 'again until they are unbanned.' : 'until it ends.') + (ip ? ' Nobody else on their network can either.' : ''), 'Ban', () => wsSend({ t: 'admban', pub: o.pub, h, ip: ip ? 1 : 0 }), { no: 'Cancel', yesClass: 'danger' });
+  askConfirm('Ban ' + admNm(o) + ' ' + len + '?', (o.on ? 'They are taken out now. ' : '') + 'They cannot play online ' + (h === -1 ? 'again until they are unbanned.' : 'until it ends.') + (ip ? ' Nobody else on their network can either.' : ''), 'Ban', () => wsSend({ t: 'admban', pub: o.pub, h, ip: ip ? 1 : 0 }), { no: 'Cancel', yesClass: 'danger' });
 };
 $('amUnban').onclick = () => { const o = admOne; if (!o) return; sfx('ui'); wsSend({ t: 'admunban', pub: o.pub }); };
 function tryKey(raw) {   // a code nobody knows: maybe the server's key. Only the server can tell
@@ -7351,11 +7391,11 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
     case 'admsh': devShSrv = m.on ? 1 : 0; devRender(); try { lpRender(); } catch (e) {} if (chatOpen && chatView === 'w') chatRender(false); return true;   // (the Dev badge: shown or hidden, as the server now has it)
     case 'admsnapv': if (isAdmin() && devRole === 'owner' && m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap)); return true;   // (the bans, the dev team and the switches, kept here in case the server forgets them)
     case 'admp': if (!admOne || m.pub !== admOne.pub) return true;
-      { const keep = { pkPend: admOne.pkPend, banH: admOne.banH, code: admOne.code, color: admOne.color, color2: admOne.color2, pat: admOne.pat, fr: admOne.fr, w: admOne.w, host: admOne.host, since: admOne.since };
+      { const keep = { pkPend: admOne.pkPend, wl: admOne.wl, mTyped: admOne.mTyped, banH: admOne.banH, code: admOne.code, color: admOne.color, color2: admOne.color2, pat: admOne.pat, fr: admOne.fr, w: admOne.w, host: admOne.host, since: admOne.since };
         const fresh = (admData && [...admData.on, ...admData.recent, ...admData.bans, ...(admData.devs || [])].find(e => e.pub === m.pub)) || {};
         admOne = Object.assign({}, keep, fresh, m, { banH: keep.banH, last: m.last || fresh.last }); if (!m.on) { admOne.w = ''; admOne.since = 0; } }
       admOneRender(); return true;
-    case 'admw': if (admOne && m.pub === admOne.pub) { if (document.activeElement !== $('amC') && document.activeElement !== $('amG')) { $('amC').value = m.c; $('amG').value = m.g; } $('amMoneyNote').textContent = (admOne.me ? 'You have now: ' : 'On their device now: ') + fmtN(m.c) + ' coins, ' + fmtN(m.g) + ' diamonds' + (m.pk ? (admOne.me ? '. You have' : '. They have') + ' unlimited coins and diamonds for good (see Extras below), so this only matters once that is off.' : m.inf ? (admOne.me ? '. You have' : '. They have') + ' unlimited money on from a code: setting it turns that off.' : '.'); } return true;
+    case 'admw': if (admOne && m.pub === admOne.pub) { admOne.wl = { c: Math.max(0, +m.c || 0), g: Math.max(0, +m.g || 0), inf: m.inf ? 1 : 0, at: Date.now() }; admMoneyRender(); } return true;
     case 'admok': {
       const t = { money: 'Their money is set', moneyme: 'Your money is set', moneylater: 'Their money is set for the next time they play', pkc1: 'Unlimited coins and diamonds for them, for good', pkc0: 'Their unlimited coins and diamonds are off', pkb1: 'No building limits for them, for good', pkb0: 'Their building limits are back', nob1: 'They can build again', nob0: 'They can\u2019t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a dev: nothing changed', owner: 'That is an owner: nothing changed', noperm: 'You can\u2019t do that: ask an owner', dev1: 'Saved: they are on the dev team', dev0: 'They are off the dev team' }[m.what];
       if (t) notice(t, m.what === 'admin' || m.what === 'owner' || m.what === 'noperm' ? 'urgent' : '');
@@ -8030,6 +8070,7 @@ function setMultiplayer(on) {
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
+  try { o.w = [purseP.c | 0, purseP.g | 0, infMoney ? 1 : 0]; } catch (e) {}   // (your public-world money, so game admins can see it on your page)
   { const k = admKey(); if (k) o.ak = k; if (devOn()) o.dv = 1; if (devOn() && settings.devShow) o.dsh = 1; }   // (dsh: show the Dev badge to other players, only if this owner or dev turned it on)   // (an owner's key, kept on this device; dv: this device has dev tools, and must hear if that changed)
   if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), fk: soloFin(soloLevel()), bots: settings.botsPriv ? 1 : 0, nc: settings.noCheats ? 1 : 0, ul: settings.unl ? 1 : 0 }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   if (!lobby && !party && wantW > 0) o.pw = wantW;   // (joining a friend's public world from their profile)
@@ -8259,7 +8300,7 @@ function onMsg(m) {
     case 'welcome':
       srvOk();
       if (Number.isFinite(m.v) && m.v !== srvGameV) { srvGameV = m.v; try { devRender(); } catch (e) {} }   // (the server's version: Dev tools says when it is not this game's)
-      pickTaken = new Map(Array.isArray(m.taken) ? m.taken : []); pickPend.clear();
+      pickTaken = new Map(Array.isArray(m.taken) ? m.taken : []); pickPend.clear(); if (Number.isFinite(m.now)) clockOff = m.now - Date.now(); pickTaken.forEach((t, k) => pickMem(k, t));
       { let u = null; try { u = JSON.parse(localStorage.getItem('ballrun4_use') || 'null'); } catch (e) {} if (u && u.m) setTimeout(() => wsSend({ t: 'use', u }), 600); }   // (the server's monthly counts, kept here in case it restarted and forgot them)
       { let c = null; try { c = JSON.parse(localStorage.getItem('ballrun4_fsub') || 'null'); } catch (e) {} if (c && typeof c === 'object') { const l = Object.keys(c).slice(0, 64).map(k => [k, c[k]]); if (l.length) setTimeout(() => wsSend({ t: 'fsubs', l }), 400); } }
       if (m.lobby) {   // connected from the main menu: friends work, but you are not in a world
@@ -8379,6 +8420,7 @@ function onMsg(m) {
       if (party || inSolo() || !m.b || !S.world) break;   // the server got this world's memory back from a player: load it again, as it really was
       S.pendingBuild = { slot: S.slot, b: m.b }; S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false; loadMap(S.slot, S.nextAt); break;
     case 'took': pickAnswer(m, !!m.mine); break;
+    case 'tkall': if (Array.isArray(m.taken)) { for (const e of m.taken) if (Array.isArray(e) && typeof e[0] === 'string' && Number.isFinite(e[1])) { pickTaken.set(e[0], e[1]); pickMem(e[0], e[1]); } wDirty = true; } break;
     case 'tookno': pickAnswer(m, false); break;
     case 'devempty': if (devOn() && settings.nEmpty) { topNote('Nobody is playing right now: a good time to update the game'); sysNotify('nEmpty', 'Nobody is playing', 'Every world is empty: a good time to update the game', 'empty'); } break;
     case 'newmap': sysNotify('nMaps', 'A new map has started', BallMaps.names[m.slot % BallMaps.count], 'map-' + m.slot); if (inSolo() || S.slot >= SOLO_BASE && !party) break;   // a private world does not follow the public map
@@ -8782,7 +8824,7 @@ function drawTiles(camL, camT, vw, vh) {
       const px = tx * TS, py = ty * TS;
       if (t === 5) { water.push(px, py, (ty > 0 && g[i - W] !== 5) ? 1 : 0); continue; }
       if (t === 9) continue;                       // closed doors are drawn with the gadgets
-      if (t === 6) { drawPad(px, py, tx); continue; }
+      if (t === 6) { drawPad(px, py, tx, w.sspr && w.sspr.has(i)); continue; }
       const th = THEMES[tg[i]] || THEMES[0];
       const rk = t === 1 && S.world.rock && S.world.rock[i];   // grey rock (made by water on lava)
       ctx.fillStyle = rk ? '#80858f' : (t === 1 || t === 4) ? th.solid : t === 3 ? ICE : LAVA;   /* (the finish ground is plain ground: only the flag marks it) */
@@ -8823,14 +8865,14 @@ function drawTiles(camL, camT, vw, vh) {
     }
   }
 }
-function drawPad(px, py, tx) {   // bounce pad: a springy cushion with arrows that hop upward
-  const p = 0.5 + 0.5 * Math.sin(S.t * 5 + tx);
+function drawPad(px, py, tx, sup) {   // bounce pad: a springy cushion with arrows that hop upward (a super one: purple with a gold top and a double arrow, like the super spring)
+  const p = 0.5 + 0.5 * Math.sin(S.t * (sup ? 7 : 5) + tx);
   ctx.lineWidth = 2.4; ctx.strokeStyle = INK; ctx.lineJoin = 'round';
-  ctx.fillStyle = '#1c7f78'; ctx.fillRect(px + 4, py + TS * 0.5, TS - 8, TS * 0.5); ctx.strokeRect(px + 4, py + TS * 0.5, TS - 8, TS * 0.5);
-  ctx.fillStyle = '#35e0c2'; ctx.fillRect(px + 1, py + 1, TS - 2, TS * 0.5); ctx.strokeRect(px + 1, py + 1, TS - 2, TS * 0.5);
-  ctx.strokeStyle = 'rgba(255,255,255,' + (0.55 + 0.4 * p) + ')'; ctx.lineWidth = 2.4; ctx.beginPath();
+  ctx.fillStyle = sup ? '#7a3dd6' : '#1c7f78'; ctx.fillRect(px + 4, py + TS * 0.5, TS - 8, TS * 0.5); ctx.strokeRect(px + 4, py + TS * 0.5, TS - 8, TS * 0.5);
+  ctx.fillStyle = sup ? '#ffd23d' : '#35e0c2'; ctx.fillRect(px + 1, py + 1, TS - 2, TS * 0.5); ctx.strokeRect(px + 1, py + 1, TS - 2, TS * 0.5);
+  ctx.strokeStyle = sup ? 'rgba(122,61,214,' + (0.6 + 0.4 * p) + ')' : 'rgba(255,255,255,' + (0.55 + 0.4 * p) + ')'; ctx.lineWidth = 2.4; ctx.beginPath();
   const cx = px + TS / 2, cy = py + TS * 0.38 - p * 2;
-  ctx.moveTo(cx - 8, cy + 4); ctx.lineTo(cx, cy - 3); ctx.lineTo(cx + 8, cy + 4); ctx.stroke();
+  ctx.moveTo(cx - 8, cy + 4); ctx.lineTo(cx, cy - 3); ctx.lineTo(cx + 8, cy + 4); if (sup) { ctx.moveTo(cx - 8, cy + 9); ctx.lineTo(cx, cy + 2); ctx.lineTo(cx + 8, cy + 9); } ctx.stroke();
   ctx.strokeStyle = INK;
 }
 function drawBase(z, camL, camT, vw, vh) {   // a player's base: its circle, a beam of light straight up so it stands out from far away, and the glowing centre (delete it to move the base)
@@ -8910,7 +8952,7 @@ function drawGadgets(camL, camT, vw, vh, dt) {
   for (let i = 0; i < w.doors.length; i++) {
     const d = w.doors[i], px = d.x * TS, py = d.y * TS, ww = d.w * TS, hh = d.h * TS;
     if (d.a === undefined) d.a = d.open ? 1 : 0;
-    d.a += ((d.open ? 1 : 0) - d.a) * Math.min(1, dt * 5);
+    d.a = d.open ? Math.min(1, d.a + dt * 9) : Math.max(0, d.a - dt * 14);   // (the bars move quickly, so the picture always matches what you can roll through: up in about a tenth of a second, slammed down faster)
     if (px > camL + vw + 40 || px + ww < camL - 40 || py > camT + vh + 40 || py + hh < camT - 40) continue;
     const gy = py + TS, gh = hh - TS, bh = Math.max(6, gh * (1 - d.a)), n = Math.max(2, Math.round(ww / 12));   // the top tile is a solid beam you can stand on; the bars hang below it and slide up into it
     ctx.fillStyle = '#b8862b';
@@ -8934,7 +8976,7 @@ function drawGadgets(camL, camT, vw, vh, dt) {
     for (let k = 0; k < 3; k++) { const cx = x + 10 + ((k + (q.dir < 0 ? 1 - ph : ph)) % 3) / 3 * (ww - 20); ctx.beginPath(); ctx.moveTo(cx - 4 * q.dir, y); ctx.lineTo(cx + 3 * q.dir, y + 2.5); ctx.lineTo(cx - 4 * q.dir, y + 5); ctx.lineTo(cx - 1 * q.dir, y + 2.5); ctx.closePath(); ctx.fill(); }
     if (q.t > 0 && fxOn() && Math.random() < 0.5) burst(x + Math.random() * ww, y, ['#ffd23d', '#fff'], 1, 90, 40);
   }
-  for (const d of (w.drops || [])) for (let k = 0; k < (d.n || 2); k++) drawPad((d.tx + k) * TS, d.y, d.tx + k);   // a ground spring on its way down
+  for (const d of (w.drops || [])) for (let k = 0; k < (d.n || 2); k++) drawPad((d.tx + k) * TS, d.y, d.tx + k, d.sup);   // a ground spring on its way down
   // portals: glowing holes in the ground, yellow and blue
   for (let i = 0; i < w.portals.length; i++) {
     const q = w.portals[i];
@@ -9498,7 +9540,7 @@ function mbRgb() {
   if (mbT.rgb) return mbT.rgb;
   const c = document.createElement('canvas'); c.width = c.height = 1; const g = c.getContext('2d', { willReadFrequently: true });
   const px = col => { g.clearRect(0, 0, 1, 1); g.fillStyle = col; g.fillRect(0, 0, 1, 1); const d = g.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2]]; };
-  mbT.rgb = { top: THEMES.map(t => px(t.top)), solid: THEMES.map(t => px(t.solid)), lava: px(LAVA), ice: px(ICE), water: px('#2e7be6'), pad: px('#3bd1c0'), fin: px('#ffd23d'), door: px('#8a5a2b'), rock: px('#80858f') };
+  mbT.rgb = { top: THEMES.map(t => px(t.top)), solid: THEMES.map(t => px(t.solid)), lava: px(LAVA), ice: px(ICE), water: px('#2e7be6'), pad: px('#3bd1c0'), spad: px('#9b5cf0'), fin: px('#ffd23d'), door: px('#8a5a2b'), rock: px('#80858f') };
   return mbT.rgb;
 }
 function mbTilesBuild() {
@@ -9509,7 +9551,7 @@ function mbTilesBuild() {
     const i = y * W + x, t = gr[i]; if (!t) continue;
     let c;
     if (t === 1) { if (rk && rk[i]) c = C.rock; else { const th = tg ? tg[i] : 0, up = y > 0 ? gr[i - W] : 1; c = (up === 1 || up === 4 || up === 9 ? C.solid : C.top)[th] || C.solid[0]; } }
-    else if (t === 2) c = C.lava; else if (t === 3) c = C.ice; else if (t === 4) { const th = tg ? tg[i] : 0, up = y > 0 ? gr[i - W] : 1; c = (up === 1 || up === 4 || up === 9 ? C.solid : C.top)[th] || C.solid[0]; } else if (t === 5) c = C.water; else if (t === 6) c = C.pad; else if (t === 9) c = C.door; else continue;
+    else if (t === 2) c = C.lava; else if (t === 3) c = C.ice; else if (t === 4) { const th = tg ? tg[i] : 0, up = y > 0 ? gr[i - W] : 1; c = (up === 1 || up === 4 || up === 9 ? C.solid : C.top)[th] || C.solid[0]; } else if (t === 5) c = C.water; else if (t === 6) c = w.sspr && w.sspr.has(i) ? C.spad : C.pad; else if (t === 9) c = C.door; else continue;
     const o = i * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
   }
   g.putImageData(im, 0, 0); mbT.at = performance.now();
@@ -9546,7 +9588,7 @@ function drawMinimapBig() {
   g.globalAlpha = 1;
   mbTilesDraw(g, L, T, Rr, B, z, cw, ch);
   drawThings(g, X, Y, z, L, T, Rr, B);
-  if (z >= 1.5) { g.fillStyle = '#ffd23d'; for (const q of m.coins) { const tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B || buriedAt(q[0], q[1])) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
+  if (z >= 1.5) { g.fillStyle = '#ffd23d'; for (let ci = 0; ci < m.coins.length; ci++) { const q = m.coins[ci], tx = q[0] / TS, ty = q[1] / TS; if (tx < L || tx > Rr || ty < T || ty > B || buriedAt(q[0], q[1]) || (m === S.map && pkGone('c' + ci))) continue; g.beginPath(); g.arc(X(tx), Y(ty), Math.max(1.5, z * 0.22), 0, TAU); g.fill(); } }
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = X(c[0] + 0.5), y = Y(c[1]); if (x < 0 || y < 0 || x > cw || y > ch) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.8, y - 12, 2, 12); g.beginPath(); g.moveTo(x + 1, y - 12); g.lineTo(x + 10, y - 9); g.lineTo(x + 1, y - 6); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 0.8; g.stroke(); });
   { const dr = tinyR(z), fr = friendsOnMap();   /* everybody else is drawn to scale, tiny when zoomed out */
     const dotAt = (x, y, col, sp, big) => { const rr = big ? Math.max(6, dr * 1.9) : dr; if (rr >= 5 && sp) g.drawImage(sp, X(x / TS) - rr, Y(y / TS) - rr, rr * 2, rr * 2); else { g.fillStyle = col; g.beginPath(); g.arc(X(x / TS), Y(y / TS), rr, 0, TAU); g.fill(); if (rr > 2.4) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 0.8; g.stroke(); } } };
@@ -9702,7 +9744,7 @@ if (params && params.get('test')) window.__d = { NET, addGate, pk: { buriedAt, p
     AU.ctx = oc; AU.mus = out; AU.song = sg; AU.style = kind; AU.melody = genMelody(sg, MOOD[kind]);
     try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += songBeats(sg) * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
     const buf = await oc.startRendering(); return Array.from(buf.getChannelData(0));
-  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, dvb: () => ({ others: [...others.values()].map(o => ({ name: o.name, dv: o.dv | 0, pub: o.pub, color: o.color, x: o.cx || o.x, y: o.cy || o.y })), devShow: !!settings.devShow, shown: devShown(), devOn: devOn(), pills: devPillN, me: S.b ? { x: S.b.x, y: S.b.y } : null }), openProfile: p => openProfile(p), mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), put: (k, x, y) => placeProp(k, [x, y]), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
+  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), joinParty: (h, n) => joinParty(h, n), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, dvb: () => ({ others: [...others.values()].map(o => ({ name: o.name, dv: o.dv | 0, pub: o.pub, color: o.color, x: o.cx || o.x, y: o.cy || o.y })), devShow: !!settings.devShow, shown: devShown(), devOn: devOn(), pills: devPillN, me: S.b ? { x: S.b.x, y: S.b.y } : null }), openProfile: p => openProfile(p), mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), put: (k, x, y) => placeProp(k, [x, y]), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();

@@ -15,7 +15,7 @@
         for (let xx = r[0]; xx < r[0] + r[2]; xx++) if (xx >= 0 && xx < W) grid[yy * W + xx] = r[4];
       }
     }
-    const w = { W, H, grid, map, dyn: [], dynBy: new Map(), follow: false, doors: [], plates: [], btns: [], see: [], pads: [], portals: [], ropes: [], ev: [], focus: null };
+    const w = { W, H, grid, map, dyn: [], dynBy: new Map(), follow: false, doors: [], plates: [], btns: [], see: [], pads: [], portals: [], ropes: [], ev: [], focus: null, sspr: new Set() };   // (sspr: which ground-spring tiles are super ones)
     const G = map.gadgets || {};
     (G.doors || []).forEach((d, i) => { const o = { id: i, uid: hash32('d' + i), x: d[0], y: d[1], w: d[2], h: d[3], open: false, latched: false }; w.doors.push(o); setDoorTiles(w, o, false); });
     (G.plates || []).forEach(p => w.plates.push({ x: p[0], y: p[1], w: p[2], to: p[3], on: false }));
@@ -43,6 +43,12 @@
     return w.grid[ty * w.W + tx];
   }
 
+  function gSpring(b, w, tx, ty) {   // standing on a ground spring: it throws you straight up (a super one as high as the super spring)
+    b.bnc = true; if (w.sspr && w.sspr.size && w.sspr.has(ty * w.W + tx)) { b.bncV = SUPER_BOUNCE; b.bnx = 0; b.bny = -1; }
+  }
+  function setPad(w, tx, r, n, sup) {   // ground springs set into the ground (n tiles wide): the same on every device and on the server
+    for (let k = 0; k < (n || 2); k++) { const i = r * w.W + tx + k; if (tx + k >= 0 && tx + k < w.W && r >= 0 && r < w.H && (w.grid[i] === 1 || w.grid[i] === 3)) { w.grid[i] = 6; if (!w.sspr) w.sspr = new Set(); if (sup) w.sspr.add(i); else w.sspr.delete(i); } }
+  }
   function newBody(x, y) {
     return { x, y, vx: 0, vy: 0, hold: 0, hdir: 0, bcharge: 0, jm: 0, jmt: 0, noJm: true, boost: false, bdir: 0, btime: 0, bReq: false, bAuto: false, fall: 0, rot: 0, ground: false, flat: false, gType: 0, coyote: 0, jbuf: 0, water: false, swimCool: 0, holdLeft: 0, bnc: false, bncV: 0, bnx: 0, bny: -1, kicked: null };
   }
@@ -73,7 +79,7 @@
           if (!isSol(tile(w, tx, ty + 1)) && top + TS - b.y < fd) { fx = 0; fy = 1; fd = top + TS - b.y; }
           if (!isSol(tile(w, tx - 1, ty)) && b.x - left < fd) { fx = -1; fy = 0; fd = b.x - left; }
           if (!isSol(tile(w, tx + 1, ty)) && left + TS - b.x < fd) { fx = 1; fy = 0; fd = left + TS - b.x; }
-          if (fy < 0) { b.y = top - R; if (b.vy > 0) b.vy = 0; b.ground = true; b.flat = true; b.gType = t; if (t === 6) b.bnc = true; continue; }   // (buried with no open face at all: up on top, as always, and out at the surface)
+          if (fy < 0) { b.y = top - R; if (b.vy > 0) b.vy = 0; b.ground = true; b.flat = true; b.gType = t; if (t === 6) gSpring(b, w, tx, ty); continue; }   // (buried with no open face at all: up on top, as always, and out at the surface)
           b.x = fx ? (fx > 0 ? left + TS + R : left - R) : b.x; b.y = fy > 0 ? top + TS + R : b.y;
           const vn = b.vx * fx + b.vy * fy; if (vn < 0) { b.vx -= vn * fx; b.vy -= vn * fy; }
           continue;
@@ -83,7 +89,7 @@
         const vn = b.vx * nx + b.vy * ny;
         if (vn < 0) { b.vx -= vn * nx; b.vy -= vn * ny; }
         if (ny < -0.5) {
-          b.ground = true; if (t === 6) b.bnc = true;
+          b.ground = true; if (t === 6) gSpring(b, w, tx, ty);
           if (dx === 0) { b.flat = true; b.gType = t; }       // centre is over the tile: real footing
           else if (!b.flat) b.gType = t;                      // only touching its corner: no grip
         }
@@ -290,6 +296,14 @@
   }
   /* ---------- buttons, pressure plates and doors ---------- */
   const BTN_T = 60;   // seconds a red button keeps its gates open
+  // a built gate is [column, top row, height, trigger column, trigger row]. Its height with 100 added means its trigger is a red button (one tile) instead of a floor plate (two tiles)
+  const gateH = q => (q[2] | 0) % 100, gateBtn = q => (q[2] | 0) >= 100, gateOkH = h => (h >= 2 && h <= 8) || (h >= 102 && h <= 108);
+  function addBuiltGate(w, q) {   // a built gate (shut) and its trigger, the same on the server and every device
+    const id = w.doors.length, d = { id, uid: hash32('g' + q.slice(0, 5).join(',')), x: q[0], y: q[1], w: 1, h: gateH(q), open: false, latched: false };
+    w.doors.push(d); setDoorTiles(w, d, false);
+    const t = gateBtn(q) ? { x: q[3], y: q[4], to: [id], on: false } : { x: q[3], y: q[4], w: 2, to: [id], on: false };
+    (gateBtn(q) ? w.btns : w.plates).push(t); return { d, t };
+  }
   function doorBlocked(w, d, bs) {
     const x0 = d.x * TS, x1 = (d.x + d.w) * TS, y0 = (d.y + 1) * TS, y1 = (d.y + d.h) * TS;   // (the beam above is always solid, so only the gap below it can be blocked)
     const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [];
@@ -302,7 +316,7 @@
     const sideOk = (sx, y) => { const tx = Math.floor(sx / TS), ty = Math.floor(y / TS); return !BSOLID(tile(w, tx, ty)); };
     let seed = 1; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
     const out = (o, e, heavy) => { seed = (hash32('g' + (d.uid || d.id || 0) + ':' + (o.uid !== undefined ? o.uid : 'p')) >>> 0) || 1;   // (the same 'random' on every device: it comes from the gate and the thing itself, never from a clock, so the server and your screen throw it the same way)
-      let dir = o.x < cx ? -1 : 1; if (rnd() < 0.18) dir = -dir; if (!sideOk(dir < 0 ? x0 - e - 2 : x1 + e + 2, o.y)) dir = -dir;   // (now and then it goes out the other side: a slam is not tidy)
+      let dir = o.x < cx ? -1 : 1; if (rnd() < 0.18 && o.uid !== undefined) dir = -dir; if (!sideOk(dir < 0 ? x0 - e - 2 : x1 + e + 2, o.y)) dir = -dir;   // (now and then a crate or ball goes out the other side: a slam is not tidy. A player always goes out on the side they are on, never through it)
       o.x = dir < 0 ? x0 - e - 1 : x1 + e + 1; const k = heavy ? 0.55 : 1;
       o.vx = dir * (140 + rnd() * 230) * k; o.vy = Math.min(o.vy || 0, 0) - (90 + rnd() * 260) * k; if (o.av !== undefined) o.av = (rnd() - 0.5) * 14 * k; };
     const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [];
@@ -331,12 +345,13 @@
     for (let i = 0; i < f.length; i++) if (Math.abs(f[i].x - cx) < r && Math.abs(f[i].y - cy) < r) return false;
     return true;
   }
+  const swept = (b, x0, x1, fy) => b.sx !== undefined && Math.abs(b.sx - b.x) < 400 && Math.min(b.sx, b.x) < x1 && Math.max(b.sx, b.x) > x0 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.sy + R >= fy - 8 && b.sy + R <= fy + 6;   // (sx, sy: where a player was when the switches were last looked at. Rolling fast along the ground right over a plate or a button between two looks still presses it)
   function stepSwitches(w, bs, dt) {
     const L = bs ? (Array.isArray(bs) ? bs : [bs]) : [];
     for (let i = 0; i < w.doors.length; i++) w.doors[i].latched = false;
     for (let i = 0; i < w.btns.length; i++) {   // a red button holds its gates open for BTN_T seconds after it was last stood on, then pops back up
       const q = w.btns[i], x0 = q.x * TS - R, x1 = (q.x + 1) * TS + R, fy = q.y * TS; let hit = false;
-      for (let k = 0; k < L.length && !hit; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6) hit = true; }
+      for (let k = 0; k < L.length && !hit; k++) { const b = L[k]; if (b && !b.ghost && (b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 || swept(b, x0, x1, fy))) hit = true; }
       let on = null;   // (what rests on it: crates, balls and springs press it too, once it is up again)
       if (!w.follow && !noneNear(w, (x0 + x1) / 2, fy, 700)) { const DL0 = w.cand || w.dyn, DL = DL0.length > 48 ? nearCol(DL0, (x0 + x1) / 2) : DL0;
         for (let j = 0; j < DL.length; j++) { const o = DL[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 200) continue; const bot = o.y + (o.r || o.hh); if (o.x > x0 + R - 4 && o.x < x1 - R + 4 && bot >= fy - 10 && bot <= fy + 6) (on || (on = [])).push(o); } }
@@ -352,7 +367,7 @@
     const want = w.doors.map(d => d.latched);
     for (let i = 0; i < w.plates.length; i++) {
       const q = w.plates[i], x0 = q.x * TS, x1 = (q.x + q.w) * TS, fy = q.y * TS; let on = !!(w.follow && q.srvOn), dynOn = false;
-      for (let k = 0; k < L.length && !on; k++) { const b = L[k]; if (b && !b.ghost && b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 && b.ground) on = true; }
+      for (let k = 0; k < L.length && !on; k++) { const b = L[k]; if (b && !b.ghost && b.ground && (b.x > x0 && b.x < x1 && b.y + R >= fy - 8 && b.y + R <= fy + 6 || swept(b, x0, x1, fy))) on = true; }
       const DL0 = w.follow || noneNear(w, (x0 + x1) / 2, fy, 800) ? NONE : w.cand || w.dyn, DL = DL0.length > 48 ? nearCol(DL0, (x0 + x1) / 2) : DL0;   // (on the server: only the things near a player. In the shared world the crates on it are the server's to judge: here only your own ball is looked at, so a crate seen a little differently never makes it flicker)
       for (let j = 0; j < DL.length && !on; j++) {
         const o = DL[j]; if (o.burn > 0 || Math.abs(o.x - (x0 + x1) / 2) > 300) continue;
@@ -369,7 +384,7 @@
     for (let i = 0; i < w.doors.length; i++) {
       const d = w.doors[i];
       if (want[i]) d.offT = 0; else d.offT = (d.offT || 0) + (dt || 0);
-      if (want[i] && !d.open) { setDoorTiles(w, d, true); d.predT = Date.now(); w.ev.push({ k: 'door', open: true, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
+      if (want[i] && !d.open && !(w.follow && d.noPred > Date.now())) { setDoorTiles(w, d, true); d.predT = Date.now(); w.ev.push({ k: 'door', open: true, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
       else if (!want[i] && d.open && !w.follow && !(w.closeDelay && d.offT < w.closeDelay)) { doorShut(w, d, L); w.ev.push({ k: 'door', open: false, x: (d.x + d.w / 2) * TS, y: (d.y + d.h / 2) * TS, h: d.h }); }
     }
   }
@@ -818,7 +833,7 @@
     for (let i = 0; i < L.length; i++) { const d = L[i]; if (d.burn >= 1e9 || d.x < -9000) continue;
       if (burnZone(w, d)) { d.bx = d.x; d.by = d.y; d.bl = 1; d.bfx = 0; d.burn = 1e9; d.x = -99999; d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.st = 0; if (d.ownPub) (w.lost || (w.lost = [])).push(d); } }
   }
-  let dynTick = 0, hStamp = 0; const DYN_BUDGET = 600, CELL = 64, TOPUT = [], HB = [], NONE = [], BALLSH = { x: 0, y: 0 }, PCO = [];
+  let dynTick = 0, hStamp = 0; const DYN_BUDGET = 600, CELL = 64, TOPUT = [], HB = [], NONE = [], FA = [], BALLSH = { x: 0, y: 0 }, PCO = [];
   function selectFirst(a, k) {   // puts the k things with the lowest _pri first (in any order), without sorting the whole list
     let lo = 0, hi = a.length - 1;
     while (lo < hi) {
@@ -837,11 +852,15 @@
     if (f) {   // a very busy pile near you: only the nearest few dozen things are simulated each moment, so the game stays smooth however much has been built
       const near = [];
       fb = Array.isArray(f) && f.length > 3 ? colBuckets(f, FB) : null;   // (many players: each thing only looks at the players in its own stretch of the map; the answers are exactly the same)
-      for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; if (d.burn > 0) continue; const n1 = d._n1 = fb ? nearF(fb.get(Math.floor(d.x / FB)) || NONE, d.x, d.y, FR, FR) : nearF(f, d.x, d.y, FR, FR); if (d.nap || !n1) continue; near.push(d); }   // (_n1: worked out once here and used again below, nothing moves in between)
+      for (let i = 0; i < L.length; i++) { const d = L[i]; d.skip = false; d._spr = 0; if (d.burn > 0) continue; const n1 = d._n1 = fb ? nearF(fb.get(Math.floor(d.x / FB)) || NONE, d.x, d.y, FR, FR) : nearF(f, d.x, d.y, FR, FR); if (d.nap || !n1) continue; near.push(d); }   // (_n1: worked out once here and used again below, nothing moves in between)
       const BUD = w.dynBudget > 0 ? w.dynBudget : DYN_BUDGET;   // (the server can set a smaller number when it is busy: what is nearest to the players moves first)
-      if (near.length > BUD) { for (const d of near) { const fd = fb ? fb.get(Math.floor(d.x / FB)) : null, m = fd ? distF(fd, d) : 1e9; d._pri = (m <= FB ? m : distF(f, d)) - (d.gr && Math.abs(d.vx) + Math.abs(d.vy) < 40 ? 0 : 1e6); } selectFirst(near, BUD); for (let k = BUD; k < near.length; k++) near[k].skip = true; }   // (the BUD most important ones first; their order among themselves does not matter)   // (only with a truly huge crowd moving at once: what is still falling or flying is always worked out, and the farthest of what is only settling waits a moment)
+      if (near.length > BUD) {   // (more is moving than this moment allows: the nearest and the moving half of what is allowed moves every moment; everything else moves all together, every few moments. On a busy server things far from the players go on falling and settling, only more slowly: nothing is ever left hanging in mid-air, and nothing is squeezed between something that moves and something that waits)
+        for (const d of near) { const fd = fb ? fb.get(Math.floor(d.x / FB)) : null, m = fd ? distF(fd, d) : 1e9; d._pri = (m <= FB ? m : distF(f, d)) - (d.gr && Math.abs(d.vx) + Math.abs(d.vy) < 40 ? 0 : 1e6); }
+        const A = Math.max(1, BUD >> 1), k = Math.ceil((near.length - A) / Math.max(1, BUD - A)); selectFirst(near, A);
+        for (let i = A; i < near.length; i++) { near[i]._spr = k; if (wTick % k !== 0) near[i].skip = true; }   // (_spr: it moves at 1/k of its speed for now; the server tells everyone that speed, so every screen shows it moving smoothly)
+      }
     }
-    let pbMove = null; if (w.pb) for (const p of w.pb) { if (p._lx === undefined || Math.abs(p.x - p._lx) + Math.abs(p.y - p._ly) > 0.5) (pbMove || (pbMove = [])).push(p); p._lx = p.x; p._ly = p.y; }
+    let pbMove = null; if (w.pb) for (const p of w.pb) { if (p._lx === undefined || Math.abs(p.x - p._lx) + Math.abs(p.y - p._ly) > 0.5) { (pbMove || (pbMove = [])).push(p); if (p._lx !== undefined && Math.abs(p.x - p._lx) + Math.abs(p.y - p._ly) > 40) wakeAround(w, p._lx - R - 6, p._ly - R - 6, p._lx + R + 6, p._ly + R + 6); } p._lx = p.x; p._ly = p.y; }   // (a player who jumped somewhere at once, back to the start or through a portal: what rested on them where they were falls)
     const pbB = pbMove && pbMove.length > 3 ? colBuckets(pbMove, PB) : null;
     const act = [], chk = [], movingP = w.see.length ? w.see.filter(s => s.moving > 0 && !s.gone) : NONE;
     if (!w._grid || w._grid.size > 30000) { w._grid = new Map(); w._gUsed = []; }
@@ -850,7 +869,7 @@
     const grid = w._grid, used = w._gUsed, gA = w._gA, gC = w._gC, gR = w._gR; for (let i = 0; i < used.length; i++) used[i].length = 0; used.length = 0;
     const put = d => { const e = d.r || Math.max(d.hw, d.hh) * 1.42; for (let cx = Math.floor((d.x - e) / CELL); cx <= Math.floor((d.x + e) / CELL); cx++) for (let cy = Math.floor((d.y - e) / CELL); cy <= Math.floor((d.y + e) / CELL); cy++) { const ax = cx + 4, ay = cy + 4; let g; if (ax >= 0 && ax < gC && ay >= 0 && ay < gR) { const k = ax * gR + ay; g = gA[k]; if (!g) gA[k] = g = []; } else { const k = ax * 65536 + ay; g = grid.get(k); if (!g) grid.set(k, g = []); } if (!g.length) used.push(g); g.push(d); } };
     const H = (x0, y0, x1, y1) => { const r = HB; r.length = 0; const st = ++hStamp; for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) { const ax = cx + 4, ay = cy + 4, g = ax >= 0 && ax < gC && ay >= 0 && ay < gR ? gA[ax * gR + ay] : grid.get(ax * 65536 + ay); if (g) for (let j = 0; j < g.length; j++) { const o = g[j]; if (o._hT !== st) { o._hT = st; r.push(o); } } } return r; };
-    let farAwake = false; if (f) for (let i = 0; i < L.length; i++) { const d = L[i]; if (!d.nap && !(d.burn > 0) && !d._n1) { farAwake = true; break; } }   // (unless something far away is still moving: then everything is looked at, so it bumps into what is there)
+    let farAwake = false; FA.length = 0; if (f) for (let i = 0; i < L.length; i++) { const d = L[i]; if (!d.nap && !(d.burn > 0) && !d._n1) { farAwake = true; FA.push(d); if (FA.length >= 64) break; } }   // (unless something far away is still moving: then everything is looked at, so it bumps into what is there)
     for (let i = 0; i < L.length; i++) {
       const d = L[i]; d._i = i; d._dyn = false;
       if (d.burn > 0) { if (d.burn < 1e8) { d.burn -= dt; if (d.burn <= 0) { d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; d.av = 0; d.rot = 0; } } continue; }
@@ -859,7 +878,7 @@
       d._far = !!f && !d._n1;
       if (!d._far || !d.nap || farAwake || (fb ? nearF(fb.get(Math.floor(d.x / FB)) || NONE, d.x, d.y, FR + 300, FR + 300) : nearF(f, d.x, d.y, FR + 300, FR + 300))) TOPUT.push(d);   // (what rests far from everybody is not even looked at: nothing near anybody can touch it)
       if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if (d.farT > 30 && (d.gr || d.farT > 90)) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (only something that is on the ground: nothing is ever stopped in mid-air) */   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
-      if (d._far && d.nap) { d.sleep = true; continue; }   // far from everybody and at rest: nothing to work out
+      if (d._far && d.nap) { d.sleep = true; if (FA.length && dynTick % 15 === 0) for (let j = 0; j < FA.length; j++) { const o = FA[j]; if (Math.abs(o.x - d.x) < 260 && Math.abs(o.y - d.y) < 260) { chk.push(d); break; } } continue; }   // far from everybody and at rest: nothing to work out (unless something is still moving right by it, far away too: then it checks now and then that it is still held up, so nothing is left in the air where nobody happens to be)
       if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
       if (fol && w.seeOwned && !(d.mineT > 0) && !(d.hold > 0) && onOwnedPlank(w, d)) { d.mineT = 0.3; d.nap = false; }   // (what rides on a plank this device is turning is worked out here too, so they move together)
@@ -880,7 +899,6 @@
     nCT = 0; plankUsed = [];
     const S = o => { if (o.r) return BALLSH; if (o._shT !== wTick || o._sh === null) { o._sh = shapeOf(o); o._shT = wTick; } return o._sh; };   // (a ball needs no shape worked out: it is just its middle and its size)
     const wake = [], lavaOf = new Set();
-    for (const d of act) d._spr = 0;
     for (const d of act) {   // gravity, then every contact
       d.vy = Math.min(900, d.vy + GRAV * dt);
       d._im = d.im; d._ii = d.ii; d._bx = d._by = d._bw = 0; d._pl = false;
@@ -1233,12 +1251,15 @@
     (L.props || []).forEach(q => one('p', q, 3)); (L.gates || []).forEach(q => one('g', q, 5)); (L.misc || []).forEach(q => one('m', q, q[0] === 'por' || q[0] === 'rope' ? 5 : 4)); (L.cps || []).forEach(q => one('c', q, 2)); (L.dels || []).forEach(q => one('d', q, q.length));
     return h;
   }
+  function wakeAround(w, x0, y0, x1, y1) {   // something here was taken away (a crate, a plank, a tile of ground): whatever rests on it or against it looks again at once, wherever it is, near anybody or not
+    for (let i = 0; i < w.dyn.length; i++) { const o = w.dyn[i]; if (o.burn > 0 || !o.nap) continue; const e = (o.r || Math.max(o.hw, o.hh || o.hw) * 1.42) + 8; if (o.x + e > x0 && o.x - e < x1 && o.y + e > y0 && o.y - e < y1) { o.nap = false; o.st = 0; o.sleep = false; o.farT = 0; } }
+  }
   function applyDel(w, q) {
     if (!Array.isArray(q)) return false;
     const k = q[0], u = q[1] >>> 0;
-    if (k === 'b') { const d = w.dynBy.get(u); if (!d || d.gone) return false; d.gone = true; d.burn = 1e9; d.bl = 0; d.bx = d.by = -99999; d.x = d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.nap = false; return true; }
-    if (k === 's') { const s = w.see.find(e => e.uid === u && !e.gone); if (!s) return false; s.gone = true; s.cx = s.cy = -1e6; s.av = 0; s.sav = 0; return true; }
-    if (k === 'r') { const r = (w.ropes || []).find(e => e.uid === u && !e.gone); if (!r) return false; r.gone = true; return true; }
+    if (k === 'b') { const d = w.dynBy.get(u); if (!d || d.gone) return false; { const e = (d.r || Math.max(d.hw, d.hh || d.hw) * 1.42) + 4; wakeAround(w, d.x - e, d.y - e, d.x + e, d.y + e); } d.gone = true; d.burn = 1e9; d.bl = 0; d.bx = d.by = -99999; d.x = d.y = -99999; d.vx = d.vy = 0; d.av = 0; d.nap = false; return true; }
+    if (k === 's') { const s = w.see.find(e => e.uid === u && !e.gone); if (!s) return false; wakeAround(w, s.cx - s.hl - 20, s.cy - 60, s.cx + s.hl + 20, s.cy + 30); s.gone = true; s.cx = s.cy = -1e6; s.av = 0; s.sav = 0; return true; }
+    if (k === 'r') { const r = (w.ropes || []).find(e => e.uid === u && !e.gone); if (!r) return false; wakeAround(w, Math.min(r.ax, r.bx) - 20, Math.min(r.ay, r.by) - 60, Math.max(r.ax, r.bx) + 20, Math.max(r.ay, r.by) + 120); r.gone = true; return true; }
     if (k === 'base') { const b = (w.bases || []).find(e => !e.gone && e.tx === q[1] && e.ty === q[2]); if (!b) return false; w.bases.splice(w.bases.indexOf(b), 1); w._nbv = (w._nbv | 0) + 1; return true; }
     if (k === 'pwr') { const p = (w.pwrs || []).find(e => !e.gone && e.tx === q[1] && e.ty === q[2]); if (!p) return false; p.gone = true; return true; }
     if (k === 'pad') { const p = w.pads.find(e => !e.gone && e.x === q[1] && e.y === q[2]); if (!p) return false; p.gone = true; p.x = p.y = -100000; return true; }
@@ -1246,6 +1267,7 @@
     if (k === 'g') {
       const d = w.doors.find(e => e.uid === u && !e.gone); if (!d) return false;
       for (let yy = d.y; yy < d.y + d.h; yy++) for (let xx = d.x; xx < d.x + d.w; xx++) if (xx >= 0 && xx < w.W && yy >= 0 && yy < w.H && w.grid[yy * w.W + xx] === 9) w.grid[yy * w.W + xx] = 0;
+      wakeAround(w, d.x * TS - 4, d.y * TS - 4, (d.x + d.w) * TS + 4, (d.y + d.h) * TS + 4);
       d.gone = true; d.open = true; d.latched = true; d.x = d.y = -100000;
       for (const q2 of w.plates.concat(w.btns)) if (q2.to && q2.to.every(i => !w.doors[i] || w.doors[i].gone)) { q2.gone = true; q2.x = q2.y = -100000; }   // (its trigger goes with it, unless it still works another gate)
       return true;
@@ -1779,7 +1801,7 @@
     return '';
   }
   const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
-  const api = { VERSION: 221, springKick, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 223, springKick, setPad, wakeAround, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
