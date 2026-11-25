@@ -1,6 +1,6 @@
 /* ballpit.party service worker: lets the game install as an app and open without a network.
    Network first (so you always get the newest files), the saved copy is only the fallback. */
-const CACHE = 'ballpit-v224';
+const CACHE = 'ballpit-v225';
 const FILES = ['/', '/index.html', '/maps.js', '/physics.js', '/icon.svg', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES).catch(() => {})).then(() => self.skipWaiting())); });
 const META = 'ballpit-meta';   // (small notes kept across updates: whether the game is installed as an app on this device)
@@ -22,25 +22,27 @@ self.addEventListener('push', e => {
    Installed: the phone is asked to open the app's address. Android hands an address of an installed app to the app (and just brings it to the front when it
    is already open), so a browser tab never takes over. The game tells this worker when it runs as the app, or when the browser says it is installed, and
    that is remembered (so it is known even when the app is closed). */
-const appWins = new Set();
+const appWins = new Set();   // (the app's windows open now. Also written down, because the phone stops this worker when it is idle and it would forget them)
+const IDS = '/__appids', idsGet = () => caches.open(META).then(c => c.match(IDS)).then(r => r ? r.text() : '[]').then(t => { const L = JSON.parse(t); return Array.isArray(L) ? L.filter(x => typeof x === 'string') : []; }).catch(() => []);
+const idsSet = (id, on) => idsGet().then(L => { L = L.filter(x => x !== id); if (on) L.push(id); return caches.open(META).then(c => c.put(IDS, new Response(JSON.stringify(L.slice(-12))))); }).catch(() => {});
 const markApp = () => caches.open(META).then(c => c.put('/__app', new Response(String(Date.now())))).catch(() => {});
 const appKnown = () => caches.open(META).then(c => c.match('/__app')).then(r => r ? r.text() : '0').then(t => Date.now() - (+t || 0) < 180 * 864e5).catch(() => false);
 const asApp = u => { try { const x = new URL(u, self.location.origin); if (x.origin !== self.location.origin) return '/?app=1'; x.searchParams.set('app', '1'); return x.pathname + x.search + x.hash; } catch (e) { return '/?app=1'; } };
 const sameSite = u => { try { const x = new URL(u, self.location.origin); return x.origin === self.location.origin ? x.pathname + x.search + x.hash : '/'; } catch (e) { return '/'; } };   // (only ever this game's own pages)
 self.addEventListener('message', e => {
   const d = e.data || {}, src = e.source;
-  if (d.t === 'mode' && src) { if (d.app) { appWins.add(src.id); e.waitUntil(markApp()); } else appWins.delete(src.id); }
+  if (d.t === 'mode' && src) { if (d.app) { appWins.add(src.id); e.waitUntil(Promise.all([markApp(), idsSet(src.id, true)])); } else { appWins.delete(src.id); e.waitUntil(idsSet(src.id, false)); } }
   else if (d.t === 'installed') e.waitUntil(markApp());
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const url = (e.notification.data && e.notification.data.url) || '/';
-  e.waitUntil((async () => {
-    let cs = []; try { cs = await self.clients.matchAll({ type: 'window', includeUncontrolled: true }); } catch (x) {}
-    const app = cs.find(c => appWins.has(c.id) && 'focus' in c);
-    if (app) { try { await app.focus(); return; } catch (x) {} }   // the app is open, and it told us so: back to it
-    if (await appKnown()) { try { await self.clients.openWindow(asApp(url)); return; } catch (x) {} }   // installed: open the app
-    const tab = cs.find(c => 'focus' in c); if (tab) { try { await tab.focus(); return; } catch (x) {} }   // not installed: the game already open in the browser
-    try { await self.clients.openWindow(sameSite(url)); } catch (x) {}
-  })());
+  e.waitUntil(onTap((e.notification.data && e.notification.data.url) || '/'));
 });
+async function onTap(url) {   // a notification was tapped
+  let cs = []; try { cs = await self.clients.matchAll({ type: 'window', includeUncontrolled: true }); } catch (x) {}
+  const ids = new Set([...appWins, ...(await idsGet())]), app = cs.find(c => ids.has(c.id) && 'focus' in c);
+  if (app) { try { await app.focus(); return; } catch (x) {} }   // the app is open, and it told us so: back to it
+  if (app || await appKnown()) { try { await self.clients.openWindow(asApp(url)); return; } catch (x) {} }   // installed: the phone is asked to open the app (it hands the game's address to the app on the home screen)
+  const tab = cs.find(c => 'focus' in c); if (tab) { try { await tab.focus(); return; } catch (x) {} }   // not installed: the game already open in the browser
+  try { await self.clients.openWindow(sameSite(url)); } catch (x) {}
+}

@@ -1106,7 +1106,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 224; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 225; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1621,6 +1621,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
     <section class="pane" data-pane="notify">
       <div class="small dim" style="margin:2px 0 8px">Get a notification on this device, even when the game is closed. Off until you turn it on. On iPhone and iPad, add the game to your Home Screen first (Share, then Add to Home Screen) and open it from there.</div>
       <label class="sw2 ic2"><span class="ti"><span data-ic="bell"></span><span><b>Notifications</b><small id="ntSub">Reach you here, even when the game is closed</small></span></span><input type="checkbox" id="setNotify"><i></i></label>
+      <div class="amnote hide" id="ntApp"></div>
       <div id="ntKinds" class="ntkinds hide"><div class="small dim ntk">Tell me about:</div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Friends come online</b><small id="ntFrSub">Any of your friends starts playing</small></span></span><input type="checkbox" id="setNFriends"><i></i></label>
         <div class="ntfr" id="ntFrBox"><button class="btn sm" id="ntFrBtn" type="button"><span data-ic="users"></span><span id="ntFrBtnT">Choose friends</span></button></div>
@@ -1949,8 +1950,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=224"></script>
-<script src="physics.js?v=224"></script>
+<script src="maps.js?v=225"></script>
+<script src="physics.js?v=225"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -7705,12 +7706,20 @@ $('ntFrBtn').onclick = () => nfOpen('f');
 $('ntMsBtn').onclick = () => nfOpen('m');
 $('setNMsgs').addEventListener('change', () => setTimeout(ntFrRender, 0));
 $('setNFriends').addEventListener('change', () => setTimeout(ntFrRender, 0));
+const ntAppTip = () => {   // a browser that cannot open the app from a notification: say so, once notifications are on (only on Android, where Chrome can)
+  if (!settings.notify || !notifOn() || !/Android/i.test(navigator.userAgent)) return '';
+  const brave = !!(navigator.brave && typeof navigator.brave.isBrave === 'function'), sam = /SamsungBrowser/i.test(navigator.userAgent), ff = /Firefox\//i.test(navigator.userAgent);
+  const nm = brave ? 'Brave' : ff ? 'Firefox' : /EdgA\//i.test(navigator.userAgent) ? 'Edge' : /OPR\//i.test(navigator.userAgent) ? 'Opera' : '';
+  if (!nm || sam) return '';
+  return nm + ' puts the game on your home screen as a shortcut, not as an app, so tapping a notification opens ' + nm + '. To have taps open the app, install the game from Chrome (menu, then Install app) and turn notifications on there. Save a backup first (More) and load it in Chrome to keep everything.';
+};
 function ntRender() {
   const on = notifOK() ? Notification.permission !== 'denied' : false;
   $('setNotify').checked = !!settings.notify && notifOn();
   $('setNotify').disabled = !on && !settings.notify;
   $('ntSub').textContent = !notifOK() ? (/iPhone|iPad|iPod/.test(navigator.userAgent) ? 'Add the game to your Home Screen, open it from there, then turn this on' : 'Not available on this device or browser') : Notification.permission === 'denied' ? 'Blocked. Allow notifications for ballpit.party in your browser settings' : settings.notify && pushState === 'fail' ? 'On while the game is open. This browser cannot wake a closed game' : 'Reach you here, even when the game is closed';
   $('ntKinds').classList.toggle('hide', !(settings.notify && notifOn()));
+  { const tip = ntAppTip(); $('ntApp').classList.toggle('hide', !tip); $('ntApp').textContent = tip; }
   [['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'], ['setNEmpty', 'nEmpty']].forEach(p => { $(p[0]).checked = !!settings[p[1]]; });
   ntFrRender(); quietRender();
 }
