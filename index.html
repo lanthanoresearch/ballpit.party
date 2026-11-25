@@ -1059,6 +1059,7 @@ html.mfull #admModal .amcard{zoom:1;width:100%;max-width:100%;height:100%;max-he
 .amfr{display:inline-flex;align-items:center;gap:5px;flex:none;font-size:13px;padding:4px 9px;border-radius:99px;background:#2fa463;color:#fff}
 .amfr .ic{width:15px;height:15px}
 .amnote{padding:10px 12px;border-radius:12px;background:rgba(107,79,208,.25);border:2px solid rgba(190,170,255,.5);font-size:14px}
+.amchl{display:flex;flex-direction:column;gap:8px;margin:4px 0 10px}.amch{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:12px;background:rgba(107,79,208,.22);border:2px solid rgba(190,170,255,.45);font-size:14px}.amch .amcht{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.amch .amcht small{opacity:.78;font-size:12.5px}.amch .xbtn{flex:none}.amch.off{opacity:.55}.amch.off .amcht b{text-decoration:line-through}.amchnone{padding:6px 2px}.amsubh{font-size:13px;font-weight:700;opacity:.8;margin:6px 2px 2px;text-transform:uppercase;letter-spacing:.04em}
 .amban{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(168,40,28,.28);border:2px solid rgba(224,86,107,.75);font-size:14px}
 .amban span{flex:1;min-width:0}
 .amban .btn{flex:none}
@@ -1105,7 +1106,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 223; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 224; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1401,7 +1402,10 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       <button class="btn full" id="amSet" type="button"><span data-ic="check"></span>Set their money</button>
       </div>
       <div id="amPerkBox">
-      <h4><span data-ic="spark"></span> Extras, for good</h4>
+      <h4><span data-ic="spark"></span> <span id="amChH">Cheats</span></h4>
+      <div class="small dim" id="amChNote"></div>
+      <div id="amChList" class="amchl"></div>
+      <div class="amsubh">Turn on for good</div>
       <label class="sw2 ic2" id="amPkCRow"><span class="ti"><span data-ic="gem"></span><span><b>Unlimited coins and diamonds</b><small>Everywhere they play, on every device of theirs, until you turn it off</small></span></span><input type="checkbox" id="amPkC"><i></i></label>
       <label class="sw2 ic2" id="amPkBRow"><span class="ti"><span data-ic="plus"></span><span><b>No building limits</b><small>As many of everything as they like, and no fair-share limit in busy worlds. A world still holds only so much in all</small></span></span><input type="checkbox" id="amPkB"><i></i></label>
       </div>
@@ -1945,8 +1949,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=223"></script>
-<script src="physics.js?v=223"></script>
+<script src="maps.js?v=224"></script>
+<script src="physics.js?v=224"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3164,7 +3168,10 @@ function loadPurses() {
 }
 loadPurses();
 if (typeof settings.unl !== 'boolean') { settings.unl = !!(purseV[soloLevel()] && purseV[soloLevel()].u); save(); }   // (from before: if the level you played last had unlimited coins, every level has them now)
-function cheatPre(p) { if (!p.pre) p.pre = { c: p.c, g: p.g }; }   // (the money you had before the first money code of this game, so it can go back at the next one)
+function cheatPre(p) { if (!p.pre) p.pre = { c: p.c, g: p.g }; }
+const cheatMonPre = () => purseP.pre && (purseP.c > purseP.pre.c || purseP.g > purseP.pre.g) ? purseP.pre : null;   // (public money a code gave: more than you had before it. That is what goes back when the code goes)
+const cheatList = () => { const L = []; if (infMoney) L.push('inf'); try { if (noCaps) L.push('nc'); } catch (e) {} if (cheatMonPre()) L.push('mon'); return L; };   // (the codes on this device now, for a game admin's page)
+function pckSet(k) { try { const o = JSON.parse(localStorage.getItem(PCK) || 'null'); if (o && o[k]) { o[k] = 0; localStorage.setItem(PCK, JSON.stringify(o)); } } catch (e) {} }   // (a code turned off stays off when you come back to this public map, too)   // (the money you had before the first money code of this game, so it can go back at the next one)
 /* Cheats used in a public game last until that public map changes (every 3 hours): leaving, reloading, an update, or a trip to a private world and back
    does not take them away. A private game still starts without them. */
 const PCK = 'ballrun4_pcheat';
@@ -5631,7 +5638,7 @@ const SHOP = [
   { cat: 'gadgets', id: 'pad', max: 100, name: 'Floor booster', info: 'Throws you forward.', c: 100, g: 0, misc: 'pad' },
   { cat: 'travel', id: 'portal', max: 2, name: 'Portals', info: 'Go in one, come out the other.', c: 1000, g: 20, portal: true },
   { cat: 'gadgets', id: 'bnc', max: 100, name: 'Ground spring', info: 'Bounces you up from the ground.', c: 100, g: 0, misc: 'spr' },
-  { cat: 'gadgets', id: 'bncS', max: 60, name: 'Super ground spring', info: 'Set into the ground. Bounces you as high as the super spring.', c: 400, g: 4, misc: 'spr', sup: 1 },
+  { cat: 'gadgets', id: 'bncS', max: 60, name: 'Super ground spring', info: 'Set into the ground. Bounces you as high as the super spring.', c: 200, g: 0, misc: 'spr', sup: 1 },
   { cat: 'terrain', id: 'lava', max: 300, name: 'Lava', info: 'Turns ground into lava.', c: 150, g: 7, misc: 'ter', ter: 'lava' },
   { cat: 'terrain', id: 'ice', max: 300, name: 'Ice', info: 'Turns ground into slippery ice.', c: 150, g: 7, misc: 'ter', ter: 'ice' },
   { cat: 'terrain', id: 'dirt', max: 3000, name: 'Dirt', info: 'Adds ground next to other ground.', c: 70, g: 3, misc: 'ter', ter: 'dirt' },
@@ -5884,18 +5891,14 @@ function lavaDown(x, r, out) {   // lava that is turned to rock turns to rock al
   for (let b = r + 1, n = 0; n < 14 && b < w.H - 1 && P.tile(w, x, b) === 2 && !startTile(x, b) && !terrainBlocked(x, b, false); b++, n++) if (!out.some(e => e[0] === x && e[1] === b)) out.push([x, b, 7]);
   return out;
 }
-function bncSpot(side) {   // a ground spring: one tile wide. Over open air it falls until it reaches the ground, then it sits in it.
-  const w = S.world, b = S.b;
-  for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
-    const s = pass ? -side : side, tx = adjTx(b, s, 1), r0 = Math.floor((b.y + R - 2) / TS);
-    if (solidT(P.tile(w, tx, r0))) continue;
-    for (let r = r0 + 1; r < r0 + 80 && r < w.H; r++) {
-      const a = P.tile(w, tx, r);
-      if (a === 2 || a === 5) break;
-      if (solidT(a)) { if (a === 1 || a === 3) return { tx, r, r0, side: s }; break; }
-    }
+function bncSpot(side) {   // a ground spring: one tile wide, set straight into the top of the ground right beside you (a step up or down is fine). It appears there at once, never dropped from the air
+  const w = S.world, b = S.b, tx = adjTx(b, side, 1), feet = Math.floor((b.y + R + 1) / TS);   // (feet: the row of ground under your ball)
+  let best = null;
+  for (let r = feet - 2; r <= feet + 3; r++) {   // (the top of the ground in that column, nearest the ground you are on)
+    const a = P.tile(w, tx, r), up = P.tile(w, tx, r - 1);
+    if ((a === 1 || a === 3) && !solidT(up) && up !== 2 && (!best || Math.abs(r - feet) < Math.abs(best.r - feet))) best = { tx, r, r0: r, side };
   }
-  return null;
+  return best;
 }
 const portalHere = (cx, half, row) => S.world.portals.some(q => [q.a, q.b].some(e => Math.abs(e.x - cx) < half + 26 && Math.abs(e.y - row * TS) < 14));   // is there a portal where this would go?
 const underSomething = (cx, half, gr) => {   // is something built right above this spot of ground?
@@ -7292,12 +7295,12 @@ function admOneRender() {
   { const pc = good && canDo('m'), pb = good && canDo('b');
     $('amPerkBox').classList.toggle('hide', !(pc || pb)); $('amPkCRow').classList.toggle('hide', !pc); $('amPkBRow').classList.toggle('hide', !pb);
     const pk = Object.assign({}, o.pk || {}), pd = o.pkPend || {}; for (const k of ['c', 'b']) if (pd[k] && Date.now() - pd[k].at < 6000) pk[k] = pd[k].on;   // (just switched: shown as you set it until the server has it)
-    $('amPkC').checked = !!pk.c; $('amPkB').checked = !!pk.b; }
+    $('amPkC').checked = !!pk.c; $('amPkB').checked = !!pk.b; $('amChH').textContent = staff === 'me' ? 'Your cheats' : 'Cheats'; }
   $('amBoot').classList.toggle('hide', !canDo('boot')); $('amBanGo').classList.toggle('hide', !canDo('ban'));
   $('amBoot').disabled = !o.on; $('amBanGo').innerHTML = '<svg class="ic"><use href="#i-lock"/></svg>' + (b ? 'Ban again' : 'Ban');
   $('amOutNote').textContent = o.on ? (canDo('boot') ? 'Boot sends them to the main menu: they can come straight back. ' : '') + (canDo('ban') ? 'A ban keeps them out of online play until it ends.' : '') : 'They are not playing now.' + (canDo('ban') ? ' A ban starts at once and stops them coming in.' : '');
   $('amIpRow').classList.toggle('hide', !o.ipOk); $('amIpNote').textContent = o.net ? 'Stops a new account from the same Wi-Fi or phone network too. ' + o.net + ' other player' + (o.net === 1 ? ' is' : 's are') + ' on it right now and would be out too' : 'Stops a new account from the same Wi-Fi or phone network too';
-  admMoneyRender();
+  admMoneyRender(); admCheatRender();
   document.querySelectorAll('.amdur [data-h]').forEach(x => x.classList.toggle('on', +x.dataset.h === (admOne.banH || 24)));
 }
 const devPermsNow = () => { const p = {}; document.querySelectorAll('#amDevPerms [data-perm]').forEach(x => { if (x.checked) p[x.dataset.perm] = 1; }); return p; };
@@ -7306,6 +7309,7 @@ $('amDev').onchange = () => { const o = admOne; if (!o) return; const on = $('am
   else askConfirm('Take ' + admNm(o) + ' off the dev team?', 'Their dev tools go away at once, on all their devices.', 'Take off', () => { o.dev = null; wsSend({ t: 'admdev', pub: o.pub, on: 0 }); admOneRender(); }, { no: 'Cancel', yesClass: 'danger' });
 };
 document.querySelectorAll('#amDevPerms [data-perm]').forEach(x => x.onchange = () => { const o = admOne; if (!o || !o.dev) return; sfx(x.checked ? 'on' : 'off'); const p = devPermsNow(); o.dev = { p }; wsSend({ t: 'admdev', pub: o.pub, on: 1, p }); });
+const walMsg = () => { const pre = cheatMonPre(); return { t: 'mwal', c: purseP.c | 0, g: purseP.g | 0, inf: infMoney ? 1 : 0, pk: perkC ? 1 : 0, ch: cheatList(), pre: pre ? [pre.c | 0, pre.g | 0] : null }; };   // (this device's public money and the codes it has on, for a game admin's page)
 function admMoneyRender() {   // a player's money on their page: what they have (live from their device, or as it last said), and whether they play with unlimited money just now
   const o = admOne; if (!o || $('amMoneyBox').classList.contains('hide')) return;
   const me = !!o.me, live = o.wl && Date.now() - o.wl.at < 12000 ? o.wl : null, w = live || o.mw || null;
@@ -7315,15 +7319,43 @@ function admMoneyRender() {   // a player's money on their page: what they have 
   let t = live ? (me ? 'You have ' : 'They have ') + amt + ' right now.' : w ? (me ? 'You had ' : 'They had ') + amt + (o.on ? ' a moment ago.' : ' when they last played (' + ago(w.at) + ').') : o.on ? 'Asking their device…' : 'Not known yet: their device has not said since this was added. It will the next time they play.';
   if (!o.on && !me) t += o.pend ? ' Waiting to be set the next time they play: ' + fmtN(o.pend.c) + ' coins, ' + fmtN(o.pend.g) + ' diamonds.' : ' What you set here goes on their device the next time they play.';
   $('amMoneyNote').textContent = t;
-  const pkc = !!(o.pk && o.pk.c), inf = !!(w && w.inf), box = $('amMoneyInf');
-  box.classList.toggle('hide', !(pkc || inf));
-  box.textContent = pkc ? (me ? 'You are' : 'They are') + ' playing with unlimited coins and diamonds (Extras, below). The amounts above are ' + (me ? 'your' : 'their') + ' own, kept for when that is off.' : inf ? (me ? 'You are' : 'They are') + ' playing with unlimited coins and diamonds from a code. The amounts above are ' + (me ? 'your' : 'their') + ' own; setting them turns the code off.' : '';
+  const pk = admPkNow(o), ch = admChNow(o), inf = !!pk.c || ch.includes('inf'), box = $('amMoneyInf'), Y = me ? 'You are' : 'They are', y = me ? 'your' : 'their';
+  box.classList.toggle('hide', !inf);
+  box.textContent = inf ? Y + ' playing with unlimited coins and diamonds right now (' + (pk.c && ch.includes('inf') ? 'for good, and from a code' : pk.c ? 'for good' : 'from a code') + '). The amounts above are ' + y + ' own: what ' + (me ? 'you have' : 'they have') + ' whenever unlimited is off. Setting them keeps unlimited on; turn it off under Cheats.' : '';
+  admCheatRender();
+}
+const admPkNow = o => { const pk = Object.assign({}, o.pk || {}), pd = o.pkPend || {}; for (const k of ['c', 'b']) if (pd[k] && Date.now() - pd[k].at < 6000) pk[k] = pd[k].on; return pk; };   // (just switched: shown as you set it until the server has it)
+const admChSrc = o => { const live = o.wl && Date.now() - o.wl.at < 12000 && Array.isArray(o.wl.ch) ? o.wl : null; return live || (o.mw && Array.isArray(o.mw.ch) ? o.mw : null); };   // (the codes on their device: as it says now, or as it last said)
+const admChNow = o => { const s = admChSrc(o), off = o.chOff || {}; return s ? s.ch.filter(k => !(off[k] && Date.now() - off[k] < 8000)) : []; };
+const CH_TXT = { inf: ['gem', 'Unlimited coins and diamonds', 'From a code (themaker#1), until this public map changes'], nc: ['plus', 'No building limits', 'From a code (unlimitedpower), until this public map changes'], mon: ['gcoin', 'Money set by a code', ''], pkc: ['gem', 'Unlimited coins and diamonds', 'For good, given by a game admin, on every device of theirs'], pkb: ['plus', 'No building limits', 'For good, given by a game admin, on every device of theirs'] };
+function admCheatRender() {   // the cheats a player has on now: codes on their device and extras given for good, each with an X that turns it off for them
+  const o = admOne, L = $('amChList'); if (!o || !L || $('amPerkBox').classList.contains('hide')) return;
+  const me = !!o.me, src = admChSrc(o), ch = admChNow(o), pk = admPkNow(o), un = o.unch || {}, mOk = canDo('m'), bOk = canDo('b'), rows = [];
+  for (const k of ['inf', 'nc', 'mon']) if (ch.includes(k) || un[k]) rows.push({ k, code: 1, ok: k === 'nc' ? bOk : mOk, later: !!un[k] });
+  if (pk.c) rows.push({ k: 'pkc', ok: mOk }); if (pk.b) rows.push({ k: 'pkb', ok: bOk });
+  const key = JSON.stringify([rows, src && src.pre, me]); if (L.dataset.k === key) return; L.dataset.k = key; L.textContent = '';
+  for (const r of rows) {
+    const t = CH_TXT[r.k], row = el('div', 'amch' + (r.later ? ' off' : '')), ic = el('span'); ic.dataset.ic = t[0]; row.appendChild(ic); fillIcons(row);
+    const w = el('span', 'amcht'); w.appendChild(el('b', '', t[1]));
+    const pre = src && src.pre, sub = r.later ? 'Turned off: it goes the next time ' + (me ? 'you play' : 'they play') : r.k === 'mon' ? (pre ? (me ? 'You' : 'They') + ' had ' + fmtN(pre[0]) + ' coins and ' + fmtN(pre[1]) + ' diamonds before it. Turning it off puts ' + (me ? 'you' : 'them') + ' back to that' : 'Turning it off puts ' + (me ? 'you' : 'them') + ' back to what ' + (me ? 'you' : 'they') + ' had before it') : t[2];
+    w.appendChild(el('small', '', sub)); row.appendChild(w);
+    if (r.ok && !r.later) { const x = el('button', 'xbtn'); x.type = 'button'; x.setAttribute('aria-label', 'Turn off ' + t[1].toLowerCase()); x.title = 'Turn off'; x.innerHTML = '<svg class="ic"><use href="#i-close"/></svg>'; x.onclick = () => admCheatOff(r.k, t[1]); row.appendChild(x); }
+    L.appendChild(row);
+  }
+  if (!rows.length) L.appendChild(el('div', 'small dim amchnone', src || o.on ? 'No cheats on.' : 'Not known yet: ' + (me ? 'your' : 'their') + ' device has not said. It will the next time ' + (me ? 'you play' : 'they play') + '.'));
+  $('amChNote').textContent = rows.length && !o.on && !me && src && src.at ? 'As ' + (me ? 'your' : 'their') + ' device said when they last played (' + ago(src.at) + ').' : '';
+}
+function admCheatOff(k, name) {   // the X: off for that player now (or the next time they play)
+  const o = admOne; if (!o) return; sfx('off');
+  if (k === 'pkc' || k === 'pkb') { const kk = k === 'pkc' ? 'c' : 'b'; o.pkPend = Object.assign({}, o.pkPend, { [kk]: { on: 0, at: Date.now() } }); wsSend({ t: 'admperk', pub: o.pub, k: kk, on: 0 }); }
+  else { o.chOff = Object.assign({}, o.chOff, { [k]: Date.now() }); if (!o.on) o.unch = Object.assign({}, o.unch, { [k]: 1 }); wsSend({ t: 'admunch', pub: o.pub, k }); }
+  admOneRender();
 }
 ['amC', 'amG'].forEach(id => { $(id).oninput = () => { if (admOne) admOne.mTyped = true; }; });   // (typing: the amounts are left as you type them, not refreshed over)
 $('amSet').onclick = () => {
   if (!admOne) return; const c = Math.floor(+$('amC').value), g = Math.floor(+$('amG').value);
   if (!($('amC').value !== '' && $('amG').value !== '' && c >= 0 && g >= 0 && c <= 1e9 && g <= 1e9)) { notice('Type both amounts: whole numbers from 0', 'urgent'); return; }
-  sfx('ui'); wsSend({ t: 'admset', pub: admOne.pub, c, g }); admOne.mTyped = false; if (admOne.on) { admOne.wl = null; admOne.mw = { c, g, inf: 0, at: Date.now() }; } else admOne.pend = { c, g };
+  sfx('ui'); wsSend({ t: 'admset', pub: admOne.pub, c, g }); admOne.mTyped = false; if (admOne.on) { const w0 = admChSrc(admOne) || {}; admOne.wl = null; admOne.mw = { c, g, inf: w0.inf ? 1 : 0, at: Date.now(), ch: (w0.ch || []).filter(k => k !== 'mon'), pre: null }; } else admOne.pend = { c, g };   // (a code that set their money is over; unlimited stays as it was)
 };
 ['C', 'B'].forEach(K => { $('amPk' + K).onchange = () => { if (!admOne) return; const on = $('amPk' + K).checked, k = K.toLowerCase(), o = admOne; sfx(on ? 'on' : 'off');
   o.pkPend = Object.assign({}, o.pkPend, { [k]: { on: on ? 1 : 0, at: Date.now() } }); wsSend({ t: 'admperk', pub: o.pub, k, on: on ? 1 : 0 });
@@ -7391,14 +7423,14 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
     case 'admsh': devShSrv = m.on ? 1 : 0; devRender(); try { lpRender(); } catch (e) {} if (chatOpen && chatView === 'w') chatRender(false); return true;   // (the Dev badge: shown or hidden, as the server now has it)
     case 'admsnapv': if (isAdmin() && devRole === 'owner' && m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap)); return true;   // (the bans, the dev team and the switches, kept here in case the server forgets them)
     case 'admp': if (!admOne || m.pub !== admOne.pub) return true;
-      { const keep = { pkPend: admOne.pkPend, wl: admOne.wl, mTyped: admOne.mTyped, banH: admOne.banH, code: admOne.code, color: admOne.color, color2: admOne.color2, pat: admOne.pat, fr: admOne.fr, w: admOne.w, host: admOne.host, since: admOne.since };
+      { const keep = { pkPend: admOne.pkPend, chOff: admOne.chOff, wl: admOne.wl, mTyped: admOne.mTyped, banH: admOne.banH, code: admOne.code, color: admOne.color, color2: admOne.color2, pat: admOne.pat, fr: admOne.fr, w: admOne.w, host: admOne.host, since: admOne.since };
         const fresh = (admData && [...admData.on, ...admData.recent, ...admData.bans, ...(admData.devs || [])].find(e => e.pub === m.pub)) || {};
         admOne = Object.assign({}, keep, fresh, m, { banH: keep.banH, last: m.last || fresh.last }); if (!m.on) { admOne.w = ''; admOne.since = 0; } }
       admOneRender(); return true;
-    case 'admw': if (admOne && m.pub === admOne.pub) { admOne.wl = { c: Math.max(0, +m.c || 0), g: Math.max(0, +m.g || 0), inf: m.inf ? 1 : 0, at: Date.now() }; admMoneyRender(); } return true;
+    case 'admw': if (admOne && m.pub === admOne.pub) { admOne.wl = { c: Math.max(0, +m.c || 0), g: Math.max(0, +m.g || 0), inf: m.inf ? 1 : 0, at: Date.now(), ch: Array.isArray(m.ch) ? m.ch : null, pre: Array.isArray(m.pre) ? m.pre : null }; if (Array.isArray(m.ch)) admOne.chOff = {}; admMoneyRender(); } return true;
     case 'admok': {
-      const t = { money: 'Their money is set', moneyme: 'Your money is set', moneylater: 'Their money is set for the next time they play', pkc1: 'Unlimited coins and diamonds for them, for good', pkc0: 'Their unlimited coins and diamonds are off', pkb1: 'No building limits for them, for good', pkb0: 'Their building limits are back', nob1: 'They can build again', nob0: 'They can\u2019t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a dev: nothing changed', owner: 'That is an owner: nothing changed', noperm: 'You can\u2019t do that: ask an owner', dev1: 'Saved: they are on the dev team', dev0: 'They are off the dev team' }[m.what];
-      if (t) notice(t, m.what === 'admin' || m.what === 'owner' || m.what === 'noperm' ? 'urgent' : '');
+      const t = { money: 'Their money is set', moneyme: 'Your money is set', moneylater: 'Their money is set for the next time they play', pkc1: 'Unlimited coins and diamonds for them, for good', unchinf: 'Their unlimited coins and diamonds are off', unchnc: 'Their building limits are back', unchmon: 'The money from their code is gone: they have what they had before it', unchinfL: 'Their unlimited coins and diamonds go off the next time they play', unchncL: 'Their building limits come back the next time they play', unchmonL: 'The money from their code goes the next time they play', pkc0: 'Their unlimited coins and diamonds are off', pkb1: 'No building limits for them, for good', pkb0: 'Their building limits are back', nob1: 'They can build again', nob0: 'They can\u2019t build now', noc1: 'They can use codes again', noc0: 'Codes are off for them', boot: 'Booted', ban: 'Banned', unban: 'Unbanned', closed: 'The game is closed to everyone', opened: 'The game is open again', admin: 'That is a dev: nothing changed', owner: 'That is an owner: nothing changed', noperm: 'You can\u2019t do that: ask an owner', dev1: 'Saved: they are on the dev team', dev0: 'They are off the dev team' }[m.what];
+      if (t) notice(admOne && admOne.me && m.pub === admOne.pub && /^unch/.test(m.what) ? t.replace(/^Their /, 'Your ').replace(/^The money from their/, 'The money from your').replace(/\bthey\b/g, 'you') : t, m.what === 'admin' || m.what === 'owner' || m.what === 'noperm' ? 'urgent' : '');
       admAsk(); if (admOne && m.pub === admOne.pub) wsSend({ t: 'admp', pub: admOne.pub });
       if (m.what === 'ban' || m.what === 'unban') $('amBanBox').classList.add('hide');
       return true;
@@ -7417,14 +7449,22 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
       try { if (shopOpen) shopRender(); } catch (e) {}
       return true;
     }
-    case 'mwal': wsSend({ t: 'mwal', c: purseP.c | 0, g: purseP.g | 0, inf: infMoney ? 1 : 0, pk: perkC ? 1 : 0 }); return true;   // (an admin is looking: the public money on this device)
+    case 'mwal': wsSend(walMsg()); return true;   // (an admin is looking: the public money on this device, and the codes it has on)
+    case 'unch': {   // a game admin turned off one of the codes on this device
+      const k = m.k; let what = '';
+      if (k === 'inf' && infMoney) { infMoney = false; try { localStorage.removeItem('ballrun4_inf'); } catch (e) {} pckSet('inf'); what = 'unlimited coins and diamonds'; }
+      else if (k === 'nc' && noCaps) { noCaps = false; try { localStorage.removeItem('ballrun4_nocap'); } catch (e) {} pckSet('nc'); what = 'no building limits'; }
+      else if (k === 'mon' && purseP.pre) { purseP.c = Math.min(purseP.c, purseP.pre.c); purseP.g = Math.min(purseP.g, purseP.pre.g); delete purseP.pre; saveWallet(); what = 'the money from a code'; }
+      try { homeWalletRender.k = ''; homeWalletRender(); } catch (e) {} try { if (shopOpen) shopRender(); } catch (e) {}
+      if (what && !m.self) notice('A game admin turned off ' + what, '');
+      wsSend(walMsg()); return true;
+    }
     case 'mset': {   // an admin set this player's public money
       const c = Math.max(0, Math.min(1e9, Math.floor(+m.c) || 0)), g = Math.max(0, Math.min(1e9, Math.floor(+m.g) || 0));
-      purseP.c = c; purseP.g = g; delete purseP.pre;
-      try { infMoney = false; localStorage.removeItem('ballrun4_inf'); const o = JSON.parse(localStorage.getItem(PCK) || 'null'); if (o) { o.inf = 0; localStorage.setItem(PCK, JSON.stringify(o)); } } catch (e) {}
+      purseP.c = c; purseP.g = g; delete purseP.pre;   // (your own money from now on: a code that set your money before is over, and this is what you have whenever unlimited is off. Unlimited itself stays as it was)
       saveWallet(); try { homeWalletRender.k = ''; homeWalletRender(); } catch (e) {} try { if (shopOpen) shopRender(); } catch (e) {}
-      if (!m.self) notice('A game admin set your public-world money: ' + fmtN(c) + ' coins, ' + fmtN(g) + ' diamonds', '');
-      wsSend({ t: 'mwal', c, g, inf: 0 }); return true;
+      if (!m.self) notice('A game admin set your public-world money: ' + fmtN(c) + ' coins, ' + fmtN(g) + ' diamonds' + (moneyFree() ? ' (yours whenever unlimited is off)' : ''), '');
+      wsSend(walMsg()); return true;
     }
     case 'barred': {   // the server is sending this device out: booted (back in at once), banned, or the game is closed for now
       const why = m.why === 'ban' ? 'ban' : m.why === 'closed' ? 'closed' : 'boot', now = Date.now();
@@ -8070,7 +8110,7 @@ function setMultiplayer(on) {
    Pressing Play then sends a second hello on the same connection, and that puts you into the shared world. Solo play closes the connection (a private world is private). */
 const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
-  try { o.w = [purseP.c | 0, purseP.g | 0, infMoney ? 1 : 0]; } catch (e) {}   // (your public-world money, so game admins can see it on your page)
+  try { const pre = cheatMonPre(); o.w = [purseP.c | 0, purseP.g | 0, infMoney ? 1 : 0, noCaps ? 1 : 0, pre ? pre.c : -1, pre ? pre.g : -1]; } catch (e) {}   // (your public-world money and the codes you have on, so game admins can see them on your page)
   { const k = admKey(); if (k) o.ak = k; if (devOn()) o.dv = 1; if (devOn() && settings.devShow) o.dsh = 1; }   // (dsh: show the Dev badge to other players, only if this owner or dev turned it on)   // (an owner's key, kept on this device; dv: this device has dev tools, and must hear if that changed)
   if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), fk: soloFin(soloLevel()), bots: settings.botsPriv ? 1 : 0, nc: settings.noCheats ? 1 : 0, ul: settings.unl ? 1 : 0 }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   if (!lobby && !party && wantW > 0) o.pw = wantW;   // (joining a friend's public world from their profile)
@@ -9735,7 +9775,7 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, addGate, pk: { buriedAt, pkGone, allPowers, pickShared, pend: () => pickPend.size, wal: () => wallet.c },  SONGS, ui: { start: () => startEdit(true), end: () => endEdit(), sel: (k, c) => uiSelect(k, c), size: v => uiResize(v), move: (k, x, y) => uiMoveBy(k, x, y), push: on => { settings.uiPush = on; relayUi(); }, rects: () => { const o = {}; for (const k in UIP) { const r = pieceRects(k)[0]; o[k] = r ? r.map(Math.round) : null; } o.feedTop = Math.round($("feed").getBoundingClientRect().top); o.lay = JSON.stringify(settings.uiL); return o; } }, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, hush: !!AU.hush, bar: AU.bar, t0: AU.songT0, ct: AU.ctx && AU.ctx.currentTime, prog: ($('npProg') || {}).style ? $('npProg').style.width : '', sbp: $('sbProg').style.width, npt: $('npTime').textContent, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
+if (params && params.get('test')) window.__d = { NET, addGate, pk: { buriedAt, pkGone, allPowers, pickShared, pend: () => pickPend.size, wal: () => wallet.c, purse: () => [purseP.c, purseP.g, purseP.pre ? [purseP.pre.c, purseP.pre.g] : null, infMoney ? 1 : 0, noCaps ? 1 : 0] },  SONGS, ui: { start: () => startEdit(true), end: () => endEdit(), sel: (k, c) => uiSelect(k, c), size: v => uiResize(v), move: (k, x, y) => uiMoveBy(k, x, y), push: on => { settings.uiPush = on; relayUi(); }, rects: () => { const o = {}; for (const k in UIP) { const r = pieceRects(k)[0]; o[k] = r ? r.map(Math.round) : null; } o.feedTop = Math.round($("feed").getBoundingClientRect().top); o.lay = JSON.stringify(settings.uiL); return o; } }, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, hush: !!AU.hush, bar: AU.bar, t0: AU.songT0, ct: AU.ctx && AU.ctx.currentTime, prog: ($('npProg') || {}).style ? $('npProg').style.width : '', sbp: $('sbProg').style.width, npt: $('npTime').textContent, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
     const sg = SONGS[kind][idx], sr = 22050, secs = bars * songBeats(sg) * 60 / sg.bpm + 1.5, oc = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
     if (!AU.noiseBuf) auInit();
     const keep = { ctx: AU.ctx, mus: AU.mus, song: AU.song, style: AU.style, bar: AU.bar, melody: AU.melody };

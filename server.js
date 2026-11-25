@@ -57,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 223;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 224;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -288,7 +288,7 @@ try {
   for (const k in (o.links || {})) if (PUB.test(k)) links.set(k, new Set((o.links[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));
   for (const k in (o.gone || {})) if (PUB.test(k)) gone.set(k, new Set((o.gone[k] || []).filter(v => PUB.test(v)).slice(0, 50)));
   for (const k in (o.claims || {})) if (PUB.test(k)) claimsOf.set(k, new Set((o.claims[k] || []).filter(v => PUB.test(v)).slice(0, MAX_LINKS)));   // (who each player says their friends are, so friendships rebuild after a restart even when the two come back at different times)
-  for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', color2: HEX.test(v.color2) ? v.color2 : '#ffffff', pat: cleanPat(v.pat), last: +v.last || 0, nameAt: +v.nameAt || 0, first: +v.first || +v.last || Date.now(), firstEst: v.first ? (v.firstEst ? 1 : 0) : 1, share: v.share && typeof v.share === 'object' ? cleanShare(v.share) : undefined, played: v.played === undefined ? 1 : v.played ? 1 : 0, beat: Math.max(0, Math.min(999, v.beat | 0)), wc: Math.max(0, Math.min(1e9, Math.floor(+v.wc) || 0)), wg: Math.max(0, Math.min(1e9, Math.floor(+v.wg) || 0)), wi: v.wi ? 1 : 0, wAt: Math.max(0, +v.wAt || 0) }); }
+  for (const k in (o.known || {})) if (PUB.test(k)) { const v = o.known[k] || {}; known.set(k, { name: cleanName(v.name), color: HEX.test(v.color) ? v.color : '#ff4d4d', color2: HEX.test(v.color2) ? v.color2 : '#ffffff', pat: cleanPat(v.pat), last: +v.last || 0, nameAt: +v.nameAt || 0, first: +v.first || +v.last || Date.now(), firstEst: v.first ? (v.firstEst ? 1 : 0) : 1, share: v.share && typeof v.share === 'object' ? cleanShare(v.share) : undefined, played: v.played === undefined ? 1 : v.played ? 1 : 0, beat: Math.max(0, Math.min(999, v.beat | 0)), wc: Math.max(0, Math.min(1e9, Math.floor(+v.wc) || 0)), wg: Math.max(0, Math.min(1e9, Math.floor(+v.wg) || 0)), wi: v.wi ? 1 : 0, wAt: Math.max(0, +v.wAt || 0), wch: typeof v.wch === 'string' ? ['inf', 'nc', 'mon'].filter(x => v.wch.split(',').includes(x)).join(',') : '', wpre: Array.isArray(v.wpre) && v.wpre.length === 2 && v.wpre.every(x => +x >= 0) ? v.wpre.map(x => Math.min(1e9, Math.floor(+x) || 0)) : null }); }
   for (const k in (o.blocks || {})) if (PUB.test(k)) blocks.set(k, new Set((o.blocks[k] || []).filter(v => PUB.test(v)).slice(0, 200)));
   for (const k in (o.pairs || {})) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k)) { const v = o.pairs[k] || {}; pairT.set(k, { s: +v.s || 0, m: +v.m || 0 }); }
   for (const e of (o.pend || [])) if (Array.isArray(e) && /^[0-9a-f]{16}>[0-9a-f]{16}$/.test(e[0]) && Date.now() - e[1] < REQ_TTL) pend.set(e[0], { t: +e[1] });
@@ -1060,17 +1060,19 @@ const ADMIN_KEY = (() => {
 const MODS_FILE = process.env.MODS_FILE || path.join(path.dirname(LINKS_FILE), 'mods.json');
 const BAN_HOURS = [1, 24, 168, -1];   // (one hour, a day, a week, for good)
 const PERMS = ['m', 'b', 'boot', 'ban', 'lock'];   // money; building and codes; boot; ban; close the game
-let mods = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, perk: {}, lock: 0, lockAt: 0 }, modsDirty = false, modsFresh = true;   // modsFresh: nothing was loaded and no owner has changed anything yet (an owner's device may then hand back what it remembers)
+let mods = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, perk: {}, unch: {}, lock: 0, lockAt: 0 }, modsDirty = false, modsFresh = true;   // modsFresh: nothing was loaded and no owner has changed anything yet (an owner's device may then hand back what it remembers)
 const banLive = b => !!b && (b.until === -1 || b.until > Date.now());
+const CHEATS = ['inf', 'nc', 'mon'];   // the codes a player can have on: inf unlimited coins and diamonds (themaker#1), nc no building limits (unlimitedpower), mon money set by a code (maker, zeros)
 const cleanPerms = o => { const r = {}; for (const k of PERMS) if (o && o[k]) r[k] = 1; return r; };
 function cleanMods(o) {   // only well-formed records, whatever the file or an owner's device says
-  const r = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, perk: {}, lock: o && o.lock ? 1 : 0, lockAt: Math.max(0, +(o && o.lockAt) || 0) };
+  const r = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, perk: {}, unch: {}, lock: o && o.lock ? 1 : 0, lockAt: Math.max(0, +(o && o.lockAt) || 0) };
   const ipOk = v => typeof v === 'string' && v.length <= 64 && /^[0-9a-f:.]+$/i.test(v);
   for (const k in (o && o.bans) || {}) { const b = o.bans[k]; if (!PUB.test(k) || !b) continue; const until = b.until === -1 ? -1 : Math.max(0, +b.until || 0); const v = { until, at: Math.max(0, +b.at || 0), name: cleanName(b.name) }; if (ipOk(b.ip)) v.ip = b.ip; if (banLive(v)) r.bans[k] = v; }
   for (const k of ['nob', 'noc']) for (const q in (o && o[k]) || {}) if (PUB.test(q) && o[k][q]) r[k][q] = 1;
   for (const q in (o && o.pend) || {}) { const v = o.pend[q]; if (PUB.test(q) && v) r.pend[q] = { c: Math.max(0, Math.min(1e9, Math.floor(+v.c) || 0)), g: Math.max(0, Math.min(1e9, Math.floor(+v.g) || 0)) }; }
   for (const q in (o && o.devs) || {}) { const v = o.devs[q]; if (PUB.test(q) && v) r.devs[q] = { name: cleanName(v.name), p: cleanPerms(v.p), at: Math.max(0, +v.at || 0) }; }
   for (const q in (o && o.perk) || {}) { const v = o.perk[q]; if (!PUB.test(q) || !v) continue; const e = {}; if (v.c) e.c = 1; if (v.b) e.b = 1; if (e.c || e.b) r.perk[q] = e; }   // (extras an admin gave for good: c unlimited coins and diamonds, b no building limits)
+  for (const q in (o && o.unch) || {}) { const v = o.unch[q]; if (!PUB.test(q) || !v) continue; const e = {}; for (const k of CHEATS) if (v[k]) e[k] = 1; if (Object.keys(e).length) r.unch[q] = e; }   // (codes an admin turned off while that player was away: off on their device the next time they play)
   return r;
 }
 try { mods = cleanMods(JSON.parse(fs.readFileSync(MODS_FILE, 'utf8'))); modsFresh = false; } catch (e) {}
@@ -1133,14 +1135,16 @@ function barOut(q, why, until) {   // out of the game, with a reason their game 
 function admList(a) {   // every player now, the ones seen in the last three days, the bans and the dev team
   const now = Date.now(), fr = links.get(a.pub) || new Set(), on = [], seen = new Set();
   const look = (pub, x) => ({ pub, code: codeOf(pub), name: x.name || '', color: HEX.test(x.color) ? x.color : '#ff4d4d', color2: HEX.test(x.color2) ? x.color2 : '#ffffff', pat: x.pat | 0, fr: fr.has(pub) ? 1 : 0, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(mods.bans[pub]) ? 1 : 0, dev: mods.devs[pub] ? 1 : 0 });
+  const named = (pub, nm) => !!String(nm || '').trim() || !!mods.devs[pub];   // (the same players as the Add a friend list: only people with a name. Somebody who never picked one is not listed, unless they are on the dev team)
   for (const q of allConns()) {
-    if (!q.pub || seen.has(q.pub) || !live(q)) continue; seen.add(q.pub);
-    const r = q.room, e = look(q.pub, q);
+    if (!q.pub || seen.has(q.pub) || !live(q)) continue;
+    if (q !== a && !named(q.pub, q.name || (known.get(q.pub) || {}).name)) continue; seen.add(q.pub);
+    const r = q.room, e = look(q.pub, q.name ? q : Object.assign({}, q, { name: (known.get(q.pub) || {}).name || '' }));
     e.w = r ? (r.priv ? 'priv' : 'pub') : 'menu'; if (r && r.priv && r.priv.hostPub !== q.pub) e.host = (known.get(r.priv.hostPub) || {}).name || '';
     e.since = q.since || now; e.role = q.role || ''; e.me = q === a ? 1 : 0; on.push(e);
   }
   const recent = [];
-  for (const [k, v] of known) { if (seen.has(k) || !v.last || now - v.last > 7 * DAY || !(v.played || mods.devs[k] || fr.has(k))) continue; const e = look(k, v); e.last = v.last; recent.push(e); }   // (everyone who really played in the last week, and friends and devs: not visitors who only opened the game and left)
+  for (const [k, v] of known) { if (seen.has(k) || !v.last || now - v.last > STALE_MS || !named(k, v.name) || !(v.played || mods.devs[k] || fr.has(k))) continue; const e = look(k, v); e.last = v.last; recent.push(e); }   // (the same as the Add a friend list: everyone with a name who really played in the last 30 days, and friends and devs. Not visitors who only opened the game, and nobody without a name)
   recent.sort((x, y) => y.last - x.last); if (recent.length > 300) recent.length = 300;
   const bans = [];
   for (const k in mods.bans) { const b = mods.bans[k]; if (!banLive(b)) continue; const e = look(k, known.get(k) || { name: b.name }); e.name = e.name || b.name || ''; e.until = b.until; e.at = b.at; e.ip = b.ip ? 1 : 0; bans.push(e); }
@@ -1186,8 +1190,8 @@ function admMsg(p, m, ip) {
   const q = byPub.get(pub), on = live(q), k = known.get(pub), qStaff = (on && q.role) || mods.devs[pub] ? (on && q.role === 'owner' ? 'owner' : 'dev') : '';
   if (m.t === 'admp') {   // one player: what there is to know, and their money from their own device
     const b = mods.bans[pub], who = on ? q.ip : lastIp.get(pub), net = can(p, 'ban') && on && q.ip && !privIp(q.ip) ? allConns().filter(x => x !== q && x.ip === q.ip && live(x)).length : 0;
-    send(p, { t: 'admp', pub, on: on ? 1 : 0, role: qStaff, me: q === p ? 1 : 0, name: (on ? q.name : k && k.name) || (b && b.name) || (mods.devs[pub] && mods.devs[pub].name) || '', last: k && k.last, first: k && k.first, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(b) ? { until: b.until, ip: b.ip ? 1 : 0 } : null, net, ipOk: can(p, 'ban') && who && !privIp(who) ? 1 : 0, pend: can(p, 'm') ? mods.pend[pub] || null : null, dev: mods.devs[pub] ? { p: mods.devs[pub].p } : null, pk: perkOf(pub), mw: can(p, 'm') ? walOf(pub) : null });   // (mw: their money as their device last said it)
-    if (on && can(p, 'm') && (q === p || !qStaff || (p.role === 'owner' && qStaff !== 'owner'))) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mwal' }); }
+    send(p, { t: 'admp', pub, on: on ? 1 : 0, role: qStaff, me: q === p ? 1 : 0, name: (on ? q.name : k && k.name) || (b && b.name) || (mods.devs[pub] && mods.devs[pub].name) || '', last: k && k.last, first: k && k.first, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(b) ? { until: b.until, ip: b.ip ? 1 : 0 } : null, net, ipOk: can(p, 'ban') && who && !privIp(who) ? 1 : 0, pend: can(p, 'm') ? mods.pend[pub] || null : null, dev: mods.devs[pub] ? { p: mods.devs[pub].p } : null, pk: perkOf(pub), mw: can(p, 'm') || can(p, 'b') ? walOf(pub) : null, unch: can(p, 'm') || can(p, 'b') ? mods.unch[pub] || null : null });   // (mw: their money as their device last said it)
+    if (on && (can(p, 'm') || can(p, 'b')) && (q === p || !qStaff || (p.role === 'owner' && qStaff !== 'owner'))) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mwal' }); }
     return;
   }
   const posOk = q === p || !qStaff || (p.role === 'owner' && qStaff !== 'owner');   // good things (money, extras): for players, for yourself, and an owner for devs too. Never anything against an owner or a dev, and never anything against yourself
@@ -1206,9 +1210,20 @@ function admMsg(p, m, ip) {
     if (!posOk) { send(p, { t: 'admok', what: qStaff === 'owner' ? 'owner' : 'admin', pub }); return; }
     const c = Math.max(0, Math.min(1e9, Math.floor(+m.c))), g = Math.max(0, Math.min(1e9, Math.floor(+m.g)));
     if (!Number.isFinite(c) || !Number.isFinite(g)) return;
-    if (on) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mset', c, g, self: q === p ? 1 : 0 }); delete mods.pend[pub]; walNote(q, c, g, 0); }
+    if (on) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mset', c, g, self: q === p ? 1 : 0 }); delete mods.pend[pub]; const kk = known.get(pub); if (kk) { kk.wc = c; kk.wg = g; kk.wAt = now; kk.wpre = null; if (kk.wch) kk.wch = kk.wch.split(',').filter(x => x !== 'mon').join(','); knownDirty = true; } }   // (their own amount: unlimited stays on if it was; a code that set their money is over)
     else mods.pend[pub] = { c, g };
     modsChanged(); send(p, { t: 'admok', what: on ? (q === p ? 'moneyme' : 'money') : 'moneylater', pub }); return;
+  }
+  if (m.t === 'admunch') {   // turn off a code a player has on (or one of your own): unlimited money (inf) or money a code set (mon), with the money power; no building limits (nc), with the building power
+    const k = CHEATS.includes(m.k) ? m.k : ''; if (!k) return;
+    if (!can(p, k === 'nc' ? 'b' : 'm')) return no();
+    if (!posOk) { send(p, { t: 'admok', what: qStaff === 'owner' ? 'owner' : 'admin', pub }); return; }
+    if (on) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'unch', k, self: q === p ? 1 : 0 }); }
+    else { mods.unch[pub] = Object.assign({}, mods.unch[pub], { [k]: 1 }); }
+    { const kk = known.get(pub); if (kk && kk.wAt) {   // (what the page shows straight away: that code gone, as their device will soon say)
+      const L = (kk.wch ? kk.wch.split(',') : kk.wi ? ['inf'] : []).filter(x => x !== k); kk.wch = L.join(','); if (k === 'inf') kk.wi = 0;
+      if (k === 'mon' && kk.wpre) { kk.wc = Math.min(kk.wc | 0, kk.wpre[0]); kk.wg = Math.min(kk.wg | 0, kk.wpre[1]); kk.wpre = null; } knownDirty = true; } }
+    modsChanged(); saveMods(false); send(p, { t: 'admok', what: 'unch' + k + (on ? '' : 'L'), pub }); return;
   }
   if (q === p) return;   // (nothing else on yourself: no booting, banning or limiting yourself)
   if (m.t === 'admdev') {   // owners only: put a player on the dev team with chosen powers, change them, or take them off
@@ -1241,17 +1256,20 @@ function admMsg(p, m, ip) {
   }
   if (m.t === 'admunban') { if (!can(p, 'ban')) return no(); if (mods.bans[pub]) { delete mods.bans[pub]; modsChanged(); saveMods(false); } send(p, { t: 'admok', what: 'unban', pub }); return; }
 }
-function walNote(p, c, g, inf) {   // what a player's device last said about its public-world money: shown on their page in dev tools, even when they are away. (Only what their own device says: the money lives there)
+const cleanCh = a => Array.isArray(a) ? CHEATS.filter(k => a.includes(k)) : null;   // (which codes are on, as a device says)
+const cleanPre = a => Array.isArray(a) && a.length === 2 && a.every(v => Number.isFinite(+v) && +v >= 0) ? a.map(v => Math.min(1e9, Math.floor(+v))) : null;
+function walNote(p, c, g, inf, ch, pre) {   // what a player's device last said about its public-world money and the codes it has on: shown on their page in dev tools, even when they are away. (Only what their own device says: the money lives there)
   const k = p.pub && known.get(p.pub); if (!k) return;
   const n = v => Math.max(0, Math.min(1e9, Math.floor(+v) || 0)); k.wc = n(c); k.wg = n(g); k.wi = inf ? 1 : 0; k.wAt = Date.now(); knownDirty = true;
+  const L = cleanCh(ch); if (L) { k.wch = L.join(','); k.wpre = L.includes('mon') ? cleanPre(pre) : null; } else { k.wch = inf ? 'inf' : ''; k.wpre = null; }   // (an older device only says whether money is unlimited)
 }
-const walOf = pub => { const k = pub && known.get(pub); return k && k.wAt ? { c: k.wc | 0, g: k.wg | 0, inf: k.wi ? 1 : 0, at: k.wAt } : null; };
+const walOf = pub => { const k = pub && known.get(pub); return k && k.wAt ? { c: k.wc | 0, g: k.wg | 0, inf: k.wi ? 1 : 0, at: k.wAt, ch: k.wch ? k.wch.split(',').filter(x => CHEATS.includes(x)) : (k.wi ? ['inf'] : []), pre: k.wpre || null } : null; };
 function walBack(p, m) {   // a player's device answering with its money: kept, and passed on to the dev who just asked
-  walNote(p, m.c, m.g, m.inf);
+  walNote(p, m.c, m.g, m.inf, m.ch, m.pre);
   const a = p.walAsk; if (!a || Date.now() - a.at > 8000) return; p.walAsk = null;
   const to = allConns().find(x => x.id === a.by); if (!to || !to.role) return;
   const n = v => Math.max(0, Math.min(1e9, Math.floor(+v) || 0));
-  send(to, { t: 'admw', pub: p.pub, c: n(m.c), g: n(m.g), inf: m.inf ? 1 : 0, pk: perkOf(p.pub).c });
+  const w = walOf(p.pub); send(to, { t: 'admw', pub: p.pub, c: n(m.c), g: n(m.g), inf: m.inf ? 1 : 0, pk: perkOf(p.pub).c, ch: w ? w.ch : [], pre: w ? w.pre : null });
 }
 
 const ipCount = new Map();
@@ -1339,7 +1357,7 @@ wss.on('connection', (ws, req) => {
       if (!nm && !lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || randomName();   // everybody has a name once they play
       if (!nm && lobby) nm = (p.pub && known.get(p.pub) && known.get(p.pub).name) || '';          // (a brand-new visitor on the menu has not picked one yet: that first pick stays free)
       const nameLeft = setName(p, nm);
-      if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.color2 = p.color2; k.pat = p.pat | 0; k.last = Date.now(); if (m.beat != null) k.beat = Math.max(0, Math.min(999, m.beat | 0)); knownDirty = true; if (Array.isArray(m.w) && m.w.length === 3) walNote(p, m.w[0], m.w[1], m.w[2]); }   // (w: their public-world money, as their device has it)
+      if (p.pub) { const k = known.get(p.pub); k.color = p.color; k.color2 = p.color2; k.pat = p.pat | 0; k.last = Date.now(); if (m.beat != null) k.beat = Math.max(0, Math.min(999, m.beat | 0)); knownDirty = true; if (Array.isArray(m.w) && m.w.length >= 3 && m.w.length <= 6) { const w = m.w, ch = w.length === 6 ? [w[2] ? 'inf' : '', w[3] ? 'nc' : '', w[4] >= 0 ? 'mon' : ''] : null; walNote(p, w[0], w[1], w[2], ch, w.length === 6 && w[4] >= 0 ? [w[4], w[5]] : null); } }   // (w: their public-world money, as their device has it)
       if (room) {
         room.players.set(p.id, p);
         const myFin = p.pub && room.finPub && room.finPub.get(p.pub);   // (finished this round already, then left and came back: the crown and the place are still theirs)
@@ -1384,6 +1402,7 @@ wss.on('connection', (ws, req) => {
         sendDmBox(p); sendGifts(p);
         send(p, modOf(p.pub));   // (what an admin allows this player: building, codes)
         if (mods.pend[p.pub]) { const v = mods.pend[p.pub]; delete mods.pend[p.pub]; modsChanged(); send(p, { t: 'mset', c: v.c, g: v.g }); }   // (money an admin set while they were away)
+        if (mods.unch[p.pub]) { const v = mods.unch[p.pub]; delete mods.unch[p.pub]; modsChanged(); for (const k of CHEATS) if (v[k]) send(p, { t: 'unch', k }); }   // (codes an admin turned off while they were away)
         pend.forEach((v, k) => {   // friend requests that arrived while you were away
           if (k.slice(17) !== p.pub) return;
           if (Date.now() - v.t > REQ_TTL) { pend.delete(k); return; }
