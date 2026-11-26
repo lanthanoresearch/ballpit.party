@@ -877,7 +877,7 @@
       if (d.sq > 0) d.sq = Math.max(0, d.sq - dt);
       d._far = !!f && !d._n1;
       if (!d._far || !d.nap || farAwake || (fb ? nearF(fb.get(Math.floor(d.x / FB)) || NONE, d.x, d.y, FR + 300, FR + 300) : nearF(f, d.x, d.y, FR + 300, FR + 300))) TOPUT.push(d);   // (what rests far from everybody is not even looked at: nothing near anybody can touch it)
-      if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if (d.farT > 30 && (d.gr || d.farT > 90)) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (only something that is on the ground: nothing is ever stopped in mid-air) */   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
+      if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if ((d.farT > 30 && (d.gr || d.farT > 90)) || (d.farT > 5 && d.gr && d.vx * d.vx + d.vy * d.vy < 900 && Math.abs(d.av) < 0.6)) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (far from everybody, on the ground and all but still for 5 seconds: a big pile nobody is near settles, instead of shuffling for half a minute) */   /* (only something that is on the ground: nothing is ever stopped in mid-air) */   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
       if (d._far && d.nap) { d.sleep = true; if (FA.length && dynTick % 15 === 0) for (let j = 0; j < FA.length; j++) { const o = FA[j]; if (Math.abs(o.x - d.x) < 260 && Math.abs(o.y - d.y) < 260) { chk.push(d); break; } } continue; }   // far from everybody and at rest: nothing to work out (unless something is still moving right by it, far away too: then it checks now and then that it is still held up, so nothing is left in the air where nobody happens to be)
       if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
@@ -1212,6 +1212,29 @@
     }
     return best;
   }
+  function restAll(w) {   // a world just put back together from memory (the host's device, or the server's own file): what is held up and clear of everything else is at rest from the very start, so nothing has to be worked out all over again. What is not held up falls, and what is inside something else is pushed out, as always
+    const BK = 128, bk = new Map(), key = (cx, cy) => cx * 131072 + cy, near = [], ovl = [];
+    for (const d of w.dyn) { if (d.burn > 0 || d.gone) continue; const k = key(Math.floor(d.x / BK), Math.floor(d.y / BK)); let a = bk.get(k); if (!a) bk.set(k, a = []); a.push(d); }
+    const find = (x0, y0, x1, y1, r) => { r.length = 0; for (let cx = Math.floor((x0 - 90) / BK); cx <= Math.floor((x1 + 90) / BK); cx++) for (let cy = Math.floor((y0 - 90) / BK); cy <= Math.floor((y1 + 90) / BK); cy++) { const a = bk.get(key(cx, cy)); if (a) for (const o of a) if (o.x + 90 > x0 && o.x - 90 < x1 && o.y + 90 > y0 && o.y - 90 < y1) r.push(o); } return r; };
+    const H = (x0, y0, x1, y1) => find(x0, y0, x1, y1, near), out = [];
+    let rest = 0, woke = 0;
+    for (const d of w.dyn) {
+      if (d.burn > 0 || d.gone) continue;
+      if (d.m0 && d.nap && d.x === d.hx && d.y === d.hy) { rest++; continue; }   // (the map's own toys, still where the map put them, start at rest as they always have)
+      let clear = true; const e = d.r || Math.max(d.hw, d.hh || d.hw) * 1.42;
+      for (const o of find(d.x - e, d.y - e, d.x + e, d.y + e, ovl)) {   // (inside another one by more than a hair: it has to be pushed out, so it is not at rest)
+        if (o === d) continue; const f = e + (o.r || Math.max(o.hw, o.hh || o.hw) * 1.42); if (Math.abs(o.x - d.x) > f || Math.abs(o.y - d.y) > f) continue;
+        out.length = 0;
+        if (!isBall(d) && !isBall(o)) obbHit(shapeOf(d), shapeOf(o), 0, out);
+        else if (isBall(d) && isBall(o)) { const q = Math.hypot(o.x - d.x, o.y - d.y) - d.r - o.r; if (q < 0) out.push([0, 0, q]); }
+        else { const bx = isBall(d) ? o : d, bl = isBall(d) ? d : o, h = circBox(shapeOf(bx), bl.x, bl.y, bl.r); if (h) out.push(h); }
+        if (out.some(h => -h[2] > 1.5)) { clear = false; break; }
+      }
+      if (clear && hasSupport(w, d, H)) { d.nap = true; d.vx = d.vy = 0; d.av = 0; d.farT = 0; rest++; }
+      else { d.nap = false; d.st = 0; d.sleep = false; d.farT = 0; woke++; }
+    }
+    return [rest, woke];
+  }
   function bodyOverlaps(w, x0, y0, x1, y1, pad) {   // is any crate or ball on this box?
     for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (d.burn > 0) continue; const e = d.r || d.hw; if (d.x + e > x0 - (pad || 0) && d.x - e < x1 + (pad || 0) && d.y + e > y0 - (pad || 0) && d.y - e < y1 + (pad || 0)) return true; }
     return false;
@@ -1310,7 +1333,7 @@
   }
   /* who a bot is. Racers try to finish (some are great, some miss jumps); explorers roam up, down or sideways; builders put up little towers, stairs and bridges;
      chill ones hang around and talk; wanderers just roll about near where they are. Everybody stops for a bit now and then. */
-  const KINDS = [['racer', 0.4], ['explorer', 0.22], ['builder', 0.16], ['chill', 0.14], ['wander', 0.08]];
+  const KINDS = [['racer', 0.45], ['explorer', 0.3], ['builder', 0.14], ['chill', 0.11]];   // (v227: no more bots that only roll about the start: everybody goes somewhere)
   function botMake(o) {
     let r = Math.random(), kind = 'racer'; for (const k of KINDS) { if (r < k[1]) { kind = k[0]; break; } r -= k[1]; }
     if (o && o.kind) kind = o.kind;
@@ -1355,14 +1378,17 @@
     for (let j = 0; j < path.length; j++) { const A = path[j], dx = tx < A[0] ? A[0] - tx : tx > A[0] + A[2] ? tx - A[0] - A[2] : 0, dd = dx + Math.abs(ty - A[1]) * 2; if (dd < bd) { bd = dd; best = j; } }
     bt.i = best; return bd;
   }
-  function exGoal(bt, w) {   // an explorer (or a builder looking for a spot) picks somewhere to go: higher up, further down, or along
-    const path = w.map.path, n = path.length, rr = bt.kind === 'chill' ? 10 : 45, i0 = Math.max(0, bt.i - rr), i1 = Math.min(n - 1, bt.i + rr), here = path[bt.i] || path[0];
+  function exGoal(bt, w) {   // an explorer (or a builder looking for a spot, or a chill one looking for somewhere to sit) picks somewhere to go anywhere on the map: up, down or along, away from where the other bots are already headed, and never the start or the finish to hang about in
+    const path = w.map.path, n = path.length, here = path[bt.i] || path[0], fi = finI(w), taken = w._botGoals || (w._botGoals = []);
     let best = Math.min(n - 1, bt.i + 8), bs = -1e9;
-    for (let k = 0; k < 16; k++) {
-      const j = i0 + Math.floor(Math.random() * (i1 - i0 + 1)); if (Math.abs(j - bt.i) < (bt.kind === 'chill' ? 2 : 5)) continue;
-      const A = path[j], sc = (bt.kind === 'builder' ? -Math.abs(j - bt.i) : bt.ex === 'up' ? here[1] - A[1] : bt.ex === 'down' ? A[1] - here[1] : -Math.abs(A[1] - here[1]) * 2 + Math.abs(j - bt.i) * 0.4) + Math.random() * 5;
-      if (sc > bs) { bs = sc; best = j; }
+    for (let k = 0; k < 24; k++) {
+      const j = Math.floor(Math.random() * n); if (Math.abs(j - bt.i) < (bt.kind === 'chill' ? 3 : 6)) continue;
+      const A = path[j]; let sc = bt.kind === 'builder' ? -Math.abs(j - bt.i) * 0.3 : bt.ex === 'up' ? (here[1] - A[1]) * 0.5 : bt.ex === 'down' ? (A[1] - here[1]) * 0.5 : Math.abs(j - bt.i) * 0.15;
+      if (j < Math.max(4, n * 0.08) || Math.abs(j - fi) < Math.max(3, n * 0.05)) sc -= 40;   // (not the start, not the finish)
+      for (const g of taken) if (g.w === w && Math.abs(g.j - j) < Math.max(4, n * 0.06)) sc -= 12;   // (somewhere nobody else is going)
+      sc += Math.random() * 8; if (sc > bs) { bs = sc; best = j; }
     }
+    taken.push({ w, j: best }); if (taken.length > 24) taken.shift();
     bt.goalI = best; bt.dir = Math.sign(best - bt.i) || 1; bt.iT = 0; botPlan(bt, w);
   }
   function botLand(bt, w) {
@@ -1430,11 +1456,11 @@
      'sA.B' a built message ("Can you open the gate?", "Where is the button?"...). Picked at random, never the same one twice in a row in a world. */
   const L = {
     hi: ['p0', 'p0', 'p0', 'e0', 'p17'], bye: ['p1', 'p1', 'e0'],
-    die: ['p19', 'p19', 'e5', 'e2', 'e1', 'e8', 's4.0', 's4.4', 's4.3', 'p5'], restart: ['p19', 'p17', 'e2', 'e9'], retry: ['p17', 'e3', 'p15', 's5.4'],
-    stuck: ['s7.2', 'e3', 'p13', 's0.0', 's5.2', 'e4'], gate: ['s0.5', 's0.4', 's7.6', 'p13', 's6.6', 's4.5'], gateOk: ['p16', 'p11', 'p17', 'p15', 's6.5'],
+    die: ['p19', 'p19', 'e5', 'e2', 'e1', 'e8'], dieLava: ['s4.0', 'p19', 'e5'], dieGap: ['s4.4', 'p19', 'e5'], restart: ['p19', 'p17', 'e2'], retry: ['p17', 'e3', 'p15', 's5.4'],
+    stuck: ['s7.2', 'e3', 'p13', 's0.0', 'e4'], gate: ['s0.5', 's0.4', 's7.6', 'p13', 's6.6', 's4.5'], gateOk: ['p16', 'p11', 'p17', 'p15', 's6.5'],
     fin: ['p7', 'e6', 'e0', 'p6', 'e7', 'e1', 'p17'], finOther: ['p18', 'p8', 'p6', 'p7', 'e8'],
-    build: ['s10.0', 's9.0', 's3.0', 's1.0', 'e6', 's9.3'], explore: ['s6.3', 's10.0', 'p11', 'e8', 's5.2', 's5.3', 's6.4', 's10.3'],
-    chill: ['e9', 'e0', 'p16', 'p2', 'e1', 'e6', 'p15'], fun: ['e1', 'e0', 'p6', 's10.0'], warn: ['s4.0', 's4.4', 's4.3', 's4.6', 'p14'],
+    build: ['s10.0', 's9.0', 'e6', 'p7'], explore: ['s10.0', 'p11', 'e8', 'p6'],
+    chill: ['e0', 'e1', 'e6', 'p15'], fun: ['e1', 'e0', 'p6', 's10.0'], warn: ['s4.0', 's4.4', 's4.3', 's4.6', 'p14'],
     seeBuild: ['p8', 'p6', 'p7', 'e8', 's3.0'], helpBuild: ['p16', 's9.0', 'e0'],
     ok: ['p15', 'p2'], follow: ['p15', 'p2', 'p17'], wait: ['p15', 'p2'], btn: ['p15', 'p2', 's9.7'], noBtn: ['s7.6', 'p3', 'p5', 'e3'], buildFor: ['p15', 'p2', 's9.0'],
     nope: ['p3', 'p5'], thanks: ['e0', 'e7', 'p15'], gl: ['p9', 'p4'], first: ['p15', 'p17'], go: ['p17', 'p11']
@@ -1549,7 +1575,7 @@
     const flatG = b.ground && b.flat;
     if (flatG && !bt.task && !bt.plan && bt.idle <= 0 && !bt.fun) {   // now and then: sit for a bit, say something, or do something silly
       const sitP = bt.kind === 'chill' ? 0.07 : bt.kind === 'racer' ? 0.016 : 0.035;
-      if (Math.random() < dt * sitP) { bt.idle = brnd(1.2, bt.kind === 'chill' ? 9 : bt.kind === 'racer' ? 4 : 6); if (Math.random() < 0.12) emote(bt, st, EM.sleepy); }
+      if (Math.random() < dt * sitP) { bt.idle = brnd(1.2, bt.kind === 'chill' ? 9 : bt.kind === 'racer' ? 4 : 6); }
       else if (Math.random() < dt * 0.004 * (bt.kind === 'racer' ? 0.4 : 1)) { bt.fun = Math.random() < 0.6 ? { k: 'hop', n: 2 + Math.floor(Math.random() * 4) } : { k: 'spin', t: brnd(1.2, 2.4) }; if (Math.random() < 0.3) say(bt, st, 'fun'); }
       else if (Math.random() < dt * (bt.kind === 'racer' ? 0.004 : 0.012)) {   // something of its own: a stroll, a visit to somebody near, or a shove at a crate or ball
         const r = Math.random(), sd = Math.random() < 0.5 ? -1 : 1; let done = false;
@@ -1559,7 +1585,7 @@
           if (best) { bt.fun = { k: 'walk', ax: Math.sign(best.x - b.x) || 1, t: bd / 200 + brnd(0.8, 2.4), n: Math.random() < 0.3 ? 1 : 0, hop: false }; done = true; } }
         if (!done) bt.fun = { k: 'walk', ax: sd, t: brnd(0.5, 1.8), n: Math.floor(Math.random() * 3), hop: Math.random() < 0.35 };
       }
-      else if (Math.random() < dt * 0.008 * bt.chatty) say(bt, st, bt.kind === 'racer' ? (Math.random() < 0.5 ? 'chill' : 'go') : bt.kind === 'builder' ? 'build' : bt.kind === 'explorer' ? 'explore' : 'chill');
+      else if (Math.random() < dt * 0.0025 * bt.chatty) say(bt, st, bt.kind === 'racer' ? (Math.random() < 0.5 ? 'chill' : 'go') : bt.kind === 'builder' ? 'build' : bt.kind === 'explorer' ? 'explore' : 'chill');
     }
     if (bt.finished) { bt.leaveT -= dt; if (bt.leaveT <= 0) return 'leave'; }
     if (bt.idle > 0) bt.idle -= dt;
@@ -1668,7 +1694,7 @@
         else {
           const dx = bt.tcx - b.x, axp = pl.t < pl.t0 ? pl.ax0 : Math.abs(dx) < 0.5 * b.vx * b.vx / 1800 + 4 && Math.sign(b.vx) === Math.sign(dx) ? -Math.sign(b.vx) : Math.sign(dx);
           const ev = step(b, w, axp, pl.t < pl.hold, dt);
-          if (ev.lava || ev.splat || botOob(w, b)) { bt.jplan = null; return botDied(bt, w, ctx); }
+          if (ev.lava || ev.splat || botOob(w, b)) { bt.jplan = null; return botDied(bt, w, ctx, ev.lava ? 'lava' : ''); }
           return '';
         }
       }
@@ -1684,21 +1710,21 @@
     b.pushing = !!bt.pushing;
     if (b.ground && ax && bt.pace < 1 && !bt.pushing) ax *= bt.pace;   // (some roll along more slowly than others)
     const ev = step(b, w, ax, jheld, dt);
-    if (ev.lava || ev.splat || botOob(w, b)) return botDied(bt, w, ctx);
+    if (ev.lava || ev.splat || botOob(w, b)) return botDied(bt, w, ctx, ev.lava ? 'lava' : '');
     const f = m.finish;
     if (!bt.finished && bt.type === 'runner' && b.x > f[0] * TS && b.x < (f[0] + f[2]) * TS && b.y > f[1] * TS - 7 * TS && b.y < f[1] * TS + R) {
-      bt.finished = true; bt.leaveT = brnd(40, 150); bt.task = null; bt.type = 'wander'; bt.anchor = b.x;
+      bt.finished = true; bt.leaveT = brnd(90, 300); bt.task = null; bt.kind = Math.random() < 0.7 ? 'explorer' : 'builder'; bt.ex = ['up', 'down', 'side'][Math.floor(Math.random() * 3)]; exGoal(bt, w);   // (done: off to see the rest of the map, never crowding the flag)
       if (Math.random() < 0.65) say(bt, st, 'fin', true); else emote(bt, st, pickEm([EM.cool, EM.happy, EM.love, EM.laugh]), true);
       return 'fin';
     }
     return '';
   }
-  function botDied(bt, w, ctx) {   // a fall: back at the last good spot, or (some of the less skilled) all the way back at the start
+  function botDied(bt, w, ctx, why) {   // a fall: back at the last good spot, or (some of the less skilled) all the way back at the start
     const st = ctx.st, b = bt.b;
     bt.dead = 0.6; bt.deadX = b.x; bt.deadY = b.y; bt.dI = (bt.dI || 0) + 1;
     if (bt.lgX !== undefined) { if (bt.fail && Math.abs(bt.fail.x - bt.lgX) < 3 * TS && Math.abs(bt.fail.y - bt.lgY) < 2 * TS) bt.fail.n++; else bt.fail = { x: bt.lgX, y: bt.lgY, n: 1 }; } bt.goal = null; bt.jplan = null; bt.fun = null; bt.plan = null;
     if (!(bt.cpArmed >= 0)) { if (Math.random() < 0.4) say(bt, st, 'restart'); }   // (no checkpoint flag: back to the start, like anyone)
-    else if (Math.random() < 0.3) say(bt, st, bt.dI >= 2 ? 'retry' : 'die');
+    else if (Math.random() < 0.3) say(bt, st, bt.dI >= 2 ? 'retry' : why === 'lava' ? 'dieLava' : 'die');   // ("watch out for lava" only after lava)
     else if (Math.random() < 0.25) emote(bt, st, pickEm([EM.cry, EM.angry, EM.laugh, EM.wow]));
     if (bt.dI >= 2) bt.err = Math.max(0.003, bt.err * 0.7);   // (trying again, a bit more carefully)
     return 'died';
@@ -1801,7 +1827,7 @@
     return '';
   }
   const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
-  const api = { VERSION: 225, springKick, setPad, wakeAround, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 227, springKick, setPad, wakeAround, restAll, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

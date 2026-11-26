@@ -205,6 +205,23 @@
   .mpseg button svg{flex:none}
   .mpseg button:hover{opacity:.85}
   .mpseg button.on{opacity:1;color:#fff}
+  .lvseg{margin:0 0 8px}
+  #scBack{position:fixed;inset:0;z-index:70;background:rgba(10,8,24,.3);touch-action:none}
+  #scRing{position:fixed;inset:0;z-index:72;pointer-events:none}
+  #scRing .scb{position:fixed;width:54px;height:54px;margin:0;padding:0;border-radius:50%;border:3px solid #fff;background:rgba(44,38,68,.95);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-shadow:0 3px 12px rgba(0,0,0,.45);transform:scale(.4);opacity:0;transition:transform .14s ease-out,opacity .14s,filter .2s;touch-action:none;color:#fff;-webkit-tap-highlight-color:transparent}
+  #scRing.show .scb{transform:scale(1);opacity:1}
+  #scRing .scb svg{width:34px;height:34px;pointer-events:none}
+  #scRing .scb.all{background:rgba(79,111,208,.95)}
+  #scRing .scb.all svg{width:26px;height:26px}
+  #scRing .scb.empty{border-style:dashed;background:rgba(44,38,68,.7)}
+  #scRing.show .scb.empty{opacity:.6}
+  #scRing .scb.dim{filter:grayscale(.9) brightness(.72)}
+  #scRing.show .scb.dim{opacity:.7}
+  #scRing .scb:active{transform:scale(.92)}
+  .scpin{display:flex;gap:4px;margin-top:5px;align-items:center}
+  .shopitem .scpin .scl{display:inline;opacity:.65;margin-right:2px;font-size:12px}
+  .shopitem .scpin button{flex:0 0 28px;max-width:28px;width:26px;height:24px;border-radius:8px;border:2px solid var(--line);background:#231e38;color:var(--ink);font-size:13px;padding:0;line-height:1;min-width:0}
+  .shopitem .scpin button.on{background:#ffd23d;color:#16102a;border-color:#ffd23d}
   .mpseg button[data-m=priv].on{background:#d98a2f}
   .mpseg button[data-m=pub].on{background:#2f9e61}
   .mpseg button[data-m=off].on{background:#4f6fd0}
@@ -1106,7 +1123,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 225; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 227; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1519,6 +1536,9 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
         </div></div>
       </div></div>
 
+      <h4><span data-ic="plus"></span> Build shortcuts</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Build shortcuts</b><small>Three quick picks for building. In the build menu, tap 1, 2 or 3 beside anything to put it there. On a touch screen, tap + for your three shortcuts and tap + again for the whole menu. On a keyboard, each shortcut has its own key (below)</small></span></span><input type="checkbox" id="setScOn"><i></i></label>
+
       <div class="dep" data-dep="kb"><div>
         <h4><span data-ic="key"></span> Keyboard</h4>
         <div id="keyrows"></div><div id="keymsg"></div>
@@ -1541,8 +1561,18 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       <div class="row"><span class="lbl"><span data-ic="eye"></span> Zoom <span id="zoomval" class="dim"></span></span>
         <div class="zrow"><button class="btn" id="zOut">−</button><input type="range" id="setZoom" min="0.25" max="2" step="0.05"><button class="btn" id="zIn">+</button></div>
         <div class="dep" data-dep="kb"><div><div class="small dim">Also: <kbd>-</kbd> <kbd>+</kbd> keys or the mouse wheel</div></div></div></div>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Arrow to my base</b><small>When your base is off the screen, an arrow at the edge points to it</small></span></span><input type="checkbox" id="setBaseArrow"><i></i></label>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Bigger base on the map</b><small>Your base glows and pulses on the map, like a friend does</small></span></span><input type="checkbox" id="setBaseBig"><i></i></label>
+      <h4><span data-ic="map"></span> Bases</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Show my base</b><small>Your base on both maps</small></span></span><input type="checkbox" id="setBaseShow"><i></i></label>
+      <div class="dep sub" data-dep="baseShow"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Bigger</b><small>Your base glows and pulses on the map, like a friend does</small></span></span><input type="checkbox" id="setBaseBig"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Arrow to it</b><small>When your base is off the screen, an arrow at the edge points to it</small></span></span><input type="checkbox" id="setBaseArrow"><i></i></label>
+      </div></div>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Show other bases</b><small>Everybody else's base on both maps</small></span></span><input type="checkbox" id="setBaseOthers"><i></i></label>
+      <div class="dep sub" data-dep="baseOthers"><div>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Bigger</b><small>Other players' bases stand out more on the map</small></span></span><input type="checkbox" id="setBaseBigAll"><i></i></label>
+      </div></div>
+      <h4><span data-ic="eye"></span> Shown</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Names on the map</b><small>A tiny name over every player and bot on both maps</small></span></span><input type="checkbox" id="setMapNames"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="eye"></span><span><b>Family friendly</b><small>Rude words in player names are starred out on your screen. Anyone can still type any name</small></span></span><input type="checkbox" id="setFamily"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="crown"></span><span><b>Finish crowns</b><small>Gold, silver, bronze and rock crowns over everyone who has finished</small></span></span><input type="checkbox" id="setCrowns"><i></i></label><label class="sw2 ic2"><span class="ti"><span data-ic="tag"></span><span><b>Name tags</b><small>Names above players</small></span></span><input type="checkbox" id="setTags"><i></i></label>
       <div class="dep sub" data-dep="tags"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Show my own name</b><small>Your name over your own ball. Others still see it</small></span></span><input type="checkbox" id="setMyName"><i></i></label></div></div><label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Mini-map</b><small>A big area around you, and where you are</small></span></span><input type="checkbox" id="setMinimap"><i></i></label><div class="dep" data-dep="minimap"><div><label class="sw2 ic2"><span class="ti"><span data-ic="user"></span><span><b>Players on the mini-map</b><small>People on your screen, as little blips</small></span></span><input type="checkbox" id="setMmPlayers"><i></i></label>
@@ -1586,7 +1616,11 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       <div class="dep" data-dep="!mp"><div>
         <h4><span data-ic="bot"></span> Bots</h4>
       <div class="dep" data-dep="botsPriv"><div>
-        <label class="sw2 ic2" id="botsPrivRow"><span class="ti"><span data-ic="bot"></span><span><b>Fill my private world with bots</b><small>Bots join until there are 10 to 20 players in all. Real players always come first: with 20 people there are no bots</small></span></span><input type="checkbox" id="setBots"><i></i></label>
+        <label class="sw2 ic2" id="botsPrivRow"><span class="ti"><span data-ic="bot"></span><span><b>Fill my private world with bots</b><small>Bots join until your world has as many players as you choose. Real players always come first</small></span></span><input type="checkbox" id="setBots"><i></i></label>
+        <div class="dep sub" data-dep="botsPrivOn"><div>
+          <div class="row"><span class="lbl"><span data-ic="bot"></span>&nbsp;Fill to <b id="botFillVal"></b>&nbsp;players in all</span><input type="range" id="setBotFill" min="2" max="20" step="1"></div>
+          <div class="small dim" id="botFillNote"></div>
+        </div></div>
         <div class="small dim" id="botsNote"></div>
       </div></div>
       <div class="dep" data-dep="botsOff"><div>
@@ -1780,6 +1814,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   <div class="chead"><button id="lvBack" class="btn dmback hide" type="button" aria-label="Back to all levels"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="lvTitle">Levels</h3><button id="lvX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="lvl">
     <div class="lvleft">
+      <div class="mpseg lvseg" id="lvSeg" role="tablist" aria-label="Where to play"><button type="button" role="tab" data-m="priv"><span data-ic="lock"></span>Private</button><button type="button" role="tab" data-m="pub"><span data-ic="globe"></span>Public</button><button type="button" role="tab" data-m="off"><span data-ic="user"></span>Offline</button></div>
       <div class="lvfil" id="lvFil" role="group" aria-label="Show"><button type="button" data-f="all" class="on">All</button><button type="button" data-f="mine"><i class="k mine"></i>Built</button><button type="button" data-f="got"><i class="k got"></i>Saved</button><button type="button" data-f="beat"><span data-ic="crown"></span>Beaten</button></div>
       <div id="lvGrid" role="listbox" aria-label="Levels"></div>
     </div>
@@ -1950,8 +1985,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=225"></script>
-<script src="physics.js?v=225"></script>
+<script src="maps.js?v=227"></script>
+<script src="physics.js?v=227"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -1990,12 +2025,12 @@ function fillIcons(root) {
 fillIcons();
 
 /* ================= settings (saved in this browser, restored exactly on return) ================= */
-const OPT_KEYS = ['mback'];   // (these may be left with no key at all)
+const OPT_KEYS = ['mback', 'sc1', 'sc2', 'sc3'];   // (these may be left with no key at all)
 function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'KeyS'], mleft: ['ArrowLeft', 'KeyA'], mright: ['ArrowRight', 'KeyD'], mok: ['Enter', 'Space'], mback: ['Backspace'], tprev: ['KeyQ'], tnext: ['KeyE', 'Tab'] }; }
-function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
+function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], sc1: ['Digit1'], sc2: ['Digit2'], sc3: ['Digit3'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, nQuiet: { on: false, a: 1320, b: 420 }, nInGame: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botFill: 12, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, nQuiet: { on: false, a: 1320, b: 420 }, nInGame: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseShow: true, baseOthers: true, scOn: false, sc: [null, null, null], baseBigAll: false, mapNames: false, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nMsgs: true, nRequests: true, nInvites: true, nMaps: true, nEmpty: false, devUpd: true, devHealth: false, devShow: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -2077,11 +2112,13 @@ function normalize() {
   if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);
   settings.finArrow = settings.finArrow !== false; delete settings.finMode;
   if (['live', 'morning', 'midday', 'night'].indexOf(settings.tod) < 0) settings.tod = 'live';
+  settings.botFill = Math.max(2, Math.min(20, Math.round(+settings.botFill) || 12));   // (how full the host wants their private world: players and bots together)
+  settings.sc = [0, 1, 2].map(i => { const v = Array.isArray(settings.sc) ? settings.sc[i] : null; return typeof v === 'string' && v.length < 16 ? v : null; });   // (the three build shortcuts: which item each holds)
   settings.soloLen = 0;   // your own world never runs out: it stays until you reset that level
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
   if (settings.scheme !== 'buttons') settings.scheme = 'swipebtn';   // (the full-swipe and tap-to-jump styles are gone: you swipe or press to move, the rest is buttons)
-  ['tags', 'songBar', 'uiPush', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'baseBig', 'lowAsked', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
+  ['tags', 'songBar', 'uiPush', 'low', 'fx', 'intro', 'mp', 'family', 'myName', 'noCheats', 'shopBtn', 'shopBoth', 'baseArrow', 'baseShow', 'baseOthers', 'scOn', 'baseBig', 'baseBigAll', 'mapNames', 'lowAsked', 'bots', 'botsPriv', 'botsOff', 'botChat', 'botAnnounce', 'botCrowns', 'mmBigP', 'mmBigB', 'botMark', 'botAsk', 'minimap', 'mmPlayers', 'mmBots', 'edge', 'deathMark', 'fs', 'announce', 'joinMsg', 'beacon', 'fallWarn', 'sfx', 'boost', 'boostAuto', 'boostBtn', 'boostPull', 'joy', 'superBtn', 'peopleMark', 'botMsg', 'peopleMsg', 'powerJump', 'stats', 'crowns', 'stFps', 'stPing', 'stBuf', 'stData', 'stSrv', 'stConf'].forEach(k => { settings[k] = !!settings[k]; });
   ['btnMul', 'btnMulP'].forEach(n => { const bm = settings[n] && typeof settings[n] === 'object' ? settings[n] : {}, o = {}; ['l', 'r', 'j', 'b', 's', 'p', 'c'].forEach(k => { const v = +bm[k]; if (isFinite(v) && Math.abs(v - 1) > 0.001) o[k] = clamp(v, 0.5, 1.8); }); settings[n] = o; });
   ['btnPos', 'btnPosP'].forEach(n => {
     const bp = settings[n];
@@ -3613,7 +3650,7 @@ function sendHostBuild() {   // your own world, opened for friends: everything i
 }
 function hostSeed(nb) {   // your own world, opened for friends: the server takes it exactly as your device has it (where everything is), since your device is its memory
   const w = S.world; if (!w) return;
-  const d = []; for (const o of w.dyn) { if (o.burn === UNK) continue; if (o.burn >= 1e9) d.push([o.uid >>> 0, 0, 0, 0, 1]); else if (!(o.burn > 0) && (Math.abs(o.x - o.hx) > 1 || Math.abs(o.y - o.hy) > 1 || Math.abs(o.rot) > 0.005)) d.push([o.uid >>> 0, Math.round(o.x * 10) / 10, Math.round(o.y * 10) / 10, Math.round(o.rot * 1000) / 1000]); }
+  const d = []; for (const o of w.dyn) { if (o.burn !== UNK && o.burn >= 1e9) d.push([o.uid >>> 0, 0, 0, 0, 1]); else if ((o.burn === UNK || !(o.burn > 0)) && (Math.abs(o.x - o.hx) > 1 || Math.abs(o.y - o.hy) > 1 || Math.abs(o.rot) > 0.005)) d.push([o.uid >>> 0, Math.round(o.x * 10) / 10, Math.round(o.y * 10) / 10, Math.round(o.rot * 1000) / 1000]); }
   const s = w.see.filter(q => Math.abs(q.ang) > 0.001).map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]);
   for (let i = 0; i === 0 || i < d.length; i += 500) { const msg = { t: 'pseed', d: d.slice(i, i + 500), s: i ? [] : s, last: i + 500 >= d.length ? 1 : 0 }; if (nb < 0) { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } } else setTimeout(() => { if (ws && ws.readyState === 1 && online) { try { ws.send(JSON.stringify(msg)); } catch (e) {} } }, 230 * (nb + 1) + 200 + 100 * (i / 500)); }   // (nb < 0: right now, straight after the world itself)
 }
@@ -3653,15 +3690,15 @@ function deriveOwn() {   // saves from before every item had its own count: work
 }
 function worldObj() {   // the world exactly as it is right now: everything built, where everything is and how it is moving
   const w = S.world, dyn = [], r2 = v => Math.round(v * 100) / 100;
-  for (let i = 0; i < w.dyn.length; i++) {   // every thing that has been moved, with how it was moving and turning
-    const d = w.dyn[i];
-    if (d.burn === UNK) continue;   // (not known here: nothing to remember)
-    if (d.burn >= 1e9) dyn.push([i, 0, 0, 1]);
-    else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2 || Math.abs(d.rot) > 0.01 || Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1) dyn.push([i, r2(d.x), r2(d.y), 0, r2(d.vx), r2(d.vy), r2(d.rot), r2(d.av)]);
+  for (let i = 0; i < w.dyn.length; i++) {   // every thing that has been moved, with how it was moving and turning, under its own name (u, last): never under its place in the list, which changes when something is deleted or lost
+    const d = w.dyn[i], u = d.uid >>> 0;
+    if (d.burn === UNK) { if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2 || Math.abs(d.rot) > 0.01) dyn.push([i, r2(d.x), r2(d.y), 0, 0, 0, r2(d.rot), 0, u]); continue; }   // (the server has not said again where it is, as the world is still loading: it is remembered where it was last, at rest. A save made while loading, or leaving then, never forgets where everything is)
+    if (d.burn >= 1e9) { if (d.m0 || (d.bought && d.brec && !d.gone)) dyn.push([i, 0, 0, 1, 0, 0, 0, 0, u]); }   // (lost for good: the map's own toys, and what is still on the list of things built here. Something deleted or lost from the list is simply not built next time)
+    else if (Math.abs(d.x - d.hx) > 2 || Math.abs(d.y - d.hy) > 2 || Math.abs(d.rot) > 0.01 || Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1) dyn.push([i, r2(d.x), r2(d.y), 0, r2(d.vx), r2(d.vy), r2(d.rot), r2(d.av), u]);
   }
-  const see = w.see.map(q => [r2(q.ang), r2(q.av), r2(q.tilt)]);
+  const see = w.see.map(q => [r2(q.ang), r2(q.av), r2(q.tilt), q.uid >>> 0]);
   const pickT = {}, nw = Date.now(); for (const k in S.pickLoc || {}) if (S.pickLoc[k] > nw) pickT[k] = S.pickLoc[k];
-  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, room: S.slot < SOLO_BASE ? S.pubRoom : undefined, rcv: S.rcvN | 0, own: S.own, ow: bookOut(), dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), pickT, n: S.coinN };
+  return { slot: S.slot, buys: S.bought, cps: S.boughtCps, gates: S.boughtGates, misc: S.boughtMisc, dels: S.dels, room: S.slot < SOLO_BASE ? S.pubRoom : undefined, rcv: S.rcvN | 0, own: S.own, ow: bookOut(), dyn, see, doors: w.doors.map(d => (d.latched ? 1 : 0)), btns: w.btns.map(q => (q.on ? 1 : 0)), doorU: w.doors.filter(d => d.latched).map(d => d.uid >>> 0), btnP: w.btns.filter(q => q.on).map(q => [q.x, q.y]), pickT, n: S.coinN };
 }
 function saveWorld(force, snap) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
@@ -3691,10 +3728,12 @@ function restoreWorld(slot) {
     (own && !pubW ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push(ownSet([q[0], q[1]], who('c', q))); } });
     S.rcvN = o.rcv | 0; S.own = o.own && typeof o.own === 'object' ? o.own : deriveOwn();
     const seedD = [];
-    if (!pubW) (o.dyn || []).forEach(q => { const d = w.dyn[q[0]]; if (!d) return; if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } else { d.x = q[1]; d.y = q[2]; d.vx = q[4] || 0; d.vy = q[5] || 0; d.rot = q[6] || 0; d.av = q[7] || 0; if (Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1 || Math.abs(d.av) > 0.05) d.sleep = false; } });
-    if (!pubW) (o.see || []).forEach((q, i) => { const e = w.see[i]; if (e && Array.isArray(q)) { e.ang = q[0] || 0; e.av = q[1] || 0; e.tilt = q[2] || 0; } });
-    if (!pubW) (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
-    if (!pubW) (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
+    if (!pubW) (o.dyn || []).forEach(q => { const d = q.length > 8 ? w.dynBy.get(q[8] >>> 0) : w.dyn[q[0]]; if (!d || d.gone) return;   /* (found by its own name; a save from before names were kept goes by the place in the list) */ if (q[3]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; } else { d.x = q[1]; d.y = q[2]; d.vx = q[4] || 0; d.vy = q[5] || 0; d.rot = q[6] || 0; d.av = q[7] || 0; if (Math.abs(d.vx) > 1 || Math.abs(d.vy) > 1 || Math.abs(d.av) > 0.05) d.sleep = false; } });
+    if (!pubW) (o.see || []).forEach((q, i) => { const e = Array.isArray(q) && q.length > 3 ? w.see.find(o => (o.uid >>> 0) === q[3]) : w.see[i]; if (e && Array.isArray(q)) { e.ang = q[0] || 0; e.av = q[1] || 0; e.tilt = q[2] || 0; } });
+    if (!pubW && Array.isArray(o.doorU)) { for (const u of o.doorU) { const d = w.doors.find(e => (e.uid >>> 0) === u); if (d) { d.latched = true; P.setDoorTiles(w, d, true); } } }   // (gates held open, by their own names)
+    else if (!pubW) (o.doors || []).forEach((v, i) => { if (v && w.doors[i]) { w.doors[i].latched = true; P.setDoorTiles(w, w.doors[i], true); } });
+    if (!pubW && Array.isArray(o.btnP)) { for (const p of o.btnP) { const b = Array.isArray(p) && w.btns.find(e => e.x === p[0] && e.y === p[1]); if (b) b.on = true; } }
+    else if (!pubW) (o.btns || []).forEach((v, i) => { if (v && w.btns[i]) w.btns[i].on = true; });
     { const nw = Date.now(); S.pickLoc = {}; if (o.pickT && typeof o.pickT === 'object') for (const k in o.pickT) if (+o.pickT[k] > nw && +o.pickT[k] < nw + PICK_BACK + 60000) S.pickLoc[k] = +o.pickT[k]; }   // (what you took comes back 10 minutes later, even across a reload)
     if (!pubW) (o.dels || []).forEach(q => { if (!P.coordDel(q) && validDel(q)) { key('d', q); applyDelRec(q); S.dels.push(ownSet(q.slice(), who('d', q))); } });   // what you deleted stays deleted (in a public world the server has all of it: this device only mirrors it)
     S.seed = null;
@@ -3898,6 +3937,8 @@ addEventListener('keydown', e => {
       if (has('pause')) { escMenu(); eat(); return; }
     }
   }
+  if (typeof scRingOn !== 'undefined' && scRingOn && e.code === 'Escape') { scRingClose(); eat(); return; }
+  if (settings.scOn && !e.repeat && S.mode === 'play' && !blocked() && typeof scUse === 'function') { for (let i = 0; i < 3; i++) if (has('sc' + (i + 1))) { scUse(i); eat(); return; } }   // (a build shortcut's key: straight to building that, even while building something else)
   const bk = settings.keys.build || [], open = typeof shopOpen !== 'undefined' && shopOpen;
   if (!open) { if (bk.indexOf(e.code) >= 0 && !e.repeat && !blocked() && S.mode === 'play' && !(typeof placing !== 'undefined' && placing)) { shopSel = 0; toggleShop(true); if (shopOpen) { shopKb(); e.preventDefault(); e.stopPropagation(); } } return; }
   const tabs = [...document.querySelectorAll('#shopTabs button')], ti = tabs.findIndex(b => b.classList.contains('on')), c = e.code;
@@ -3907,8 +3948,8 @@ addEventListener('keydown', e => {
   else if (mk('tnext', c) || mk('mright', c)) { if (tabs.length) { tabs[(ti + 1) % tabs.length].click(); shopSel = 0; shopKb(); } }
   else if (mk('mdown', c)) { const n = shopKb().length; if (n) { shopSel = (Math.max(-1, shopSel) + 1) % n; shopKb(); } }
   else if (mk('mup', c)) { const n = shopKb().length; if (n) { shopSel = (Math.max(0, shopSel) - 1 + n) % n; shopKb(); } }
-  else if (mk('mok', c) || c === 'NumpadEnter') { const rows = shopKb(), b = rows[Math.max(0, shopSel)] && rows[Math.max(0, shopSel)].querySelector('button'); if (b && !b.disabled) b.click(); else sfx('warn'); }
-  else if (/^Digit[1-9]$/.test(c)) { const rows = shopKb(), i = +c.slice(5) - 1; if (rows[i]) { shopSel = i; shopKb(); const b = rows[i].querySelector('button'); if (b && !b.disabled) b.click(); else sfx('warn'); } }
+  else if (mk('mok', c) || c === 'NumpadEnter') { const rows = shopKb(), b = rows[Math.max(0, shopSel)] && rows[Math.max(0, shopSel)].querySelector('button.sbuy'); if (b && !b.disabled) b.click(); else sfx('warn'); }
+  else if (/^Digit[1-9]$/.test(c)) { const rows = shopKb(), i = +c.slice(5) - 1; if (rows[i]) { shopSel = i; shopKb(); const b = rows[i].querySelector('button.sbuy'); if (b && !b.disabled) b.click(); else sfx('warn'); } }
   else used = false;
   if (used) { e.preventDefault(); e.stopPropagation(); }
 }, true);
@@ -4149,7 +4190,7 @@ function bindBtn(id, key) {
 bindBtn('tl', 'L'); bindBtn('tr', 'R'); bindBtn('tj', 'J'); bindBtn('tb', 'B');
 // power jump, place and cancel: a tap is all they need
 function pressSuper() { if (!blocked() && S.mode === 'play' && S.b && !S.away && S.dead <= 0 && (S.b.jm || 0) >= 1) { S.b.sjReq = 0.25; S.b.jbuf = 0.12; } }
-[['tm', () => { if (typeof toggleShop === 'function') toggleShop(!shopOpen); }], ['ts', () => pressSuper()], ['tpl', () => { if (typeof finishPlacing === 'function') finishPlacing(); }], ['tpc', () => { if (typeof cancelPlacing === 'function') cancelPlacing(); }]].forEach(p => {
+[['tm', () => { if (typeof buildPress === 'function') buildPress($('tm')); }], ['ts', () => pressSuper()], ['tpl', () => { if (typeof finishPlacing === 'function') finishPlacing(); }], ['tpc', () => { if (typeof cancelPlacing === 'function') cancelPlacing(); }]].forEach(p => {
   const b = $(p[0]), act = e => { if (edSess) return; e.preventDefault(); b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 140); p[1](); };
   if (window.PointerEvent) b.addEventListener('pointerdown', act); else b.addEventListener('touchstart', act, { passive: false });
 });
@@ -4646,14 +4687,14 @@ function buildLook() {
 }
 function syncUI() {
   nameUI();
-  [['setTags', 'tags'], ['setSongBar', 'songBar'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setShopBoth', 'shopBoth'], ['setFamily', 'family'], ['setMyName', 'myName'], ['setBaseArrow', 'baseArrow'], ['setBaseBig', 'baseBig'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
+  [['setTags', 'tags'], ['setSongBar', 'songBar'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setShopBoth', 'shopBoth'], ['setFamily', 'family'], ['setMyName', 'myName'], ['setBaseArrow', 'baseArrow'], ['setBaseBig', 'baseBig'], ['setBaseShow', 'baseShow'], ['setBaseOthers', 'baseOthers'], ['setScOn', 'scOn'], ['setBaseBigAll', 'baseBigAll'], ['setMapNames', 'mapNames'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
     ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   layoutCorner(); selMouse.set(settings.mouseMove); $('mouseDesc').textContent = MOUSE[settings.mouseMove][1]; applyUi();
   boostWayRender(); selInput.set(settings.inputMode); selScheme.set(settings.scheme); selPreset.set(curPreset()); selMusic.set(settings.music); selTod.set(settings.tod); selVs.set(settings.vs); $('vsDesc').textContent = (VSS[settings.vs] || VSS.classic)[1]; $('todDesc').textContent = TODS[settings.tod];
   $('schemeDesc').textContent = SCHEMES[settings.scheme].desc; $('musicDesc').textContent = MUSIC_INFO[settings.music];
-  $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMaxOff; $('botMaxVal').textContent = settings.botMaxOff;
+  $('setSfxVol').value = settings.sfxVol; $('setMusicVol').value = settings.musicVol; $('setBotMax').value = settings.botMaxOff; $('botMaxVal').textContent = settings.botMaxOff; botFillShow();
   buildKeys();
   $('setZoom').value = settings.zoom; $('zoomval').textContent = Math.round(settings.zoom * 100) + '%';
   $('setFs').disabled = !fsSupported(); $('fsNote').textContent = fsSupported() ? '' : 'Full screen is not available on this device or browser.';
@@ -4673,7 +4714,7 @@ bindToggle('setStats', 'stats', () => { applyDeps(); statsKick(); }); ['Fps', 'P
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
-bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 'family'); bindToggle('setMyName', 'myName'); bindToggle('setBaseArrow', 'baseArrow'); bindToggle('setBaseBig', 'baseBig'); bindToggle('setMusicOn', 'musicOn', () => { applyDeps(); if (!AU.ctx) auInit(); musicStart(); auVol(); }); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0 })); } catch (e) {} } });
+bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 'family'); bindToggle('setMyName', 'myName'); bindToggle('setBaseArrow', 'baseArrow'); bindToggle('setBaseBig', 'baseBig'); bindToggle('setBaseShow', 'baseShow', () => applyDeps()); bindToggle('setBaseOthers', 'baseOthers', () => applyDeps()); bindToggle('setScOn', 'scOn', () => { buildKeys(); if (!settings.scOn && typeof scRingClose === 'function') scRingClose(); if (typeof shopOpen !== 'undefined' && shopOpen) shopRender(); }); bindToggle('setBaseBigAll', 'baseBigAll'); bindToggle('setMapNames', 'mapNames'); bindToggle('setMusicOn', 'musicOn', () => { applyDeps(); if (!AU.ctx) auInit(); musicStart(); auVol(); }); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { applyDeps(); if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0, fill: settings.botFill | 0 })); } catch (e) {} } });
 bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => { settings.boostPull = !settings.boostBtn; $('setBoostPull').checked = settings.boostPull; save(); applyTouchUI(); });   /* (a button, or pull farther: one or the other) */ bindToggle('setShopBtn', 'shopBtn', () => { applyTouchUI(); applyDeps(); }); bindToggle('setShopBoth', 'shopBoth', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull', () => { settings.boostBtn = !settings.boostPull; $('setBoostBtn').checked = settings.boostBtn; save(); applyTouchUI(); }); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
@@ -4684,6 +4725,8 @@ $('sbNext').onclick = e => { e.stopPropagation(); auWake(); musicSkip(1); sfx('u
 bindToggle('setSongBar', 'songBar', () => songBarShow());
 $('ebPush').onchange = () => { settings.uiPush = $('ebPush').checked; save(); relayUi(); layoutTouch(); edZone(); };
 function botNote() {}
+function botFillShow() { const n = Math.max(2, Math.min(20, settings.botFill | 0 || 12)), el = $('setBotFill'); if (el) el.value = n; const v = $('botFillVal'); if (v) v.textContent = n; const nt = $('botFillNote'); if (nt) nt.textContent = 'With you alone, ' + (n - 1) + ' bots. Each friend who comes in takes a bot\'s place.'; }
+$('setBotFill').oninput = () => { settings.botFill = Math.max(2, Math.min(20, +$('setBotFill').value)); botFillShow(); save(); if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0, fill: settings.botFill })); } catch (e) {} } };   // (the host changes how full their world should be: the bots come or go to match)
 $('setBotMax').oninput = () => { settings.botMaxOff = Math.max(1, Math.min(19, +$('setBotMax').value)); $('botMaxVal').textContent = settings.botMaxOff; save(); };
 // the important switches ask first when you turn them OFF; the small ones just switch
 function guard(id, key, title, text, yes) {
@@ -4705,7 +4748,7 @@ const MKEYACT = [['mup', 'up', 'Up'], ['mdown', 'down', 'Down'], ['mleft', 'left
 const KEYNAMES = { Space: 'Space', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Enter: 'Enter', ShiftLeft: 'L-Shift', ShiftRight: 'R-Shift', Tab: 'Tab', Backspace: 'Backspace', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`', CapsLock: 'Caps' };
 const keyLabel = c => KEYNAMES[c] || (c.indexOf('Key') === 0 ? c.slice(3) : c.indexOf('Digit') === 0 ? c.slice(5) : c.indexOf('Numpad') === 0 ? 'Num ' + c.slice(6) : c);
 const RESERVED = ['Escape', 'Minus', 'Equal', 'NumpadAdd', 'NumpadSubtract', 'MetaLeft', 'MetaRight', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ContextMenu'];
-const KEYGROUPS = [{ box: 'keyrows', acts: () => KEYACT, store: 'keys', def: () => defKeys() }, { box: 'mkeyrows', acts: () => MKEYACT, store: 'mkeys', def: () => defMKeys() }];
+const KEYGROUPS = [{ box: 'keyrows', acts: () => KEYACT.concat(settings.scOn ? [0, 1, 2].map(i => { const it = typeof scList === 'function' ? scList()[i] : null; return ['sc' + (i + 1), 'plus', 'Shortcut ' + (i + 1) + (it ? ' (' + it.name + ')' : ' (empty)')]; }) : []), store: 'keys', def: () => defKeys() }, { box: 'mkeyrows', acts: () => MKEYACT, store: 'mkeys', def: () => defMKeys() }];
 function buildKeys() { KEYGROUPS.forEach(buildKeyGroup); }
 function buildKeyGroup(G) {
   const box = $(G.box); if (!box) return; box.innerHTML = ''; const K = settings[G.store] || (settings[G.store] = G.def());
@@ -4735,7 +4778,7 @@ addEventListener('keydown', e => {
   const G = keyCapture.g || KEYGROUPS[0], msg = $(G.box === 'mkeyrows' ? 'mkeymsg' : 'keymsg'), K = settings[G.store];
   if (RESERVED.indexOf(code) >= 0 || (G.store === 'mkeys' && /^Digit[1-9]$/.test(code))) { msg.textContent = keyLabel(code) + ' is kept for the game. Pick another key.'; return; }
   let owner = null; for (const o in K) if (K[o].indexOf(code) >= 0) owner = o;
-  if (owner) { const nm = G.acts().filter(k => k[0] === owner)[0][2]; msg.textContent = keyLabel(code) + ' already does "' + nm + '". A key can only do one thing here, so remove it there first.'; sfx('warn'); return; }
+  if (owner) { const nm = (G.acts().find(k => k[0] === owner) || [0, 0, /^sc\d$/.test(owner) ? 'Shortcut ' + owner.slice(2) : owner])[2]; msg.textContent = keyLabel(code) + ' already does "' + nm + '". A key can only do one thing here, so remove it there first.'; sfx('warn'); return; }
   K[keyCapture.a].push(code); keyCapture = null; save(); buildKeys(); sfx('on'); msg.textContent = '';
 }, true);
 $('mkeyReset').onclick = () => { settings.mkeys = defMKeys(); save(); buildKeys(); $('mkeymsg').textContent = ''; sfx('on'); };
@@ -4809,7 +4852,7 @@ const DEPS = {
   tags: () => !!settings.tags,
   boostman: () => showTouch() && !settings.boostAuto, shopbtn: () => !!settings.shopBtn,
   boost: () => settings.boost, power: () => settings.powerJump, touchgest: () => showTouch() && settings.scheme !== 'buttons',
-  mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => false, '!bots': () => true, botsPriv: () => !settings.mp && !settings.offline, botsOff: () => !settings.mp && !!settings.offline, botsOffOn: () => !!settings.botsOff,
+  mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => false, '!bots': () => true, botsPriv: () => !settings.mp && !settings.offline, botsOff: () => !settings.mp && !!settings.offline, botsOffOn: () => !!settings.botsOff, botsPrivOn: () => !!settings.botsPriv, baseShow: () => settings.baseShow !== false, baseOthers: () => settings.baseOthers !== false,
   minimap: () => settings.minimap, mmPlayers: () => !!settings.mmPlayers, mmBots: () => !!settings.mmBots, stats: () => settings.stats, sfx: () => settings.sfx, music: () => !!settings.musicOn
 };
 function applyDeps() {
@@ -5048,6 +5091,10 @@ function opos(o) {   // where a player is, for the maps: the live spot if they a
 }
 const tinyR = z => Math.max(1.4, R / TS * z);   /* a ball on the maps is drawn to scale (a speck when zoomed out), never bigger than it really is */
 const friendsOnMap = () => { const m = new Map(); for (const e of liveLinks()) { trackFollow(e); m.set(e.pub, e); } return m; };
+function mapName(g, name, x, y, px) {   // a tiny name on a map, over a player's or bot's dot (Display: "Names on the map")
+  if (typeof name !== 'string' || !name) return; let t = censor(name) || ''; if (t.length > 14) t = t.slice(0, 13) + '…';
+  g.save(); g.font = '600 ' + px + 'px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'bottom'; g.lineJoin = 'round'; g.lineWidth = Math.max(2, px * 0.3); g.strokeStyle = 'rgba(10,8,24,.85)'; g.strokeText(t, x, y); g.fillStyle = '#fff'; g.fillText(t, x, y); g.restore();
+}
 function dotFor(o, fr) {   /* where to draw somebody on the maps: a friend with the big marker is skipped (the marker is already there and follows them smoothly), a friend without it uses that same smooth spot, everybody else the last known spot */
   const e = o.pub && fr.get(o.pub); if (e) return e.big ? null : { x: e.sx == null ? e.x : e.sx, y: e.sy == null ? e.y : e.sy };
   return opos(o);
@@ -5085,7 +5132,7 @@ function trackFollow(e) {   // keeps the pin glued to the friend: their drawn ba
   if (Math.abs(tx - e.sx) > 600 || Math.abs(ty - e.sy) > 600) { e.sx = tx; e.sy = ty; } else { e.sx += (tx - e.sx) * k; e.sy += (ty - e.sy) * k; }
 }
 function drawBaseArrow(camL, camT, vw, vh, sc) {   // your base, when it is off the screen: an arrow at the edge pointing to it (Display: "Arrow to my base")
-  const mb = settings.baseArrow ? myBase() : null; if (!mb || !S.b) return;
+  const mb = settings.baseArrow && settings.baseShow !== false ? myBase() : null; if (!mb || !S.b) return;
   const vx = camL + vw / 2, vy = camT + vh / 2, dx = mb.cx - vx, dy = mb.cy - vy, z = 1 / Math.max(0.45, sc);
   if (Math.abs(dx) < vw / 2 - 20 && Math.abs(dy) < vh / 2 - 20) return;
   const mg = 74 / Math.max(0.45, sc), k = Math.min((vw / 2 - mg) / (Math.abs(dx) || 1), (vh / 2 - mg * 0.8) / (Math.abs(dy) || 1)), a = Math.atan2(dy, dx), ax = vx + dx * k, ay = vy + dy * k;
@@ -5127,7 +5174,7 @@ function drawTrack(camL, camT, vw, vh, sc) {
 /* ----- the maps: people you track are bigger and glow ----- */
 function drawLinksOnMap(g, toX, toY, r, labels, inside) {   // toX/toY turn tile numbers into canvas pixels
   const t = performance.now();
-  { const mb = myBase(); if (mb) {   // your base: a little diamond in your colours. With "Bigger base on the map" it glows and pulses like a friend does
+  { const mb = settings.baseShow !== false ? myBase() : null; if (mb) {   // your base (Display: "Show my base"): a little diamond in your colours. With "Bigger base on the map" it glows and pulses like a friend does
     const w = g.canvas.width, h = g.canvas.height, big = !!settings.baseBig, rr = big ? r * 1.15 : Math.max(3, r * 0.7);
     let x = toX(mb.cx / TS), y = toY(mb.cy / TS);   // (always on the map: when it is past the edge, it waits at the edge on that side)
     {
@@ -5138,6 +5185,12 @@ function drawLinksOnMap(g, toX, toY, r, labels, inside) {   // toX/toY turn tile
       if (big) { g.strokeStyle = 'rgba(255,255,255,' + (0.8 - 0.5 * p) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, rr * 1.4 + 3 + p * 3, 0, TAU); g.stroke(); }
       g.restore();
     } } }
+  if (S.world && S.world.bases && settings.baseOthers !== false) for (const b of S.world.bases) {   // everybody else's base: a small diamond, or a bigger glowing one with "Bigger bases for everyone else"
+    if ((b.o >>> 0) === myTag() || b.gone) continue; const x = toX(b.cx / TS), y = toY(b.cy / TS), w = g.canvas.width, h = g.canvas.height; if (x < -4 || y < -4 || x > w + 4 || y > h + 4) continue;
+    const big = !!settings.baseBigAll, rr = big ? r * 1.0 : Math.max(2.5, r * 0.55); g.save();
+    if (big) { const gr = g.createRadialGradient(x, y, r * 0.2, x, y, r * 2.4); gr.addColorStop(0, 'rgba(255,214,120,.75)'); gr.addColorStop(1, 'rgba(255,214,120,0)'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r * 2.4, 0, TAU); g.fill(); }
+    g.fillStyle = '#ffd678'; g.strokeStyle = 'rgba(22,16,42,.85)'; g.lineWidth = big ? 1.6 : 1; g.beginPath(); g.moveTo(x, y - rr * 1.3); g.lineTo(x + rr, y); g.lineTo(x, y + rr * 1.3); g.lineTo(x - rr, y); g.closePath(); g.fill(); g.stroke(); g.restore();
+  }
   for (const e of liveLinks()) {
     trackFollow(e);
     if (!e.big) continue;
@@ -5692,7 +5745,13 @@ function shopRender() {
     const row = document.createElement('div'); row.className = 'shopitem';
     const full = atLimit(it), ok = wallet.c >= it.c && wallet.g >= it.g && !full;
     row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + (it.max && !capsOff() ? ' <span class="lim' + (full ? ' full' : '') + '">' + ownCount(it) + '/' + it.max + '</span>' : '') + '</b><small>' + it.info + '</small></div>';
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.disabled = !ok || !modBuildOk();
+    if (settings.scOn && !it.give) {   // put it on a build shortcut: 1, 2 or 3 (whatever was there before is replaced; tap a lit one to empty it)
+      const pin = document.createElement('div'); pin.className = 'scpin'; pin.innerHTML = '<span class="scl">Shortcut</span>'; const cur = scList();
+      [0, 1, 2].forEach(i => { const sb = document.createElement('button'); sb.type = 'button'; sb.textContent = i + 1; const on = !!cur[i] && cur[i].id === it.id; sb.className = on ? 'on' : ''; sb.setAttribute('aria-label', (on ? 'Take ' + it.name + ' off shortcut ' : 'Put ' + it.name + ' on shortcut ') + (i + 1)); sb.setAttribute('aria-pressed', on ? 'true' : 'false');
+        sb.onclick = e => { e.stopPropagation(); scSet(i, on ? null : it.id); sfx(on ? 'off' : 'on'); shopRender(); }; pin.appendChild(sb); });
+      row.querySelector('.sinfo').appendChild(pin);
+    }
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sbuy'; b.disabled = !ok || !modBuildOk();
     b.innerHTML = (it.c ? '<span class="pr">' + ico('gcoin') + it.c + '</span>' : '') + (it.g ? '<span class="pr">' + ico('gem') + it.g + '</span>' : '');
     b.onclick = () => buyItem(it); row.appendChild(b); L.appendChild(row);
   });
@@ -5703,7 +5762,55 @@ function toggleShop(on) {
   if (on) { if (chatOpen) toggleChat(false); if (typeof closeSettingsNow === 'function') closeSettingsNow(); shopRender(); sfx('ui'); }
 }
 $('setKeep').onchange = () => { settings.terrKeep = $('setKeep').checked; save(); sfx($('setKeep').checked ? 'on' : 'off'); };
-$('btnShop').onclick = () => toggleShop(!shopOpen);
+$('btnShop').onclick = () => buildPress($('btnShop'));
+/* ----- build shortcuts (Controls: "Build shortcuts", off at first). Three items, put there from the build menu (1, 2, 3 beside each).
+   Keyboard: a key for each. Touch: tap + and the three appear around it, as their icons; tap one to build it, + again (in the middle) for the whole menu,
+   anywhere else to close them. While one cannot be built right now (dead, not enough coins, at its limit), it is greyed out. ----- */
+const scList = () => [0, 1, 2].map(i => { const id = Array.isArray(settings.sc) ? settings.sc[i] : null; return typeof id === 'string' ? SHOP.find(it => it.id === id && !it.give) || null : null; });
+function scSet(i, id) { const a = scList().map(it => it ? it.id : null); if (id) for (let k = 0; k < 3; k++) if (a[k] === id) a[k] = null; a[i] = id || null; settings.sc = a; save(); if (typeof buildKeys === 'function') buildKeys(); }   // (one item, one shortcut: putting it on another moves it)
+const scCan = it => !!it && canShop() && modBuildOk() && wallet.c >= it.c && wallet.g >= it.g && !atLimit(it);
+function scUse(i) {
+  scRingClose(); const it = scList()[i]; if (!canShop()) return;
+  if (!it) { toggleShop(true); notice('Shortcut ' + (i + 1) + ' is empty: tap ' + (i + 1) + ' beside anything here to put it there', ''); return; }
+  if (!modBuildOk()) { notice('A game admin turned off building for you', 'urgent'); return; }
+  if (atLimit(it)) { sfx('warn'); notice(limitNote(it), 'urgent'); return; }
+  if (wallet.c < it.c || wallet.g < it.g) { sfx('warn'); notice('Not enough yet for ' + it.name, 'urgent'); return; }
+  if (placing) cancelPlacing(true);   // (already building something: this one instead; nothing is paid until it is placed)
+  buyItem(it);
+}
+let scRingOn = false, scRaf = 0;
+function buildPress(anchor) {   // the + button (in the corner, or with the touch controls)
+  if (shopOpen) { toggleShop(false); return; }
+  if (scRingOn) { scRingClose(); toggleShop(true); return; }
+  if (settings.scOn && canShop() && !placing) { scRingOpen(anchor); return; }
+  toggleShop(true);
+}
+function scRingOpen(anchor) {
+  const r = anchor && anchor.getBoundingClientRect(); if (!r || !r.width) { toggleShop(true); return; }
+  scRingClose();
+  const W = window.innerWidth, H = window.innerHeight, cx = r.left + r.width / 2, cy = r.top + r.height / 2, s = Math.max(r.width, r.height), bw = 54;
+  const back = document.createElement('div'); back.id = 'scBack';
+  const ring = document.createElement('div'); ring.id = 'scRing'; ring.setAttribute('role', 'menu'); ring.setAttribute('aria-label', 'Build shortcuts');
+  const eat = e => { e.preventDefault(); e.stopPropagation(); };
+  back.addEventListener('pointerdown', e => { eat(e); scRingClose(); }); back.addEventListener('touchstart', eat, { passive: false }); back.addEventListener('click', eat);
+  const put = (b, x, y, sz) => { x = clamp(x, sz / 2 + 6, W - sz / 2 - 6); y = clamp(y, sz / 2 + 6, H - sz / 2 - 6); b.style.left = (x - sz / 2) + 'px'; b.style.top = (y - sz / 2) + 'px'; b.style.width = b.style.height = sz + 'px'; };
+  const a0 = Math.atan2(H / 2 - cy, W / 2 - cx), rad = Math.max(74, s / 2 + bw / 2 + 14), list = scList();
+  [-1, 0, 1].forEach((k, i) => {
+    const it = list[i], b = document.createElement('button'); b.type = 'button'; b.className = 'scb' + (it ? '' : ' empty'); b.setAttribute('role', 'menuitem'); b.setAttribute('aria-label', it ? 'Build ' + it.name : 'Shortcut ' + (i + 1) + ' is empty'); b.dataset.i = i;
+    b.innerHTML = it ? shopIcon(it.id) : ic('plus'); const a = a0 + k * 0.95; put(b, cx + Math.cos(a) * rad, cy + Math.sin(a) * rad, bw);
+    b.addEventListener('pointerdown', e => { eat(e); if (b.classList.contains('dim')) { sfx('warn'); return; } scUse(i); }); b.addEventListener('touchstart', eat, { passive: false }); b.addEventListener('click', eat);
+    ring.appendChild(b);
+  });
+  { const b = document.createElement('button'); b.type = 'button'; b.className = 'scb all'; b.setAttribute('aria-label', 'Whole build menu'); b.innerHTML = ic('plus'); put(b, cx, cy, Math.max(44, Math.min(64, s)));   // (right over the + itself: tapping + again opens the whole menu)
+    b.addEventListener('pointerdown', e => { eat(e); scRingClose(); toggleShop(true); }); b.addEventListener('touchstart', eat, { passive: false }); b.addEventListener('click', eat); ring.appendChild(b); }
+  document.body.appendChild(back); document.body.appendChild(ring); scRingOn = true; sfx('ui');
+  requestAnimationFrame(() => ring.classList.add('show'));
+  const tick = () => { if (!scRingOn) return; if (!canShop() || inHome || paused || shopOpen || placing || !settings.scOn) { scRingClose(); return; }
+    const L = scList(); ring.querySelectorAll('.scb[data-i]').forEach(b => b.classList.toggle('dim', !!L[+b.dataset.i] && !scCan(L[+b.dataset.i]))); scRaf = requestAnimationFrame(tick); };
+  tick();
+}
+function scRingClose() { if (scRaf) cancelAnimationFrame(scRaf); scRaf = 0; scRingOn = false; ['scBack', 'scRing'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); }
+addEventListener('resize', () => { if (scRingOn) scRingClose(); });
 $('shopClose').onclick = () => toggleShop(false);
 $('chatClose').onclick = () => toggleChat(false);
 const ownCount = it => ownTally()[it.id] | 0;   // how many of this you have built on this map, counted from who built what (what others built does not count; leaving and coming back changes nothing)
@@ -6768,7 +6875,7 @@ function homeStats() {
 window.__sprite = () => sprite(settings.color, settings.color2, settings.pat);   // the loading screen and the main screen show your real ball
 try { window.__scene($('homeScene'), 'home'); } catch (e) {}
 const curMode = () => settings.mp ? 'pub' : settings.offline ? 'off' : 'priv';
-function segRender() { const m = curMode(), fail = srvSt === 'fail'; $('homeSeg').style.gridTemplateColumns = fail ? '1fr' : '1fr 1fr'; document.querySelectorAll('#homeSeg button').forEach(b => { const k = b.getAttribute('data-m'), on = k === m; b.classList.toggle('hide', fail ? k !== 'off' : k === 'off'); b.disabled = k !== 'off' && srvSt !== 'ok'; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); }); document.body.classList.toggle('offl', m === 'off'); }
+function segRender() { const m = curMode(), fail = srvSt === 'fail'; ['homeSeg', 'lvSeg'].forEach(id => { const e = $(id); if (e) e.style.gridTemplateColumns = fail ? '1fr' : '1fr 1fr'; }); document.querySelectorAll('#homeSeg button, #lvSeg button').forEach(b => { const k = b.getAttribute('data-m'), on = k === m; b.classList.toggle('hide', fail ? k !== 'off' : k === 'off'); b.disabled = k !== 'off' && srvSt !== 'ok'; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); }); document.body.classList.toggle('offl', m === 'off'); }
 /* three ways to play, picked on the main menu: Private (your own levels, on the server so friends can join you), Public (everyone online), Offline (your own levels, never online, with bots) */
 function setMode(m) {
   if (m === curMode()) return;
@@ -6783,6 +6890,7 @@ function setMode(m) {
 }
 segRender();
 $('homeSeg').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (!b) return; sfx('ui'); setMode(b.getAttribute('data-m')); });
+$('lvSeg').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (!b || b.disabled) return; sfx('ui'); const m = b.getAttribute('data-m'); setMode(m); if (m === 'pub') closeLevels(); });   // (the same choice, right where you pick a level: Public has no levels to pick, so the list closes and the main menu shows the public map)
 function homeModeText() { netRender(); segRender(); const pub = $('homeMp').checked;
   $('homeModeNote').textContent = srvSt === 'fail' ? 'Could not reach the server. You can play offline: the starting maps, just you and bots, saved on this device.' : srvSt === 'wait' && !offlineOn() ? 'Connecting to the server…' : pub ? 'A public world. Everyone online shares it.' : offlineOn() ? 'Just you and bots, on this device. Nothing goes online.' : 'Your own world. Invite friends to play in it with you.';
   $('homeRetry').classList.toggle('hide', srvSt !== 'fail');
@@ -7025,7 +7133,7 @@ function cleanShared(o) {   // a world from somebody else: only well-formed reco
   const num = v => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 5e9,   /* (owner tags are big whole numbers) */ list = (a, max, ok) => Array.isArray(a) ? a.slice(0, max).filter(ok) : [];
   const nums = (q, a, b) => Array.isArray(q) && q.length >= a && q.length <= b && q.every(num), tagged = (q, a, b) => Array.isArray(q) && q.length >= a && q.length <= b && typeof q[0] === 'string' && q[0].length <= 8 && q.slice(1).every(num);
   const r = { buys: list(o.buys, 20000, q => nums(q, 3, 3)), cps: list(o.cps, 2000, q => nums(q, 2, 2)), gates: list(o.gates, 2000, q => nums(q, 5, 6)), misc: list(o.misc, 20000, q => tagged(q, 4, 6)), dels: list(o.dels, 20000, q => tagged(q, 2, 5) || nums(q, 2, 5)),
-    dyn: list(o.dyn, 20000, q => nums(q, 4, 8)), see: list(o.see, 2000, q => nums(q, 1, 3)), doors: list(o.doors, 2000, v => v === 0 || v === 1), btns: list(o.btns, 2000, v => v === 0 || v === 1), got: [], n: 0, own: {}, pickT: {} };
+    dyn: list(o.dyn, 20000, q => nums(q, 4, 9)), see: list(o.see, 2000, q => nums(q, 1, 4)), doors: list(o.doors, 2000, v => v === 0 || v === 1), btns: list(o.btns, 2000, v => v === 0 || v === 1), doorU: list(o.doorU, 2000, num), btnP: list(o.btnP, 2000, q => nums(q, 2, 2)), got: [], n: 0, own: {}, pickT: {} };
   r.rcv = r.buys.length + r.gates.length + r.misc.length;   // (everything in it counts as already there, as with a copy you save yourself)
   try { if (o.ow && typeof o.ow === 'object' && !Array.isArray(o.ow)) r.ow = P.bookClean(o.ow, { props: r.buys, gates: r.gates, misc: r.misc, cps: r.cps, dels: r.dels }); } catch (e) {}
   return r;
@@ -8121,7 +8229,7 @@ const helloMsg = lobby => {
   const o = { t: 'hello', name: settings.name || '', color: settings.color, color2: settings.color2, pat: settings.pat, dev: devId, claims: linkClaims(), lobby: lobby ? 1 : 0, beat: beatCount(), b: window.__BUILD || '' };
   try { const pre = cheatMonPre(); o.w = [purseP.c | 0, purseP.g | 0, infMoney ? 1 : 0, noCaps ? 1 : 0, pre ? pre.c : -1, pre ? pre.g : -1]; } catch (e) {}   // (your public-world money and the codes you have on, so game admins can see them on your page)
   { const k = admKey(); if (k) o.ak = k; if (devOn()) o.dv = 1; if (devOn() && settings.devShow) o.dsh = 1; }   // (dsh: show the Dev badge to other players, only if this owner or dev turned it on)   // (an owner's key, kept on this device; dv: this device has dev tools, and must hear if that changed)
-  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), fk: soloFin(soloLevel()), bots: settings.botsPriv ? 1 : 0, nc: settings.noCheats ? 1 : 0, ul: settings.unl ? 1 : 0 }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
+  if (!lobby && party) { if (party.role === 'host') o.host = { m: soloLevel(), fk: soloFin(soloLevel()), bots: settings.botsPriv ? 1 : 0, fill: settings.botFill | 0, nc: settings.noCheats ? 1 : 0, ul: settings.unl ? 1 : 0 }; /* (what you built follows in small pieces once the world is open) */ else o.join = party.host; }   // a friend's world: open mine, or go to theirs
   if (!lobby && !party && wantW > 0) o.pw = wantW;   // (joining a friend's public world from their profile)
   return JSON.stringify(o);
 };
@@ -8442,7 +8550,7 @@ function onMsg(m) {
     case 'pno': {   // the world has no room for that one: it is taken back and paid back
       const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.local && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y);
       if (d) { const i = S.bought.indexOf(d.brec); if (i >= 0) S.bought.splice(i, 1); d.bought = false; d.gone = true; d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; const it = SHOP.find(q => q.kind === d.kind && !q.misc); if (it) { wallet.c += it.c; wallet.g += it.g; saveWallet(); } wDirty = true; }
-      if (performance.now() - (S.pnoAt || 0) > 4000) { S.pnoAt = performance.now(); notice(m.full ? 'This world is full of crates and balls. Delete some to build more' : 'You have used your share here. The rest is kept for the other players', 'urgent'); }
+      if (performance.now() - (S.pnoAt || 0) > 4000) { S.pnoAt = performance.now(); notice(m.fast ? 'Building too fast: that one was taken back' : m.full ? 'This world is full of crates and balls. Delete some to build more' : 'You have used your share here. The rest is kept for the other players', 'urgent'); }
       if (placing) cancelPlacing(true);
       break; }
     case 'puid': { const w = S.world; if (!w) break; const d = w.dyn.find(o => !o.srvU && o.bought && o.kind === (m.k | 0) && Math.round(o.hx) === m.x && Math.round(o.hy) === m.y); if (d) { adoptUid(w, d, m.u); d.srvU = true; } break; }
@@ -9500,8 +9608,8 @@ function drawMinimap() {
     if (now - mmPing > PING_MS) mmPing = now;   // the ring still pulses; the dots themselves are always there
     mmDots.length = 0;
     const fr = friendsOnMap();   /* a tracked friend is drawn once (by the friend marker), never twice */
-    if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) mmDots.push({ x: q.x / TS, y: q.y / TS, c: o.color, big: settings.mmBigP }); });
-    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; const q = bt.b; mmDots.push({ x: q.x / TS, y: q.y / TS, c: bt.color, big: settings.mmBigB }); });
+    if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) mmDots.push({ x: q.x / TS, y: q.y / TS, c: o.color, big: settings.mmBigP, n: o.name }); });
+    if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; const q = bt.b; mmDots.push({ x: q.x / TS, y: q.y / TS, c: bt.color, big: settings.mmBigB, n: bt.name }); });
     const age = (now - mmPing) / PING_MS;
     if (settings.mmPlayers || settings.mmBots) {
       g.strokeStyle = 'rgba(159,232,255,' + (0.5 * (1 - age)) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(w / 2, h / 2, age * Math.max(v.w, v.h) / TS * ppt * 0.6, 0, TAU); g.stroke();
@@ -9510,6 +9618,7 @@ function drawMinimap() {
         const rr = d.big ? Math.max(4.2, tinyR(ppt) * 2) : tinyR(ppt); g.globalAlpha = 1; g.fillStyle = d.c; g.beginPath(); g.arc(x, y, rr, 0, TAU); g.fill(); if (rr > 2.4) { g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = d.big ? 1.4 : 0.8; g.stroke(); }
       }
       g.globalAlpha = 1;
+      if (settings.mapNames) for (let i = 0; i < mmDots.length; i++) { const d = mmDots[i], x = (d.x - left) * ppt, y = (d.y - top) * ppt; if (x < 0 || y < 0 || x > w || y > h || !d.n) continue; mapName(g, d.n, x, y - (d.big ? 6 : 4), 8); }
     }
   }
   if (m.checkpoints) m.checkpoints.forEach((c, i) => { const x = (c[0] + 0.5 - left) * ppt, y = (c[1] - top) * ppt; if (x < 3 || y < 7 || x > w - 3 || y > h) return; g.fillStyle = S.cpArmed === i ? '#3fd37a' : '#ff8a1f'; g.fillRect(x - 0.5, y - 7, 1.4, 7); g.beginPath(); g.moveTo(x + 1, y - 7); g.lineTo(x + 6, y - 5.2); g.lineTo(x + 1, y - 3.4); g.fill(); });
@@ -9643,6 +9752,10 @@ function drawMinimapBig() {
     const dotAt = (x, y, col, sp, big) => { const rr = big ? Math.max(6, dr * 1.9) : dr; if (rr >= 5 && sp) g.drawImage(sp, X(x / TS) - rr, Y(y / TS) - rr, rr * 2, rr * 2); else { g.fillStyle = col; g.beginPath(); g.arc(X(x / TS), Y(y / TS), rr, 0, TAU); g.fill(); if (rr > 2.4) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 0.8; g.stroke(); } } };
     if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; dotAt(bt.b.x, bt.b.y, bt.color, dr >= 5 || settings.mmBigB ? sprite(HEX.test(bt.color) ? bt.color : '#ccc', HEX.test(bt.color2) ? bt.color2 : '#ffffff', (bt.pat | 0) % PATTERNS.length) : null, settings.mmBigB); });   // (drawn exactly like a player)
     if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) dotAt(q.x, q.y, o.color, dr >= 5 || settings.mmBigP ? sprite(HEX.test(o.color) ? o.color : '#ccc', HEX.test(o.color2) ? o.color2 : '#ffffff', (o.pat | 0) % PATTERNS.length) : null, settings.mmBigP); });
+    if (settings.mapNames) {   // a tiny name over everybody
+      if (settings.mmBots) bots.forEach(bt => { if (bt.dead > 0 || !isFinite(bt.b.x)) return; mapName(g, bt.name, X(bt.b.x / TS), Y(bt.b.y / TS) - (settings.mmBigB ? Math.max(6, dr * 1.9) : dr) - 3, 10); });
+      if (settings.mmPlayers) others.forEach(o => { const q = dotFor(o, fr); if (q) mapName(g, o.name, X(q.x / TS), Y(q.y / TS) - (settings.mmBigP ? Math.max(6, dr * 1.9) : dr) - 3, 10); });
+    }
   }
   if (z >= 1.5) { const ps = allPowers(), now = Date.now(), rr = Math.max(1.5, z * 0.22);   // (power-ups on the big map: drawn to scale like the coins, and gone at the same zoom as them)
     for (let i = 0; i < ps.length; i++) { if (pkGone(ps[i][3])) continue; const tx = ps[i][0] / TS, ty = ps[i][1] / TS; if (tx < L || tx > Rr || ty < T || ty > B) continue;
@@ -9793,7 +9906,7 @@ if (params && params.get('test')) window.__d = { NET, addGate, pk: { buriedAt, p
     AU.ctx = oc; AU.mus = out; AU.song = sg; AU.style = kind; AU.melody = genMelody(sg, MOOD[kind]);
     try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += songBeats(sg) * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
     const buf = await oc.startRendering(); return Array.from(buf.getChannelData(0));
-  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), joinParty: (h, n) => joinParty(h, n), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, dvb: () => ({ others: [...others.values()].map(o => ({ name: o.name, dv: o.dv | 0, pub: o.pub, color: o.color, x: o.cx || o.x, y: o.cy || o.y })), devShow: !!settings.devShow, shown: devShown(), devOn: devOn(), pills: devPillN, me: S.b ? { x: S.b.x, y: S.b.y } : null }), openProfile: p => openProfile(p), mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), put: (k, x, y) => placeProp(k, [x, y]), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
+  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), joinParty: (h, n) => joinParty(h, n), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, scUse: i => scUse(i), scList: () => scList().map(it => it && it.id), scCan: i => scCan(scList()[i]), canShop: () => canShop(), wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, dvb: () => ({ others: [...others.values()].map(o => ({ name: o.name, dv: o.dv | 0, pub: o.pub, color: o.color, x: o.cx || o.x, y: o.cy || o.y })), devShow: !!settings.devShow, shown: devShown(), devOn: devOn(), pills: devPillN, me: S.b ? { x: S.b.x, y: S.b.y } : null }), openProfile: p => openProfile(p), mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), put: (k, x, y) => placeProp(k, [x, y]), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();

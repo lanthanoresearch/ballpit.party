@@ -57,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 225;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 227;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -754,6 +754,7 @@ setInterval(() => { const t = Date.now(); for (const [id, r] of rooms) if (r.pla
    come and go now and then, and live here on the server, so they push crates, tip planks, cross bridges and press buttons for everybody, just like a player ----- */
 let botIdN = 0;
 const BOT_GOALS = [10, 12, 14, 15, 16, 18, 20];
+const fillOf = v => Number.isFinite(+v) && +v >= 2 ? Math.min(20, Math.round(+v)) : 0;   // (how many players in all the host wants in their world, bots making up the rest: 2 to 20; 0 from an older game, which lets the crowd wander between 10 and 20)
 const botInfo = bt => [bt.id, bt.name, bt.color, bt.color2, bt.pat, bt.crown | 0];
 function roomBots(room, w, dtReal) {
   const bs = room.bots || (room.bots = []);
@@ -765,13 +766,13 @@ function roomBots(room, w, dtReal) {
   }
   room.botRe = (room.botRe || 0) - dtReal;
   if (room.botRe <= 0) { room.botGoal = room.botGoal ? Math.max(10, Math.min(20, room.botGoal + [-2, -1, 0, 0, 1, 2][Math.floor(Math.random() * 6)])) : BOT_GOALS[Math.floor(Math.random() * BOT_GOALS.length)]; room.botRe = 300 + Math.random() * 420; }   // (the crowd changes slowly: now and then one comes or goes, never a stream of them)
-  const want = room.botsOn ? Math.max(0, Math.min(MAX_PLAYERS, room.botGoal || 15) - room.players.size) : 0;
+  const want = room.botsOn ? Math.max(0, Math.min(MAX_PLAYERS, room.fill || room.botGoal || 15) - room.players.size) : 0;
   room.botT = (room.botT || 0) - dtReal;
   if (bs.length < want && room.botT <= 0) {
     const taken = n => bs.some(b => b.name === n) || [...room.players.values()].some(p => p.name === n);
     const bt = P.botMake(Object.assign({ id: 900000 + (botIdN++ % 90000), name: P.botName(taken) }, P.botLook())); P.botSpawn(bt, w); bs.push(bt);
     broadcast(room, { t: 'bj', b: [botInfo(bt)], say: 1 });
-    room.botT = bs.length < 4 ? 0.4 + Math.random() * 0.8 : bs.length < want - 3 ? 1 + Math.random() * 3 : 20 + Math.random() * 40;
+    room.botT = room.fill ? 0.5 + Math.random() * 1.2 : bs.length < 4 ? 0.4 + Math.random() * 0.8 : bs.length < want - 3 ? 1 + Math.random() * 3 : 20 + Math.random() * 40;   // (a world the host said how full to make fills up in a few seconds)
   } else if (bs.length > want && room.botT <= 0) {
     const i = Math.floor(Math.random() * bs.length), bt = bs[i]; bs.splice(i, 1); broadcast(room, { t: 'bl', id: bt.id, say: 1 });
     room.botT = room.botsOn ? 1 + Math.random() * 2 : 0.3;
@@ -811,7 +812,7 @@ function giveBack(r, d, by) {   // a built thing is gone (deleted by anyone, or 
    Past that, what is nearest to the players moves first and what is further away waits its turn, so a world where everybody built everything never slows the server down. */
 const phys = { cost: 0.012, busy: 1, busyN: 0, bud: 600 };   // (bud: how many moving things in all; it is turned down when the server is short of processor or running late, and back up when there is room)   // (cost: milliseconds per moving thing per step, measured as it runs)
 let testBud = TEST_HOOKS ? +process.env.PHYS_BUD || 0 : 0;
-function physBudget() { if (testBud > 0) return testBud; return Math.max(30, Math.min(600, Math.floor(phys.bud / phys.busy))); }   // (PHYS_BUD: tests only, a server pretending to be very busy)   // (shared between the worlds where a lot is moving)
+function physBudget(room) { if (testBud > 0) return testBud; const b = Math.max(30, Math.min(600, Math.floor(phys.bud / phys.busy))); return room && room.priv && (health.level >= 1 || phys.bud < 400) ? Math.max(30, b >> 1) : b; }   // (v227: when the server is short of processor, private worlds give way first, so the public world everybody shares stays smooth)   // (PHYS_BUD: tests only, a server pretending to be very busy)   // (shared between the worlds where a lot is moving)
 const privHold = (r, now) => !r.priv.ready ? now - (r.priv.at || 0) < 4000 : !!(r.priv.seedAt && !r.priv.seeded && now - r.priv.seedAt < 3000);   // (never more than a few seconds, in case the host's device is an old one or a part goes missing)
 function simTick() {
   const now = Date.now(), dtReal = Math.min(0.2, (now - simLast) / 1000); simLast = now;
@@ -822,13 +823,15 @@ function simTick() {
     if (!act.length && !(room.world && room.world.nAct > 0 && room.aloneT < 30)) continue;   // (with nobody there, the world still runs until everything that was moving has come to rest, and never more than 30 seconds)
     if (room.priv && privHold(room, now)) continue;   // (a private world that has just opened waits for its host's device to send it: everything built, then where everything is. Only then is it sent to anyone, all at once, as the public world is)
     const w = roomWorld(room), slot = rslot(room) & 0xFFFF;
+    if (!w._rested) { w._rested = true; try { P.restAll(w); } catch (e) {} }   // (a world just put together from memory: what lies at rest is at rest from the start, so a big world opens without everything in it being worked out all over again)
     room.tk++;
     room.acc += dtReal;
     let n = 0; while (room.acc >= SIMDT && n < 12) { room.acc -= SIMDT; n++; }
     if (room.acc > SIMDT) room.acc = 0;
     for (const p of room.players.values()) if (p._act !== room.tk) p.qx = undefined;
     if (n) {
-      roomBots(room, w, dtReal);
+      room.allIn = true; for (const p of room.players.values()) { if (p.has && p.looked0) { p.outT = 0; continue; } p.outT = p.outT || now; if (now - p.outT < 20000) room.allIn = false; }   // (never longer than 20 seconds for anybody, in case a device never finishes)   // (everybody here has the whole world on their screen: until then no bot moves, joins or speaks)
+      if (room.allIn) roomBots(room, w, dtReal);
       { const fo = [], seen = new Set(), add = (x, y) => { const k = Math.floor(x / 48) * 100003 + Math.floor(y / 48); if (seen.has(k)) return; seen.add(k); fo.push({ x, y }); };   // (where the players are, one point for each little square: a crowd standing together counts once)
         for (const p of act) add(p.x, p.y); if (room.bots) for (const bt of room.bots) if (!(bt.dead > 0)) add(bt.b.x, bt.b.y);
         w.focus = fo;
@@ -843,10 +846,10 @@ function simTick() {
         pbs.length = 0; for (const p of act) { const o = p.pbo || (p.pbo = { x: 0, y: 0 }); o.x = p.x; o.y = p.y; pbs.push(o); }
         if (room.bots) for (const bt of room.bots) if (!(bt.dead > 0)) pbs.push(bt.b);   // (where the player really is: never the point carried on ahead for pushing, so nothing is moved by a player who has not reached it)
         w.pb = pbs;   // (every player's ball is solid to everything in the world: nothing is pushed or squeezed into it)
-        w.dynBudget = physBudget(); const pt0 = performance.now();
+        w.dynBudget = physBudget(room); const pt0 = performance.now();
         P.stepDyn(w, SIMDT);
         { const ms = performance.now() - pt0; health.physMs += ms; w.physFix = w.physFix === undefined ? ms : w.physFix; if (w.nAct < 8) w.physFix += (ms - w.physFix) * 0.05; else { if (w.nAct > 40) phys.cost += (Math.max(0.004, (ms - Math.min(w.physFix, ms * 0.8)) / w.nAct) - phys.cost) * 0.02; if (k === 0) phys.busyN++; } }   // (what each moving thing costs, apart from what the step costs anyway)
-        if (room.bots && room.bots.length && (SIMDT > 1 / 100 || (room.tk + k) % 2)) stepRoomBots(room, w, SIMDT > 1 / 100 ? SIMDT : SIMDT * 2);   // (bots think and move 60 times a second)
+        if (room.allIn && room.bots && room.bots.length && (SIMDT > 1 / 100 || (room.tk + k) % 2)) stepRoomBots(room, w, SIMDT > 1 / 100 ? SIMDT : SIMDT * 2);   // (bots think and move 60 times a second)
         const list = [];
         for (const p of act) {   // each player is a point that moves smoothly along their path (never jumping through a crate between two updates)
           const a0 = (now - (p.tPos || now)) / 1000 + k * SIMDT, age = Math.min(0.12, a0), g = !!(p.st & 0x8000);   // (where the player is now, from their last word: their own screen already shows what they push moving, worked out there by the same physics)
@@ -918,7 +921,7 @@ function simTick() {
       if (!pend.size) { if (!p.looked0 && full) { p.looked0 = true; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); } continue; }
       if (!p.looked0 ? false : !sendNow) continue;   // (30 times a second, which each device fills in smoothly; a server that cannot keep up halves that. A player who has just arrived gets everything as fast as it goes)
       // each moment only so much is sent (a slow connection is never flooded): what has waited longest and what is closest goes first, so nothing is ever left waiting while other things are told again and again. In between, each device carries everything on along its path, falling as it falls
-      const cap = !p.looked0 || pend.size > 200 ? 200 : SEND_CAP; let out;
+      const cap = !p.looked0 ? 6000 : pend.size > 200 ? 200 : SEND_CAP; let out;   // (someone just arriving gets the whole world in one go, as fast as it goes, so it is simply all there when the loading screen goes, however big it is)
       if (pend.size <= cap) { out = [...pend]; pend.clear(); }
       else {
         const L = []; for (const d of pend) { const dx = Math.abs(d.x - p.x), dy = Math.abs(d.y - p.y), near = dx < 450 && dy < 350 ? 4 : dx < 900 && dy < 700 ? 2 : 1; const ls = lastS.get(d); d._sc = (ls === undefined ? 1e6 : room.tk - ls) * near; L.push(d); }
@@ -929,8 +932,10 @@ function simTick() {
       for (const d of out) lastS.set(d, room.tk);
       if (lastS.size > 4000) { for (const [d] of lastS) if (d.burn > 0 || Math.abs(d.x - p.x) > SEE_X + 600) lastS.delete(d); }
       if (!out.length) continue;
-      const buf = Buffer.allocUnsafe(8 + out.length * 23); buf[0] = 9; buf.writeUInt16LE(slot, 1); buf[3] = out.length; buf.writeUInt32LE(Date.now() % 4294967296, 4);   // (type 9: as type 6 (type 4, plus how fast each one is turning), plus the moment on the server it was true, so every device can replay the world's motion exactly as it happened)
-      out.forEach((d, k) => {
+      for (let s0 = 0; s0 < out.length; s0 += 250) {   // (at most 250 in a packet: the count is one byte)
+      const part = s0 === 0 && out.length <= 250 ? out : out.slice(s0, s0 + 250);
+      const buf = Buffer.allocUnsafe(8 + part.length * 23); buf[0] = 9; buf.writeUInt16LE(slot, 1); buf[3] = part.length; buf.writeUInt32LE(Date.now() % 4294967296, 4);   // (type 9: as type 6 (type 4, plus how fast each one is turning), plus the moment on the server it was true, so every device can replay the world's motion exactly as it happened)
+      part.forEach((d, k) => {
         const o = 8 + k * 23, bn = d.burn > 0;
         buf.writeUInt32LE(d.uid >>> 0, o); buf.writeFloatLE(bn ? 0 : d.x, o + 4); buf.writeFloatLE(bn ? 0 : d.y, o + 8);
         const rest = bn || d.lst; buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svx))), o + 12); buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svy))), o + 14);
@@ -938,6 +943,7 @@ function simTick() {
         p.dver.set(d.uid, d.ver);
       });
       p.ws.send(buf, { binary: true });
+      }
       if (p.readyDue) { p.readyDue = false; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); }   // (planks told once more right before, so nothing is shown at an old angle)   // (the whole world around them has been sent: the loading screen can go)
     }
     if (sendNow) { chg.length = 0; room.fullAll = false; room.cw = (room.cw | 0) + 1; }   // (between updates that go out, what changed keeps gathering)
@@ -1334,12 +1340,12 @@ wss.on('connection', (ws, req) => {
         if (!p.pub) { send(p, { t: 'jno', why: 'nodev' }); return; }
         const key = privKey(p.pub), lv = m.host.m | 0;
         const hr0 = rooms.get(key);
-        if (hr0 && hr0.priv && hr0.priv.away && hr0.priv.hostPub === p.pub) { hr0.priv.owner = p.id; hr0.priv.away = 0; hr0.priv.back = 1; hr0.botsOn = !!m.host.bots; hr0.noCheats = !!m.host.nc; hr0.unl = !!m.host.ul; room = hr0; p.room = room; fr = { full: [] }; broadcast(room, { t: 'hostback', name: p.name }); }   // the host is back after their connection dropped: their world was kept open for everyone in it
+        if (hr0 && hr0.priv && hr0.priv.away && hr0.priv.hostPub === p.pub) { hr0.priv.owner = p.id; hr0.priv.away = 0; hr0.priv.back = 1; hr0.botsOn = !!m.host.bots; hr0.fill = fillOf(m.host.fill); hr0.noCheats = !!m.host.nc; hr0.unl = !!m.host.ul; room = hr0; p.room = room; fr = { full: [] }; broadcast(room, { t: 'hostback', name: p.name }); }   // the host is back after their connection dropped: their world was kept open for everyone in it
         else if (hr0) { send(p, { t: 'jno', why: 'busy' }); return; }
         else {
         if (privFull()) { send(p, { t: 'jno', why: 'load' }); return; }   // (too many private games for this server to run well: the public world and offline games are still there)
         const props = [], gates = [], misc = [], cps = [], dels = [];   // (what the host built arrives right after, in small pieces)
-        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((genMap(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), botsOn: !!m.host.bots, noCheats: !!m.host.nc, unl: !!m.host.ul, priv: { hostTag: p.otag >>> 0, at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
+        room = { id: key, players: new Map(), finishers: [], fk: Math.max(0, Math.min((genMap(Math.max(0, Math.min(maps.count - 1, lv))).fins || [1]).length - 1, m.host.fk | 0)), botsOn: !!m.host.bots, fill: fillOf(m.host.fill), noCheats: !!m.host.nc, unl: !!m.host.ul, priv: { hostTag: p.otag >>> 0, at: Date.now(), owner: p.id, hostPub: p.pub, slot: PRIV_BASE + Math.max(0, Math.min(maps.count - 1, lv)), idx: Math.max(0, Math.min(maps.count - 1, lv)), props, cps, gates, misc, dels, invited: new Set(), keep: new Set(), once: new Set() } };
         rooms.set(key, room); p.room = room; fr = { full: [] }; room.taken = privTakenGet(room);   // (coins taken here a moment ago, before the world closed, are still taken)
         }
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
@@ -1601,7 +1607,7 @@ wss.on('connection', (ws, req) => {
       for (const q of rows) { const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone) continue; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.rot = q[3]; d.burn = 0; } d.vx = d.vy = 0; d.av = 0; d.nap = true; d.rest = 0; d.ver = ++r.verN; }
       if (Array.isArray(m.s)) for (const q of m.s.slice(0, 200)) { if (!Array.isArray(q) || q.length !== 2 || !q.every(Number.isFinite)) continue; const e = w.see.find(o => o.uid === (q[0] >>> 0)); if (e) { e.ang = Math.max(-0.36, Math.min(0.36, q[1])); e.av = 0; } }
       for (const q of r.players.values()) q.dver = null;   // (everyone is told where it all is again)
-      if (m.last || m.d.length < 500 || !r.priv.seedAt) r.priv.seeded = true;   // (the last part: the world is complete and goes out to everyone)
+      if (m.last || m.d.length < 500 || !r.priv.seedAt) { r.priv.seeded = true; w._rested = false; }   // (the last part: the world is complete and goes out to everyone)
     } else if (m.t === 'ping') {   // (the device measuring how long a message takes there and back)
       p.ws.send(JSON.stringify({ t: 'pong', c: Number.isFinite(m.c) ? m.c : 0 }));
     } else if (m.t === 'use') {   // a device's copy of this month's counts, from before the server restarted
@@ -1667,7 +1673,7 @@ wss.on('connection', (ws, req) => {
     } else if (m.t === 'padd' || m.t === 'pcp') {   // somebody built something in a friend's world: everyone there gets it
       if (noBuild(p)) { buildNo(p); return; }   // (an admin stopped this player building)
       const r = p.room; if (!bstate(p.room)) return;
-      if (!addOk(p)) return;
+      if (!addOk(p)) { if (m.t === 'padd' && Number.isFinite(m.x) && Number.isFinite(m.y)) send(p, { t: 'pno', k: m.k | 0, x: Math.round(m.x), y: Math.round(m.y), fast: 1 }); return; }   // (faster than anybody builds by hand: that one is not built, and the builder's device is told so, so it takes it back at once instead of keeping something this world does not have)
       if (m.t === 'padd') {
         const k = m.k | 0; if (k < 0 || k > 7 || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
         if (roomWorld(r) && (P.zoneP(r.world.map, m.x, m.y, P.TS * 0.6) || bLock(r.world, m.x, m.y, p.otag))) { send(p, { t: 'pno', k, x: Math.round(m.x), y: Math.round(m.y) }); return; }
@@ -1787,7 +1793,7 @@ wss.on('connection', (ws, req) => {
       if (p.room) broadcast(p.room, infoOf(p), p);
     } else if (m.t === 'bots') {   // the host switches the bots in their private world on or off
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id) return;
-      r.botsOn = !!m.on;
+      r.botsOn = !!m.on; if (m.fill !== undefined) r.fill = fillOf(m.fill); r.botT = Math.min(r.botT || 0, 0.5);   // (the bots come or go to match at once)
     } else if (m.t === 'rules') {   // the host of a private world changes its game settings ("no cheats", unlimited coins): everyone there is told
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id) return;
       if (m.nc !== undefined) r.noCheats = !!m.nc; if (m.ul !== undefined) r.unl = !!m.ul; broadcast(r, { t: 'rules', nc: r.noCheats ? 1 : 0, ul: r.unl ? 1 : 0 });
