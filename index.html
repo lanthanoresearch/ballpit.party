@@ -1144,7 +1144,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 231; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 232; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -2027,8 +2027,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=231"></script>
-<script src="physics.js?v=231"></script>
+<script src="maps.js?v=232"></script>
+<script src="physics.js?v=232"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -3523,6 +3523,11 @@ const mapTile = (tx, ty) => P.zoneT(S.map, tx, ty);   // (only the start and fin
 const mapBlock = (px, py, m) => P.zoneP(S.map, px, py, m === undefined ? TS * 0.6 : m);   // (in the wide no-build circle around the start or the finish)
 const startBlock = (px, py, m) => { m = m === undefined ? TS * 0.6 : m; return P.zoneP(S.world || S.map, px, py, m, typeof myTag === 'function' ? myTag() : undefined); };   // (your own base is yours to build in)   // (a little extra room, so nothing can hang over the edge of it)
 const PORC = [['#ffd23d', '#3da5ff'], ['#ff4a3d', '#a45cff'], ['#3ddc6a', '#ff6fc8'], ['#ff9a2e', '#2ee6d6']];   // the colours of portal pairs: yellow and blue, then red and purple, then green and pink, then orange and teal
+const hexOf = v => '#' + ((v >>> 0) & 0xffffff).toString(16).padStart(6, '0');
+const porCols = p => p && p.rgb >= 0 ? [hexOf(p.rgb), hexOf(p.rgb)] : (PORC[(p && p.c) | 0] || PORC[0]);   // (v231: a pair built in its builder's colour, both ends alike; an older pair in the fixed colours above)
+const myPorSlot = () => { const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 63) c++; return c; };   // (which of your pairs this is: the first free one)
+const myPorHex = c => (c % 2 === 0 ? settings.color : settings.color2) || '#ffd23d';   // your first pair in your main colour, your second in your second colour, and so on, taking turns
+const porCode = c => 4 + c + 64 * (parseInt(String(myPorHex(c)).slice(1), 16) || 0);
 const validMisc = q => Array.isArray(q) && ((q[0] === 'base' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q[0] === 'pwr' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'sspr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n, sup) { P.setPad(w, tx, r, n, sup); }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
@@ -5901,7 +5906,12 @@ function scRingOpen(anchor) {
   });
   { const b = anchor.cloneNode(true); b.removeAttribute('id'); b.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); b.classList.add('scself'); b.setAttribute('aria-label', 'Whole build menu'); b.setAttribute('role', 'menuitem');   // (the + itself, looking just as it does, on top of the dimming: tap it again for the whole menu)
     anchor.classList.remove('on'); b.classList.remove('on', 'edit', 'sel', 'bad'); const cs = getComputedStyle(anchor);   // (its everyday look, never the flash of being pressed)
-    b.style.cssText = 'position:fixed;margin:0;left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px;opacity:' + (getComputedStyle(anchor.parentElement || anchor).opacity * cs.opacity) + ';pointer-events:auto;transform:none;box-sizing:border-box;border-radius:' + cs.borderRadius + ';background:' + cs.background + ';border:' + cs.borderWidth + ' ' + cs.borderStyle + ' ' + cs.borderColor + ';box-shadow:' + cs.boxShadow + ';color:' + cs.color + ';display:' + cs.display + ';align-items:' + cs.alignItems + ';justify-content:' + cs.justifyContent + ';padding:' + cs.padding + ';';
+    { const tw = anchor.cloneNode(true); tw.classList.remove('on', 'edit', 'sel', 'bad'); tw.style.transition = 'none'; tw.querySelectorAll('*').forEach(e => { e.style.transition = 'none'; e.style.animation = 'none'; }); anchor.insertAdjacentElement('afterend', tw);   // (v231: a twin of the + with its own name, so every rule for it applies, never pressed or hovered: its exact everyday look, down to the icon, is copied onto the copy)
+      const cp = (from, to) => { const c = getComputedStyle(from); let t = ''; for (let k = 0; k < c.length; k++) { const n = c[k]; if (n === 'transition' || n.indexOf('transition') === 0 || n.indexOf('animation') === 0) continue; t += n + ':' + c.getPropertyValue(n) + ';'; } to.style.cssText = t; };
+      const A = [tw, ...tw.querySelectorAll('*')], Bs = [b, ...b.querySelectorAll('*')]; for (let k = 1; k < A.length && k < Bs.length; k++) cp(A[k], Bs[k]);
+      const c0 = getComputedStyle(tw), ow = anchor.offsetWidth || r.width, oh = anchor.offsetHeight || r.height, ks = r.width / ow;   // (the buttons may be drawn bigger than their own size (the UI size setting): the copy is made at its own size and drawn just as much bigger, so every part of it, the icon too, keeps its proportions)
+      b.style.cssText = 'position:fixed;margin:0;left:' + r.left + 'px;top:' + r.top + 'px;width:' + ow + 'px;height:' + oh + 'px;transform-origin:0 0;opacity:' + (getComputedStyle(anchor.parentElement || anchor).opacity * c0.opacity) + ';pointer-events:auto;transform:scale(' + ks + ');box-sizing:border-box;border-radius:' + c0.borderRadius + ';background:' + c0.background + ';border:' + c0.borderWidth + ' ' + c0.borderStyle + ' ' + c0.borderColor + ';box-shadow:' + c0.boxShadow + ';color:' + c0.color + ';display:' + (c0.display === 'none' ? 'flex' : c0.display) + ';align-items:' + c0.alignItems + ';justify-content:' + c0.justifyContent + ';padding:' + c0.padding + ';font:' + c0.font + ';filter:' + c0.filter + ';backdrop-filter:' + (c0.backdropFilter || 'none') + ';transition:none;animation:none';
+      tw.remove(); }
     b.addEventListener('pointerdown', e => { eat(e); scRingClose(); toggleShop(true); }); b.addEventListener('touchstart', eat, { passive: false }); b.addEventListener('click', eat); ring.appendChild(b); }
   document.body.appendChild(back); document.body.appendChild(ring); scRingOn = true; sfx('ui');
   scAnchor = anchor; anchor.style.visibility = 'hidden';   // (the + itself steps aside while its exact copy sits on top: only ever one of them showing, so nothing flickers)
@@ -6294,8 +6304,8 @@ function drawTileGhost(g, nowT) {
     ctx.restore(); return;
   }
   if (g.it.portal) {
-    if (g.stage === 2 && g.pA) { const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++; portalShape((g.pA.tx + 1) * TS, g.pA.gr * TS, PORC[c][0], 0.9, nowT); }
-    { const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++; portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : PORC[c][g.stage === 2 ? 1 : 0], pulse + 0.2, nowT); }
+    if (g.stage === 2 && g.pA) { const c = myPorSlot(); portalShape((g.pA.tx + 1) * TS, g.pA.gr * TS, myPorHex(c), 0.9, nowT); }
+    { const c = myPorSlot(); portalShape(g.dx, bad ? g.dy + 2 : g.mgr * TS, bad ? '#ff7a6a' : myPorHex(c), pulse + 0.2, nowT); }
   } else if (g.it.misc === 'ter' && g.del && !bad) {   // the delete tool on a whole thing: a red outline around it and a big X
     const bx = g.del.box, x0 = bx[0] + (g.dx - g.tx) - 4, y0 = bx[1] + (g.dy - g.ty) - 4, ww = bx[2] - bx[0] + 8, hh = bx[3] - bx[1] + 8;
     ctx.globalAlpha = 0.18 + 0.08 * Math.sin(nowT / 170); ctx.fillStyle = '#ff3b2e'; ctx.fillRect(x0, y0, ww, hh);
@@ -6378,10 +6388,10 @@ function finishPlacing() {
   if (it.portal && g.stage === 1) { g.pA = { tx: g.mtx, gr: g.mgr }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   if (it.ter === 'dig' && g.del) delThing(g.del.q);
   else if (it.portal) {
-    const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 3) c++;   // (your first pair is yellow and blue, your second red and purple: never the same as one you have)
-    const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr, c]; S.own = S.own || {}; S.own.porC = [...used, c];
+    const used = new Set((S.own && S.own.porC) || []), c = myPorSlot();   // (v231: your first pair in your main colour, your second in your second colour, then taking turns)
+    const q = ['por', g.pA.tx, g.pA.gr, g.mtx, g.mgr, porCode(c)]; S.own = S.own || {}; S.own.porC = [...used, c];
     addBook('por', q[1], q[2]); addMisc(S.world, q); S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('portal');
-    burst((q[1] + 1) * TS, q[2] * TS - 8, [PORC[c][0], '#fff'], 14, 160, 60); burst((q[3] + 1) * TS, q[4] * TS - 8, [PORC[c][1], '#fff'], 14, 160, 60);
+    burst((q[1] + 1) * TS, q[2] * TS - 8, [myPorHex(c), '#fff'], 14, 160, 60); burst((q[3] + 1) * TS, q[4] * TS - 8, [myPorHex(c), '#fff'], 14, 160, 60);
   } else if (it.gate && g.stage === 1) { g.gate = { tx: g.gtx, gr: g.ggr, h: g.gh }; g.stage = 2; g.dx = undefined; placeUIKey = null; sfx('ui'); computeGhost(); refreshPlaceUI(); return; }
   else if (it.gate) {
     const q = [g.gate.tx, g.gate.gr - g.gate.h, g.gate.h + (it.btn ? 100 : 0), g.ptx, g.prow, Math.round(g.py0)];   // (a button gate: its height plus 100. The button sits where it lands, on the first of the two tiles)
@@ -7271,8 +7281,7 @@ $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
 const guestsHere = () => party && party.role === 'host' ? others.size : 0;
 function hostLeaveWarn(go, what) {   // you made this private game and friends are in it: leaving (or starting it over) closes it for them, so ask first
   const n = guestsHere();
-  if (!n) { if (what || settings.offline || !(party && party.role === 'host')) { go(); return; }   // (v229: your own private game with nobody else in it: still asked, so it never closes by surprise; playing offline there is nothing to close)
-    askConfirm('Close your private game?', 'You made this game, so leaving closes it. Everything in it is kept on this device, and it opens again just as it is when you come back.', 'Close and leave', go, { no: 'Stay', yesClass: 'danger', k: 'leave' }); return; }
+  if (!n) { go(); return; }   // (v231: nobody else in it: you just leave, no question)
   askConfirm('Close your private game?', 'You made this game, so it closes when you ' + (what || 'leave') + '. ' + (n === 1 ? 'The friend in it goes' : 'The ' + n + ' friends in it go') + ' back to the main menu.', what ? 'Go ahead' : 'Close and leave', go, { no: 'Stay', yesClass: 'danger' });
 }
 $('pHome').onclick = () => { sfx('ui'); hostLeaveWarn(quitToHome); };
@@ -8473,7 +8482,9 @@ function dynBin(dv, len, ty) {
     for (let k = 0; k < n; k++) {
       const o = base + k * st; if (o + st > len) break;
       const d = w.dynBy.get(dv.getUint32(o, true)); if (!d) continue;
-      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, other: dv.getUint8(o + 20) & 2, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0, jump: !d.sv || (t - d.sv.t > 1500 && !(d.mineT > 0 || d.keep > 0)), ay: 0 }; d.srvOk = true;
+      const tp0 = d.sv ? d.sv.tp : 0;
+      d.sv = { x: dv.getFloat32(o + 4, true), y: dv.getFloat32(o + 8, true), vx: dv.getInt16(o + 12, true), vy: dv.getInt16(o + 14, true), rot: dv.getFloat32(o + 16, true), burn: dv.getUint8(o + 20) & 1, other: dv.getUint8(o + 20) & 2, tp: dv.getUint8(o + 20) & 4, av: st === 23 ? dv.getInt16(o + 21, true) / 1000 : 0, t, iv: d.sv ? Math.min(400, t - d.sv.t) : 0, jump: !d.sv || (t - d.sv.t > 1500 && !(d.mineT > 0 || d.keep > 0)), ay: 0 }; d.srvOk = true;
+      if (d.sv.tp && !tp0) d.sv.jump = true;   // (v231: it has just gone through a portal: put it at the other end at once, never drawn flying across the map, and the path it took before is forgotten)
       { const o0 = d._svp, n = d.sv; n.ts = ts; if (o0 && t - o0.t > 4 && t - o0.t < 300) { const a = (n.vy - o0.vy) / ((t - o0.t) / 1000); n.ay = Math.max(0, Math.min(P.GRAV, (o0.ay || 0) * 0.4 + a * 0.6)); } d._svp = n;
         if (ty === 9) { const h = d.hb || (d.hb = []); if (n.jump) h.length = 0; if (h.length && n.ts <= h[h.length - 1].ts) n.ts = h[h.length - 1].ts + 1; h.push(n); if (h.length > 10) h.shift(); if (h.length > 1) { const iv = ts - h[h.length - 2].ts; if (iv > 0 && iv < 400) NET.iv += (iv - NET.iv) * 0.03; } } }   // (the last few words on it, each with its moment, to replay its path smoothly)   // (how fast it is really speeding up as it falls: free in the air, or held back rolling down a slope)   // (the first word on something, or the first in a long while: it is simply put there)
     }
@@ -9152,7 +9163,8 @@ function drawPad(px, py, tx, sup) {   // bounce pad: a springy cushion with arro
 }
 function drawBase(z, camL, camT, vw, vh) {   // a player's base: its circle, a beam of light straight up so it stands out from far away, and the glowing centre (delete it to move the base)
   const mine = (z.o >>> 0) === myTag(), nowT = performance.now(), pu = 0.5 + 0.5 * Math.sin(nowT / 700);
-  let c1 = '#b9a8ff', c2 = '#ffffff'; if (mine) { c1 = settings.color; c2 = settings.color2; } else for (const o of others.values()) if ((o.ot >>> 0) === (z.o >>> 0)) { c1 = o.color; c2 = o.color2 || '#ffffff'; break; }   // (the owner's own colours: it changes when they change theirs)
+  let c1 = '#b9a8ff', c2 = '#ffffff'; if (mine) { c1 = settings.color; c2 = settings.color2; } else for (const o of others.values()) if ((o.ot >>> 0) === (z.o >>> 0)) { c1 = o.color; c2 = o.color2 || '#ffffff'; break; }
+  { const k = (S.world && S.world.bases ? S.world.bases.filter(b => (b.o >>> 0) === (z.o >>> 0)) : [z]).indexOf(z); if (k % 2 === 1) { const t = c1; c1 = c2; c2 = t; } }   // (v231: like portals: someone's first base in their main colour, a second one in their second colour, taking turns)   // (the owner's own colours: it changes when they change theirs)
   const rgb = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); const v = m ? parseInt(m[1], 16) : 0xb9a8ff; return ((v >> 16) & 255) + ',' + ((v >> 8) & 255) + ',' + (v & 255); }, col = rgb(c1), col2 = rgb(c2);
   if (Math.abs(z.cx - (camL + vw / 2)) < vw / 2 + 120 && z.cy - 7 * TS < camT + vh) {   // the beam
     const top = Math.max(camT - 20, z.cy - 7 * TS), g = ctx.createLinearGradient(0, z.cy, 0, top);   // (a short beam: a few blocks up, then it fades)
@@ -9255,7 +9267,7 @@ function drawGadgets(camL, camT, vw, vh, dt) {
   // portals: glowing holes in the ground, yellow and blue
   for (let i = 0; i < w.portals.length; i++) {
     const q = w.portals[i];
-    const pc = PORC[q.c | 0] || PORC[0];
+    const pc = porCols(q);
     for (const [e, col] of [[q.a, pc[0]], [q.b, pc[1]]]) {
       if (e.x < camL - 60 || e.x > camL + vw + 60 || e.y < camT - 60 || e.y > camT + vh + 60) continue;
       portalShape(e.x, e.y, col, 1, S.t * 1000);
@@ -9777,7 +9789,7 @@ function drawThings(g, X, Y, z, L, T, Rr, B) {   // toys and items, on both maps
   g.strokeStyle = '#e8923a'; g.lineWidth = Math.max(2, z * 0.3); g.lineCap = 'round';
   for (const q of w.see) { const cx = q.cx / TS, cy = q.cy / TS; if (cx + 3 < L || cx - 3 > Rr || cy < T - 2 || cy > B + 2) continue; g.beginPath(); g.moveTo(X(cx - 3), Y(cy)); g.lineTo(X(cx + 3), Y(cy)); g.stroke(); }
   g.lineCap = 'butt';
-  for (const p of w.portals) for (const [e, col] of [[p.a, (PORC[p.c | 0] || PORC[0])[0]], [p.b, (PORC[p.c | 0] || PORC[0])[1]]]) { const tx = e.x / TS, ty = e.y / TS; if (tx < L - 2 || tx > Rr + 2 || ty < T - 2 || ty > B + 2) continue; g.fillStyle = col; g.strokeStyle = '#16100c'; g.lineWidth = 1; g.beginPath(); g.arc(X(tx), Y(ty) - 1, Math.max(2.5, z * 0.45), 0, TAU); g.fill(); g.stroke(); }
+  for (const p of w.portals) for (const [e, col] of [[p.a, porCols(p)[0]], [p.b, porCols(p)[1]]]) { const tx = e.x / TS, ty = e.y / TS; if (tx < L - 2 || tx > Rr + 2 || ty < T - 2 || ty > B + 2) continue; g.fillStyle = col; g.strokeStyle = '#16100c'; g.lineWidth = 1; g.beginPath(); g.arc(X(tx), Y(ty) - 1, Math.max(2.5, z * 0.45), 0, TAU); g.fill(); g.stroke(); }
 }
 function drawFinishIcon(g, x, y, sc, now) {   // a little flag on a gold pulse, the same on both maps
   const p = (now / 700) % 1;

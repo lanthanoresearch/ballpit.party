@@ -57,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 231;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 232;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -889,8 +889,10 @@ function simTick() {
     // what changed, for the dyn things
     const stepped = act.length > 0 && n > 0, tickDt = Math.max(1, n) * SIMDT;   // (only after the world really moved on: a tick with no step in it must not report everything as standing still)
     const chg = room.chg = room.chg || []; if (chg.length > 1500) { room.fullAll = true; chg.length = 0; } room.cw = room.cw | 0;
-    for (let i = 0; stepped && i < w.dyn.length; i++) {
+    w._slpChk = stepped ? 2 : Math.max(0, (w._slpChk | 0) - 1);   // (a couple of moments after the last step)
+    for (let i = 0; (stepped || w._slpChk) && i < w.dyn.length; i++) {   // (v232: also on the moment after the last thing in the world went to sleep with nothing else moving, so where it stopped is still told: before, the last things far from everyone to come to rest were never told, and a device saved them where it last heard of them)
       const d = w.dyn[i];
+      if (!stepped && !d.sleep) continue;
       if (d.sleep && d.skip && d._spr > 1 && !(d.burn > 0)) continue;   // (a busy server: it is waiting its turn to move on, slowly. Nothing new to tell)
       if (d.sleep) {   // (a thing that went to sleep in the middle of a move is still told to everybody once, where it stopped)
         if (!(d.burn > 0) && (Math.abs(d.x - d.lx) + Math.abs(d.y - d.ly) + Math.abs(d.rot - d.lr) > 0.04 || !d.lst)) { d.ver = ++room.verN; if (d._cw !== room.cw) { d._cw = room.cw; chg.push(d); } d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; if (d.ownT > 0) { d.lst = false; d.lvx = d.svx = d.vx; d.lvy = d.svy = d.vy; } else { d.lst = true; d.lvx = d.lvy = d.svx = d.svy = 0; } d.px = undefined; }
@@ -926,7 +928,7 @@ function simTick() {
       const pend = p.pend || (p.pend = new Set()), lastS = p.lastS || (p.lastS = new Map());
       if (full) {   // (a full look: first time, every few seconds, or after moving far: everything around them that they do not have the latest word on yet)
         p.sv = room.verN; p.sx = p.x; p.sy = p.y; p.more = 0;
-        for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (p.dver.get(d.uid) === d.ver) continue; const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y; if (p.looked0 && (Math.abs(x - p.x) > SEE_X || Math.abs(y - p.y) > SEE_Y)) continue; pend.add(d); }   // (someone who has just arrived is told where everything in the whole world is, once: their map shows every crate and ball that was ever built, where it really lies, not only what is near them. After that they hear about what is around them)
+        for (let i = 0; i < w.dyn.length; i++) { const d = w.dyn[i]; if (p.dver.get(d.uid) === d.ver) continue; const bn = d.burn > 0, x = bn ? d.hx : d.x, y = bn ? d.hy : d.y; if (p.looked0 && !bn && !d.lst && (Math.abs(x - p.x) > SEE_X || Math.abs(y - p.y) > SEE_Y)) continue; pend.add(d); }   /* (v232: far away, but come to rest or burned up since they last heard: told, as the changes would have told them. Before, a full look took the place of the changes and left these out, and the changes were then cleared, so a device could keep something far away in mid-fall for ever, and save it there) */   // (someone who has just arrived is told where everything in the whole world is, once: their map shows every crate and ball that was ever built, where it really lies, not only what is near them. After that they hear about what is around them)
       } else for (let i = 0; i < chg.length; i++) { const d = chg[i]; if (p.dver.get(d.uid) === d.ver) continue; if (!(d.burn > 0) && !d.lst && p.dver.has(d.uid) && (Math.abs(d.x - p.x) > SEE_X || Math.abs(d.y - p.y) > SEE_Y)) continue; pend.add(d); }   // (far away: told where it comes to rest, never left in the air on anybody's map)   // (what is far away is told only now and then, enough for the map: every few seconds at most)
       if (!pend.size) { if (!p.looked0 && full) { p.looked0 = true; plankSend(room, w.see, p); p.ws.send('{"t":"ready"}'); } continue; }
       if (!p.looked0 ? false : !sendNow) continue;   // (30 times a second, which each device fills in smoothly; a server that cannot keep up halves that. A player who has just arrived gets everything as fast as it goes)
@@ -949,7 +951,7 @@ function simTick() {
         const o = 8 + k * 23, bn = d.burn > 0;
         buf.writeUInt32LE(d.uid >>> 0, o); buf.writeFloatLE(bn ? 0 : d.x, o + 4); buf.writeFloatLE(bn ? 0 : d.y, o + 8);
         const rest = bn || d.lst; buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svx))), o + 12); buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round(rest ? 0 : d.svy))), o + 14);
-        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = (bn ? 1 : 0) | (!bn && d.ownT > 0 && d.ownBy !== p.id && d.ownTouch ? 2 : 0);   /* (2: another player's device is moving this one right now) */ buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round((bn || d.lst ? 0 : d.sav || 0) * 1000))), o + 21);
+        buf.writeFloatLE(d.rot || 0, o + 16); buf[o + 20] = (bn ? 1 : 0) | (!bn && d.ownT > 0 && d.ownBy !== p.id && d.ownTouch ? 2 : 0) | (!bn && d.tpT !== undefined && (w.tick || 0) - d.tpT < 90 ? 4 : 0);   /* (4: it has just gone through a portal: screens put it there at once, never draw it flying across) */   /* (2: another player's device is moving this one right now) */ buf.writeInt16LE(Math.max(-32000, Math.min(32000, Math.round((bn || d.lst ? 0 : d.sav || 0) * 1000))), o + 21);
         p.dver.set(d.uid, d.ver);
       });
       p.ws.send(buf, { binary: true });
@@ -970,7 +972,7 @@ const okProp = q => (Array.isArray(q) && q.length === 3 && (q[0] | 0) >= 0 && (q
 const okGate = q => (Array.isArray(q) && q.length === 5 && q.every(Number.isFinite) && P.gateOkH(Math.round(q[2])) ? q.map(Math.round) : null);
 const okMisc = q => Array.isArray(q) && q.length === 4 && q[0] === 'base' && q.slice(1).every(Number.isFinite) ? ['base', Math.round(q[1]), Math.round(q[2]), q[3] >>> 0]   // (a base, with its owner's number: it must come with the world, or nobody but the host would see it)
   : Array.isArray(q) && q.length === 5 && q[0] === 'rope' && q.slice(1).every(Number.isFinite) ? ['rope', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])]
-  : (Array.isArray(q) && q.length === 4 && (q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'sspr' || q[0] === 'lav' || q[0] === 'tl' || q[0] === 'pwr') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[0] === 'pwr' ? (q[3] ? 1 : 0) : Math.round(q[3])] : Array.isArray(q) && q.length === 4 && (q[0] === 'see' || q[0] === 'pad') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[3] < 0 ? -1 : q[3] > 0 ? 1 : 0] : (Array.isArray(q) && (q.length === 5 || q.length === 6) && q[0] === 'por' && q.slice(1).every(Number.isFinite) ? ['por', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])].concat(q.length === 6 ? [Math.max(0, Math.min(3, Math.round(q[5])))] : []) : null));
+  : (Array.isArray(q) && q.length === 4 && (q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'sspr' || q[0] === 'lav' || q[0] === 'tl' || q[0] === 'pwr') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[0] === 'pwr' ? (q[3] ? 1 : 0) : Math.round(q[3])] : Array.isArray(q) && q.length === 4 && (q[0] === 'see' || q[0] === 'pad') && q.slice(1).every(Number.isFinite) ? [q[0], Math.round(q[1]), Math.round(q[2]), q[3] < 0 ? -1 : q[3] > 0 ? 1 : 0] : (Array.isArray(q) && (q.length === 5 || q.length === 6) && q[0] === 'por' && q.slice(1).every(Number.isFinite) ? ['por', Math.round(q[1]), Math.round(q[2]), Math.round(q[3]), Math.round(q[4])].concat(q.length === 6 ? [Math.max(0, Math.min(1073741823, Math.round(q[5])))] : []) : null));
 const okDel = q => (Array.isArray(q) && (((q[0] === 'b' || q[0] === 's' || q[0] === 'g' || q[0] === 'r') && q.length === 2 && Number.isFinite(q[1]) && q[1] >= 0 && q[1] < 4294967296) || ((q[0] === 'pad' || q[0] === 'por' || q[0] === 'c' || q[0] === 'base' || q[0] === 'pwr') && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2]))) ? (q.length === 2 ? [q[0], Math.round(q[1])] : [q[0], Math.round(q[1]), Math.round(q[2])]) : null);   // something removed with the delete tool
 const okCp = q => (Array.isArray(q) && q.length === 2 && Number.isFinite(q[0]) && Number.isFinite(q[1]) ? [Math.round(q[0]), Math.round(q[1])] : null);
 function send(p, obj) { if (p.ws.readyState === 1) p.ws.send(JSON.stringify(obj)); }
@@ -1533,7 +1535,7 @@ wss.on('connection', (ws, req) => {
         if (g0 && r.bots && r.bots.length && (g0[2] === 1 || g0[2] === 3)) roomCtx(r).builds.push({ x: g0[0], y: g0[1] });
         return;
       }
-      const e = m.g[0] === 'pwr' ? ['pwr', Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] ? 1 : 0] : (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'sspr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' || m.g[0] === 'rope' ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])].concat(m.g[0] === 'por' && m.g.length === 6 ? [Math.max(0, Math.min(3, Math.round(m.g[5])))] : []) : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0];
+      const e = m.g[0] === 'pwr' ? ['pwr', Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] ? 1 : 0] : (m.g[0] === 'bnc' || m.g[0] === 'spr' || m.g[0] === 'sspr' || m.g[0] === 'lav' || m.g[0] === 'tl') ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3])] : m.g[0] === 'por' || m.g[0] === 'rope' ? [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), Math.round(m.g[3]), Math.round(m.g[4])].concat(m.g[0] === 'por' && m.g.length === 6 ? [Math.max(0, Math.min(1073741823, Math.round(m.g[5])))] : []) : [m.g[0], Math.round(m.g[1]), Math.round(m.g[2]), m.g[3] < 0 ? -1 : m.g[3] > 0 ? 1 : 0];
       if (e[0] === 'base') { e[3] = p.otag >>> 0 || 0; }   // (a base is always the builder's own)
       if (e[0] === 'base' && (!p.otag || bstate(r).misc.some(x => x[0] === 'base' && (x[3] >>> 0) === (e[3] >>> 0)))) return;
       if (e[0] === 'base' && roomWorld(r)) {   // on dirt or ice, and nothing of anybody else's in the circle (it is not a clearing tool)

@@ -884,6 +884,7 @@
       if (!d._far || !d.nap || farAwake || (fb ? nearF(fb.get(Math.floor(d.x / FB)) || NONE, d.x, d.y, FR + 300, FR + 300) : nearF(f, d.x, d.y, FR + 300, FR + 300))) TOPUT.push(d);   // (what rests far from everybody is not even looked at: nothing near anybody can touch it)
       if (d._far && !d.nap) { d.farT = (d.farT || 0) + dt; if ((d.farT > 30 && (d.gr || d.farT > 90)) || (d.farT > 5 && d.gr && d.vx * d.vx + d.vy * d.vy < 900 && Math.abs(d.av) < 0.6)) { d.nap = true; d.vx = d.vy = 0; d.av = 0; } } else d.farT = 0;   /* (far from everybody, on the ground and all but still for 5 seconds: a big pile nobody is near settles, instead of shuffling for half a minute) */   /* (only something that is on the ground: nothing is ever stopped in mid-air) */   /* (with nobody near, nothing keeps moving for more than 30 seconds: anything still going by then is simply put to rest) */
       if (d._far && d.nap) { d.sleep = true; if (FA.length && dynTick % 15 === 0) for (let j = 0; j < FA.length; j++) { const o = FA[j]; if (Math.abs(o.x - d.x) < 260 && Math.abs(o.y - d.y) < 260) { chk.push(d); break; } } continue; }   // far from everybody and at rest: nothing to work out (unless something is still moving right by it, far away too: then it checks now and then that it is still held up, so nothing is left in the air where nobody happens to be)
+      if (d.ownT > 0 && w.portals.length && portalAt(w, d.x, d.y + (d.r || shapeOf(d).ey))) d.ownT = 0;   // (v231: a device moved it onto a portal: the server takes it from here and takes it through)
       if (d.ownT > 0) { d.ownT -= dt; d.sleep = true; continue; }   /* (on the server: a player's device is working this one out and saying where it is) */
       if (d.skip) { d.sleep = true; continue; }   // (far away but still moving: it carries on until it comes to rest, whether anybody is watching or not)
       if (fol && w.seeOwned && !(d.mineT > 0) && !(d.hold > 0) && onOwnedPlank(w, d)) { d.mineT = 0.3; d.nap = false; }   // (what rides on a plank this device is turning is worked out here too, so they move together)
@@ -968,7 +969,9 @@
       if (w.see.length) seeGuard(w, d, d.r || shapeOf(d).ey);
       if (w.pads.length && d.gr) { const pd = padAt(w, d.x, d.y + (d.r || shapeOf(d).ey)); if (pd) { d.vx = approach(d.vx, pd.dir * PAD_V * 0.8, 6000 * dt); pd.t = 0.3; d._pad = pd; } }
       if (w.portals.length) { d.pcd = Math.max(0, (d.pcd || 0) - dt); if (Math.abs(d.vx) > 15) d.pdir = d.vx > 0 ? 1 : -1;
-        if (!d.pcd && d.vy > -60 && d.gr) { const ey = d.r || shapeOf(d).ey, pt = portalAt(w, d.x, d.y + ey); if (pt) { const dir = d.pdir || 1, hf = d.r || d.hw; d.x = pt.to.x + dir * (26 + hf); d.y = pt.to.y - ey - 2; d.vx = dir * 260; d.vy = -300; d.pcd = 0.6; w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); } } }
+        if (!d.pcd && d.vy > -60 && d.gr) { const ey = d.r || shapeOf(d).ey, pt = portalAt(w, d.x, d.y + ey);
+          if (pt && fol) { d.mineT = 0; d.keep = 0; d.pred = 0; d.coast = false; d.pcd = 0.4; }   // (v231: in a shared world only the server takes things through a portal. A device moving one lets go of it at the portal, so the two never take it through each on their own and send it back and forth)
+          else if (pt) portalThrow(w, d, pt, ey); } }
       d.dm = Math.abs(d.x - d._x0) + Math.abs(d.y - d._y0);
       const still = d.vx * d.vx + d.vy * d.vy < LIN_SLEEP * LIN_SLEEP && Math.abs(d.av) < ANG_SLEEP && (d._far || ((!d._pl || !plankMoving(w, d)) && !d._pad));
       d.st = still ? (d.st || 0) + dt : 0;
@@ -1090,8 +1093,19 @@
   }
   function addPad(w, q) { const p = { x: q[0], y: q[1], w: 2, dir: q[2] < 0 ? -1 : 1, t: 0 }; w.pads.push(p); return p; }
   /* ---------- portals: two holes in the ground, joined. Whatever goes into one comes out of the other, thrown to the side it was last heading ---------- */
-  function addPortal(w, q) { const p = { a: { x: (q[1] + 1) * TS, y: q[2] * TS }, b: { x: (q[3] + 1) * TS, y: q[4] * TS }, c: Math.max(0, Math.min(3, q[5] | 0)) };   // (c: which colours this pair is: each pair goes only to its own other half)
+  function addPortal(w, q) { const cv = Math.max(0, Math.min(1073741823, Math.round(+q[5] || 0))), p = { a: { x: (q[1] + 1) * TS, y: q[2] * TS }, b: { x: (q[3] + 1) * TS, y: q[4] * TS }, c: cv >= 4 ? (cv - 4) % 64 : cv, rgb: cv >= 4 ? Math.floor((cv - 4) / 64) : -1 };   // (v231: 4 and up: its builder's colour, as 4 + which of their pairs it is + 64 x the colour. 0 to 3: an older pair in the fixed colours)   // (c: which colours this pair is: each pair goes only to its own other half)
  w.portals.push(p); return p; }
+  function portalThrow(w, d, pt, ey) {   // (v231) out of the other end, on a side where it fits: the way it was going if there is room there, else the other way. No room on either side: it stays on this end. Thrown only as far as there is room, so it does not hit a wall and come straight back in. Through again and again in a short while (something keeps feeding it back), it leaves portals alone for a while
+    const hf = d.r || d.hw, hh = d.r || d.hh || d.hw, y = pt.to.y - ey - 2;
+    const free = (x0, y0, x1, y1) => { for (let tx = Math.floor(x0 / TS); tx <= Math.floor(x1 / TS); tx++) for (let ty = Math.floor(y0 / TS); ty <= Math.floor(y1 / TS); ty++) if (SOLIDT(tile(w, tx, ty))) return false; return true; };
+    const room = sd => { const x = pt.to.x + sd * (26 + hf + 2); if (!free(x - hf, y - hh, x + hf, y + hh - 1)) return -1; let r = 0; for (let k = 1; k <= 6; k++) { const xx = x + sd * k * 20; if (!free(xx - hf, y - hh - 8, xx + hf, y + hh - 4)) break; r = k * 20; } return r; };
+    const dir = d.pdir || 1, r1 = room(dir), r2 = room(-dir); let sd = 0, r = 0;
+    if (r1 >= 60 || (r1 >= 0 && r1 >= r2)) { sd = dir; r = r1; } else if (r2 >= 0) { sd = -dir; r = r2; }
+    if (!sd) { d.pcd = 1; return false; }
+    if (w.tick - (d.ptS || -1e9) > 1200) { d.ptS = w.tick; d.ptC = 0; } d.ptC = (d.ptC || 0) + 1;
+    d.x = pt.to.x + sd * (26 + hf + 2); d.y = y; d.vx = sd * (r >= 120 ? 260 : 90 + r * 1.2); d.vy = r >= 120 ? -300 : -200; d.av = 0; d.pdir = sd; d.pcd = d.ptC >= 4 ? 8 : 0.8; d.tpT = w.tick; d.nap = false; d.st = 0;
+    w.ev.push({ k: 'portal', x: pt.from.x, y: pt.from.y, x2: pt.to.x, y2: pt.to.y }); return true;
+  }
   function portalAt(w, x, bottom) {
     for (let i = 0; i < w.portals.length; i++) { const p = w.portals[i];
       if (Math.abs(x - p.a.x) < 26 && bottom >= p.a.y - 6 && bottom <= p.a.y + 12) return { from: p.a, to: p.b };
@@ -1233,7 +1247,7 @@
         if (!isBall(d) && !isBall(o)) obbHit(shapeOf(d), shapeOf(o), 0, out);
         else if (isBall(d) && isBall(o)) { const q = Math.hypot(o.x - d.x, o.y - d.y) - d.r - o.r; if (q < 0) out.push([0, 0, q]); }
         else { const bx = isBall(d) ? o : d, bl = isBall(d) ? d : o, h = circBox(shapeOf(bx), bl.x, bl.y, bl.r); if (h) out.push(h); }
-        if (out.some(h => -h[2] > 1.5)) { clear = false; break; }
+        if (out.some(h => -h[2] > 4)) { clear = false; break; }   // (v232: 4 px, not 1.5: a pile at rest presses its pieces a few px into each other under its own weight. Woken for that, a pile balanced on a ledge could topple on opening. Really inside one another is much more than that)
       }
       if (clear && hasSupport(w, d, H)) { d.nap = true; d.vx = d.vy = 0; d.av = 0; d.farT = 0; rest++; }
       else { d.nap = false; d.st = 0; d.sleep = false; d.farT = 0; woke++; }
@@ -1844,7 +1858,7 @@
     return '';
   }
   const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
-  const api = { VERSION: 231, springKick, setPad, wakeAround, restAll, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 232, springKick, setPad, wakeAround, restAll, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
