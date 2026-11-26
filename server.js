@@ -57,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 228;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 231;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -106,7 +106,14 @@ function useMerge(u) {   // a player's device remembers the counts from before t
   if (Array.isArray(u.days)) for (const e of u.days.slice(-40)) { const q = cleanDay(e); if (!q) continue; const i = usage.days.findIndex(x => x[0] === q[0]); if (i < 0) usage.days.push(q); else for (let k = 1; k < 5; k++) usage.days[i][k] = Math.max(usage.days[i][k], q[k]); }
   usage.days.sort((a, b) => a[0] < b[0] ? -1 : 1); if (usage.days.length > 31) usage.days.splice(0, usage.days.length - 31); if (+u.pkMem > usage.pkMem && +u.pkMem < 1e12) usage.pkMem = +u.pkMem; if ((u.pkPl | 0) > usage.pkPl && (u.pkPl | 0) < 10000) { usage.pkPl = u.pkPl | 0; usage.pkPlAt = +u.pkPlAt || 0; }
 }
-const cleanCtx = c => c && typeof c === 'object' ? { pl: Math.max(0, Math.min(1e4, c.pl | 0)), rm: Math.max(0, Math.min(1e4, c.rm | 0)), mv: Math.max(0, Math.min(1e6, c.mv | 0)), th: Math.max(0, Math.min(1e6, c.th | 0)), out: Math.max(0, Math.min(1e10, +c.out || 0)), lv: Math.max(0, Math.min(3, c.lv | 0)), ev: Array.isArray(c.ev) ? c.ev.filter(x => typeof x === 'string' && EV_OK.has(x)).slice(0, 4) : [] } : null;
+function movingMix() {   // (the busiest world at that moment: what kinds of things were moving, and how many near players or far away)
+  let best = null; for (const r of rooms.values()) if (r.world && (!best || (r.world.nAct || 0) > (best.world.nAct || 0))) best = r;
+  if (!best) return {};
+  const k = [0, 0, 0, 0, 0, 0, 0, 0], w = best.world; let near = 0, far = 0;
+  for (const d of w.dyn) { if (d.nap || d.gone || d.burn > 0) continue; const i = d.kind | 0; if (i >= 0 && i < 8) k[i]++; if (d._far) far++; else near++; }
+  return { mk: k, mn: near, mf: far, mp: best.priv ? 1 : 0, mt: w.dyn.length };
+}
+const cleanCtx = c => c && typeof c === 'object' ? { pl: Math.max(0, Math.min(1e4, c.pl | 0)), rm: Math.max(0, Math.min(1e4, c.rm | 0)), mv: Math.max(0, Math.min(1e6, c.mv | 0)), th: Math.max(0, Math.min(1e6, c.th | 0)), out: Math.max(0, Math.min(1e10, +c.out || 0)), lv: Math.max(0, Math.min(3, c.lv | 0)), ev: Array.isArray(c.ev) ? c.ev.filter(x => typeof x === 'string' && EV_OK.has(x)).slice(0, 4) : [], ...(Array.isArray(c.mk) && c.mk.length === 8 ? { mk: c.mk.map(x => Math.max(0, Math.min(1e6, x | 0))), mn: Math.max(0, Math.min(1e6, c.mn | 0)), mf: Math.max(0, Math.min(1e6, c.mf | 0)), mp: c.mp ? 1 : 0, mt: Math.max(0, Math.min(1e6, c.mt | 0)) } : {}) } : null;
 const cleanDay = e => Array.isArray(e) && /^\d{4}-\d{2}-\d{2}$/.test(e[0]) && e[0].slice(0, 7) === usage.m ? [e[0], Math.max(0, Math.min(5, +e[1] || 0)), Math.max(0, Math.min(1e4, e[2] | 0)), Math.max(0, Math.min(1e6, e[3] | 0)), Math.max(0, Math.min(1e12, +e[4] || 0))] : null;   // [day, highest processor use, most players, most things moving, data sent]
 /* What happened that takes the server a lot of work at once (a new map made, the worlds written down, players arriving), so the busiest moment can say why */
 const EV_OK = new Set(['a new map was made', 'players arriving', 'the worlds were saved']);   // (the only things it ever says; anything else handed back by a device is dropped)
@@ -135,12 +142,14 @@ setInterval(() => {
   if (health.cpuHist.length >= 10 && load > usage.pkCpu && process.uptime() > 30) {   // (this month's highest, over 10 seconds; not counting the first half minute after a start, which is the engine warming up)
     usage.pkCpu = +load.toFixed(3); usage.pkCpuAt = t;
     const mx = k => ctxWin.reduce((a, c) => Math.max(a, c[k]), 0), evs = [...new Set(busyEv.filter(q => t - q[0] < 12000).map(q => q[1]))];
-    usage.pkCtx = { pl: mx('pl'), rm: mx('rm'), mv: mx('mv'), th: mx('th'), out: Math.round(mx('out')), lv: health.level, ev: evs.slice(0, 4) };   // (what was going on at that moment)
+    usage.pkCtx = { pl: mx('pl'), rm: mx('rm'), mv: mx('mv'), th: mx('th'), out: Math.round(mx('out')), lv: health.level, ev: evs.slice(0, 4), ...movingMix() };   // (what was going on at that moment)
   }
   if (rss > usage.pkMem) usage.pkMem = rss;
   { const n = health.cpuHist.length, l3 = health.cpuHist.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, n || 1) / CPU_LIMIT, lt = health.late.slice(-60), lateNow = lt.length ? Math.max(...lt) : 0;
     const r3 = health.cpuHist.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, n || 1);   // (v228: how busy the one thread that runs the game is, whatever the machine says its limit is: over 80% of one processor and the physics gives way, so play stays smooth)
-    if ((CPU_KNOWN && l3 > 0.85) || r3 > 0.8 || lateNow > 25) phys.bud = Math.max(30, phys.bud * 0.7);
+    const r1 = n ? health.cpuHist[n - 1] : 0;   // (v229: the last second alone. A world opening with a whole pile to settle swamps the server at once: the physics gives way within a second or two, not only once the three-second average catches up)
+    if (r1 > 0.9) phys.bud = Math.max(30, phys.bud * 0.45);
+    else if ((CPU_KNOWN && l3 > 0.85) || r3 > 0.8 || lateNow > 25) phys.bud = Math.max(30, phys.bud * 0.7);
     else if ((!CPU_KNOWN || l3 < 0.65) && r3 < 0.6 && lateNow < 8) phys.bud = Math.min(600 * Math.max(1, phys.busy), phys.bud * (r3 < 0.4 ? 1.5 : 1.15) + 10); }   // (plenty of room: back up quickly, so a big pile settles at full speed again)
   const down = lateP > 45 || (CPU_KNOWN && load > 0.92 && lateP > 12), up = lateP < 15 && (!CPU_KNOWN || load < 0.7);
   if (down && t - health.levelAt > 3000 && health.level < 3) { health.level++; health.levelAt = t; }
