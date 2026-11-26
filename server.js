@@ -57,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 227;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 228;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -139,8 +139,9 @@ setInterval(() => {
   }
   if (rss > usage.pkMem) usage.pkMem = rss;
   { const n = health.cpuHist.length, l3 = health.cpuHist.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, n || 1) / CPU_LIMIT, lt = health.late.slice(-60), lateNow = lt.length ? Math.max(...lt) : 0;
-    if ((CPU_KNOWN && l3 > 0.85) || lateNow > 25) phys.bud = Math.max(30, phys.bud * 0.7);
-    else if ((!CPU_KNOWN || l3 < 0.65) && lateNow < 8) phys.bud = Math.min(600 * Math.max(1, phys.busy), phys.bud * 1.15 + 5); }
+    const r3 = health.cpuHist.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, n || 1);   // (v228: how busy the one thread that runs the game is, whatever the machine says its limit is: over 80% of one processor and the physics gives way, so play stays smooth)
+    if ((CPU_KNOWN && l3 > 0.85) || r3 > 0.8 || lateNow > 25) phys.bud = Math.max(30, phys.bud * 0.7);
+    else if ((!CPU_KNOWN || l3 < 0.65) && r3 < 0.6 && lateNow < 8) phys.bud = Math.min(600 * Math.max(1, phys.busy), phys.bud * (r3 < 0.4 ? 1.5 : 1.15) + 10); }   // (plenty of room: back up quickly, so a big pile settles at full speed again)
   const down = lateP > 45 || (CPU_KNOWN && load > 0.92 && lateP > 12), up = lateP < 15 && (!CPU_KNOWN || load < 0.7);
   if (down && t - health.levelAt > 3000 && health.level < 3) { health.level++; health.levelAt = t; }
   else if (up && t - health.levelAt > 6000 && health.level > 0) { health.level--; health.levelAt = t; }

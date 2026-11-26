@@ -219,9 +219,23 @@
   #scRing.show .scb.dim{opacity:.7}
   #scRing .scb:active{transform:scale(.92)}
   .scpin{display:flex;gap:4px;margin-top:5px;align-items:center}
-  .shopitem .scpin .scl{display:inline;opacity:.65;margin-right:2px;font-size:12px}
-  .shopitem .scpin button{flex:0 0 28px;max-width:28px;width:26px;height:24px;border-radius:8px;border:2px solid var(--line);background:#231e38;color:var(--ink);font-size:13px;padding:0;line-height:1;min-width:0}
-  .shopitem .scpin button.on{background:#ffd23d;color:#16102a;border-color:#ffd23d}
+  .shopitem{position:relative}
+  .shopitem.hassc{padding-right:30px}
+  .shopitem .scset{position:absolute;top:3px;right:3px;min-width:0;width:26px;height:26px;padding:0;border-radius:9px;border:2px solid var(--line);background:#231e38;color:var(--ink);display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;opacity:.8;z-index:1}
+  .shopitem .scset .ic{width:14px;height:14px}
+  .shopitem .scset.on{background:#ffd23d;color:#16102a;border-color:#ffd23d;opacity:1;width:auto;padding:0 5px}
+  .shopitem .scset b{font-size:13px;margin-left:1px}
+  #scAsk{z-index:80}
+  .scaskcard{width:min(360px,94vw)}
+  .scaskcard h3{display:flex;align-items:center;gap:8px}.scaskcard h3 svg{width:30px;height:30px;flex:none}
+  .scslots{display:grid;grid-template-columns:repeat(auto-fit,minmax(56px,1fr));gap:8px;margin:8px 0 10px}
+  .scslot{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:14px;border:2px solid var(--line);background:#2c2644;min-width:0}
+  .scslot b{font-size:18px}.scslot .sci{width:34px;height:34px;display:flex}.scslot .sci svg{width:100%;height:100%}
+  .scslot.empty .sci{border:2px dashed var(--line);border-radius:50%;opacity:.6}
+  .scslot.on{border-color:#ffd23d;background:rgba(255,210,61,.14)}
+  .scnseg{flex:0 0 auto;width:auto;grid-template-columns:repeat(4,40px)!important;display:grid}.scnseg button{padding:4px 0}
+  #scRing .scself{z-index:73}
+  #shopList{overflow-x:hidden}#shopList>.shopitem{min-width:0}
   .mpseg button[data-m=priv].on{background:#d98a2f}
   .mpseg button[data-m=pub].on{background:#2f9e61}
   .mpseg button[data-m=off].on{background:#4f6fd0}
@@ -470,17 +484,17 @@
   .shopitem button{flex:none;min-width:84px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 8px;line-height:1.1}
   .shopitem button .pr{display:inline-flex;align-items:center;gap:3px;font-size:14px}.shopitem button .pr .ic{width:14px;height:14px}
   .shopitem button:disabled{opacity:.45}
-  @media (min-width:700px){.shopcard{width:min(720px,100%)}#shopList{display:grid;grid-template-columns:1fr 1fr}.shopitem .sinfo small{display:none}}
-  @media (max-width:699px) and (max-aspect-ratio:1/1){#shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px}.shopitem{flex-direction:column;gap:3px;text-align:center;padding:6px}.shopitem .sinfo small{display:none}.shopitem button{flex-direction:row;gap:8px;min-width:0;width:100%;justify-content:center}}
+  @media (min-width:700px){.shopcard{width:min(720px,100%)}#shopList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.shopitem .sinfo small{display:none}}
+  @media (max-width:699px) and (max-aspect-ratio:1/1){#shopList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.shopitem{flex-direction:column;gap:3px;text-align:center;padding:6px}.shopitem .sinfo small{display:none}.shopitem button{flex-direction:row;gap:8px;min-width:0;width:100%;justify-content:center}}
   @media (max-width:699px) and (max-aspect-ratio:1/1) and (min-height:760px){.shopitem .sinfo small{display:block}}
   @media (max-width:699px) and (max-aspect-ratio:1/1){#shopList.dense .shopitem .sinfo small{display:none}}
   @media (max-height:520px) and (min-aspect-ratio:1/1){
     #hl{--hlw:122px}#infoRow .pill{font-size:12px}.gemw{margin-left:3px}#coinpill{padding:1px 6px;gap:3px}
     .shopcard{width:min(720px,100%);padding:10px 14px}.shopcard h3{margin:0 0 2px;font-size:19px}#shopWallet{margin:0 0 6px;font-size:16px}
-    #shopList{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.shopitem{padding:5px 8px}.shopitem .sico{width:32px;height:32px}.shopitem .sinfo b{font-size:15px}.shopitem .sinfo small{display:none}.shopitem button{min-width:70px;padding:4px 6px}.shopcard .small{margin:0 0 4px;font-size:12px}.shopcard .cfoot{margin-top:2px}.shopcard .cfoot button{padding:5px 18px}
+    #shopList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:6px}.shopitem{padding:5px 8px}.shopitem .sico{width:32px;height:32px}.shopitem .sinfo b{font-size:15px}.shopitem .sinfo small{display:none}.shopitem button{min-width:70px;padding:4px 6px}.shopcard .small{margin:0 0 4px;font-size:12px}.shopcard .cfoot{margin-top:2px}.shopcard .cfoot button{padding:5px 18px}
     .epcard{width:min(680px,100%);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start;padding:10px 14px}.epcard h3,.epcard .cfoot{grid-column:1/-1;margin:0 0 4px}
     #emoGrid{grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0}#phraseGrid{gap:4px;margin:4px 0;align-content:start}#phraseGrid button{padding:6px 2px;font-size:12px}#sayBuild{gap:4px;margin:2px 0}#sayBuild .csel-btn{padding:5px 6px;font-size:13px}#sayBuild .small{display:none}
-    #shopKeep{padding:1px 8px;margin:0 0 4px}#shopKeep small{display:none}#shopKeep b{font-size:14px;font-weight:normal}#shopList{grid-template-columns:repeat(5,1fr)}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
+    #shopKeep{padding:1px 8px;margin:0 0 4px}#shopKeep small{display:none}#shopKeep b{font-size:14px;font-weight:normal}#shopList{grid-template-columns:repeat(5,minmax(0,1fr))}.shopitem{flex-direction:column;gap:2px;padding:4px 4px;text-align:center}.shopitem .sico{width:26px;height:26px}.shopitem .sinfo b{font-size:13px}.shopitem button{min-width:0;width:100%;flex-direction:row;justify-content:center;gap:6px;padding:2px 4px}.shopcard{padding:8px 14px}
     #emoGrid button{aspect-ratio:auto;height:36px;padding:3px}.epcard{padding:8px 12px}.epcard h3{font-size:19px}#phraseGrid button{padding:4px 2px}
     .profcard{padding:8px 14px}.profcard .phead{gap:10px}.profcard .pbeat{padding:5px 10px}
     .pcard{width:min(520px,100%);display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:10px 14px}.pcard h3{grid-column:1/-1;font-size:22px}.pcard #pauseSub,.pcard #pResume,.pcard #pHome{grid-column:1/-1}.pcard .pbtn{padding:7px;font-size:17px;gap:6px}.pcard #pResume{font-size:20px}.pcard #pauseSub{margin:-2px 0}
@@ -1123,7 +1137,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 227; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 228; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1537,7 +1551,10 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       </div></div>
 
       <h4><span data-ic="plus"></span> Build shortcuts</h4>
-      <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Build shortcuts</b><small>Three quick picks for building. In the build menu, tap 1, 2 or 3 beside anything to put it there. On a touch screen, tap + for your three shortcuts and tap + again for the whole menu. On a keyboard, each shortcut has its own key (below)</small></span></span><input type="checkbox" id="setScOn"><i></i></label>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Build shortcuts</b><small>Three quick picks for building. In the build menu, tap the bolt in the corner of anything to put it on one. On a touch screen, tap + for your three shortcuts and tap + again for the whole menu. On a keyboard, each shortcut has its own key (below)</small></span></span><input type="checkbox" id="setScOn"><i></i></label>
+      <div class="dep sub" data-dep="scOn"><div>
+        <div class="row scnrow"><span class="lbl"><span data-ic="bolt"></span>&nbsp;How many</span><div class="mpseg scnseg" id="scNSeg" role="radiogroup" aria-label="How many build shortcuts"><button type="button" data-n="2">2</button><button type="button" data-n="3">3</button><button type="button" data-n="4">4</button><button type="button" data-n="5">5</button></div></div>
+      </div></div>
 
       <div class="dep" data-dep="kb"><div>
         <h4><span data-ic="key"></span> Keyboard</h4>
@@ -1611,10 +1628,6 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
         <div class="small dim" id="todDesc"></div>
         <div class="row todrow"><span data-ic="flag"></span><div id="selFin"></div><label class="sw2 finroll" id="lvRollRow" title="Draw a new finish spot every time a game starts"><span>New each game</span><input type="checkbox" id="lvRoll"><i></i></label></div>
       </div>
-        </div>
-      </div></div>
-      <div class="dep" data-dep="!mp"><div>
-        <h4><span data-ic="bot"></span> Bots</h4>
       <div class="dep" data-dep="botsPriv"><div>
         <label class="sw2 ic2" id="botsPrivRow"><span class="ti"><span data-ic="bot"></span><span><b>Fill my private world with bots</b><small>Bots join until your world has as many players as you choose. Real players always come first</small></span></span><input type="checkbox" id="setBots"><i></i></label>
         <div class="dep sub" data-dep="botsPrivOn"><div>
@@ -1623,6 +1636,10 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
         </div></div>
         <div class="small dim" id="botsNote"></div>
       </div></div>
+        </div>
+      </div></div>
+      <div class="dep" data-dep="!mp"><div>
+        <h4><span data-ic="bot"></span> Bots</h4>
       <div class="dep" data-dep="botsOff"><div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="bot"></span><span><b>Bots</b><small>They run the level, push crates, tip planks and press buttons just like a player</small></span></span><input type="checkbox" id="setBotsOff"><i></i></label>
         <div class="dep sub" data-dep="botsOffOn"><div>
@@ -1814,7 +1831,6 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   <div class="chead"><button id="lvBack" class="btn dmback hide" type="button" aria-label="Back to all levels"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="lvTitle">Levels</h3><button id="lvX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="lvl">
     <div class="lvleft">
-      <div class="mpseg lvseg" id="lvSeg" role="tablist" aria-label="Where to play"><button type="button" role="tab" data-m="priv"><span data-ic="lock"></span>Private</button><button type="button" role="tab" data-m="pub"><span data-ic="globe"></span>Public</button><button type="button" role="tab" data-m="off"><span data-ic="user"></span>Offline</button></div>
       <div class="lvfil" id="lvFil" role="group" aria-label="Show"><button type="button" data-f="all" class="on">All</button><button type="button" data-f="mine"><i class="k mine"></i>Built</button><button type="button" data-f="got"><i class="k got"></i>Saved</button><button type="button" data-f="beat"><span data-ic="crown"></span>Beaten</button></div>
       <div id="lvGrid" role="listbox" aria-label="Levels"></div>
     </div>
@@ -1985,8 +2001,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=227"></script>
-<script src="physics.js?v=227"></script>
+<script src="maps.js?v=228"></script>
+<script src="physics.js?v=228"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2025,12 +2041,12 @@ function fillIcons(root) {
 fillIcons();
 
 /* ================= settings (saved in this browser, restored exactly on return) ================= */
-const OPT_KEYS = ['mback', 'sc1', 'sc2', 'sc3'];   // (these may be left with no key at all)
+const OPT_KEYS = ['mback', 'sc1', 'sc2', 'sc3', 'sc4', 'sc5'];   // (these may be left with no key at all)
 function defMKeys() { return { mup: ['ArrowUp', 'KeyW'], mdown: ['ArrowDown', 'KeyS'], mleft: ['ArrowLeft', 'KeyA'], mright: ['ArrowRight', 'KeyD'], mok: ['Enter', 'Space'], mback: ['Backspace'], tprev: ['KeyQ'], tnext: ['KeyE', 'Tab'] }; }
-function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], sc1: ['Digit1'], sc2: ['Digit2'], sc3: ['Digit3'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
+function defKeys() { return { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'KeyW', 'ArrowUp'], boost: ['ShiftLeft', 'ShiftRight'], power: ['KeyF'], back: ['KeyR'], build: ['KeyB'], sc1: ['Digit1'], sc2: ['Digit2'], sc3: ['Digit3'], sc4: ['Digit4'], sc5: ['Digit5'], down: ['ArrowDown', 'KeyS'], chat: ['KeyC'], help: ['KeyH'], map: ['KeyM'], pause: ['KeyP'], place: ['KeyE', 'Enter'], pcancel: ['KeyQ', 'Backspace'] }; }
 function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
-    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botFill: 12, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, nQuiet: { on: false, a: 1320, b: 420 }, nInGame: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseShow: true, baseOthers: true, scOn: false, sc: [null, null, null], baseBigAll: false, mapNames: false, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
+    tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botFill: 12, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, nQuiet: { on: false, a: 1320, b: 420 }, nInGame: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseShow: true, baseOthers: true, scOn: false, scN: 3, sc: [null, null, null, null, null], baseBigAll: false, mapNames: false, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
     notify: false, nFriends: true, nMsgs: true, nRequests: true, nInvites: true, nMaps: true, nEmpty: false, devUpd: true, devHealth: false, devShow: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
@@ -2113,7 +2129,7 @@ function normalize() {
   settings.finArrow = settings.finArrow !== false; delete settings.finMode;
   if (['live', 'morning', 'midday', 'night'].indexOf(settings.tod) < 0) settings.tod = 'live';
   settings.botFill = Math.max(2, Math.min(20, Math.round(+settings.botFill) || 12));   // (how full the host wants their private world: players and bots together)
-  settings.sc = [0, 1, 2].map(i => { const v = Array.isArray(settings.sc) ? settings.sc[i] : null; return typeof v === 'string' && v.length < 16 ? v : null; });   // (the three build shortcuts: which item each holds)
+  settings.scN = Math.max(2, Math.min(5, Math.round(+settings.scN) || 3)); settings.sc = [0, 1, 2, 3, 4].map(i => { const v = Array.isArray(settings.sc) ? settings.sc[i] : null; return typeof v === 'string' && v.length < 16 ? v : null; });   // (the three build shortcuts: which item each holds)
   settings.soloLen = 0;   // your own world never runs out: it stays until you reset that level
   settings.btnSize = 1;   // (there is no 'size of all buttons' any more: each button is sized in the button editor)
   if (['auto', 'keyboard', 'touch'].indexOf(settings.inputMode) < 0) settings.inputMode = 'auto';
@@ -3938,7 +3954,7 @@ addEventListener('keydown', e => {
     }
   }
   if (typeof scRingOn !== 'undefined' && scRingOn && e.code === 'Escape') { scRingClose(); eat(); return; }
-  if (settings.scOn && !e.repeat && S.mode === 'play' && !blocked() && typeof scUse === 'function') { for (let i = 0; i < 3; i++) if (has('sc' + (i + 1))) { scUse(i); eat(); return; } }   // (a build shortcut's key: straight to building that, even while building something else)
+  if (settings.scOn && !e.repeat && S.mode === 'play' && !blocked() && typeof scUse === 'function') { for (let i = 0; i < scN(); i++) if (has('sc' + (i + 1))) { scUse(i); eat(); return; } }   // (a build shortcut's key: straight to building that, even while building something else)
   const bk = settings.keys.build || [], open = typeof shopOpen !== 'undefined' && shopOpen;
   if (!open) { if (bk.indexOf(e.code) >= 0 && !e.repeat && !blocked() && S.mode === 'play' && !(typeof placing !== 'undefined' && placing)) { shopSel = 0; toggleShop(true); if (shopOpen) { shopKb(); e.preventDefault(); e.stopPropagation(); } } return; }
   const tabs = [...document.querySelectorAll('#shopTabs button')], ti = tabs.findIndex(b => b.classList.contains('on')), c = e.code;
@@ -4714,7 +4730,10 @@ bindToggle('setStats', 'stats', () => { applyDeps(); statsKick(); }); ['Fps', 'P
 bindToggle('setDeathMark', 'deathMark', () => { if (!settings.deathMark) { S.deathPos = null; try { localStorage.removeItem('ballrun4_death'); } catch (e) {} } });
 bindToggle('setAnnounce', 'announce'); bindToggle('setJoinMsg', 'joinMsg');
 bindToggle('setMinimap', 'minimap', () => { applyMmVisibility(); });
-bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 'family'); bindToggle('setMyName', 'myName'); bindToggle('setBaseArrow', 'baseArrow'); bindToggle('setBaseBig', 'baseBig'); bindToggle('setBaseShow', 'baseShow', () => applyDeps()); bindToggle('setBaseOthers', 'baseOthers', () => applyDeps()); bindToggle('setScOn', 'scOn', () => { buildKeys(); if (!settings.scOn && typeof scRingClose === 'function') scRingClose(); if (typeof shopOpen !== 'undefined' && shopOpen) shopRender(); }); bindToggle('setBaseBigAll', 'baseBigAll'); bindToggle('setMapNames', 'mapNames'); bindToggle('setMusicOn', 'musicOn', () => { applyDeps(); if (!AU.ctx) auInit(); musicStart(); auVol(); }); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { applyDeps(); if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0, fill: settings.botFill | 0 })); } catch (e) {} } });
+bindToggle('setBotsOff', 'botsOff', () => applyDeps()); bindToggle('setFamily', 'family'); bindToggle('setMyName', 'myName'); bindToggle('setBaseArrow', 'baseArrow'); bindToggle('setBaseBig', 'baseBig'); bindToggle('setBaseShow', 'baseShow', () => applyDeps()); bindToggle('setBaseOthers', 'baseOthers', () => applyDeps()); function scNShow() { const n = Math.max(2, Math.min(5, settings.scN | 0 || 3)); document.querySelectorAll('#scNSeg button').forEach(b => { const on = +b.dataset.n === n; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); }); }
+$('scNSeg').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if (!b) return; settings.scN = +b.dataset.n; save(); sfx('ui'); scNShow(); buildKeys(); });
+scNShow();
+bindToggle('setScOn', 'scOn', () => { applyDeps(); buildKeys(); if (!settings.scOn && typeof scRingClose === 'function') scRingClose(); if (typeof shopOpen !== 'undefined' && shopOpen) shopRender(); }); bindToggle('setBaseBigAll', 'baseBigAll'); bindToggle('setMapNames', 'mapNames'); bindToggle('setMusicOn', 'musicOn', () => { applyDeps(); if (!AU.ctx) auInit(); musicStart(); auVol(); }); bindToggle('setBotChat', 'botChat'); bindToggle('setBotAnn', 'botAnnounce'); bindToggle('setBotCrown', 'botCrowns'); bindToggle('setMmBigP', 'mmBigP'); bindToggle('setMmBigB', 'mmBigB'); bindToggle('setBots', 'botsPriv', () => { applyDeps(); if (party && party.role === 'host' && ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t: 'bots', on: settings.botsPriv ? 1 : 0, fill: settings.botFill | 0 })); } catch (e) {} } });
 bindToggle('setBoost', 'boost', () => { applyTouchUI(); }); bindToggle('setBoostAuto', 'boostAuto', () => { applyTouchUI(); applyDeps(); }); bindToggle('setBoostBtn', 'boostBtn', () => { settings.boostPull = !settings.boostBtn; $('setBoostPull').checked = settings.boostPull; save(); applyTouchUI(); });   /* (a button, or pull farther: one or the other) */ bindToggle('setShopBtn', 'shopBtn', () => { applyTouchUI(); applyDeps(); }); bindToggle('setShopBoth', 'shopBoth', () => applyTouchUI()); bindToggle('setBoostPull', 'boostPull', () => { settings.boostBtn = !settings.boostPull; $('setBoostBtn').checked = settings.boostBtn; save(); applyTouchUI(); }); bindToggle('setSuperBtn', 'superBtn', () => { applyTouchUI(); }); bindToggle('setJoy', 'joy', () => joyUpdate());
 bindToggle('setSfx', 'sfx', () => { auVol(); if (settings.sfx) sfx('on'); }); $('setSfxVol').oninput = () => { settings.sfxVol = +$('setSfxVol').value; save(); auVol(); }; $('setSfxVol').onchange = () => sfx('coin');
 $('setMusicVol').oninput = () => { settings.musicVol = +$('setMusicVol').value; save(); auVol(); };
@@ -4748,7 +4767,7 @@ const MKEYACT = [['mup', 'up', 'Up'], ['mdown', 'down', 'Down'], ['mleft', 'left
 const KEYNAMES = { Space: 'Space', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Enter: 'Enter', ShiftLeft: 'L-Shift', ShiftRight: 'R-Shift', Tab: 'Tab', Backspace: 'Backspace', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`', CapsLock: 'Caps' };
 const keyLabel = c => KEYNAMES[c] || (c.indexOf('Key') === 0 ? c.slice(3) : c.indexOf('Digit') === 0 ? c.slice(5) : c.indexOf('Numpad') === 0 ? 'Num ' + c.slice(6) : c);
 const RESERVED = ['Escape', 'Minus', 'Equal', 'NumpadAdd', 'NumpadSubtract', 'MetaLeft', 'MetaRight', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ContextMenu'];
-const KEYGROUPS = [{ box: 'keyrows', acts: () => KEYACT.concat(settings.scOn ? [0, 1, 2].map(i => { const it = typeof scList === 'function' ? scList()[i] : null; return ['sc' + (i + 1), 'plus', 'Shortcut ' + (i + 1) + (it ? ' (' + it.name + ')' : ' (empty)')]; }) : []), store: 'keys', def: () => defKeys() }, { box: 'mkeyrows', acts: () => MKEYACT, store: 'mkeys', def: () => defMKeys() }];
+const KEYGROUPS = [{ box: 'keyrows', acts: () => KEYACT.concat(settings.scOn ? [0, 1, 2, 3, 4].slice(0, Math.max(2, Math.min(5, settings.scN | 0 || 3))).map(i => { const id = Array.isArray(settings.sc) ? settings.sc[i] : null, it = typeof id === 'string' && typeof SHOP !== 'undefined' ? SHOP.find(q => q.id === id) : null; return ['sc' + (i + 1), 'plus', 'Shortcut ' + (i + 1) + (it ? ' (' + it.name + ')' : ' (empty)')]; }) : []), store: 'keys', def: () => defKeys() }, { box: 'mkeyrows', acts: () => MKEYACT, store: 'mkeys', def: () => defMKeys() }];
 function buildKeys() { KEYGROUPS.forEach(buildKeyGroup); }
 function buildKeyGroup(G) {
   const box = $(G.box); if (!box) return; box.innerHTML = ''; const K = settings[G.store] || (settings[G.store] = G.def());
@@ -4852,7 +4871,7 @@ const DEPS = {
   tags: () => !!settings.tags,
   boostman: () => showTouch() && !settings.boostAuto, shopbtn: () => !!settings.shopBtn,
   boost: () => settings.boost, power: () => settings.powerJump, touchgest: () => showTouch() && settings.scheme !== 'buttons',
-  mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => false, '!bots': () => true, botsPriv: () => !settings.mp && !settings.offline, botsOff: () => !settings.mp && !!settings.offline, botsOffOn: () => !!settings.botsOff, botsPrivOn: () => !!settings.botsPriv, baseShow: () => settings.baseShow !== false, baseOthers: () => settings.baseOthers !== false,
+  mp: () => settings.mp, '!mp': () => !settings.mp, bots: () => false, '!bots': () => true, botsPriv: () => !settings.mp && !settings.offline, botsOff: () => !settings.mp && !!settings.offline, botsOffOn: () => !!settings.botsOff, botsPrivOn: () => !!settings.botsPriv, scOn: () => !!settings.scOn, baseShow: () => settings.baseShow !== false, baseOthers: () => settings.baseOthers !== false,
   minimap: () => settings.minimap, mmPlayers: () => !!settings.mmPlayers, mmBots: () => !!settings.mmBots, stats: () => settings.stats, sfx: () => settings.sfx, music: () => !!settings.musicOn
 };
 function applyDeps() {
@@ -5745,11 +5764,10 @@ function shopRender() {
     const row = document.createElement('div'); row.className = 'shopitem';
     const full = atLimit(it), ok = wallet.c >= it.c && wallet.g >= it.g && !full;
     row.innerHTML = '<div class="sico">' + shopIcon(it.id) + '</div><div class="sinfo"><b>' + it.name + (it.max && !capsOff() ? ' <span class="lim' + (full ? ' full' : '') + '">' + ownCount(it) + '/' + it.max + '</span>' : '') + '</b><small>' + it.info + '</small></div>';
-    if (settings.scOn && !it.give) {   // put it on a build shortcut: 1, 2 or 3 (whatever was there before is replaced; tap a lit one to empty it)
-      const pin = document.createElement('div'); pin.className = 'scpin'; pin.innerHTML = '<span class="scl">Shortcut</span>'; const cur = scList();
-      [0, 1, 2].forEach(i => { const sb = document.createElement('button'); sb.type = 'button'; sb.textContent = i + 1; const on = !!cur[i] && cur[i].id === it.id; sb.className = on ? 'on' : ''; sb.setAttribute('aria-label', (on ? 'Take ' + it.name + ' off shortcut ' : 'Put ' + it.name + ' on shortcut ') + (i + 1)); sb.setAttribute('aria-pressed', on ? 'true' : 'false');
-        sb.onclick = e => { e.stopPropagation(); scSet(i, on ? null : it.id); sfx(on ? 'off' : 'on'); shopRender(); }; pin.appendChild(sb); });
-      row.querySelector('.sinfo').appendChild(pin);
+    if (settings.scOn && !it.give) {   // a small bolt in the card's corner: tap it to put this on one of your build shortcuts (shows the number when it is on one)
+      const at = scList().findIndex(q => q && q.id === it.id), sb = document.createElement('button'); sb.type = 'button'; sb.className = 'scset' + (at >= 0 ? ' on' : '');
+      sb.innerHTML = ic('bolt') + (at >= 0 ? '<b>' + (at + 1) + '</b>' : ''); sb.setAttribute('aria-label', at >= 0 ? it.name + ' is on shortcut ' + (at + 1) + ': change' : 'Put ' + it.name + ' on a shortcut');
+      sb.onclick = e => { e.stopPropagation(); e.preventDefault(); sfx('ui'); scAsk(it); }; row.appendChild(sb); row.classList.add('hassc');
     }
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sbuy'; b.disabled = !ok || !modBuildOk();
     b.innerHTML = (it.c ? '<span class="pr">' + ico('gcoin') + it.c + '</span>' : '') + (it.g ? '<span class="pr">' + ico('gem') + it.g + '</span>' : '');
@@ -5766,12 +5784,26 @@ $('btnShop').onclick = () => buildPress($('btnShop'));
 /* ----- build shortcuts (Controls: "Build shortcuts", off at first). Three items, put there from the build menu (1, 2, 3 beside each).
    Keyboard: a key for each. Touch: tap + and the three appear around it, as their icons; tap one to build it, + again (in the middle) for the whole menu,
    anywhere else to close them. While one cannot be built right now (dead, not enough coins, at its limit), it is greyed out. ----- */
-const scList = () => [0, 1, 2].map(i => { const id = Array.isArray(settings.sc) ? settings.sc[i] : null; return typeof id === 'string' ? SHOP.find(it => it.id === id && !it.give) || null : null; });
-function scSet(i, id) { const a = scList().map(it => it ? it.id : null); if (id) for (let k = 0; k < 3; k++) if (a[k] === id) a[k] = null; a[i] = id || null; settings.sc = a; save(); if (typeof buildKeys === 'function') buildKeys(); }   // (one item, one shortcut: putting it on another moves it)
+const scN = () => Math.max(2, Math.min(5, settings.scN | 0 || 3));   // (how many build shortcuts: 2 to 5, Controls)
+const scList = () => { const n = scN(); return [0, 1, 2, 3, 4].slice(0, n).map(i => { const id = Array.isArray(settings.sc) ? settings.sc[i] : null; return typeof id === 'string' ? SHOP.find(it => it.id === id && !it.give) || null : null; }); };
+function scSet(i, id) { const a = [0, 1, 2, 3, 4].map(k => (Array.isArray(settings.sc) && typeof settings.sc[k] === 'string' ? settings.sc[k] : null)); if (id) for (let k = 0; k < 5; k++) if (a[k] === id) a[k] = null; a[i] = id || null; settings.sc = a; save(); if (typeof buildKeys === 'function') buildKeys(); }   // (one item, one shortcut: putting it on another moves it)
 const scCan = it => !!it && canShop() && modBuildOk() && wallet.c >= it.c && wallet.g >= it.g && !atLimit(it);
+function scAsk(it) {   // "which shortcut?": the shortcuts as big buttons, each showing what is on it now; tap one to put this there (what was there comes off)
+  scAskClose(); const L = scList(), at = L.findIndex(q => q && q.id === it.id);
+  const ov = document.createElement('div'); ov.id = 'scAsk'; ov.className = 'overlay'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Shortcut for ' + it.name);
+  ov.innerHTML = '<div class="card scaskcard"><div class="chead"><h3>' + shopIcon(it.id) + '<span>' + String(it.name).replace(/[<>&"]/g, '') + '</span></h3><button type="button" class="btn dmback scx" aria-label="Close">' + ic('close') + '</button></div><div class="small dim">Put it on shortcut</div><div class="scslots"></div>' + (at >= 0 ? '<button type="button" class="btn full scoff">' + ic('close') + 'Take it off shortcut ' + (at + 1) + '</button>' : '') + '</div>';
+  const box = ov.querySelector('.scslots');
+  L.forEach((q, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'scslot' + (i === at ? ' on' : '') + (q ? '' : ' empty'); b.innerHTML = '<b>' + (i + 1) + '</b><span class="sci">' + (q ? shopIcon(q.id) : '') + '</span>'; b.setAttribute('aria-label', 'Shortcut ' + (i + 1) + (q ? ', now ' + q.name : ', empty'));
+    b.onclick = () => { scSet(i, it.id); sfx('on'); scAskClose(); shopRender(); notice(it.name + ' is on shortcut ' + (i + 1), ''); }; box.appendChild(b); });
+  ov.querySelector('.scx').onclick = () => { sfx('ui'); scAskClose(); };
+  const off = ov.querySelector('.scoff'); if (off) off.onclick = () => { scSet(at, null); sfx('off'); scAskClose(); shopRender(); };
+  ov.addEventListener('pointerdown', e => { if (e.target === ov) scAskClose(); });
+  document.body.appendChild(ov);
+}
+function scAskClose() { const e = document.getElementById('scAsk'); if (e) e.remove(); }
 function scUse(i) {
   scRingClose(); const it = scList()[i]; if (!canShop()) return;
-  if (!it) { toggleShop(true); notice('Shortcut ' + (i + 1) + ' is empty: tap ' + (i + 1) + ' beside anything here to put it there', ''); return; }
+  if (!it) { toggleShop(true); notice('Shortcut ' + (i + 1) + ' is empty: tap the bolt on anything here to put it there', ''); return; }
   if (!modBuildOk()) { notice('A game admin turned off building for you', 'urgent'); return; }
   if (atLimit(it)) { sfx('warn'); notice(limitNote(it), 'urgent'); return; }
   if (wallet.c < it.c || wallet.g < it.g) { sfx('warn'); notice('Not enough yet for ' + it.name, 'urgent'); return; }
@@ -5785,23 +5817,37 @@ function buildPress(anchor) {   // the + button (in the corner, or with the touc
   if (settings.scOn && canShop() && !placing) { scRingOpen(anchor); return; }
   toggleShop(true);
 }
+function scLayout(cx, cy, s, n, bw, W, H) {   // where the shortcuts go around the +: on an arc facing the middle of the screen, far enough apart never to touch, turned and pushed out until every one is fully on the screen
+  const m = 8, inside = (x, y) => x - bw / 2 >= m && y - bw / 2 >= m && x + bw / 2 <= W - m && y + bw / 2 <= H - m;
+  const a0 = Math.atan2(H / 2 - cy, W / 2 - cx);
+  for (let rad = Math.max(s / 2 + bw / 2 + 12, 70); rad <= 220; rad += 14) {
+    const step = Math.max(0.6, 2 * Math.asin(Math.min(1, (bw + 10) / (2 * rad)))), span = step * (n - 1);
+    if (span > Math.PI * 1.6) continue;
+    for (let t = 0; t <= 12; t++) { const da = (t % 2 ? 1 : -1) * Math.ceil(t / 2) * 0.22, c = a0 + da, P = [];
+      for (let i = 0; i < n; i++) { const a = c - span / 2 + i * step; P.push([cx + Math.cos(a) * rad, cy + Math.sin(a) * rad]); }
+      if (P.every(p => inside(p[0], p[1]))) return P; }
+  }
+  const P = [], cols = Math.min(n, Math.max(1, Math.floor((W - 2 * m) / (bw + 10))));   // (a screen too small for any arc: a tidy row in the middle)
+  for (let i = 0; i < n; i++) P.push([W / 2 + ((i % cols) - (cols - 1) / 2) * (bw + 10), H / 2 + Math.floor(i / cols) * (bw + 10)]);
+  return P;
+}
 function scRingOpen(anchor) {
   const r = anchor && anchor.getBoundingClientRect(); if (!r || !r.width) { toggleShop(true); return; }
   scRingClose();
-  const W = window.innerWidth, H = window.innerHeight, cx = r.left + r.width / 2, cy = r.top + r.height / 2, s = Math.max(r.width, r.height), bw = 54;
+  const W = window.innerWidth, H = window.innerHeight, cx = r.left + r.width / 2, cy = r.top + r.height / 2, s = Math.max(r.width, r.height), list = scList(), n = list.length, bw = n > 3 && Math.min(W, H) < 420 ? 50 : 54;
   const back = document.createElement('div'); back.id = 'scBack';
   const ring = document.createElement('div'); ring.id = 'scRing'; ring.setAttribute('role', 'menu'); ring.setAttribute('aria-label', 'Build shortcuts');
   const eat = e => { e.preventDefault(); e.stopPropagation(); };
   back.addEventListener('pointerdown', e => { eat(e); scRingClose(); }); back.addEventListener('touchstart', eat, { passive: false }); back.addEventListener('click', eat);
-  const put = (b, x, y, sz) => { x = clamp(x, sz / 2 + 6, W - sz / 2 - 6); y = clamp(y, sz / 2 + 6, H - sz / 2 - 6); b.style.left = (x - sz / 2) + 'px'; b.style.top = (y - sz / 2) + 'px'; b.style.width = b.style.height = sz + 'px'; };
-  const a0 = Math.atan2(H / 2 - cy, W / 2 - cx), rad = Math.max(74, s / 2 + bw / 2 + 14), list = scList();
-  [-1, 0, 1].forEach((k, i) => {
-    const it = list[i], b = document.createElement('button'); b.type = 'button'; b.className = 'scb' + (it ? '' : ' empty'); b.setAttribute('role', 'menuitem'); b.setAttribute('aria-label', it ? 'Build ' + it.name : 'Shortcut ' + (i + 1) + ' is empty'); b.dataset.i = i;
-    b.innerHTML = it ? shopIcon(it.id) : ic('plus'); const a = a0 + k * 0.95; put(b, cx + Math.cos(a) * rad, cy + Math.sin(a) * rad, bw);
+  const P = scLayout(cx, cy, s, n, bw, W, H);
+  list.forEach((it, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'scb' + (it ? '' : ' empty'); b.setAttribute('role', 'menuitem'); b.setAttribute('aria-label', it ? 'Build ' + it.name : 'Shortcut ' + (i + 1) + ' is empty'); b.dataset.i = i;
+    b.innerHTML = it ? shopIcon(it.id) : ic('plus'); b.style.left = (P[i][0] - bw / 2) + 'px'; b.style.top = (P[i][1] - bw / 2) + 'px'; b.style.width = b.style.height = bw + 'px'; b.style.transitionDelay = (i * 0.025) + 's';
     b.addEventListener('pointerdown', e => { eat(e); if (b.classList.contains('dim')) { sfx('warn'); return; } scUse(i); }); b.addEventListener('touchstart', eat, { passive: false }); b.addEventListener('click', eat);
     ring.appendChild(b);
   });
-  { const b = document.createElement('button'); b.type = 'button'; b.className = 'scb all'; b.setAttribute('aria-label', 'Whole build menu'); b.innerHTML = ic('plus'); put(b, cx, cy, Math.max(44, Math.min(64, s)));   // (right over the + itself: tapping + again opens the whole menu)
+  { const b = anchor.cloneNode(true); b.removeAttribute('id'); b.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); b.classList.add('scself'); b.setAttribute('aria-label', 'Whole build menu'); b.setAttribute('role', 'menuitem');   // (the + itself, looking just as it does, on top of the dimming: tap it again for the whole menu)
+    const cs = getComputedStyle(anchor); b.style.cssText = 'position:fixed;margin:0;left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px;opacity:1;pointer-events:auto;transform:none;border-radius:' + cs.borderRadius + ';background:' + cs.background + ';';
     b.addEventListener('pointerdown', e => { eat(e); scRingClose(); toggleShop(true); }); b.addEventListener('touchstart', eat, { passive: false }); b.addEventListener('click', eat); ring.appendChild(b); }
   document.body.appendChild(back); document.body.appendChild(ring); scRingOn = true; sfx('ui');
   requestAnimationFrame(() => ring.classList.add('show'));
@@ -5810,7 +5856,7 @@ function scRingOpen(anchor) {
   tick();
 }
 function scRingClose() { if (scRaf) cancelAnimationFrame(scRaf); scRaf = 0; scRingOn = false; ['scBack', 'scRing'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); }
-addEventListener('resize', () => { if (scRingOn) scRingClose(); });
+addEventListener('resize', () => { if (scRingOn) scRingClose(); scAskClose(); });
 $('shopClose').onclick = () => toggleShop(false);
 $('chatClose').onclick = () => toggleChat(false);
 const ownCount = it => ownTally()[it.id] | 0;   // how many of this you have built on this map, counted from who built what (what others built does not count; leaving and coming back changes nothing)
@@ -6875,7 +6921,7 @@ function homeStats() {
 window.__sprite = () => sprite(settings.color, settings.color2, settings.pat);   // the loading screen and the main screen show your real ball
 try { window.__scene($('homeScene'), 'home'); } catch (e) {}
 const curMode = () => settings.mp ? 'pub' : settings.offline ? 'off' : 'priv';
-function segRender() { const m = curMode(), fail = srvSt === 'fail'; ['homeSeg', 'lvSeg'].forEach(id => { const e = $(id); if (e) e.style.gridTemplateColumns = fail ? '1fr' : '1fr 1fr'; }); document.querySelectorAll('#homeSeg button, #lvSeg button').forEach(b => { const k = b.getAttribute('data-m'), on = k === m; b.classList.toggle('hide', fail ? k !== 'off' : k === 'off'); b.disabled = k !== 'off' && srvSt !== 'ok'; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); }); document.body.classList.toggle('offl', m === 'off'); }
+function segRender() { const m = curMode(), fail = srvSt === 'fail'; $('homeSeg').style.gridTemplateColumns = fail ? '1fr' : '1fr 1fr'; document.querySelectorAll('#homeSeg button').forEach(b => { const k = b.getAttribute('data-m'), on = k === m; b.classList.toggle('hide', fail ? k !== 'off' : k === 'off'); b.disabled = k !== 'off' && srvSt !== 'ok'; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); }); document.body.classList.toggle('offl', m === 'off'); }
 /* three ways to play, picked on the main menu: Private (your own levels, on the server so friends can join you), Public (everyone online), Offline (your own levels, never online, with bots) */
 function setMode(m) {
   if (m === curMode()) return;
@@ -6890,7 +6936,6 @@ function setMode(m) {
 }
 segRender();
 $('homeSeg').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (!b) return; sfx('ui'); setMode(b.getAttribute('data-m')); });
-$('lvSeg').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (!b || b.disabled) return; sfx('ui'); const m = b.getAttribute('data-m'); setMode(m); if (m === 'pub') closeLevels(); });   // (the same choice, right where you pick a level: Public has no levels to pick, so the list closes and the main menu shows the public map)
 function homeModeText() { netRender(); segRender(); const pub = $('homeMp').checked;
   $('homeModeNote').textContent = srvSt === 'fail' ? 'Could not reach the server. You can play offline: the starting maps, just you and bots, saved on this device.' : srvSt === 'wait' && !offlineOn() ? 'Connecting to the server…' : pub ? 'A public world. Everyone online shares it.' : offlineOn() ? 'Just you and bots, on this device. Nothing goes online.' : 'Your own world. Invite friends to play in it with you.';
   $('homeRetry').classList.toggle('hide', srvSt !== 'fail');
@@ -6978,6 +7023,7 @@ function openPause() {
   if (inHome || paused) return;
   toggleChat(false); toggleShop(false); paused = true; clearInput();
   $('pauseSub').textContent = settings.mp ? 'The world keeps going. Your ball waits for you.' : party ? (party.role === 'host' ? 'Your private game is open for friends. It keeps going.' : 'You are in ' + who(party.name) + "'s private game. It keeps going.") : lvlLabel() + '. Everything is paused.'; lvlRender();
+  $('pLevel').classList.toggle('hide', !!settings.mp && !(party && party.role)); pauseLayout();   // (in the public world there is nothing to set there: no Mode in the pause menu)
   $('pause').classList.remove('hide'); sfx('ui');
 }
 function resumeGame() { if (!paused) return; paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); sfx('ui'); }

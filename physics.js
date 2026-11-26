@@ -1346,7 +1346,7 @@
   function botSpawn(bt, w) {   // exactly like a player: at the start, or (once) at the last checkpoint flag it touched
     const m = w.map, cps = m.checkpoints, cp = bt.cpArmed >= 0 && cps && cps[bt.cpArmed] && cps[bt.cpArmed][0] > -9999 ? cps[bt.cpArmed] : null;
     if (cp) { let y = cp[1] * TS - R - 1; for (let k = 0; k < 6 && BSOLID(tile(w, cp[0], Math.floor(y / TS))); k++) y -= TS; bt.b = newBody((cp[0] + 0.5) * TS, y); bt.cpUsed = bt.cpArmed; bt.cpArmed = -1; }
-    else bt.b = newBody(m.start[0], m.start[1]);
+    else { const sp = bt.kind !== 'racer' ? botSpot(bt, w) : null; bt.b = sp ? newBody(sp[0], sp[1]) : newBody(m.start[0], m.start[1]); }   // (v228: a bot that explores, builds or hangs about turns up somewhere along the way, as if it had been playing a while, and after a fall carries on near where it was: never the whole crowd at the start)
     bt.b.bot = true; bt.b.noJm = true; bt.anchor = bt.b.x;
     botSync(bt, w);
     if (bt.kind === 'explorer' || bt.kind === 'builder' || bt.kind === 'chill') exGoal(bt, w); else { bt.dir = racerDir(bt, w); botPlan(bt, w); }
@@ -1372,6 +1372,18 @@
     if (bt.knowsFin) return Math.sign(finI(w) - bt.i) || 1;
     if (bt.i >= n - 1) bt.exDir = -1; else if (bt.i <= 0) bt.exDir = 1;
     return bt.exDir || 1;
+  }
+  function botSpot(bt, w) {   // a safe place to stand somewhere along the route, away from the start and the finish (near where it last was, after a fall)
+    const path = w.map.path, n = path ? path.length : 0; if (n < 12) return null; const lo = Math.max(3, Math.floor(n * 0.08)), fi = finI(w);
+    for (let k = 0; k < 10; k++) {
+      const j = bt.spawns > 0 && bt.i > lo ? Math.max(lo, Math.min(n - 1, (bt.i | 0) + Math.floor(Math.random() * 17) - 8)) : lo + Math.floor(Math.random() * (n - lo));
+      if (Math.abs(j - fi) < Math.max(3, n * 0.05)) continue; const A = path[j]; if (!A) continue;
+      const tx = Math.floor(A[0] + Math.random() * Math.max(1, A[2])), ty = A[1];
+      if (!BSOLID(tile(w, tx, ty)) || tile(w, tx, ty) === 2 || BSOLID(tile(w, tx, ty - 1)) || BSOLID(tile(w, tx, ty - 2))) continue;   // (solid ground under it, not lava, and room to stand)
+      if (w.map.zones && zoneP(w.map, (tx + 0.5) * TS, ty * TS, TS)) continue;
+      bt.i = j; return [(tx + 0.5) * TS, ty * TS - R - 1];
+    }
+    return null;
   }
   function botSync(bt, w) {   // which part of the route the bot is on (after coming back, or after wandering off it)
     const path = w.map.path, b = bt.b, tx = b.x / TS, ty = (b.y + R + 2) / TS; let best = bt.i | 0, bd = 1e9;
@@ -1827,7 +1839,7 @@
     return '';
   }
   const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
-  const api = { VERSION: 227, springKick, setPad, wakeAround, restAll, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 228, springKick, setPad, wakeAround, restAll, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);
