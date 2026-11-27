@@ -698,6 +698,7 @@
   .bugmh{margin:14px 0 6px;font-size:13px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;opacity:.8;display:flex;align-items:center;gap:6px}.bugmh .ic{width:15px;height:15px}
   .buglist{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto}.bugi{border:1px solid rgba(232,220,192,.25);border-radius:10px;padding:7px 9px;background:rgba(255,255,255,.03)}
   .bugi .bgt{white-space:pre-wrap;word-break:break-word;font-size:15px}.bugi .bgm{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;opacity:.8;margin-bottom:3px}
+  .bugi .bgwho{font:inherit;font-weight:700;color:var(--ink);background:none;border:0;padding:2px 0;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:3px}.bugi .bgwho:hover{text-decoration-color:currentColor}
   .bgpill{font-size:12px;padding:1px 8px;border-radius:999px;font-weight:700;letter-spacing:.5px}.bgpill.open{background:#5a4a1e;color:#ffd98a}.bgpill.done{background:#1f5a3a;color:#9ff0c0}.bgpill.frz{background:#5a2420;color:#ffb3a8}
   #bugModal{z-index:22;background:rgba(10,8,16,.6)}.bgcard{width:min(680px,96vw);max-height:90vh;display:flex;flex-direction:column}.bglist{overflow:auto;display:flex;flex-direction:column;gap:8px;padding:0 10px 10px;min-height:120px}
   .bgtabs{display:flex;gap:6px;padding:0 10px 8px}.bgtabs button{flex:1;padding:6px 4px;background:#241f36;border:2px solid var(--line);border-radius:var(--wob);color:var(--ink);font-size:15px;opacity:.7}.bgtabs button.on{opacity:1;background:#3a3355;border-color:var(--accent)}
@@ -1004,6 +1005,18 @@
   .lvtag{font-size:11px;padding:2px 8px;border-radius:99px;white-space:nowrap;font-family:system-ui,sans-serif;font-weight:600}.lvtag.mine{background:#27603f;color:#bff0d2}.lvtag.got{background:#6a5415;color:#ffe9a0}.lvtag.cur{background:#3a3355;color:#fff;border:1px solid rgba(255,255,255,.5)}
   #lvlModal .lvb.mine .lnum{border-color:#3fd37a}#lvlModal .lvb.got .lnum{border-color:#ffd23d}
   #lvlModal .lvb.sel{border-color:#fff;background:#3a3355;box-shadow:none}#lvlModal .lvb.cur::after{display:none}
+  #lvlModal .lvgrp{display:flex;flex-direction:column;gap:6px;flex:none}#lvlModal .lvgrp.hid{display:none}
+  #lvlModal .lvline{display:flex;gap:6px;align-items:stretch}#lvlModal .lvline .lvb{flex:1 1 auto;width:auto;min-width:0}
+  #lvlModal .lvdd{flex:none;width:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:2px solid rgba(232,220,192,.35);border-radius:14px;background:#2c2644;color:var(--ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:2px 0}
+  #lvlModal .lvdd b{font-family:system-ui,sans-serif;font-size:13px;line-height:1.1;color:#bff0d2}#lvlModal .lvdd .ic{width:20px;height:20px;transform:rotate(90deg);transition:transform .18s}
+  #lvlModal .lvdd:hover{border-color:var(--line)}#lvlModal .lvgrp.open .lvdd{border-color:var(--line);background:#3a3355}#lvlModal .lvgrp.open .lvdd .ic{transform:rotate(-90deg)}
+  #lvlModal .lvsubs{display:flex;flex-direction:column;gap:6px;margin-left:20px;padding-left:12px;border-left:2px dashed rgba(63,211,122,.55)}#lvlModal .lvsubs.hide{display:none}
+  #lvlModal .lvb.lvsub{padding:6px 10px;background:#243a31;border-color:rgba(63,211,122,.45)}#lvlModal .lvb.lvsub.got{background:#3b331a;border-color:rgba(255,210,61,.5)}
+  #lvlModal .lvb.lvsub > .ic{width:22px;height:22px;color:#3fd37a}#lvlModal .lvb.lvsub.got > .ic{color:#ffd23d}
+  #lvlModal .lvb.lvsub .nm{font-size:16px}#lvlModal .lvb.lvsub .lsm{font-size:12px;opacity:.8;font-family:system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #lvlModal .lvb.lvsub.sel{border-color:#fff;background:#2f4a3e}
+  #descModal #dsA{width:100%;box-sizing:border-box;font:inherit;font-size:18px;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:#1b1726;color:var(--ink)}
+  #dsOk:disabled{opacity:.5;cursor:default}
   .lvhero{display:flex;flex-direction:column;gap:8px;padding:0 0 12px;border-radius:16px;background:#2c2644;overflow:hidden;flex:none}
   .lvstrip{display:flex;height:16px}.lvstrip i{flex:1}
   .lvhn{display:flex;flex-direction:column;padding:0 14px}.lvhn span{font-size:13px;opacity:.7}.lvhn b{font-weight:normal;font-size:24px;line-height:1.15}
@@ -1092,6 +1105,7 @@ html.mfull #admModal .amcard{zoom:1;width:100%;max-width:100%;height:100%;max-he
 .amtabs{display:flex;gap:6px}
 .amtabs button{flex:1 1 0;min-width:0;min-height:34px;box-sizing:border-box;font:inherit;font-size:14px;padding:6px 8px;border-radius:12px;border:2px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .amtabs button.on{background:#3a2f63;border-color:#e8dcc0}
+@media (max-width:420px){.amtabs{gap:4px}.amtabs button{font-size:13px;padding:6px 3px}}
 .amtabs button b{font-weight:normal;opacity:.75;margin-left:5px}
 #amFind{font:inherit;font-size:16px;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:#1b1726;color:var(--ink);width:100%;box-sizing:border-box}
 .amrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#2c2644;border:2px solid rgba(232,220,192,.3);cursor:pointer;text-align:left;font:inherit;color:var(--ink);width:100%}
@@ -1160,7 +1174,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 234; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 235; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1430,7 +1444,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <div id="admModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="amTitle"><div class="card nfcard amcard">
   <div class="chead"><button id="amBack" class="btn dmback wback hide" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="amTitle">Players</h3><button id="amX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="amListView" class="amview">
-    <div class="amtabs" role="tablist"><button type="button" data-am="on" role="tab">Online<b id="amNOn"></b></button><button type="button" data-am="recent" role="tab">Recent</button><button type="button" data-am="ban" role="tab">Banned<b id="amNBan"></b></button></div>
+    <div class="amtabs" role="tablist"><button type="button" data-am="on" role="tab">Online<b id="amNOn"></b></button><button type="button" data-am="recent" role="tab">Recent</button><button type="button" data-am="ban" role="tab">Banned<b id="amNBan"></b></button><button type="button" data-am="fr" role="tab">Friends<b id="amNFr"></b></button></div>
     <input id="amFind" type="search" placeholder="Find by name or code" aria-label="Find a player" autocomplete="off" spellcheck="false" maxlength="40">
     <div id="amList" class="nflist amlist"></div>
   </div>
@@ -1470,6 +1484,10 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       <h4><span data-ic="gear"></span> Allowed</h4>
       <label class="sw2 ic2"><span class="ti"><span data-ic="plus"></span><span><b>Can build</b><small>In the public world and in private games with friends. The server turns away anything they try to build</small></span></span><input type="checkbox" id="amCanB"><i></i></label>
       <label class="sw2 ic2"><span class="ti"><span data-ic="key"></span><span><b>Can use codes</b><small>Codes like themaker#1. Turning this off also ends any code they are using now</small></span></span><input type="checkbox" id="amCanC"><i></i></label>
+      </div>
+      <div id="amBugBox" class="hide">
+      <h4><span data-ic="warn"></span> Bug reports</h4>
+      <label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Can send bug reports</b><small>Off: their Send is greyed out and the server turns away anything they send. What they already sent stays</small></span></span><input type="checkbox" id="amCanR"><i></i></label>
       </div>
       <div id="amOutBox">
       <h4><span data-ic="warn"></span> Out of the game</h4>
@@ -1728,6 +1746,10 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
         <div class="ntfr" id="ntMsBox"><button class="btn sm" id="ntMsBtn" type="button"><span data-ic="users"></span><span>Choose friends</span></button></div>
         <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Friend requests</b><small>Someone asks you, or answers you</small></span></span><input type="checkbox" id="setNRequests"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="share"></span><span><b>Game invites</b><small>Someone invites you to their private game</small></span></span><input type="checkbox" id="setNInvites"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="users"></span><span><b>Asking to join you</b><small>A friend asks to come into your private game</small></span></span><input type="checkbox" id="setNJoins"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Shared maps</b><small>Someone shares a map with you</small></span></span><input type="checkbox" id="setNShares"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="gem"></span><span><b>Gifts</b><small>Someone sends you coins or diamonds</small></span></span><input type="checkbox" id="setNGifts"><i></i></label>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="warn"></span><span><b>Your bug reports</b><small>One you sent is fixed</small></span></span><input type="checkbox" id="setNBugFix"><i></i></label>
         <label class="sw2 ic2"><span class="ti"><span data-ic="map"></span><span><b>Map changes</b><small>A new public map starts</small></span></span><input type="checkbox" id="setNMaps"><i></i></label>
         <label class="sw2 ic2 nqsw"><span class="ti"><span data-ic="clock"></span><span><b>Quiet hours</b><small id="nqSub">A time of day with no notifications, like at night</small></span></span><input type="checkbox" id="setNQuiet"><i></i></label>
         <div class="nqtimes hide" id="nqTimes"><div><span>From</span><button type="button" class="nqbtn" id="nqFrom" aria-label="Quiet hours start"><b>10:00 PM</b><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"/></svg></button></div><div><span>Until</span><button type="button" class="nqbtn" id="nqTo" aria-label="Quiet hours end"><b>7:00 AM</b><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"/></svg></button></div></div>
@@ -1742,6 +1764,9 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
       <h4><span data-ic="users"></span> Players</h4>
       <button class="btn full" id="admPlayers" type="button"><span data-ic="users"></span>Players<span class="admn" id="admPlN"></span></button>
       <label class="sw2 ic2" id="admLockRow"><span class="ti"><span data-ic="lock"></span><span><b>Close the game to everyone</b><small>Everyone but owners and devs goes back to the main menu and cannot play online until this is off. Offline games still work</small></span></span><input type="checkbox" id="admLockSw"><i></i></label>
+      <div id="devBugBox" class="hide"><h4><span data-ic="warn"></span> Bug reports</h4>
+        <button class="btn full" id="bugLogBtn" type="button"><span data-ic="warn"></span>Everyone's bug reports <span id="bugLogN" class="dim"></span></button>
+        <label class="sw2 ic2"><span class="ti"><span data-ic="bell"></span><span><b>New bug reports</b><small id="nBugNewSub">Tell me when someone sends one: here in the game, and as a notification when Notifications are on</small></span></span><input type="checkbox" id="setNBugNew"><i></i></label></div>
       <div id="devTeamBox"><h4><span data-ic="crown"></span> Dev team</h4>
         <div class="small dim" id="devTeamNote">To add someone, open Players, pick them, and turn on Dev. You choose what each dev can do.</div>
         <div id="devTeam" class="nflist devteam"></div></div>
@@ -1766,7 +1791,6 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
         <div class="small bugfrz hide" id="bugFrozen">A dev has paused your bug reports for now.</div>
         <div class="bugmh"><span data-ic="info"></span> Your reports</div>
         <div id="bugMine" class="buglist"><div class="small dim">None yet.</div></div>
-        <button class="btn full hide" id="bugLogBtn" type="button"><span data-ic="crown"></span>Everyone's bug reports <span id="bugLogN" class="dim"></span></button>
       </div>
       <div class="bkbox"><h4><span data-ic="install"></span>Backup</h4>
         <div class="small">Everything this device keeps, in one file: your profile and friends, settings, coins, and your own worlds with everything in them. Load it here or on another device to get it all back.</div>
@@ -1826,6 +1850,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   <button id="pInvite" class="pbtn" type="button"><span data-ic="users"></span>Friends</button>
   <button id="pSave" class="pbtn hide" type="button"><span data-ic="map"></span>Save this map</button>
   <button id="pShare" class="pbtn hide" type="button"><span data-ic="share"></span>Share this map</button>
+  <button id="pMap" class="pbtn hide" type="button"><span data-ic="gear"></span>This map</button>
   <button id="pSnap" class="pbtn hide" type="button"><span data-ic="down"></span>Save as it is now</button>
   <button id="pLevel" class="pbtn" type="button"><span data-ic="globe"></span>Mode</button>
   <button id="pSettings" class="pbtn" type="button"><span data-ic="gear"></span>Settings</button>
@@ -1895,7 +1920,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   <div class="chead"><button id="lvBack" class="btn dmback hide" type="button" aria-label="Back to all levels"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="lvTitle">Levels</h3><button id="lvX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="lvl">
     <div class="lvleft">
-      <div class="lvfil" id="lvFil" role="group" aria-label="Show"><button type="button" data-f="all" class="on">All</button><button type="button" data-f="mine"><i class="k mine"></i>Built</button><button type="button" data-f="got"><i class="k got"></i>Saved</button><button type="button" data-f="beat"><span data-ic="crown"></span>Beaten</button></div>
+      <div class="lvfil" id="lvFil" role="group" aria-label="Show"><button type="button" data-f="all" class="on">All</button><button type="button" data-f="mine"><i class="k mine"></i>Saved maps</button><button type="button" data-f="got"><i class="k got"></i>From friends</button><button type="button" data-f="beat"><span data-ic="crown"></span>Beaten</button></div>
       <div id="lvGrid" role="listbox" aria-label="Levels"></div>
     </div>
     <div class="lvright">
@@ -1912,18 +1937,18 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   <div class="chead"><button id="msBack" class="btn dmback wback" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="msTitle">Map settings</h3><button id="msX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div class="msbody">
     <div class="lvhero mshero"><div class="lvstrip" id="msStrip"></div><div class="lvhn"><span id="msNum"></span><b id="msName"></b></div></div>
-    <section class="mssec"><h4>When you come back</h4>
+    <section class="mssec" id="msSaveSec"><h4>When you come back</h4>
       <div class="lvsave" role="group" aria-label="When you come back to this level"><button type="button" id="lvSaveLive"><span data-ic="reset"></span><b>Continuous</b><small>Stays as you leave it</small></button><button type="button" id="lvSaveSnap"><span data-ic="lock"></span><b>Saved state</b><small>Same start every time</small></button></div>
       <div class="small dim" id="lvSaveNote"></div>
       <button class="btn full hide" id="lvSaveNow" type="button"><span data-ic="down"></span>Save the level as it is now</button>
     </section>
-    <section class="mssec"><h4>Description</h4>
+    <section class="mssec"><h4 id="msNameH">Name</h4>
       <div class="msdesc" id="msDesc"></div>
-      <button class="btn full" id="lvDescBtn" type="button"><span data-ic="edit"></span><span>Add a description</span></button>
+      <button class="btn full" id="lvDescBtn" type="button"><span data-ic="edit"></span><span>Rename</span></button>
     </section>
     <section class="mssec" id="msMore"><h4 id="msMoreH">Share or start over</h4>
       <button class="btn full hide" id="lvShare" type="button"><span data-ic="share"></span>Share this map with friends</button>
-      <button class="btn full danger hide" id="msReset" type="button"><span data-ic="reset"></span>Reset this level</button>
+      <button class="btn full danger hide" id="msReset" type="button"><span data-ic="close"></span>Delete this map</button>
     </section>
   </div>
   <div class="btns msfoot"><button id="msDone" type="button" class="go">Done</button></div>
@@ -1964,13 +1989,11 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   <div class="btns"><button type="button" id="wiClose" class="hide">Back</button><button type="button" id="wiPlay" class="go"><span data-ic="play"></span>Play now</button></div>
 </div></div>
 <div id="descModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="dsTitle"><div class="card nmcard">
-  <h3 id="dsTitle">Describe this level</h3>
+  <h3 id="dsTitle">Name this map</h3>
   <div class="dsnote" id="dsNote"></div>
+  <label class="dslab" id="dsLab" for="dsA">Name</label>
+  <input id="dsA" type="text" maxlength="24" placeholder="Like “Big tower” or “Ramps”" autocomplete="off" spellcheck="false" enterkeyhint="done">
   <div class="dshad hide" id="dsHad"></div>
-  <label class="dslab hide" id="dsLab" for="dsA">Description <span class="dim">(optional)</span></label>
-  <textarea id="dsA" maxlength="140" rows="3" placeholder="A few words about this level" autocomplete="off" spellcheck="false"></textarea>
-  <label class="dont hide" id="dsSplitWrap" style="margin:0"><input type="checkbox" id="dsSplit"><span>Write a different one for my offline map</span></label>
-  <textarea id="dsB" class="hide" maxlength="140" rows="3" placeholder="For my offline map" autocomplete="off" spellcheck="false"></textarea>
   <div class="btns"><button id="dsNo" type="button">Cancel</button><button id="dsOk" type="button" class="go">Save</button></div>
 </div></div>
 <div id="nameModal" class="overlay hide"><div class="card nmcard">
@@ -2065,8 +2088,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=234"></script>
-<script src="physics.js?v=234"></script>
+<script src="maps.js?v=235"></script>
+<script src="physics.js?v=235"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2112,7 +2135,7 @@ function defaults() {
   return { name: '', color: '#6c7bff', color2: '#ffffff', pat: 0, zoom: 1,
     tags: true, low: false, fx: true, intro: true, mp: true, offline: false, bots: false, botMax: 8, botsPriv: false, botFill: 12, popMsgs: true, feedOn: true, autoInv: false, botsOff: true, botMaxOff: 6, mouseMove: 'off', uiL: {}, musicOn: true, songBar: false, uiPush: true, nOff: [], share: null, lvSave: {}, nQuiet: { on: false, a: 1320, b: 420 }, nInGame: true, family: true, myName: true, noCheats: false, shopBtn: false, shopBoth: false, baseArrow: true, baseShow: true, baseOthers: true, scOn: false, ntAsked: false, scN: 3, sc: [null, null, null, null, null], baseBigAll: false, mapNames: false, baseBig: false, lowAsked: false, chatQuick: null, botChat: true, botAnnounce: true, botCrowns: true, mmBigP: false, mmBigB: false, botMark: false, peopleMark: false, botMsg: false, peopleMsg: false, powerJump: true, botAsk: true,
     minimap: true, mmPlayers: true, mmBots: true, soloMap: '0', soloLen: 0, tod: 'live', vs: 'classic', crowns: true, finArrow: true, terrKeep: false, edge: true, deathMark: true, fs: false, announce: true, joinMsg: true,
-    notify: false, nFriends: true, nMsgs: true, nRequests: true, nInvites: true, nMaps: true, nEmpty: false, devUpd: true, devHealth: false, devShow: false,
+    notify: false, nFriends: true, nMsgs: true, nRequests: true, nInvites: true, nMaps: true, nShares: true, nJoins: true, nBugFix: true, nGifts: true, nBugNew: false, nEmpty: false, devUpd: true, devHealth: false, devShow: false,
     stats: false, stFps: true, stPing: false, stBuf: false, stData: false, stSrv: false, stConf: false,
     beacon: true, fallWarn: true, sfx: true, sfxVol: 0.7, music: 'random', musicVol: 0.5,
     boost: true, boostAuto: false, boostBtn: true, boostPull: false, joy: true, superBtn: true, btnMul: {},
@@ -2179,7 +2202,7 @@ function normalize() {
   if (typeof settings.musicOn !== 'boolean') settings.musicOn = true;
   if (settings.music === 'peaceful') settings.music = 'chill'; if (settings.music === 'funk') settings.music = 'phonk';
   if (['adaptive', 'random', 'chill', 'upbeat', 'exciting', 'phonk', 'dreamy'].indexOf(settings.music) < 0) settings.music = 'adaptive';
-  for (const key of ['lvSave', 'lvSaveO']) { const o = {}; if (settings[key] && typeof settings[key] === 'object') for (const k in settings[key]) if (/^\d+$/.test(k) && settings[key][k]) o[k] = 1; settings[key] = o; }   // (private and offline levels each keep their own saved states)
+  for (const key of ['lvSave', 'lvSaveO']) { const o = {}; if (settings[key] && typeof settings[key] === 'object') for (const k in settings[key]) if (/^\d+$/.test(k)) o[k] = settings[key][k] ? 1 : 0; settings[key] = o; }   // (v235: 1 saved state, 0 continuous; a level not in here has saved state)   // (private and offline levels each keep their own saved states)
   if (settings.unl != null) settings.unl = !!settings.unl;   // the game settings: the same on every level of yours, and kept for your next game (left unset, they are worked out from how your levels were set before)
   { const f = settings.fin; settings.fin = f && typeof f === 'object' && !Array.isArray(f) ? { k: f.k === 'r' ? 'r' : Math.max(0, Math.min(3, f.k | 0)), roll: f.roll ? 1 : 0 } : null; }
   settings.offline = false;   // the game always starts on the server: offline is only offered when the server cannot be reached
@@ -2189,7 +2212,7 @@ function normalize() {
   if (settings.share && typeof settings.share === 'object') { const o = {}; for (const k of ['on', 'last', 'beat', 'fr', 'since']) o[k] = settings.share[k] === 0 ? 0 : 1; settings.share = o; } else settings.share = null;
   ['preset', 'presetP'].forEach(n => { if (['moveleft', 'moveright', 'custom'].indexOf(settings[n]) < 0) settings[n] = 'moveleft'; });
   settings.keys = cleanKeys(settings.keys);
-  if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < BallMaps.count)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);
+  if (!(/^\d+$/.test(String(settings.soloMap)) && +settings.soloMap < 1e6)) settings.soloMap = '0'; settings.soloMap = String(settings.soloMap);   // (v235: a saved map's key too: level + count x n. soloMk() falls back to its level if that map is gone)
   settings.finArrow = settings.finArrow !== false; delete settings.finMode;
   if (['live', 'morning', 'midday', 'night'].indexOf(settings.tod) < 0) settings.tod = 'live';
   settings.botFill = Math.max(2, Math.min(20, Math.round(+settings.botFill) || 12));   // (how full the host wants their private world: players and bots together)
@@ -3093,22 +3116,54 @@ const offlineOn = () => !!settings.offline && !settings.mp && !party;   // a pri
 const shared = () => !!party || (online && !inSolo() && S.slot >= 0 && S.slot < SOLO_BASE);   // is what you build shown to everyone in the room? (private games and public worlds)
 const soloKeyNow = () => offlineOn() ? SOLOKEY_O : SOLOKEY_P;
 const readSolo = key => { try { const o = JSON.parse(localStorage.getItem(key) || 'null'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } };
-function loadSolo() { SOLOKEY = soloKeyNow(); solo2 = readSolo(SOLOKEY); try { loadPurses(); } catch (e) {} }   // (and that mode's purses; at start-up the purses load a little further down)   // (the maps of the mode you are in: private or offline)
-function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo2)); } catch (e) {} }
-const soloLevel = () => Math.max(0, Math.min(BallMaps.count - 1, +settings.soloMap || 0));
-const hasSoloSave = i => !!solo2[i];
-const soloBuilt = i => { const o = solo2[i], n = k => (o[k] && o[k].length) | 0; return !!o && n('buys') + n('cps') + n('gates') + n('misc') + n('dels') > 0; };   // (playing a level is not building in it)
-const soloFrom = i => (solo2[i] && solo2[i].from) || '';   // where a copy saved from someone else's world came from
+function loadSolo() { SOLOKEY = soloKeyNow(); solo2 = readSolo(SOLOKEY); try { if (mapsMigrate(solo2, SOLOKEY)) saveSolo(); } catch (e) {} try { loadPurses(); } catch (e) {} }   // (and that mode's purses; at start-up the purses load a little further down)   // (the maps of the mode you are in: private or offline)
+function saveSolo() { try { localStorage.setItem(SOLOKEY, JSON.stringify(solo2)); return true; } catch (e) { return false; } }
+/* (v235) Map versions. The game's own levels (keys 0 to count-1) never change: playing one always starts fresh. Your saved maps live under them, each with its
+   own name, under the key level + count x n (n = 1, 2, 3...), so key % count is always its level: the map is drawn, hosted and shared as that level. Saving in
+   a standard level makes a new saved map under it; saving in a saved map saves over it. A name already used under the same level replaces that saved map. */
+const NAME_MAX = 24;
+const isStd = k => k < BallMaps.count;
+const lvOfK = k => ((Math.floor(k) % BallMaps.count) + BallMaps.count) % BallMaps.count;
+const cleanName = t => { let s = String(t || '').replace(/\s+/g, ' ').trim(); if (s.length > NAME_MAX) { s = s.slice(0, NAME_MAX); const sp = s.lastIndexOf(' '); if (sp > 10) s = s.slice(0, sp); } return s.replace(/[\s.,;:–-]+$/, ''); };
+function savedOf(i, st) { st = st || solo2; const out = []; for (const k in st) { const n = +k; if (Number.isInteger(n) && n >= BallMaps.count && n < 1e6 && lvOfK(n) === i && st[k] && typeof st[k] === 'object') out.push(n); } return out.sort((a, b) => a - b); }
+function savedName(k, st) { st = st || solo2; if (isStd(k)) return BallMaps.names[lvOfK(k)]; const o = st[k]; return (o && typeof o.nm === 'string' && o.nm) || 'My map'; }
+const nameTaken = (i, nm, st, except) => { const n = cleanName(nm).toLowerCase(); return n ? savedOf(i, st).find(k => k !== except && savedName(k, st).toLowerCase() === n) : undefined; };   // (the saved map of this level that has this name already, if any)
+function newKey(i, st) { st = st || solo2; for (let m = 1; m < 19000; m++) { const k = i + BallMaps.count * m; if (!st[k]) return k; } return -1; }
+const wireSlot = s => s >= SOLO_BASE && s < SOLO_BASE + 1e6 ? SOLO_BASE + lvOfK(s - SOLO_BASE) : s;   // (v235: the slot the server knows a game by: one of your saved maps is its level)
+const curMk = () => S.slot >= SOLO_BASE && !S.guest ? S.slot - SOLO_BASE : -1;   // (the map you are in: a level, or one of your saved maps)
+const soloMk = () => { let k = Math.floor(+settings.soloMap || 0); if (!(k >= 0 && k < 1e6)) k = 0; if (!isStd(k) && !solo2[k]) k = lvOfK(k); return k; };   // (the map picked to play)
+const soloLevel = () => lvOfK(soloMk());
+const mapLabel = (k, st) => isStd(k) ? 'Level ' + (lvOfK(k) + 1) + ': ' + BallMaps.names[lvOfK(k)] : '“' + savedName(k, st) + '” (level ' + (lvOfK(k) + 1) + ')';
+function mapsMigrate(st, key) {   // from before v235 (one save per level): a level you built on, got from someone, named or kept as a saved state becomes a saved map under it, called by its description
+  let moved = false; const sk = key === SOLOKEY_O ? 'lvSaveO' : 'lvSave';
+  for (const k of Object.keys(st)) { const n = +k; if (!Number.isInteger(n) || n < 0 || n >= BallMaps.count) continue; const o = st[k]; delete st[k]; moved = true;
+    if (!o || typeof o !== 'object') continue;
+    const cnt = a => (Array.isArray(o[a]) ? o[a].length : 0), built = cnt('buys') + cnt('cps') + cnt('gates') + cnt('misc') + cnt('dels') > 0, was = !!(settings[sk] && settings[sk][n]), desc = ((lvDescs.p || {})[n]) || ((lvDescs.o || {})[n]) || '';
+    if (!(built || o.from || desc || was)) continue;   // (only ever played: that was the standard level)
+    const nk = newKey(n, st); if (nk < 0) continue; o.nm = cleanName(desc) || (o.from ? cleanName('From ' + o.from) : 'My map'); o.t = o.t || Date.now(); st[nk] = o;
+    const ls = Object.assign({}, settings[sk] || {}); ls[nk] = was ? 1 : 0; settings[sk] = ls;   // (it stays as it was: continuous, or a saved state)
+    if (key === SOLOKEY_P && Math.floor(+settings.soloMap || 0) === n) settings.soloMap = String(nk); }
+  if (moved) { const ls = Object.assign({}, settings[sk] || {}); for (const k in ls) if (+k < BallMaps.count) delete ls[k]; settings[sk] = ls; save(); }
+  return moved;
+}
+const hasSoloSave = k => !isStd(k) && !!solo2[k];
+const soloBuilt = i => { const o = solo2[i]; if (!o) return false; const n = k => (o[k] && o[k].length) | 0; return !!o && n('buys') + n('cps') + n('gates') + n('misc') + n('dels') > 0; };   // (playing a level is not building in it)
+const soloFrom = i => (solo2[i] && solo2[i].from) || '';
+const soloSavedAt = i => (solo2[i] && +solo2[i].t) || 0;   // where a copy saved from someone else's world came from
 function copySnap() {   // this world, as it is right now, as your own version of this level. Taken the moment you ask to save, so it is still whole if the game closes while you decide where it goes
   if (!S.world || !S.map || S.slot < 0) return null;
   const o = JSON.parse(JSON.stringify(worldObj())); delete o.slot; o.got = []; o.n = 0; o.rcv = o.buys.length + o.gates.length + o.misc.length; o.own = {};   // (everything in it counts as already there, so you can still build)
   o.from = party ? who(party.name) : 'a public world';
   return { o, idx: S.idx };
 }
-function saveCopy(key, snap) {   // into your private maps (SOLOKEY_P) or your offline maps (SOLOKEY_O)
-  snap = snap || copySnap(); if (!snap) return false;
-  key = key || SOLOKEY; const st = key === SOLOKEY ? solo2 : readSolo(key); st[snap.idx] = JSON.parse(JSON.stringify(snap.o));
-  try { localStorage.setItem(key, JSON.stringify(st)); } catch (e) { return false; } return true;
+function saveCopy(key, snap, nm, mode) {   // (v235) a new saved map under its level, into your private maps (SOLOKEY_P) or your offline maps (SOLOKEY_O). The same name under that level replaces that one. Gives its key, or -1
+  snap = snap || copySnap(); if (!snap) return -1;
+  key = key || SOLOKEY; const st = key === SOLOKEY ? solo2 : readSolo(key), i = lvOfK(snap.idx), name = cleanName(nm) || 'My map';
+  const k = nameTaken(i, name, st) !== undefined ? nameTaken(i, name, st) : newKey(i, st); if (k < 0) return -1;
+  const was = st[k]; st[k] = Object.assign(JSON.parse(JSON.stringify(snap.o)), { nm: name, t: Date.now() });
+  try { localStorage.setItem(key, JSON.stringify(st)); } catch (e) { if (was) st[k] = was; else delete st[k]; return -1; }
+  if (mode !== undefined && !was) { const sk = key === SOLOKEY_O ? 'lvSaveO' : 'lvSave', ls = Object.assign({}, settings[sk] || {}); ls[k] = mode ? 1 : 0; settings[sk] = ls; save(); }
+  return k;
 }
 /* a few words of your own about a level, so you can tell them apart: one for your private map, one for your offline map */
 const DESCKEY = 'ballrun4_lvdesc', DESC_MAX = 140;
@@ -3119,7 +3174,7 @@ const lvDescOf = (i, key) => { const d = lvDescs[descSlot(key || soloKeyNow())];
 function setLvDesc(i, key, txt) { const k = descSlot(key || soloKeyNow()); if (!lvDescs[k] || typeof lvDescs[k] !== 'object') lvDescs[k] = {}; txt = String(txt || '').replace(/\s+/g, ' ').trim().slice(0, DESC_MAX); if (txt) lvDescs[k][i] = txt; else delete lvDescs[k][i]; try { localStorage.setItem(DESCKEY, JSON.stringify(lvDescs)); } catch (e) {} }
 loadSolo();
 function soloRoll() {}   // (a level of your own never ends by itself)
-function soloSlot() { return SOLO_BASE + soloLevel(); }
+function soloSlot() { return SOLO_BASE + soloMk(); }
 /* Where the finish is. Every map has 4 spots. Public worlds draw one each round (the server says which). On your own levels you pick, in the game settings
    (the same for every level, and kept for your next game): spot 1 to 4, or Random, which draws a spot for each level and keeps it, or draws a new one every game. */
 const FINKEY = 'ballrun4_fin', FIN_N = 4;
@@ -3142,7 +3197,7 @@ function finRoll(i) {   // (a new game while the finish is Random and new each g
 }
 let netFk = 0; try { const q = (sessionStorage.getItem('ballrun4_fk') || '').split(':'); if (+q[0] === BallMaps.slotOf(Date.now())) netFk = +q[1] | 0; } catch (e) {}
 function setNetFk(slot, k) { netFk = k | 0; try { sessionStorage.setItem('ballrun4_fk', slot + ':' + netFk); } catch (e) {} }
-const finKOf = slot => slot >= SOLO_BASE && !(party && party.role === 'guest') ? soloFin(slot - SOLO_BASE) : netFk;
+const finKOf = slot => slot >= SOLO_BASE && !(party && party.role === 'guest') ? soloFin(lvOfK(slot - SOLO_BASE)) : netFk;
 function soloNext() { return Date.now() + 3e11; }
 function enterMap(slot, next) {   // going somewhere on purpose: no 'change' screen, you are simply there (the fade is only for a map that swaps while you are in it)
   if (S.map && S.slot >= 0) saveWorld(true);
@@ -3153,9 +3208,11 @@ function soloGo(announce) {   // your own world: the level you picked, just as y
   enterMap(soloSlot(), soloNext());
   if (announce) announceEntry({ slot: soloSlot() });
 }
-function soloReset(idx) {   // start this level over: everything goes back to how it was at the start
-  delete solo2[idx]; saveSolo(); finRoll(idx); resetCheats();
-  if (S.slot >= SOLO_BASE && S.idx === idx) { const s = S.slot; S.slot = -1; lastWorldStr = ''; loadMap(s, soloNext()); }
+function mapDelete(k) {   // (v235) a saved map, gone for good. If you are in it, you are in its standard level from then on
+  if (isStd(k) || !solo2[k]) return; delete solo2[k]; saveSolo();
+  { const sk = SOLOKEY === SOLOKEY_O ? 'lvSaveO' : 'lvSave'; if (settings[sk] && settings[sk][k] !== undefined) { const ls = Object.assign({}, settings[sk]); delete ls[k]; settings[sk] = ls; } }
+  if (Math.floor(+settings.soloMap || 0) === k) settings.soloMap = String(lvOfK(k)); save();
+  if (curMk() === k) { const s = SOLO_BASE + lvOfK(k); S.slot = -1; lastWorldStr = ''; resetCheats(); loadMap(s, soloNext()); }
 }
 const TH = [60, 30, 10, 5, 1];   // minutes-before-the-end warnings
 let warned = {};
@@ -3801,20 +3858,21 @@ function worldObj() {   // the world exactly as it is right now: everything buil
 }
 function saveWorld(force, snap) {
   if (!S.world || S.slot < 0 || !S.map || S.guest) return;
-  if (S.slot >= SOLO_BASE && !snap && lvSaveOn(S.idx)) return;   // (a level kept as a saved state only changes when you save it)
+  const mk = curMk(); if (S.slot >= SOLO_BASE && (isStd(mk) || (!snap && lvSaveOn(mk)))) return;   // (v235: a standard level never changes; a saved map kept as a saved state only changes when you save it)
   if (snap) lastWorldStr = '';
-  const o = worldObj(), pv = S.slot >= SOLO_BASE ? solo2[S.idx] : null; if (pv && pv.from) o.from = pv.from;   // (a copy saved from someone else stays marked as one)
+  const o = worldObj(), pv = S.slot >= SOLO_BASE ? solo2[mk] : null; if (pv && pv.from) o.from = pv.from; if (pv && pv.nm) o.nm = pv.nm;   // (a copy saved from someone else stays marked as one; a saved map keeps its name)
   const str = JSON.stringify(o);
   if (str !== lastWorldStr) {
     lastWorldStr = str;
-    if (S.slot >= SOLO_BASE) { solo2[S.idx] = JSON.parse(str); delete solo2[S.idx].slot; saveSolo(); }   // your own world: one save for every level
+    if (S.slot >= SOLO_BASE) { const was = solo2[mk]; solo2[mk] = JSON.parse(str); delete solo2[mk].slot; solo2[mk].t = Date.now(); if (!saveSolo()) { solo2[mk] = was; lastWorldStr = ''; if (snap) notice('Could not save: this device is out of room. Delete a saved map you do not need', 'urgent'); return false; } }   // your own saved map
     else { try { localStorage.setItem(WKEY, str); } catch (e) {} }
   }
+  return true;
 }
 function lvFixTick() {   // (v229, every 2 s: see S.lvFix in restoreWorld. Nothing else in the save changes: only where things lie, and only if nothing was built or deleted since it opened)
   const f = S.lvFix; if (!f) return;
   const w = S.world, pv = solo2[f.idx];
-  if (!w || !pv || S.slot !== f.slot || S.idx !== f.idx || S.guest || !lvSaveOn(f.idx) || Date.now() - f.t0 > 240000) { S.lvFix = null; return; }
+  if (!w || !pv || S.slot !== f.slot || curMk() !== f.idx || S.guest || !lvSaveOn(f.idx) || Date.now() - f.t0 > 240000) { S.lvFix = null; return; }
   if (inHome || paused) return;
   const nb = (S.bought || []).length + (S.dels || []).length + (S.boughtMisc || []).length + (S.boughtCps || []).length + (S.boughtGates || []).length;
   if (f.n0 < 0) f.n0 = nb; else if (nb !== f.n0) { S.lvFix = null; return; }
@@ -3829,9 +3887,9 @@ function restoreWorld(slot) {
   lastWorldStr = '';
   if (S.guest) return;
   try {
-    const o = slot >= SOLO_BASE ? solo2[S.idx] : JSON.parse(localStorage.getItem(WKEY) || 'null');
+    const o = slot >= SOLO_BASE ? (isStd(slot - SOLO_BASE) ? null : solo2[slot - SOLO_BASE]) : JSON.parse(localStorage.getItem(WKEY) || 'null');   // (v235: a standard level always starts fresh)
     if (!o || (slot < SOLO_BASE && o.slot !== slot)) return;           // a new session (or a level you reset): everything starts fresh
-    S.lvFix = slot >= SOLO_BASE && lvSaveOn(S.idx) && (o.dyn || []).some(q => Array.isArray(q) && q.length < 9) ? { idx: S.idx, slot, t0: Date.now(), last: null, calm: 0, n0: -1 } : null;   // (v229: a level kept as it was saved, saved by an older version that did not write down where everything lies: once it has all come to rest, where it lies is written into that save, so it opens already at rest next time)
+    S.lvFix = slot >= SOLO_BASE && lvSaveOn(slot - SOLO_BASE) && (o.dyn || []).some(q => Array.isArray(q) && q.length < 9) ? { idx: slot - SOLO_BASE, slot, t0: Date.now(), last: null, calm: 0, n0: -1 } : null;   // (v229: a level kept as it was saved, saved by an older version that did not write down where everything lies: once it has all come to rest, where it lies is written into that save, so it opens already at rest next time)
     const w = S.world; { const n = normPv({ misc: o.misc, cps: o.cps, dels: o.dels }); o.misc = n.misc; o.cps = n.cps; o.dels = n.dels; }
     if (slot >= SOLO_BASE) { const who0 = savedWho(o); (o.dels || []).forEach(q => { if (P.coordDel(q) && validDel(q)) { const t = who0('d', q); applyDelRec(q); S.dels.push(ownSet(q.slice(), t)); } }); }   // (the map's own portals and boosters that were deleted: before anything built goes in)
     const own = true, pubW = slot < SOLO_BASE, key = (k, q) => { if (pubW && S.pubKeys) S.pubKeys.add(pkey(k, q)); };
@@ -4729,6 +4787,7 @@ function showTab(name) {
   if (closeSelectFn) closeSelectFn(); closePicker();
   curTab = name; { const sb = document.querySelector('#settings .sbody'); if (sb) sb.scrollTop = 0; }
   if (name === 'you' && typeof shareRender === 'function') shareRender();
+  if (name === 'dev' && typeof bugDevOpen === 'function') bugDevOpen();
   if (name === 'more' && typeof bugOpen === 'function') bugOpen();   // (v234: your bug reports, fresh)
   if (name === 'friends' && typeof lpRender === 'function') setTimeout(lpRender, 0);   // (a new tab always starts at its top)
   if (typeof lpAfterTab === 'function') lpAfterTab();
@@ -4803,7 +4862,7 @@ function buildLook() {
 function syncUI() {
   nameUI();
   [['setTags', 'tags'], ['setPopMsgs', 'popMsgs'], ['setFeedOn', 'feedOn'], ['setSongBar', 'songBar'], ['setLow', 'low'], ['setFx', 'fx'], ['setIntro', 'intro'], ['setMp', 'mp'], ['setBots', 'botsPriv'], ['setShopBtn', 'shopBtn'], ['setShopBoth', 'shopBoth'], ['setFamily', 'family'], ['setMyName', 'myName'], ['setBaseArrow', 'baseArrow'], ['setBaseBig', 'baseBig'], ['setBaseShow', 'baseShow'], ['setBaseOthers', 'baseOthers'], ['setScOn', 'scOn'], ['setBaseBigAll', 'baseBigAll'], ['setMapNames', 'mapNames'], ['setMusicOn', 'musicOn'], ['setBotsOff', 'botsOff'], ['setBotChat', 'botChat'], ['setBotAnn', 'botAnnounce'], ['setBotCrown', 'botCrowns'], ['setMmBigP', 'mmBigP'], ['setMmBigB', 'mmBigB'], ['setBotMark', 'botMark'],
-    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'],
+    ['setMinimap', 'minimap'], ['setMmPlayers', 'mmPlayers'], ['setMmBots', 'mmBots'], ['setDeathMark', 'deathMark'], ['setFs', 'fs'], ['setAnnounce', 'announce'], ['setJoinMsg', 'joinMsg'], ['setNotify', 'notify'], ['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'], ['setNShares', 'nShares'], ['setNJoins', 'nJoins'], ['setNGifts', 'nGifts'], ['setNBugFix', 'nBugFix'], ['setNBugNew', 'nBugNew'],
     ['setBeacon', 'beacon'], ['setFinArrow', 'finArrow'], ['setFallWarn', 'fallWarn'], ['setSfx', 'sfx'], ['setBoost', 'boost'], ['setBoostAuto', 'boostAuto'], ['setBoostBtn', 'boostBtn'], ['setBoostPull', 'boostPull'], ['setSuperBtn', 'superBtn'], ['setJoy', 'joy'], ['setPower', 'powerJump'], ['setPeopleMark', 'peopleMark'], ['setBotMsg', 'botMsg'], ['setPeopleMsg', 'peopleMsg'], ['setStats', 'stats'], ['setCrowns', 'crowns'], ['setStFps', 'stFps'], ['setStPing', 'stPing'], ['setStBuf', 'stBuf'], ['setStData', 'stData'], ['setStSrv', 'stSrv'], ['setStConf', 'stConf']]
     .forEach(p => { $(p[0]).checked = settings[p[1]]; });
   layoutCorner(); selMouse.set(settings.mouseMove); $('mouseDesc').textContent = MOUSE[settings.mouseMove][1]; applyUi();
@@ -5080,10 +5139,10 @@ const wsSend = o => { if (ws && ws.readyState === 1 && (online || lobbyOn)) { tr
 function outFlush() { if (!(ws && ws.readyState === 1 && (online || lobbyOn)) || !outbox.length) return; const l = outbox; outbox = []; outSave(); for (const o of l) wsSend(o); }
 
 /* ----- players you have run into stay on this device for three months, so the list is there even if the server forgot them. Friends are kept for good. ----- */
-const SEENKEY = 'ballrun4_seen', WEEK = 90 * 86400000;
+const SEENKEY = 'ballrun4_seen', WEEK = 365 * 86400000;   // (v235: players this device has met are remembered for a year, friends for good)
 let seen = {}; try { seen = JSON.parse(localStorage.getItem(SEENKEY) || '{}') || {}; } catch (e) { seen = {}; }
 function pruneSeen() { const now = Date.now(); for (const k in seen) { const e = seen[k]; if (!e || !/^[0-9a-f]{16}$/.test(k) || !e.n || (now - (+e.t || 0) > WEEK && !lkOf(k))) delete seen[k]; } }
-function saveSeen() { pruneSeen(); try { localStorage.setItem(SEENKEY, JSON.stringify(seen)); } catch (e) {} }
+function saveSeen() { pruneSeen(); for (let i = 0; i < 6; i++) { try { localStorage.setItem(SEENKEY, JSON.stringify(seen)); return; } catch (e) {} const ks = Object.keys(seen).filter(k => !lkOf(k)).sort((a, b) => (+seen[a].t || 0) - (+seen[b].t || 0)); if (!ks.length) return; ks.slice(0, Math.max(1, Math.ceil(ks.length * 0.2))).forEach(k => delete seen[k]); } }   // (out of room on this device: the ones gone longest go first, never a friend)
 function noteSeen(pub, name, color, code, last, b, color2, pat) {
   if (!/^[0-9a-f]{16}$/.test(pub || '') || !name) return;
   const e = seen[pub] || (seen[pub] = {}); e.n = String(name).slice(0, 12); if (code) e.c = String(code).slice(0, 6); if (HEX.test(color)) e.col = color; if (HEX.test(color2)) e.col2 = color2; if (pat !== undefined) e.pat = pat | 0; e.t = Math.max(+e.t || 0, last || (typeof nowMs === 'function' ? nowMs() : Date.now())); if (b !== undefined) e.b = b | 0;
@@ -5195,7 +5254,7 @@ function linkMsg(m) {
   return false;
 }
 function trackBin(dv, len, ty) {   // 2: everybody (far away too) for the maps.  3: the people I track, wherever they are
-  const sl = dv.getUint16(1, true), okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;
+  const sl = dv.getUint16(1, true), okSlot = S.mode === 'play' ? (wireSlot(S.slot) & 0xFFFF) : S.mode === 'fade' ? (wireSlot(S.pending) & 0xFFFF) : -1;
   if (sl !== okSlot) return;
   const t = performance.now();
   if (ty === 2) {
@@ -5735,7 +5794,7 @@ function onGift(m) {
   const c = Math.max(0, m.c | 0), g = Math.max(0, m.g | 0); if (!(c + g)) return;
   if (m.gid && giftGot.includes(m.gid)) { wsSend({ t: 'giftack', gid: m.gid }); return; }   // (already counted)
   { const pu = m.w === 'p' ? purseP : m.w === 'v' && (m.idx | 0) >= 0 ? purseOf(m.idx | 0) : purseNow(); pu.c += c; pu.g += g; }
-  if (m.gid) giftGot.push(m.gid); saveWallet(); giftSave(); if (m.gid) wsSend({ t: 'giftack', gid: m.gid }); sfx('gem');
+  if (m.gid) giftGot.push(m.gid); saveWallet(); giftSave(); if (m.gid) wsSend({ t: 'giftack', gid: m.gid }); sfx('gem'); if (!m.late) sysNotify('nGifts', who(m.name || 'Someone') + ' sent you a gift', [c ? fmtN(c) + ' coins' : '', g ? fmtN(g) + ' diamonds' : ''].filter(Boolean).join(' and '), 'gift-' + (m.gid || Date.now()));
   lastCoinShown = lastGemShown = -1; try { homeWalletRender.k = ''; homeWalletRender(); } catch (e) {}
   const what = [c ? fmtN(c) + ' coin' + (c === 1 ? '' : 's') : '', g ? fmtN(g) + ' diamond' + (g === 1 ? '' : 's') : ''].filter(Boolean).join(' and ');
   notice(who(m.name) + ' gave you ' + what + '!', ''); chatAdd('', who(m.name) + ' gave you ' + what, 'sys');
@@ -7132,7 +7191,7 @@ function enterGame(auto) {
   try { auWake(); } catch (e) {}
   if (settings.mp !== homeMode) setMultiplayer(settings.mp);
   else if (settings.mp) joinWorld();
-  else { setNet('solo'); if (S.slot === soloSlot() && (lvSaveOn(soloLevel()) || finNewEach())) S.slot = -1;   /* (a level kept as a saved state starts from that state every time you come in, and a finish that is new each game moves) */ if (S.slot !== soloSlot()) soloGo(false); if (offlineOn() || !startHosting()) { if (!ws) { retry = 0; connect(); } } }   // (a private game is on the server from the very first moment, so nothing jumps when friends come: the game waits until it is there)
+  else { setNet('solo'); if (S.slot === soloSlot() && (isStd(soloMk()) || lvSaveOn(soloMk()) || finNewEach())) S.slot = -1;   /* (a level kept as a saved state starts from that state every time you come in, and a finish that is new each game moves) */ if (S.slot !== soloSlot()) soloGo(false); if (offlineOn() || !startHosting()) { if (!ws) { retry = 0; connect(); } } }   // (a private game is on the server from the very first moment, so nothing jumps when friends come: the game waits until it is there)
   setTimeout(() => { if (netState === 'connecting') setNet('offline'); }, 3500);
   if (reenter) backToStart(); reenter = true;
   if (!settings.mp) setTimeout(() => announceEntry({ slot: soloSlot() }), 350);
@@ -7147,14 +7206,14 @@ function quitToHome() {
 /* pause: your ball waits, the menu has Resume, Settings and Main menu */
 function clearInput() { keysDown.clear(); inp.left = inp.right = inp.jump = false; tin.ax = 0; tin.jump = false; tin.btnJ = false; tin.jumpUntil = 0; }
 function pauseLayout() {   // the two-across buttons of the pause menu: one left on its own takes the whole row, so there is never a gap
-  const mid = ['pInvite', 'pSave', 'pShare', 'pSnap', 'pLevel', 'pSettings'].map($).filter(b => b && !b.classList.contains('hide'));
+  const mid = ['pInvite', 'pSave', 'pShare', 'pMap', 'pSnap', 'pLevel', 'pSettings'].map($).filter(b => b && !b.classList.contains('hide'));
   mid.forEach((b, i) => b.classList.toggle('wide', i === mid.length - 1 && mid.length % 2 === 1));
 }
 function openPause() {
   if (inHome || paused) return;
   toggleChat(false); toggleShop(false); paused = true; clearInput(); setTimeout(ntFriendAsk, 700);
   $('pauseSub').textContent = settings.mp ? 'The world keeps going. Your ball waits for you.' : party ? (party.role === 'host' ? 'Your private game is open for friends. It keeps going.' : 'You are in ' + who(party.name) + "'s private game. It keeps going.") : lvlLabel() + '. Everything is paused.'; lvlRender();
-  $('pLevel').classList.toggle('hide', !!settings.mp && !(party && party.role)); $('pSnap').classList.toggle('hide', !canSnapNow()); pauseLayout();   // (in the public world there is nothing to set there: no Mode in the pause menu)
+  $('pLevel').classList.toggle('hide', !!settings.mp && !(party && party.role)); $('pSnap').classList.toggle('hide', !canSnapNow()); snapLabels(); $('pMap').classList.toggle('hide', !(canSnapNow() && !isStd(curMk()))); pauseLayout();   // (in the public world there is nothing to set there: no Mode in the pause menu)
   $('pause').classList.remove('hide'); sfx('ui');
 }
 function resumeGame() { if (!paused) return; paused = false; $('pause').classList.add('hide'); closeSettingsNow(); clearInput(); sfx('ui'); }
@@ -7181,34 +7240,45 @@ const soloDesc = (i, st) => {   // what is already saved on that level, in words
 };
 /* writing a description: one box, or two when it goes to both your private and your offline maps and you want them different */
 let dsCb = null, saveBusy = false, saveAfter = null;
-function askDesc(o, cb) {
-  $('dsTitle').textContent = o.title || 'Describe this level'; $('dsNote').textContent = o.note || (o.save ? 'Your copy keeps everything built, moved and opened here. It shows up for this level in your private games.' : '');
-  $('dsHad').textContent = o.had || ''; $('dsHad').classList.toggle('hide', !o.had); $('dsLab').classList.toggle('hide', !o.save); $('dsOk').className = o.okClass || 'go'; $('dsA').value = o.a || ''; $('dsB').value = o.b || '';
-  $('dsSplitWrap').classList.toggle('hide', !o.both); $('dsSplit').checked = !!(o.both && o.b && o.b !== o.a); $('dsB').classList.toggle('hide', !$('dsSplit').checked); $('dsA').placeholder = o.both && $('dsSplit').checked ? 'For my private map' : 'A few words about this level';
-  $('dsNo').textContent = o.no || 'Cancel'; $('dsOk').textContent = o.ok || 'Save'; dsCb = cb; $('descModal').classList.remove('hide');
+let dsLv = null;
+function askName(o, cb) {   // (v235) a saved map's name: short. The same name under the same level replaces that saved map (it says so, in red, as you type)
+  dsLv = o || {}; $('dsTitle').textContent = o.title || 'Name this map'; $('dsNote').textContent = o.note || '';
+  $('dsA').value = o.a || ''; $('dsA').maxLength = NAME_MAX; $('dsNo').textContent = o.no || 'Cancel'; dsCb = cb; dsCheck(); $('descModal').classList.remove('hide');
+  setTimeout(() => { try { $('dsA').focus(); $('dsA').select(); } catch (e) {} }, 80);
 }
-function dsClose(ok) { $('descModal').classList.add('hide'); try { $('dsA').blur(); $('dsB').blur(); } catch (e) {} const f = dsCb; dsCb = null; if (f) f(ok ? { a: $('dsA').value, b: $('dsSplit').checked ? $('dsB').value : $('dsA').value } : null); }
-$('dsSplit').onchange = () => { const on = $('dsSplit').checked; $('dsB').classList.toggle('hide', !on); $('dsA').placeholder = on ? 'For my private map' : 'A few words about this level'; sfx(on ? 'on' : 'off'); };
-$('dsOk').onclick = () => { sfx('ui'); dsClose(true); }; $('dsNo').onclick = () => { sfx('ui'); dsClose(false); };
-$('lvDescBtn').onclick = () => { const i = msIdx; if (i < 0) return; sfx('ui'); askDesc({ title: 'Describe ' + lvLabelOf(i), note: offlineOn() ? 'Only you see this. It shows for this level in offline games.' : 'Only you see this. It shows for this level in private games.', a: lvDescOf(i) }, r => { if (r) { setLvDesc(i, null, r.a); if (msIdx === i) msRender(); if (shownEl('lvlModal') && lvSel === i) lvSelect(i); } }); };
+function dsCheck() {
+  const o = dsLv || {}, nm = cleanName($('dsA').value), k = nm && o.level !== undefined ? nameTaken(o.level, nm, o.st, o.except) : undefined, rp = k !== undefined;
+  $('dsHad').textContent = rp ? '“' + savedName(k, o.st) + '” is already one of your saved maps of this level. Saving replaces it.' : ''; $('dsHad').classList.toggle('hide', !rp);
+  $('dsOk').className = rp ? 'danger' : 'go'; $('dsOk').textContent = rp ? 'Replace it' : (o.ok || 'Save'); $('dsOk').disabled = !nm;
+}
+$('dsA').addEventListener('input', dsCheck);
+$('dsA').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!$('dsOk').disabled) $('dsOk').click(); } });
+function dsClose(ok) { $('descModal').classList.add('hide'); try { $('dsA').blur(); } catch (e) {} const f = dsCb; dsCb = null; dsLv = null; if (f) f(ok ? cleanName($('dsA').value) : null); }
+$('dsOk').onclick = () => { if (!cleanName($('dsA').value)) return; sfx('ui'); dsClose(true); }; $('dsNo').onclick = () => { sfx('ui'); dsClose(false); };
+function mapsChanged(k) { try { if (msIdx >= 0) msRender(); } catch (e) {} try { if (shownEl('lvlModal')) { lvBuild(); lvSelect(typeof lvSel === 'number' && (isStd(lvSel) || solo2[lvSel]) ? lvSel : lvOfK(k)); } } catch (e) {} try { lvlRender(); } catch (e) {} }
+$('lvDescBtn').onclick = () => { const k = msIdx; if (k < 0 || isStd(k) || !solo2[k]) return; sfx('ui');
+  askName({ title: 'Rename this map', note: 'One of your saved maps of ' + lvLabelOf(lvOfK(k)) + '.', a: savedName(k), level: lvOfK(k), except: k, ok: 'Rename' }, nm => {
+    if (!nm || !solo2[k]) return; const other = nameTaken(lvOfK(k), nm, solo2, k);
+    if (other !== undefined && other === curMk()) { notice('That is the name of the map you are playing. Pick another name', 'urgent'); return; }
+    if (other !== undefined) mapDelete(other); solo2[k].nm = nm; saveSolo(); sfx('ui'); mapsChanged(k); }); };
 /* ----- sharing a map: your version of one of your levels (everything built in it, and who built what) goes to the friends you pick.
    They get a pop-up the next time they play, for up to 3 days, and choose to save it or not (each asked twice) ----- */
 let shIdx = -1, shSel = new Set(), shSending = false, shTimer = 0, linksSeen = false, shOpenT = 0, shLoadT = 0;
-function shareData(i) {   // what is shared: the level as it is now (or its saved moment, if it is kept as a saved state)
-  const here = !inHome && S.world && S.slot === SOLO_BASE + i && !(party && party.role === 'guest');
+function shareData(k) {   // what is shared: the map as it is now (or its saved moment, if it is kept as a saved state). A standard level: as it is in your game now
+  const here = !inHome && S.world && curMk() === k && !(party && party.role === 'guest');
   let o = null;
-  if (here && !lvSaveOn(i)) { saveWorld(true); o = JSON.parse(JSON.stringify(worldObj())); }
-  else if (solo2[i]) o = JSON.parse(JSON.stringify(solo2[i]));
+  if (here && (isStd(k) || !lvSaveOn(k))) { saveWorld(true); o = JSON.parse(JSON.stringify(worldObj())); }
+  else if (!isStd(k) && solo2[k]) o = JSON.parse(JSON.stringify(solo2[k]));
   if (!o) return null;
-  delete o.slot; delete o.from; o.got = []; o.n = 0; o.own = {};   // (their own coins to collect, their own portal colours; who built what stays in the owner book)
-  return { v: 1, idx: i, desc: lvDescOf(i), o };
+  delete o.slot; delete o.from; delete o.nm; delete o.t; o.got = []; o.n = 0; o.own = {};   // (their own coins to collect, their own portal colours; who built what stays in the owner book)
+  return { v: 1, idx: lvOfK(k), nm: isStd(k) ? '' : savedName(k), desc: isStd(k) ? '' : savedName(k), o };
 }
-function openShare(i) {
+function openShare(k) {
   if (offlineOn()) { notice('Sharing needs the server. Offline maps stay on this device', 'urgent'); return; }
   if (!ws || ws.readyState !== 1 || !(online || lobbyOn)) { notice('Not connected right now. Try again in a moment', 'urgent'); return; }
-  if (!shareData(i)) { notice('Play this level first. There is nothing on it to share yet', 'urgent'); return; }
-  shIdx = i; shSel = new Set(); shSending = false; shOpenT = Date.now(); sfx('ui');
-  $('shTitle2').textContent = 'Share ' + lvLabelOf(i); $('shSub').textContent = 'Your version of this level, with everything in it. Your base stays yours: nobody else can change it.';
+  if (!shareData(k)) { notice('Play this map first. There is nothing on it to share yet', 'urgent'); return; }
+  shIdx = k; shSel = new Set(); shSending = false; shOpenT = Date.now(); sfx('ui');
+  $('shTitle2').textContent = 'Share ' + (isStd(k) ? lvLabelOf(lvOfK(k)) : '“' + savedName(k) + '”'); $('shSub').textContent = 'Your version of ' + lvLabelOf(lvOfK(k)) + ', with everything in it. Your base stays yours: nobody else can change it.';
   shRender(); $('shModal').classList.remove('hide');
 }
 function shFriends() { return lks.filter(l => l.pub && !isMe(l) && (l.ok || l.name) && !blockedPub(l.pub))   /* (everyone on your friends list, even while the server is still catching up on who is friends with whom) */.sort((a, b) => (b.on | 0) - (a.on | 0) || String(a.name).localeCompare(String(b.name))); }
@@ -7239,7 +7309,7 @@ $('shGo').onclick = () => {
   if (!ws || ws.readyState !== 1) { notice('Not connected right now. Try again in a moment', 'urgent'); return; }
   const sid = Math.random().toString(36).slice(2, 12).replace(/[^a-z0-9]/g, '') || 'sh' + Date.now().toString(36);
   shSending = true; shCount();
-  for (let i = 0; i < n; i++) { try { ws.send(JSON.stringify({ t: 'shup', sid, n, i, c: str.slice(i * CH, (i + 1) * CH), to, idx: shIdx })); } catch (e) {} }
+  for (let i = 0; i < n; i++) { try { ws.send(JSON.stringify({ t: 'shup', sid, n, i, c: str.slice(i * CH, (i + 1) * CH), to, idx: lvOfK(shIdx) })); } catch (e) {} }
   clearTimeout(shTimer); shTimer = setTimeout(() => { if (shSending) { shSending = false; shCount(); notice('Could not share right now. Try again in a minute', 'urgent'); } }, 15000);
   sfx('ui');
 };
@@ -7254,7 +7324,7 @@ function sharesIn(list) {
   let fresh = 0;
   for (const v of list || []) { if (!v || typeof v.id !== 'string' || shQ.some(x => x.id === v.id) || blockedPub(v.from)) continue;
     if (shDone[v.id]) { wsSend({ t: 'shans', id: v.id, ok: shDone[v.id].ok ? 1 : 0 }); continue; }   // (answered already: just tell the server again)
-    shQ.push(v); fresh++; }
+    shQ.push(v); fresh++; sysNotify('nShares', who(v.name || nameOf(v.from) || 'A friend') + ' shared a map with you', 'Open the game to save it', 'shr-' + v.id); }
   shTry();
 }
 const shBusy = () => !$('shIn').classList.contains('hide') || !$('confirm').classList.contains('hide') || !$('shModal').classList.contains('hide') || !$('descModal').classList.contains('hide') || !!shGet;
@@ -7264,18 +7334,19 @@ function shTry() {   // (v234: in a game too, as soon as it comes: just not over
 }
 setInterval(shTry, 1200);
 function shShow(v) {
-  $('shIn').classList.remove('loading'); shCur = v; const nm = who(v.name || nameOf(v.from) || 'A friend'), lab = lvLabelOf(v.idx | 0), had = hasSoloSave(v.idx | 0);
+  $('shIn').classList.remove('loading'); shCur = v; const nm = who(v.name || nameOf(v.from) || 'A friend'), lab = lvLabelOf(v.idx | 0);
   $('shInT').textContent = nm + ' shared a map with you';
   const wbox = $('shInWho'); wbox.textContent = ''; { const left = v.exp ? Math.max(0, v.exp - nowMs()) : 0, d = Math.ceil(left / 86400000), h = Math.ceil(left / 3600000), lt = !v.exp ? '' : h > 24 ? ' · waits ' + d + ' more day' + (d === 1 ? '' : 's') : ' · waits ' + h + ' more hour' + (h === 1 ? '' : 's'); wbox.appendChild(personRow(lkOf(v.from) || { pub: v.from, name: v.name }, 'Shared ' + ago(v.t) + lt, [], true)); }
   $('shInText').textContent = 'Their version of ' + lab + (v.n ? ', with ' + v.n + (v.n === 1 ? ' thing' : ' things') + ' built in it' : '') + '. Save it to your private maps?';
-  $('shInMore').textContent = had ? 'Saving replaces your own ' + lab + ' (' + soloDesc(v.idx | 0, readSolo(SOLOKEY_P)) + ').' : 'It goes in your private maps as ' + lab + '. Play it in a private game, with friends too.';
+  $('shInMore').textContent = 'It goes under ' + lab + ' as a saved map of your own, with a name you choose. Play it in a private game, with friends too.';
   $('shIn').classList.remove('hide'); sfx('notice');
 }
 const shHide = () => { $('shIn').classList.add('hide'); };
 $('shInX').onclick = () => { sfx('ui'); if (shCur) shLater.add(shCur.id); shHide(); shCur = null; };   // (later: it comes back next time you play, until it runs out)
 $('shInYes').onclick = () => {
-  const v = shCur; if (!v) return; const nm = who(v.name || nameOf(v.from) || 'your friend'), lab = lvLabelOf(v.idx | 0), had = hasSoloSave(v.idx | 0); shHide(); sfx('ui');
-  askConfirm('Save ' + nm + '\'s map?', had ? 'This replaces your own ' + lab + ' (' + soloDesc(v.idx | 0, readSolo(SOLOKEY_P)) + '). It can not be undone.' : 'It goes in your maps as ' + lab + '.', had ? 'Replace and save' : 'Save it', () => shFetch(v), { yesClass: had ? 'danger' : 'go', no: 'Back', onNo: () => setTimeout(() => shShow(v), 60) });
+  const v = shCur; if (!v) return; const nm = who(v.name || nameOf(v.from) || 'your friend'), i = v.idx | 0; shHide(); sfx('ui');
+  askName({ title: 'Save ' + nm + '\'s map', note: 'It goes under ' + lvLabelOf(i) + ' in your private maps.', a: cleanName('From ' + nm), level: i, st: readSolo(SOLOKEY_P), ok: 'Save it', no: 'Back' }, name => {
+    if (!name) { setTimeout(() => shShow(v), 60); return; } v._nm = name; shFetch(v); });
 };
 $('shInNo').onclick = () => {
   const v = shCur; if (!v) return; const nm = who(v.name || nameOf(v.from) || 'your friend'); shHide(); sfx('ui');
@@ -7294,14 +7365,15 @@ function shPart(m) {
   clearTimeout(g.t); shGet = null; shLoading(false); let d = null; try { d = JSON.parse(g.a.join('')); } catch (e) {}
   const v = g.v, i = v.idx | 0;
   if (!d || !d.o || typeof d.o !== 'object' || !Array.isArray(d.o.buys) || (d.idx | 0) !== i) { notice('That map could not be read. It was discarded', 'urgent'); shAnswer(v, false); return; }
-  const nm = who(v.name || nameOf(v.from) || 'a friend'), cur = !inHome && S.slot === SOLO_BASE + i && !(party && party.role === 'guest');
+  const nm = who(v.name || nameOf(v.from) || 'a friend'), name = v._nm || cleanName(d.nm || d.desc) || cleanName('From ' + nm), st = readSolo(SOLOKEY_P), over = nameTaken(i, name, st);
+  const cur = over !== undefined && !inHome && SOLOKEY === SOLOKEY_P && curMk() === over && !(party && party.role === 'guest');   // (it replaces the very map you are in: that one is loaded again)
   const go = () => {
     const o = cleanShared(d.o); o.from = nm;
-    const was = S.slot === SOLO_BASE + i; if (was) S.slot = -1;   // (the old world of this level, even the one behind the main menu, is never saved over what you just got)
-    if (!saveCopy(SOLOKEY_P, { o, idx: i })) { notice('Could not save: there is no room left on this device', 'urgent'); if (was) S.slot = SOLO_BASE + i; return; }
-    if (typeof d.desc === 'string' && d.desc && !lvDescOf(i, SOLOKEY_P)) setLvDesc(i, SOLOKEY_P, d.desc);
-    loadSolo(); lvlRender(); shAnswer(v, true); sfx('big'); notice('Saved ' + nm + '\'s ' + lvLabelOf(i) + ' to your maps', '');
-    if (cur) rehost(() => { lastWorldStr = ''; loadMap(SOLO_BASE + i, soloNext()); });
+    if (cur) S.slot = -1;   // (the world you were in is never saved over what you just got)
+    const k = saveCopy(SOLOKEY_P, { o, idx: i }, name, 1);
+    if (k < 0) { notice('Could not save: this device is out of room. Delete a saved map you do not need', 'urgent'); if (cur) S.slot = SOLO_BASE + over; return; }
+    loadSolo(); lvlRender(); shAnswer(v, true); sfx('big'); okPop('Saved', '“' + name + '” is under ' + lvLabelOf(i) + ' in your maps');
+    if (cur) rehost(() => { lastWorldStr = ''; loadMap(SOLO_BASE + k, soloNext()); });
   };
   if (cur) hostLeaveWarn(go, 'load the map you saved'); else go();
 }
@@ -7321,20 +7393,22 @@ function shareAnswered(m) {   // what happened to a map you shared: saved, not s
   else if (m.ok === -1) notice(nm + ' did not answer in 3 days, so your ' + lab + ' was not sent. You can share it again', '');
   else notice(nm + ' did not save your ' + lab, '');
 }
-$('pShare').onclick = () => { if (S.slot >= SOLO_BASE) openShare(S.idx); };
+$('pShare').onclick = () => { if (curMk() >= 0) openShare(curMk()); };
+$('pMap').onclick = () => { const k = curMk(); if (k >= 0 && !isStd(k)) msOpen(k); };
 $('lvShare').onclick = () => { if (msIdx >= 0) openShare(msIdx); };
 function saveDone() { saveBusy = false; const f = saveAfter; saveAfter = null; if (f) setTimeout(f, 250); }
-$('pSave').onclick = () => {   // keep a copy of the world you are in as your own private map of this level (offline maps are kept apart). The copy is taken right now, so it is safe even if the game closes while you write
+$('pSave').onclick = () => {   // keep a copy of the world you are in as a saved map of your own, under its level (offline maps are kept apart). The copy is taken right now, so it is safe even if the game closes while you write
   const snap = copySnap(); if (!snap) return;
-  const idx = snap.idx, label = lvLabelOf(idx), st = readSolo(SOLOKEY_P), had = st[idx];
+  const idx = lvOfK(snap.idx), label = lvLabelOf(idx);
   sfx('ui'); saveBusy = true;
-  askDesc({ title: 'Save ' + label, save: true, had: had ? 'You already have your own ' + label + ' (' + soloDesc(idx, st) + '). Saving replaces it with this world.' : '', a: lvDescOf(idx), ok: had ? 'Replace and save' : 'Save', okClass: had ? 'danger' : 'go', no: 'Cancel' }, r => {
-    if (!r) { saveDone(); return; }
-    if (saveCopy(SOLOKEY_P, snap)) { setLvDesc(idx, SOLOKEY_P, r.a); notice('Saved to your private maps', ''); } else notice('Could not save on this device', 'urgent');
+  askName({ title: 'Save this map', note: 'It goes under ' + label + ' in your private maps.', a: '', level: idx, st: readSolo(SOLOKEY_P), ok: 'Save' }, name => {
+    if (!name) { saveDone(); return; }
+    const k = saveCopy(SOLOKEY_P, snap, name, 1);
+    if (k >= 0) okPop('Saved', '“' + name + '” is under ' + label + ' in your private maps'); else notice('Could not save: this device is out of room. Delete a saved map you do not need', 'urgent');
     loadSolo(); lvlRender(); saveDone();
   });
 };
-$('btnMapSet').onclick = () => msOpen(soloLevel());   // (Mode: the map settings of the level you play)
+$('btnMapSet').onclick = () => msOpen(soloMk());   // (Mode: the map settings of the level you play)
 $('pSettings').onclick = () => { sfx('ui'); toggleSettings(); };
 const guestsHere = () => party && party.role === 'host' ? others.size : 0;
 function hostLeaveWarn(go, what) {   // you made this private game and friends are in it: leaving (or starting it over) closes it for them, so ask first
@@ -7342,7 +7416,7 @@ function hostLeaveWarn(go, what) {   // you made this private game and friends a
   if (!n) { go(); return; }   // (v231: nobody else in it: you just leave, no question)
   askConfirm('Close your private game?', 'You made this game, so it closes when you ' + (what || 'leave') + '. ' + (n === 1 ? 'The friend in it goes' : 'The ' + n + ' friends in it go') + ' back to the main menu.', what ? 'Go ahead' : 'Close and leave', go, { no: 'Stay', yesClass: 'danger' });
 }
-$('pHome').onclick = () => { sfx('ui'); hostLeaveWarn(quitToHome); };
+$('pHome').onclick = () => { sfx('ui'); leaveSaveAsk(() => hostLeaveWarn(quitToHome)); };
 $('ngSolo').onclick = () => { sfx('ui'); gateOn = false; $('netGate').classList.add('hide'); if (party && party.role === 'host') quietUnhost(); else setMultiplayer(false); };
 setInterval(() => { if (gateOn && inHome) { gateOn = false; $('netGate').classList.add('hide'); } }, 400);
 $('pause').addEventListener('pointerdown', e => { if (e.target === $('pause') && $('settings').classList.contains('hide')) { e.preventDefault(); resumeGame(); } });
@@ -7395,7 +7469,20 @@ function backStep() {
   if (placing) { cancelPlacing(); return; }
   if (inHome) askExit(); else askLeave();
 }
+function unsavedBuild() {   // (v235) built or deleted something since it was last saved, in a map that does not save by itself (a standard level, or a saved map kept as a saved state)
+  const k = curMk(); if (k < 0 || inHome || !S.world || (party && party.role === 'guest') || (!isStd(k) && !lvSaveOn(k))) return false;
+  const pv = isStd(k) ? null : solo2[k], cur = [S.bought, S.boughtCps, S.boughtGates, S.boughtMisc, S.dels], keys = ['buys', 'cps', 'gates', 'misc', 'dels'];
+  if (!pv) return cur.some(a => (a || []).length > 0);
+  return cur.some((a, j) => JSON.stringify(a || []) !== JSON.stringify(pv[keys[j]] || []));
+}
+function leaveSaveAsk(go) {   // leaving with something built and not saved: save it (as a new map, in a standard level), or leave without it
+  if (!unsavedBuild()) { go(); return; }
+  const k = curMk(), std = isStd(k), shut = () => $('confirm').classList.add('hide');
+  askConfirm(std ? 'Save what you built?' : 'Save “' + savedName(k) + '”?', std ? 'This is the standard level, so it never keeps changes. Save what you built as a new map of your own, or leave without it.' : 'This map is kept as a saved state, so what you built since you last saved is not kept unless you save it.',
+    std ? 'Save as a new map' : 'Save and leave', () => setTimeout(() => snapNow(ok => { if (ok) go(); }), 60), { yesClass: 'go', mid: 'Leave without saving', onMid: () => { shut(); go(); }, no: 'Keep playing', k: 'leave' });
+}
 function askLeave() {   // Back in a game: are you sure?
+  if (unsavedBuild()) { leaveSaveAsk(() => { if (party && party.role === 'host' && guestsHere()) hostLeaveWarn(quitToHome); else quitToHome(); }); return; }
   if (party && party.role === 'host' && guestsHere()) { hostLeaveWarn(quitToHome); return; }   // (your own private game with friends in it: leaving closes it for them, and it says so. Alone: Back still asks, like anywhere else, so a stray Back never drops you out)
   const t = settings.mp && !party ? 'Leave the public world?' : party && party.role === 'guest' ? 'Leave ' + who(party.name) + "'s game?" : 'Leave this game?';
   askConfirm(t, 'You go back to the main menu.', 'Leave', () => quitToHome(), { no: 'Keep playing', yesClass: 'danger', k: 'leave' });
@@ -7540,17 +7627,17 @@ function admWhere(e) {
 function admTag(cls, ic, title) { const t = el('span', 'amtag ' + cls); t.title = title; t.setAttribute('aria-label', title); t.innerHTML = '<svg class="ic"><use href="#i-' + ic + '"/></svg>'; return t; }
 function admListRender() {
   document.querySelectorAll('.amtabs [data-am]').forEach(b => { b.classList.toggle('on', b.dataset.am === admTab); b.setAttribute('aria-selected', b.dataset.am === admTab ? 'true' : 'false'); });
-  const d = admData || { on: [], recent: [], bans: [] };
-  $('amNOn').textContent = d.on.length; $('amNBan').textContent = d.bans.length || '';
+  const d = admData || { on: [], recent: [], bans: [], friends: [] }; d.friends = d.friends || [];
+  $('amNOn').textContent = d.on.length; $('amNBan').textContent = d.bans.length || ''; $('amNFr').textContent = d.friends.length || '';
   const q = $('amFind').value.trim().toLowerCase().replace(/^#/, '');
-  const src = admTab === 'on' ? d.on : admTab === 'ban' ? d.bans : d.recent;
+  const src = admTab === 'on' ? d.on : admTab === 'ban' ? d.bans : admTab === 'fr' ? d.friends : d.recent;
   const list = src.filter(e => !q || (e.name || '').toLowerCase().includes(q) || (e.code || '').toLowerCase().includes(q));
   const box = $('amList'); box.textContent = '';
   for (const e of list) {
     const r = el('button', 'amrow'); r.type = 'button'; r.appendChild(dot(e));
     const w = el('span', 'dmw'); w.appendChild(el('b', '', admNm(e) + (e.me ? ' (you)' : ''))); w.appendChild(el('small', '', '#' + e.code + ' · ' + (admTab === 'ban' ? 'Banned ' + whenTxt(e.until) : admWhere(e)))); r.appendChild(w);
     const tags = el('span', 'amtags');
-    if (e.fr) tags.appendChild(admTag('fr', 'users', 'Your friend'));
+    if (e.fr && admTab !== 'fr') tags.appendChild(admTag('fr', 'users', 'Your friend'));
     if (e.role === 'owner') tags.appendChild(admTag('ad', 'crown', 'Owner')); else if (e.role === 'dev' || e.dev) tags.appendChild(admTag('ad', 'bolt', 'Dev'));
     if (e.nb) tags.appendChild(admTag('no', 'plus', 'Cannot build'));
     if (e.nc) tags.appendChild(admTag('no', 'key', 'Cannot use codes'));
@@ -7559,7 +7646,7 @@ function admListRender() {
     r.onclick = () => { sfx('ui'); admOpenOne(e); };
     box.appendChild(r);
   }
-  if (!list.length) box.appendChild(el('div', 'small dim amempty', !admData ? 'Loading…' : q ? 'Nobody by that name or code.' : admTab === 'on' ? 'Nobody is playing right now.' : admTab === 'ban' ? 'Nobody is banned.' : 'Nobody else played in the last three days.'));
+  if (!list.length) box.appendChild(el('div', 'small dim amempty', !admData ? 'Loading…' : q ? 'Nobody by that name or code.' : admTab === 'on' ? 'Nobody is playing right now.' : admTab === 'ban' ? 'Nobody is banned.' : admTab === 'fr' ? 'No friends yet. Add them from Friends.' : 'Nobody else played in the last 30 days.'));
 }
 function admOpenOne(e) { admOne = Object.assign({ pub: e.pub }, e); if (e.p && !admOne.dev) admOne.dev = { p: e.p }; admView = 'one'; $('amC').value = ''; $('amG').value = ''; $('amBanBox').classList.add('hide'); $('amMoneyNote').textContent = ''; $('amMoneyInf').classList.add('hide'); admShow(); admOneRender(); wsSend({ t: 'admp', pub: e.pub }); }
 function admOneRender() {
@@ -7577,6 +7664,7 @@ function admOneRender() {
   $('amMoneyBox').classList.toggle('hide', !(good && canDo('m'))); $('amMoneyH').textContent = staff === 'me' ? 'Your money in the public world' : 'Money in the public world'; $('amSet').lastChild.textContent = staff === 'me' ? 'Set my money' : 'Set their money'; $('amAllowBox').classList.toggle('hide', !(plain && canDo('b'))); $('amOutBox').classList.toggle('hide', !(plain && (canDo('boot') || canDo('ban'))));
   const b = o.ban; $('amBanned').classList.toggle('hide', !b); if (b) $('amBanTxt').textContent = 'Banned ' + whenTxt(b.until) + (b.ip ? ', with their network' : ''); $('amUnban').classList.toggle('hide', !canDo('ban'));
   $('amCanB').checked = !o.nb; $('amCanC').checked = !o.nc;
+  $('amBugBox').classList.toggle('hide', !(plain && bugCanEdit())); $('amCanR').checked = !o.bf;   // (v235: pausing someone's bug reports lives with their other dev controls)
   { const pc = good && canDo('m'), pb = good && canDo('b');
     $('amPerkBox').classList.toggle('hide', !(pc || pb)); $('amPkCRow').classList.toggle('hide', !pc); $('amPkBRow').classList.toggle('hide', !pb);
     const pk = Object.assign({}, o.pk || {}), pd = o.pkPend || {}; for (const k of ['c', 'b']) if (pd[k] && Date.now() - pd[k].at < 6000) pk[k] = pd[k].on;   // (just switched: shown as you set it until the server has it)
@@ -7646,6 +7734,8 @@ $('amSet').onclick = () => {
   o.pkPend = Object.assign({}, o.pkPend, { [k]: { on: on ? 1 : 0, at: Date.now() } }); wsSend({ t: 'admperk', pub: o.pub, k, on: on ? 1 : 0 });
   setTimeout(() => { const p = admOne && admOne.pub === o.pub && admOne.pkPend && admOne.pkPend[k]; if (!p || p.on !== (on ? 1 : 0)) return; delete admOne.pkPend[k]; admOneRender();   // (no word from the server after 6 seconds: shown as the server really has it, and said why)
     if (!!(admOne.pk || {})[k] !== on) notice(srvGameV && srvGameV < GAME_V ? 'The game server is still on version ' + srvGameV + ', which cannot do that yet. It updates itself a few minutes after new files go on GitHub: try again then' : 'The server did not take that. Try again in a moment', 'urgent'); }, 6500); }; });
+$('amCanR').onchange = () => { if (!admOne || !bugCanEdit()) return; const o = admOne, on = $('amCanR').checked, nm = admNm(o); $('amCanR').checked = !on;   // (asked first; shown as it was until they say yes)
+  askConfirm(on ? 'Let ' + nm + ' send bug reports again?' : 'Pause ' + nm + '’s bug reports?', on ? 'They can send bug reports again.' : 'They can not send bug reports until you let them again. What they already sent stays.', on ? 'Let them' : 'Pause', () => { bugWs({ t: 'bugfrz', pub: o.pub, on: on ? 0 : 1 }); o.bf = on ? 0 : 1; $('amCanR').checked = on; sfx(on ? 'on' : 'off'); }, { yesClass: on ? 'go' : 'danger' }); };
 $('amCanB').onchange = () => { if (!admOne) return; const on = $('amCanB').checked; sfx(on ? 'on' : 'off'); admOne.nb = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'b', on: on ? 1 : 0 }); };
 $('amCanC').onchange = () => { if (!admOne) return; const on = $('amCanC').checked; sfx(on ? 'on' : 'off'); admOne.nc = on ? 0 : 1; wsSend({ t: 'admflag', pub: admOne.pub, k: 'c', on: on ? 1 : 0 }); };
 $('amBoot').onclick = () => { const o = admOne; if (!o || !o.on) return; askConfirm('Boot ' + admNm(o) + '?', 'They go back to the main menu. They can come straight back in.', 'Boot', () => wsSend({ t: 'admboot', pub: o.pub }), { no: 'Cancel', yesClass: 'danger' }); };
@@ -7703,7 +7793,7 @@ function admIn(m) {   // messages for the admin tools, and the ones an admin sen
       admRender(); if (shownEl('admModal')) { if (admView === 'one') admOneRender(); else admListRender(); } return true;
     }
     case 'admchg': if (!isAdmin()) return true; if (m.lock !== undefined) admLock = m.lock ? 1 : 0; admAsk(); if (admOne) wsSend({ t: 'admp', pub: admOne.pub }); admRender(); return true;   // (something changed: the team, a switch)
-    case 'admlist': if (!isAdmin()) return true; admData = { on: m.on || [], recent: m.recent || [], bans: m.bans || [], devs: m.devs || [] }; admLock = m.lock ? 1 : 0; if (m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap));
+    case 'admlist': if (!isAdmin()) return true; admData = { on: m.on || [], recent: m.recent || [], bans: m.bans || [], devs: m.devs || [], friends: m.friends || [] }; admLock = m.lock ? 1 : 0; if (m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap));
       admRender(); if (shownEl('admModal') && admView === 'list') admListRender(); return true;
     case 'admsh': devShSrv = m.on ? 1 : 0; devRender(); try { lpRender(); } catch (e) {} if (chatOpen && chatView === 'w') chatRender(false); return true;   // (the Dev badge: shown or hidden, as the server now has it)
     case 'admsnapv': if (isAdmin() && devRole === 'owner' && m.snap) lsSet(ADMSNAP_K, JSON.stringify(m.snap)); return true;   // (the bans, the dev team and the switches, kept here in case the server forgets them)
@@ -7856,14 +7946,17 @@ let bugLog = [], bugF = 'open', bugOpenN = -1, bugEdit = false;
 const bugWhen = t => { const d = new Date(t), now = Date.now(), m = Math.round((now - t) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : d.toLocaleDateString(); };
 function bugInfo() { let md = 'menu'; try { md = inHome ? 'menu' : party ? (party.role === 'host' ? 'private, hosting' : 'private, guest') : offlineOn() ? 'offline' : 'public'; } catch (e) {}
   return { cv: GAME_V | 0, dv: String(navigator.userAgent || '').replace(/\s+/g, ' ').slice(0, 120), sc: innerWidth + 'x' + innerHeight + '@' + (Math.round((devicePixelRatio || 1) * 100) / 100), md, lv: S.idx | 0 }; }
+const bugWs = o => { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(o)); return true; } catch (e) {} } return false; };   // (v235: straight to the server whenever connected: on the main menu too, not only in a game)
+let bugWait = 0;
+function bugTimeout() { clearTimeout(bugWait); bugWait = 0; $('bugSend').disabled = false; askConfirm('Not sent', 'The server did not answer. Check your internet and try again in a moment.', 'OK', () => {}, { single: true, yesClass: 'go' }); }
 function bugOpen() {   // the More tab opened: your reports, and (for a dev with the right) how many are not done
-  wsSend({ t: 'bugmine' }); $('bugLogBtn').classList.toggle('hide', !bugCanSee()); if (bugCanSee()) wsSend({ t: 'buglog', f: 'open' }); }
+  bugWs({ t: 'bugmine' }); }
 $('bugTxt').oninput = () => { $('bugCount').textContent = $('bugTxt').value.length + ' / 1000'; };
 $('bugSend').onclick = () => {
   const t = $('bugTxt').value.trim(); sfx('ui');
   if (t.length < 4) { askConfirm('Say a bit more', 'Tell us what went wrong and what you were doing, so it can be found and fixed.', 'OK', () => {}, { single: true, yesClass: 'go' }); return; }
-  if (!ws || ws.readyState !== 1) { askConfirm('Not connected', 'Bug reports go to the server. Try again once you are connected.', 'OK', () => {}, { single: true, yesClass: 'go' }); return; }
-  wsSend({ t: 'bug', txt: t, inf: bugInfo() }); $('bugSend').disabled = true; setTimeout(() => { $('bugSend').disabled = false; }, 2500);
+  if (!bugWs({ t: 'bug', txt: t, inf: bugInfo() })) { askConfirm('Not connected', 'Bug reports go to the server. The game keeps trying to connect: try again in a moment.', 'OK', () => {}, { single: true, yesClass: 'go' }); return; }
+  $('bugSend').disabled = true; clearTimeout(bugWait); bugWait = setTimeout(bugTimeout, 8000);   // (v235: always a clear answer: Sent, why not, or that the server did not answer)
 };
 function bugMineRender(list, frz) {
   const box = $('bugMine'); box.textContent = ''; $('bugFrozen').classList.toggle('hide', !frz); $('bugSend').classList.toggle('hide', !!frz); $('bugTxt').disabled = !!frz;
@@ -7872,19 +7965,23 @@ function bugMineRender(list, frz) {
 }
 function bugMsg(m) {
   switch (m.t) {
-    case 'bugok': $('bugTxt').value = ''; $('bugCount').textContent = '0 / 1000'; okPop('Sent', 'Thank you! You can see it under Your reports'); wsSend({ t: 'bugmine' }); break;
-    case 'bugno': { const w = { frozen: ['Reports are paused', 'A dev has paused your bug reports for now.'], slow: ['One moment', 'Please wait a few seconds before sending another one.'], many: ['That is a lot for one day', 'You can send up to 10 a day. Thank you for all of them!'], short: ['Say a bit more', 'Tell us what went wrong and what you were doing.'] }[m.why] || ['Not sent', 'Please try again in a little while.'];
+    case 'bugok': clearTimeout(bugWait); bugWait = 0; setTimeout(() => { $('bugSend').disabled = false; }, 1500); $('bugTxt').value = ''; $('bugCount').textContent = '0 / 1000'; okPop('Sent', 'Thank you! You can see it under Your reports'); bugWs({ t: 'bugmine' }); break;
+    case 'bugno': { clearTimeout(bugWait); bugWait = 0; $('bugSend').disabled = false; const w = { frozen: ['Reports are paused', 'A dev has paused your bug reports for now.'], slow: ['One moment', 'Please wait a few seconds before sending another one.'], many: ['That is a lot for one day', 'You can send up to 10 a day. Thank you for all of them!'], short: ['Say a bit more', 'Tell us what went wrong and what you were doing.'], who: ['One moment', 'Still connecting to the server. Try again in a few seconds.'] }[m.why] || ['Not sent', 'Please try again in a little while.'];
       askConfirm(w[0], w[1], 'OK', () => {}, { single: true, yesClass: 'go' }); if (m.why === 'frozen') bugMineRender([], 1); break; }
     case 'bugmine': bugMineRender(Array.isArray(m.list) ? m.list : [], m.frz); break;
     case 'bugfixed': { const l = Array.isArray(m.list) ? m.list : []; if (!l.length) break; const one = l[0], ex = '“' + (one.txt.length > 90 ? one.txt.slice(0, 87) + '…' : one.txt) + '”';
       const go = () => askConfirm(l.length === 1 ? 'A bug you reported is fixed' : l.length + ' bugs you reported are fixed', (l.length === 1 ? ex + ' is fixed.' : 'Including ' + ex + '.') + ' Thank you for telling us!', 'Nice', () => {}, { single: true, yesClass: 'go' });
-      const wait = () => { if ($('confirm').classList.contains('hide')) go(); else setTimeout(wait, 1500); }; setTimeout(wait, 1200); sfx('ready'); break; }   // (after any question already on the screen)
+      const wait = () => { if ($('confirm').classList.contains('hide')) go(); else setTimeout(wait, 1500); }; setTimeout(wait, 1200); sfx('ready'); sysNotify('nBugFix', l.length === 1 ? 'A bug you reported is fixed' : l.length + ' bugs you reported are fixed', one.txt.slice(0, 90), 'bugfix-' + one.id); break; }
+    case 'bugnew': if (!bugCanSee() || !settings.nBugNew) break; bugOpenN = m.open | 0; try { $('bugLogN').textContent = '(' + bugOpenN + ' not done)'; } catch (e) {} notice('New bug report from ' + who(m.name || 'someone'), ''); sysNotify('nBugNew', who(m.name || 'Someone') + ' sent a bug report', String(m.txt || '').slice(0, 90), 'bugnew-' + Date.now()); if (!$('bugModal').classList.contains('hide')) bugWs({ t: 'buglog', f: bugF }); break;   // (after any question already on the screen)
     case 'buglog': bugLog = Array.isArray(m.list) ? m.list : []; bugF = m.f || 'open'; bugOpenN = m.open | 0; bugEdit = !!m.edit; $('bugLogN').textContent = '(' + bugOpenN + ' not done)'; bugRender(); break;
     case 'bugset': { const i = bugLog.findIndex(b => b.id === m.b.id); if (i >= 0) { if ((bugF === 'open' && m.b.st) || (bugF === 'done' && !m.b.st)) bugLog.splice(i, 1); else bugLog[i] = m.b; } bugOpenN = m.open | 0; $('bugLogN').textContent = '(' + bugOpenN + ' not done)'; bugRender(); okPop(m.b.st ? 'Marked done' : 'Marked not done', m.b.st ? (m.b.tell ? (m.b.name || 'They') + ' will be told it is fixed' : 'Quietly: they are not told') : ''); break; }
     case 'bugdel': bugLog = bugLog.filter(b => b.id !== m.id); bugOpenN = m.open | 0; $('bugLogN').textContent = '(' + bugOpenN + ' not done)'; bugRender(); okPop('Deleted', ''); break;
-    case 'bugfrz': for (const b of bugLog) if (b.pub === m.pub) b.frz = m.on ? 1 : 0; bugRender(); okPop(m.on ? 'Reports paused' : 'Reports allowed again', ''); break;
+    case 'bugfrz': for (const b of bugLog) if (b.pub === m.pub) b.frz = m.on ? 1 : 0; if (admOne && admOne.pub === m.pub) { admOne.bf = m.on ? 1 : 0; $('amCanR').checked = !m.on; } bugRender(); okPop(m.on ? 'Reports paused' : 'Reports allowed again', ''); break;
   }
 }
+function bugWho(b) {   // (v235) the sender's name: their dev controls, where their reports can be paused
+  sfx('ui'); $('bugModal').classList.add('hide'); try { admOpen(); } catch (e) {} setTimeout(() => { try { admOpenOne({ pub: b.pub, name: b.name || '', code: b.code || '' }); } catch (e) {} }, 60); }
+function bugDevOpen() { const v = bugCanSee(); $('devBugBox').classList.toggle('hide', !v); $('setNBugNew').checked = !!settings.nBugNew; if (v) bugWs({ t: 'buglog', f: 'open' }); }   // (v235: the log is in Dev tools)
 function bugRender() {
   if ($('bugModal').classList.contains('hide')) return;
   document.querySelectorAll('#bugModal .bgtabs button').forEach(b => b.classList.toggle('on', b.dataset.f === bugF));
@@ -7892,26 +7989,25 @@ function bugRender() {
   if (!bugLog.length) { L.appendChild(el('div', 'small dim', bugF === 'open' ? 'Nothing waiting. Nice!' : 'None here.')); return; }
   for (const b of bugLog) {
     const r = el('div', 'bugi'), m = el('div', 'bgm'); m.appendChild(el('span', 'bgpill ' + (b.st ? 'done' : 'open'), b.st ? 'Done' : 'Not done')); if (b.frz) m.appendChild(el('span', 'bgpill frz', 'Paused'));
-    m.appendChild(el('b', '', b.name || 'Someone')); m.appendChild(el('span', '', bugWhen(b.at))); if (b.st) m.appendChild(el('span', '', (b.by ? 'by ' + b.by : '') + (b.tell ? (b.told ? ' · told them' : ' · they will be told') : ' · quietly')));
+    { const nb = el('button', 'bgwho', b.mine ? (b.name || 'You') + ' (you)' : (b.name || 'Someone')); nb.type = 'button'; nb.title = 'Their dev controls'; nb.onclick = () => bugWho(b); m.appendChild(nb); } m.appendChild(el('span', '', bugWhen(b.at))); if (b.st) m.appendChild(el('span', '', (b.by ? 'by ' + b.by : '') + (b.tell ? (b.told ? ' · told them' : ' · they will be told') : ' · quietly')));
     r.appendChild(m); r.appendChild(el('div', 'bgt', b.txt)); const i = b.inf || {}; r.appendChild(el('div', 'bginf', 'v' + (i.cv || i.v || '?') + ' · ' + (i.md || '') + (i.lv >= 0 ? ' · level ' + (i.lv + 1) : '') + ' · ' + (i.sc || '') + ' · ' + (i.dv || '')));
     if (bugEdit) { const bt = el('div', 'bgbtns'), nm = who(b.name || 'them');
       const mk = (t, cls, ic, fn) => { const x = el('button', 'btn ' + cls); x.type = 'button'; x.innerHTML = (ic ? '<svg class="ic"><use href="#i-' + ic + '"/></svg>' : '') ; x.appendChild(document.createTextNode(t)); x.onclick = fn; bt.appendChild(x); };
-      if (!b.st) mk('Mark done', 'go', 'check', () => askConfirm('Mark this bug done?', '“' + (b.txt.length > 120 ? b.txt.slice(0, 117) + '…' : b.txt) + '”', 'Mark done', () => wsSend({ t: 'bugset', id: b.id, done: 1, tell: $('cfOpt').checked ? 1 : 0 }), { yesClass: 'go', check: 'Tell ' + nm + ' it is fixed (they see it next time they open the game)' }));
-      else mk('Mark not done', '', 'reset', () => askConfirm('Mark this bug not done?', 'It goes back to the list of bugs still to fix.', 'Mark not done', () => wsSend({ t: 'bugset', id: b.id, done: 0 }), { yesClass: 'go' }));
-      mk(b.frz ? 'Let them report again' : 'Pause their reports', '', 'lock', () => askConfirm(b.frz ? 'Let ' + nm + ' send reports again?' : 'Pause ' + nm + '’s reports?', b.frz ? 'They can send bug reports again.' : 'They can not send bug reports until you let them again. What they sent stays here.', b.frz ? 'Let them' : 'Pause', () => wsSend({ t: 'bugfrz', pub: b.pub, on: b.frz ? 0 : 1 }), { yesClass: b.frz ? 'go' : 'danger' }));
-      mk('Delete', 'red', 'close', () => askConfirm('Delete this report?', 'It is gone for good, for everyone, its sender too.', 'Delete', () => wsSend({ t: 'bugdel', id: b.id }), { yesClass: 'danger' }));
+      if (!b.st) mk('Mark done', 'go', 'check', () => askConfirm('Mark this bug done?', '“' + (b.txt.length > 120 ? b.txt.slice(0, 117) + '…' : b.txt) + '”' + (b.mine ? ' You sent this one, so nobody is told.' : ''), 'Mark done', () => bugWs({ t: 'bugset', id: b.id, done: 1, tell: !b.mine && $('cfOpt').checked ? 1 : 0 }), b.mine ? { yesClass: 'go' } : { yesClass: 'go', check: 'Tell ' + nm + ' it is fixed (they see it next time they open the game)' }));   // (v235: no message to yourself)
+      else mk('Mark not done', '', 'reset', () => askConfirm('Mark this bug not done?', 'It goes back to the list of bugs still to fix.', 'Mark not done', () => bugWs({ t: 'bugset', id: b.id, done: 0 }), { yesClass: 'go' }));
+      mk('Delete', 'red', 'close', () => askConfirm('Delete this report?', 'It is gone for good, for everyone, its sender too.', 'Delete', () => bugWs({ t: 'bugdel', id: b.id }), { yesClass: 'danger' }));
       r.appendChild(bt); }
     L.appendChild(r);
   }
 }
-$('bugLogBtn').onclick = () => { if (!bugCanSee()) return; sfx('ui'); $('bugModal').classList.remove('hide'); bugRender(); wsSend({ t: 'buglog', f: bugF }); };
+$('bugLogBtn').onclick = () => { if (!bugCanSee()) return; sfx('ui'); $('bugModal').classList.remove('hide'); bugRender(); bugWs({ t: 'buglog', f: bugF }); };
 $('bgClose').onclick = () => { sfx('ui'); $('bugModal').classList.add('hide'); };
-document.querySelectorAll('#bugModal .bgtabs button').forEach(b => b.onclick = () => { sfx('ui'); bugF = b.dataset.f; bugLog = []; bugRender(); wsSend({ t: 'buglog', f: bugF }); });
+document.querySelectorAll('#bugModal .bgtabs button').forEach(b => b.onclick = () => { sfx('ui'); bugF = b.dataset.f; bugLog = []; bugRender(); bugWs({ t: 'buglog', f: bugF }); });
 const askQ = [];   // (v234) friends who asked to join while another question was up
 setInterval(() => { if (askQ.length && $('confirm').classList.contains('hide') && party && party.role === 'host') askedToJoin(askQ.shift()); else if (askQ.length && !(party && party.role === 'host')) askQ.length = 0; }, 1500);
 function askedToJoin(m) {   // a friend would like to join your private game
   if (typeof m.pub !== 'string' || (mutes[m.pub] || 0) >= 2) return;
-  const nm = who(m.name || nameOf(m.pub)); sfx('notice');
+  const nm = who(m.name || nameOf(m.pub)); sfx('notice'); sysNotify('nJoins', nm + ' wants to join your game', 'Open the game to let them in', 'ask-' + m.pub);
   if (!m.own || !party || party.role !== 'host') { notice(nm + ' would like to join you. Only the one who made this game can invite them', ''); return; }
   if (!$('confirm').classList.contains('hide')) { if (!askQ.some(q => q.pub === m.pub)) askQ.push(m); notice(nm + ' would like to join your game', ''); return; }   // (v234: asked as soon as the question on screen is answered)
   askConfirm(nm + ' wants to join', nm + ' would like to come into your private game.', 'Let them in', () => { wsSend({ t: 'askans', to: m.pub, ok: 1 }); if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } sfx('ui'); }, { yesClass: 'go', no: 'Decline', onNo: () => { wsSend({ t: 'askans', to: m.pub, ok: 0 }); sfx('ui'); }, k: 'askjoin' });   // (v234: let them in (they come straight in), or decline (they are told))
@@ -8064,7 +8160,7 @@ function ntRender() {
   $('ntSub').textContent = !notifOK() ? (/iPhone|iPad|iPod/.test(navigator.userAgent) ? 'Add the game to your Home Screen, open it from there, then turn this on' : 'Not available on this device or browser') : Notification.permission === 'denied' ? 'Blocked. Allow notifications for ballpit.party in your browser settings' : settings.notify && pushState === 'fail' ? 'On while the game is open. This browser cannot wake a closed game' : 'Reach you here, even when the game is closed';
   $('ntKinds').classList.toggle('hide', !(settings.notify && notifOn()));
   { const tip = ntAppTip(); $('ntApp').classList.toggle('hide', !tip); $('ntApp').textContent = tip; }
-  [['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'], ['setNEmpty', 'nEmpty']].forEach(p => { $(p[0]).checked = !!settings[p[1]]; });
+  [['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'], ['setNEmpty', 'nEmpty'], ['setNShares', 'nShares'], ['setNJoins', 'nJoins'], ['setNGifts', 'nGifts'], ['setNBugFix', 'nBugFix'], ['setNBugNew', 'nBugNew']].forEach(p => { $(p[0]).checked = !!settings[p[1]]; });
   ntFrRender(); quietRender();
 }
 const b64uBytes = s => { const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')), o = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; };
@@ -8088,7 +8184,7 @@ async function pushSync() {   // tell the server where to reach this device, and
     if (sub && isStandalone()) { let own = ''; try { own = localStorage.getItem('bp_subapp') || ''; } catch (e) {} if (own !== sub.endpoint) { try { await sub.unsubscribe(); } catch (e) {} sub = null; } }   // (in the app: sign up again from here, so the phone treats the notifications as the app's and a tap opens the app)
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
     if (isStandalone()) { try { localStorage.setItem('bp_subapp', sub.endpoint); } catch (e) {} }
-    const prefs = { f: settings.nFriends ? 1 : 0, d: settings.nMsgs ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, e: devOn() && settings.nEmpty ? 1 : 0, mu: [...new Set(lks.filter(l => l.mute >= 1 || nOffHas(l.pub)).map(l => l.pub))].slice(0, 500), mm: (Array.isArray(settings.nMsgOff) ? settings.nMsgOff : []).slice(0, 500), q: quietPrefs() };   // (friends you do not want to hear about)
+    const prefs = { f: settings.nFriends ? 1 : 0, d: settings.nMsgs ? 1 : 0, r: settings.nRequests ? 1 : 0, i: settings.nInvites ? 1 : 0, m: settings.nMaps ? 1 : 0, s: settings.nShares ? 1 : 0, j: settings.nJoins ? 1 : 0, g: settings.nGifts ? 1 : 0, b: settings.nBugFix ? 1 : 0, x: bugCanSee() && settings.nBugNew ? 1 : 0, e: devOn() && settings.nEmpty ? 1 : 0, mu: [...new Set(lks.filter(l => l.mute >= 1 || nOffHas(l.pub)).map(l => l.pub))].slice(0, 500), mm: (Array.isArray(settings.nMsgOff) ? settings.nMsgOff : []).slice(0, 500), q: quietPrefs() };   // (friends you do not want to hear about)
     const j = sub.toJSON(), sig = JSON.stringify([j.endpoint, prefs]);
     pushState = 'on'; ntRender();
     if (sig === pushSig && pushSock === ws) return;
@@ -8099,7 +8195,7 @@ async function pushSync() {   // tell the server where to reach this device, and
 const pushSyncSoon = () => { clearTimeout(pushTimer); pushTimer = setTimeout(pushSync, 1200); };
 const sendVis = () => wsSend({ t: 'vis', h: document.hidden ? 1 : 0 });   // while the page is in the background the server sends your notifications as pushes
 document.addEventListener('visibilitychange', sendVis);
-[['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'], ['setNEmpty', 'nEmpty']].forEach(([id, k]) => { bindToggle(id, k); $(id).addEventListener('change', () => pushSyncSoon()); });   // (each switch keeps what you pick)
+[['setNFriends', 'nFriends'], ['setNMsgs', 'nMsgs'], ['setNRequests', 'nRequests'], ['setNInvites', 'nInvites'], ['setNMaps', 'nMaps'], ['setNEmpty', 'nEmpty'], ['setNShares', 'nShares'], ['setNJoins', 'nJoins'], ['setNGifts', 'nGifts'], ['setNBugFix', 'nBugFix'], ['setNBugNew', 'nBugNew']].forEach(([id, k]) => { bindToggle(id, k); $(id).addEventListener('change', () => pushSyncSoon()); });   // (each switch keeps what you pick)
 $('setNotify').onchange = async () => {
   const want = $('setNotify').checked;
   if (!want) { settings.notify = false; save(); sfx('off'); ntRender(); pushSyncSoon(); return; }
@@ -8183,7 +8279,7 @@ $('btnInviteF').onclick = () => { sfx('ui'); openInvites(); };
 /* ----- your own world: pick any of the levels. Each one keeps what you did on it until you reset it ----- */
 let lvSel = 0;
 const lvLabelOf = i => 'Level ' + (i + 1) + ': ' + BallMaps.names[i];
-function lvlLabel() { return lvLabelOf(soloLevel()); }
+function lvlLabel() { return mapLabel(soloMk()); }
 const pubIdx = () => { const s = BallMaps.slotOf(nowMs()); return { i: ((s % BallMaps.count) + BallMaps.count) % BallMaps.count, next: BallMaps.slotStart(s + 1) }; };
 function lvlRender() {
   { const g = !!(party && party.role === 'guest'), pk = $('btnPickLvl'); if (pk) pk.classList.toggle('hide', g); }   // (in a friend's game only they change the level, the finish, the time of day and the bots)
@@ -8192,12 +8288,12 @@ function lvlRender() {
   if (h) {   // private: your level, tap to change. Public: the map everyone is on right now, and how long until the next one.
     h.classList.toggle('static', false); h.disabled = false; h.setAttribute('aria-label', pub ? 'The public world right now: tap for details' : 'Your level: tap to look, change it, and play');
     if (pub) { const p = pubIdx(); h.innerHTML = ico('map') + '<span class="lvt">' + lvLabelOf(p.i) + '</span><span class="lvtime">' + fmtClock(p.next - nowMs()) + '</span>' + ico('info'); }
-    else h.innerHTML = ico('map') + '<span class="lvt">' + t + '</span><span class="lvtime">' + (lvSaveOn(soloLevel()) ? 'Saved state' : hasSoloSave(soloLevel()) ? 'Continuous' : 'New') + '</span>' + ico('info');
+    else { const k = soloMk(); h.innerHTML = ico('map') + '<span class="lvt"></span><span class="lvtime">' + (isStd(k) ? 'Standard' : lvSaveOn(k) ? 'Saved state' : 'Continuous') + '</span>' + ico('info'); h.querySelector('.lvt').textContent = isStd(k) ? t : savedName(k) + ' · level ' + (lvOfK(k) + 1); }   // (v235: a saved map by its name)
   }
   const pt = $('pickLvlText'); if (pt) pt.textContent = t;
   lvOptRender();
-  { const g = !!(party && party.role === 'guest'); $('btnMapSet').classList.toggle('hide', g); $('mapSetSum').textContent = msSum(soloLevel()); }
-  $('pSnap').classList.toggle('hide', !canSnapNow()); $('btnSaveNow').classList.toggle('hide', !canSnapNow());
+  { const g = !!(party && party.role === 'guest'); $('btnMapSet').classList.toggle('hide', g); $('mapSetSum').textContent = msSum(soloMk()); }
+  $('pSnap').classList.toggle('hide', !canSnapNow()); $('btnSaveNow').classList.toggle('hide', !canSnapNow()); snapLabels(); $('pMap').classList.toggle('hide', !(canSnapNow() && !isStd(curMk())));
   $('pSave').classList.toggle('hide', !((settings.mp && !party) || (party && party.role === 'guest')) || !S.world || S.slot < 0);
   $('pShare').classList.toggle('hide', !S.world || S.slot < SOLO_BASE || !!(party && party.role === 'guest') || offlineOn());
   const canInv = !settings.mp && !(party && party.role === 'guest'); $('btnInviteF').classList.toggle('hide', !canInv || inHome); $('invT').textContent = party ? 'Invite more friends' : 'Invite friends to play'; $('invS').textContent = party ? 'Your world is open. Send another link' : 'Pick friends and send them a link to this world';
@@ -8206,32 +8302,59 @@ function lvlRender() {
 let lvF = 'all';   // which kind of levels the picker shows
 const biomeOf = id => THEMES.find(t => t.id === id);
 const lvLen = i => { const n = BallMaps.meta && BallMaps.meta[i] ? BallMaps.meta[i].len : 0; return n && n < 350 ? 'Short' : n && n < 480 ? 'Medium' : n && n < 620 ? 'Long' : n ? 'Very long' : ''; };
+let lvOpen = new Set();   // (v235) the levels whose saved maps are showing (closed until you open them)
 function lvBuild() {
-  const g = $('lvGrid'); g.innerHTML = '';
+  const g = $('lvGrid'); g.innerHTML = ''; const cur = soloMk();
   for (let i = 0; i < BallMaps.count; i++) {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'lvb' + (i === soloLevel() ? ' cur' : ''); b.setAttribute('data-i', i); b.setAttribute('role', 'option');
-    const kind = !hasSoloSave(i) ? '' : soloFrom(i) ? 'got' : soloBuilt(i) ? 'mine' : ''; if (kind) b.classList.add(kind);
+    const sv = savedOf(i), open = lvOpen.has(i), grp = document.createElement('div'); grp.className = 'lvgrp' + (open ? ' open' : ''); grp.setAttribute('data-l', i);
+    const row = document.createElement('div'); row.className = 'lvline';
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lvb' + (i === cur ? ' cur' : '') + (sv.length ? ' mine' : ''); b.setAttribute('data-i', i); b.setAttribute('role', 'option');
     const th = (BallMaps.meta && BallMaps.meta[i] ? BallMaps.meta[i].th : []).map(biomeOf).filter(Boolean).slice(0, 5);
-    b.innerHTML = '<span class="lnum">' + (i + 1) + '</span><span class="lt"><span class="nm">' + BallMaps.names[i] + '</span><span class="dots">' + th.map(t => '<i style="background:' + t.top + '"></i>').join('') + '</span></span><span class="lst">' + (i === soloLevel() ? '<span class="lvtag cur">Playing</span>' : '') + (kind === 'mine' ? '<span class="lvtag mine">Built</span>' : kind === 'got' ? '<span class="lvtag got">Saved</span>' : '') + (isBeaten(i) ? ico('crown') : '') + '</span>';
-    b.setAttribute('aria-label', 'Level ' + (i + 1) + ': ' + BallMaps.names[i]);
-    b.setAttribute('data-k', kind + (isBeaten(i) ? ' beat' : '')); g.appendChild(b);
+    b.innerHTML = '<span class="lnum">' + (i + 1) + '</span><span class="lt"><span class="nm">' + BallMaps.names[i] + '</span><span class="dots">' + th.map(t => '<i style="background:' + t.top + '"></i>').join('') + '</span></span><span class="lst">' + (i === cur ? '<span class="lvtag cur">Playing</span>' : '') + (isBeaten(i) ? ico('crown') : '') + '</span>';
+    b.setAttribute('aria-label', 'Level ' + (i + 1) + ': ' + BallMaps.names[i] + ', the standard level');
+    grp.setAttribute('data-k', (sv.length ? 'mine ' : '') + (sv.some(k => soloFrom(k)) ? 'got ' : '') + (isBeaten(i) ? 'beat' : '')); row.appendChild(b);
+    if (sv.length) {
+      const t = document.createElement('button'); t.type = 'button'; t.className = 'lvdd'; t.setAttribute('data-dd', i); t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      t.setAttribute('aria-label', (open ? 'Hide' : 'Show') + ' your ' + sv.length + ' saved map' + (sv.length === 1 ? '' : 's') + ' of level ' + (i + 1)); t.innerHTML = '<b>' + sv.length + '</b>' + ico('right'); row.appendChild(t);
+    }
+    grp.appendChild(row);
+    if (sv.length) {
+      const sub = document.createElement('div'); sub.className = 'lvsubs' + (open ? '' : ' hide'); sub.setAttribute('role', 'group'); sub.setAttribute('aria-label', 'Your saved maps of level ' + (i + 1));
+      for (const k of sv) {
+        const e = document.createElement('button'); e.type = 'button'; e.className = 'lvb lvsub' + (k === cur ? ' cur' : '') + (soloFrom(k) ? ' got' : ''); e.setAttribute('data-i', k); e.setAttribute('role', 'option');
+        e.innerHTML = ico('map') + '<span class="lt"><span class="nm"></span><span class="lsm"></span></span><span class="lst">' + (k === cur ? '<span class="lvtag cur">Playing</span>' : '') + '</span>';
+        e.querySelector('.nm').textContent = savedName(k); e.querySelector('.lsm').textContent = (lvSaveOn(k) ? 'Saved state' : 'Continuous') + (soloFrom(k) ? ' · from ' + soloFrom(k) : '');
+        e.setAttribute('aria-label', savedName(k) + ', your saved map of level ' + (i + 1)); sub.appendChild(e);
+      }
+      grp.appendChild(sub);
+    }
+    g.appendChild(grp);
   }
   lvFilter();
 }
+function lvToggle(i, on) {   // open or close a level's saved maps
+  const grp = document.querySelector('#lvGrid .lvgrp[data-l="' + i + '"]'); if (!grp) return; const sub = grp.querySelector('.lvsubs'), t = grp.querySelector('.lvdd'); if (!sub) return;
+  if (on === undefined) on = !lvOpen.has(i); if (on) lvOpen.add(i); else lvOpen.delete(i);
+  grp.classList.toggle('open', on); sub.classList.toggle('hide', !on); if (t) { t.setAttribute('aria-expanded', on ? 'true' : 'false'); const n = sub.children.length; t.setAttribute('aria-label', (on ? 'Hide' : 'Show') + ' your ' + n + ' saved map' + (n === 1 ? '' : 's') + ' of level ' + (i + 1)); }
+}
 function lvFilter() {
   document.querySelectorAll('#lvFil button').forEach(b => b.classList.toggle('on', b.getAttribute('data-f') === lvF));
-  document.querySelectorAll('#lvGrid .lvb').forEach(b => { const k = b.getAttribute('data-k') || ''; b.classList.toggle('hid', lvF !== 'all' && k.indexOf(lvF) < 0 && +b.getAttribute('data-i') !== lvSel); });
+  document.querySelectorAll('#lvGrid .lvgrp').forEach(b => { const k = b.getAttribute('data-k') || ''; b.classList.toggle('hid', lvF !== 'all' && k.indexOf(lvF) < 0 && +b.getAttribute('data-l') !== lvOfK(lvSel)); });
 }
-function lvMoneyText(i) { const q = purseV[i]; return unlimitedSet() ? 'On every level of yours: buy and build anything' : 'You have ' + fmtN(q ? q.c : 0) + ' coins and ' + fmtN(q ? q.g : 0) + ' diamonds on this level'; }
-function lvSelect(i) {
-  lvSel = i;
-  document.querySelectorAll('#lvGrid .lvb').forEach(b => { const on = +b.getAttribute('data-i') === i; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
-  $('lvName').textContent = BallMaps.names[i]; $('lvNum').textContent = 'Level ' + (i + 1) + ' of ' + BallMaps.count;
+function lvMoneyText(i) { const q = purseV[lvOfK(i)]; return unlimitedSet() ? 'On every level of yours: buy and build anything' : 'You have ' + fmtN(q ? q.c : 0) + ' coins and ' + fmtN(q ? q.g : 0) + ' diamonds on this level'; }
+function lvSelect(k) {
+  if (!isStd(k) && !solo2[k]) k = lvOfK(k); lvSel = k; const i = lvOfK(k), std = isStd(k);
+  if (!std && !lvOpen.has(i)) lvToggle(i, true);
+  document.querySelectorAll('#lvGrid .lvb').forEach(b => { const on = +b.getAttribute('data-i') === k; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+  $('lvName').textContent = std ? BallMaps.names[i] : savedName(k); $('lvNum').textContent = std ? 'Level ' + (i + 1) + ' of ' + BallMaps.count : 'Your saved map of level ' + (i + 1) + ': ' + BallMaps.names[i];
   { const th = (BallMaps.meta && BallMaps.meta[i] ? BallMaps.meta[i].th : []).map(biomeOf).filter(Boolean); $('lvStrip').innerHTML = th.map(t => '<i style="background:' + t.top + '"></i>').join(''); }
   const mt = BallMaps.meta && BallMaps.meta[i], tags = $('lvTags'); tags.innerHTML = '';
   if (mt) { const len = lvLen(i); if (len) { const s = document.createElement('span'); s.textContent = len; tags.appendChild(s); } mt.th.slice(0, 5).map(biomeOf).filter(Boolean).forEach(t => { const s = document.createElement('span'); s.innerHTML = '<i style="background:' + t.top + '"></i>' + t.id.charAt(0).toUpperCase() + t.id.slice(1); tags.appendChild(s); }); }
-  $('lvNote').textContent = (isBeaten(i) ? 'You have beaten this level. ' : 'Not beaten yet. ') + (soloFrom(i) ? 'A copy saved from ' + soloFrom(i) + '.' : soloBuilt(i) ? 'What you built here is saved.' : hasSoloSave(i) ? 'Your progress here is saved. Nothing built yet.' : 'Nothing saved yet.') ; { const t = lvDescOf(i), de = $('lvDesc'); de.textContent = t; de.classList.toggle('hide', !t); $('lvMapSum').textContent = msSum(i); }
-  $('lvOkT').textContent = inHome ? 'Play ' + 'level ' + (i + 1) : (i === soloLevel() ? 'Keep playing' : 'Play level ' + (i + 1)); lvOptRender.k = ''; lvOptRender(); lvLayout();
+  const n = savedOf(i).length, at = soloSavedAt(k);
+  $('lvNote').textContent = (isBeaten(i) ? 'You have beaten this level. ' : 'Not beaten yet. ') + (std ? 'The standard level: it never changes. Save in it to make a saved map of your own.' + (n ? ' You have ' + n + ' saved map' + (n === 1 ? '' : 's') + ' of it: open the list under it.' : '')
+    : (lvSaveOn(k) ? 'Saved state: it starts the same way every time.' : 'Continuous: it stays as you leave it.') + (at ? ' Saved ' + ago(at) + '.' : '') + (soloFrom(k) ? ' From ' + soloFrom(k) + '.' : ''));
+  $('lvDesc').classList.add('hide'); $('lvMapSet').classList.toggle('hide', std); $('lvMapSum').textContent = msSum(k);
+  $('lvOkT').textContent = inHome ? 'Play' : (k === curMk() ? 'Keep playing' : 'Play this map'); lvOptRender.k = ''; lvOptRender(); lvLayout();
 }
 $('lvFil').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { sfx('ui'); lvF = b.getAttribute('data-f'); lvFilter(); } });
 $('lvUnl').onchange = () => {   // unlimited coins and diamonds: a game setting, for every level of yours, kept until you change it
@@ -8260,30 +8383,44 @@ function autoInvite() {   // (v234) every friend who is online gets an invite (a
   if (fl.length) notice('Invited ' + fl.length + (fl.length === 1 ? ' friend' : ' friends') + ' who ' + (fl.length === 1 ? 'is' : 'are') + ' online', '');
 }
 $('setNoCheats').onchange = () => { if (party && party.role === 'guest') { $('setNoCheats').checked = !!settings.noCheats; return; } settings.noCheats = $('setNoCheats').checked; save(); sfx(settings.noCheats ? 'on' : 'off'); rulesSend(); lvOptRender.k = ''; lvOptRender(); homeWalletRender.k = ''; try { homeWalletRender(); } catch (e) {} };
-const optIdx = () => !$('lvlModal').classList.contains('hide') && typeof lvSel === 'number' ? lvSel : soloLevel();   // (the level the game settings are showing beside: the one picked in the level list while it is open)
+const optIdx = () => !$('lvlModal').classList.contains('hide') && typeof lvSel === 'number' ? lvOfK(lvSel) : soloLevel();   // (the level the game settings are showing beside: the one picked in the level list while it is open)
 /* Continuous or saved state, for each of your levels (a map setting). Continuous: the level stays as you leave it. Saved state: it starts from the same saved
    moment every time, whatever you did since, until you save it again */
-const lvSKey = () => offlineOn() ? 'lvSaveO' : 'lvSave', lvSaveOn = i => !!(settings[lvSKey()] && settings[lvSKey()][i]);
+const lvSKey = () => offlineOn() ? 'lvSaveO' : 'lvSave', lvSaveOn = i => { if (isStd(i)) return false; const o = settings[lvSKey()]; return !(o && o[i] === 0); };   // (v235: saved state is the default for every one of your levels: only a level you switched to Continuous is kept as 0)
 function lvSaveSet(i, on) {
-  const k = lvSKey(), o = Object.assign({}, settings[k] || {}); if (on) o[i] = 1; else delete o[i]; settings[k] = o; save();
-  if (on && S.slot >= SOLO_BASE && S.idx === i && !inHome && !S.guest) { saveWorld(true, true); notice('Saved state on. This level now starts just like this every time', ''); }
-  else notice(on ? 'Saved state on. This level starts the same way every time' : 'Continuous: this level stays the way you leave it', '');
-  sfx(on ? 'on' : 'off'); msRender(); if (shownEl('lvlModal') && lvSel === i) $('lvMapSum').textContent = msSum(i); lvlRender();
+  const k = lvSKey(), o = Object.assign({}, settings[k] || {}); o[i] = on ? 1 : 0; settings[k] = o; save();
+  if (on && curMk() === i && !inHome && !S.guest) { saveWorld(true, true); notice('Saved state on. This map now starts just like this every time', ''); }
+  else notice(on ? 'Saved state on. This map starts the same way every time' : 'Continuous: this map stays the way you leave it', '');
+  sfx(on ? 'on' : 'off'); msRender(); mapsChanged(i);
 }
 function lvSaveRender(i) {
-  const on = lvSaveOn(i), here = S.slot >= SOLO_BASE && S.idx === i && !inHome && !(party && party.role === 'guest');
+  const on = lvSaveOn(i), here = curMk() === i && !inHome && !(party && party.role === 'guest');
   $('lvSaveLive').classList.toggle('on', !on); $('lvSaveSnap').classList.toggle('on', on); $('lvSaveLive').setAttribute('aria-pressed', !on); $('lvSaveSnap').setAttribute('aria-pressed', on);
-  $('lvSaveNote').textContent = on ? 'Every game on this level starts from the saved moment. What you build, break or move after that is gone when you come back, unless you save again.' : 'What you build, break or move stays that way. Leave and come back, and the level is just how you left it.';
+  $('lvSaveNote').textContent = on ? 'Every game on this map starts from the saved moment. What you build, break or move after that is gone when you come back, unless you save again.' : 'What you build, break or move stays that way. Leave and come back, and the map is just how you left it.';
   $('lvSaveNow').classList.toggle('hide', !on || !here);
   $('lvShare').classList.toggle('hide', offlineOn() || !!(party && party.role === 'guest') || !(hasSoloSave(i) || (here && S.world)));
 }
 $('lvSaveLive').onclick = () => { const i = msIdx; if (i >= 0 && lvSaveOn(i)) lvSaveSet(i, false); };
 $('lvSaveSnap').onclick = () => { const i = msIdx; if (i >= 0 && !lvSaveOn(i)) lvSaveSet(i, true); };
-function canSnapNow() { return !!S.world && S.slot >= SOLO_BASE && !S.guest && !(party && party.role === 'guest') && !inHome && lvSaveOn(S.idx); }   // (v230: your own level kept as a saved state, and you are in it: it can be saved as it is right now)
-function snapNow() {   // everything exactly where it is this moment, moving things with how they move: every game on this level starts from here
-  if (!canSnapNow()) return; saveWorld(true, true); S.lvFix = null; sfx('big'); okPop('Saved', 'Every game on this level starts from here');
+function canSnapNow() { return !!S.world && S.slot >= SOLO_BASE && !S.guest && !(party && party.role === 'guest') && !inHome; }   // (your own map, and you are in it: a standard level can be saved as a new map, a saved map saved as it is right now)
+function snapLabels() { const std = isStd(curMk()); $('pSnap').lastChild.textContent = std ? 'Save as a new map' : 'Save this map'; const b = $('btnSaveNow').querySelector('.mst'); if (b) { b.firstChild.textContent = std ? 'Save as a new map' : 'Save this map as it is now'; b.lastChild.textContent = std ? 'The standard level stays as it is. Yours goes under it, with a name' : lvSaveOn(curMk()) ? 'Saved state: every game starts from this moment' : 'It keeps saving by itself too: this saves it now'; } }
+function snapNow(after) {   // a saved map: everything exactly where it is this moment, moving things with how they move. A standard level: a new saved map under it
+  if (!canSnapNow()) return; const k = curMk();
+  if (isStd(k)) { saveAsNew(after); return; }
+  if (saveWorld(true, true) === false) { if (after) after(false); return; } S.lvFix = null; sfx('big'); okPop('Saved', '“' + savedName(k) + '” is saved just like this'); if (after) after(true);
 }
-$('lvSaveNow').onclick = () => { if (S.idx === msIdx) snapNow(); };
+function saveAsNew(after) {   // (v235) in a standard level: what is here now becomes a saved map of your own under it, and you are in that map from then on
+  const i = lvOfK(curMk()); if (!S.world) return; const o = JSON.parse(JSON.stringify(worldObj())); delete o.slot;
+  askName({ title: 'Save as a new map', note: 'It goes under ' + lvLabelOf(i) + '. The standard level stays as it is.', a: '', level: i, ok: 'Save' }, nm => {
+    if (!nm) { if (after) after(false); return; }
+    if (curMk() !== i) { if (after) after(false); return; }   // (the game moved on while you were writing)
+    const over = nameTaken(i, nm), k = saveCopy(SOLOKEY, { o, idx: i }, nm, 1);
+    if (k < 0) { notice('Could not save: this device is out of room. Delete a saved map you do not need', 'urgent'); if (after) after(false); return; }
+    S.slot = SOLO_BASE + k; settings.soloMap = String(k); save(); lastWorldStr = '';   // (saving again now saves this map)
+    sfx('big'); okPop('Saved', '“' + nm + '” is under ' + lvLabelOf(i) + (over !== undefined ? ', in place of the old one' : '')); mapsChanged(k); try { lvlRender(); } catch (e) {} if (after) after(true);
+  });
+}
+$('lvSaveNow').onclick = () => { if (curMk() === msIdx) snapNow(); };
 $('pSnap').onclick = () => snapNow();
 $('btnSaveNow').onclick = () => snapNow();
 function lvOptRender() {   // the game settings, wherever they are showing (the Mode page, or under the level you picked). The same on every level
@@ -8294,10 +8431,10 @@ function lvOptRender() {   // the game settings, wherever they are showing (the 
 /* ----- Map settings: what belongs to one level. Continuous or saved state, its description, sharing it, starting it over. It opens from the level
    picker (for the level you are looking at) or from Mode (for the level you play). The back arrow goes back there, the X closes everything ----- */
 let msIdx = -1;
-function msSum(i) { return lvSaveOn(i) ? 'Saved state: the same start every time' : 'Continuous: stays as you leave it'; }
+function msSum(i) { return isStd(i) ? 'The standard level: it never changes' : lvSaveOn(i) ? 'Saved state: the same start every time' : 'Continuous: stays as you leave it'; }
 function msOpen(i) {
   if (party && party.role === 'guest') return;   // (in a friend's game the levels are theirs)
-  msIdx = Math.max(0, Math.min(BallMaps.count - 1, i | 0)); msRender(); $('msModal').classList.remove('hide'); sfx('ui');
+  i = Math.floor(+i || 0); if (!(i >= 0) || (!isStd(i) && !solo2[i])) i = lvOfK(i); msIdx = i; msRender(); $('msModal').classList.remove('hide'); sfx('ui');
   const b = $('msModal').querySelector('.msbody'); if (b) b.scrollTop = 0;
 }
 function msClose() {
@@ -8306,49 +8443,48 @@ function msClose() {
   if (shownEl('lvlModal') && typeof lvSel === 'number') lvSelect(lvSel); try { lvlRender(); } catch (e) {}
 }
 function msRender() {
-  const i = msIdx; if (i < 0) return;
-  const here = S.slot >= SOLO_BASE && S.idx === i && !inHome && !(party && party.role === 'guest');
-  $('msNum').textContent = 'Level ' + (i + 1) + ' of ' + BallMaps.count; $('msName').textContent = BallMaps.names[i];
+  const k = msIdx; if (k < 0) return; const i = lvOfK(k), std = isStd(k) || !solo2[k];
+  const here = curMk() === k && !inHome && !(party && party.role === 'guest');
+  $('msNum').textContent = std ? 'Level ' + (i + 1) + ' of ' + BallMaps.count : 'Your saved map of level ' + (i + 1) + ': ' + BallMaps.names[i]; $('msName').textContent = std ? BallMaps.names[i] : savedName(k);
   { const th = (BallMaps.meta && BallMaps.meta[i] ? BallMaps.meta[i].th : []).map(biomeOf).filter(Boolean); $('msStrip').innerHTML = th.map(t => '<i style="background:' + t.top + '"></i>').join(''); }
-  lvSaveRender(i);
-  const t = lvDescOf(i), d = $('msDesc'); d.textContent = t || 'No description yet.'; d.classList.toggle('none', !t); $('lvDescBtn').lastChild.textContent = t ? 'Edit description' : 'Add a description';
-  const rs = hasSoloSave(i) || (here && !!S.world); $('msReset').classList.toggle('hide', !rs);
-  { const sh = !$('lvShare').classList.contains('hide'); $('msMore').classList.toggle('hide', !rs && !sh); $('msMoreH').textContent = sh && rs ? 'Share or start over' : sh ? 'Share' : 'Start over'; }
+  lvSaveRender(k); $('msSaveSec').classList.toggle('hide', std);
+  $('msNameH').textContent = std ? 'The standard level' : 'Name'; const d = $('msDesc'); d.textContent = std ? 'It never changes. Save in it (in the pause menu) to make a saved map of your own under it.' : savedName(k); d.classList.toggle('none', std);
+  $('lvDescBtn').classList.toggle('hide', std); $('lvDescBtn').lastChild.textContent = 'Rename';
+  $('msReset').classList.toggle('hide', std);
+  { const sh = !$('lvShare').classList.contains('hide'); $('msMore').classList.toggle('hide', std && !sh); $('msMoreH').textContent = sh && !std ? 'Share or delete' : sh ? 'Share' : 'Delete'; }
 }
 $('lvMapSet').onclick = () => { if (typeof lvSel === 'number') msOpen(lvSel); };
 $('msDone').onclick = () => { sfx('ui'); msClose(); };
 $('msBack').onclick = () => { sfx('ui'); msClose(); };
 $('msModal').addEventListener('pointerdown', e => { if (e.target === $('msModal')) msClose(); });
-$('msReset').onclick = () => { const i = msIdx; if (i < 0) return; sfx('ui'); askResetLevel(i, () => { if (msIdx === i) msRender(); setTimeout(() => { if (msIdx === i) msRender(); }, 500); }, i === soloLevel() && !inHome); };
-function finApply() { if (!finChg) return; setTimeout(() => { if (!finChg) return; finChg = false; if (inHome || settings.mp || (party && party.role === 'guest') || S.slot < SOLO_BASE || S.idx !== soloLevel() || soloFin(soloLevel()) === (S.fk | 0)) return; hostLeaveWarn(() => rehost(() => soloGo(true)), 'move the finish'); }, 0); }   // (once every menu has closed, and only if the finish of this game really moved)
+$('msReset').onclick = () => { const k = msIdx; if (k < 0 || isStd(k) || !solo2[k]) return; sfx('ui'); const here = curMk() === k && !inHome, nm = savedName(k);
+  askConfirm('Delete “' + nm + '”?', 'This saved map is gone for good. ' + lvLabelOf(lvOfK(k)) + ' itself stays.' + (here ? ' You go on in the standard level.' : ''), 'Delete', () => {
+    const go = () => { if (here) rehost(() => mapDelete(k)); else mapDelete(k); okPop('Deleted', '“' + nm + '” is gone'); msClose(); mapsChanged(lvOfK(k)); };
+    if (here) hostLeaveWarn(go, 'delete this map'); else go(); }, { no: 'Keep it' }); };
+function finApply() { if (!finChg) return; setTimeout(() => { if (!finChg) return; finChg = false; if (inHome || settings.mp || (party && party.role === 'guest') || S.slot < SOLO_BASE || curMk() !== soloMk() || soloFin(soloLevel()) === (S.fk | 0)) return; hostLeaveWarn(() => rehost(() => soloGo(true)), 'move the finish'); }, 0); }   // (once every menu has closed, and only if the finish of this game really moved)
 let lvOptHome = null, lvStep = 'list';
 const lvSplit = () => (innerWidth >= 760 && innerHeight >= 520) || (innerWidth >= 640 && innerWidth > innerHeight * 1.4);   // (a big screen, or a phone on its side: list and level side by side)
 function lvLayout() {   // phones: the list, then one level (with a back arrow). A big screen: both at once
   const c = document.querySelector('#lvlModal .lvpick'), sp = lvSplit(), det = !sp && lvStep === 'detail';
   c.classList.toggle('split', sp); c.classList.toggle('detail', det); $('lvBack').classList.toggle('hide', !det && !(typeof stacked === 'function' && stacked('lvlModal')));
-  $('lvTitle').textContent = det ? 'Level ' + (lvSel + 1) : inHome ? 'Pick a level' : 'Levels';
+  $('lvTitle').textContent = det ? (isStd(lvSel) ? 'Level ' + (lvSel + 1) : savedName(lvSel)) : inHome ? 'Pick a map' : 'Maps';
 }
 $('lvBack').onclick = () => { sfx('ui'); if (lvStep !== 'detail' || lvSplit()) { closeLevels(); return; } lvStep = 'list'; lvLayout(); setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s) try { s.scrollIntoView({ block: 'center' }); } catch (e) {} }, 0); };
 addEventListener('resize', () => { if (!$('lvlModal').classList.contains('hide')) lvLayout(); });
 function openLevels() {
   loadSolo(); lvBuild(); if (!lvOptHome) lvOptHome = { p: $('lvOptBox').parentNode, n: $('lvOptBox').nextSibling }; $('lvOptSlot').appendChild($('lvOptBox'));   // (the level's options come along into the list: look, set, then play)
-  lvStep = 'list'; $('lvlModal').classList.remove('hide'); lvSelect(soloLevel()); $('lvNo').textContent = inHome ? 'Cancel' : 'Close';
+  lvStep = 'list'; $('lvlModal').classList.remove('hide'); lvSelect(soloMk()); $('lvNo').textContent = inHome ? 'Cancel' : 'Close';
   setTimeout(() => { const s = document.querySelector('#lvGrid .lvb.sel'); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }, 30);
 }
 function closeLevels() { if (shownEl('msModal')) { $('msModal').classList.add('hide'); msIdx = -1; } $('lvlModal').classList.add('hide'); if ($('settings').classList.contains('hide')) finApply(); if (lvOptHome && $('lvOptBox').parentNode !== lvOptHome.p) lvOptHome.p.insertBefore($('lvOptBox'), lvOptHome.n); lvOptRender.k = ''; lvOptRender(); }
-function askResetLevel(i, after, twice) {
-  if (twice) { askConfirm('Reset ' + lvLabelOf(i) + '?', 'This starts the level over from nothing. You will be asked once more before anything is removed.', 'Continue', () => setTimeout(() => askResetLevel(i, after), 60), { no: 'Keep it', yesClass: 'go' }); return; }
-  askConfirm('Reset ' + lvLabelOf(i) + '?', 'Everything you built, moved, opened or collected on this level goes back to the start. Your coins and diamonds stay yours.', 'Reset level', () => {
-    const cur = i === soloLevel() && !inHome, go = () => { if (cur) rehost(() => soloReset(i)); else soloReset(i); notice('Level reset', ''); if (!$('lvlModal').classList.contains('hide')) { lvBuild(); lvSelect(lvSel); } if (after) after(); };
-    if (cur) { hostLeaveWarn(go, 'start the level over'); return; } go();
-  }, { no: 'Keep it' });
-}
-$('lvGrid').addEventListener('click', e => { const b = e.target.closest('.lvb'); if (b) { sfx('ui'); lvStep = 'detail'; lvSelect(+b.getAttribute('data-i')); const r = document.querySelector('#lvlModal .lvright'); if (r) r.scrollTop = 0; } });
+$('lvGrid').addEventListener('click', e => { const dd = e.target.closest('.lvdd'); if (dd) { sfx('ui'); lvToggle(+dd.getAttribute('data-dd')); return; } const b = e.target.closest('.lvb'); if (b) { sfx('ui'); lvStep = 'detail'; lvSelect(+b.getAttribute('data-i')); const r = document.querySelector('#lvlModal .lvright'); if (r) r.scrollTop = 0; } });
 $('lvNo').onclick = closeLevels;
 $('lvOk').onclick = () => {
-  const changed = lvSel !== soloLevel(); settings.soloMap = String(lvSel); save(); lvlRender(); closeLevels(); sfx('ui');
-  if (inHome) { setTimeout(() => $('homePlay').click(), 30); return; }   // (from the main menu: straight into the game)
-  if (!inHome) { if (paused) resumeGame(); if (changed) { finChg = false; hostLeaveWarn(() => rehost(() => soloGo(true)), 'change the level'); } }
+  const pick = lvSel, set = () => { settings.soloMap = String(pick); save(); lvlRender(); }; closeLevels(); sfx('ui');
+  if (inHome) { set(); setTimeout(() => $('homePlay').click(), 30); return; }   // (from the main menu: straight into the game)
+  if (paused) resumeGame();
+  if (pick === curMk()) { set(); return; }
+  leaveSaveAsk(() => { finChg = false; hostLeaveWarn(() => { set(); rehost(() => soloGo(true)); }, 'change the map'); });   // (v235: what you built and did not save is offered a save first)
 };
 $('lvlModal').addEventListener('pointerdown', e => { if (e.target === $('lvlModal')) closeLevels(); });
 $('homeLvl').onclick = () => { sfx('ui'); if ($('homeMp').checked) openWorldInfo(); else openLevels(); };
@@ -8615,7 +8751,7 @@ const NET = { lastTs: 0, pongC: 0, pongAt: 0, pingAt: 0, off: null, jit: 20, jit
   conflict(e, k) { if (this.log) this.log.push([Math.round(performance.now()), Math.round(e), k]); this.conf++; this.confAt = performance.now(); this.confE = Math.max(this.confAt - this.lastConfE < 2000 ? this.confE : 0, e); this.lastConfE = this.confAt; this.confK = k; if (k === 'snap') this.snaps++; }, lastConfE: 0 };   // (and, for the live stats, how many times your screen and the server disagreed)   // (the server's clock against this one's, how unevenly packets arrive, and how often each thing is told about)
 function netDelay() { return Math.max(40, Math.min(240, NET.jit * 0.8 + NET.jitHi * 0.5 + NET.iv * 1.3)); }   // (things away from you are shown this far in the past, so their motion is replayed exactly as it happened instead of being guessed at)
 function dynBin(dv, len, ty) {
-  const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (S.slot & 0xFFFF)) return;
+  const w = S.world; if (!w || S.mode !== 'play' || dv.getUint16(1, true) !== (wireSlot(S.slot) & 0xFFFF)) return;
   if (!S.gotDyn) S.firstDynAt = performance.now(); S.gotDyn = true;   // where the shared crates, balls (type 4) and planks (type 5) are right now (only once it has really been taken in)
   const n = dv.getUint8(3), t = performance.now();
   if (ty === 4 || ty === 6 || ty === 9) {
@@ -8651,7 +8787,7 @@ function onBin(buf) {   // compact position update: [1][slot u16] then per playe
   if (ty === 4 || ty === 5 || ty === 6 || ty === 7 || ty === 9) { dynBin(dv, buf.byteLength, ty); return; }
   if (ty !== 1) return;
   const sl = dv.getUint16(1, true);
-  const okSlot = S.mode === 'play' ? (S.slot & 0xFFFF) : S.mode === 'fade' ? (S.pending & 0xFFFF) : -1;
+  const okSlot = S.mode === 'play' ? (wireSlot(S.slot) & 0xFFFF) : S.mode === 'fade' ? (wireSlot(S.pending) & 0xFFFF) : -1;
   if (sl !== okSlot) return;
   const t = performance.now();
   for (let off = 3; off + 12 <= buf.byteLength; off += 12) {
@@ -8705,7 +8841,7 @@ const leftText = ms => { const m = Math.max(1, Math.round(ms / 60000)); return m
 let pubMany = false;
 const wNum = id => pubMany || id > 1, wName = id => wNum(id) ? 'World ' + id : 'the public world', WName = id => wNum(id) ? 'World ' + id : 'The public world';
 function announceEntry(o) {   // when you arrive somewhere: which map, how long is left, how many are there. (No 'change' screen: that is only for a map that swaps while you are in it.)
-  const idx = ((o.slot % BallMaps.count) + BallMaps.count) % BallMaps.count, mapT = lvLabelOf(idx); let title, sub;
+  const idx = ((o.slot % BallMaps.count) + BallMaps.count) % BallMaps.count, mk = o.slot >= SOLO_BASE && !(party && party.role === 'guest') ? o.slot - SOLO_BASE : -1, mapT = mk >= 0 && !isStd(mk) && solo2[mk] ? '“' + savedName(mk) + '” · level ' + (idx + 1) : lvLabelOf(idx); let title, sub;   // (v235: your saved map by its name)
   if (party) { title = party.role === 'host' ? 'Your private game' : who(party.name) + "'s private game"; sub = mapT + (o.n ? ' · ' + o.n + ' here' : ''); }
   else if (o.slot >= SOLO_BASE || inSolo()) { title = 'Your private world'; sub = mapT + ' · no time limit · only you'; }
   else { title = WName(room.id || 1); sub = mapT + ' · ' + leftText((o.next || S.nextAt) - nowMs()) + ' left · ' + (o.n || room.n) + ' player' + ((o.n || room.n) === 1 ? '' : 's'); }
@@ -8764,11 +8900,12 @@ function onMsg(m) {
       if (!m.priv || (party && party.role === 'guest')) setNetFk(m.slot, m.fk);
       if (party && party.role === 'guest') { loadMap(m.slot, m.next); }
       else if (!m.priv && m.build && m.room !== S.pubRoom && S.pubKeys && S.pubKeys.size && S.slot === m.slot) { S.pubRoom = m.room; loadMap(m.slot, m.next); }   // (a different world than the one you were building in: start from its map)
+      else if (m.priv && party && party.role === 'host' && S.slot >= SOLO_BASE && S.world && ((S.slot - m.slot) % BallMaps.count + BallMaps.count) % BallMaps.count === 0) {}   // (v235: your own game of one of your saved maps: the server knows it by its level, and it is the map you already have)
       else if ((m.slot !== S.slot && forced === null) || (!m.priv && m.slot === S.slot && (m.fk | 0) !== S.fk)) { if (S.mode === 'fade') { S.pending = m.slot; S.pendingNext = m.next; } else loadMap(m.slot, m.next); }
       if (!m.priv && m.build) { S.pubRoom = m.room; if (S.slot === m.slot && S.world && S.mode !== 'fade') pubSync(m.build); else S.pendingBuild = { slot: m.slot, b: m.build }; }
       if (!m.priv && m.fresh) offerSnap(m.slot, m.room);
       if (!m.priv) pubMany = m.room > 1 || (m.full || []).length > 0;   // (only one public world: no numbers)
-      if (m.priv) announceEntry({ slot: m.priv.idx, n: m.n }); else if ((m.full || []).length) showWorldPop(m.room, m.full); else announceEntry({ slot: m.slot, next: m.next, n: m.n });
+      if (m.priv) announceEntry({ slot: party && party.role === 'host' && S.slot >= SOLO_BASE ? S.slot : m.priv.idx, n: m.n }); else if ((m.full || []).length) showWorldPop(m.room, m.full); else announceEntry({ slot: m.slot, next: m.next, n: m.n });
       botNote(); newBotTarget();
       setTimeout(maybeAskBots, 900);
       break;
@@ -8815,7 +8952,7 @@ function onMsg(m) {
     case 'shres': shareAnswered(m); break;
     case 'asksent': notice('Asked ' + who(nameOf(m.pub) || 'your friend') + ' if you can join', ''); break;
     case 'askno': askNo(m); break;
-    case 'bugok': case 'bugno': case 'bugmine': case 'bugfixed': case 'buglog': case 'bugset': case 'bugdel': case 'bugfrz': bugMsg(m); break;
+    case 'bugok': case 'bugno': case 'bugmine': case 'bugfixed': case 'buglog': case 'bugset': case 'bugdel': case 'bugfrz': case 'bugnew': bugMsg(m); break;
     case 'askok': askLetIn(m); break;
     case 'invsent': if (party) { party.invited = party.invited || new Set(); party.invited.add(m.pub); } ivRender(); break;
     case 'pobj': S.buildAt = performance.now(); if (m.bot) { if (S.world && validMisc(m.g) && m.g[0] === 'tl') { addMisc(S.world, m.g, !m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)); if (!m.bulk && nearMe((m.g[1] + 0.5) * TS, m.g[2] * TS)) sfx('ui'); } break; } { if (Array.isArray(m.ex)) m.ex.forEach(e => { if (Array.isArray(e) && e.length === 3) onMsg({ t: 'pobj', g: ['tl', e[0], e[1], e[2]], bulk: 1, o: m.o }); });
@@ -8905,7 +9042,7 @@ function sendPos(force) {   // share my position as a tiny packet, and only when
   }
   lastSend = { x: x, y: y, vx: qx, vy: qy, g: g, d: d, t: t, pr: pr, pv: pv };
   const buf = new ArrayBuffer(13), dv = new DataView(buf);
-  dv.setUint8(0, 0x70); dv.setUint16(1, S.slot & 0xFFFF, true); dv.setUint16(3, clamp((x + P.POFF) >> 1, 0, 65534), true); dv.setUint16(5, d ? 65535 : clamp(y + P.POFF, 0, 65533), true);   // (shifted by P.POFF, so the open air left of and above the map fits)
+  dv.setUint8(0, 0x70); dv.setUint16(1, wireSlot(S.slot) & 0xFFFF, true); dv.setUint16(3, clamp((x + P.POFF) >> 1, 0, 65534), true); dv.setUint16(5, d ? 65535 : clamp(y + P.POFF, 0, 65533), true);   // (shifted by P.POFF, so the open air left of and above the map fits)
   dv.setInt8(7, qx / 5); dv.setInt8(8, qy / 20); dv.setUint16(9, (Math.round(t) & 0x7FFF) | (g ? 0x8000 : 0), true); dv.setUint8(11, pr | (pv && !d ? 2 : 0)); dv.setInt8(12, d ? 0 : clamp(Math.round(rvx / 5), -127, 127));   // (2: that speed is how hard you push something that holds you back, not how fast you move: the server pushes with it, everybody else sees you standing against it)
   ws.send(buf);
 }
@@ -8933,12 +9070,12 @@ setInterval(() => {
     s.owned = true; pl.push([s.uid >>> 0, Math.round(s.ang * 10000) / 10000, Math.round(s.av * 1000) / 1000]);
   }
   if (!out.length && !pl.length && !lost.length) return;
-  for (let i = 0; i < Math.max(1, out.length) && i < 24; i += 12) { const m = { t: 'own', s: S.slot, b: out.slice(i, i + 12) }; if (i === 0 && pl.length) m.pl = pl; if (i === 0 && lost.length) m.lost = lost.slice(0, 12); try { ws.send(JSON.stringify(m)); } catch (e) {} }
+  for (let i = 0; i < Math.max(1, out.length) && i < 24; i += 12) { const m = { t: 'own', s: wireSlot(S.slot), b: out.slice(i, i + 12) }; if (i === 0 && pl.length) m.pl = pl; if (i === 0 && lost.length) m.lost = lost.slice(0, 12); try { ws.send(JSON.stringify(m)); } catch (e) {} }
 }, 50);
 setInterval(() => {   // a spring that threw you was pushed back the other way: the server is told, and pushes it the same way for everybody
   const w = S.world; if (!w || !w.kicks || !w.kicks.length) return;
   const k = w.kicks.splice(0, w.kicks.length); if (!w.follow || !online || !ws || ws.readyState !== 1 || S.mode !== 'play') return;
-  try { ws.send(JSON.stringify({ t: 'kick', s: S.slot, k: k.slice(-4) })); } catch (e) {}
+  try { ws.send(JSON.stringify({ t: 'kick', s: wireSlot(S.slot), k: k.slice(-4) })); } catch (e) {}
 }, 30);
 /* ================= drawing (hand-drawn look, flat colours) ================= */
 const ICE = '#7fdcff', LAVA = '#ff4a1c', INK = 'rgba(22,15,12,.85)';
@@ -10188,7 +10325,7 @@ if (params && params.get('test')) window.__d = { NET, addGate, pk: { buriedAt, p
     AU.ctx = oc; AU.mus = out; AU.song = sg; AU.style = kind; AU.melody = genMelody(sg, MOOD[kind]);
     try { let t = 0.05; for (let b = 0; b < bars; b++) { AU.bar = b; musicBar(t); t += songBeats(sg) * 60 / sg.bpm; } } finally { Object.assign(AU, keep); }
     const buf = await oc.startRendering(); return Array.from(buf.getChannelData(0));
-  }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), copySnap: () => copySnap(), sharesIn: l => sharesIn(l), notice: t => notice(t, ''), dmToast: (p, n, t) => dmToast(p, n, t), chatAdd: (n, t) => chatAdd(n, t, ''), chatLogNow: () => (chatSwitch(), chatLog.map(m => m.txt)), placingId: () => placing && placing.it ? placing.it.id : null, lvFix: () => S.lvFix, joinParty: (h, n) => joinParty(h, n), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, scUse: i => scUse(i), scList: () => scList().map(it => it && it.id), scCan: i => scCan(scList()[i]), canShop: () => canShop(), wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, dvb: () => ({ others: [...others.values()].map(o => ({ name: o.name, dv: o.dv | 0, pub: o.pub, color: o.color, x: o.cx || o.x, y: o.cy || o.y })), devShow: !!settings.devShow, shown: devShown(), devOn: devOn(), pills: devPillN, me: S.b ? { x: S.b.x, y: S.b.y } : null }), openProfile: p => openProfile(p), mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), put: (k, x, y) => placeProp(k, [x, y]), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
+  }, maps: { soloMk: () => soloMk(), curMk: () => curMk(), keys: () => Object.keys(solo2) }, bugLog: () => bugLog, bugWs: o => bugWs(o), netFlags: (l, o) => { lobbyOn = l; online = o; return [lobbyOn, online]; }, tBuy: id => buyItem(SHOP.find(i => i.id === id)), copySnap: () => copySnap(), sharesIn: l => sharesIn(l), notice: t => notice(t, ''), dmToast: (p, n, t) => dmToast(p, n, t), chatAdd: (n, t) => chatAdd(n, t, ''), chatLogNow: () => (chatSwitch(), chatLog.map(m => m.txt)), placingId: () => placing && placing.it ? placing.it.id : null, lvFix: () => S.lvFix, joinParty: (h, n) => joinParty(h, n), tFinish: () => finishPlacing(), myBase: () => myBase(), delTarget: (s) => delTarget(s), delThing: q => delThing(q), ws: () => ws, delThing, botsL: () => bots, localAsk, loadMap, startHosting, stopHosting, liveLinks, pinShown, ghostSpot, terrainSpot, saveWorld, respawn, addMisc, gateSpot: (s, h) => gateSpot(s, h), openPause, openLevels, openProfile, openInvites, askConfirm, openCode, openNameModal, toggleShop, toggleChat, placing: () => placing, finishPlacing, cancelPlacing, scUse: i => scUse(i), scList: () => scList().map(it => it && it.id), scCan: i => scCan(scList()[i]), canShop: () => canShop(), wallet, saveWallet, purseV, SHOP, buyItem, toggleShop, lks: () => lks, dvb: () => ({ others: [...others.values()].map(o => ({ name: o.name, dv: o.dv | 0, pub: o.pub, color: o.color, x: o.cx || o.x, y: o.cy || o.y })), devShow: !!settings.devShow, shown: devShown(), devOn: devOn(), pills: devPillN, me: S.b ? { x: S.b.x, y: S.b.y } : null }), openProfile: p => openProfile(p), mutes: () => mutes, found: a => { lpFound = a; }, lpRender, S, settings, bots, others, P, fx, tin, inp, room: () => room, sfx, SFX, AU, auWake, MUSIC_INFO, showWorldPop, hudTick, drawMinimap, dayPhase, toggleMmBig, party: () => party, solo2: () => solo2, online: () => online, bld: { buy: id => buyItem(SHOP.find(q => q.id === id)), put: (k, x, y) => placeProp(k, [x, y]), fin: () => finishPlacing(), cancel: () => cancelPlacing(true), placing: () => !!placing, ok: () => placing ? { ok: placing.ok, why: placing.bwhy || '' } : null, count: id => ownCount(SHOP.find(q => q.id === id)), lim: id => atLimit(SHOP.find(q => q.id === id)), tally: () => ownTally(), tag: () => myTag(), book: () => bookOut(), n: () => [S.bought.length, S.boughtGates.length, S.boughtMisc.length, S.boughtCps.length, S.dels.length] }, gfxWipe: () => { sprites.forEach(s => { s.width = s.width; }); return sprites.size; }, gfxN: () => sprites.size, oth: () => [...others.values()].map(o => ({ x: Math.round(o.cx || 0), y: Math.round(o.cy || 0), n: o.name, seen: !!o.seen, dead: !!o.dead })), meB: () => ({ x: Math.round(S.b.x), y: Math.round(S.b.y), dead: S.dead, away: S.away, spawnT: S.spawnT, mode: S.mode, gate: !document.getElementById("netGate").classList.contains("hide"), paused }) };
 setNet(settings.mp ? 'offline' : 'solo');
 nameUI(); setInterval(nameUI, 20000);
 if ((resumeAfterUpdate() || (params && params.get('test') && settings.autoEnter)) && settings.name) enterGame(true); else showHome();

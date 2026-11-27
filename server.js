@@ -57,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 234;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 235;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -266,7 +266,7 @@ function quietNow(q) {   // is it within their quiet hours, where they are?
   if (m === undefined) { const d = new Date(Date.now() - q.off * 60000); m = d.getUTCHours() * 60 + d.getUTCMinutes(); }   // (no time zone name: by the clock offset the device gave)
   return q.a < q.b ? m >= q.a && m < q.b : m >= q.a || m < q.b;   // (a stretch over midnight, like 22:00 to 07:00, too)
 }
-function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map, 'e' nobody playing (dev mode). Only to devices that are not connected right now.
+function pushTo(pub, kind, n, tag, from) {   // kind: 'f' friends online, 'r' friend requests, 'i' invites, 'm' new map, 'e' nobody playing (dev mode), 's' a map shared with you, 'j' a friend asks to join your game, 'b' a bug you reported is fixed, 'g' a gift, 'x' a new bug report (devs). Only to devices that are not connected right now.
   const sub = pushSubs.get(pub), here = byPub.get(pub); if (!sub || !(kind === 'd' ? sub.d !== 0 : sub[kind]) || (live(here) && !here.hidden) || (from && kind !== 'd' && sub.mu && sub.mu.indexOf(from) >= 0) || (from && kind === 'd' && sub.mm && sub.mm.indexOf(from) >= 0) || quietNow(sub.q)) return;
   const k = pub + tag, t = Date.now(), gap = kind === 'f' ? 20 * 60000 : kind === 'm' ? 60 * 60000 : kind === 'd' ? 60000 : kind === 'e' ? 0 : 30000;   // ('e', nobody playing: its own rule decides, once each time everyone has left) if (t - (pushLast.get(k) || 0) < gap) return; pushLast.set(k, t);
   if (pushLast.size > 4000) { for (const [kk, v] of pushLast) if (t - v > 3600000) pushLast.delete(kk); }
@@ -315,9 +315,11 @@ function saveLinks(sync) {
   if (knownDirty && (sync || Date.now() - linksSavedAt > 5 * 60000)) linksDirty = true;
   if (!linksDirty) return; linksDirty = false; knownDirty = false; linksSavedAt = Date.now();
   // keep only what is needed: people not seen for 30 days (and not tied to a friend link or a waiting request) are forgotten
-  { const old = Date.now() - STALE_MS, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); }); news.forEach((v, k) => { need.add(k); v.forEach(x => need.add(x.p)); });
-    known.forEach((v, k) => { if ((v.last < old || (!v.played && v.last < Date.now() - DAY)) && !need.has(k) && !byPub.has(k)) { known.delete(k); pushSubs.delete(k); blocks.delete(k); gone.delete(k); claimsOf.delete(k); } }); }   // (and what was kept for them goes with them: their notifications, their block list)   // (not seen for a month: forgotten, unless somebody has them as a friend or is waiting on a request with them. Their friends keep them)   // (everybody who has really played is kept for good; somebody who only opened the page for a moment is forgotten after a day)
-  if (known.size > 50000) { const need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); [...known.entries()].filter(e => !need.has(e[0]) && !byPub.has(e[0])).sort((a, b) => a[1].last - b[1].last).slice(0, known.size - 50000).forEach(e => known.delete(e[0])); }   // (a safety ceiling that never drops anybody's friend)
+  // (v235: everybody who has played or picked a name is remembered for a year after they were last here; somebody who only opened the page, for 30 days. Nobody that anybody has as a friend, or has a request waiting with, is ever forgotten)
+  { const old = Date.now() - STALE_MS, yr = Date.now() - KEEP_MS, need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); pend.forEach((v, k) => { const p2 = k.split('>'); need.add(p2[0]); need.add(p2[1]); }); news.forEach((v, k) => { need.add(k); v.forEach(x => need.add(x.p)); });
+    known.forEach((v, k) => { if (((v.played || v.name) ? v.last < yr : v.last < old) && !need.has(k) && !byPub.has(k)) { known.delete(k); pushSubs.delete(k); blocks.delete(k); gone.delete(k); claimsOf.delete(k); } }); }   // (and what was kept for them goes with them: their notifications, their block list)   // (not seen for a month: forgotten, unless somebody has them as a friend or is waiting on a request with them. Their friends keep them)   // (everybody who has really played is kept for good; somebody who only opened the page for a moment is forgotten after a day)
+  { let room = KNOWN_MAX; try { if (fs.statfsSync) { const st = fs.statfsSync(path.dirname(LINKS_FILE)); if (st.bavail * st.bsize < 150e6) room = Math.max(1000, Math.floor(known.size * 0.9)); } } catch (e) {}   // (out of room: the disk nearly full, or more players than the ceiling. Then the ones gone longest go first, never anybody's friend)
+  if (known.size > room) { const need = new Set(); links.forEach((v, k) => { if (v.size) { need.add(k); v.forEach(x => need.add(x)); } }); [...known.entries()].filter(e => !need.has(e[0]) && !byPub.has(e[0])).sort((a, b) => a[1].last - b[1].last).slice(0, known.size - room).forEach(e => known.delete(e[0])); } }   // (a safety ceiling that never drops anybody's friend)
   const o = { links: {}, gone: {}, known: {}, pend: [...pend.entries()].map(e => [e[0], e[1].t]), news: [...news.entries()].filter(e => e[1].length), vapid: vapid ? { pub: vapid.pub, priv: vapid.priv } : undefined, push: Object.fromEntries(pushSubs) };
   o.blocks = {}; blocks.forEach((v, k) => { if (v.size) o.blocks[k] = [...v]; });
   o.pairs = {}; pairT.forEach((v, k) => { const [a, b] = k.split('|'); if ((links.get(a) && links.get(a).has(b)) || v.m > Date.now() - STALE_MS) o.pairs[k] = v; });   // (kept while they are friends)
@@ -352,24 +354,37 @@ setInterval(saveShares, 20000);
 function dropShares(a, b) { for (const [id, v] of shares) if ((v.from === a && v.to === b) || (v.from === b && v.to === a)) { shares.delete(id); sharesDirty = true; } }
 const shareMeta = v => ({ id: v.id, from: v.from, name: (byPub.get(v.from) || {}).name || v.fromName || '', idx: v.idx, n: v.n, t: v.t, exp: v.t + SHARE_TTL });
 /* ---------- messages between friends: a friend who is not on gets them the next time they come on (kept until then, however long that is; at most 50 waiting from each friend) ---------- */
+/* (v235) messages between players are kept encrypted on the server's disk (AES-256-GCM): the waiting ones and the history. The key is in its own file beside
+   them (chatkey.json, only the server may read it), or comes from CHAT_KEY (64 hex characters). On their way, messages go over https/wss like everything else. */
+const CHATKEY_FILE = process.env.CHATKEY_FILE || path.join(path.dirname(LINKS_FILE), 'chatkey.json');
+const chatKey = (() => { const ev = String(process.env.CHAT_KEY || '').trim(); if (/^[0-9a-f]{64}$/i.test(ev)) return Buffer.from(ev, 'hex');
+  try { const o = JSON.parse(fs.readFileSync(CHATKEY_FILE, 'utf8')); if (o && /^[0-9a-f]{64}$/.test(o.k)) return Buffer.from(o.k, 'hex'); } catch (e) {}
+  const k = crypto.randomBytes(32); try { fs.mkdirSync(path.dirname(CHATKEY_FILE), { recursive: true }); fs.writeFileSync(CHATKEY_FILE, JSON.stringify({ k: k.toString('hex') }), { mode: 0o600 }); } catch (e) { console.log('could not keep the chat key: ' + e.message); } return k; })();
+const sealJ = s => { const iv = crypto.randomBytes(12), c = crypto.createCipheriv('aes-256-gcm', chatKey, iv), d = Buffer.concat([c.update(s, 'utf8'), c.final()]); return JSON.stringify({ enc: 1, iv: iv.toString('base64'), tag: c.getAuthTag().toString('base64'), d: d.toString('base64') }); };
+function openJ(file) {   // a saved file, encrypted or (from before) not. One that cannot be opened is set aside, never written over
+  let raw; try { raw = fs.readFileSync(file, 'utf8'); } catch (e) { return { o: null, plain: false }; }
+  const o = JSON.parse(raw); if (!o || o.enc !== 1) return { o, plain: true };
+  try { const dc = crypto.createDecipheriv('aes-256-gcm', chatKey, Buffer.from(o.iv, 'base64')); dc.setAuthTag(Buffer.from(o.tag, 'base64')); return { o: JSON.parse(Buffer.concat([dc.update(Buffer.from(o.d, 'base64')), dc.final()]).toString('utf8')), plain: false }; }
+  catch (e) { const keep = file + '.locked-' + Date.now(); try { fs.renameSync(file, keep); } catch (x) {} console.log('could not open ' + path.basename(file) + ' with this chat key: kept as ' + path.basename(keep)); return { o: null, plain: false }; }
+}
 const DM_FILE = process.env.DM_FILE || path.join(path.dirname(LINKS_FILE), 'dms.json');
 const DM_TTL = Infinity, DM_PER = 50;
 const dmBox = new Map(); let dmDirty = false;
-try { const o = JSON.parse(fs.readFileSync(DM_FILE, 'utf8')); for (const k in (o && o.box) || {}) if (PUB.test(k) && Array.isArray(o.box[k])) dmBox.set(k, o.box[k].filter(x => x && PUB.test(x.f || '') && typeof x.s === 'string' && Date.now() - x.at < DM_TTL)); console.log('Restored waiting messages for ' + dmBox.size + ' players'); } catch (e) {}
+try { const J = openJ(DM_FILE), o = J.o; if (o && J.plain) dmDirty = true; for (const k in (o && o.box) || {}) if (PUB.test(k) && Array.isArray(o.box[k])) dmBox.set(k, o.box[k].filter(x => x && PUB.test(x.f || '') && typeof x.s === 'string' && Date.now() - x.at < DM_TTL)); console.log('Restored waiting messages for ' + dmBox.size + ' players'); } catch (e) {}
 function saveDms(sync) {
   const now = Date.now(); for (const [k, l] of dmBox) { const n = l.filter(x => now - x.at < DM_TTL); if (n.length !== l.length) { dmDirty = true; if (n.length) dmBox.set(k, n); else dmBox.delete(k); } }
   if (!dmDirty) return; dmDirty = false;
-  try { const s = JSON.stringify({ box: Object.fromEntries(dmBox) }), tmp = DM_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, DM_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, DM_FILE, () => {}); }); } catch (e) {}
+  try { const s = sealJ(JSON.stringify({ box: Object.fromEntries(dmBox) })), tmp = DM_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, DM_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, DM_FILE, () => {}); }); } catch (e) {}
 }
 setInterval(saveDms, 15000);
 /* every message between two friends is kept here too (the newest 2000 of each pair), so each device can catch up on anything it missed:
    a phone that was asleep, the app and the browser, a new device */
 const DMH_FILE = process.env.DMH_FILE || path.join(path.dirname(LINKS_FILE), 'dmhist.json'), DMH_KEEP = 2000;
 const dmHist = new Map(); let dmhDirty = false;
-try { const o = JSON.parse(fs.readFileSync(DMH_FILE, 'utf8')); for (const k in (o && o.h) || {}) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k) && Array.isArray(o.h[k])) dmHist.set(k, o.h[k].filter(x => x && PUB.test(x.f || '') && typeof x.s === 'string').slice(-DMH_KEEP)); console.log('Restored chats between ' + dmHist.size + ' pairs of friends'); } catch (e) {}
+try { const J = openJ(DMH_FILE), o = J.o; if (o && J.plain) dmhDirty = true; for (const k in (o && o.h) || {}) if (/^[0-9a-f]{16}\|[0-9a-f]{16}$/.test(k) && Array.isArray(o.h[k])) dmHist.set(k, o.h[k].filter(x => x && PUB.test(x.f || '') && typeof x.s === 'string').slice(-DMH_KEEP)); console.log('Restored chats between ' + dmHist.size + ' pairs of friends'); } catch (e) {}
 function saveDmh(sync) {
   if (!dmhDirty) return; dmhDirty = false;
-  try { const s = JSON.stringify({ h: Object.fromEntries(dmHist) }), tmp = DMH_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, DMH_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, DMH_FILE, () => {}); }); } catch (e) {}
+  try { const s = sealJ(JSON.stringify({ h: Object.fromEntries(dmHist) })), tmp = DMH_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, DMH_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, DMH_FILE, () => {}); }); } catch (e) {}
 }
 setInterval(saveDmh, 10000);
 const pairKey = (a, b) => a < b ? a + '|' + b : b + '|' + a;
@@ -411,6 +426,7 @@ function sendDmBox(p) {   // what friends wrote while you were away
 }
 function sendShares(p) { const now = Date.now(), list = [], cl = claimsOf.get(p.pub) || new Set(); for (const v of shares.values()) if (v.to === p.pub && now - v.t <= SHARE_TTL && !blocked(v.from, v.to) && (linkSet(p.pub).has(v.from) || cl.has(v.from))) list.push(shareMeta(v)); if (list.length) send(p, { t: 'shr', list });
   const rl = shRes.get(p.pub); if (rl && rl.length) { shRes.delete(p.pub); sharesDirty = true; for (const r of rl) send(p, { t: 'shres', pub: r.pub, name: r.name, idx: r.idx, ok: r.ok, late: 1 }); } }   // (and what happened to the maps you shared while you were away)   // (only from somebody you have as a friend too)
+const KEEP_MS = 365 * 86400000, KNOWN_MAX = +process.env.KNOWN_MAX || 250000;   // (v235: players are remembered for a year, up to this many)
 const STALE_MS = 30 * 86400000;   // everybody who has played in the last 30 days is listed; anybody gone longer (and not somebody's friend or in a waiting request) is quietly forgotten
 const live = q => !!(q && (q.room || q.lobby));   // connected: playing in a world, or just sitting on the main menu
 function cleanShare(o) { const r = {}; for (const k in SHARE_DEF) r[k] = o && o[k] === 0 && (k === 'fr' || k === 'since') ? 0 : 1; return r; }   // (only how many friends you have and when you started can be kept private; the rest is always shown)
@@ -511,7 +527,7 @@ function moveOut(req, res) {
     try { await fetch(to + '/version', { signal: AbortSignal.timeout(10000), cache: 'no-store' }); }   // (any answer at all: its address and certificate work, so players sent there can reach it)
     catch (e) { return out(502, { error: 'Nothing answers at ' + to + ' yet. Is its DNS record set, and has it got its certificate?' }); }
     saveAll();
-    const files = {}; for (const [n, f] of [['links.json', LINKS_FILE], ['stats.json', STATS_FILE], ['shares.json', SHARE_FILE], ['dms.json', DM_FILE], ['dmhist.json', DMH_FILE], ['gifts.json', GIFT_FILE], ['world.json', WORLD_FILE], ['mods.json', MODS_FILE]]) { try { files[n] = fs.readFileSync(f, 'utf8'); } catch (e) {} }
+    const files = {}; for (const [n, f] of [['links.json', LINKS_FILE], ['stats.json', STATS_FILE], ['shares.json', SHARE_FILE], ['dms.json', DM_FILE], ['dmhist.json', DMH_FILE], ['gifts.json', GIFT_FILE], ['world.json', WORLD_FILE], ['mods.json', MODS_FILE], ['chatkey.json', CHATKEY_FILE]]) { try { files[n] = fs.readFileSync(f, 'utf8'); } catch (e) {} }
     out(200, { v: GAME_V, at: Date.now(), files, players: known.size });
     if (m.dry) { console.log('move: everything was copied to ' + to + ' (a trial: players stay here)'); return; }
     movedTo = to; try { fs.writeFileSync(MOVE_FILE, JSON.stringify({ to, at: Date.now() })); } catch (e) {}
@@ -1141,6 +1157,7 @@ const lastIp = new Map();   // pub -> the network they last came from (only whil
 const ALLP = { m: 1, b: 1, boot: 1, ban: 1, lock: 1, bugv: 1, buge: 1 };
 function setRole(p) {   // owner (proved the key on this connection), dev (on the team), or nobody
   p.role = p.keyOk ? 'owner' : p.pub && mods.devs[p.pub] ? 'dev' : '';
+  if (p.role === 'owner' && p.pub && !(mods.owns && mods.owns[p.pub])) { (mods.owns = mods.owns || {})[p.pub] = Date.now(); modsDirty = true; }   // (v235: who the owners are, so a new bug report can reach them when they are away)
   p.perms = p.role === 'owner' ? ALLP : p.role === 'dev' ? mods.devs[p.pub].p : {};
   p.admin = !!p.role;   // (staff: let in when the game is closed, never banned, booted or changed)
   dvSync(p);
@@ -1186,7 +1203,10 @@ function admList(a) {   // every player now, the ones seen in the last three day
   bans.sort((x, y) => y.at - x.at);
   const devs = []; for (const k in mods.devs) { const d = mods.devs[k], kn = known.get(k) || {}, q = byPub.get(k), e = look(k, kn); e.name = (live(q) && q.name) || kn.name || d.name || ''; e.p = d.p; e.on = live(q) ? 1 : 0; e.last = kn.last; devs.push(e); }
   devs.sort((x, y) => (x.name || '').localeCompare(y.name || ''));
-  const out = { t: 'admlist', on, recent, bans, devs, lock: mods.lock, lockAt: mods.lockAt };
+  const friends = [], onBy = new Map(on.map(e => [e.pub, e]));   // (v235: the dev's own friends, online or not)
+  for (const k of fr) { if (k === a.pub) continue; const o = onBy.get(k); if (o) { friends.push(o); continue; } const kn = known.get(k) || {}; const e = look(k, kn); e.on = 0; e.last = kn.last || 0; friends.push(e); }
+  friends.sort((x, y) => ((y.on !== 0) - (x.on !== 0)) || ((y.last || 0) - (x.last || 0)));
+  const out = { t: 'admlist', on, recent, bans, devs, friends, lock: mods.lock, lockAt: mods.lockAt };
   if (a.role === 'owner') out.snap = mods;   // (only owners keep a copy: it has network addresses in it)
   return out;
 }
@@ -1225,7 +1245,7 @@ function admMsg(p, m, ip) {
   const q = byPub.get(pub), on = live(q), k = known.get(pub), qStaff = (on && q.role) || mods.devs[pub] ? (on && q.role === 'owner' ? 'owner' : 'dev') : '';
   if (m.t === 'admp') {   // one player: what there is to know, and their money from their own device
     const b = mods.bans[pub], who = on ? q.ip : lastIp.get(pub), net = can(p, 'ban') && on && q.ip && !privIp(q.ip) ? allConns().filter(x => x !== q && x.ip === q.ip && live(x)).length : 0;
-    send(p, { t: 'admp', pub, on: on ? 1 : 0, role: qStaff, me: q === p ? 1 : 0, name: (on ? q.name : k && k.name) || (b && b.name) || (mods.devs[pub] && mods.devs[pub].name) || '', last: k && k.last, first: k && k.first, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(b) ? { until: b.until, ip: b.ip ? 1 : 0 } : null, net, ipOk: can(p, 'ban') && who && !privIp(who) ? 1 : 0, pend: can(p, 'm') ? mods.pend[pub] || null : null, dev: mods.devs[pub] ? { p: mods.devs[pub].p } : null, pk: perkOf(pub), mw: can(p, 'm') || can(p, 'b') ? walOf(pub) : null, unch: can(p, 'm') || can(p, 'b') ? mods.unch[pub] || null : null });   // (mw: their money as their device last said it)
+    send(p, { t: 'admp', pub, on: on ? 1 : 0, role: qStaff, me: q === p ? 1 : 0, bf: bugFrz[pub] ? 1 : 0, name: (on ? q.name : k && k.name) || (b && b.name) || (mods.devs[pub] && mods.devs[pub].name) || '', last: k && k.last, first: k && k.first, nb: mods.nob[pub] ? 1 : 0, nc: mods.noc[pub] ? 1 : 0, ban: banLive(b) ? { until: b.until, ip: b.ip ? 1 : 0 } : null, net, ipOk: can(p, 'ban') && who && !privIp(who) ? 1 : 0, pend: can(p, 'm') ? mods.pend[pub] || null : null, dev: mods.devs[pub] ? { p: mods.devs[pub].p } : null, pk: perkOf(pub), mw: can(p, 'm') || can(p, 'b') ? walOf(pub) : null, unch: can(p, 'm') || can(p, 'b') ? mods.unch[pub] || null : null });   // (mw: their money as their device last said it)
     if (on && (can(p, 'm') || can(p, 'b')) && (q === p || !qStaff || (p.role === 'owner' && qStaff !== 'owner'))) { q.walAsk = { by: p.id, at: now }; send(q, { t: 'mwal' }); }
     return;
   }
@@ -1494,7 +1514,7 @@ wss.on('connection', (ws, req) => {
         const id = crypto.randomBytes(8).toString('hex'), v = { id, from: p.pub, fromName: p.name || '', to: t, idx, n: nThings, data: str, t: now };
         shares.set(id, v); total += str.length; sent++;
         const q = byPub.get(t); if (live(q) && (linkSet(t).has(p.pub) || (claimsOf.get(t) || new Set()).has(p.pub))) send(q, { t: 'shr', list: [shareMeta(v)] });
-        if (linkSet(t).has(p.pub) || (claimsOf.get(t) || new Set()).has(p.pub)) pushTo(t, 'i', [(p.name || 'A friend') + ' shared a map with you', 'Open ballpit.party to save it'], 'shr-' + p.pub + '-' + idx);
+        if (linkSet(t).has(p.pub) || (claimsOf.get(t) || new Set()).has(p.pub)) pushTo(t, 's', [(p.name || 'A friend') + ' shared a map with you', 'Open ballpit.party to save it'], 'shr-' + p.pub + '-' + idx);
       }
       sharesDirty = true; saveShares();
       send(p, { t: 'shsent', n: sent, idx });
@@ -1508,7 +1528,7 @@ wss.on('connection', (ws, req) => {
       shares.delete(v.id); sharesDirty = true; saveShares();
       if (!blocked(v.from, v.to)) shTell(v.from, { pub: p.pub, name: p.name || '', idx: v.idx, ok: m.ok ? 1 : 0 });
     } else if (m.t === 'bug') {   // (v234) a bug report
-      if (!p.pub) return; const now = Date.now();
+      if (!p.pub) { send(p, { t: 'bugno', why: 'who' }); return; } const now = Date.now();
       if (bugFrz[p.pub]) { send(p, { t: 'bugno', why: 'frozen' }); return; }
       if (now - (p.lastBug || 0) < 20000) { send(p, { t: 'bugno', why: 'slow' }); return; }
       const day = bugs.filter(b => b.pub === p.pub && now - b.at < 86400000).length; if (day >= 10) { send(p, { t: 'bugno', why: 'many' }); return; }
@@ -1517,18 +1537,21 @@ wss.on('connection', (ws, req) => {
       p.lastBug = now; const b = { id: now.toString(36) + '-' + (++bugSeq).toString(36) + '-' + crypto.randomBytes(3).toString('hex'), pub: p.pub, name: String(p.name || '').slice(0, 24), txt, at: now, st: 0, inf };
       bugs.push(b); if (bugs.length > BUG_MAX) bugs.splice(0, bugs.length - BUG_MAX); bugDirty = true;
       send(p, { t: 'bugok', b: bugOwn(b) });
+      { const to = new Set(Object.keys(mods.owns || {})); for (const k in mods.devs) { const d = mods.devs[k]; if (d && d.p && (d.p.bugv || d.p.buge)) to.add(k); }   // (v235: the owners and every dev who may see reports hear about a new one: in the game at once, and as a notification when they are away, if they asked for it)
+        const short = txt.length > 90 ? txt.slice(0, 87) + '…' : txt, nm = b.name || 'Someone';
+        for (const k of to) { if (k === p.pub) continue; const q = byPub.get(k); if (live(q) && (can(q, 'bugv') || can(q, 'buge'))) send(q, { t: 'bugnew', name: nm, txt: short, open: bugs.filter(x => !x.st).length }); pushTo(k, 'x', [nm + ' sent a bug report', short], 'bugnew-' + b.id); } }
     } else if (m.t === 'bugmine') {   // your own reports, newest first
       if (!p.pub) return; send(p, { t: 'bugmine', list: bugs.filter(b => b.pub === p.pub).slice(-50).reverse().map(bugOwn), frz: bugFrz[p.pub] ? 1 : 0 });
     } else if (m.t === 'buglog') {   // a dev with the right: the reports
       if (!(can(p, 'bugv') || can(p, 'buge'))) { send(p, { t: 'admok', what: 'noperm' }); return; }
       const f = m.f === 'done' ? 1 : m.f === 'all' ? -1 : 0, L = bugs.filter(b => f < 0 || (b.st | 0) === f).slice(-400).reverse();
-      send(p, { t: 'buglog', f: m.f === 'done' || m.f === 'all' ? m.f : 'open', list: L.map(bugDev), open: bugs.filter(b => !b.st).length, edit: can(p, 'buge') ? 1 : 0 });
+      send(p, { t: 'buglog', f: m.f === 'done' || m.f === 'all' ? m.f : 'open', list: L.map(b => Object.assign(bugDev(b), b.pub === p.pub ? { mine: 1 } : {})), open: bugs.filter(b => !b.st).length, edit: can(p, 'buge') ? 1 : 0 });
     } else if (m.t === 'bugset') {   // a dev with the right: done (telling the sender or not) or not done
       if (!can(p, 'buge')) { send(p, { t: 'admok', what: 'noperm' }); return; }
       const b = bugs.find(x => x.id === m.id); if (!b) return;
-      if (m.done) { b.st = 1; b.doneAt = Date.now(); b.by = String(p.name || '').slice(0, 24); b.tell = m.tell ? 1 : 0; b.told = 0; } else { b.st = 0; b.doneAt = 0; b.by = ''; b.tell = 0; b.told = 0; }
-      bugDirty = true; send(p, { t: 'bugset', b: bugDev(b), open: bugs.filter(x => !x.st).length });
-      if (b.st && b.tell) { const q = byPub.get(b.pub); if (live(q)) bugTellFixed(q); }
+      if (m.done) { b.st = 1; b.doneAt = Date.now(); b.by = String(p.name || '').slice(0, 24); b.tell = m.tell && b.pub !== p.pub ? 1 : 0; b.told = 0; } else { b.st = 0; b.doneAt = 0; b.by = ''; b.tell = 0; b.told = 0; }   // (v235: never told about a fix they marked done themselves)
+      bugDirty = true; send(p, { t: 'bugset', b: Object.assign(bugDev(b), b.pub === p.pub ? { mine: 1 } : {}), open: bugs.filter(x => !x.st).length });
+      if (b.st && b.tell) { const q = byPub.get(b.pub); if (live(q)) bugTellFixed(q); pushTo(b.pub, 'b', ['A bug you reported is fixed', b.txt.length > 90 ? b.txt.slice(0, 87) + '…' : b.txt], 'bugfix-' + b.id); }
     } else if (m.t === 'bugdel') {   // (v234) a dev with the right: delete a report outright
       if (!can(p, 'buge')) { send(p, { t: 'admok', what: 'noperm' }); return; }
       const i = bugs.findIndex(x => x.id === m.id); if (i < 0) return; bugs.splice(i, 1); bugDirty = true; send(p, { t: 'bugdel', id: m.id, open: bugs.filter(x => !x.st).length });
@@ -1540,9 +1563,9 @@ wss.on('connection', (ws, req) => {
       if (!p.pub || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to) || blocked(p.pub, m.to)) return;
       const q = byPub.get(m.to), hr = rooms.get(privKey(m.to));
       if (live(q) && hr && hr.priv) {   // (v234: their own private game, even while they are still getting it ready in the menus: they are asked "let them in?")
-        (hr.priv.asks || (hr.priv.asks = new Map())).set(p.pub, now); send(q, { t: 'ask', pub: p.pub, name: p.name, own: 1 }); send(p, { t: 'asksent', pub: m.to }); return; }
+        (hr.priv.asks || (hr.priv.asks = new Map())).set(p.pub, now); send(q, { t: 'ask', pub: p.pub, name: p.name, own: 1 }); send(p, { t: 'asksent', pub: m.to }); pushTo(m.to, 'j', [(p.name || 'A friend') + ' wants to join your game', 'Open ballpit.party to let them in'], 'ask-' + p.pub, p.pub); return; }
       if (!live(q) || !q.room || !q.room.priv) { send(p, { t: 'askno', pub: m.to }); return; }
-      send(q, { t: 'ask', pub: p.pub, name: p.name, own: q.room.priv.owner === q.id ? 1 : 0 }); send(p, { t: 'asksent', pub: m.to });
+      send(q, { t: 'ask', pub: p.pub, name: p.name, own: q.room.priv.owner === q.id ? 1 : 0 }); send(p, { t: 'asksent', pub: m.to }); pushTo(m.to, 'j', [(p.name || 'A friend') + ' wants to join your game', 'Open ballpit.party to let them in'], 'ask-' + p.pub, p.pub);
     } else if (m.t === 'askans') {   // (v234) the one who made the game answers a friend who asked to join: let them in, or not
       const hr = rooms.get(privKey(p.pub)); if (!p.pub || !hr || !hr.priv || typeof m.to !== 'string' || !PUB.test(m.to) || !hr.priv.asks || !hr.priv.asks.has(m.to)) return;
       hr.priv.asks.delete(m.to); const q = byPub.get(m.to); if (!live(q) || blocked(p.pub, m.to)) return;
@@ -1818,7 +1841,7 @@ wss.on('connection', (ws, req) => {
       const k1 = unb64u(m.sub.keys.p256dh || ''), k2 = unb64u(m.sub.keys.auth || ''); if (k1.length !== 65 || k1[0] !== 4 || k2.length !== 16) return;
       if (!pushSubs.has(p.pub) && pushSubs.size >= 8000) return;
       const pr = m.prefs && typeof m.prefs === 'object' ? m.prefs : {};
-      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, e: pr.e ? 1 : 0, d: pr.d === 0 ? 0 : 1, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], mm: Array.isArray(pr.mm) ? pr.mm.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(pr.q), t: Date.now() };
+      const ent = { ep: m.sub.endpoint, p: b64u(k1), a: b64u(k2), f: pr.f ? 1 : 0, r: pr.r ? 1 : 0, i: pr.i ? 1 : 0, m: pr.m ? 1 : 0, e: pr.e ? 1 : 0, d: pr.d === 0 ? 0 : 1, s: pr.s === undefined ? (pr.i ? 1 : 0) : (pr.s ? 1 : 0), j: pr.j === 0 ? 0 : 1, b: pr.b === 0 ? 0 : 1, g: pr.g === 0 ? 0 : 1, x: pr.x ? 1 : 0, mu: Array.isArray(pr.mu) ? pr.mu.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], mm: Array.isArray(pr.mm) ? pr.mm.filter(x => typeof x === 'string' && PUB.test(x)).slice(0, 500) : [], q: cleanQuiet(pr.q), t: Date.now() };
       pushSubs.set(p.pub, ent); linksDirty = true;
       for (const f of linkSet(p.pub)) { const q = byPub.get(f); if (q && live(q)) send(q, { t: 'fsub', pub: p.pub, s: ent }); }   // (your friends' devices keep where to reach yours: if this server ever forgets, they tell it again)
       send(p, { t: 'fsubs', l: [...linkSet(p.pub)].filter(f => pushSubs.has(f)).slice(0, 64).map(f => [f, pushSubs.get(f)]) });
@@ -1872,7 +1895,7 @@ wss.on('connection', (ws, req) => {
       if (!r || !addOk(p) || !q || q === p || !(c + g) || (typeof m.toPub === 'string' && m.toPub && q.pub !== m.toPub) || (p.pub && q.pub && blocked(p.pub, q.pub))) { send(p, { t: 'giftno', gid, c, g }); return; }   // (not there any more: the giver gets it all back)
       const rec = { gid: gid || dmNewId(), n: p.name || '', c, g, w: r.priv ? 'v' : 'p', idx: r.priv ? (r.priv.idx | 0) : -1, at: Date.now() };
       if (q.pub) { const l = giftBox.get(q.pub) || []; l.push(rec); giftBox.set(q.pub, l.slice(-200)); giftDirty = true; }   // (kept until their device says it has them)
-      send(q, { t: 'gift', from: p.id, name: p.name, c, g, gid: rec.gid, w: rec.w, idx: rec.idx });
+      send(q, { t: 'gift', from: p.id, name: p.name, c, g, gid: rec.gid, w: rec.w, idx: rec.idx }); if (q.pub) pushTo(q.pub, 'g', [(p.name || 'Someone') + ' sent you a gift', [c ? c + ' coins' : '', g ? g + ' diamonds' : ''].filter(Boolean).join(' and ')], 'gift-' + p.pub, p.pub);
       if (gid) { seen.push(gid); if (seen.length > 200) seen.shift(); }
       send(p, { t: 'giftok', to: q.id, gid, c, g });
     } else if (m.t === 'giftack') {   // their device has the coins: done

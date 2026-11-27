@@ -23,7 +23,7 @@ const fail = (msg, code) => { console.error('move-in: ' + msg); process.exit(cod
     if (!/^[a-z]+\.json$/.test(n) || typeof s !== 'string') continue;
     try { JSON.parse(s); } catch (e) { console.log('move-in: ' + n + ' was not readable, left out'); continue; }
     const f = n === 'stats.json' ? STATS : n === 'links.json' ? LINKS : path.join(DIR, n), tmp = f + '.tmp';
-    fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(tmp, s); fs.renameSync(tmp, f); names.push(n + ' (' + Math.round(s.length / 1024) + ' KB)');
+    fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(tmp, s, n === 'chatkey.json' ? { mode: 0o600 } : undefined); fs.renameSync(tmp, f);   // (chatkey.json: the key the saved messages are encrypted with; only the server reads it) names.push(n + ' (' + Math.round(s.length / 1024) + ' KB)');
   }
   console.log('move-in: copied from ' + FROM + ' (version ' + j.v + ', ' + (j.players || 0) + ' players on record): ' + names.join(', '));
   console.log(process.env.MOVE_DRY === '1' ? 'move-in: a trial only: players stay on the old server' : 'move-in: the old server now sends every player to ' + TO);
