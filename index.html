@@ -1174,7 +1174,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 235; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 236; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -1444,7 +1444,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <div id="admModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="amTitle"><div class="card nfcard amcard">
   <div class="chead"><button id="amBack" class="btn dmback wback hide" type="button" aria-label="Back" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h3 id="amTitle">Players</h3><button id="amX" class="xbtn" type="button" aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button></div>
   <div id="amListView" class="amview">
-    <div class="amtabs" role="tablist"><button type="button" data-am="on" role="tab">Online<b id="amNOn"></b></button><button type="button" data-am="recent" role="tab">Recent</button><button type="button" data-am="ban" role="tab">Banned<b id="amNBan"></b></button><button type="button" data-am="fr" role="tab">Friends<b id="amNFr"></b></button></div>
+    <div class="amtabs" role="tablist"><button type="button" data-am="on" role="tab">Online<b id="amNOn"></b></button><button type="button" data-am="recent" role="tab">Recent<b id="amNRec"></b></button><button type="button" data-am="ban" role="tab">Banned<b id="amNBan"></b></button><button type="button" data-am="fr" role="tab">Friends<b id="amNFr"></b></button></div>
     <input id="amFind" type="search" placeholder="Find by name or code" aria-label="Find a player" autocomplete="off" spellcheck="false" maxlength="40">
     <div id="amList" class="nflist amlist"></div>
   </div>
@@ -2088,8 +2088,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=235"></script>
-<script src="physics.js?v=235"></script>
+<script src="maps.js?v=236"></script>
+<script src="physics.js?v=236"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -7620,17 +7620,25 @@ const whenTxt = t => { if (t === -1) return 'for good'; const d = new Date(t), f
 const forTxt = ms => { const m = Math.max(1, Math.round(ms / 60000)); return m < 60 ? m + ' min' : m < 1440 ? Math.round(m / 60) + ' h' : Math.round(m / 1440) + ' d'; };
 const admNm = e => censor(e.name || '') || ('Player #' + (e.code || '?'));   // (somebody who never picked a name is shown by their friend code)
 function admWhere(e) {
-  if (e.on === 0 || (!e.w && e.last)) return 'Last played ' + ago(e.last);
+  if (e.on === 0 || (!e.w && e.last)) return e.last ? 'Last played ' + ago(e.last) : 'Not online';
   const w = e.w === 'pub' ? 'In the public world' : e.w === 'priv' ? (e.host ? 'In ' + who(e.host) + '’s private game' : 'In their own private game') : 'On the main menu';
   return w + (e.since ? ' · ' + forTxt(Date.now() - e.since) : '');
 }
 function admTag(cls, ic, title) { const t = el('span', 'amtag ' + cls); t.title = title; t.setAttribute('aria-label', title); t.innerHTML = '<svg class="ic"><use href="#i-' + ic + '"/></svg>'; return t; }
+function admFriends(d) {   // (v235) the same friends as your Friends screen (everyone on it, whatever this device or the server last said), online first, with what the server knows about each
+  const on = new Map((d.on || []).map(e => [e.pub, e])), known = new Map([...(d.recent || []), ...(d.friends || [])].map(e => [e.pub, e])), out = [], seen = new Set();
+  for (const l of lks) { if (!l || !l.pub || isMe(l) || seen.has(l.pub)) continue; seen.add(l.pub); const o = on.get(l.pub);
+    if (o) { out.push(Object.assign({}, o, { fr: 1 })); continue; }
+    const k = known.get(l.pub) || {}; out.push(Object.assign({ pub: l.pub, code: l.code || '', name: l.name || '', color: l.color, color2: l.color2, pat: l.pat | 0 }, k, { fr: 1, on: 0, last: Math.max(+k.last || 0, +l.last || 0) })); }
+  for (const e of d.friends || []) if (!seen.has(e.pub)) { seen.add(e.pub); out.push(e); }
+  return out.sort((x, y) => ((y.on !== 0) - (x.on !== 0)) || ((y.last || 0) - (x.last || 0)));
+}
 function admListRender() {
   document.querySelectorAll('.amtabs [data-am]').forEach(b => { b.classList.toggle('on', b.dataset.am === admTab); b.setAttribute('aria-selected', b.dataset.am === admTab ? 'true' : 'false'); });
-  const d = admData || { on: [], recent: [], bans: [], friends: [] }; d.friends = d.friends || [];
-  $('amNOn').textContent = d.on.length; $('amNBan').textContent = d.bans.length || ''; $('amNFr').textContent = d.friends.length || '';
+  const d = admData || { on: [], recent: [], bans: [], friends: [] }, frs = admFriends(d);
+  $('amNOn').textContent = d.on.length; $('amNRec').textContent = d.recent.length || ''; $('amNBan').textContent = d.bans.length || ''; $('amNFr').textContent = frs.length || '';
   const q = $('amFind').value.trim().toLowerCase().replace(/^#/, '');
-  const src = admTab === 'on' ? d.on : admTab === 'ban' ? d.bans : admTab === 'fr' ? d.friends : d.recent;
+  const src = admTab === 'on' ? d.on : admTab === 'ban' ? d.bans : admTab === 'fr' ? frs : d.recent;
   const list = src.filter(e => !q || (e.name || '').toLowerCase().includes(q) || (e.code || '').toLowerCase().includes(q));
   const box = $('amList'); box.textContent = '';
   for (const e of list) {
