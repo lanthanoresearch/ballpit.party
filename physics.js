@@ -1239,7 +1239,8 @@
     let rest = 0, woke = 0;
     for (const d of w.dyn) {
       if (d.burn > 0 || d.gone) continue;
-      if (d.m0 && d.nap && d.x === d.hx && d.y === d.hy) { rest++; continue; }   // (the map's own toys, still where the map put them, start at rest as they always have)
+      if (d.m0 && d.nap && d.x === d.hx && d.y === d.hy) { rest++; continue; }
+      if (Math.abs(d.vx || 0) > 15 || Math.abs(d.vy || 0) > 15 || Math.abs(d.av || 0) > 0.3) { d.nap = false; d.st = 0; d.sleep = false; d.farT = 0; woke++; continue; }   // (v234: moving when it was saved: it carries on as it was going, never stopped dead)   // (the map's own toys, still where the map put them, start at rest as they always have)
       let clear = true; const e = d.r || Math.max(d.hw, d.hh || d.hw) * 1.42;
       for (const o of find(d.x - e, d.y - e, d.x + e, d.y + e, ovl)) {   // (inside another one by more than a hair: it has to be pushed out, so it is not at rest)
         if (o === d) continue; const f = e + (o.r || Math.max(o.hw, o.hh || o.hw) * 1.42); if (Math.abs(o.x - d.x) > f || Math.abs(o.y - d.y) > f) continue;
@@ -1858,7 +1859,7 @@
     return '';
   }
   const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
-  const api = { VERSION: 233, springKick, setPad, wakeAround, restAll, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 234, springKick, setPad, wakeAround, restAll, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

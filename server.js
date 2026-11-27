@@ -57,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 233;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 234;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -377,6 +377,19 @@ function dmKeep(a, b, x) { const k = pairKey(a, b), l = dmHist.get(k) || []; l.p
 const dmNewId = () => crypto.randomBytes(6).toString('hex');
 const dmSeen = new Map();
 /* coins and diamonds given to someone: kept until their device says it has them (sent again when they come back, or when the game wakes up) */
+/* ---------- bug reports (v234): anyone can send one and see their own; devs with the right see them all, mark them done (telling the sender, or not) or not done, and can stop someone sending more ---------- */
+const BUG_FILE = process.env.BUG_FILE || path.join(path.dirname(LINKS_FILE), 'bugs.json'), BUG_MAX = 5000;
+let bugs = [], bugFrz = {}, bugDirty = false, bugSeq = 0;
+try { const o = JSON.parse(fs.readFileSync(BUG_FILE, 'utf8')); if (o && Array.isArray(o.list)) bugs = o.list.filter(b => b && typeof b.id === 'string' && typeof b.pub === 'string' && typeof b.txt === 'string').slice(-BUG_MAX); if (o && o.frz && typeof o.frz === 'object') bugFrz = o.frz; } catch (e) {}
+function saveBugs(sync) { if (!bugDirty) return; bugDirty = false; try { const s = JSON.stringify({ list: bugs, frz: bugFrz }), tmp = BUG_FILE + '.tmp'; if (sync) { fs.writeFileSync(tmp, s); fs.renameSync(tmp, BUG_FILE); } else fs.writeFile(tmp, s, er => { if (!er) fs.rename(tmp, BUG_FILE, () => {}); }); } catch (e) {} }
+setInterval(saveBugs, 5000);
+const bugClean = s => String(s == null ? '' : s).replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '').trim();
+const bugOwn = b => ({ id: b.id, txt: b.txt, at: b.at, st: b.st | 0, doneAt: b.doneAt || 0 });
+const bugDev = b => ({ id: b.id, pub: b.pub, name: b.name || '', txt: b.txt, at: b.at, st: b.st | 0, doneAt: b.doneAt || 0, by: b.by || '', tell: b.tell ? 1 : 0, told: b.told ? 1 : 0, inf: b.inf || {}, frz: bugFrz[b.pub] ? 1 : 0 });
+function bugTellFixed(p) {   // fixed reports the sender is to hear about: told when they come in (or now, if they are here)
+  if (!p || !p.pub) return; const l = bugs.filter(b => b.pub === p.pub && b.st === 1 && b.tell && !b.told); if (!l.length) return;
+  send(p, { t: 'bugfixed', list: l.map(bugOwn) }); for (const b of l) b.told = 1; bugDirty = true;
+}
 const GIFT_FILE = process.env.GIFT_FILE || path.join(path.dirname(LINKS_FILE), 'gifts.json');
 const giftBox = new Map(), giftSeen = new Map(); let giftDirty = false;
 try { const o = JSON.parse(fs.readFileSync(GIFT_FILE, 'utf8')); for (const k in (o && o.box) || {}) if (PUB.test(k) && Array.isArray(o.box[k])) giftBox.set(k, o.box[k].filter(x => x && typeof x.gid === 'string').slice(-200)); } catch (e) {}
@@ -405,8 +418,12 @@ const peerInfo = (pub, viewer) => {   // what one player is told about another: 
   const k = known.get(pub) || {}, q = byPub.get(pub), sh = shareOf(pub), pr = viewer ? pairT.get(pairK(pub, viewer)) : null, on = live(q);
   return { pub, code: codeOf(pub), name: q ? q.name : (k.name || ''), color: q ? q.color : (k.color || '#cccccc'), color2: q ? q.color2 : (k.color2 || '#ffffff'), pat: q ? q.pat | 0 : (k.pat | 0),
     on: sh.on && on ? 1 : 0, hid: sh.on ? 0 : 1, w: sh.on && q && q.room ? (q.room.priv ? -1 : q.room.id) : 0, last: sh.last ? (on && sh.on ? Date.now() : (k.last || 0)) : 0, b: sh.beat ? k.beat | 0 : -1,
-    fr: sh.fr ? linkSet(pub).size : -1, first: sh.since ? k.first || 0 : 0, fe: k.firstEst ? 1 : 0, since: pr ? pr.s : 0, dm: pr ? pr.m : 0, dv: sh.on && on && dvOf(q) ? 1 : 0 };
+    fr: sh.fr ? linkSet(pub).size : -1, first: sh.since ? k.first || 0 : 0, fe: k.firstEst ? 1 : 0, since: pr ? pr.s : 0, dm: pr ? pr.m : 0, dv: sh.on && on && dvOf(q) ? 1 : 0, pg: sh.on && on ? pgOf(pub) : 0 };
 };
+function pgOf(pub) {   // (v234) the private game this player made, if it is open: [still getting it ready (in the menus): 1 or 0, how many people are in it, which level]
+  const hr = rooms.get(privKey(pub)); if (!hr || !hr.priv) return 0; let n = 0; for (const q of hr.players.values()) if (!q.bot) n++;
+  return [hr.priv.away ? 1 : 0, n, hr.priv.idx | 0];
+}
 function sendMe(p) {   // your own profile as others see it, what you share, and who you have blocked
   if (!p.pub) return; const k = known.get(p.pub) || {};
   send(p, { t: 'me', first: k.first || 0, fr: linkSet(p.pub).size, share: shareOf(p.pub), blocks: [...(blocks.get(p.pub) || [])].map(b => { const i = peerInfo(b); return { pub: b, code: i.code, name: i.name, color: i.color, color2: i.color2, pat: i.pat }; }) });
@@ -686,8 +703,8 @@ function roomWorld(room) {
   (B.dels || []).forEach(q => { try { if (!P.coordDel(q)) P.applyDel(w, q); } catch (e) {} });   // (and what was deleted stays deleted)
   let restored = false;
   if (room.snapDyn && room.snapDyn.length && Array.isArray(room.snapDyn.find(q => q)) && room.snapDyn.find(q => q).length >= 4) {   // (saved by name: each thing finds its own entry)
-    for (const q of room.snapDyn) { if (!q) continue; const d = w.dynBy.get(q[3] >>> 0); if (!d || d.gone) continue; restored = true; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; continue; }   /* (the map's own toys at the start that an older version burned up there come back) */ if (Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } }
-  } else if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && !d.gone && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.nap = true; d.rest = 0; } } }
+    for (const q of room.snapDyn) { if (!q) continue; const d = w.dynBy.get(q[3] >>> 0); if (!d || d.gone) continue; restored = true; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; d.vx = d.vy = 0; continue; }   /* (the map's own toys at the start that an older version burned up there come back) */ if (Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.av = 0; d.nap = true; d.rest = 0; } }
+  } else if (room.snapDyn && room.snapDyn.length === w.dyn.length) { for (let i = 0; i < w.dyn.length; i++) { const q = room.snapDyn[i], d = w.dyn[i]; if (q && !d.gone && Number.isFinite(q[0]) && Number.isFinite(q[1])) { d.x = q[0]; d.y = q[1]; d.rot = q[2] || 0; d.vx = d.vy = 0; d.av = 0; d.nap = true; d.rest = 0; } } }
   if (Array.isArray(room.snapSee)) for (const q of room.snapSee) { const e = Array.isArray(q) && w.see.find(o => o.uid === (q[0] >>> 0)); if (e && Number.isFinite(q[1])) e.ang = q[1]; }
   room.seedOk = !room.priv && !restored && !(room.snapDyn && room.snapDyn.length === w.dyn.length); room.seedBy = null; room.worldAt = Date.now();   // (a world the server has no memory of: the first player who remembers it can tell it where everything was)
   room.snapDyn = undefined; room.snapSee = undefined;
@@ -736,7 +753,7 @@ try {
 } catch (e) {}
 function snapRoom(r) {
   const w = r.world; if (!w) return r.snapDyn !== undefined ? { build: r.build || null, tk: takenList(r), dyn: r.snapDyn, see: r.snapSee } : r.build ? { build: r.build, tk: takenList(r), dyn: [], see: [] } : null;
-  return { build: r.build || null, tk: takenList(r), dyn: w.dyn.map(d => d.burn >= 1e9 ? [0, 0, 0, d.uid >>> 0, 1] : [Math.round(d.x * 10) / 10, Math.round(d.y * 10) / 10, Math.round(d.rot * 1000) / 1000, d.uid >>> 0]), see: w.see.map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]) };   // (each thing by its name, so nothing can ever be put back in another's place; teeter-totters too)
+  return { build: r.build || null, tk: takenList(r), dyn: w.dyn.map(d => d.burn >= 1e9 ? [0, 0, 0, d.uid >>> 0, 1] : [Math.round(d.x * 100) / 100, Math.round(d.y * 100) / 100, Math.round(d.rot * 10000) / 10000, d.uid >>> 0]), see: w.see.map(q => [q.uid >>> 0, Math.round(q.ang * 1000) / 1000]) };   // (each thing by its name, so nothing can ever be put back in another's place; teeter-totters too)
 }
 const wkey = id => (curSlot % maps.count) + ':' + id;   // a public world is remembered by its map and its room, never by when it was played
 const worldStr = new Map();   // each remembered world, already written out as text: only the worlds people are in are written out again
@@ -785,7 +802,7 @@ function roomBots(room, w, dtReal) {
     room.botT = room.fill ? 0.5 + Math.random() * 1.2 : bs.length < 4 ? 0.4 + Math.random() * 0.8 : bs.length < want - 3 ? 1 + Math.random() * 3 : 20 + Math.random() * 40;   // (a world the host said how full to make fills up in a few seconds)
   } else if (bs.length > want && room.botT <= 0) {
     const i = Math.floor(Math.random() * bs.length), bt = bs[i]; bs.splice(i, 1); broadcast(room, { t: 'bl', id: bt.id, say: 1 });
-    room.botT = room.botsOn ? 1 + Math.random() * 2 : 0.3;
+    room.botT = room.botsOn ? (room.fill ? 0.5 + Math.random() * 0.8 : 1 + Math.random() * 2) : 0.3;   // (v234: the host asked for fewer: the extra bots go in a few seconds, not one every 2)
   }
 }
 const roomCtx = room => room.botCtx || (room.botCtx = Object.assign(P.botCtx(), { finKnown: true }));   // (in a private world the finish is on everybody's map)
@@ -1077,7 +1094,7 @@ const ADMIN_KEY = (() => {
 })();
 const MODS_FILE = process.env.MODS_FILE || path.join(path.dirname(LINKS_FILE), 'mods.json');
 const BAN_HOURS = [1, 24, 168, -1];   // (one hour, a day, a week, for good)
-const PERMS = ['m', 'b', 'boot', 'ban', 'lock'];   // money; building and codes; boot; ban; close the game
+const PERMS = ['m', 'b', 'boot', 'ban', 'lock', 'bugv', 'buge'];   // (v234: bugv see the bug reports, buge change them: mark done or not, stop someone sending them)   // money; building and codes; boot; ban; close the game
 let mods = { bans: {}, nob: {}, noc: {}, pend: {}, devs: {}, perk: {}, unch: {}, lock: 0, lockAt: 0 }, modsDirty = false, modsFresh = true;   // modsFresh: nothing was loaded and no owner has changed anything yet (an owner's device may then hand back what it remembers)
 const banLive = b => !!b && (b.until === -1 || b.until > Date.now());
 const CHEATS = ['inf', 'nc', 'mon'];   // the codes a player can have on: inf unlimited coins and diamonds (themaker#1), nc no building limits (unlimitedpower), mon money set by a code (maker, zeros)
@@ -1121,7 +1138,7 @@ function admCheck(key, ip) {   // 'ok', 'bad' (wrong key), or 'wait' (too many w
 }
 setInterval(() => { const t = Date.now(); for (const [k, v] of admFails) if (t - v.at > 15 * 60000) admFails.delete(k); }, 60000).unref();
 const lastIp = new Map();   // pub -> the network they last came from (only while this server runs: for banning a network after they have left)
-const ALLP = { m: 1, b: 1, boot: 1, ban: 1, lock: 1 };
+const ALLP = { m: 1, b: 1, boot: 1, ban: 1, lock: 1, bugv: 1, buge: 1 };
 function setRole(p) {   // owner (proved the key on this connection), dev (on the team), or nobody
   p.role = p.keyOk ? 'owner' : p.pub && mods.devs[p.pub] ? 'dev' : '';
   p.perms = p.role === 'owner' ? ALLP : p.role === 'dev' ? mods.devs[p.pub].p : {};
@@ -1363,7 +1380,7 @@ wss.on('connection', (ws, req) => {
       } else if (!lobby && typeof m.join === 'string' && PUB.test(m.join)) {   // go to a friend's world
         const hr = rooms.get(privKey(m.join));
         if (!hr || !hr.priv) { send(p, { t: 'jno', why: 'gone' }); return; }
-        if (!p.pub || !(hr.priv.invited.has(p.pub) || linkSet(p.pub).has(m.join))) { send(p, { t: 'jno', why: 'nope' }); return; }
+        if (!p.pub || !hr.priv.invited.has(p.pub)) { send(p, { t: 'jno', why: 'nope' }); return; }   // (v234: only with an invitation: asking to join and being let in gives one. Being friends is not enough)
         if (hr.players.size >= PRIV_MAX) { send(p, { t: 'jno', why: 'full' }); return; }
         room = hr; p.room = room; fr = { full: [] };
       } else if (!lobby && Number.isInteger(m.pw) && m.pw > 0 && rooms.get(m.pw) && !rooms.get(m.pw).priv && rooms.get(m.pw).players.size < MAX_PLAYERS) {   // a friend's public world, picked from their profile (if it is full, the usual world instead)
@@ -1410,7 +1427,7 @@ wss.on('connection', (ws, req) => {
           if (cv && cv.has(p.pub) && !blocked(p.pub, v) && linkSet(p.pub).size < MAX_LINKS && linkSet(v).size < MAX_LINKS) addLink(p.pub, v);
         }
         if (removed.length) send(p, { t: 'unl', gone: removed });
-        sendLinks(p);
+        sendLinks(p); try { bugTellFixed(p); } catch (e) {}   // (v234: a report of theirs was fixed, and the dev chose to tell them)
         rooms.forEach(r => { if (r.priv && (r.priv.keep.has(p.pub) || r.priv.once.has(p.pub)) && r !== p.room) { r.priv.once.delete(p.pub); send(p, { t: 'inv', pub: r.priv.hostPub, name: (byPub.get(r.priv.hostPub) || {}).name || '', idx: r.priv.idx }); } });   // an invite that came while you were away (one that was sent as 'ask once' is only shown the first time)
         { const hid = !shareOf(p.pub).on; for (const b of linkSet(p.pub)) { const q = byPub.get(b); if (live(q)) { sendLinks(q); if (!wasOn && !hid) send(q, { t: 'lon', pub: p.pub, name: p.name }); } if (!wasOn && p.name && !hid) pushTo(b, 'f', [p.name + ' is online', 'Jump in and play together'], 'on-' + p.pub, p.pub); } }   // (somebody who keeps their online status to themselves comes and goes quietly)
         sendMe(p);
@@ -1490,12 +1507,49 @@ wss.on('connection', (ws, req) => {
       const v = typeof m.id === 'string' ? shares.get(m.id) : null; if (!v || v.to !== p.pub) return;
       shares.delete(v.id); sharesDirty = true; saveShares();
       if (!blocked(v.from, v.to)) shTell(v.from, { pub: p.pub, name: p.name || '', idx: v.idx, ok: m.ok ? 1 : 0 });
+    } else if (m.t === 'bug') {   // (v234) a bug report
+      if (!p.pub) return; const now = Date.now();
+      if (bugFrz[p.pub]) { send(p, { t: 'bugno', why: 'frozen' }); return; }
+      if (now - (p.lastBug || 0) < 20000) { send(p, { t: 'bugno', why: 'slow' }); return; }
+      const day = bugs.filter(b => b.pub === p.pub && now - b.at < 86400000).length; if (day >= 10) { send(p, { t: 'bugno', why: 'many' }); return; }
+      const txt = bugClean(m.txt).slice(0, 1000); if (txt.length < 4) { send(p, { t: 'bugno', why: 'short' }); return; }
+      const i = m.inf && typeof m.inf === 'object' ? m.inf : {}, inf = { v: GAME_V, cv: Math.max(0, Math.min(99999, i.cv | 0)), dv: bugClean(i.dv).slice(0, 120), sc: bugClean(i.sc).slice(0, 20), md: bugClean(i.md).slice(0, 20), lv: Math.max(-1, Math.min(999, i.lv | 0)) };
+      p.lastBug = now; const b = { id: now.toString(36) + '-' + (++bugSeq).toString(36) + '-' + crypto.randomBytes(3).toString('hex'), pub: p.pub, name: String(p.name || '').slice(0, 24), txt, at: now, st: 0, inf };
+      bugs.push(b); if (bugs.length > BUG_MAX) bugs.splice(0, bugs.length - BUG_MAX); bugDirty = true;
+      send(p, { t: 'bugok', b: bugOwn(b) });
+    } else if (m.t === 'bugmine') {   // your own reports, newest first
+      if (!p.pub) return; send(p, { t: 'bugmine', list: bugs.filter(b => b.pub === p.pub).slice(-50).reverse().map(bugOwn), frz: bugFrz[p.pub] ? 1 : 0 });
+    } else if (m.t === 'buglog') {   // a dev with the right: the reports
+      if (!(can(p, 'bugv') || can(p, 'buge'))) { send(p, { t: 'admok', what: 'noperm' }); return; }
+      const f = m.f === 'done' ? 1 : m.f === 'all' ? -1 : 0, L = bugs.filter(b => f < 0 || (b.st | 0) === f).slice(-400).reverse();
+      send(p, { t: 'buglog', f: m.f === 'done' || m.f === 'all' ? m.f : 'open', list: L.map(bugDev), open: bugs.filter(b => !b.st).length, edit: can(p, 'buge') ? 1 : 0 });
+    } else if (m.t === 'bugset') {   // a dev with the right: done (telling the sender or not) or not done
+      if (!can(p, 'buge')) { send(p, { t: 'admok', what: 'noperm' }); return; }
+      const b = bugs.find(x => x.id === m.id); if (!b) return;
+      if (m.done) { b.st = 1; b.doneAt = Date.now(); b.by = String(p.name || '').slice(0, 24); b.tell = m.tell ? 1 : 0; b.told = 0; } else { b.st = 0; b.doneAt = 0; b.by = ''; b.tell = 0; b.told = 0; }
+      bugDirty = true; send(p, { t: 'bugset', b: bugDev(b), open: bugs.filter(x => !x.st).length });
+      if (b.st && b.tell) { const q = byPub.get(b.pub); if (live(q)) bugTellFixed(q); }
+    } else if (m.t === 'bugdel') {   // (v234) a dev with the right: delete a report outright
+      if (!can(p, 'buge')) { send(p, { t: 'admok', what: 'noperm' }); return; }
+      const i = bugs.findIndex(x => x.id === m.id); if (i < 0) return; bugs.splice(i, 1); bugDirty = true; send(p, { t: 'bugdel', id: m.id, open: bugs.filter(x => !x.st).length });
+    } else if (m.t === 'bugfrz') {   // a dev with the right: stop someone sending reports, or let them again
+      if (!can(p, 'buge') || typeof m.pub !== 'string' || !PUB.test(m.pub)) { send(p, { t: 'admok', what: 'noperm' }); return; }
+      if (m.on) bugFrz[m.pub] = Date.now(); else delete bugFrz[m.pub]; bugDirty = true; send(p, { t: 'bugfrz', pub: m.pub, on: m.on ? 1 : 0 });
     } else if (m.t === 'ask') {   // asking a friend in a private game if you can join them: they get a pop-up (the one who made the game can invite you)
       const now = Date.now(); if (now - (p.lastAsk || 0) < 3000) return; p.lastAsk = now;
       if (!p.pub || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to) || blocked(p.pub, m.to)) return;
-      const q = byPub.get(m.to);
+      const q = byPub.get(m.to), hr = rooms.get(privKey(m.to));
+      if (live(q) && hr && hr.priv) {   // (v234: their own private game, even while they are still getting it ready in the menus: they are asked "let them in?")
+        (hr.priv.asks || (hr.priv.asks = new Map())).set(p.pub, now); send(q, { t: 'ask', pub: p.pub, name: p.name, own: 1 }); send(p, { t: 'asksent', pub: m.to }); return; }
       if (!live(q) || !q.room || !q.room.priv) { send(p, { t: 'askno', pub: m.to }); return; }
       send(q, { t: 'ask', pub: p.pub, name: p.name, own: q.room.priv.owner === q.id ? 1 : 0 }); send(p, { t: 'asksent', pub: m.to });
+    } else if (m.t === 'askans') {   // (v234) the one who made the game answers a friend who asked to join: let them in, or not
+      const hr = rooms.get(privKey(p.pub)); if (!p.pub || !hr || !hr.priv || typeof m.to !== 'string' || !PUB.test(m.to) || !hr.priv.asks || !hr.priv.asks.has(m.to)) return;
+      hr.priv.asks.delete(m.to); const q = byPub.get(m.to); if (!live(q) || blocked(p.pub, m.to)) return;
+      if (m.ok) { hr.priv.invited.add(m.to); send(q, { t: 'askok', pub: p.pub, name: p.name, idx: hr.priv.idx }); }
+      else send(q, { t: 'askno', pub: p.pub, why: 'no', name: p.name });
+    } else if (m.t === 'lkq') {   // (v234) the main menu asks for the friends list again now and then: who has a private game open
+      const now = Date.now(); if (now - (p.lastLkq || 0) < 4000) return; p.lastLkq = now; if (p.pub) sendLinks(p);
     } else if (m.t === 'inv') {   // the host asks a friend to come to their world
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || typeof m.to !== 'string' || !PUB.test(m.to) || !linkSet(p.pub).has(m.to)) return;
       const now = Date.now(); if (now - (p.lastInv || 0) < 700) return; p.lastInv = now;
@@ -1616,7 +1670,8 @@ wss.on('connection', (ws, req) => {
       const r = p.room; if (!r || !r.priv || r.priv.owner !== p.id || Date.now() - (r.priv.at || 0) > 90000 || !Array.isArray(m.d)) return;
       const rows = m.d.slice(0, 500).filter(q => Array.isArray(q) && q.length >= 4 && q.slice(0, 4).every(Number.isFinite));
       const w = roomWorld(r);
-      for (const q of rows) { const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone) continue; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.rot = q[3]; d.burn = 0; } d.vx = d.vy = 0; d.av = 0; d.nap = true; d.rest = 0; d.ver = ++r.verN; }
+      for (const q of rows) { const d = w.dynBy.get(q[0] >>> 0); if (!d || d.gone) continue; if (q[4]) { d.burn = 1e9; d.x = d.y = -99999; } else { d.x = q[1]; d.y = q[2]; d.rot = q[3]; d.burn = 0; } d.vx = d.vy = 0; d.av = 0; d.nap = true; d.rest = 0; d.ver = ++r.verN;
+        if (!q[4] && q.length >= 8 && Number.isFinite(q[5]) && Number.isFinite(q[6]) && Number.isFinite(q[7])) { d.vx = Math.max(-3000, Math.min(3000, q[5])); d.vy = Math.max(-3000, Math.min(3000, q[6])); d.av = Math.max(-60, Math.min(60, q[7])); d.nap = false; d.st = 0; d.sleep = false; } }   // (v234: something that was moving when it was saved carries on, just as it was going)
       if (Array.isArray(m.s)) for (const q of m.s.slice(0, 200)) { if (!Array.isArray(q) || q.length !== 2 || !q.every(Number.isFinite)) continue; const e = w.see.find(o => o.uid === (q[0] >>> 0)); if (e) { e.ang = Math.max(-0.36, Math.min(0.36, q[1])); e.av = 0; } }
       for (const q of r.players.values()) q.dver = null;   // (everyone is told where it all is again)
       if (m.last || m.d.length < 500 || !r.priv.seedAt) { r.priv.seeded = true; w._rested = false; }   // (the last part: the world is complete and goes out to everyone)
@@ -2035,7 +2090,7 @@ setInterval(() => {
   }
 }, 25000);
 
-function saveAll() { savePeak(true); saveLinks(true); try { modsDirty = true; saveMods(true); } catch (e) {} try { saveDms(true); } catch (e) {} try { dmhDirty = true; saveDmh(true); } catch (e) {} try { giftDirty = true; saveGifts(true); } catch (e) {} try { sharesDirty = true; saveShares(); } catch (e) {} try { keepWorlds(true); } catch (e) {} }
+function saveAll() { savePeak(true); saveLinks(true); try { bugDirty = true; saveBugs(true); } catch (e) {} try { modsDirty = true; saveMods(true); } catch (e) {} try { saveDms(true); } catch (e) {} try { dmhDirty = true; saveDmh(true); } catch (e) {} try { giftDirty = true; saveGifts(true); } catch (e) {} try { sharesDirty = true; saveShares(); } catch (e) {} try { keepWorlds(true); } catch (e) {} }
 function shutdown() { saveAll(); process.exit(0); }
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
