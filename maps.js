@@ -1924,9 +1924,10 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
        three: soccer, the blaster arena, target practice), always the same for that level, at its own spots. Nothing of the level stays inside one (coins, toys,
        little things), and nothing can be built there. A game never moves or stops a player: its edges are only drawn. */
     { let h = (idx * 2246822519 + 3266489917) >>> 0; const rnd = () => { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; };
-      const want = ['soc', 'sht', 'tgt'].filter(() => rnd() < 0.55); for (let i = want.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = want[i]; want[i] = want[j]; want[j] = t; }
-      const SZ = { soc: [30, 38, 8, 9], sht: [22, 30, 7, 8], tgt: [18, 26, 7, 8] }, games = [];
-      if (want.length) {
+      const want = ['soc', 'sht', 'tgt', 'gem', 'tag']; for (let i = want.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = want[i]; want[i] = want[j]; want[j] = t; }   // (v240: the kinds in this level's own order)
+      const rn = rnd(), howMany = rn < 0.3 ? 0 : rn < 0.75 ? 1 : 2;   // (most levels have one or two games, some none: a find, not on every corner)
+      const SZ = { soc: [30, 38, 9, 10], sht: [22, 30, 13, 14], tgt: [18, 26, 8, 9], gem: [22, 30, 9, 10], tag: [24, 32, 9, 10] }, games = [];
+      if (howMany) {
         const g8 = new Uint8Array(W * H); for (const r of rects) for (let yy = Math.max(0, r[1]); yy < Math.min(H, r[1] + r[3]); yy++) g8.fill(r[4], yy * W + Math.max(0, r[0]), yy * W + Math.min(W, r[0] + r[2]));
         const G8 = (x, y) => (x < 0 || x >= W || y < 0 || y >= H) ? 0 : g8[y * W + x], air = new Uint16Array(W * H);   // (air: how many open blocks are right above each block)
         for (let y = 1; y < H; y++) { const o = y * W, u = o - W; for (let x = 0; x < W; x++) air[o + x] = g8[u + x] === 0 ? Math.min(60000, air[u + x] + 1) : 0; }   // (row by row: quick)
@@ -1943,7 +1944,7 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
               if (run[q] < aw + 2 || x % 3) continue; const x0 = x - aw;   // (one block of the same ground on each side as well. Every third spot is plenty to choose from)
               const cx = x0 + aw / 2, cy = fy - ah / 2, dS = 60 + aw / 2, dF = 45 + aw / 2; if ((cx - st[0]) ** 2 + (cy - st[1]) ** 2 < dS * dS) continue; let nf = false; for (let f = 0; f < fz.length && !nf; f++) nf = (cx - fz[f][0]) ** 2 + (cy - fz[f][1]) ** 2 < dF * dF; if (nf) continue;
               cands[q].push(x0 * 4096 + fy); } } } }
-        for (let q = 0; q < want.length; q++) {
+        for (let q = 0; q < want.length && games.length < howMany; q++) {   // (in order, until this level has its one or two: a kind with no room here lets the next one try)
           const k = want[q], aw = dim[q][0], ah = dim[q][1], cand = cands[q];
           let got = null; for (let n = 0; n < 80 && cand.length && !got; n++) { const cc = cand[Math.floor(rnd() * cand.length)], c = [Math.floor(cc / 4096), cc % 4096], a = [c[0] - 1, c[1] - ah - 2, c[0] + aw + 1, c[1]];
             if (games.some(o => c[0] < o.x1 + 14 && c[0] + aw > o.x0 - 14 && c[1] - ah < o.y1 + 10 && c[1] > o.y0 - 10)) continue; if (!clash(a)) got = c; }   // (well apart from each other)

@@ -113,7 +113,7 @@
       // (everything the physics keeps on a thing is there from the start, so every crate and ball has the same make-up and the sums over hundreds of them stay fast. Keep it under 128 names in all: at 128 the engine stores them a slower way and a big pile takes four times as long)
       im: 0, ii: 0, nap: false, sleep: false, skip: false, sq: 0, _i: 0, _dyn: false, _far: false, farT: 0, _spr: 0, _im: 0, _ii: 0, _bx: 0, _by: 0, _bw: 0, _pl: false, _x0: 0, _y0: 0, onp: false, _ice: false, _pad: null, _N: 0, _F: 0, dm: 0, pcd: 0, pdir: 0,
       _uf: null, _isl: 0, _wR: 0, _wOk: false, _wP: null, _wN: null, _wT: 0, _sh: null, _shT: 0, _hT: 0, _onP: false, _pri: 0, coast: false, _tx: 0, _ty: 0, _tT: 0, sqb: 0, _tip: 0, mineT: 0, keep: 0, hold: 0,
-      sb: -1, mgb: undefined, mgHold: 0, uid: undefined, hx: undefined, hy: undefined, ver: undefined, rest: undefined, errT: undefined, brec: undefined, bought: undefined, svx: undefined, svy: undefined, sav: undefined, lav: undefined, owned: undefined, lx: undefined, ly: undefined, lr: undefined, lb: undefined, bl: undefined, bfx: undefined, bx: undefined, by: undefined, ownT: undefined, ownBad: undefined, ownTouch: undefined, ownLeft: undefined, ownBy: undefined, ownAt: undefined, ownLong: undefined, oh: undefined, lvx: undefined, lvy: undefined, lst: undefined, lostAt: undefined, lostSent: undefined, wasMine: undefined, sv: undefined, srvU: undefined, soft: undefined, px: undefined, py: undefined, pr: undefined, handAt: undefined, gone: undefined, m0: undefined, local: undefined, _pv: undefined, dver: undefined, seen: undefined, _sc: 0, _tpx: undefined, _svp: undefined, hb: undefined, pred: 0, predT: 0, predA: 0, touchT: 0, predS: 0, _ppN: 0, ph: undefined, pcx: 0, pcy: 0, _lsv: undefined };   // (and what the server and the players' devices keep on it, left empty until used)
+      uid: undefined, hx: undefined, hy: undefined, ver: undefined, rest: undefined, errT: undefined, brec: undefined, bought: undefined, svx: undefined, svy: undefined, sav: undefined, lav: undefined, owned: undefined, lx: undefined, ly: undefined, lr: undefined, lb: undefined, bl: undefined, bfx: undefined, bx: undefined, by: undefined, ownT: undefined, ownBad: undefined, ownTouch: undefined, ownLeft: undefined, ownBy: undefined, ownAt: undefined, ownLong: undefined, oh: undefined, lvx: undefined, lvy: undefined, lst: undefined, lostAt: undefined, lostSent: undefined, wasMine: undefined, sv: undefined, srvU: undefined, soft: undefined, px: undefined, py: undefined, pr: undefined, handAt: undefined, gone: undefined, m0: undefined, local: undefined, _pv: undefined, dver: undefined, seen: undefined, _sc: 0, _tpx: undefined, _svp: undefined, hb: undefined, pred: 0, predT: 0, predA: 0, touchT: 0, predS: 0, _ppN: 0, ph: undefined, pcx: 0, pcy: 0, _lsv: undefined };   // (and what the server and the players' devices keep on it, left empty until used)
     { const I = r ? 0.5 * d.m * r * r : d.m * (hw * hw + hw * hw) / 3; d.im = 1 / d.m; d.ii = 1 / I; }
     d.hx = d.x; d.hy = d.y; d.uid = hash32('p' + kind + ',' + Math.round(x) + ',' + Math.round(y)); if (w.dynBy) { while (w.dynBy.has(d.uid)) d.uid = (d.uid + 1) >>> 0; w.dynBy.set(d.uid, d); }
     w.dyn.push(d); return d;
@@ -809,19 +809,27 @@
   const gamesOf = o => (o && !o.rects && o.games) || [];   // (a world's own games. A map on its own has none of these no-build areas: builds that arrive or load are never turned away for them)
   function gameAt(o, px, py, m) { const G = gamesOf(o); m = m || 0; for (let i = 0; i < G.length; i++) { const g = G[i]; if (px >= g.x0 * TS - m && px <= g.x1 * TS + m && py >= (g.y0 - 2) * TS - m && py <= (g.y1 + 1) * TS + m) return i; } return -1; }
   const inGame = (g, x, y) => x >= g.x0 * TS && x <= g.x1 * TS && y >= g.y0 * TS && y <= g.y1 * TS;   // (a player is in a game: their middle inside its edges)
-  function tgtAt(g, t) {   // where target practice's target is at time t (ms, the server's clock): the same on every device. Every 1.6 s it heads somewhere new, its own way
-    const SEG = 1600, s = Math.floor(t / SEG), f = (t - s * SEG) / SEG, L = (g.x0 + 2.5) * TS, Rr = (g.x1 - 2.5) * TS;
-    const r = k => { let h = (g.seed ^ Math.imul(k, 2654435761)) >>> 0; h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0; h = Math.imul(h ^ (h >>> 13), 3266489917) >>> 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  const mgR = (g, k) => { let h = (g.seed ^ Math.imul(k, 2654435761)) >>> 0; h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0; h = Math.imul(h ^ (h >>> 13), 3266489917) >>> 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  function tgtAt(g, t) {   // where target practice's target is at time t (ms, the server's clock): the same on every device. About once a second it heads somewhere new, its own way
+    const SEG = 850, s = Math.floor(t / SEG), f = (t - s * SEG) / SEG, L = (g.x0 + 2) * TS, Rr = (g.x1 - 2) * TS, r = k => mgR(g, k);
     const xa = L + (Rr - L) * r(s * 3 - 3), xb = L + (Rr - L) * r(s * 3), sty = r(s * 3 + 1);
     let e = f * f * (3 - 2 * f);   // (smooth)
-    if (sty < 0.25) e = Math.min(1, f / 0.3); else if (sty < 0.45) e = f < 0.55 ? 0 : Math.min(1, (f - 0.55) / 0.2); else if (sty < 0.6) e = f + Math.sin(f * Math.PI * 4) * 0.12 * (1 - f);   // (a dash, a wait then a dash, a wobble)
-    const x = xa + (xb - xa) * e, y = (g.y0 + 1.3) * TS + Math.sin(t / 420 + g.seed) * TS * 0.2;   // (low enough that the target is always on the screen of somebody standing on the floor)
+    if (sty < 0.22) e = Math.min(1, f / 0.22);   // (a sudden dash)
+    else if (sty < 0.4) e = f < 0.5 ? 0 : Math.min(1, (f - 0.5) / 0.15);   // (waits, then darts)
+    else if (sty < 0.58) e = f + Math.sin(f * Math.PI * 6) * 0.16 * (1 - f);   // (zigzags)
+    else if (sty < 0.72) e = f < 0.6 ? -Math.sin(f / 0.6 * Math.PI) * 0.35 : (f - 0.6) / 0.4;   // (a feint the other way first)
+    const x = xa + (xb - xa) * e, y = (g.y0 + 1.4) * TS + Math.sin(t / 330 + g.seed) * TS * 0.45 + Math.sin(t / 910 + g.seed * 0.7) * TS * 0.25;   // (it bobs as well)
     return { x: Math.max(L, Math.min(Rr, x)), y };
   }
-  const MG = { SHOT_MS: 500, BUL_V: 640, BUL_R: 5, PJ_V: 430, PJ_R: 7, TGT_W: 2.6 * TS, TGT_H: 0.9 * TS, WIN: 3, PAUSE_MS: 10000, GOAL_W: 3, GOAL_H: 3 };
+  function shieldAt(g, t) {   // a shield that slides back and forth under the target and stops what it is in the way of
+    const L = (g.x0 + 2.5) * TS, Rr = (g.x1 - 2.5) * TS, m = (L + Rr) / 2, a = (Rr - L) / 2, sp = 0.9 + mgR(g, 7) * 0.6;
+    return { x: m + a * Math.sin(t / 1000 * sp + g.seed) * (0.75 + 0.25 * Math.sin(t / 2300 + g.seed * 3)), y: (g.y1 - 4.6) * TS };
+  }
+  const MG = { SHOT_MS: 500, BUL_V: 640, BUL_R: 5, PJ_V: 400, PJ_R: 7, PJ_CD: 650, TGT_R: 0.5 * TS, SH_W: 3.2 * TS, SH_H: 0.32 * TS, WIN: 3, PAUSE_MS: 10000, GOAL_W: 3, GOAL_H: 3,
+    BALL_R: 24, BALL_M: 0.3, GEM_WIN: 5, COIN_H: 60, GEM_H: 4, TAG_MS: 15000, TAG_BACK: 1000, TAG_CD: 3000 };
   /* (v238) which mini games a world really has: the map's own, unless something was built or changed inside one (a world saved before there were mini games keeps
      everything it had, and that game is simply not there), and the ones players built (['mg', column, row, kind, builder]: its marker, in the middle just above the floor) */
-  const MGK = ['soc', 'sht', 'tgt'], MGSZ = { soc: [32, 9], sht: [26, 8], tgt: [22, 8] };
+  const MGK = ['soc', 'sht', 'tgt', 'gem', 'tag'], MGSZ = { soc: [28, 9], sht: [24, 13], tgt: [20, 9], gem: [24, 9], tag: [26, 9] };
   function mgRect(k, tx, ty) { const z = MGSZ[k]; if (!z) return null; const x0 = tx - (z[0] >> 1), y1 = ty + 2; return { k, x0, x1: x0 + z[0], y0: y1 - z[1], y1, tx, ty, bx: tx }; }
   function recHit(g, kind, q) {   // does this one thing built lie in (or on the floor of) this game's area?
     const X0 = g.x0, X1 = g.x1, Y0 = g.y0 - 2, Y1 = g.y1 + 1, box = (a, b, c, d) => a < X1 && c > X0 && b < Y1 && d > Y0;
@@ -864,77 +872,155 @@
     }
     return out;
   }
+  function mgParts(g) {   // the solid parts a game brings (tiles): soccer's goals (a roof and a back each: the ball stops in the net, you can hop on top), the shoot-out's walls, roof and cover, the platforms of gem dash and bomb tag
+    const out = [], aw = g.x1 - g.x0, mid = g.x0 + (aw >> 1), r = k => mgR(g, k + 40), plat = (cx, y, wd) => { for (let x = cx - (wd >> 1); x < cx - (wd >> 1) + wd; x++) out.push([x, y]); }, blk = (x0, y0, wd, ht) => { for (let x = x0; x < x0 + wd; x++) for (let y = y0; y < y0 + ht; y++) out.push([x, y]); };
+    if (g.k === 'soc') { for (const [a, back] of [[g.x0, g.x0], [g.x1 - 3, g.x1 - 1]]) { for (let x = a; x < a + 3; x++) out.push([x, g.y1 - 4]); for (let y = g.y1 - 3; y < g.y1; y++) out.push([back, y]); } }
+    else if (g.k === 'sht') {   // (boxed in: a roof, walls down each side with a way in and out at the bottom, steel cover to hide behind, and ledges to climb)
+      for (let x = g.x0; x < g.x1; x++) out.push([x, g.y0]);
+      for (const x of [g.x0, g.x1 - 1]) for (let y = g.y0 + 1; y <= g.y1 - 4; y++) out.push([x, y]);
+      for (const side of [-1, 1]) { const off = 3 + Math.floor(r(side + 2) * Math.max(1, (aw >> 1) - 9)), ww = r(side + 5) < 0.5 ? 1 : 2, hh = 2 + Math.floor(r(side + 9) * 2), x0 = side < 0 ? mid - off - ww : mid + off;
+        blk(x0, g.y1 - hh, ww, hh);
+        const lx = side < 0 ? g.x0 + 3 + Math.floor(r(side + 20) * 2) : g.x1 - 6 - Math.floor(r(side + 20) * 2); plat(lx + 1, g.y1 - 5, 3);   // (a ledge high on each side)
+        blk(side < 0 ? g.x0 + 2 : g.x1 - 3, g.y1 - 1, 1, 1); }   // (a low block just inside each way in: cover from the door)
+      plat(mid, g.y1 - 4, 3); plat(mid + (r(30) < 0.5 ? -4 : 4), g.y1 - 8, 4);   // (a ledge in the middle, high enough to roll under, and one way up for the big jump)
+    } else if (g.k === 'gem') {   // (platforms at two heights, so the coins can be up high too)
+      const xs = [0.17, 0.38, 0.62, 0.83]; xs.forEach((f, i) => plat(g.x0 + Math.round(aw * f), g.y1 - (i % 2 ? 6 : 3) - (r(i) < 0.3 ? 1 : 0), 3));
+    } else if (g.k === 'tag') {   // (somewhere to run, climb and hide: blocks, steps and high platforms)
+      blk(g.x0 + Math.round(aw * 0.22) - 1, g.y1 - 2, 2, 2); blk(g.x0 + Math.round(aw * 0.78) - 1, g.y1 - 2, 2, 2);
+      plat(g.x0 + 3, g.y1 - 4, 2); plat(g.x1 - 3, g.y1 - 4, 2);
+      plat(g.x0 + Math.round(aw * 0.36), g.y1 - 6, 3); plat(g.x0 + Math.round(aw * 0.64), g.y1 - 6, 3);
+    }
+    const seen = new Set(); return out.filter(([x, y]) => { const k = x * 4096 + y; if (seen.has(k)) return false; seen.add(k); return x >= g.x0 && x < g.x1 && y >= g.y0 && y < g.y1; });
+  }
+  function mgObjs(g) {   // the things a game brings that move: crates in the shoot-out, big rolling balls in bomb tag ([kind, x, y]: where each one belongs)
+    const aw = g.x1 - g.x0, mid = g.x0 + (aw >> 1);
+    if (g.k === 'sht') return [[0, (mid - 2) * TS, g.y1 * TS - propDims(0).half - 0.5], [0, (mid + 3) * TS, g.y1 * TS - propDims(0).half - 0.5]];
+    if (g.k === 'tag') return [[3, (g.x0 + aw * 0.15) * TS, g.y1 * TS - propDims(3).half - 0.5], [3, (g.x0 + aw * 0.85) * TS, g.y1 * TS - propDims(3).half - 0.5]];
+    return [];
+  }
   const mgKey = g => g.k + ',' + g.x0 + ',' + g.y0 + ',' + g.x1 + ',' + g.y1 + ',' + (g.b ? 1 : 0);
   function mgBallOf(w, g) { const hx = (g.bx + 0.5) * TS, hy = g.y1 * TS - propDims(2).half - 0.5; return w.dyn.find(o => o.kind === 2 && !o.gone && (g.b ? o.mgb === mgKey(g) : o.m0) && Math.abs(o.hx - hx) < 2 && Math.abs(o.hy - hy) < 2) || null; }
-  function setGames(w, list) {   // the world takes on this list of games: each soccer field's crossbars and ball come and go with it. Returns the tiles that changed
+  function setGames(w, list) {   // the world takes on this list of games: each one's solid parts and moving things come and go with it. Returns the tiles that changed
     const old = w.games || [], ch = [];
     if (old.length === list.length && old.every((g, i) => mgKey(g) === mgKey(list[i]))) return ch;
     const nk = new Set(list.map(mgKey)), ok = new Set(old.map(mgKey));
-    const bars = (g, v) => { for (const x0 of [g.x0, g.x1 - 3]) for (let x = x0; x < x0 + 3; x++) { const y = g.y1 - 4; if (x < 0 || x >= w.W || y < 0 || y >= w.H) continue; const i = y * w.W + x; if (v ? w.grid[i] === 0 : w.grid[i] === 1) { w.grid[i] = v ? 1 : 0; ch.push([x, y]); } }
-      if (!v) wakeAround(w, g.x0 * TS - 8, (g.y1 - 4) * TS - 8, g.x1 * TS + 8, (g.y1 - 3) * TS + 8); };
-    for (const g of old) if (!nk.has(mgKey(g)) && g.k === 'soc') { bars(g, false); const d = mgBallOf(w, g); if (d) { d.sb = -1; if (g.b) applyDel(w, ['b', d.uid]); } }   // (the map's own ball stays, a ball like any other; a built one goes with its game)
-    for (const g of list) if (!ok.has(mgKey(g)) && g.k === 'soc') { bars(g, true); if (!mgBallOf(w, g) && g.b) { const k = mgKey(g), old = w.dyn.find(o => o.mgb === k && o.gone); if (old) { old.gone = false; mgHome(w, old); old.nap = true; } else { const d = addProp(w, 2, (g.bx + 0.5) * TS, g.y1 * TS - propDims(2).half - 0.5); d.mgb = k; d.nap = true; } } }   // (built again in the same place: the same ball as before, so its number is the same on every device)
+    const bars = (g, v) => { for (const [x, y] of mgParts(g)) { if (x < 0 || x >= w.W || y < 0 || y >= w.H) continue; const i = y * w.W + x; if (v ? w.grid[i] === 0 : w.grid[i] === 1) { w.grid[i] = v ? 1 : 0; ch.push([x, y]); } }
+      if (!v) wakeAround(w, g.x0 * TS - 8, (g.y0 - 1) * TS, g.x1 * TS + 8, g.y1 * TS + 8); };
+    for (const g of old) if (!nk.has(mgKey(g))) {
+      bars(g, false); const k = mgKey(g);
+      for (const d of w.dyn) if (d.mgo && d.mgo.startsWith(k + '#') && !d.gone) applyDel(w, ['b', d.uid]);   // (its crates and balls go with it)
+      if (g.k !== 'soc') continue; const d = mgBallOf(w, g); if (d) { mgBall(d, false); if (g.b) applyDel(w, ['b', d.uid]); }   // (the map's own ball stays, a ball like any other; a built one goes with its game)
+    }
+    for (const g of list) if (!ok.has(mgKey(g))) {
+      bars(g, true); const k = mgKey(g);
+      mgObjs(g).forEach((o, n) => { const key = k + '#' + n, was = w.dyn.find(d => d.mgo === key); if (was) { if (was.gone) { was.gone = false; mgHome(w, was); was.nap = true; } return; } const d = addProp(w, o[0], o[1], o[2]); d.mgo = key; d.mgh = [o[1], o[2]]; d.nap = true; });   // (built again in the same place: the same things as before, so their numbers are the same on every device)
+      if (g.k === 'soc' && !mgBallOf(w, g) && g.b) { const old = w.dyn.find(o => o.mgb === k && o.gone); if (old) { old.gone = false; old.nap = true; } else { const d = addProp(w, 2, (g.bx + 0.5) * TS, g.y1 * TS - propDims(2).half - 0.5); d.mgb = k; d.nap = true; } }
+    }
     w.games = list; w.gamesV = (w.gamesV | 0) + 1;
-    for (const d of w.dyn) if (d.sb >= 0) d.sb = -1;
-    list.forEach((g, i) => { if (g.k !== 'soc') return; const d = mgBallOf(w, g); if (d) d.sb = i; });
+    for (const d of w.dyn) if (d.sb >= 0) { d.sb = -1; mgBall(d, false); }
+    list.forEach((g, i) => { if (g.k !== 'soc') return; const d = mgBallOf(w, g); if (d) { const fresh = d.r !== MG.BALL_R; d.sb = i; mgBall(d, true, g); if (fresh) mgHome(w, d); } });
     return ch;
   }
-  function mgFits(w, k, tx, ty, L, cps) {   // can a new mini game go here? '' when it can, otherwise why not
-    const g = mgRect(k, tx, ty); if (!g) return 'bad';
-    if (g.x0 < 3 || g.x1 > w.W - 3 || g.y0 < 3 || g.y1 >= w.H - 1) return 'edge';
-    for (let x = g.x0; x < g.x1; x++) { const t = tile(w, x, g.y1); if (t !== 1 && t !== 3) return 'flat'; }
-    for (let y = g.y0; y < g.y1; y++) for (let x = g.x0; x < g.x1; x++) if (tile(w, x, y) !== 0) return 'room';
-    if ((w.games || []).some(o => mgNear(o, g))) return 'game';
-    const A0 = g.x0 * TS, A1 = g.x1 * TS, B0 = (g.y0 - 2) * TS, B1 = (g.y1 + 1) * TS, inA = (x, y) => x > A0 && x < A1 && y > B0 && y < B1;
-    for (const z of noBuild(w)) { const nx = Math.max(A0, Math.min(A1, z.cx)), ny = Math.max(B0, Math.min(B1, z.cy)); if ((nx - z.cx) ** 2 + (ny - z.cy) ** 2 < z.r * z.r) return 'zone'; }
-    for (const d of w.dyn) if (!(d.burn > 0) && !d.gone && inA(d.x, d.y)) return 'thing';
-    for (const o of w.doors) if (!o.gone && o.x + o.w > g.x0 && o.x < g.x1 && o.y + o.h > g.y0 - 2 && o.y < g.y1 + 1) return 'thing';
-    for (const o of w.plates.concat(w.btns)) if (!o.gone && inA((o.x + 0.5) * TS, (o.y - 0.5) * TS)) return 'thing';
-    for (const o of w.see) if (!o.gone && inA(Math.max(A0 + 1, Math.min(A1 - 1, o.cx)), o.cy) && o.cx + o.hl > A0 && o.cx - o.hl < A1) return 'thing';
-    for (const o of w.pads) if (!o.gone && inA((o.x + 1) * TS, (o.y - 0.5) * TS)) return 'thing';
-    for (const o of w.portals) if (!o.gone && (inA(o.a.x, o.a.y - 20) || inA(o.b.x, o.b.y - 20))) return 'thing';
-    for (const o of w.ropes || []) if (!o.gone && o.bx > A0 && o.ax < A1 && Math.max(o.ay, o.by) > B0 && Math.min(o.ay, o.by) < B1) return 'thing';
-    for (const o of w.pwrs || []) if (!o.gone && inA(o.x, o.y)) return 'thing';
-    for (const c of (cps || []).concat((w.map && w.map.checkpoints) || [])) if (c && c[0] > -1000 && inA((c[0] + 0.5) * TS, (c[1] - 0.5) * TS)) return 'thing';
-    if (L && builtIn(g, L)) return 'thing';
-    return '';
+  function mgBall(d, on, g) {   // a soccer ball: bigger and lighter than an ordinary ball, and lively; back to an ordinary ball when its field is not there
+    if (on) { if (d.r0 === undefined) { d.r0 = d.r; d.m0m = d.m; } d.r = MG.BALL_R; d.m = MG.BALL_M; d.mgh = [(g.bx + 0.5) * TS, g.y1 * TS - MG.BALL_R - 0.5]; }
+    else if (d.r0 !== undefined) { d.r = d.r0; d.m = d.m0m; d.mgh = null; }
+    d.im = undefined; d.ii = undefined;
+  }
+  function mgWhy(w, k, tx, ty, L, cps, all) {   // can a new mini game go here? { why: '' when it can, otherwise why not; bad: the tiles at fault, pts: the things in the way } (all: find every one, for the picture; otherwise stop at the first)
+    const g = mgRect(k, tx, ty), res = { why: '', bad: [], pts: [] }, no = (why) => { if (!res.why) res.why = why; return !all; };
+    if (!g) { res.why = 'bad'; return res; }
+    if (g.x0 < 3 || g.x1 > w.W - 3 || g.y0 < 3 || g.y1 >= w.H - 1) { res.why = 'edge'; return res; }
+    for (let x = g.x0; x < g.x1; x++) { const t = tile(w, x, g.y1); if (t !== 1 && t !== 3) { res.bad.push([x, g.y1]); if (no('flat')) return res; } }
+    for (let y = g.y0; y < g.y1; y++) for (let x = g.x0; x < g.x1; x++) if (tile(w, x, y) !== 0) { res.bad.push([x, y]); if (no('room')) return res; }
+    if ((w.games || []).some(o => mgNear(o, g))) { if (no('game')) return res; }
+    const A0 = g.x0 * TS, A1 = g.x1 * TS, B0 = (g.y0 - 2) * TS, B1 = (g.y1 + 1) * TS, inA = (x, y) => x > A0 && x < A1 && y > B0 && y < B1, at = (x, y) => { res.pts.push([x, y]); return no('thing'); };
+    for (const z of noBuild(w)) { const nx = Math.max(A0, Math.min(A1, z.cx)), ny = Math.max(B0, Math.min(B1, z.cy)); if ((nx - z.cx) ** 2 + (ny - z.cy) ** 2 < z.r * z.r) { res.pts.push([nx, ny]); if (no('zone')) return res; } }
+    for (const d of w.dyn) if (!(d.burn > 0) && !d.gone && inA(d.x, d.y) && at(d.x, d.y)) return res;
+    for (const o of w.doors) if (!o.gone && o.x + o.w > g.x0 && o.x < g.x1 && o.y + o.h > g.y0 - 2 && o.y < g.y1 + 1 && at((o.x + 0.5) * TS, (o.y + o.h / 2) * TS)) return res;
+    for (const o of w.plates.concat(w.btns)) if (!o.gone && inA((o.x + 0.5) * TS, (o.y - 0.5) * TS) && at((o.x + 0.5) * TS, (o.y - 0.5) * TS)) return res;
+    for (const o of w.see) if (!o.gone && inA(Math.max(A0 + 1, Math.min(A1 - 1, o.cx)), o.cy) && o.cx + o.hl > A0 && o.cx - o.hl < A1 && at(Math.max(A0 + 1, Math.min(A1 - 1, o.cx)), o.cy)) return res;
+    for (const o of w.pads) if (!o.gone && inA((o.x + 1) * TS, (o.y - 0.5) * TS) && at((o.x + 1) * TS, (o.y - 0.5) * TS)) return res;
+    for (const o of w.portals) for (const e of [o.a, o.b]) if (!o.gone && inA(e.x, e.y - 20) && at(e.x, e.y - 20)) return res;
+    for (const o of w.ropes || []) if (!o.gone && o.bx > A0 && o.ax < A1 && Math.max(o.ay, o.by) > B0 && Math.min(o.ay, o.by) < B1 && at(Math.max(A0, Math.min(A1, (o.ax + o.bx) / 2)), (o.ay + o.by) / 2)) return res;
+    for (const o of w.pwrs || []) if (!o.gone && inA(o.x, o.y) && at(o.x, o.y)) return res;
+    for (const c of (cps || []).concat((w.map && w.map.checkpoints) || [])) if (c && c[0] > -1000 && inA((c[0] + 0.5) * TS, (c[1] - 0.5) * TS) && at((c[0] + 0.5) * TS, (c[1] - 0.5) * TS)) return res;
+    if (L && builtIn(g, L) && no('thing')) return res;
+    return res;
+  }
+  const mgFits = (w, k, tx, ty, L, cps) => mgWhy(w, k, tx, ty, L, cps).why;
+  function mgNearest(w, k, tx, ty, L, cps) {   // the nearest place it does fit (rows and columns of tiles), or null: for showing the way
+    let best = null, bs = 1e9;
+    for (let dy = -6; dy <= 6; dy++) for (let dx = -60; dx <= 60; dx++) { const sc = Math.abs(dx) + Math.abs(dy) * 3; if (sc >= bs) continue; if (!mgFits(w, k, tx + dx, ty + dy, L, cps)) { best = [tx + dx, ty + dy]; bs = sc; } }
+    return best;
   }
   const recInGames = (w, kind, q) => (w.games || []).some(g => recHit(g, kind, q));   // (anything new built in a game is turned away)
   /* (v238) the mini games' rules: the same on the server and in a game played alone. Nothing here ever moves a player or stops one: it only looks where they are */
-  function mgNew(w) { return gamesOf(w).map((g, i) => ({ g, i, k: g.k, L: 0, R: 0, lastIn: -1e15, rsAt: 0, sc: new Map(), fire: new Map(), face: new Map(), lj: new Map(), shots: [], pz: 0, wn: '', bid: 0 })); }
-  function mgHome(w, d) {   // the soccer ball back on its spot in the middle, at once (every screen puts it there, never draws it flying back)
-    d.x = d.hx; d.y = d.hy; d.vx = d.vy = 0; d.av = 0; d.rot = 0; d.burn = 0; d.nap = false; d.sleep = false; d.rest = 0; d.st = 0; d.tpT = w.tick || 0; d.px = d.x; d.py = d.y; d.ownT = 0; d.mgHold = Date.now() + 700;
+  function mgSpots(w, g) {   // gem dash: where a coin can appear (open air, with something to stand on a short jump below)
+    const out = []; for (let y = g.y0 + 1; y < g.y1; y++) for (let x = g.x0 + 1; x < g.x1 - 1; x++) { if (tile(w, x, y) !== 0) continue; let st = 0; for (let k = 1; k <= 3 && !st; k++) { const t = tile(w, x, y + k); if (t === 1 || t === 3) st = k; } if (st) out.push([(x + 0.5) * TS, (y + 0.5) * TS]); }
+    return out;
   }
-  function mgStep(M, w, pl, now, out) {   // pl: the players really playing, { id, x, y, vx, land (came down from a jump just now), name }. out: what happened, for everybody's screens
-    const hf = propDims(2).half;
+  function mgNew(w) { return gamesOf(w).map((g, i) => ({ g, i, k: g.k, key: mgKey(g), L: 0, R: 0, lastIn: -1e15, rsAt: 0, sc: new Map(), fire: new Map(), face: new Map(), lj: new Map(), shots: [], pz: 0, wn: '', bid: 0, ws: 0,
+    item: null, next: 0, cnt: 0, spots: g.k === 'gem' ? mgSpots(w, g) : null, st: 0, cd: 0, bars: new Map(), h: -1, hs: 0, nb: null })); }
+  function mgHome(w, d) {   // a game's ball or crate back where it belongs, at once (every screen puts it there, never draws it flying back)
+    const h = d.mgh; d.x = h ? h[0] : d.hx; d.y = h ? h[1] : d.hy; d.vx = d.vy = 0; d.av = 0; d.rot = 0; d.burn = 0; d.nap = false; d.sleep = false; d.rest = 0; d.st = 0; d.tpT = w.tick || 0; d.px = d.x; d.py = d.y; d.ownT = 0; d.mgHold = Date.now() + 700;
+  }
+  const mgCap = (caps, tag, now) => { let c = caps.get(tag); if (!c || now - c.t > 3600e3) { c = { t: now, c: 0, g: 0 }; caps.set(tag, c); } return c; };
+  function mgState(s) { return { k: 'tag', i: s.i, st: s.st, cd: s.cd, h: s.h, hs: s.hs, b: [...s.bars] }; }
+  function mgStep(M, w, pl, now, out, caps) {   // pl: the players really playing, { id, x, y, vx, land (came down from a jump just now), name, tag }. out: what happened, for everybody's screens. caps: what each player has earned lately
+    const hf = MG.BALL_R;
     for (const s of M) {
       const g = s.g, x0 = g.x0 * TS, x1 = g.x1 * TS, y0 = g.y0 * TS, y1 = g.y1 * TS;
       const ins = []; for (const p of pl) if (inGame(g, p.x, p.y)) ins.push(p);
       if (ins.length) s.lastIn = now;
+      for (const d of w.dyn) if (d.mgo && d.mgo.startsWith(s.key + '#') && !d.gone && (d.burn > 0 || d.x < x0 - TS || d.x > x1 + TS || d.y < y0 - 2 * TS || d.y > y1 + TS)) mgHome(w, d);   // (a crate or ball pushed out of its arena: back where it belongs)
       if (s.k === 'soc') {
         const d = s.d && !s.d.gone && s.d.sb === s.i ? s.d : (s.d = w.dyn.find(o => o.sb === s.i && !o.gone)); if (!d) continue;
-        const away = Math.abs(d.x - d.hx) + Math.abs(d.y - d.hy) > 6 || d.burn > 0;
-        if (now - s.lastIn > 3000) { if (s.L || s.R || away || s.pz) { s.L = s.R = 0; s.rsAt = 0; s.pz = 0; mgHome(w, d); out.push({ k: 'srs', i: s.i, L: 0, R: 0, z: 1 }); } continue; }   // (nobody in it for a few seconds: it all starts over)
+        if (s.pz && now >= s.pz) { s.pz = 0; out.push({ k: 'rs', i: s.i }); }   // (a win is shown for ten seconds, counting down, whoever stays or goes; then the next game)
+        const hx = d.mgh ? d.mgh[0] : d.hx, hy = d.mgh ? d.mgh[1] : d.hy, away = Math.abs(d.x - hx) + Math.abs(d.y - hy) > 6 || d.burn > 0;
+        if (now - s.lastIn > 3000) { if (s.L || s.R || away) { s.L = s.R = 0; s.rsAt = 0; mgHome(w, d); out.push({ k: 'srs', i: s.i, L: 0, R: 0, z: 1 }); } continue; }   // (nobody in it for a few seconds: it starts over)
         if (s.rsAt) { if (now >= s.rsAt) { s.rsAt = 0; mgHome(w, d); } continue; }   // (a goal: the ball sits in the net a moment, then goes back to the middle)
-        if (d.burn > 0 || d.x < x0 - TS || d.x > x1 + TS || d.y < y0 - TS || d.y > y1 + TS) { mgHome(w, d); out.push({ k: 'srs', i: s.i, L: s.L, R: s.R }); continue; }   // (out of the arena: back to the middle, the game goes on)
-        if (s.pz) { if (now < s.pz) continue; s.pz = 0; out.push({ k: 'rs', i: s.i }); }   // (a win: ten seconds to enjoy it, with nothing counted, then the next game)
-        const inL = d.x < x0 + MG.GOAL_W * TS - hf, inR = d.x > x1 - MG.GOAL_W * TS + hf;
-        if ((inL || inR) && d.y > y1 - MG.GOAL_H * TS + hf * 0.5) {
+        if (d.burn > 0 || d.x < x0 - TS || d.x > x1 + TS || d.y < y0 - 2 * TS || d.y > y1 + TS) { mgHome(w, d); out.push({ k: 'srs', i: s.i, L: s.L, R: s.R }); continue; }   // (out of the arena: back to the middle, the game goes on)
+        if (s.pz) continue;
+        const inL = d.x < x0 + MG.GOAL_W * TS - hf * 0.6, inR = d.x > x1 - MG.GOAL_W * TS + hf * 0.6;
+        if ((inL || inR) && d.y > y1 - MG.GOAL_H * TS + hf * 0.3) {
           const side = inL ? 0 : 1; if (side) s.R++; else s.L++; s.rsAt = now + 800;
           if (s.L >= MG.WIN || s.R >= MG.WIN) { out.push({ k: 'swin', i: s.i, side }); s.L = s.R = 0; s.pz = now + MG.PAUSE_MS; s.ws = side; } else out.push({ k: 'goal', i: s.i, side, L: s.L, R: s.R });
         }
         continue;
       }
-      // the shooter and target practice: a score for each player inside, lost when they leave
       const here = new Set(); for (const p of ins) here.add(p.id);
+      if (s.k === 'tag') {   // bomb tag: the one holding the bomb watches their bar run down; touch somebody to hand it over (no handing it straight back); a bar that runs out goes off, and that player is out. Last one left wins
+        if (s.pz) { if (now < s.pz) continue; s.pz = 0; s.st = 0; s.bars.clear(); s.h = -1; out.push({ k: 'rs', i: s.i }, mgState(s)); }
+        if (s.st === 0) { if (ins.length >= 2) { s.st = 1; s.cd = now + MG.TAG_CD; out.push(mgState(s)); } continue; }
+        if (s.st === 1) { if (ins.length < 2) { s.st = 0; out.push(mgState(s)); continue; } if (now < s.cd) continue;
+          s.st = 2; s.bars = new Map(ins.map(p => [p.id, MG.TAG_MS])); s.h = ins[Math.floor(Math.random() * ins.length)].id; s.hs = now; s.nb = null; out.push(mgState(s)); continue; }
+        let ch = false;
+        for (const id of [...s.bars.keys()]) if (!here.has(id)) { s.bars.delete(id); ch = true; if (id === s.h) s.h = -1; }   // (leaving the arena: out)
+        if (s.h !== -1 && now - s.hs >= s.bars.get(s.h)) { s.bars.delete(s.h); out.push({ k: 'boom', i: s.i, id: s.h }); s.h = -1; ch = true; }   // (the bar ran out: boom)
+        if (s.bars.size <= 1) {
+          const wid = s.bars.size ? [...s.bars.keys()][0] : null, who = ins.find(p => p.id === wid);
+          if (who) { s.pz = now + MG.PAUSE_MS; s.wn = who.name || ''; out.push({ k: 'win', i: s.i, id: wid, name: s.wn }); } else s.st = 0;
+          s.h = -1; out.push(mgState(s)); continue;
+        }
+        if (s.h === -1) { const a = [...s.bars.keys()]; s.h = a[Math.floor(Math.random() * a.length)]; s.hs = now; s.nb = null; ch = true; }   // (the bomb goes to somebody still in)
+        else if (now - s.hs > 200) {
+          const hp = ins.find(p => p.id === s.h);
+          if (hp) for (const p of ins) { if (p.id === s.h || !s.bars.has(p.id) || (s.nb && s.nb.from === p.id && now - s.nb.at < MG.TAG_BACK)) continue;
+            if ((p.x - hp.x) ** 2 + (p.y - hp.y) ** 2 < (2 * R + 8) ** 2) { s.bars.set(s.h, s.bars.get(s.h) - (now - s.hs)); out.push({ k: 'pass', i: s.i, from: s.h, to: p.id }); s.nb = { from: s.h, at: now }; s.h = p.id; s.hs = now; ch = true; break; } }
+        }
+        if (ch) out.push(mgState(s));
+        continue;
+      }
+      // the shoot-out, target practice and gem dash: a score for each player inside, lost when they leave
       let gone = false; for (const id of s.sc.keys()) if (!here.has(id)) { s.sc.delete(id); gone = true; }
       for (const id of s.fire.keys()) if (!here.has(id)) { s.fire.delete(id); s.face.delete(id); }
       for (const id of s.lj.keys()) if (!here.has(id)) s.lj.delete(id);
       if (gone) out.push({ k: 'sc', i: s.i, s: [...s.sc] });
       if (s.pz) { if (now < s.pz) continue; s.pz = 0; s.sc.clear(); out.push({ k: 'rs', i: s.i }); }   // (the winner has been shown: everyone starts again from nothing)
+      const win = (id) => { const who = ins.find(p => p.id === id); s.pz = now + MG.PAUSE_MS; s.shots.length = 0; s.item = null; s.wn = who && who.name || ''; out.push({ k: 'win', i: s.i, id, name: s.wn }); };
       const score = (b, extra) => {
         if (!here.has(b.id)) { out.push({ k: 'x', i: s.i, b: b.n }); return; } const n = (s.sc.get(b.id) || 0) + 1; s.sc.set(b.id, n); out.push(Object.assign({ i: s.i, b: b.n, id: b.id, n }, extra));
-        if (n >= MG.WIN) { const who = ins.find(p => p.id === b.id); s.pz = now + MG.PAUSE_MS; s.shots.length = 0; s.wn = who && who.name || ''; out.push({ k: 'win', i: s.i, id: b.id, name: s.wn }); }
+        if (n >= MG.WIN) win(b.id);
       };
       if (s.k === 'sht') {
         for (const p of ins) {
@@ -943,28 +1029,42 @@
           if (now >= t) { const f = s.face.get(p.id), b = { n: ++s.bid, id: p.id, x: p.x + f * (R + 3), y: p.y, vx: f * MG.BUL_V, t: now, lx: p.x }; s.shots.push(b); out.push({ k: 'bul', i: s.i, b: b.n, id: p.id, x: Math.round(b.x), y: Math.round(b.y), vx: b.vx, t: now }); t = Math.max(t + MG.SHOT_MS, now); }
           s.fire.set(p.id, t);
         }
+        const objs = w.dyn.filter(d => d.mgo && d.mgo.startsWith(s.key + '#') && !d.gone);
         for (let j = s.shots.length - 1; j >= 0; j--) {
           const b = s.shots[j], x = b.x + b.vx * (now - b.t) / 1000, a = Math.min(b.lx, x), c = Math.max(b.lx, x), rr = R + MG.BUL_R; b.lx = x;
           let hit = null; for (const p of ins) if (p.id !== b.id && Math.abs(p.y - b.y) < rr && p.x > a - rr && p.x < c + rr) { hit = p; break; }
           if (hit) { s.shots.splice(j, 1); score(b, { k: 'hit', v: hit.id }); if (s.pz) break; continue; }
-          if (x < x0 || x > x1) s.shots.splice(j, 1);   // (at the edge of the arena it is gone: every screen does the same)
+          if (x < x0 || x > x1 || mgSolidOn(w, b, a, c) || objs.some(d => { const e = d.r || d.hw, f = d.r || d.hh; return Math.abs(d.y - b.y) < f + MG.BUL_R && d.x + e + MG.BUL_R > a && d.x - e - MG.BUL_R < c; })) { s.shots.splice(j, 1); out.push({ k: 'x', i: s.i, b: b.n }); }   // (the wall, cover or a crate takes it)
         }
       } else if (s.k === 'tgt') {
         for (const p of ins) {
-          if (!p.land || p.y < y1 - 1.6 * TS || now - (s.lj.get(p.id) || -1e15) < 300) continue;   // (came down on the floor from a jump: the block under them fires)
+          if (!p.land || p.y < y1 - 1.6 * TS || now - (s.lj.get(p.id) || -1e15) < MG.PJ_CD) continue;   // (came down on the floor from a jump: the block under them fires; then it has to load again)
           s.lj.set(p.id, now); const bx = Math.max(g.x0, Math.min(g.x1 - 1, Math.floor(p.x / TS))), b = { n: ++s.bid, id: p.id, x: (bx + 0.5) * TS, y: y1 - 4, t: now, ly: y1 - 4 };
           s.shots.push(b); out.push({ k: 'pj', i: s.i, b: b.n, id: p.id, x: b.x, y: b.y, t: now });
         }
-        const tg = tgtAt(g, now);
+        const tg = tgtAt(g, now), sh = shieldAt(g, now);
         for (let j = s.shots.length - 1; j >= 0; j--) {
           const b = s.shots[j], y = b.y - MG.PJ_V * (now - b.t) / 1000, top = Math.min(b.ly, y), bot = Math.max(b.ly, y); b.ly = y;
-          if (Math.abs(b.x - tg.x) < MG.TGT_W / 2 + MG.PJ_R && top < tg.y + MG.TGT_H / 2 + MG.PJ_R && bot > tg.y - MG.TGT_H / 2 - MG.PJ_R) { s.shots.splice(j, 1); score(b, { k: 'thit' }); if (s.pz) break; continue; }
+          if (Math.abs(b.x - sh.x) < MG.SH_W / 2 + MG.PJ_R && top < sh.y + MG.SH_H / 2 + MG.PJ_R && bot > sh.y - MG.SH_H / 2 - MG.PJ_R) { s.shots.splice(j, 1); out.push({ k: 'x', i: s.i, b: b.n, sh: 1 }); continue; }   // (the shield took it)
+          const dx = b.x - tg.x, rr = MG.TGT_R + MG.PJ_R, cy = Math.max(top, Math.min(bot, tg.y));
+          if (dx * dx + (cy - tg.y) ** 2 < rr * rr) { s.shots.splice(j, 1); score(b, { k: 'thit' }); if (s.pz) break; continue; }
           if (y < y0) s.shots.splice(j, 1);
         }
+      } else if (s.k === 'gem') {   // gem dash: one coin at a time somewhere in the arena (every tenth a diamond); whoever touches it first has it, for real
+        if (!ins.length) { if (s.item) { s.item = null; out.push({ k: 'gx', i: s.i }); } s.next = 0; continue; }
+        if (!s.item) { if (!s.next) s.next = now + 800; if (now >= s.next && s.spots.length) { s.cnt++; const sp = s.spots[Math.floor(Math.random() * s.spots.length)]; s.item = { x: sp[0], y: sp[1], v: s.cnt % 10 === 0 ? 'g' : 'c', n: s.cnt }; s.next = 0; out.push({ k: 'gs', i: s.i, x: s.item.x, y: s.item.y, v: s.item.v, n: s.item.n }); } continue; }
+        const it = s.item; let got = null; for (const p of ins) if ((p.x - it.x) ** 2 + (p.y - it.y) ** 2 < (R + 15) ** 2) { got = p; break; }
+        if (!got) continue;
+        s.item = null; s.next = now + 900 + Math.floor(Math.random() * 900);
+        const n = (s.sc.get(got.id) || 0) + 1; s.sc.set(got.id, n);
+        let rw = 0; if (caps) { const c = mgCap(caps, got.tag || got.id, now); if (it.v === 'g' ? c.g < MG.GEM_H : c.c < MG.COIN_H) { if (it.v === 'g') c.g++; else c.c++; rw = 1; } }   // (it really goes in your wallet, up to so much an hour: a game, not a mine)
+        out.push({ k: 'gp', i: s.i, id: got.id, v: it.v, n, rw, x: it.x, y: it.y });
+        if (n >= MG.GEM_WIN) win(got.id);
       }
     }
   }
-  function mgSnap(M, now) { return M.map(s => s.k === 'soc' ? [s.L, s.R, s.pz > now ? s.pz : 0, s.ws | 0] : [[...s.sc], s.pz > now ? s.pz : 0, s.pz > now ? s.wn : '']); }   // (for someone just arriving: the lights and the scores, never what is flying)
+  function mgSolidOn(w, b, a, c) { for (let x = a; x <= c + 0.1; x += 8) { const t = tile(w, Math.floor(Math.min(x, c) / TS), Math.floor(b.y / TS)); if (t === 1 || t === 3) return true; } return false; }   // (a shot along a..c at its height: anything solid in the way?)
+  function mgSnap(M, now) { return M.map(s => s.k === 'soc' ? [s.L, s.R, s.pz > now ? s.pz : 0, s.ws | 0] : s.k === 'tag' ? [[], s.pz > now ? s.pz : 0, s.pz > now ? s.wn : '', s.st, s.cd, s.h, s.hs, [...s.bars]] : [[...s.sc], s.pz > now ? s.pz : 0, s.pz > now ? s.wn : '', s.item ? [s.item.x, s.item.y, s.item.v, s.item.n] : null]); }   // (for someone just arriving: lights, scores, the bomb and the coin; never what is flying)
   function zoneC(o, px, py, m, own) { const z = noBuild(o); for (let i = 0; i < z.length; i++) { const q = z[i]; if (own !== undefined && q.k === 'b' && (q.o >>> 0) === (own >>> 0)) continue; const dx = px - q.cx, dy = py - q.cy, rr = q.r + (m || 0); if (dx * dx + dy * dy <= rr * rr) return true; } return false; }   // (the circles only: what burns things)
   function zoneP(o, px, py, m, own) { if (gameAt(o, px, py, m) >= 0) return true; const z = noBuild(o); for (let i = 0; i < z.length; i++) { const q = z[i]; if (own !== undefined && q.k === 'b' && (q.o >>> 0) === (own >>> 0)) continue; const dx = px - q.cx, dy = py - q.cy, rr = q.r + (m || 0); if (dx * dx + dy * dy <= rr * rr) return true; } return false; }   // (own: a player's own base does not count for them)
   function burnZone(w, d) {   // does this thing burn up where it is? Always in the circles at the start and the finish; in a player's base, anything that is not theirs (the server decides that in a shared world)
@@ -1177,7 +1277,7 @@
         const pm = Math.abs(nx) > 0.5 ? PM_PUSH : PM;   // (you weigh as much as four small crates)
         const K = 1 / pm + im + ii * rn * rn, jf = -(1 + e) * vn / K;
         // rolling into something is a push: it gets going over a moment, together with whatever is riding on it (the more there is, the harder it is to get going). Flying into it is a knock
-        const load = Math.max(d.m, (d._N || 0) / GRAV), soft = vn > -330 && b.vx * b.vx + b.vy * b.vy < 330 * 330 && free;
+        const load = Math.max(d.m, (d._N || 0) / GRAV), soft = vn > -330 && b.vx * b.vx + b.vy * b.vy < 330 * 330 && free && !(d.sb >= 0);   // (v240: the soccer ball is never just pushed: every touch knocks it)
         let cap = 1e9;
         if (soft) {
           cap = F_PUSH * (b.dt || 1 / 60);   // (how hard you can push)
@@ -1186,6 +1286,11 @@
         } else if (free && ny > -0.5) { const kb = im + ii * rn * rn; if (kb > 0) cap = KNOCK_MAX / kb; }   // (a hard knock from the side or below sends it flying, but only so fast: never off across the whole map. Landing on top of it is not capped: what is under it takes that)
         const j = Math.min(jf, cap);
         if (free) { d.vx -= j * nx * im; d.vy -= j * ny * im; d.av -= j * rn * ii; if (vn < -40 || (Math.abs(nx) > 0.5 && Math.abs(b.vx) > 20)) d.st = 0; }   // (only a real knock or push keeps it from settling: just standing or leaning on a pile lets it come to rest under you)
+        if (free && d.sb >= 0 && j > 0) {   // (v240) the soccer ball: a touch lifts it as well as knocking it on; caught between two players at once it squashes and pops up out from between them
+          if (ny > -0.6 && vn < -50 && (w.tick || 0) - (d.kk || -99) > 6) { d.kk = w.tick || 0; d.vy = Math.min(d.vy, -(380 + 0.6 * Math.abs(vn))); }
+          const tk = w.tick || 0; if (nx < -0.5) d.pL = tk; else if (nx > 0.5) d.pR = tk;
+          if (d.pL !== undefined && d.pR !== undefined && Math.abs(d.pL - d.pR) <= 8 && tk - Math.min(d.pL, d.pR) <= 8) { d.vy = -820; d.vx *= 0.15; d.sq = 1; d.pL = d.pR = undefined; }
+        }
         b.vx += j * nx / pm; b.vy += j * ny / pm;
         if (free && d.k === 'o' && j > 0) {   // your ball grips a ball it pushes, the way two rolling balls do (so one squeezed between you and another never gets spun backwards into you)
           const tx = ny, ty = -nx, wp = b.vx / R, px = -wp * (-ny * R), py = wp * (-nx * R);   // (your ball rolls: its surface where they touch moves with its spin)
@@ -2023,7 +2128,7 @@
     return '';
   }
   const PII_WHY = { email: 'an email address', link: 'a link', app: 'an account on another app', phone: 'a phone number', address: 'an address' };
-  const api = { VERSION: 238, gameAt, inGame, tgtAt, MG, gamesOf, mgNew, mgStep, mgSnap, mgHome, MGK, MGSZ, mgRect, liveGames, setGames, mgFits, recInGames, mgKey, springKick, setPad, wakeAround, restAll, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
+  const api = { VERSION: 240, gameAt, inGame, tgtAt, MG, gamesOf, mgNew, mgStep, mgSnap, mgHome, MGK, MGSZ, mgRect, liveGames, setGames, mgFits, mgWhy, mgNearest, mgParts, mgObjs, shieldAt, mgSolidOn, recInGames, mgKey, springKick, setPad, wakeAround, restAll, SUPER_BOUNCE, gateH, gateBtn, gateOkH, addBuiltGate, _sup: (w, d) => hasSupport(w, d, (x0, y0, x1, y1) => w.dyn.filter(o => !(o.burn > 0) && o.x + 80 > x0 && o.x - 80 < x1 && o.y + 80 > y0 && o.y - 80 < y1)), OOB, POFF, BOOK_K, bkey, bookAdd, bookDel, bookReader, bookClean, piiCheck, PII_WHY, nameReserved, addPwr, baseGround, baseClear, burnZone, addBase, baseOk, BASE_R, btnPop, doorShut, miscClash, addCancel, zoneP, zoneT, portalSpotOk, coordDel, delCancel, normBuild, buildHash, gadgetTile, botMake, botSpawn, botStep, botName, botLook, botSocial, askKind, botCtx, BTN_T, outOfBall, ballOff, inSolidAt: (w, x, y, e) => boxHits(w, x, y, e - 1, e - 1), restsOn, maxPen, seeOut, addRope, ropeOk, ropeAt, ropeBody, ropeQ, nearZone, noBuild, plankCross, applyDel, PLAYER_WT, liftOut, bodyOverlaps, addPortal, padAt, addPad, PAD_V, TS, R, GRAV, propDims, addProp, spotFree, tile, MAXV, BOOST_T, BOOST_V, makeWorld, newBody, step, stepDyn, stepSwitches, setDoorTiles, killYAt, collideDyn, seeBody, hash32, doorBlocked, FALL_WARN, FALL_DIE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BallPhysics = api;
 })(typeof window !== 'undefined' ? window : globalThis);

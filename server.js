@@ -57,7 +57,7 @@ for (const [url, name, type] of [
   ['/sw.js', 'sw.js', 'application/javascript; charset=utf-8']
 ]) FILES[url] = { data: fs.readFileSync(path.join(__dirname, name)), type };
 // A fingerprint of the game files. The page asks for it on every visit and refreshes itself if it is holding an old copy.
-const GAME_V = 238;   // (the version of the game this server runs: the game's version panel shows it)
+const GAME_V = 240;   // (the version of the game this server runs: the game's version panel shows it)
 const BUILD_CHECK = process.env.BUILD_CHECK !== '0';   // (tests that talk to the server directly switch it off)
 const BUILD = crypto.createHash('sha1').update(FILES['/index.html'].data).update(FILES['/maps.js'].data).update(FILES['/physics.js'].data).update(FILES['/sw.js'].data).digest('hex').slice(0, 12);
 const HOME_URL = (process.env.HOME_URL || '').replace(/\/+$/, '');   // optional: send visitors of any other address here, e.g. https://ballpit.party
@@ -563,7 +563,7 @@ const server = http.createServer((req, res) => {
     const q = (req.url.split('ball=')[1] || '').split(',').map(Number), out = [];
     for (const r of rooms.values()) { if (!r.world || !r.mg) continue; const w = r.world;
       if (q.length >= 2 && q.every(Number.isFinite)) { const s = r.mg.find(s => s.k === 'soc'), d = s && w.dyn.find(o => o.sb === s.i && !o.gone); if (d) { d.x = q[0]; d.y = q[1]; d.vx = q[2] || 0; d.vy = q[3] || 0; d.nap = false; d.sleep = false; d.st = 0; d.tpT = w.tick || 0; } }
-      out.push({ id: r.id, priv: r.priv ? 1 : 0, games: (w.games || []).map(g => [g.k, g.x0, g.y0, g.x1, g.y1, g.tx, g.ty, g.b ? 1 : 0]), st: r.mg.map(s => s.k === 'soc' ? { L: s.L, R: s.R, ball: s.d ? [Math.round(s.d.x), Math.round(s.d.y), s.d.gone ? 1 : 0] : null } : { sc: [...s.sc], pz: s.pz, shots: s.shots.length }) }); }
+      out.push({ id: r.id, priv: r.priv ? 1 : 0, games: (w.games || []).map(g => [g.k, g.x0, g.y0, g.x1, g.y1, g.tx, g.ty, g.b ? 1 : 0]), st: r.mg.map(s => s.k === 'soc' ? { L: s.L, R: s.R, ball: s.d ? [Math.round(s.d.x), Math.round(s.d.y), s.d.gone ? 1 : 0] : null } : { sc: [...s.sc], pz: s.pz, shots: s.shots.length, item: s.item, st: s.st, h: s.h, bars: [...s.bars] }) }); }
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); return res.end(JSON.stringify(out));
   }
   if (TEST_HOOKS && url === '/__t/bud') { testBud = +(req.url.split('n=')[1] || 0) || 0; res.writeHead(200); return res.end('{}'); }
@@ -712,6 +712,7 @@ function miscOkZ(w, q) {   // (the same rule every device uses: nothing built in
 function bLock(w, px, py, otag) { if (!w || !w.bases) return false; for (const b of w.bases) { const dx = px - b.cx, dy = py - b.cy; if (dx * dx + dy * dy <= b.r * b.r && (b.o >>> 0) !== ((otag || 0) >>> 0)) return true; } return false; }
 const mkey = q => q.slice(0, q[0] === 'por' || q[0] === 'rope' ? 5 : 3).join(',');
 function gateOkZ(w, q) { if (!Array.isArray(q) || q.length < 5) return false; return !inZoneT(w, q[0], q[1]) && !inZoneT(w, q[3], q[4]); }   // (exactly the client's validGate)
+const MG_CAPS = new Map();   // (v240: what each player has earned from gem dash this hour, so it is a game and not a mine)
 const gSigOf = B => B ? (B.props || []).length + '|' + (B.gates || []).length + '|' + (B.misc || []).length + '|' + (B.cps || []).length + '|' + (B.dels || []).length : '';   // (v238: anything built or deleted: which mini games there are is looked at again)
 function roomWorld(room) {
   if (room.world) return room.world;
@@ -736,7 +737,7 @@ function roomWorld(room) {
   w.dyn.forEach(d => { d.ver = 1; d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; });
   w.see.forEach(s => { s.lang = s.ang; });
   P.setGames(w, P.liveGames(m, B)); room.gSig = gSigOf(B);   // (v238: the map's mini games, except where something was built in one, and the ones players built)
-  room.mg = P.mgNew(w); for (const s of room.mg) if (s.k === 'soc') { const d = w.dyn.find(o => o.sb === s.i && !o.gone); if (d) P.mgHome(w, d); }   // (v238: the mini games start over with the world: nothing about them is ever kept)
+  room.mg = P.mgNew(w); for (const d of w.dyn) if ((d.sb >= 0 || d.mgo) && !d.gone) P.mgHome(w, d);   // (v238: the mini games start over with the world: nothing about them is ever kept)
   return w;
 }
 const worldAdd = {   // somebody built something: it goes into the shared world straight away
@@ -923,12 +924,13 @@ function simTick() {
       }
       w.ev.length = 0;
     }
-    if (room.mg) { const B = bstate(room), sg = gSigOf(B); if (sg !== room.gSig) { room.gSig = sg; const v0 = w.gamesV; P.setGames(w, P.liveGames(w.map, B)); if (w.gamesV !== v0) { room.mg = P.mgNew(w); for (const s of room.mg) if (s.k === 'soc') { const d = w.dyn.find(o => o.sb === s.i && !o.gone); if (d) { d.ver = ++room.verN; (room.chg = room.chg || []).push(d); } } } } }   // (a game built or deleted, or something in one: every device works out the same list)
+    if (room.mg) { const B = bstate(room), sg = gSigOf(B); if (sg !== room.gSig) { room.gSig = sg; const v0 = w.gamesV; P.setGames(w, P.liveGames(w.map, B)); if (w.gamesV !== v0) { room.mg = P.mgNew(w); for (const d of w.dyn) if ((d.sb >= 0 || d.mgo) && !d.gone) { d.ver = ++room.verN; (room.chg = room.chg || []).push(d); } } } }   // (a game built or deleted, or something in one: every device works out the same list)
     if (room.mg && room.mg.length) {   // (v238) the mini games: only ever looking at where the players are, never moving one
       const pl = room.mgPl || (room.mgPl = []); pl.length = 0;
-      for (const p of act) { pl.push({ id: p.id, x: p.x, y: p.y, vx: p.rvx === undefined ? p.vx : p.rvx, land: !!p.mgLand, name: p.name }); p.mgLand = false; }
-      const out = []; P.mgStep(room.mg, w, pl, now, out);
-      for (const s of room.mg) { const d = s.d; if (d && d.tpT === (w.tick || 0) && d.mgv !== w.tick) { d.mgv = w.tick; d.ver = ++room.verN; if (d._cw !== room.cw) { d._cw = room.cw; (room.chg = room.chg || []).push(d); } d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; d.lst = true; } }   // (the soccer ball put back in the middle: told at once)
+      for (const p of act) { pl.push({ id: p.id, x: p.x, y: p.y, vx: p.rvx === undefined ? p.vx : p.rvx, land: !!p.mgLand, name: p.name, tag: p.otag >>> 0 }); p.mgLand = false; }
+      const out = []; P.mgStep(room.mg, w, pl, now, out, MG_CAPS);
+      if (room.mgDV !== w.gamesV) { room.mgDV = w.gamesV; room.mgD = w.dyn.filter(d => d.sb >= 0 || d.mgo); }   // (the games' balls and crates)
+      for (const d of room.mgD) if (!d.gone && d.tpT === (w.tick || 0) && d.mgv !== w.tick) { d.mgv = w.tick; d.ver = ++room.verN; if (d._cw !== room.cw) { d._cw = room.cw; (room.chg = room.chg || []).push(d); } d.lx = d.x; d.ly = d.y; d.lr = d.rot; d.lb = false; d.lst = true; }   // (put back where it belongs: told at once)
       if (out.length) broadcast(room, { t: 'mg', e: out });
     }
     if (w.lost && w.lost.length) {   // something a player built burned up in lava or fell out of the world: it is off the books, and whoever built it can build it again
@@ -1768,7 +1770,7 @@ wss.on('connection', (ws, req) => {
       if (q[0] === 'mg') { const e = B.misc.find(x => x[0] === 'mg' && x[1] === q[1] && x[2] === q[2]); if (e ? (e[4] >>> 0) !== (p.otag >>> 0) && !p.admin : !(r.world && (r.world.games || []).some(g => !g.b && g.tx === q[1] && g.ty === q[2]))) return; }   // (v238: a mini game somebody built: only they take it away. One of the map's: anybody, like the map's other things)
       if (r.world && q[0] !== 'base' && q[0] !== 'mg') {   // nothing in somebody else's base can be deleted by anyone but them
         const w = r.world, T = P.TS; let at = null;
-        if (q[0] === 'b') { const d = w.dynBy.get(q[1] >>> 0); if (d && d.sb >= 0) return; if (d) at = [d.x, d.y]; }   // (v238: the soccer ball can never be deleted)
+        if (q[0] === 'b') { const d = w.dynBy.get(q[1] >>> 0); if (d && (d.sb >= 0 || d.mgo)) return; if (d) at = [d.x, d.y]; }   // (v238: a game's ball or crates can never be deleted)
         else if (q[0] === 's') { const e = w.see.find(o => o.uid === (q[1] >>> 0)); if (e) at = [e.cx, e.cy]; }
         else if (q[0] === 'g') { const e = w.doors.find(o => o.uid === (q[1] >>> 0)); if (e) at = [(e.x + 0.5) * T, (e.y + e.h / 2) * T]; }
         else if (q[0] === 'r') { const e = (w.ropes || []).find(o => o.uid === (q[1] >>> 0)); if (e) at = [(e.ax + e.bx) / 2, (e.ay + e.by) / 2]; }

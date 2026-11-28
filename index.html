@@ -887,6 +887,7 @@
   .shoptabs{display:flex;gap:4px;margin:0 0 8px;flex:none}.shoptabs button{flex:1;min-width:0;padding:6px 2px;font-size:14px;background:none;border:2px solid transparent;border-radius:var(--wob);color:var(--ink);opacity:.7}.shoptabs button.on{opacity:1;background:#3a3355;border-color:var(--line)}
   .finroll{margin:0!important;gap:6px;font-size:13px;flex:none!important;white-space:nowrap}.lvmode{margin:0}.lvmode .todrow>div{flex:1;min-width:0}.lvmode .row{margin:4px 0}.lvmode .small{margin:0 0 4px}
   #settings .tabs{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}#settings .sbody{touch-action:pan-y}
+  @media (max-width:430px){.shoptabs{gap:2px}.shoptabs button{font-size:12.5px;padding:6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
   @media (max-height:520px) and (min-aspect-ratio:1/1){.shoptabs{margin:0 0 4px}.shoptabs button{padding:3px 2px;font-size:13px}.chead{margin:0 0 2px}.lvmode .small{display:none}.lvmode .row{margin:2px 0}}
   canvas.pball{border:0!important;border-radius:0!important;box-shadow:none!important;background:none!important}
   /* one message at a time, high up and out of the way of the player: the most important one shows, the rest wait their turn */
@@ -1178,7 +1179,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 238; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 240; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -2092,8 +2093,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=238"></script>
-<script src="physics.js?v=238"></script>
+<script src="maps.js?v=240"></script>
+<script src="physics.js?v=240"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2467,7 +2468,7 @@ function noise(dur, vol, f1, f2, type, t0, dest) {
   s.connect(fl); fl.connect(g); g.connect(dest || AU.sfx); s.start(t0, Math.random()); s.stop(t0 + dur + 0.05);
 }
 const hz = m => 440 * Math.pow(2, (m - 69) / 12);
-const SFXGAP = { shot: 70, hit2: 60, launch2: 60, goal: 300, ready: 400, boost: 300, push: 140, thud: 80, land: 90, coin: 25, creak: 400, tick: 200, ui: 30 };
+const SFXGAP = { shot: 70, hit2: 60, launch2: 60, goal: 300, boom: 120, pass: 120, pass2: 120, ready: 400, boost: 300, push: 140, thud: 80, land: 90, coin: 25, creak: 400, tick: 200, ui: 30 };
 const SFXLAST = {};
 const SFX = {
   jump: () => { tone(300, 0.14, 'square', 0.07, 620); },
@@ -2515,7 +2516,10 @@ const SFX = {
   hit: () => { tone(520, 0.12, 'triangle', 0.11, 1040); noise(0.08, 0.08, 3000, 1500, 'highpass'); },
   hit2: () => { tone(520, 0.1, 'triangle', 0.045, 1040); },
   launch: () => { tone(260, 0.18, 'sine', 0.1, 760); noise(0.12, 0.06, 1200, 3000, 'bandpass'); },
-  launch2: () => { tone(260, 0.14, 'sine', 0.04, 760); }
+  launch2: () => { tone(260, 0.14, 'sine', 0.04, 760); },
+  boom: () => { const t = AU.ctx.currentTime; noise(0.7, 0.3, 900, 120, 'lowpass', t); tone(110, 0.5, 'sine', 0.22, 40, t); tone(70, 0.6, 'triangle', 0.15, 30, t + 0.02); },   // (v240: bomb tag)
+  pass: () => { tone(620, 0.08, 'square', 0.06, 980); tone(980, 0.1, 'triangle', 0.06, 1300, AU.ctx.currentTime + 0.06); },
+  pass2: () => { tone(620, 0.08, 'square', 0.025, 980); }
 };
 function sfx(n) {
   if (!settings.sfx || !AU.ctx || AU.ctx.state !== 'running') return;
@@ -5903,9 +5907,11 @@ const SHOP = [
   { cat: 'gadgets', id: 'spring0', max: 60, name: 'Spring', info: 'Bounces you high.', c: 100, g: 0, kind: 5 },
   { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Bounces you very high.', c: 200, g: 0, kind: 6 },
   { cat: 'travel', id: 'base', max: 1, base: true, name: 'Base', info: 'Your own safe zone. Only you can build in it.', c: 500, g: 5 },
-  { cat: 'travel', id: 'mgsoc', max: 1, mgk: 'soc', name: 'Soccer field', info: 'Mini game: two goals, three lights each. Needs wide, flat ground.', c: 10000, g: 100 },
-  { cat: 'travel', id: 'mgsht', max: 1, mgk: 'sht', name: 'Shoot-out arena', info: 'Mini game: everyone inside shoots. First to 3 hits wins.', c: 10000, g: 100 },
-  { cat: 'travel', id: 'mgtgt', max: 1, mgk: 'tgt', name: 'Target practice', info: 'Mini game: land a jump to fire at a moving target.', c: 10000, g: 100 },
+  { cat: 'games', id: 'mgsoc', max: 1, mgk: 'soc', name: 'Soccer field', info: 'Two goals, three lights each. Knock the bouncy ball in.', c: 10000, g: 100 },
+  { cat: 'games', id: 'mgsht', max: 1, mgk: 'sht', name: 'Shoot-out arena', info: 'Walled arena. Everyone inside shoots. First to 3 hits wins.', c: 10000, g: 100 },
+  { cat: 'games', id: 'mgtgt', max: 1, mgk: 'tgt', name: 'Target practice', info: 'Land a jump to fire at a dodging target. First to 3 wins.', c: 10000, g: 100 },
+  { cat: 'games', id: 'mggem', max: 1, mgk: 'gem', name: 'Gem dash', info: 'Grab the coins that pop up first. Every 10th is a diamond.', c: 10000, g: 100 },
+  { cat: 'games', id: 'mgtag', max: 1, mgk: 'tag', name: 'Bomb tag', info: 'Pass the bomb before your bar runs out. Last one left wins.', c: 10000, g: 100 },
   { cat: 'travel', id: 'pw0', max: 40, pwr: 0, name: 'Sushi', info: 'Power-up: unlimited boost for a minute.', c: 750, g: 0 },
   { cat: 'travel', id: 'pw1', max: 40, pwr: 1, name: 'Flower bouquet', info: 'Power-up: extra tall jumps for a minute.', c: 750, g: 0 },
   { cat: 'travel', id: 'flag', max: 1, name: 'Checkpoint flag', info: 'Saves your spot. One at a time.', c: 400, g: 5 },
@@ -5929,7 +5935,7 @@ const SHOP = [
   { cat: 'coins', id: 'dig', name: 'Delete', info: 'Removes what is in front of you.', c: 200, g: 0, misc: 'ter', ter: 'dig' },
   { cat: 'terrain', id: 'water', max: 600, name: 'Water', info: 'Turns lava into rock, ice into water.', c: 150, g: 7, misc: 'ter', ter: 'water' }
 ];
-const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['travel', 'Special'], ['terrain', 'Terrain'], ['coins', 'More']];
+const SHOP_TABS = [['blocks', 'Blocks'], ['gadgets', 'Gadgets'], ['travel', 'Special'], ['games', 'Games'], ['terrain', 'Terrain'], ['coins', 'More']];   // (v240: the mini games have a tab of their own)
 let shopTab = 'blocks';
 const shopIcon = id => {
   const st = 'stroke="#16100c" stroke-width="2.200" stroke-linejoin="round" stroke-linecap="round"';
@@ -5939,6 +5945,8 @@ const shopIcon = id => {
   if (id === 'mgsoc') return '<svg viewBox="0 0 40 40"><path d="M5 33V14H13M35 33V14H27" fill="none" stroke="#fff" ' + st.replace('#16100c', '#5fd36d') + '/><circle cx="20" cy="26" r="7" fill="#fff" ' + st + '/><path d="M20 22L23 25L22 29H18L17 25Z" fill="#16100c"/><circle cx="9" cy="8" r="2.5" fill="#ffd23d"/><circle cx="31" cy="8" r="2.5" fill="#ffd23d"/></svg>';
   if (id === 'mgsht') return '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="12" fill="none" stroke="#ff6b6b" stroke-width="3"/><path d="M20 3V12M20 28V37M3 20H12M28 20H37" stroke="#ff6b6b" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="3" fill="#fff" ' + st + '/></svg>';
   if (id === 'mgtgt') return '<svg viewBox="0 0 40 40"><rect x="5" y="7" width="30" height="11" rx="5.5" fill="#fff" ' + st + '/><rect x="10" y="10" width="20" height="5" rx="2.5" fill="#ff5a5a"/><path d="M20 34V24M15 28L20 23L25 28" fill="none" stroke="#ffb938" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="21" r="2.5" fill="#ffe9a8"/></svg>';
+  if (id === 'mggem') return '<svg viewBox="0 0 40 40"><path d="M8 15L14 7H26L32 15L20 34Z" fill="#7ff0ff" ' + st + '/><path d="M14 7L20 15L26 7M8 15H32M20 15V34" fill="none" stroke="#1c6f8a" stroke-width="1.6"/><circle cx="32" cy="30" r="5" fill="#ffc233" ' + st + '/></svg>';
+  if (id === 'mgtag') return '<svg viewBox="0 0 40 40"><circle cx="18" cy="24" r="11" fill="#1c1820" stroke="#fff" stroke-width="2"/><circle cx="14" cy="20" r="3" fill="rgba(255,255,255,.4)"/><rect x="15" y="9" width="6" height="5" fill="#5b5566"/><path d="M18 9Q24 3 29 6" fill="none" stroke="#c9a26b" stroke-width="2.4"/><circle cx="30" cy="6" r="4" fill="#ffd23d"/><circle cx="30" cy="6" r="2" fill="#ff5a2a"/></svg>';
   if (id === 'base') return '<svg viewBox="0 0 40 40"><circle cx="20" cy="21" r="15" fill="rgba(127,240,255,.18)" stroke="#7ff0ff" stroke-width="2.200" stroke-dasharray="4 3"/><path d="M20 4V30" stroke="#7ff0ff" stroke-width="3" stroke-linecap="round" opacity=".6"/><path d="M14 30L20 18L26 30Z" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'pw0') return '<svg viewBox="0 0 40 40"><ellipse cx="20" cy="25" rx="14" ry="8" fill="#fff" ' + st + '/><path d="M7 22Q20 8 33 22Q20 18 7 22Z" fill="#ff8a6a" ' + st + '/><rect x="17" y="15" width="6" height="18" fill="#24303a" ' + st + '/></svg>';
   if (id === 'pw1') return '<svg viewBox="0 0 40 40"><path d="M20 36L14 18M20 36V16M20 36L26 18" fill="none" stroke="#3c9b4a" stroke-width="2.600" stroke-linecap="round"/><circle cx="13" cy="15" r="5.500" fill="#ff7ab8" ' + st + '/><circle cx="27" cy="15" r="5.500" fill="#ffd23d" ' + st + '/><circle cx="20" cy="10" r="5.500" fill="#b98cff" ' + st + '/><path d="M13 34H27L24 28H16Z" fill="#fff3d6" ' + st + '/></svg>';
@@ -6226,7 +6234,7 @@ function delTarget(side, pull) {
     if (!best || dd < best.dd) best = Object.assign({ q, name, box: [x0, y0, x1, y1], dd }, extra || {});
   };
   for (const d of w.dyn) {
-    if (d.burn > 0 || d.gone || d.sb >= 0) continue;   // (v238: the soccer ball is never deleted)
+    if (d.burn > 0 || d.gone || d.sb >= 0 || d.mgo) continue;   // (v238: a game's ball and crates are never deleted)
     const e = d.r || Math.max(d.hw, d.hh) * 1.2; if (Math.abs(d.x - b.x) > 160 || Math.abs(d.y - b.y) > 160) continue;
     offer(d.x - e, d.y - e, d.x + e, d.y + e, ['b', d.uid >>> 0], d.k === 'o' ? 'ball' : d.kind === 5 || d.kind === 6 ? 'spring' : 'crate');
   }
@@ -6239,7 +6247,7 @@ function delTarget(side, pull) {
   for (const q of w.btns) if (!q.gone && !q.mm && q.to && q.to.length === 1 && w.doors[q.to[0]] && !w.doors[q.to[0]].gone && !w.doors[q.to[0]].mm) offer(q.x * TS, q.y * TS - 22, (q.x + 1) * TS, q.y * TS + 4, ['g', w.doors[q.to[0]].uid >>> 0], 'gate');   // (a button gate's button)
   for (const q of (w.pwrs || [])) if (!q.gone) offer(q.x - 24, q.y - 24, q.x + 24, q.y + 24, ['pwr', q.tx, q.ty], q.t ? 'flower bouquet' : 'sushi');
   { const mb = myBase(); if (mb) offer(mb.cx - 24, mb.cy - 40, mb.cx + 24, mb.cy + 26, ['base', mb.tx, mb.ty], 'base'); }
-  for (const gm of (w.games || [])) if (!gm.b || gm.own === myTag()) offer(gm.tx * TS - 8, gm.y1 * TS - 3.4 * TS, (gm.tx + 1) * TS + 8, gm.y1 * TS, ['mg', gm.tx, gm.ty], ({ soc: 'soccer field', sht: 'shoot-out', tgt: 'target practice' })[gm.k]);   // (v238: a mini game, by the marker in its middle: one of the map's, or your own)   // (only your own base: its glowing centre)
+  for (const gm of (w.games || [])) if (!gm.b || gm.own === myTag()) offer(gm.tx * TS - 8, gm.y1 * TS - 3.4 * TS, (gm.tx + 1) * TS + 8, gm.y1 * TS, ['mg', gm.tx, gm.ty], ({ soc: 'soccer field', sht: 'shoot-out', tgt: 'target practice', gem: 'gem dash', tag: 'bomb tag' })[gm.k]);   // (v238: a mini game, by the marker in its middle: one of the map's, or your own)   // (only your own base: its glowing centre)
   for (const c of S.map.checkpoints) if (c[0] > -1000) offer((c[0] + 0.5) * TS - 22, c[1] * TS - 66, (c[0] + 0.5) * TS + 22, c[1] * TS, ['c', c[0], c[1]], 'flag');
   { const fx = Math.floor((b.x + s * (R + 6)) / TS), rows = [Math.floor(b.y / TS), Math.floor((b.y + R + 4) / TS)];   // a ground spring set into the ground just ahead
     for (const r of rows) for (const tx of [fx, fx + s]) if (P.tile(w, tx, r) === 6) offer(tx * TS, r * TS, (tx + 1) * TS, (r + 1) * TS, null, 'ground spring', { tl: { tx, r } }); }
@@ -6351,10 +6359,16 @@ function computeGhost() {
     g.ok = !g.bwhy; g.bz = !g.ok; return;
   }
   if (g.it.mgk) {   // (v238) a mini game: right where you stand, you in the middle of its floor
-    const k = g.it.mgk, z = P.MGSZ[k]; g.mtx = Math.floor(b.x / TS); g.mty = Math.floor((b.y + R + 2) / TS) - 2; g.sb = false; g.pb = false; g.pc = false; g.bwhy = '';
+    const k = g.it.mgk, z = P.MGSZ[k]; g.mtx = Math.floor(b.x / TS); g.mty = Math.floor((b.y + R + 2) / TS) - 2; g.sb = false; g.pb = false; g.pc = false; g.bwhy = ''; g.mgBad = null;
     if (!b.ground) g.bwhy = 'Stand on the ground where its middle should go';
     else if (atLimit(g.it)) g.bwhy = limitNote(g.it);
-    else { const why = P.mgFits(S.world, k, g.mtx, g.mty, ownLists(), S.boughtCps); if (why) g.bwhy = { edge: 'Too close to the edge of the map', flat: 'The whole floor (' + z[0] + ' blocks) has to be flat dirt or ice', room: 'Not enough open space: it needs ' + z[0] + ' blocks across and ' + z[1] + ' up, all clear', game: 'Too close to another mini game', zone: 'Too close to the start, the finish or a base', thing: 'Something is in the way. Clear the space first' }[why] || 'It does not fit here'; }
+    else {
+      const L = ownLists(), res = P.mgWhy(S.world, k, g.mtx, g.mty, L, S.boughtCps, true), why = res.why; g.mgBad = res;
+      if (why) { g.bwhy = { edge: 'Too close to the edge of the map', flat: 'The floor (' + z[0] + ' blocks wide) has to be flat dirt or ice: red marks the gaps', room: 'It needs ' + z[0] + ' blocks across and ' + z[1] + ' up, all clear: red marks what is in the way', game: 'Too close to another mini game', zone: 'Too close to the start, the finish or a base', thing: 'Something is in the way (marked red). Clear the space first' }[why] || 'It does not fit here';
+        const key = k + ',' + g.mtx + ',' + g.mty, t = performance.now(); if (g.mgNk !== key && t - (g.mgNt || 0) > 250) { g.mgNk = key; g.mgNt = t; g.mgNear = P.mgNearest(S.world, k, g.mtx, g.mty, L, S.boughtCps); }   // (where it would fit, nearest first: shown so you know which way to go)
+        const n = g.mgNear; if (n) { const dx = n[0] - g.mtx, dy = n[1] - g.mty; g.bwhy += '. It fits ' + (dx ? Math.abs(dx) + ' block' + (Math.abs(dx) === 1 ? '' : 's') + ' to the ' + (dx > 0 ? 'right' : 'left') : '') + (dx && dy ? ' and ' : '') + (dy ? Math.abs(dy) + (dy > 0 ? ' down' : ' up') : '') + ' (the green outline)'; } else g.bwhy += '. Nowhere close by is big enough: try somewhere wider and flatter';
+      } else { g.mgNear = null; g.mgNk = ''; }
+    }
     g.ok = !g.bwhy; g.bz = !g.ok; return;
   }
   if (g.it.base) {   // a base: right where you stand (on dirt or ice), you in the middle, and nothing of anybody else's in its circle
@@ -6467,9 +6481,20 @@ function drawTileGhost(g, nowT) {
   const bad = !g.ok, pulse = 0.55 + 0.15 * Math.sin(nowT / 170);
   ctx.save(); ctx.lineJoin = 'round';
   if (g.it.mgk) {   // (v238) the arena it would make, around you
-    const r = P.mgRect(g.it.mgk, g.mtx, g.mty), c = bad ? '#ff7a6a' : MGCOL[g.it.mgk]; ctx.globalAlpha = pulse; ctx.fillStyle = bad ? 'rgba(255,80,60,.10)' : 'rgba(255,255,255,.08)'; ctx.fillRect(r.x0 * TS, r.y0 * TS, (r.x1 - r.x0) * TS, (r.y1 - r.y0) * TS);
-    ctx.setLineDash([12, 10]); ctx.lineDashOffset = -nowT / 60; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,14,30,.5)'; ctx.strokeRect(r.x0 * TS, r.y0 * TS, (r.x1 - r.x0) * TS, (r.y1 - r.y0) * TS); ctx.lineWidth = 2.6; ctx.strokeStyle = c; ctx.strokeRect(r.x0 * TS, r.y0 * TS, (r.x1 - r.x0) * TS, (r.y1 - r.y0) * TS); ctx.setLineDash([]);
-    ctx.globalAlpha = 1; mgMarker(g.it.mgk, (g.mtx + 0.5) * TS, mgMy(g.mty + 2), nowT, 0.9, true); ctx.restore(); return;
+    const k = g.it.mgk, r = P.mgRect(k, g.mtx, g.mty), c = bad ? '#ffffff' : MGCOL[k], box = (q, col, wd, dash) => { ctx.setLineDash(dash); ctx.lineDashOffset = -nowT / 60; ctx.lineWidth = wd + 2.5; ctx.strokeStyle = 'rgba(20,14,30,.55)'; ctx.strokeRect(q.x0 * TS, q.y0 * TS, (q.x1 - q.x0) * TS, (q.y1 - q.y0) * TS); ctx.lineWidth = wd; ctx.strokeStyle = col; ctx.strokeRect(q.x0 * TS, q.y0 * TS, (q.x1 - q.x0) * TS, (q.y1 - q.y0) * TS); ctx.setLineDash([]); };
+    if (!bad) { ctx.save(); mgGlow(r.x0 * TS, r.x1 * TS, r.y0 * TS, r.y1 * TS, MGCOL[k], 0.3 + 0.1 * pulse); ctx.restore(); ctx.fillStyle = mgA(MGCOL[k], 0.85); ctx.fillRect(r.x0 * TS, r.y1 * TS - 4, (r.x1 - r.x0) * TS, 6); }   // (it fits: the arena glows in its own colour, its floor lit up)
+    else { ctx.fillStyle = 'rgba(255,255,255,.05)'; ctx.fillRect(r.x0 * TS, r.y0 * TS, (r.x1 - r.x0) * TS, (r.y1 - r.y0) * TS); }
+    box(r, bad ? 'rgba(255,255,255,.8)' : MGCOL[k], 3, bad ? [8, 8] : [14, 8]);
+    const mb = g.mgBad; if (bad && mb) {   // (exactly what is wrong: each gap in the floor or block in the way in red, each thing in the way circled)
+      for (const [x, y] of mb.bad) { ctx.fillStyle = 'rgba(255,60,50,' + (0.38 + 0.2 * pulse) + ')'; ctx.fillRect(x * TS + 2, y * TS + 2, TS - 4, TS - 4); ctx.strokeStyle = '#ff4a3d'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x * TS + 10, y * TS + 10); ctx.lineTo(x * TS + TS - 10, y * TS + TS - 10); ctx.moveTo(x * TS + TS - 10, y * TS + 10); ctx.lineTo(x * TS + 10, y * TS + TS - 10); ctx.stroke(); }
+      for (const [x, y] of mb.pts) { ctx.beginPath(); ctx.arc(x, y, 26, 0, 7); ctx.lineWidth = 3.5; ctx.strokeStyle = '#ff4a3d'; ctx.stroke(); }
+    }
+    const n = bad && g.mgNear; if (n) { const q = P.mgRect(k, n[0], n[1]); ctx.save(); ctx.globalAlpha = 0.5 + 0.3 * pulse; box(q, '#5fd36d', 3, [6, 6]); ctx.fillStyle = 'rgba(95,211,109,.85)'; ctx.fillRect(q.x0 * TS, q.y1 * TS - 4, (q.x1 - q.x0) * TS, 6);   // (the nearest place it fits, and an arrow to it)
+      const ax = S.b.x, ay = S.b.y - 60, bx = (n[0] + 0.5) * TS, by = mgMy(n[1] + 2), dd = Math.hypot(bx - ax, by - ay);
+      if (dd > 60) { const ux = (bx - ax) / dd, uy = (by - ay) / dd, ex = ax + ux * Math.min(dd - 20, 140), ey = ay + uy * Math.min(dd - 20, 140); ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(20,14,30,.6)'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ex, ey); ctx.stroke(); ctx.strokeStyle = '#5fd36d'; ctx.lineWidth = 5; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ex + ux * 12, ey + uy * 12); ctx.lineTo(ex - uy * 10, ey + ux * 10); ctx.lineTo(ex + uy * 10, ey - ux * 10); ctx.closePath(); ctx.fillStyle = '#5fd36d'; ctx.fill(); }
+      ctx.restore(); }
+    ctx.globalAlpha = 1; mgMarker(k, (g.mtx + 0.5) * TS, mgMy(g.mty + 2), nowT, bad ? 0.55 : 0.95, true); ctx.restore(); return;
   }
   if (g.it.base) {   // the circle it would make, around you
     const cx = (g.btx + 0.5) * TS, cy = (g.bty + 0.5) * TS; ctx.globalAlpha = pulse; ctx.setLineDash([12, 10]); ctx.lineDashOffset = -nowT / 60;
@@ -9456,12 +9481,13 @@ function drawZones(camL, camT, vw, vh) {
 function drawTiles(camL, camT, vw, vh) {
   const w = S.world, W = w.W, g = w.grid, tg = S.tg, water = S.water; water.length = 0;
   const deco = !settings.low, sketch = deco && settings.vs !== 'smooth';   // (Smooth: clean straight edges, no pencil shading; the scenery stays)
+  const mk = w.mgSkip, mf = w.mgFlr;   // (v238: a mini game's goals and pillars are drawn by the game; nothing grows on an arena's floor)
   const x0 = Math.max(0, Math.floor(camL / TS) - 3), x1 = Math.min(W - 1, Math.floor((camL + vw) / TS) + 3);   // (a few tiles extra: trees and signs lean over the edge, so they never pop in)
   const y0 = Math.max(0, Math.floor(camT / TS) - 5), y1 = Math.min(w.H - 1, Math.floor((camT + vh) / TS) + 2);
   for (let ty = y0; ty <= y1; ty++) {
     for (let tx = x0; tx <= x1; tx++) {
       const i = ty * W + tx, t = g[i];
-      if (!t) continue;
+      if (!t || (mk && mk.has(i))) continue;
       const px = tx * TS, py = ty * TS;
       if (t === 5) { water.push(px, py, (ty > 0 && g[i - W] !== 5) ? 1 : 0); continue; }
       if (t === 9) continue;                       // closed doors are drawn with the gadgets
@@ -9478,7 +9504,7 @@ function drawTiles(camL, camT, vw, vh) {
   for (let ty = y0; ty <= y1; ty++) {
     for (let tx = x0; tx <= x1; tx++) {
       const i = ty * W + tx, t = g[i];
-      if (!t || t === 5 || t === 6 || t === 9) continue;
+      if (!t || t === 5 || t === 6 || t === 9 || (mk && mk.has(i))) continue;
       let n = ty > 0 ? g[i - W] : 0; if (n === 0 || n === 5) sketchSeg(tx, ty, tx + 1, ty, sketch);
       n = ty < w.H - 1 ? g[i + W] : 0; if (n === 0 || n === 5) sketchSeg(tx, ty + 1, tx + 1, ty + 1, sketch);
       n = tx > 0 ? g[i - 1] : 0; if (n === 0 || n === 5) sketchSeg(tx, ty, tx, ty + 1, sketch);
@@ -9498,7 +9524,7 @@ function drawTiles(camL, camT, vw, vh) {
   ctx.lineWidth = 1.7; ctx.strokeStyle = INK;
   for (let ty = y0; ty <= y1; ty++) {
     for (let tx = x0; tx <= x1; tx++) {
-      const i = ty * W + tx; if (g[i] !== 1 || (S.bare && tx >= S.bare[0] && tx <= S.bare[1])) continue;   // (S.bare: a stretch with no scenery, only for the pictures in the guide)
+      const i = ty * W + tx; if (g[i] !== 1 || (S.bare && tx >= S.bare[0] && tx <= S.bare[1]) || (mf && mf.has(i))) continue;   // (S.bare: a stretch with no scenery, only for the pictures in the guide)
       const th = THEMES[tg[i]] || THEMES[0], up = ty > 0 ? g[i - W] : 0, dn = g[i + W];
       if (up === 0 && hsh(tx, ty, 11) < 0.17) decoUp(th, tx * TS, ty * TS, hsh(tx, ty, 13));
       if (up === 0) decoExtra(tx, ty, th, g, i);
@@ -9898,7 +9924,8 @@ function drawDyn(camL, camT, vw, vh) {
       ctx.save(); if (d.rot) { ctx.translate(d.x, d.y); ctx.rotate(d.rot); ctx.translate(-d.x, -d.y); }   // a tipping crate really turns
       ctx.fillStyle = d.hw > 20 ? '#ffb020' : '#ffc233'; wob(d.x - d.hw, d.y - d.hh, d.hw * 2, d.hh * 2, 1.7, i); ctx.fill(); ctx.stroke();
       ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(d.x - d.hw + 4, d.y - d.hh + 4); ctx.lineTo(d.x + d.hw - 4, d.y + d.hh - 4); ctx.moveTo(d.x + d.hw - 4, d.y - d.hh + 4); ctx.lineTo(d.x - d.hw + 4, d.y + d.hh - 4); ctx.stroke(); ctx.lineWidth = 2.4; ctx.restore();
-    } else {
+    } else if (d.sb >= 0) { drawSoccerBall(d.x, d.y, d.r, d.rot, d.sq || 0); if (d.sq) d.sq = d.sq > 0.03 ? d.sq * 0.88 : 0; }   // (v238: the soccer ball)
+    else {
       ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, TAU); ctx.fillStyle = d.kind === 4 ? PIT[i % PIT.length] : d.kind === 3 ? '#ffa31a' : d.kind === 7 ? '#ffe2a0' : '#ffc233'; ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + Math.cos(d.rot) * d.r * 0.8, d.y + Math.sin(d.rot) * d.r * 0.8); ctx.lineWidth = 1.8; ctx.stroke(); ctx.lineWidth = 2.4;
     }
@@ -9917,15 +9944,19 @@ addEventListener('resize', applyZoomRange);
 let lastFrame = performance.now(), lastDraw = lastFrame, acc = 0, errCount = 0, frameN = 0;
 let lowT = 0, rq = 1, ftAvg = 16.7, slowT = 0, fastT = 0, rqWait = 8, rqUp = -1e9;   // (a device that cannot keep up draws the picture with fewer pixels, and goes back to full sharpness once it can)
 /* ================= (v238) the mini games: soccer, the shoot-out and target practice. The server keeps the score; this screen only shows it ================= */
-const MGCOL = { soc: '#5fd36d', sht: '#ff6b6b', tgt: '#ffb938' }, MGNAME = { soc: 'Soccer', sht: 'Shoot-out', tgt: 'Target practice' };
+const MGCOL = { soc: '#5fd36d', sht: '#ff6b6b', tgt: '#ffb938', gem: '#43d6ff', tag: '#ff8a3d' }, MGNAME = { soc: 'Soccer', sht: 'Shoot-out', tgt: 'Target practice', gem: 'Gem dash', tag: 'Bomb tag' };
+const MGWIN = k => k === 'gem' ? P.MG.GEM_WIN : P.MG.WIN;
 const mgC = { w: null, v: -1, G: [], M: null, snap: null, snapAt: 0 };
 function mgSync() {   // which games this world has (the map's, unless something was built in one, and the ones players built), worked out from the lists exactly as the server does; a change: every game starts from what the server last said (or from nothing)
   const w = S.world;
   if (w && S.map) { const L = ownLists(), sg = L.props.length + '|' + L.gates.length + '|' + L.misc.length + '|' + L.cps.length + '|' + L.dels.length; if (w._gSig !== sg) { w._gSig = sg; const ch = P.setGames(w, P.liveGames(S.map, L)); if (w === S.world) for (const [x, y] of ch) mmUpdate(x, y); } }
   const v = w ? w.gamesV | 0 : -1; if (mgC.w === w && mgC.v === v) return; mgC.w = w; mgC.v = v; mgC.M = null;
+  if (w) { w.mgSkip = new Set(); w.mgFlr = new Set(); for (const g of w.games || []) { for (const [x, y] of P.mgParts(g)) w.mgSkip.add(y * w.W + x); for (let x = g.x0; x < g.x1; x++) w.mgFlr.add(g.y1 * w.W + x); for (const [x, y] of P.mgParts(g)) w.mgFlr.add(y * w.W + x); } }
   const gs = (w && w.games) || [], sn = mgC.snap && Date.now() - mgC.snapAt < 8000 && mgC.snap.length === gs.length ? mgC.snap : null;   // (what the server said on arrival: for the world that comes with it)
-  mgC.G = gs.map((g, i) => { const s = { g, k: g.k, L: 0, R: 0, win: null, sc: new Map(), shots: [], pz: 0, wn: '', fl: new Map() }, q = sn && sn[i];
-    if (q && g.k === 'soc') { s.L = q[0] | 0; s.R = q[1] | 0; if (q[2] > nowMs()) s.win = { side: q[3] | 0, until: +q[2] }; } else if (q && Array.isArray(q[0])) { s.sc = new Map(q[0]); s.pz = +q[1] || 0; s.wn = String(q[2] || ''); }
+  mgC.G = gs.map((g, i) => { const s = { g, k: g.k, L: 0, R: 0, win: null, sc: new Map(), shots: [], pz: 0, wn: '', fl: new Map(), item: null, tag: { st: 0, cd: 0, h: -1, hs: 0, bars: new Map() } }, q = sn && sn[i];
+    if (q && g.k === 'soc') { s.L = q[0] | 0; s.R = q[1] | 0; if (q[2] > nowMs()) s.win = { side: q[3] | 0, until: +q[2] }; } else if (q && Array.isArray(q[0])) { s.sc = new Map(q[0]); s.pz = +q[1] || 0; s.wn = String(q[2] || '');
+      if (g.k === 'gem' && Array.isArray(q[3])) s.item = { x: +q[3][0], y: +q[3][1], v: q[3][2], n: q[3][3] | 0, t: nowMs() };
+      if (g.k === 'tag' && q.length >= 8) s.tag = { st: q[3] | 0, cd: +q[4], h: q[5], hs: +q[6], bars: new Map(q[7] || []) }; }
     return s; });
 }
 function mgPos(id) {   // where a player is drawn on this screen
@@ -9949,13 +9980,25 @@ function mgEvents(list) {
       else if (near && (e.id === myId || !online)) sfx('shot');
     } else if (e.k === 'hit' || e.k === 'thit' || e.k === 'x') {
       const j = s.shots.findIndex(b => b.n === e.b), b = j >= 0 ? s.shots[j] : null; if (j >= 0) s.shots.splice(j, 1);
-      if (e.k === 'x') continue;
+      if (e.k === 'x') { if (e.sh && b && near) { const sh = P.shieldAt(g, now); burst(b.x, sh.y + P.MG.SH_H / 2, ['#ffd23d', '#fff'], 8, 140, 260); } continue; }
       s.sc.set(e.id, e.n | 0);
       if (e.k === 'hit') { const v = mgPos(e.v); if (v && near) { burst(v.x, v.y, [MGCOL.sht, '#fff', v.c || '#fff'], 14, 220, 200); ring(v.x, v.y, '#fff', 6, 34, 0.3); } if (near) sfx(e.id === myId || e.v === myId || !online ? 'hit' : 'hit2'); }
       else { const tg = P.tgtAt(g, now); if (near) { burst(tg.x, tg.y, [MGCOL.tgt, '#fff', '#ff5a5a'], 18, 240, 150); ring(tg.x, tg.y, '#fff', 8, 46, 0.35); sfx(e.id === myId || !online ? 'hit' : 'hit2'); } }
     } else if (e.k === 'sc') s.sc = new Map(e.s || []);
-    else if (e.k === 'win') { s.pz = now + P.MG.PAUSE_MS; s.wn = String(e.name || ''); s.shots.length = 0; mgPop(g, (e.id === myId || !online ? 'You win' : (s.wn ? censor(s.wn) : 'Somebody') + ' wins') + ' the ' + (s.k === 'sht' ? 'shoot-out!' : 'target practice!')); if (near) { sfx('finish'); const p = mgPos(e.id); if (p) burst(p.x, p.y, ['#ffd23d', '#fff', MGCOL[s.k]], 36, 320, 60); } }
-    else if (e.k === 'rs') { s.sc.clear(); s.pz = 0; s.wn = ''; s.win = null; }
+    else if (e.k === 'win') { s.pz = now + P.MG.PAUSE_MS; s.wn = String(e.name || ''); s.shots.length = 0; mgPop(g, (e.id === myId || !online ? 'You win' : (s.wn ? censor(s.wn) : 'Somebody') + ' wins') + ' ' + ({ sht: 'the shoot-out!', tgt: 'target practice!', gem: 'gem dash!', tag: 'bomb tag!' })[s.k]); if (near) { sfx('finish'); const p = mgPos(e.id); if (p) burst(p.x, p.y, ['#ffd23d', '#fff', MGCOL[s.k]], 36, 320, 60); } }
+    else if (e.k === 'rs') { s.sc.clear(); s.pz = 0; s.wn = ''; s.win = null; s.item = null; }
+    else if (e.k === 'gs') { s.item = { x: e.x, y: e.y, v: e.v, n: e.n, t: now }; if (near) { burst(e.x, e.y, [e.v === 'g' ? '#7ff0ff' : '#ffd23d', '#fff'], 10, 140, 0); sfx('pop'); } }   // (gem dash: a coin, or a diamond, pops up)
+    else if (e.k === 'gx') s.item = null;
+    else if (e.k === 'gp') {   // (somebody got it: a score, and for them a real coin or diamond, up to so many an hour)
+      s.item = null; s.sc.set(e.id, e.n | 0); const mine = e.id === myId || !online;
+      if (near) { burst(e.x, e.y, e.v === 'g' ? ['#7ff0ff', '#43d6ff', '#fff'] : ['#ffd23d', '#ffb020', '#fff'], mine ? 22 : 12, 240, 120); if (mine || e.v === 'g') sfx(e.v === 'g' ? 'gem' : 'coin'); }
+      if (mine && e.rw) { if (e.v === 'g') wallet.g++; else wallet.c++; saveWallet(); wDirty = true; }
+    } else if (e.k === 'tag') s.tag = { st: e.st | 0, cd: +e.cd, h: e.h, hs: +e.hs, bars: new Map(e.b || []) };   // (bomb tag: who has the bomb, everybody's bar)
+    else if (e.k === 'pass') { const p = mgPos(e.to); if (p && near) { burst(p.x, p.y - 10, ['#ff8a3d', '#ffd23d', '#fff'], 12, 200, 100); sfx(e.to === myId || e.from === myId ? 'pass' : 'pass2'); } }
+    else if (e.k === 'boom') {   // (a bar ran out: boom, that player is out of this round)
+      const p = mgPos(e.id); if (p && near) { burst(p.x, p.y, ['#ff8a3d', '#ffd23d', '#ff4f3d', '#1c1820', '#fff'], 44, 420, 160); ring(p.x, p.y, '#ff8a3d', 14, 110, 0.5); sfx('boom'); }
+      if (e.id === myId && online) notice('Boom! You are out of this round', '');
+    }
   }
 }
 function mgPop(g, t) { if (S.b && !(S.dead > 0) && !S.away && P.inGame(g, S.b.x, S.b.y)) notice(t + ' Next game in ' + Math.round(P.MG.PAUSE_MS / 1000) + ' seconds', ''); }   // (a pop-up for everybody in that game, unless pop-ups are off: the game itself always shows it)
@@ -9963,14 +10006,25 @@ function mgUpdate(ev) {   // in a game played alone there is no server: the same
   mgSync(); const w = S.world; if (!w || w.follow || online || !mgC.G.length) return;
   if (!mgC.M) mgC.M = P.mgNew(w);
   const pl = S.dead > 0 || S.away || !S.b ? [] : [{ id: -1, x: S.b.x, y: S.b.y, vx: S.b.vx, land: !!(ev && ev.landed), name: settings.name || '' }], out = [];
-  P.mgStep(mgC.M, w, pl, nowMs(), out); if (out.length) mgEvents(out);
+  P.mgStep(mgC.M, w, pl, nowMs(), out, mgC.caps || (mgC.caps = new Map())); if (out.length) mgEvents(out);
 }
 function mgScore(id) { for (const s of mgC.G) if (s.k !== 'soc' && s.sc.has(id)) return { n: s.sc.get(id), s }; return null; }
-function mgIn(x, y) { for (const s of mgC.G) if (s.k !== 'soc' && P.inGame(s.g, x, y)) return s; return null; }
-function mgDots(id, x, top) {   // a dot for each hit, over a player's head while they are in the shoot-out or target practice
+function mgIn(x, y) { for (const s of mgC.G) if (s.k !== 'soc' && P.inGame(s.g, x, y)) return s; return null; }   // (shoot-out, target practice, gem dash, bomb tag)
+function mgBomb(x, y, sc, now, low) {   // the bomb: black, with a fizzing fuse (it shakes when it is nearly out)
+  const j = low ? Math.sin(now / 30) * 2 : 0; ctx.save(); ctx.translate(x + j, y); ctx.scale(sc, sc);
+  ctx.beginPath(); ctx.arc(0, 0, 10, 0, 7); ctx.fillStyle = '#1c1820'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.beginPath(); ctx.arc(-3.5, -3.5, 3, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fill();
+  ctx.fillStyle = '#5b5566'; ctx.fillRect(-3, -14, 6, 5); ctx.strokeStyle = '#c9a26b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -14); ctx.quadraticCurveTo(5, -20, 9, -18); ctx.stroke();
+  const f = 0.6 + 0.4 * Math.sin(now / 50); ctx.fillStyle = '#ffd23d'; ctx.beginPath(); ctx.arc(9, -18, 3.5 * f, 0, 7); ctx.fill(); ctx.fillStyle = '#ff5a2a'; ctx.beginPath(); ctx.arc(9, -18, 2 * f, 0, 7); ctx.fill(); ctx.restore();
+}
+function mgDots(id, x, top) {   // over a player's head while they are in a game: a dot for each point; in bomb tag, their bar (and the bomb, on whoever has it)
   if (!mgC.G.length) return; const p = id === myId || id === -1 ? (S.b && { x: S.b.x, y: S.b.y }) : mgPos(id); if (!p) return;
-  const s = mgIn(p.x, p.y); if (!s) return; const n = Math.min(P.MG.WIN, s.sc.get(online ? id : -1) || 0), c = MGCOL[s.k], y = top - 8;
-  for (let k = 0; k < P.MG.WIN; k++) { const cx = x + (k - 1) * 13; ctx.beginPath(); ctx.arc(cx, y, 4.6, 0, 7); if (k < n) { ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.stroke(); } else { ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.stroke(); } }
+  const s = mgIn(p.x, p.y); if (!s) return; const me = online ? id : -1, c = MGCOL[s.k], y = top - 8, now = nowMs();
+  if (s.k === 'tag') { const t = s.tag; if (t.st !== 2 || !t.bars.has(me)) return; const full = P.MG.TAG_MS, left = Math.max(0, t.bars.get(me) - (t.h === me ? now - t.hs : 0)), f = left / full, bw = 40;
+    mgRR(x - bw / 2 - 2, y - 5, bw + 4, 10, 5); ctx.fillStyle = 'rgba(20,16,30,.85)'; ctx.fill(); mgRR(x - bw / 2, y - 3, bw * f, 6, 3); ctx.fillStyle = f > 0.5 ? '#5fd36d' : f > 0.25 ? '#ffd23d' : '#ff4f3d'; ctx.fill();
+    if (t.h === me) { mgBomb(x, y - 24, 1.1, now, f < 0.25); ctx.save(); ctx.globalAlpha = 0.5 + 0.3 * Math.sin(now / 90); ctx.strokeStyle = '#ff8a3d'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p.x, p.y, R + 7, 0, 7); ctx.stroke(); ctx.restore(); }
+    return; }
+  const W = MGWIN(s.k), n = Math.min(W, s.sc.get(me) || 0);
+  for (let k = 0; k < W; k++) { const cx = x + (k - (W - 1) / 2) * 13; ctx.beginPath(); ctx.arc(cx, y, 4.6, 0, 7); if (k < n) { ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.stroke(); } else { ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.stroke(); } }
 }
 const mgMy = y1 => y1 * TS - 2.75 * TS;   // (the marker's height: over the heads of the players on the floor, never in the way of their names)
 function mgMarker(k, x, y0, nowT, a, named) {   // the block in the middle of every mini game: the game itself, as a thing (delete it and the game goes)
@@ -9979,53 +10033,102 @@ function mgMarker(k, x, y0, nowT, a, named) {   // the block in the middle of ev
   mgRR(x - h, y - h, h * 2, h * 2, 8); ctx.fillStyle = 'rgba(20,16,30,.82)'; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = c; ctx.stroke(); ctx.lineWidth = 2.2; ctx.strokeStyle = '#fff'; ctx.fillStyle = '#fff';
   if (k === 'soc') { ctx.beginPath(); ctx.arc(x, y + 1, 7, 0, 7); ctx.fill(); ctx.fillStyle = '#16100c'; ctx.beginPath(); ctx.arc(x, y + 1, 2.6, 0, 7); ctx.fill(); }
   else if (k === 'sht') { ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.moveTo(x, y - 11); ctx.lineTo(x, y - 4); ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 11); ctx.moveTo(x - 11, y); ctx.lineTo(x - 4, y); ctx.moveTo(x + 4, y); ctx.lineTo(x + 11, y); ctx.stroke(); }
+  else if (k === 'gem') { ctx.fillStyle = '#7ff0ff'; ctx.beginPath(); ctx.moveTo(x - 8, y - 3); ctx.lineTo(x - 4, y - 8); ctx.lineTo(x + 4, y - 8); ctx.lineTo(x + 8, y - 3); ctx.lineTo(x, y + 9); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#1c6f8a'; ctx.lineWidth = 1.4; ctx.stroke(); }
+  else if (k === 'tag') { ctx.restore(); mgBomb(x, y + 2, 0.85, nowMs(), false); return; }
   else { ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.fillStyle = '#ff5a5a'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fill(); }
   ctx.restore();
 }
 function mgRR(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
-function drawGamesBack(camL, camT, vw, vh) {   // behind the ground: the arena's own soft colour and its edges
+function mgGlow(X0, X1, Y0, Y1, c, a) { const gr = ctx.createLinearGradient(0, Y1, 0, Y0); gr.addColorStop(0, mgA(c, a)); gr.addColorStop(0.55, mgA(c, a * 0.25)); gr.addColorStop(1, mgA(c, 0)); ctx.fillStyle = gr; ctx.fillRect(X0, Y0, X1 - X0, Y1 - Y0); }
+function mgA(hex, a) { const n = parseInt(hex.slice(1), 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; }
+function drawGamesBack(camL, camT, vw, vh) {   // behind the ground: a soft light rising from each arena's floor, and its own kind of backdrop
   mgSync(); if (!mgC.G.length) return;
   for (const s of mgC.G) { const g = s.g, X0 = g.x0 * TS, X1 = g.x1 * TS, Y0 = g.y0 * TS, Y1 = g.y1 * TS, c = MGCOL[s.k];
     if (X1 < camL - 40 || X0 > camL + vw + 40 || Y1 < camT - 40 || Y0 > camT + vh + 80) continue;
-    ctx.save(); ctx.globalAlpha = 0.1; ctx.fillStyle = c; mgRR(X0, Y0, X1 - X0, Y1 - Y0, 14); ctx.fill(); ctx.globalAlpha = 1;
-    ctx.setLineDash([12, 9]); ctx.lineWidth = 3; ctx.strokeStyle = c; ctx.globalAlpha = 0.75; ctx.beginPath(); ctx.moveTo(X0, Y1); ctx.lineTo(X0, Y0 + 14); ctx.arcTo(X0, Y0, X0 + 14, Y0, 14); ctx.lineTo(X1 - 14, Y0); ctx.arcTo(X1, Y0, X1, Y0 + 14, 14); ctx.lineTo(X1, Y1); ctx.stroke(); ctx.restore();
-    if (s.k === 'soc') { ctx.save(); ctx.globalAlpha = 0.35; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.setLineDash([]); const mx = (X0 + X1) / 2; ctx.beginPath(); ctx.moveTo(mx, Y1); ctx.lineTo(mx, Y1 - 2.2 * TS); ctx.stroke(); ctx.beginPath(); ctx.arc(mx, Y1, 2.2 * TS, Math.PI, 0); ctx.stroke(); ctx.restore(); }   // (the halfway line and the centre circle)
+    ctx.save(); mgGlow(X0, X1, Y0, Y1, c, 0.26);
+    ctx.beginPath(); ctx.rect(X0, Y0, X1 - X0, Y1 - Y0); ctx.clip();
+    if (s.k === 'soc') {   // (mown stripes, the halfway line and the centre circle)
+      for (let x = g.x0; x < g.x1; x += 2) { if (((x - g.x0) >> 1) % 2) continue; const gr = ctx.createLinearGradient(0, Y1, 0, Y1 - 3 * TS); gr.addColorStop(0, 'rgba(255,255,255,.09)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = gr; ctx.fillRect(x * TS, Y1 - 3 * TS, 2 * TS, 3 * TS); }
+      ctx.globalAlpha = 0.45; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; const mx = (X0 + X1) / 2; ctx.beginPath(); ctx.moveTo(mx, Y1); ctx.lineTo(mx, Y1 - 2.2 * TS); ctx.stroke(); ctx.beginPath(); ctx.arc(mx, Y1, 2.2 * TS, Math.PI, 0); ctx.stroke();
+      ctx.beginPath(); ctx.arc(mx, Y1 - 0.15 * TS, 4, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+    } else if (s.k === 'sht') {   // (a dark range with warning stripes low on the walls)
+      ctx.globalAlpha = 0.12; ctx.strokeStyle = c; ctx.lineWidth = 6; ctx.beginPath(); for (let x = X0 - 200; x < X1; x += 26) { ctx.moveTo(x, Y1); ctx.lineTo(x + 60, Y1 - 60); } ctx.stroke();
+      ctx.globalAlpha = 0.18; ctx.lineWidth = 1; ctx.beginPath(); for (let y = Y1 - TS; y > Y0; y -= TS) { ctx.moveTo(X0, y); ctx.lineTo(X1, y); } ctx.stroke();
+    } else if (s.k === 'tgt') {   // (target lanes rising from every block of the floor)
+      ctx.globalAlpha = 0.14; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); for (let x = g.x0; x <= g.x1; x++) { ctx.moveTo(x * TS, Y1); ctx.lineTo(x * TS, Y1 - 2.5 * TS); } ctx.stroke();
+    } else if (s.k === 'gem') {   // (a cave of twinkling crystals)
+      const t = performance.now() / 1000; for (let k = 0; k < 26; k++) { const x = X0 + hsh(k, g.x0, 3) * (X1 - X0), y = Y0 + hsh(k, g.y0, 4) * (Y1 - Y0) * 0.85, a = 0.25 + 0.25 * Math.sin(t * 2 + k); ctx.globalAlpha = a; ctx.fillStyle = k % 3 ? '#7ff0ff' : '#d8b4ff'; ctx.beginPath(); ctx.moveTo(x, y - 6); ctx.lineTo(x + 2, y); ctx.lineTo(x, y + 6); ctx.lineTo(x - 2, y); ctx.closePath(); ctx.fill(); }
+    } else if (s.k === 'tag') {   // (warning stripes and a spray of soot)
+      ctx.globalAlpha = 0.1; ctx.fillStyle = c; for (let x = X0 - 400; x < X1; x += 60) { ctx.beginPath(); ctx.moveTo(x, Y1); ctx.lineTo(x + 30, Y1); ctx.lineTo(x + 30 + 300, Y0); ctx.lineTo(x + 300, Y0); ctx.closePath(); ctx.fill(); }
+    }
+    ctx.restore();
   }
 }
-function drawGamesFront(camL, camT, vw, vh, nowT) {   // goals, lights, the target, the floor that fires, the names
+function mgNet(x, y, w, h, a) { ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.fillStyle = 'rgba(255,255,255,' + 0.1 * a + ')'; ctx.fillRect(x, y, w, h); ctx.globalAlpha = 0.6 * a; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.1; ctx.beginPath();
+  for (let k = -h; k < w + h; k += 10) { ctx.moveTo(x + k, y); ctx.lineTo(x + k + h, y + h); ctx.moveTo(x + k + h, y); ctx.lineTo(x + k, y + h); } ctx.stroke(); ctx.restore(); }
+function mgPost(x0, y0, x1, y1, c, nowT, k) {   // the arena's edge: a pole, with a flag on a soccer field, a light on the shoot-out, bands on target practice
+  ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(20,14,30,.75)'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(x0, y1); ctx.lineTo(x0, y0); ctx.stroke(); ctx.strokeStyle = k === 'sht' ? '#d7dbe6' : '#fff'; ctx.lineWidth = 4; ctx.stroke();
+  if (k === 'soc') { const wv = Math.sin(nowT / 300 + x0) * 4; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x0 + 14 * Math.sign(x1 - x0) , y0 + 4 + wv, x0 + 24 * Math.sign(x1 - x0), y0 + 9 + wv); ctx.lineTo(x0, y0 + 18); ctx.closePath(); ctx.fillStyle = '#ffd23d'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(20,14,30,.7)'; ctx.stroke(); }
+  else if (k === 'sht') { const on = Math.floor(nowT / 500 + x0) % 2; ctx.save(); ctx.shadowColor = c; ctx.shadowBlur = on ? 14 : 4; ctx.beginPath(); ctx.arc(x0, y0, 6, 0, 7); ctx.fillStyle = on ? c : mgA(c, 0.5); ctx.fill(); ctx.restore(); }
+  else { ctx.strokeStyle = c; ctx.lineWidth = 4; ctx.lineCap = 'butt'; for (let y = y1 - 10; y > y0 + 6; y -= 26) { ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0, y - 10); ctx.stroke(); } }
+  ctx.restore();
+}
+function drawGamesFront(camL, camT, vw, vh, nowT) {   // the parts you can touch, the target, the floor that fires, the names
   if (!mgC.G.length) return; const now = nowMs();
   for (const s of mgC.G) { const g = s.g, X0 = g.x0 * TS, X1 = g.x1 * TS, Y0 = g.y0 * TS, Y1 = g.y1 * TS, c = MGCOL[s.k];
     if (X1 < camL - 60 || X0 > camL + vw + 60 || Y1 < camT - 60 || Y0 - 60 > camT + vh) continue;
     ctx.save(); ctx.setLineDash([]);
-    if (g.tx !== undefined) mgMarker(s.k, (g.tx + 0.5) * TS, mgMy(g.y1), nowT, 0.92, true);   // (with its name over it)
+    if (s.k !== 'sht') { ctx.globalAlpha = 0.35; ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.setLineDash([3, 9]); ctx.beginPath(); ctx.moveTo(X0, Y0); ctx.lineTo(X1, Y0); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;   // (the top edge, faint; the shoot-out has its walls and roof)
+      mgPost(X0, Y0, X1, Y1, c, nowT, s.k); mgPost(X1, Y0, X0, Y1, c, nowT, s.k); }
     if (s.k === 'soc') {
+      { ctx.save(); const top = Y1 - 2;   // (turf over the floor: a green layer, mown in stripes, with blades of grass)
+        for (let x = g.x0; x < g.x1; x++) { ctx.fillStyle = ((x - g.x0) >> 1) % 2 ? '#4fbf52' : '#5ccc5e'; ctx.fillRect(x * TS, top, TS + 0.5, 11); }
+        ctx.fillStyle = '#3d9a42'; ctx.fillRect(X0, top + 9, X1 - X0, 3);
+        ctx.strokeStyle = '#6fdc6a'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.beginPath(); for (let x = X0 + 3; x < X1 - 2; x += 7) { const h = 4 + hsh(Math.floor(x), g.y1, 5) * 5; ctx.moveTo(x, top + 1); ctx.lineTo(x + (hsh(Math.floor(x), g.y1, 6) - 0.5) * 4, top - h); } ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillRect(X0 + 2.5 * TS, top + 3, 3, 4); ctx.fillRect(X1 - 2.5 * TS - 3, top + 3, 3, 4); ctx.restore(); }
       const win = s.win && now < s.win.until ? s.win : null; if (s.win && !win) s.win = null;
-      for (const side of [0, 1]) {
-        const gx0 = side ? X1 - P.MG.GOAL_W * TS : X0, gx1 = gx0 + P.MG.GOAL_W * TS, top = Y1 - (P.MG.GOAL_H + 1) * TS, bar = Y1 - P.MG.GOAL_H * TS, back = side ? gx1 : gx0;
-        ctx.globalAlpha = 0.55; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.beginPath();   // (the net)
-        for (let x = gx0 + 10; x < gx1; x += 12) { ctx.moveTo(x, bar); ctx.lineTo(x, Y1); } for (let y = bar + 10; y < Y1; y += 12) { ctx.moveTo(gx0, y); ctx.lineTo(gx1, y); } ctx.stroke(); ctx.globalAlpha = 1;
-        ctx.fillStyle = '#f4f4f4'; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 2; mgRR(gx0, top, gx1 - gx0, TS, 6); ctx.fill(); ctx.stroke();   // (the crossbar)
-        ctx.beginPath(); ctx.rect(back - 3, top + 4, 6, Y1 - top - 4); ctx.fill(); ctx.stroke();   // (the back post)
-        const lit = win ? (win.side === side ? (Math.floor(now / 400) % 2 ? 3 : 0) : 0) : side ? s.R : s.L, mx = (gx0 + gx1) / 2;   // (three lights over each goal: one more for every goal; all three blink for a win)
-        for (let k = 0; k < 3; k++) { const lx = mx + (k - 1) * 30, ly = top - 18; ctx.beginPath(); ctx.arc(lx, ly, 10, 0, 7); ctx.fillStyle = 'rgba(20,16,30,.85)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.stroke();
-          if (k < lit) { ctx.save(); ctx.shadowColor = '#ffd23d'; ctx.shadowBlur = 16; ctx.beginPath(); ctx.arc(lx, ly, 7, 0, 7); ctx.fillStyle = '#ffd23d'; ctx.fill(); ctx.restore(); } }
+      for (const side of [0, 1]) {   // (each goal: a roof net and a back net you can stand on, a white frame, the net inside, and three lights)
+        const gx0 = side ? X1 - P.MG.GOAL_W * TS : X0, gx1 = gx0 + P.MG.GOAL_W * TS, top = Y1 - (P.MG.GOAL_H + 1) * TS, bar = Y1 - P.MG.GOAL_H * TS, bx0 = side ? gx1 - TS : gx0, mouth = side ? gx0 : gx1;
+        mgNet(Math.min(gx0, gx1), bar, P.MG.GOAL_W * TS, Y1 - bar, 0.7);
+        mgNet(gx0, top, gx1 - gx0, TS, 1.4); mgNet(bx0, bar, TS, Y1 - bar, 1.4);
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(20,14,30,.7)'; ctx.lineWidth = 9; ctx.beginPath();
+        const ox = side ? gx1 - 4 : gx0 + 4; ctx.moveTo(mouth, Y1); ctx.lineTo(mouth, top + 4); ctx.lineTo(ox, top + 4); ctx.lineTo(ox, Y1); ctx.moveTo(mouth, bar); ctx.lineTo(side ? bx0 : bx0 + TS, bar); ctx.lineTo(side ? bx0 : bx0 + TS, Y1); ctx.stroke();
+        ctx.strokeStyle = '#fafafa'; ctx.lineWidth = 5; ctx.stroke();
+        const lit = win ? (win.side === side ? (Math.floor(now / 400) % 2 ? 3 : 0) : 0) : side ? s.R : s.L, mx = (gx0 + gx1) / 2;   // (one more light for every goal; all three blink for a win)
+        mgRR(mx - 46, top - 32, 92, 26, 13); ctx.fillStyle = 'rgba(20,16,30,.88)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.stroke();
+        for (let k = 0; k < 3; k++) { const lx = mx + (k - 1) * 28, ly = top - 19; ctx.beginPath(); ctx.arc(lx, ly, 8, 0, 7); ctx.fillStyle = '#2c2638'; ctx.fill();
+          if (k < lit) { ctx.save(); ctx.shadowColor = '#ffd23d'; ctx.shadowBlur = 18; ctx.beginPath(); ctx.arc(lx, ly, 7, 0, 7); ctx.fillStyle = '#ffd23d'; ctx.fill(); ctx.restore(); ctx.beginPath(); ctx.arc(lx - 2, ly - 2, 2.2, 0, 7); ctx.fillStyle = '#fff6c8'; ctx.fill(); } }
       }
       if (win) { const mx = (X0 + X1) / 2; ctx.font = 'bold 30px ' + FONT_SMOOTH; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,.7)'; const t = 'Victory!', y = Y1 - 5.6 * TS + Math.sin(now / 120) * 3; ctx.strokeText(t, mx, y); ctx.fillStyle = '#ffd23d'; ctx.fillText(t, mx, y);
         ctx.font = 'bold 15px ' + FONT_SMOOTH; ctx.lineWidth = 4; const t2 = 'Three in the ' + (win.side ? 'right' : 'left') + ' goal · next game in ' + Math.max(1, Math.ceil((win.until - now) / 1000)); ctx.strokeText(t2, mx, y + 28); ctx.fillStyle = '#fff'; ctx.fillText(t2, mx, y + 28); }
+    } else if (s.k === 'sht' || s.k === 'gem' || s.k === 'tag') {
+      mgPartArt(s, g, c);
+      if (s.k === 'gem' && s.item && !s.item.hid && S.b && online && (S.b.x - s.item.x) ** 2 + (S.b.y - s.item.y) ** 2 < (R + 15) ** 2) { s.item.hid = true; burst(s.item.x, s.item.y, ['#fff', s.item.v === 'g' ? '#7ff0ff' : '#ffd23d'], 8, 160, 0); }   // (touched it: it goes at once on your screen; the server says who really got it)
+      if (s.k === 'gem' && s.item && !s.item.hid) mgItem(s.item, now);
+      if (s.k === 'tag') mgTagSign(s, X0, X1, Y0, Y1, now);
+      ctx.fillStyle = mgA(c, 0.55); ctx.fillRect(X0, Y1 - 3, X1 - X0, 3);   // (a red line along the floor)
     } else if (s.k === 'tgt') {
-      for (let x = g.x0; x < g.x1; x++) {   // (every block of the floor fires when you come down on it from a jump)
-        const fl = s.fl.get(x), on = fl && now < fl, cx = (x + 0.5) * TS; if (fl && !on) s.fl.delete(x);
-        ctx.globalAlpha = on ? 1 : 0.55; ctx.fillStyle = on ? '#fff' : c; ctx.beginPath(); ctx.moveTo(cx - 7, Y1 - 3); ctx.lineTo(cx, Y1 - 10); ctx.lineTo(cx + 7, Y1 - 3); ctx.closePath(); ctx.fill();
-        if (on) { ctx.globalAlpha = 0.35; ctx.fillStyle = c; ctx.fillRect(x * TS + 2, Y1 - 4, TS - 4, 4); } ctx.globalAlpha = 1;
+      for (let x = g.x0; x < g.x1; x++) {   // (every block of the floor is a launcher: it fires when you come down on it from a jump)
+        const fl = s.fl.get(x), on = fl && now < fl, px = x * TS, cx = px + TS / 2; if (fl && !on) s.fl.delete(x);
+        mgRR(px + 3, Y1 - 6, TS - 6, 8, 3); ctx.fillStyle = on ? '#fff3c4' : '#3a3346'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(20,14,30,.7)'; ctx.stroke();
+        ctx.fillStyle = on ? c : mgA(c, 0.8); ctx.beginPath(); ctx.moveTo(cx - 6, Y1 - 2); ctx.lineTo(cx, Y1 - 7); ctx.lineTo(cx + 6, Y1 - 2); ctx.closePath(); ctx.fill();
+        if (on) { ctx.save(); ctx.globalAlpha = 0.5; const gr = ctx.createLinearGradient(0, Y1, 0, Y1 - 2 * TS); gr.addColorStop(0, c); gr.addColorStop(1, mgA(c, 0)); ctx.fillStyle = gr; ctx.fillRect(px + 8, Y1 - 2 * TS, TS - 16, 2 * TS - 6); ctx.restore(); }
       }
-      const L = (g.x0 + 2.5) * TS, Rr = (g.x1 - 2.5) * TS, ry = (g.y0 + 1.3) * TS;   // (the rail it runs along, and the target)
-      ctx.globalAlpha = 0.35; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.setLineDash([4, 8]); ctx.beginPath(); ctx.moveTo(L - P.MG.TGT_W / 2, ry); ctx.lineTo(Rr + P.MG.TGT_W / 2, ry); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
-      const tg = P.tgtAt(g, now), tw = P.MG.TGT_W, th = P.MG.TGT_H;
-      ctx.save(); ctx.translate(tg.x, tg.y); mgRR(-tw / 2, -th / 2, tw, th, th / 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.stroke();
-      mgRR(-tw / 2 + 8, -th / 2 + 5, tw - 16, th - 10, (th - 10) / 2); ctx.fillStyle = '#ff5a5a'; ctx.fill(); mgRR(-tw / 2 + 22, -th / 2 + 9, tw - 44, th - 18, (th - 18) / 2); ctx.fillStyle = '#fff'; ctx.fill();
-      ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fillStyle = '#ff5a5a'; ctx.fill(); ctx.restore();
+      const rl = (g.x0 + 1) * TS, rr2 = (g.x1 - 1) * TS, ry = Y0 + 0.35 * TS, tg = P.tgtAt(g, now), sh = P.shieldAt(g, now), R0 = P.MG.TGT_R;   // (the rail, the target hanging from it, and the shield sliding under it)
+      ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(20,14,30,.75)'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(rl, ry); ctx.lineTo(rr2, ry); ctx.stroke(); ctx.strokeStyle = '#a7adbb'; ctx.lineWidth = 4; ctx.stroke();
+      for (const x of [rl, rr2]) { ctx.strokeStyle = 'rgba(20,14,30,.75)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x, Y0); ctx.lineTo(x, ry + 6); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(230,230,240,.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(tg.x, ry); ctx.lineTo(tg.x, tg.y - R0); ctx.stroke();
+      mgRR(tg.x - 9, ry - 6, 18, 12, 4); ctx.fillStyle = '#5d6475'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(20,14,30,.8)'; ctx.stroke();
+      ctx.save(); ctx.translate(tg.x, tg.y); ctx.rotate(Math.sin(now / 260) * 0.08);
+      for (const [r, col] of [[1, '#fff'], [0.78, '#ff4f5e'], [0.56, '#fff'], [0.34, '#ff4f5e'], [0.14, '#ffd23d']]) { ctx.beginPath(); ctx.arc(0, 0, R0 * r, 0, 7); ctx.fillStyle = col; ctx.fill(); }
+      ctx.beginPath(); ctx.arc(0, 0, R0, 0, 7); ctx.lineWidth = 2.6; ctx.strokeStyle = INK; ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.translate(sh.x, sh.y); mgRR(-P.MG.SH_W / 2, -P.MG.SH_H / 2, P.MG.SH_W, P.MG.SH_H, 5); ctx.fillStyle = '#ffd23d'; ctx.fill(); ctx.clip();
+      ctx.fillStyle = '#1c1820'; for (let k = -P.MG.SH_W / 2 - 20; k < P.MG.SH_W / 2; k += 18) { ctx.beginPath(); ctx.moveTo(k, P.MG.SH_H / 2); ctx.lineTo(k + 9, P.MG.SH_H / 2); ctx.lineTo(k + 20, -P.MG.SH_H / 2); ctx.lineTo(k + 11, -P.MG.SH_H / 2); ctx.fill(); }
+      ctx.restore(); ctx.save(); ctx.translate(sh.x, sh.y); mgRR(-P.MG.SH_W / 2, -P.MG.SH_H / 2, P.MG.SH_W, P.MG.SH_H, 5); ctx.lineWidth = 2.4; ctx.strokeStyle = INK; ctx.stroke(); ctx.restore();
     }
-    if (s.k !== 'soc' && s.pz && now < s.pz) {   // (somebody won: the game stops a moment to say so)
+    mgSign(s.k, X0, X1, Y0, s.k === 'sht' ? Y0 - 6 : Y0);
+    if (g.tx !== undefined) mgMarker(s.k, (g.tx + 0.5) * TS, s.k === 'sht' && S.world.grid[(g.y1 - 4) * S.world.W + g.tx] === 1 ? g.y1 * TS - 5 * TS : mgMy(g.y1), nowT, 0.92, true);   // (its marker, with its name over it; over the shoot-out's ledge when it has one)
+    if (s.k !== 'soc' && s.pz && now < s.pz) {   // (somebody won: the game stops to say so)
       const mx = (X0 + X1) / 2, y = Y1 - 5.8 * TS, f = (s.pz - now) / P.MG.PAUSE_MS;
       ctx.font = 'bold 28px ' + FONT_SMOOTH; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const t = (s.wn ? censor(s.wn) : 'Somebody') + ' wins!';
       const bw = Math.max(ctx.measureText(t).width + 40, 220); mgRR(mx - bw / 2, y - 32, bw, 80, 16); ctx.fillStyle = 'rgba(20,16,30,.85)'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = c; ctx.stroke();
@@ -10035,11 +10138,63 @@ function drawGamesFront(camL, camT, vw, vh, nowT) {   // goals, lights, the targ
     ctx.restore();
   }
 }
-function drawGameShots() {   // what is flying, worked out from when it was fired (the same clock as the server's)
+function mgSign(k, X0, X1, Y0) {   // each arena's name, big, on a sign over the top: everybody can read it from far off
+  const c = MGCOL[k], t = MGNAME[k].toUpperCase(), mx = (X0 + X1) / 2; ctx.save(); ctx.font = '900 22px ' + FONT_SMOOTH; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const tw = ctx.measureText(t).width + 46, y = Y0 - 24; ctx.strokeStyle = 'rgba(20,14,30,.75)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(mx - tw / 2 + 14, y + 16); ctx.lineTo(mx - tw / 2 + 14, Y0 + 2); ctx.moveTo(mx + tw / 2 - 14, y + 16); ctx.lineTo(mx + tw / 2 - 14, Y0 + 2); ctx.stroke();
+  mgRR(mx - tw / 2, y - 18, tw, 36, 12); const gr = ctx.createLinearGradient(0, y - 18, 0, y + 18); gr.addColorStop(0, c); gr.addColorStop(1, mgA(c, 0.75)); ctx.fillStyle = gr; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.stroke();
+  mgRR(mx - tw / 2 + 4, y - 14, tw - 8, 10, 6); ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fill();
+  ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,14,30,.7)'; ctx.strokeText(t, mx, y + 1); ctx.fillStyle = '#fff'; ctx.fillText(t, mx, y + 1); ctx.restore();
+}
+const MGSTYLE = { sht: ['#434b5e', '#596379', '#2d3342', '#ffd23d'], gem: ['#4a3a72', '#6a56a0', '#2e2450', '#7ff0ff'], tag: ['#3a2c26', '#5a4236', '#241a16', '#ff8a3d'] };
+function mgPartArt(s, g, c) {   // the game's own solid parts: steel in the shoot-out, crystal stone in gem dash, striped crates in bomb tag (a bright edge where you can stand)
+  const w = S.world, st = MGSTYLE[s.k]; if (!w || !st) return; const pts = P.mgParts(g).filter(([x, y]) => w.grid[y * w.W + x] === 1), has = new Set(pts.map(([x, y]) => y * w.W + x));
+  for (const [x, y] of pts) { const px = x * TS, py = y * TS, upOpen = w.grid[(y - 1) * w.W + x] === 0;
+    ctx.fillStyle = st[0]; ctx.fillRect(px, py, TS + 0.5, TS + 0.5); ctx.fillStyle = st[1]; ctx.fillRect(px + 3, py + 3, TS - 6, TS - 6);
+    if (s.k === 'sht') { ctx.strokeStyle = 'rgba(20,14,30,.55)'; ctx.lineWidth = 1.5; ctx.strokeRect(px + 3, py + 3, TS - 6, TS - 6); ctx.fillStyle = st[2]; for (const [a, b] of [[7, 7], [TS - 7, 7], [7, TS - 7], [TS - 7, TS - 7]]) { ctx.beginPath(); ctx.arc(px + a, py + b, 2, 0, 7); ctx.fill(); } }
+    else if (s.k === 'gem') { ctx.fillStyle = 'rgba(127,240,255,.5)'; ctx.beginPath(); ctx.moveTo(px + 8 + hsh(x, y, 7) * 14, py + TS - 6); ctx.lineTo(px + 14 + hsh(x, y, 7) * 14, py + 12); ctx.lineTo(px + 20 + hsh(x, y, 7) * 14, py + TS - 6); ctx.closePath(); ctx.fill(); }
+    else { ctx.save(); ctx.beginPath(); ctx.rect(px + 3, py + 3, TS - 6, TS - 6); ctx.clip(); ctx.fillStyle = 'rgba(255,138,61,.55)'; for (let k = -TS; k < TS; k += 14) { ctx.beginPath(); ctx.moveTo(px + k, py + TS); ctx.lineTo(px + k + 7, py + TS); ctx.lineTo(px + k + 7 + TS, py); ctx.lineTo(px + k + TS, py); ctx.fill(); } ctx.restore(); }
+    if (upOpen) { ctx.fillStyle = st[3]; ctx.fillRect(px, py, TS + 0.5, 5); if (s.k === 'sht') { ctx.save(); ctx.beginPath(); ctx.rect(px, py, TS + 0.5, 8); ctx.clip(); ctx.fillStyle = '#ffd23d'; ctx.fillRect(px, py, TS + 0.5, 8); ctx.fillStyle = '#1c1820'; for (let k = -8; k < TS; k += 12) { ctx.beginPath(); ctx.moveTo(px + k, py + 8); ctx.lineTo(px + k + 6, py + 8); ctx.lineTo(px + k + 14, py); ctx.lineTo(px + k + 8, py); ctx.fill(); } ctx.restore(); } }
+  }
+  ctx.save(); ctx.beginPath(); for (const [x, y] of pts) { const i = y * w.W + x, px = x * TS, py = y * TS;   // (an ink outline round the outside of each piece, like the ground's)
+    if (!has.has(i - w.W)) { ctx.moveTo(px, py); ctx.lineTo(px + TS, py); } if (!has.has(i + w.W)) { ctx.moveTo(px, py + TS); ctx.lineTo(px + TS, py + TS); } if (!has.has(i - 1)) { ctx.moveTo(px, py); ctx.lineTo(px, py + TS); } if (!has.has(i + 1)) { ctx.moveTo(px + TS, py); ctx.lineTo(px + TS, py + TS); } }
+  ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.stroke(); ctx.restore();
+}
+function mgItem(it, now) {   // gem dash's coin (spinning gold) or diamond (every tenth), bobbing and glowing
+  const y = it.y + Math.sin(now / 260) * 3, sc = Math.min(1, (now - it.t) / 180); ctx.save(); ctx.translate(it.x, y); ctx.scale(sc, sc);
+  ctx.globalAlpha = 0.35 + 0.15 * Math.sin(now / 200); ctx.fillStyle = it.v === 'g' ? '#7ff0ff' : '#ffd23d'; ctx.beginPath(); ctx.arc(0, 0, 22, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  if (it.v === 'g') { ctx.fillStyle = '#7ff0ff'; ctx.beginPath(); ctx.moveTo(-13, -4); ctx.lineTo(-7, -12); ctx.lineTo(7, -12); ctx.lineTo(13, -4); ctx.lineTo(0, 14); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#c8fbff'; ctx.beginPath(); ctx.moveTo(-7, -12); ctx.lineTo(0, -4); ctx.lineTo(7, -12); ctx.closePath(); ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = INK; ctx.beginPath(); ctx.moveTo(-13, -4); ctx.lineTo(-7, -12); ctx.lineTo(7, -12); ctx.lineTo(13, -4); ctx.lineTo(0, 14); ctx.closePath(); ctx.stroke(); }
+  else { const sx = Math.max(0.15, Math.abs(Math.cos(now / 240))); ctx.scale(sx, 1); ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fillStyle = '#ffc233'; ctx.fill(); ctx.lineWidth = 2.4 / sx; ctx.strokeStyle = INK; ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, 7); ctx.lineWidth = 1.6 / sx; ctx.strokeStyle = '#b07a10'; ctx.stroke(); }
+  ctx.restore();
+}
+function mgTagSign(s, X0, X1, Y0, Y1, now) {   // bomb tag's board: waiting, the countdown to the start, then who has the bomb and how long their bar has left
+  const t = s.tag, mx = (X0 + X1) / 2, y = Y0 + 1.1 * TS; let txt = '', sub = '';
+  if (s.pz && now < s.pz) return;
+  if (t.st === 0) { txt = 'Bomb tag'; sub = 'Needs 2 players inside to start'; }
+  else if (t.st === 1) { txt = 'Starting in ' + Math.max(1, Math.ceil((t.cd - now) / 1000)); sub = 'Get ready to run!'; }
+  else { const nm = t.h === myId || (!online && t.h === -1) ? 'You have' : (others.get(t.h) ? censor(others.get(t.h).name || 'Somebody') : 'Somebody') + ' has'; const left = Math.max(0, (t.bars.get(t.h) || 0) - (now - t.hs)) / 1000; txt = nm + ' the bomb · ' + left.toFixed(1) + 's'; sub = t.bars.size + ' still in · touch someone to hand it over'; }
+  ctx.save(); ctx.font = 'bold 18px ' + FONT_SMOOTH; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const bw = Math.max(ctx.measureText(txt).width, 180) + 60;
+  mgRR(mx - bw / 2, y - 22, bw, 50, 14); ctx.fillStyle = 'rgba(20,16,30,.85)'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = MGCOL.tag; ctx.stroke();
+  if (t.st === 2) mgBomb(mx - bw / 2 + 24, y + 2, 0.9, now, (t.bars.get(t.h) || 0) - (now - t.hs) < 4000);
+  ctx.fillStyle = '#fff'; ctx.fillText(txt, mx + (t.st === 2 ? 10 : 0), y - 5); ctx.font = 'bold 12px ' + FONT_SMOOTH; ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fillText(sub, mx + (t.st === 2 ? 10 : 0), y + 15); ctx.restore();
+}
+function drawSoccerBall(x, y, r, rot, sq) {   // a real football: white, with black patches that turn as it rolls (squashed for a moment when it is squeezed)
+  ctx.save(); ctx.translate(x, y); if (sq > 0.02) ctx.scale(1 + 0.35 * sq, 1 - 0.3 * sq); ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fillStyle = '#fbfbfb'; ctx.fill(); ctx.clip(); ctx.rotate(rot || 0);
+  const pent = (cx, cy, rr, a) => { ctx.beginPath(); for (let k = 0; k < 5; k++) { const t = a + k * TAU / 5; ctx.lineTo(cx + Math.cos(t) * rr, cy + Math.sin(t) * rr); } ctx.closePath(); ctx.fill(); };
+  ctx.fillStyle = '#1d1a22'; pent(0, 0, r * 0.36, -Math.PI / 2);
+  ctx.strokeStyle = '#1d1a22'; ctx.lineWidth = 1.4; ctx.beginPath();
+  for (let k = 0; k < 5; k++) { const t = -Math.PI / 2 + k * TAU / 5; ctx.moveTo(Math.cos(t) * r * 0.36, Math.sin(t) * r * 0.36); ctx.lineTo(Math.cos(t) * r * 0.72, Math.sin(t) * r * 0.72); } ctx.stroke();
+  for (let k = 0; k < 5; k++) { const t = -Math.PI / 2 + k * TAU / 5 + TAU / 10; pent(Math.cos(t) * r * 1.0, Math.sin(t) * r * 1.0, r * 0.34, t + Math.PI / 5); }
+  ctx.restore(); ctx.beginPath(); ctx.arc(x - r * 0.35, y - r * 0.4, r * 0.22, 0, TAU); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.lineWidth = 2.4; ctx.strokeStyle = INK; ctx.stroke();
+}
+function drawGameShots() {   // what is flying, worked out from when it was fired (the same clock as the server's): stopped by the edge, a pillar, or the shield
   if (!mgC.G.length) return; const now = nowMs();
-  for (const s of mgC.G) { if (!s.shots.length) continue; const g = s.g, X0 = g.x0 * TS, X1 = g.x1 * TS, Y0 = g.y0 * TS;
+  for (const s of mgC.G) { if (!s.shots.length) continue; const g = s.g, X0 = g.x0 * TS, X1 = g.x1 * TS, Y0 = g.y0 * TS, sh = s.k === 'tgt' ? P.shieldAt(g, now) : null;
     for (let j = s.shots.length - 1; j >= 0; j--) { const b = s.shots[j], a = (now - b.t) / 1000, x = b.x + b.vx * Math.max(0, a), y = b.y + b.vy * Math.max(0, a);
       if (x < X0 || x > X1 || y < Y0 - 4 || a > 6) { s.shots.splice(j, 1); continue; }
+      if (b.vx && P.mgSolidOn(S.world, b, Math.min(b.lx === undefined ? b.x : b.lx, x), Math.max(b.lx === undefined ? b.x : b.lx, x))) { s.shots.splice(j, 1); burst(x, y, ['#fff', '#ffd23d'], 6, 120, 200); continue; }
+      b.lx = x;
+      if (sh && Math.abs(x - sh.x) < P.MG.SH_W / 2 + P.MG.PJ_R && Math.abs(y - sh.y) < P.MG.SH_H / 2 + P.MG.PJ_R) { s.shots.splice(j, 1); burst(x, sh.y + P.MG.SH_H / 2, ['#ffd23d', '#fff'], 8, 140, 260); continue; }
       const p = online ? mgPos(b.id) : null, col = b.id === myId || !online ? settings.color : p && p.c ? p.c : '#fff';
       if (b.vx) { const dir = Math.sign(b.vx); ctx.globalAlpha = 0.4; ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x - dir * 18, y); ctx.lineTo(x, y); ctx.stroke(); ctx.globalAlpha = 1;
         ctx.beginPath(); ctx.arc(x, y, P.MG.BUL_R, 0, 7); ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = 1.8; ctx.strokeStyle = '#fff'; ctx.stroke(); }
@@ -10048,7 +10203,6 @@ function drawGameShots() {   // what is flying, worked out from when it was fire
     }
   }
 }
-
 function frame(nowT) {
   requestAnimationFrame(frame);
   try {
@@ -10138,7 +10292,7 @@ function renderInner(dt, nowT) {
 
   if (S.mode === 'play') {
     const m = 60;
-    others.forEach(o => {            // other players (drawn first, so everyone goes behind you)
+    others.forEach((o, oid) => {            // other players (drawn first, so everyone goes behind you)
       if (!o.seen || o.dead || edSess) return;
       const ek = Math.exp(-dt / (o.D > 0 ? 0.12 : 0.07));   // (the small error from the last guess melts away)
       o.ex *= ek; o.ey *= ek;
@@ -10149,7 +10303,7 @@ function renderInner(dt, nowT) {
       let sc2 = 1; if (o.morph > 0) { o.morph = Math.max(0, o.morph - dt * 1.6); sc2 = 1 + 0.35 * Math.sin(o.morph * 3.14); }
       drawBall(nx, ny, o.rot, o.color, o.color2, o.pat, 0.88, false, sc2);
       const pinned = pinShown(o.pub);
-      const lt = pinned ? ny - R - 74 : drawLabel(o.name, false, o.crown, nx, ny, true, 0, o.dv); mgDots(o.id, nx, lt);
+      const lt = pinned ? ny - R - 74 : drawLabel(o.name, false, o.crown, nx, ny, true, 0, o.dv); mgDots(oid, nx, lt);
       if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 + (o.crown && settings.crowns ? 26 : 0) : (settings.tags && o.name) || o.dv ? 38 : 22) - (o.crown && settings.crowns ? crownH(o.crown) : 0));
     });
     for (let i = 0; i < bots.length; i++) {
@@ -10263,6 +10417,12 @@ function drawMinimap() {
 }
 function drawThings(g, X, Y, z, L, T, Rr, B) {   // toys and items, on both maps: crates, balls, springs, boosters, teeter-totters and portals
   const w = S.world; if (!w) return;
+  for (const gm of w.games || []) {   // (v240) the mini games: their area in their own colour, an outline, and (zoomed in enough) their name, so they can be found
+    if (gm.x1 < L - 2 || gm.x0 > Rr + 2 || gm.y1 < T - 2 || gm.y0 > B + 2) continue; const c = MGCOL[gm.k], x0 = X(gm.x0), x1 = X(gm.x1), y0 = Y(gm.y0), y1 = Y(gm.y1);
+    g.fillStyle = mgA(c, 0.28); g.fillRect(x0, y0, x1 - x0, y1 - y0); g.strokeStyle = c; g.lineWidth = Math.max(1.2, z * 0.18); g.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, rr = Math.max(3.5, Math.min(9, z * 1.1)); g.beginPath(); g.arc(cx, cy, rr, 0, TAU); g.fillStyle = c; g.fill(); g.lineWidth = 1.5; g.strokeStyle = '#16100c'; g.stroke();
+    if (z >= 2.5) { g.font = 'bold ' + Math.round(Math.max(10, Math.min(14, z * 2.2))) + 'px ' + FONT_SMOOTH; g.textAlign = 'center'; g.textBaseline = 'bottom'; g.lineWidth = 3; g.strokeStyle = 'rgba(20,16,30,.85)'; g.strokeText(MGNAME[gm.k], cx, y0 - 2); g.fillStyle = '#fff'; g.fillText(MGNAME[gm.k], cx, y0 - 2); }
+  }
   const dyn = w.dyn;
   for (let i = 0; i < dyn.length; i++) {
     const d = dyn[i]; if (d.burn > 0) continue;
@@ -10521,7 +10681,7 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { mgC, mgInp: inp, NET, addGate, pk: { buriedAt, pkGone, allPowers, pickShared, pend: () => pickPend.size, wal: () => wallet.c, purse: () => [purseP.c, purseP.g, purseP.pre ? [purseP.pre.c, purseP.pre.g] : null, infMoney ? 1 : 0, noCaps ? 1 : 0] },  SONGS, ui: { start: () => startEdit(true), end: () => endEdit(), sel: (k, c) => uiSelect(k, c), size: v => uiResize(v), move: (k, x, y) => uiMoveBy(k, x, y), push: on => { settings.uiPush = on; relayUi(); }, rects: () => { const o = {}; for (const k in UIP) { const r = pieceRects(k)[0]; o[k] = r ? r.map(Math.round) : null; } o.feedTop = Math.round($("feed").getBoundingClientRect().top); o.lay = JSON.stringify(settings.uiL); return o; } }, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, hush: !!AU.hush, bar: AU.bar, t0: AU.songT0, ct: AU.ctx && AU.ctx.currentTime, prog: ($('npProg') || {}).style ? $('npProg').style.width : '', sbp: $('sbProg').style.width, npt: $('npTime').textContent, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
+if (params && params.get('test')) window.__d = { mgC, mgInp: inp, mgP: P, lists: () => ownLists(), myId: () => myId, NET, addGate, pk: { buriedAt, pkGone, allPowers, pickShared, pend: () => pickPend.size, wal: () => wallet.c, purse: () => [purseP.c, purseP.g, purseP.pre ? [purseP.pre.c, purseP.pre.g] : null, infMoney ? 1 : 0, noCaps ? 1 : 0] },  SONGS, ui: { start: () => startEdit(true), end: () => endEdit(), sel: (k, c) => uiSelect(k, c), size: v => uiResize(v), move: (k, x, y) => uiMoveBy(k, x, y), push: on => { settings.uiPush = on; relayUi(); }, rects: () => { const o = {}; for (const k in UIP) { const r = pieceRects(k)[0]; o[k] = r ? r.map(Math.round) : null; } o.feedTop = Math.round($("feed").getBoundingClientRect().top); o.lay = JSON.stringify(settings.uiL); return o; } }, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, hush: !!AU.hush, bar: AU.bar, t0: AU.songT0, ct: AU.ctx && AU.ctx.currentTime, prog: ($('npProg') || {}).style ? $('npProg').style.width : '', sbp: $('sbProg').style.width, npt: $('npTime').textContent, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
     const sg = SONGS[kind][idx], sr = 22050, secs = bars * songBeats(sg) * 60 / sg.bpm + 1.5, oc = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
     if (!AU.noiseBuf) auInit();
     const keep = { ctx: AU.ctx, mus: AU.mus, song: AU.song, style: AU.style, bar: AU.bar, melody: AU.melody };
