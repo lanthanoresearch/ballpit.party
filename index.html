@@ -1178,7 +1178,7 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
 <script>
 /* Loading screen + "always the newest version". This runs first, before the game's own code. */
 (function () {
-  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 237; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
+  var BUILD = '__BUILD__'; window.__BUILD = BUILD; var GAME_V = 238; window.GAME_V = GAME_V; var t0 = Date.now(), tips = ['Jump three times in a row, each right as you land, and the jump meter fills. Jump again for an extra tall jump.', 'Roll one way long enough and the boost ring fills: then boost!', 'Touch a checkpoint flag and your next fall brings you back to it.', 'Water is safe. Lava is not.', 'Crates can be pushed around. Pile them up to reach high places.', 'Sushi gives you a minute of always-full boost. A flower bouquet, a minute of extra tall jumps.', 'The finish can be in a few different spots. Look around!', 'Add friends to see when they are online and join their games.', 'Messages to friends wait for them, even when they are offline.', 'World chat messages disappear after 5 minutes. Chats with friends are kept.', 'Give a friend coins from the Give tab in the game\'s chat.', 'Each of your levels has map settings: carry on where you left off, or start from a saved moment every time.', 'Game settings like unlimited coins or a random finish stay set for your next game.', 'Share one of your levels with a friend from its map settings.', 'Invite friends to your private game from the pause menu.', 'No connection? You can play offline: the starting maps, just you and bots.', 'Turn on notifications to hear when friends come online.'];
   var $ = function (i) { return document.getElementById(i); }, pMax = 0, fill = function (p) { pMax = Math.max(pMax, p); var f = $('boot'); if (f) f.style.setProperty('--p', Math.max(0, Math.min(1, pMax / 100))); },   /* (the bar only ever moves forward) */ msg = function (m) { var e = $('bootMsg'); if (e) e.textContent = m; };
   window.__tips = function (el, box) {   // tips that change by themselves every few seconds (shuffled, none twice until all have been shown); a tap shows the next one
     var o = [], k = 0, tm = 0, run = false; for (var i = 0; i < tips.length; i++) o.push(i); for (var j = o.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
@@ -2092,8 +2092,8 @@ button.danger{margin-top:0}   /* (.danger is also the striped Reset zone box: it
   setTimeout(function () { if (!window.__ballOk) window.__ballFail(why || 'the game took too long to start. Check that maps.js and physics.js are next to index.html.'); }, 8000);
 })();
 </script>
-<script src="maps.js?v=237"></script>
-<script src="physics.js?v=237"></script>
+<script src="maps.js?v=238"></script>
+<script src="physics.js?v=238"></script>
 <script>
 (function () {
   var m = window.BallMaps, p = window.BallPhysics, bad = [];
@@ -2467,7 +2467,7 @@ function noise(dur, vol, f1, f2, type, t0, dest) {
   s.connect(fl); fl.connect(g); g.connect(dest || AU.sfx); s.start(t0, Math.random()); s.stop(t0 + dur + 0.05);
 }
 const hz = m => 440 * Math.pow(2, (m - 69) / 12);
-const SFXGAP = { ready: 400, boost: 300, push: 140, thud: 80, land: 90, coin: 25, creak: 400, tick: 200, ui: 30 };
+const SFXGAP = { shot: 70, hit2: 60, launch2: 60, goal: 300, ready: 400, boost: 300, push: 140, thud: 80, land: 90, coin: 25, creak: 400, tick: 200, ui: 30 };
 const SFXLAST = {};
 const SFX = {
   jump: () => { tone(300, 0.14, 'square', 0.07, 620); },
@@ -2509,7 +2509,13 @@ const SFX = {
   tick: () => { tone(1000, 0.03, 'square', 0.06); },
   color: () => { const t = AU.ctx.currentTime; [0, 7, 12].forEach((s, i) => tone(hz(84 + s), 0.14, 'triangle', 0.06, 0, t + i * 0.04)); },
   creak: () => { tone(170, 0.18, 'sawtooth', 0.03, 140); },
-  pop: () => { tone(700, 0.07, 'sine', 0.1, 300); }
+  pop: () => { tone(700, 0.07, 'sine', 0.1, 300); },
+  goal: () => { const t = AU.ctx.currentTime; noise(0.9, 0.16, 1400, 700, 'bandpass', t); [0, 4, 7, 12].forEach((s, i) => tone(hz(72 + s), 0.22, 'triangle', 0.1, 0, t + i * 0.07)); },   // (v238: the mini games)
+  shot: () => { tone(880, 0.06, 'square', 0.03, 420); },
+  hit: () => { tone(520, 0.12, 'triangle', 0.11, 1040); noise(0.08, 0.08, 3000, 1500, 'highpass'); },
+  hit2: () => { tone(520, 0.1, 'triangle', 0.045, 1040); },
+  launch: () => { tone(260, 0.18, 'sine', 0.1, 760); noise(0.12, 0.06, 1200, 3000, 'bandpass'); },
+  launch2: () => { tone(260, 0.14, 'sine', 0.04, 760); }
 };
 function sfx(n) {
   if (!settings.sfx || !AU.ctx || AU.ctx.state !== 'running') return;
@@ -3308,6 +3314,7 @@ function update(dt) {
   if (ev.jumped) sfx('jump');
   if (ev.superJump) { sfx('boost'); ring(b.x, b.y + R, '#9be7ff', 6, 120, 0.5); ring(b.x, b.y + R, '#fff', 4, 70, 0.4); burst(b.x, b.y + R, ['#9be7ff', '#fff', '#c58bff'], 22, 300, 80); S.shake = Math.max(S.shake || 0, 0.14); }
   if (ev.landed) sfx('land');
+  mgUpdate(ev);
   if (ev.bounced) { sfx('bounce'); ring(b.x, b.y + R, '#9fe8ff', 6, 50, 0.4); burst(b.x, b.y + R, ['#fff', '#9fe8ff', '#ffd23d'], 10, 160, 60); }
   if (b.water !== S.wasWater) { S.wasWater = b.water; sfx('splash'); burst(b.x, b.y, ['#d6ecff', '#2e7be6', '#fff'], 12, 170, 300); }
   if (ev.splat) { die('splat'); return; }
@@ -3635,7 +3642,7 @@ const porCols = p => p && p.rgb >= 0 ? [hexOf(p.rgb), hexOf(p.rgb)] : (PORC[(p &
 const myPorSlot = () => { const used = new Set((S.own && S.own.porC) || []); let c = 0; while (used.has(c) && c < 63) c++; return c; };   // (which of your pairs this is: the first free one)
 const myPorHex = c => (c % 2 === 0 ? settings.color : settings.color2) || '#ffd23d';   // your first pair in your main colour, your second in your second colour, and so on, taking turns
 const porCode = c => 4 + c + 64 * (parseInt(String(myPorHex(c)).slice(1), 16) || 0);
-const validMisc = q => Array.isArray(q) && ((q[0] === 'base' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q[0] === 'pwr' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'sspr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[3], q[4])));
+const validMisc = q => Array.isArray(q) && ((q[0] === 'mg' && q.length === 5 && q.slice(1).every(Number.isFinite) && !!P.MGK[q[3]]) || (q[0] === 'base' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q[0] === 'pwr' && q.length >= 4 && q.slice(1, 4).every(Number.isFinite)) || (q.length >= 4 && (q[0] === 'see' || q[0] === 'pad' || q[0] === 'bnc' || q[0] === 'spr' || q[0] === 'sspr' || q[0] === 'lav' || (q[0] === 'tl' && (q[3] === -1 || q[3] === 0 || q[3] === 1 || q[3] === 2 || q[3] === 3 || q[3] === 5 || q[3] === 7))) && q.slice(1, 4).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[1] + 1, q[2])) || (q.length >= 5 && (q[0] === 'por' || q[0] === 'rope') && q.slice(1, 5).every(Number.isFinite) && !mapTile(q[1], q[2]) && !mapTile(q[3], q[4])));
 function setBouncePad(w, tx, r, n, sup) { P.setPad(w, tx, r, n, sup); }
 function stepDrops(w, dt) {   // a ground spring set down over open air falls until it lands, then sits in the ground for good
   for (let i = w.drops.length - 1; i >= 0; i--) {
@@ -3686,9 +3693,10 @@ function addMisc(w, q, anim) {   // ['see', column, ground row, 0]: a teeter-tot
   else if (q[0] === 'por') P.addPortal(w, q);
   else if (q[0] === 'pwr') { P.addPwr(w, q); if (anim) { const x = (q[1] + 0.5) * TS, y = (q[2] + 0.5) * TS; burst(x, y, q[3] ? ['#ff7ab8', '#fff', '#7ad36a'] : ['#7ff0ff', '#fff', '#ff8a6a'], 16, 180, 40); ring(x, y, q[3] ? '#ff7ab8' : '#7ff0ff', 5, 50, 0.45); } }
   else if (q[0] === 'rope') P.addRope(w, q);
+  else if (q[0] === 'mg') return;   // (v238: a mini game: the world takes it on when the lists are looked at again, see mgSync)
   else P.addPad(w, [q[1], q[2], q[3]]);
 }
-const validDel = q => Array.isArray(q) && ((['b', 's', 'g', 'r'].includes(q[0]) && q.length === 2 && Number.isFinite(q[1])) || (['pad', 'por', 'c', 'base', 'pwr'].includes(q[0]) && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2])));
+const validDel = q => Array.isArray(q) && ((['b', 's', 'g', 'r'].includes(q[0]) && q.length === 2 && Number.isFinite(q[1])) || (['pad', 'por', 'c', 'base', 'pwr', 'mg'].includes(q[0]) && q.length === 3 && Number.isFinite(q[1]) && Number.isFinite(q[2])));
 function applyDelRec(q, anim) {   // something deleted (by you or anyone in this world): gone for good
   if (!validDel(q) || !S.world) return false;
   const w = S.world; let x = null, y = null;
@@ -3710,7 +3718,7 @@ function recItemId(k, q) {   // which shop item a record is
   if (k === 'p') { const it = SHOP.find(s => s.kind === q[0] && !s.misc && !s.gate && !s.portal); return it && it.id; }
   if (k === 'g') return P.gateBtn(q) ? 'gateB' : 'gate';   // (a plate gate of any height: one under a low ceiling is shorter, and the small gates that are no longer sold count as gates too)
   if (k === 'c') return 'flag'; if (k === 'd') return 'dig';
-  const m = q[0]; return m === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : m === 'pad' ? 'pad' : m === 'por' ? 'portal' : m === 'bnc' || m === 'spr' ? 'bnc' : m === 'sspr' ? 'bncS' : m === 'lav' ? 'lava' : m === 'pwr' ? (q[3] ? 'pw1' : 'pw0') : m === 'rope' ? 'rope' : m === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null;
+  const m = q[0]; return m === 'see' ? (q[3] === 1 ? 'seeb' : 'see') : m === 'pad' ? 'pad' : m === 'por' ? 'portal' : m === 'bnc' || m === 'spr' ? 'bnc' : m === 'sspr' ? 'bncS' : m === 'lav' ? 'lava' : m === 'pwr' ? (q[3] ? 'pw1' : 'pw0') : m === 'mg' ? 'mg' + (P.MGK[q[3]] || '') : m === 'rope' ? 'rope' : m === 'tl' ? { 0: 'dig', 1: 'dirt', 2: 'lava', 3: 'ice', 5: 'water', 7: 'water' }[q[3]] : null;
 }
 const whoCache = new WeakMap();
 function savedWho(o) {   // who built each thing in a saved world. Saves from before the owner book: as many of each as the save said were yours are yours (so your limits are just as they were), the rest nobody's
@@ -3827,7 +3835,7 @@ function applyPubBuild(pv) {   // what everyone in a public world has built so f
   const takeP = q => { const key = pkey('p', q), n = (occ.get(key) || 0) + 1; occ.set(key, n); return n > (have.get(key) || 0); };   // (several crates put down on the very same spot are several crates: each one counts)
   (pv.props || []).forEach(q => { const t = Array.isArray(q) ? rd('p', q) : undefined; if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !mapBlock(q[1], q[2]) && takeP(q)) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; if (t !== undefined) d.ownTag = t; keep(S.bought, rec, t); S.rcvN++; } });
   pv = normPv(pv); (pv.dels || []).forEach(q => { const t = rd('d', q); if (P.coordDel(q) && validDel(q) && take('d', q)) { applyDelRec(q); keep(S.dels, q.slice(), t); } });
-  (pv.misc || []).forEach(q => { const t = rd('m', q); if (validMisc(q) && take('m', q)) { addMisc(S.world, q); keep(S.boughtMisc, q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4), t); S.rcvN++; } });
+  (pv.misc || []).forEach(q => { const t = rd('m', q); if (validMisc(q) && take('m', q)) { addMisc(S.world, q); keep(S.boughtMisc, q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' || q[0] === 'mg' ? 5 : 4), t); S.rcvN++; } });
   (pv.gates || []).forEach(q => { const t = rd('g', q); if (validGate(q) && take('g', q)) { addGate(S.world, q, true); keep(S.boughtGates, q.slice(0, 5), t); S.rcvN++; } });
   (pv.cps || []).forEach(q => { const t = rd('c', q); if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1]) && take('c', q)) { S.map.checkpoints.push([q[0], q[1]]); keep(S.boughtCps, [q[0], q[1]], t); S.rcvN++; } });
   (pv.dels || []).forEach(q => { if (P.coordDel(q)) return; const t = rd('d', q); if (validDel(q) && take('d', q)) { applyDelRec(q); keep(S.dels, q.slice(), t); } });
@@ -3836,7 +3844,7 @@ function applyPartyProps(pv) {   // what the host built is there when you arrive
   const rd = P.bookReader(pv.ow), keep = (L, rec, t) => { ownSet(rec, t); L.push(rec); };
   (pv.props || []).forEach(q => { const t = Array.isArray(q) ? rd('p', q) : undefined; if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half && !mapBlock(q[1], q[2])) { const d = P.addProp(S.world, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]]; d.bought = true; d.brec = rec; if (t !== undefined) d.ownTag = t; keep(S.bought, rec, t); S.rcvN++; } });   // (remembered in the lists, so the world can be saved as a copy)
   pv = normPv(pv); (pv.dels || []).forEach(q => { const t = rd('d', q); if (P.coordDel(q) && validDel(q)) { applyDelRec(q); keep(S.dels, q.slice(), t); } });
-  (pv.misc || []).forEach(q => { const t = rd('m', q); if (validMisc(q)) { addMisc(S.world, q); keep(S.boughtMisc, q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4), t); S.rcvN++; } });
+  (pv.misc || []).forEach(q => { const t = rd('m', q); if (validMisc(q)) { addMisc(S.world, q); keep(S.boughtMisc, q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' || q[0] === 'mg' ? 5 : 4), t); S.rcvN++; } });
   (pv.gates || []).forEach(q => { const t = rd('g', q); if (validGate(q)) { addGate(S.world, q, true); keep(S.boughtGates, q.slice(0, 5), t); S.rcvN++; } });
   (pv.cps || []).forEach(q => { const t = rd('c', q); if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1])) { S.map.checkpoints.push([q[0], q[1]]); keep(S.boughtCps, [q[0], q[1]], t); S.rcvN++; } });
   (pv.dels || []).forEach(q => { if (P.coordDel(q)) return; const t = rd('d', q); if (validDel(q)) { applyDelRec(q); keep(S.dels, q.slice(), t); } });
@@ -3900,7 +3908,7 @@ function restoreWorld(slot) {
     const who = savedWho(o);   // (who built each thing; an older save without the book was all yours, unless it was a copy of somebody else's)   // (what you built is remembered everywhere; in a public world it is also told to the room again when you come back)
     (own && !pubW ? o.buys || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 3 && P.propDims(q[0]).half) { key('p', q.slice(0, 3)); const d = P.addProp(w, q[0], q[1], q[2]), rec = [q[0], q[1], q[2]], t = who('p', rec); d.bought = true; d.brec = rec; d.ownTag = t !== undefined ? t : myTag(); S.bought.push(ownSet(rec, t)); if (mapBlock(q[1], q[2])) { d.burn = 1e9; d.x = d.y = -99999; } } });   // (kept in the list even if it was bought in the start area: everything after it keeps its place in the save)   // the things you bought here come back first, in the same order
     (own && !pubW ? o.gates || [] : []).forEach(q => { if (validGate(q)) { key('g', q.slice(0, 5)); addGate(w, q, true); const r = q.slice(0, 5); S.boughtGates.push(ownSet(r, who('g', r))); } });   // gates you bought, with their triggers (before the doors' own states are put back)
-    (own && !pubW ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4)); addMisc(w, q); const r = q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' ? 5 : 4); S.boughtMisc.push(ownSet(r, who('m', r))); } });   // teeter-totters and floor boosters you bought
+    (own && !pubW ? o.misc || [] : []).forEach(q => { if (validMisc(q)) { key('m', q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' || q[0] === 'mg' ? 5 : 4)); addMisc(w, q); const r = q.slice(0, q[0] === 'por' ? 6 : q[0] === 'rope' || q[0] === 'mg' ? 5 : 4); S.boughtMisc.push(ownSet(r, who('m', r))); } });   // teeter-totters and floor boosters you bought
     (own && !pubW ? o.cps || [] : []).forEach(q => { if (Array.isArray(q) && q.length === 2 && !mapTile(q[0], q[1])) { key('c', [q[0], q[1]]); S.map.checkpoints.push([q[0], q[1]]); S.boughtCps.push(ownSet([q[0], q[1]], who('c', q))); } });
     S.rcvN = o.rcv | 0; S.own = o.own && typeof o.own === 'object' ? o.own : deriveOwn();
     const seedD = [];
@@ -5895,6 +5903,9 @@ const SHOP = [
   { cat: 'gadgets', id: 'spring0', max: 60, name: 'Spring', info: 'Bounces you high.', c: 100, g: 0, kind: 5 },
   { cat: 'gadgets', id: 'spring', max: 60, name: 'Super spring', info: 'Bounces you very high.', c: 200, g: 0, kind: 6 },
   { cat: 'travel', id: 'base', max: 1, base: true, name: 'Base', info: 'Your own safe zone. Only you can build in it.', c: 500, g: 5 },
+  { cat: 'travel', id: 'mgsoc', max: 1, mgk: 'soc', name: 'Soccer field', info: 'Mini game: two goals, three lights each. Needs wide, flat ground.', c: 10000, g: 100 },
+  { cat: 'travel', id: 'mgsht', max: 1, mgk: 'sht', name: 'Shoot-out arena', info: 'Mini game: everyone inside shoots. First to 3 hits wins.', c: 10000, g: 100 },
+  { cat: 'travel', id: 'mgtgt', max: 1, mgk: 'tgt', name: 'Target practice', info: 'Mini game: land a jump to fire at a moving target.', c: 10000, g: 100 },
   { cat: 'travel', id: 'pw0', max: 40, pwr: 0, name: 'Sushi', info: 'Power-up: unlimited boost for a minute.', c: 750, g: 0 },
   { cat: 'travel', id: 'pw1', max: 40, pwr: 1, name: 'Flower bouquet', info: 'Power-up: extra tall jumps for a minute.', c: 750, g: 0 },
   { cat: 'travel', id: 'flag', max: 1, name: 'Checkpoint flag', info: 'Saves your spot. One at a time.', c: 400, g: 5 },
@@ -5925,6 +5936,9 @@ const shopIcon = id => {
   if (id === 'coins') return '<svg viewBox="0 0 40 40"><circle cx="15" cy="26" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="9" fill="#ffd23d" ' + st + '/><circle cx="25" cy="17" r="4.500" fill="none" stroke="#a06400" stroke-width="1.800"/></svg>';
   if (id === 'spring') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#7a3dd6" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'spring0') return '<svg viewBox="0 0 40 40"><rect x="9" y="31" width="22" height="5" rx="1.500" fill="#3fa66b" ' + st + '/><path d="M12 31L28 26L12 21L28 16" fill="none" ' + st + '/><rect x="7" y="9" width="26" height="6" rx="1.500" fill="#ff6a8a" ' + st + '/></svg>';
+  if (id === 'mgsoc') return '<svg viewBox="0 0 40 40"><path d="M5 33V14H13M35 33V14H27" fill="none" stroke="#fff" ' + st.replace('#16100c', '#5fd36d') + '/><circle cx="20" cy="26" r="7" fill="#fff" ' + st + '/><path d="M20 22L23 25L22 29H18L17 25Z" fill="#16100c"/><circle cx="9" cy="8" r="2.5" fill="#ffd23d"/><circle cx="31" cy="8" r="2.5" fill="#ffd23d"/></svg>';
+  if (id === 'mgsht') return '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="12" fill="none" stroke="#ff6b6b" stroke-width="3"/><path d="M20 3V12M20 28V37M3 20H12M28 20H37" stroke="#ff6b6b" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="3" fill="#fff" ' + st + '/></svg>';
+  if (id === 'mgtgt') return '<svg viewBox="0 0 40 40"><rect x="5" y="7" width="30" height="11" rx="5.5" fill="#fff" ' + st + '/><rect x="10" y="10" width="20" height="5" rx="2.5" fill="#ff5a5a"/><path d="M20 34V24M15 28L20 23L25 28" fill="none" stroke="#ffb938" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="21" r="2.5" fill="#ffe9a8"/></svg>';
   if (id === 'base') return '<svg viewBox="0 0 40 40"><circle cx="20" cy="21" r="15" fill="rgba(127,240,255,.18)" stroke="#7ff0ff" stroke-width="2.200" stroke-dasharray="4 3"/><path d="M20 4V30" stroke="#7ff0ff" stroke-width="3" stroke-linecap="round" opacity=".6"/><path d="M14 30L20 18L26 30Z" fill="#ffd23d" ' + st + '/></svg>';
   if (id === 'pw0') return '<svg viewBox="0 0 40 40"><ellipse cx="20" cy="25" rx="14" ry="8" fill="#fff" ' + st + '/><path d="M7 22Q20 8 33 22Q20 18 7 22Z" fill="#ff8a6a" ' + st + '/><rect x="17" y="15" width="6" height="18" fill="#24303a" ' + st + '/></svg>';
   if (id === 'pw1') return '<svg viewBox="0 0 40 40"><path d="M20 36L14 18M20 36V16M20 36L26 18" fill="none" stroke="#3c9b4a" stroke-width="2.600" stroke-linecap="round"/><circle cx="13" cy="15" r="5.500" fill="#ff7ab8" ' + st + '/><circle cx="27" cy="15" r="5.500" fill="#ffd23d" ' + st + '/><circle cx="20" cy="10" r="5.500" fill="#b98cff" ' + st + '/><path d="M13 34H27L24 28H16Z" fill="#fff3d6" ' + st + '/></svg>';
@@ -6072,8 +6086,8 @@ $('chatClose').onclick = () => toggleChat(false);
 const ownCount = it => ownTally()[it.id] | 0;   // how many of this you have built on this map, counted from who built what (what others built does not count; leaving and coming back changes nothing)
 let noCaps = false; try { noCaps = localStorage.getItem('ballrun4_nocap') === '1'; } catch (e) {}   // (the code "unlimitedpower": no building limits at all, on this device)
 const capsOff = () => (noCaps || perkB) && !cheatsOff();   // (the code "unlimitedpower", or no building limits given for good by a game admin)
-const atLimit = it => it.base ? !!myBase() : !capsOff() && !!it.max && ownCount(it) >= it.max;
-const limitNote = it => it.base ? 'You already have a base. Delete its glowing centre to put it somewhere else' : it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : it.portal ? 'You have both portal pairs. Delete one to move it' : it.id === 'flag' ? 'You already have a checkpoint flag. Delete it to put one somewhere else' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
+const atLimit = it => it.base ? !!myBase() : it.mgk ? ownCount(it) >= 1 : !capsOff() && !!it.max && ownCount(it) >= it.max;
+const limitNote = it => it.base ? 'You already have a base. Delete its glowing centre to put it somewhere else' : it.mgk ? 'You already built one. Delete the marker in its middle to build it somewhere else' : it.ter === 'dig' ? 'You have deleted the most you can on this map (' + it.max + ')' : it.portal ? 'You have both portal pairs. Delete one to move it' : it.id === 'flag' ? 'You already have a checkpoint flag. Delete it to put one somewhere else' : 'You have built the most ' + it.name + ' you can on this map (' + it.max + ')';   // every item has its own limit: using up one never uses up another
 /* ----- building: a bought item becomes a see-through "ghost" next to you. It follows you (right of you when you move right, left when you move left) until you tap Place. ----- */
 // 'placing' (declared early) = { it, side, tx, ty (where it would go), dx, dy (where the ghost is drawn), ok }
 const pullNow = () => ({ down: !!(tin.down || (settings.keys.down || []).some(c => keysDown.has(c))), up: !!(inp.jump || tin.jump || keysDown.has('ArrowUp') || keysDown.has('KeyW')) });   // what you are pulling on the controls
@@ -6109,7 +6123,7 @@ function flagSpot(side) {   // a checkpoint flag stands on the ground beside you
   }
   return null;
 }
-const tileIt = it => it && (it.id === 'flag' || it.gate || it.misc || it.portal || it.base);
+const tileIt = it => it && (it.id === 'flag' || it.gate || it.misc || it.portal || it.base || it.mgk);
 function gateSpot(side, hmax) {   // a gate: one tile wide, standing on the ground beside you, with clear air above it
   const w = S.world, b = S.b;
   for (let pass = 0; pass < 1; pass++) {   // (only the side you are facing)
@@ -6212,7 +6226,7 @@ function delTarget(side, pull) {
     if (!best || dd < best.dd) best = Object.assign({ q, name, box: [x0, y0, x1, y1], dd }, extra || {});
   };
   for (const d of w.dyn) {
-    if (d.burn > 0 || d.gone) continue;
+    if (d.burn > 0 || d.gone || d.sb >= 0) continue;   // (v238: the soccer ball is never deleted)
     const e = d.r || Math.max(d.hw, d.hh) * 1.2; if (Math.abs(d.x - b.x) > 160 || Math.abs(d.y - b.y) > 160) continue;
     offer(d.x - e, d.y - e, d.x + e, d.y + e, ['b', d.uid >>> 0], d.k === 'o' ? 'ball' : d.kind === 5 || d.kind === 6 ? 'spring' : 'crate');
   }
@@ -6224,7 +6238,8 @@ function delTarget(side, pull) {
   for (const q of w.plates) if (!q.gone && q.to && q.to.length === 1 && w.doors[q.to[0]] && !w.doors[q.to[0]].gone) offer(q.x * TS, q.y * TS - 12, (q.x + q.w) * TS, q.y * TS + 4, ['g', w.doors[q.to[0]].uid >>> 0], 'gate');
   for (const q of w.btns) if (!q.gone && !q.mm && q.to && q.to.length === 1 && w.doors[q.to[0]] && !w.doors[q.to[0]].gone && !w.doors[q.to[0]].mm) offer(q.x * TS, q.y * TS - 22, (q.x + 1) * TS, q.y * TS + 4, ['g', w.doors[q.to[0]].uid >>> 0], 'gate');   // (a button gate's button)
   for (const q of (w.pwrs || [])) if (!q.gone) offer(q.x - 24, q.y - 24, q.x + 24, q.y + 24, ['pwr', q.tx, q.ty], q.t ? 'flower bouquet' : 'sushi');
-  { const mb = myBase(); if (mb) offer(mb.cx - 24, mb.cy - 40, mb.cx + 24, mb.cy + 26, ['base', mb.tx, mb.ty], 'base'); }   // (only your own base: its glowing centre)
+  { const mb = myBase(); if (mb) offer(mb.cx - 24, mb.cy - 40, mb.cx + 24, mb.cy + 26, ['base', mb.tx, mb.ty], 'base'); }
+  for (const gm of (w.games || [])) if (!gm.b || gm.own === myTag()) offer(gm.tx * TS - 8, gm.y1 * TS - 3.4 * TS, (gm.tx + 1) * TS + 8, gm.y1 * TS, ['mg', gm.tx, gm.ty], ({ soc: 'soccer field', sht: 'shoot-out', tgt: 'target practice' })[gm.k]);   // (v238: a mini game, by the marker in its middle: one of the map's, or your own)   // (only your own base: its glowing centre)
   for (const c of S.map.checkpoints) if (c[0] > -1000) offer((c[0] + 0.5) * TS - 22, c[1] * TS - 66, (c[0] + 0.5) * TS + 22, c[1] * TS, ['c', c[0], c[1]], 'flag');
   { const fx = Math.floor((b.x + s * (R + 6)) / TS), rows = [Math.floor(b.y / TS), Math.floor((b.y + R + 4) / TS)];   // a ground spring set into the ground just ahead
     for (const r of rows) for (const tx of [fx, fx + s]) if (P.tile(w, tx, r) === 6) offer(tx * TS, r * TS, (tx + 1) * TS, (r + 1) * TS, null, 'ground spring', { tl: { tx, r } }); }
@@ -6237,6 +6252,7 @@ function lavaWaterAhead(side) {   // is there lava or water right where the dele
 function delThing(q) {   // delete it here, and for everyone in this world
   let id = { s: 'see', g: 'gate', r: 'rope', por: 'portal', c: 'flag', pad: 'pad', base: 'base' }[q[0]];
   if (q[0] === 'por' && S.world && S.own && S.own.porC) { const p = S.world.portals.find(e => !e.gone && Math.round(e.a.x / TS) - 1 === q[1] && Math.round(e.a.y / TS) === q[2]); if (p) { const i = S.own.porC.indexOf(p.c | 0); if (i >= 0) S.own.porC.splice(i, 1); else id = null; } }   // (only one of your own pairs gives you a pair back)
+  if (q[0] === 'mg' && S.world) { const e = (S.world.games || []).find(o => o.tx === q[1] && o.ty === q[2]); id = e && e.b ? 'mg' + e.k : null; }
   if (q[0] === 'pwr' && S.world) { const e = (S.world.pwrs || []).find(o => !o.gone && o.tx === q[1] && o.ty === q[2]); id = e ? (e.t ? 'pw1' : 'pw0') : null; }
   if (q[0] === 's' && S.world) { const e = S.world.see.find(o => o.uid === (q[1] >>> 0)); if (e && e.hl > 3 * TS + 1) id = 'seeb'; }
   if (q[0] === 'g' && S.world) { const i = S.world.doors.findIndex(o => o.uid === (q[1] >>> 0)); if (i >= 0 && S.world.btns.some(b => !b.mm && b.to && b.to.indexOf(i) >= 0)) id = 'gateB'; }   // (a button gate gives a button gate back)
@@ -6332,6 +6348,13 @@ function computeGhost() {
     else if (startBlock(g.tx, g.ty, 0)) g.bwhy = 'Not in the circles at the start or the finish';
     else if (otherBase(g.tx, g.ty)) g.bwhy = 'That is somebody else\'s base';
     else if (allPowers().some(p => Math.abs(p[0] - g.tx) < 2 * TS && Math.abs(p[1] - g.ty) < 2 * TS)) g.bwhy = 'There is a power-up right there already';
+    g.ok = !g.bwhy; g.bz = !g.ok; return;
+  }
+  if (g.it.mgk) {   // (v238) a mini game: right where you stand, you in the middle of its floor
+    const k = g.it.mgk, z = P.MGSZ[k]; g.mtx = Math.floor(b.x / TS); g.mty = Math.floor((b.y + R + 2) / TS) - 2; g.sb = false; g.pb = false; g.pc = false; g.bwhy = '';
+    if (!b.ground) g.bwhy = 'Stand on the ground where its middle should go';
+    else if (atLimit(g.it)) g.bwhy = limitNote(g.it);
+    else { const why = P.mgFits(S.world, k, g.mtx, g.mty, ownLists(), S.boughtCps); if (why) g.bwhy = { edge: 'Too close to the edge of the map', flat: 'The whole floor (' + z[0] + ' blocks) has to be flat dirt or ice', room: 'Not enough open space: it needs ' + z[0] + ' blocks across and ' + z[1] + ' up, all clear', game: 'Too close to another mini game', zone: 'Too close to the start, the finish or a base', thing: 'Something is in the way. Clear the space first' }[why] || 'It does not fit here'; }
     g.ok = !g.bwhy; g.bz = !g.ok; return;
   }
   if (g.it.base) {   // a base: right where you stand (on dirt or ice), you in the middle, and nothing of anybody else's in its circle
@@ -6443,6 +6466,11 @@ function portalShape(x, y, col, alpha, nowT) {   // a glowing hole in the ground
 function drawTileGhost(g, nowT) {
   const bad = !g.ok, pulse = 0.55 + 0.15 * Math.sin(nowT / 170);
   ctx.save(); ctx.lineJoin = 'round';
+  if (g.it.mgk) {   // (v238) the arena it would make, around you
+    const r = P.mgRect(g.it.mgk, g.mtx, g.mty), c = bad ? '#ff7a6a' : MGCOL[g.it.mgk]; ctx.globalAlpha = pulse; ctx.fillStyle = bad ? 'rgba(255,80,60,.10)' : 'rgba(255,255,255,.08)'; ctx.fillRect(r.x0 * TS, r.y0 * TS, (r.x1 - r.x0) * TS, (r.y1 - r.y0) * TS);
+    ctx.setLineDash([12, 10]); ctx.lineDashOffset = -nowT / 60; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,14,30,.5)'; ctx.strokeRect(r.x0 * TS, r.y0 * TS, (r.x1 - r.x0) * TS, (r.y1 - r.y0) * TS); ctx.lineWidth = 2.6; ctx.strokeStyle = c; ctx.strokeRect(r.x0 * TS, r.y0 * TS, (r.x1 - r.x0) * TS, (r.y1 - r.y0) * TS); ctx.setLineDash([]);
+    ctx.globalAlpha = 1; mgMarker(g.it.mgk, (g.mtx + 0.5) * TS, mgMy(g.mty + 2), nowT, 0.9, true); ctx.restore(); return;
+  }
   if (g.it.base) {   // the circle it would make, around you
     const cx = (g.btx + 0.5) * TS, cy = (g.bty + 0.5) * TS; ctx.globalAlpha = pulse; ctx.setLineDash([12, 10]); ctx.lineDashOffset = -nowT / 60;
     ctx.beginPath(); ctx.arc(cx, cy, P.BASE_R, 0, TAU); ctx.fillStyle = bad ? 'rgba(255,80,60,.10)' : 'rgba(127,240,255,.10)'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,14,30,.5)'; ctx.stroke(); ctx.lineWidth = 2.6; ctx.strokeStyle = bad ? '#ff7a6a' : '#7ff0ff'; ctx.stroke(); ctx.setLineDash([]);
@@ -6515,7 +6543,7 @@ function refreshPlaceUI() {   // the little bar (and, on a phone, the round butt
   if (!on) return;
   $('placeName').textContent = g.it.gate ? (g.stage === 2 ? (g.it.btn ? 'Step 2 of 2: the button' : 'Step 2 of 2: the trigger') : 'Step 1 of 2: the gate') : g.it.portal ? (g.stage === 2 ? 'Step 2 of 2: the blue portal' : 'Step 1 of 2: the yellow portal') : g.it.name; if (g.it.max && !capsOff()) $('placeName').textContent += ' · ' + ownCount(g.it) + ' of ' + g.it.max + ' placed'; $('placeBar').classList.toggle('bad', !g.ok); $('placeBar').classList.toggle('tch', touchActive());
   $('placeOk').disabled = !g.ok; $('tpl').classList.toggle('no', !g.ok); $('placeOk').textContent = (g.it.gate || g.it.portal) && g.stage === 1 ? 'Next' : g.it.ter === 'dig' ? 'Delete' : 'Place'; $('tpl').setAttribute('aria-label', g.it.ter === 'dig' ? 'Delete' : 'Place');
-  $('placeHint').textContent = g.off ? g.bwhy : g.it.base ? (g.ok ? 'Your base goes right here, with you in the middle' : g.bwhy) : g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space');
+  $('placeHint').textContent = g.off ? g.bwhy : g.it.mgk ? (g.ok ? 'It goes right here, with you in the middle of its floor' : g.bwhy) : g.it.base ? (g.ok ? 'Your base goes right here, with you in the middle' : g.bwhy) : g.pb ? 'Something is in the way. Move it first' : g.it.misc === 'ter' && !g.sb && !g.pc ? (g.ok ? (g.it.ter === 'dig' ? (g.del || g.tlName ? 'Deletes this ' + (g.del ? g.del.name : g.tlName) + '. Turn around to use the other side' : 'Deletes the tile in front of you. Turn around to use the other side') : 'It goes on the tile in front of you. Turn around to use the other side') : g.it.ter === 'dig' ? (g.wl ? 'Lava and water cannot be deleted. Turn them into dirt first' : 'Nothing to delete. Walk up to something, or face dirt, ice or rock') : 'Nothing here to change. Face a spot where it can go') : g.ok ? (g.it.portal ? (g.stage === 2 ? 'Anything that goes into one comes out of the other. Cancel goes back' : 'Move to slide it. Next, you place the blue one') : g.it.gate ? (g.stage === 2 ? 'The gate is open while something is on the trigger. Cancel goes back to the gate' : 'Move to slide it. Next, you place the trigger') : touchActive() ? 'Move to slide it left or right' : 'Move to slide it. E to place, Q to cancel') : (g.sb ? 'You cannot build at the start or this close to the finish flag. Move further away' : g.pc ? 'Something is already built here' : 'No room here. Move somewhere with space');
 }
 function startPlacing(it) {
   placing = { it, side: (S.b.hdir || 1) < 0 ? -1 : 1, ok: false, stage: 1 }; placeUIKey = null; computeGhost(); refreshPlaceUI(); sfx('ui');
@@ -6562,6 +6590,9 @@ function finishPlacing() {
       wDirty = true;
     } else { addBook(q[0], q[1], q[2]); S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; }
     if (q[0] !== 'tl') { burst((q[1] + 1) * TS, q[2] * TS - 10, ['#fff', '#ffd23d'], 12, 140, 60); ring((q[1] + 1) * TS, q[2] * TS - 6, '#fff', 4, 40, 0.4); }
+  } else if (it.mgk) {   // (v238) a mini game: its marker, in the middle just above the floor
+    const q = ['mg', g.mtx, g.mty, P.MGK.indexOf(it.mgk), myTag()]; S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready'); mgSync();
+    burst((g.mtx + 0.5) * TS, (g.mty + 0.5) * TS, [MGCOL[it.mgk], '#fff', '#ffd23d'], 30, 260, 80); notice(it.name + ' built. Delete the marker in its middle to take it away', '');
   } else if (it.base) {
     const q = ['base', g.btx, g.bty, myTag()]; addBook('base', q[1], q[2]); addMisc(S.world, q, true); S.boughtMisc.push(ownMe(q)); partyBuild({ t: 'pobj', g: q }); wDirty = true; sfx('ready');
     notice('Base set. Only you can build inside it', '');
@@ -8901,6 +8932,7 @@ function onMsg(m) {
   if (admIn(m)) return;   // (the game admin's tools, and what an admin sends a player)
   switch (m.t) {
     case 'dr': applyDoors(m); return;
+    case 'mg': mgEvents(m.e); return;   // (v238: the mini games)
     case 'update': forceUpdate(); return;   // the server only lets people with the same version in
     case 'welcome':
       srvOk();
@@ -8917,6 +8949,7 @@ function onMsg(m) {
       }
       if (inSolo() && !m.priv) { try { ws.send('{"t":"lobby"}'); } catch (e) {} online = false; lobbyOn = true; return; }   // (a public world we are no longer going to)
       online = true; retry = 0; myId = m.id; clockOff = m.now - Date.now(); room = { id: m.room, n: m.n, max: m.max };
+      mgC.snap = Array.isArray(m.mg) ? m.mg : null; mgC.snapAt = Date.now(); mgC.w = null;   // (v238: the mini games' lights and scores right now)
       { const ww = wantW; wantW = 0; if (ww && !m.priv && m.room !== ww) setTimeout(() => notice('World ' + ww + ' is full right now, so you are in World ' + m.room, ''), 1500); }
       if (capWait) { capStop(); if (!$('confirm').classList.contains('hide') && $('cfTitle').textContent === 'The game is full') { cfCb = null; cfNoCb = null; cfOptCb = null; $('confirm').classList.add('hide'); } notice('A place opened up: you are in', ''); }
       bots.length = 0; S.welcomeAt = performance.now(); S.gotDyn = false; S.dynFull = false; S.gateWait = 0; S.worldReady = false;
@@ -9883,6 +9916,139 @@ function applyZoomRange() {   // the slider's left end is the farthest you can r
 addEventListener('resize', applyZoomRange);
 let lastFrame = performance.now(), lastDraw = lastFrame, acc = 0, errCount = 0, frameN = 0;
 let lowT = 0, rq = 1, ftAvg = 16.7, slowT = 0, fastT = 0, rqWait = 8, rqUp = -1e9;   // (a device that cannot keep up draws the picture with fewer pixels, and goes back to full sharpness once it can)
+/* ================= (v238) the mini games: soccer, the shoot-out and target practice. The server keeps the score; this screen only shows it ================= */
+const MGCOL = { soc: '#5fd36d', sht: '#ff6b6b', tgt: '#ffb938' }, MGNAME = { soc: 'Soccer', sht: 'Shoot-out', tgt: 'Target practice' };
+const mgC = { w: null, v: -1, G: [], M: null, snap: null, snapAt: 0 };
+function mgSync() {   // which games this world has (the map's, unless something was built in one, and the ones players built), worked out from the lists exactly as the server does; a change: every game starts from what the server last said (or from nothing)
+  const w = S.world;
+  if (w && S.map) { const L = ownLists(), sg = L.props.length + '|' + L.gates.length + '|' + L.misc.length + '|' + L.cps.length + '|' + L.dels.length; if (w._gSig !== sg) { w._gSig = sg; const ch = P.setGames(w, P.liveGames(S.map, L)); if (w === S.world) for (const [x, y] of ch) mmUpdate(x, y); } }
+  const v = w ? w.gamesV | 0 : -1; if (mgC.w === w && mgC.v === v) return; mgC.w = w; mgC.v = v; mgC.M = null;
+  const gs = (w && w.games) || [], sn = mgC.snap && Date.now() - mgC.snapAt < 8000 && mgC.snap.length === gs.length ? mgC.snap : null;   // (what the server said on arrival: for the world that comes with it)
+  mgC.G = gs.map((g, i) => { const s = { g, k: g.k, L: 0, R: 0, win: null, sc: new Map(), shots: [], pz: 0, wn: '', fl: new Map() }, q = sn && sn[i];
+    if (q && g.k === 'soc') { s.L = q[0] | 0; s.R = q[1] | 0; if (q[2] > nowMs()) s.win = { side: q[3] | 0, until: +q[2] }; } else if (q && Array.isArray(q[0])) { s.sc = new Map(q[0]); s.pz = +q[1] || 0; s.wn = String(q[2] || ''); }
+    return s; });
+}
+function mgPos(id) {   // where a player is drawn on this screen
+  if (id === myId || id === -1) return S.b && !(S.dead > 0) ? { x: S.b.x, y: S.b.y, c: settings.color } : null;
+  const o = others.get(id); return o && o.seen && !o.dead && o.cx !== undefined ? { x: o.cx, y: o.cy, c: o.color } : null;
+}
+const mgNear = g => S.vis && g.x1 * TS > S.vis.l - 200 && g.x0 * TS < S.vis.r + 200 && g.y1 * TS > S.vis.t - 200 && (g.y0 - 2) * TS < S.vis.b + 200;
+function mgEvents(list) {
+  mgSync(); const now = nowMs();
+  if (window.__d && list) { const lg = mgC.log || (mgC.log = []); for (const e of list) lg.push(e.k); if (lg.length > 400) lg.splice(0, 200); }   // (tests only)
+  for (const e of list || []) {
+    const s = mgC.G[e.i]; if (!s) continue; const g = s.g, near = mgNear(g);
+    if (e.k === 'goal' || e.k === 'swin') {
+      const gx = e.side ? (g.x1 - 1.5) * TS : (g.x0 + 1.5) * TS, gy = (g.y1 - 1.5) * TS;
+      if (e.k === 'goal') { s.L = e.L | 0; s.R = e.R | 0; if (near) { sfx('goal'); burst(gx, gy, [MGCOL.soc, '#fff', '#ffd23d'], 22, 260, 120); } }
+      else { s.win = { side: e.side | 0, until: now + P.MG.PAUSE_MS }; s.L = s.R = 0; mgPop(g, 'Victory! Three in the ' + (e.side ? 'right' : 'left') + ' goal.'); if (near) { sfx('finish'); burst(gx, gy, [MGCOL.soc, '#fff', '#ffd23d', '#ff6bd6'], 40, 340, 80); ring(gx, gy, '#ffd23d', 10, 120, 0.6); } }
+    } else if (e.k === 'srs') { s.L = e.L | 0; s.R = e.R | 0; if (e.z) s.win = null; }
+    else if (e.k === 'bul' || e.k === 'pj') {
+      s.shots.push({ n: e.b, id: e.id, x: e.x, y: e.y, vx: e.k === 'bul' ? e.vx : 0, vy: e.k === 'pj' ? -P.MG.PJ_V : 0, t: e.t });
+      if (e.k === 'pj') { s.fl.set(Math.floor(e.x / TS), now + 260); if (near) sfx(e.id === myId || !online ? 'launch' : 'launch2'); }
+      else if (near && (e.id === myId || !online)) sfx('shot');
+    } else if (e.k === 'hit' || e.k === 'thit' || e.k === 'x') {
+      const j = s.shots.findIndex(b => b.n === e.b), b = j >= 0 ? s.shots[j] : null; if (j >= 0) s.shots.splice(j, 1);
+      if (e.k === 'x') continue;
+      s.sc.set(e.id, e.n | 0);
+      if (e.k === 'hit') { const v = mgPos(e.v); if (v && near) { burst(v.x, v.y, [MGCOL.sht, '#fff', v.c || '#fff'], 14, 220, 200); ring(v.x, v.y, '#fff', 6, 34, 0.3); } if (near) sfx(e.id === myId || e.v === myId || !online ? 'hit' : 'hit2'); }
+      else { const tg = P.tgtAt(g, now); if (near) { burst(tg.x, tg.y, [MGCOL.tgt, '#fff', '#ff5a5a'], 18, 240, 150); ring(tg.x, tg.y, '#fff', 8, 46, 0.35); sfx(e.id === myId || !online ? 'hit' : 'hit2'); } }
+    } else if (e.k === 'sc') s.sc = new Map(e.s || []);
+    else if (e.k === 'win') { s.pz = now + P.MG.PAUSE_MS; s.wn = String(e.name || ''); s.shots.length = 0; mgPop(g, (e.id === myId || !online ? 'You win' : (s.wn ? censor(s.wn) : 'Somebody') + ' wins') + ' the ' + (s.k === 'sht' ? 'shoot-out!' : 'target practice!')); if (near) { sfx('finish'); const p = mgPos(e.id); if (p) burst(p.x, p.y, ['#ffd23d', '#fff', MGCOL[s.k]], 36, 320, 60); } }
+    else if (e.k === 'rs') { s.sc.clear(); s.pz = 0; s.wn = ''; s.win = null; }
+  }
+}
+function mgPop(g, t) { if (S.b && !(S.dead > 0) && !S.away && P.inGame(g, S.b.x, S.b.y)) notice(t + ' Next game in ' + Math.round(P.MG.PAUSE_MS / 1000) + ' seconds', ''); }   // (a pop-up for everybody in that game, unless pop-ups are off: the game itself always shows it)
+function mgUpdate(ev) {   // in a game played alone there is no server: the same rules run here
+  mgSync(); const w = S.world; if (!w || w.follow || online || !mgC.G.length) return;
+  if (!mgC.M) mgC.M = P.mgNew(w);
+  const pl = S.dead > 0 || S.away || !S.b ? [] : [{ id: -1, x: S.b.x, y: S.b.y, vx: S.b.vx, land: !!(ev && ev.landed), name: settings.name || '' }], out = [];
+  P.mgStep(mgC.M, w, pl, nowMs(), out); if (out.length) mgEvents(out);
+}
+function mgScore(id) { for (const s of mgC.G) if (s.k !== 'soc' && s.sc.has(id)) return { n: s.sc.get(id), s }; return null; }
+function mgIn(x, y) { for (const s of mgC.G) if (s.k !== 'soc' && P.inGame(s.g, x, y)) return s; return null; }
+function mgDots(id, x, top) {   // a dot for each hit, over a player's head while they are in the shoot-out or target practice
+  if (!mgC.G.length) return; const p = id === myId || id === -1 ? (S.b && { x: S.b.x, y: S.b.y }) : mgPos(id); if (!p) return;
+  const s = mgIn(p.x, p.y); if (!s) return; const n = Math.min(P.MG.WIN, s.sc.get(online ? id : -1) || 0), c = MGCOL[s.k], y = top - 8;
+  for (let k = 0; k < P.MG.WIN; k++) { const cx = x + (k - 1) * 13; ctx.beginPath(); ctx.arc(cx, y, 4.6, 0, 7); if (k < n) { ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.stroke(); } else { ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.stroke(); } }
+}
+const mgMy = y1 => y1 * TS - 2.75 * TS;   // (the marker's height: over the heads of the players on the floor, never in the way of their names)
+function mgMarker(k, x, y0, nowT, a, named) {   // the block in the middle of every mini game: the game itself, as a thing (delete it and the game goes)
+  const y = y0 + Math.sin(nowT / 520 + x) * 2.5, c = MGCOL[k], h = 15; ctx.save(); ctx.globalAlpha = a;
+  if (named) { ctx.font = 'bold 14px ' + FONT_SMOOTH; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const t = MGNAME[k], tw = ctx.measureText(t).width + 20; mgRR(x - tw / 2, y - h - 30, tw, 22, 11); ctx.fillStyle = 'rgba(20,16,30,.78)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = c; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fillText(t, x, y - h - 18.5); }
+  mgRR(x - h, y - h, h * 2, h * 2, 8); ctx.fillStyle = 'rgba(20,16,30,.82)'; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = c; ctx.stroke(); ctx.lineWidth = 2.2; ctx.strokeStyle = '#fff'; ctx.fillStyle = '#fff';
+  if (k === 'soc') { ctx.beginPath(); ctx.arc(x, y + 1, 7, 0, 7); ctx.fill(); ctx.fillStyle = '#16100c'; ctx.beginPath(); ctx.arc(x, y + 1, 2.6, 0, 7); ctx.fill(); }
+  else if (k === 'sht') { ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.moveTo(x, y - 11); ctx.lineTo(x, y - 4); ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 11); ctx.moveTo(x - 11, y); ctx.lineTo(x - 4, y); ctx.moveTo(x + 4, y); ctx.lineTo(x + 11, y); ctx.stroke(); }
+  else { ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.fillStyle = '#ff5a5a'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fill(); }
+  ctx.restore();
+}
+function mgRR(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+function drawGamesBack(camL, camT, vw, vh) {   // behind the ground: the arena's own soft colour and its edges
+  mgSync(); if (!mgC.G.length) return;
+  for (const s of mgC.G) { const g = s.g, X0 = g.x0 * TS, X1 = g.x1 * TS, Y0 = g.y0 * TS, Y1 = g.y1 * TS, c = MGCOL[s.k];
+    if (X1 < camL - 40 || X0 > camL + vw + 40 || Y1 < camT - 40 || Y0 > camT + vh + 80) continue;
+    ctx.save(); ctx.globalAlpha = 0.1; ctx.fillStyle = c; mgRR(X0, Y0, X1 - X0, Y1 - Y0, 14); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.setLineDash([12, 9]); ctx.lineWidth = 3; ctx.strokeStyle = c; ctx.globalAlpha = 0.75; ctx.beginPath(); ctx.moveTo(X0, Y1); ctx.lineTo(X0, Y0 + 14); ctx.arcTo(X0, Y0, X0 + 14, Y0, 14); ctx.lineTo(X1 - 14, Y0); ctx.arcTo(X1, Y0, X1, Y0 + 14, 14); ctx.lineTo(X1, Y1); ctx.stroke(); ctx.restore();
+    if (s.k === 'soc') { ctx.save(); ctx.globalAlpha = 0.35; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.setLineDash([]); const mx = (X0 + X1) / 2; ctx.beginPath(); ctx.moveTo(mx, Y1); ctx.lineTo(mx, Y1 - 2.2 * TS); ctx.stroke(); ctx.beginPath(); ctx.arc(mx, Y1, 2.2 * TS, Math.PI, 0); ctx.stroke(); ctx.restore(); }   // (the halfway line and the centre circle)
+  }
+}
+function drawGamesFront(camL, camT, vw, vh, nowT) {   // goals, lights, the target, the floor that fires, the names
+  if (!mgC.G.length) return; const now = nowMs();
+  for (const s of mgC.G) { const g = s.g, X0 = g.x0 * TS, X1 = g.x1 * TS, Y0 = g.y0 * TS, Y1 = g.y1 * TS, c = MGCOL[s.k];
+    if (X1 < camL - 60 || X0 > camL + vw + 60 || Y1 < camT - 60 || Y0 - 60 > camT + vh) continue;
+    ctx.save(); ctx.setLineDash([]);
+    if (g.tx !== undefined) mgMarker(s.k, (g.tx + 0.5) * TS, mgMy(g.y1), nowT, 0.92, true);   // (with its name over it)
+    if (s.k === 'soc') {
+      const win = s.win && now < s.win.until ? s.win : null; if (s.win && !win) s.win = null;
+      for (const side of [0, 1]) {
+        const gx0 = side ? X1 - P.MG.GOAL_W * TS : X0, gx1 = gx0 + P.MG.GOAL_W * TS, top = Y1 - (P.MG.GOAL_H + 1) * TS, bar = Y1 - P.MG.GOAL_H * TS, back = side ? gx1 : gx0;
+        ctx.globalAlpha = 0.55; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.beginPath();   // (the net)
+        for (let x = gx0 + 10; x < gx1; x += 12) { ctx.moveTo(x, bar); ctx.lineTo(x, Y1); } for (let y = bar + 10; y < Y1; y += 12) { ctx.moveTo(gx0, y); ctx.lineTo(gx1, y); } ctx.stroke(); ctx.globalAlpha = 1;
+        ctx.fillStyle = '#f4f4f4'; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 2; mgRR(gx0, top, gx1 - gx0, TS, 6); ctx.fill(); ctx.stroke();   // (the crossbar)
+        ctx.beginPath(); ctx.rect(back - 3, top + 4, 6, Y1 - top - 4); ctx.fill(); ctx.stroke();   // (the back post)
+        const lit = win ? (win.side === side ? (Math.floor(now / 400) % 2 ? 3 : 0) : 0) : side ? s.R : s.L, mx = (gx0 + gx1) / 2;   // (three lights over each goal: one more for every goal; all three blink for a win)
+        for (let k = 0; k < 3; k++) { const lx = mx + (k - 1) * 30, ly = top - 18; ctx.beginPath(); ctx.arc(lx, ly, 10, 0, 7); ctx.fillStyle = 'rgba(20,16,30,.85)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.stroke();
+          if (k < lit) { ctx.save(); ctx.shadowColor = '#ffd23d'; ctx.shadowBlur = 16; ctx.beginPath(); ctx.arc(lx, ly, 7, 0, 7); ctx.fillStyle = '#ffd23d'; ctx.fill(); ctx.restore(); } }
+      }
+      if (win) { const mx = (X0 + X1) / 2; ctx.font = 'bold 30px ' + FONT_SMOOTH; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,.7)'; const t = 'Victory!', y = Y1 - 5.6 * TS + Math.sin(now / 120) * 3; ctx.strokeText(t, mx, y); ctx.fillStyle = '#ffd23d'; ctx.fillText(t, mx, y);
+        ctx.font = 'bold 15px ' + FONT_SMOOTH; ctx.lineWidth = 4; const t2 = 'Three in the ' + (win.side ? 'right' : 'left') + ' goal · next game in ' + Math.max(1, Math.ceil((win.until - now) / 1000)); ctx.strokeText(t2, mx, y + 28); ctx.fillStyle = '#fff'; ctx.fillText(t2, mx, y + 28); }
+    } else if (s.k === 'tgt') {
+      for (let x = g.x0; x < g.x1; x++) {   // (every block of the floor fires when you come down on it from a jump)
+        const fl = s.fl.get(x), on = fl && now < fl, cx = (x + 0.5) * TS; if (fl && !on) s.fl.delete(x);
+        ctx.globalAlpha = on ? 1 : 0.55; ctx.fillStyle = on ? '#fff' : c; ctx.beginPath(); ctx.moveTo(cx - 7, Y1 - 3); ctx.lineTo(cx, Y1 - 10); ctx.lineTo(cx + 7, Y1 - 3); ctx.closePath(); ctx.fill();
+        if (on) { ctx.globalAlpha = 0.35; ctx.fillStyle = c; ctx.fillRect(x * TS + 2, Y1 - 4, TS - 4, 4); } ctx.globalAlpha = 1;
+      }
+      const L = (g.x0 + 2.5) * TS, Rr = (g.x1 - 2.5) * TS, ry = (g.y0 + 1.3) * TS;   // (the rail it runs along, and the target)
+      ctx.globalAlpha = 0.35; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.setLineDash([4, 8]); ctx.beginPath(); ctx.moveTo(L - P.MG.TGT_W / 2, ry); ctx.lineTo(Rr + P.MG.TGT_W / 2, ry); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      const tg = P.tgtAt(g, now), tw = P.MG.TGT_W, th = P.MG.TGT_H;
+      ctx.save(); ctx.translate(tg.x, tg.y); mgRR(-tw / 2, -th / 2, tw, th, th / 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.stroke();
+      mgRR(-tw / 2 + 8, -th / 2 + 5, tw - 16, th - 10, (th - 10) / 2); ctx.fillStyle = '#ff5a5a'; ctx.fill(); mgRR(-tw / 2 + 22, -th / 2 + 9, tw - 44, th - 18, (th - 18) / 2); ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fillStyle = '#ff5a5a'; ctx.fill(); ctx.restore();
+    }
+    if (s.k !== 'soc' && s.pz && now < s.pz) {   // (somebody won: the game stops a moment to say so)
+      const mx = (X0 + X1) / 2, y = Y1 - 5.8 * TS, f = (s.pz - now) / P.MG.PAUSE_MS;
+      ctx.font = 'bold 28px ' + FONT_SMOOTH; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const t = (s.wn ? censor(s.wn) : 'Somebody') + ' wins!';
+      const bw = Math.max(ctx.measureText(t).width + 40, 220); mgRR(mx - bw / 2, y - 32, bw, 80, 16); ctx.fillStyle = 'rgba(20,16,30,.85)'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = c; ctx.stroke();
+      ctx.fillStyle = '#ffd23d'; ctx.fillText(t, mx, y - 8); ctx.font = 'bold 14px ' + FONT_SMOOTH; ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText('Next game in ' + Math.max(1, Math.ceil((s.pz - now) / 1000)), mx, y + 18);
+      ctx.fillStyle = 'rgba(255,255,255,.25)'; mgRR(mx - bw / 2 + 18, y + 34, bw - 36, 5, 3); ctx.fill(); ctx.fillStyle = c; mgRR(mx - bw / 2 + 18, y + 34, (bw - 36) * Math.max(0, f), 5, 3); ctx.fill();
+    } else if (s.k !== 'soc' && s.pz && now >= s.pz + 1500) { s.pz = 0; s.sc.clear(); }   // (in case the word that it starts again never came)
+    ctx.restore();
+  }
+}
+function drawGameShots() {   // what is flying, worked out from when it was fired (the same clock as the server's)
+  if (!mgC.G.length) return; const now = nowMs();
+  for (const s of mgC.G) { if (!s.shots.length) continue; const g = s.g, X0 = g.x0 * TS, X1 = g.x1 * TS, Y0 = g.y0 * TS;
+    for (let j = s.shots.length - 1; j >= 0; j--) { const b = s.shots[j], a = (now - b.t) / 1000, x = b.x + b.vx * Math.max(0, a), y = b.y + b.vy * Math.max(0, a);
+      if (x < X0 || x > X1 || y < Y0 - 4 || a > 6) { s.shots.splice(j, 1); continue; }
+      const p = online ? mgPos(b.id) : null, col = b.id === myId || !online ? settings.color : p && p.c ? p.c : '#fff';
+      if (b.vx) { const dir = Math.sign(b.vx); ctx.globalAlpha = 0.4; ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x - dir * 18, y); ctx.lineTo(x, y); ctx.stroke(); ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.arc(x, y, P.MG.BUL_R, 0, 7); ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = 1.8; ctx.strokeStyle = '#fff'; ctx.stroke(); }
+      else { ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = MGCOL.tgt; ctx.beginPath(); ctx.moveTo(x - 5, y + 4); ctx.lineTo(x + 5, y + 4); ctx.lineTo(x, y + 26); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+        ctx.shadowColor = MGCOL.tgt; ctx.shadowBlur = 12; ctx.beginPath(); ctx.arc(x, y, P.MG.PJ_R, 0, 7); ctx.fillStyle = '#ffe9a8'; ctx.fill(); ctx.restore(); ctx.lineWidth = 2; ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(x, y, P.MG.PJ_R, 0, 7); ctx.stroke(); }
+    }
+  }
+}
+
 function frame(nowT) {
   requestAnimationFrame(frame);
   try {
@@ -9962,10 +10128,12 @@ function renderInner(dt, nowT) {
   { const E = P.OOB * TS; if (camL < -E) ctx.fillRect(camL - 10, camT - 10, -E - camL + 10, vh + 20);   // (the walls far out past the map, and the ceiling far above it)
     if (camL + vw > ww + E) ctx.fillRect(ww + E, camT - 10, camL + vw - ww - E + 10, vh + 20);
     if (camT < -E) ctx.fillRect(camL - 10, camT - 10, vw + 20, -E - camT); }
+  drawGamesBack(camL, camT, vw, vh);
   drawTiles(camL, camT, vw, vh);
   drawSpawn(); drawCheckpoints(camL, camT, vw, vh); drawDeathMark(); drawFinishFlag(); drawGadgets(camL, camT, vw, vh, dt); drawCoins(camL, camT, vw, vh); drawPowers(camL, camT, vw, vh); drawDyn(camL, camT, vw, vh); drawGhost(dt, nowT);
   if (S.beaconOn && beaconOK()) drawBeacon(camL, camT, vw, vh, sc);
   drawTrack(camL, camT, vw, vh, sc);
+  drawGamesFront(camL, camT, vw, vh, nowT);
   S.view = { l: camL, t: camT, w: vw, h: vh };
 
   if (S.mode === 'play') {
@@ -9981,7 +10149,7 @@ function renderInner(dt, nowT) {
       let sc2 = 1; if (o.morph > 0) { o.morph = Math.max(0, o.morph - dt * 1.6); sc2 = 1 + 0.35 * Math.sin(o.morph * 3.14); }
       drawBall(nx, ny, o.rot, o.color, o.color2, o.pat, 0.88, false, sc2);
       const pinned = pinShown(o.pub);
-      if (!pinned) drawLabel(o.name, false, o.crown, nx, ny, true, 0, o.dv);
+      const lt = pinned ? ny - R - 74 : drawLabel(o.name, false, o.crown, nx, ny, true, 0, o.dv); mgDots(o.id, nx, lt);
       if (o.emo) drawEmoBubble(o.emo, nx, ny - R - (pinned ? 74 + (o.crown && settings.crowns ? 26 : 0) : (settings.tags && o.name) || o.dv ? 38 : 22) - (o.crown && settings.crowns ? crownH(o.crown) : 0));
     });
     for (let i = 0; i < bots.length; i++) {
@@ -9996,11 +10164,13 @@ function renderInner(dt, nowT) {
       drawTrail(b);
       drawBall(b.x, b.y, b.rot, settings.color, settings.color2, settings.pat, 1, true, s);
       const lift = meterUp(b); S.lblTop = drawLabel(settings.myName ? censor(settings.name) : '', false, S.crown, b.x, b.y, false, 0, settings.myName && devShown());   // (name and crown stay put; the meters pop up above them)
+      mgDots(myId, b.x, S.lblTop - lift);
       drawSuper(b);
       if (settings.boost || b.pSpeed > 0) drawBoost(b);
       if (S.myEmo) drawEmoBubble(S.myEmo, b.x, S.lblTop - 16 - lift);
     }
   }
+  if (S.mode === 'play') drawGameShots();
   drawFx();
   drawWater();
   if (S.mode === 'play' && S.dead <= 0 && !S.away && settings.fallWarn && (S.fallWarn || S.lavaWarn || S.edgeWarn)) drawWarnSign(b.x, b.y - R - 52, !!(S.fallWarn || S.lavaWarn));
@@ -10351,7 +10521,7 @@ applyZoomRange(); syncUI(); applyTouchUI();
     loadMap(ls, S.nextAt);
   }
 }
-if (params && params.get('test')) window.__d = { NET, addGate, pk: { buriedAt, pkGone, allPowers, pickShared, pend: () => pickPend.size, wal: () => wallet.c, purse: () => [purseP.c, purseP.g, purseP.pre ? [purseP.pre.c, purseP.pre.g] : null, infMoney ? 1 : 0, noCaps ? 1 : 0] },  SONGS, ui: { start: () => startEdit(true), end: () => endEdit(), sel: (k, c) => uiSelect(k, c), size: v => uiResize(v), move: (k, x, y) => uiMoveBy(k, x, y), push: on => { settings.uiPush = on; relayUi(); }, rects: () => { const o = {}; for (const k in UIP) { const r = pieceRects(k)[0]; o[k] = r ? r.map(Math.round) : null; } o.feedTop = Math.round($("feed").getBoundingClientRect().top); o.lay = JSON.stringify(settings.uiL); return o; } }, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, hush: !!AU.hush, bar: AU.bar, t0: AU.songT0, ct: AU.ctx && AU.ctx.currentTime, prog: ($('npProg') || {}).style ? $('npProg').style.width : '', sbp: $('sbProg').style.width, npt: $('npTime').textContent, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
+if (params && params.get('test')) window.__d = { mgC, mgInp: inp, NET, addGate, pk: { buriedAt, pkGone, allPowers, pickShared, pend: () => pickPend.size, wal: () => wallet.c, purse: () => [purseP.c, purseP.g, purseP.pre ? [purseP.pre.c, purseP.pre.g] : null, infMoney ? 1 : 0, noCaps ? 1 : 0] },  SONGS, ui: { start: () => startEdit(true), end: () => endEdit(), sel: (k, c) => uiSelect(k, c), size: v => uiResize(v), move: (k, x, y) => uiMoveBy(k, x, y), push: on => { settings.uiPush = on; relayUi(); }, rects: () => { const o = {}; for (const k in UIP) { const r = pieceRects(k)[0]; o[k] = r ? r.map(Math.round) : null; } o.feedTop = Math.round($("feed").getBoundingClientRect().top); o.lay = JSON.stringify(settings.uiL); return o; } }, mus: () => ({ style: AU.style, target: AU.target, song: AU.song && AU.song.name, hush: !!AU.hush, bar: AU.bar, t0: AU.songT0, ct: AU.ctx && AU.ctx.currentTime, prog: ($('npProg') || {}).style ? $('npProg').style.width : '', sbp: $('sbProg').style.width, npt: $('npTime').textContent, I: Math.round(musI * 100) / 100, far: !!AU.far, np: $('nowPlaying').textContent, near: musNear, moving: musMoving }), musSet: (i, far) => { musI = i; musFarT = far ? 99 : 0; }, musSkip: () => musicSkip(), musRender: async (kind, idx, bars) => {   // (test only: plays one song into a silent recorder and hands back the sound)
     const sg = SONGS[kind][idx], sr = 22050, secs = bars * songBeats(sg) * 60 / sg.bpm + 1.5, oc = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
     if (!AU.noiseBuf) auInit();
     const keep = { ctx: AU.ctx, mus: AU.mus, song: AU.song, style: AU.style, bar: AU.bar, melody: AU.melody };

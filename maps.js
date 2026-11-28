@@ -1920,6 +1920,46 @@ const S = (m, n, th, o) => Object.assign({ m, n: Math.max(3, Math.round(n * BIG)
       fins,   // (every place the finish can be: the first is where it always was)
       killY: (maxBottom + 6) * TS, chains: chainsOut
     };
+    /* (v238) mini games: on flat open ground, a good way from the start and from every place the finish can be. Each level has its own set (none, some or all
+       three: soccer, the blaster arena, target practice), always the same for that level, at its own spots. Nothing of the level stays inside one (coins, toys,
+       little things), and nothing can be built there. A game never moves or stops a player: its edges are only drawn. */
+    { let h = (idx * 2246822519 + 3266489917) >>> 0; const rnd = () => { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; };
+      const want = ['soc', 'sht', 'tgt'].filter(() => rnd() < 0.55); for (let i = want.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = want[i]; want[i] = want[j]; want[j] = t; }
+      const SZ = { soc: [30, 38, 8, 9], sht: [22, 30, 7, 8], tgt: [18, 26, 7, 8] }, games = [];
+      if (want.length) {
+        const g8 = new Uint8Array(W * H); for (const r of rects) for (let yy = Math.max(0, r[1]); yy < Math.min(H, r[1] + r[3]); yy++) g8.fill(r[4], yy * W + Math.max(0, r[0]), yy * W + Math.min(W, r[0] + r[2]));
+        const G8 = (x, y) => (x < 0 || x >= W || y < 0 || y >= H) ? 0 : g8[y * W + x], air = new Uint16Array(W * H);   // (air: how many open blocks are right above each block)
+        for (let y = 1; y < H; y++) { const o = y * W, u = o - W; for (let x = 0; x < W; x++) air[o + x] = g8[u + x] === 0 ? Math.min(60000, air[u + x] + 1) : 0; }   // (row by row: quick)
+        const st = [map.start[0] / TS, map.start[1] / TS], fz = (fins || []).concat([fin]).filter(Boolean).map(f => [f[0] + (f[2] || 2) / 2, f[1]]);
+        const inR = (x, y, a) => x >= a[0] && x < a[2] && y >= a[1] && y < a[3];
+        const clash = a => (gad.doors || []).some(d => d[0] < a[2] && d[0] + d[2] > a[0] && d[1] < a[3] && d[1] + d[3] > a[1]) || (gad.plates || []).some(q => inR(q[0], q[1], a) || inR(q[0] + q[2], q[1], a)) ||
+          (gad.btns || []).some(q => inR(q[0], q[1], a)) || (gad.see || []).some(q => inR(q[0], q[1], [a[0] - q[2], a[1] - 2, a[2] + q[2], a[3] + 2])) || cps.some(q => inR(q[0], q[1], a)) ||
+          (chainsOut || []).some(c => c.some(e => inR(e[0], e[1], [a[0] - 1, a[1] - 1, a[2] + 1, a[3] + 1]) || inR(e[0] + (e[2] || 0), e[1], a)));
+        const dim = want.map(k => { const z = SZ[k]; return [z[0] + Math.floor(rnd() * (z[1] - z[0] + 1)), z[2] + Math.floor(rnd() * (z[3] - z[2] + 1))]; }), cands = want.map(() => []);
+        { const nK = want.length, run = new Int32Array(nK);   // (one pass over the level for all of them: flat solid ground with open air above, a good way from the start and the finishes)
+          for (let fy = 5; fy < H - 1; fy++) { run.fill(0); const o = fy * W; for (let x = 1; x < W - 1; x++) {
+            const t = g8[o + x], ok = t === 1 || t === 3, a = air[o + x];
+            for (let q = 0; q < nK; q++) { const aw = dim[q][0], ah = dim[q][1]; run[q] = ok && a >= ah + 2 && fy > ah + 3 ? run[q] + 1 : 0;   // (room to jump out over the top too)
+              if (run[q] < aw + 2 || x % 3) continue; const x0 = x - aw;   // (one block of the same ground on each side as well. Every third spot is plenty to choose from)
+              const cx = x0 + aw / 2, cy = fy - ah / 2, dS = 60 + aw / 2, dF = 45 + aw / 2; if ((cx - st[0]) ** 2 + (cy - st[1]) ** 2 < dS * dS) continue; let nf = false; for (let f = 0; f < fz.length && !nf; f++) nf = (cx - fz[f][0]) ** 2 + (cy - fz[f][1]) ** 2 < dF * dF; if (nf) continue;
+              cands[q].push(x0 * 4096 + fy); } } } }
+        for (let q = 0; q < want.length; q++) {
+          const k = want[q], aw = dim[q][0], ah = dim[q][1], cand = cands[q];
+          let got = null; for (let n = 0; n < 80 && cand.length && !got; n++) { const cc = cand[Math.floor(rnd() * cand.length)], c = [Math.floor(cc / 4096), cc % 4096], a = [c[0] - 1, c[1] - ah - 2, c[0] + aw + 1, c[1]];
+            if (games.some(o => c[0] < o.x1 + 14 && c[0] + aw > o.x0 - 14 && c[1] - ah < o.y1 + 10 && c[1] > o.y0 - 10)) continue; if (!clash(a)) got = c; }   // (well apart from each other)
+          if (!got) continue;
+          const g = { k, x0: got[0], x1: got[0] + aw, y0: got[1] - ah, y1: got[1], seed: (idx * 977 + games.length * 131 + 7) >>> 0 };
+          if (k === 'soc') g.bx = Math.floor((g.x0 + g.x1) / 2);   // (the ball's spot; the crossbars come with the game itself, in the world)
+          games.push(g);
+        }
+        if (games.length) {   // nothing of the level's own stays inside a game
+          const inG = (x, y) => games.some(g => x >= g.x0 - 1 && x < g.x1 + 1 && y >= g.y0 - 2 && y < g.y1 + 0.5);
+          map.props = (map.props || []).filter(p => !inG(p[1] + 0.5, p[2] - 0.5));   // (the coins stay where they were: saved games count them in order)
+          map.decor = (map.decor || []).filter(q => q[0] !== 0 || !inG(q[1], q[2]));
+          for (const g of games) if (g.k === 'soc') map.props.push([2, g.bx, g.y1]);   // (the soccer ball, in the middle)
+        }
+      }
+      map.games = games.sort((a, b) => a.x0 - b.x0); }
     /* power-ups: a few, far apart, each where a coin was (so it can be reached): sushi (a minute of super speed) or a flower bouquet (a minute of super jumps) */
     { let h = (idx * 2654435761 + 97) >>> 0; const rnd = () => { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; };
       const zs = startZone([(ox + 1.5) * TS, oy * TS - R - 1]), pw = [], keep = [], lanes = new Map();   // (each level of the map, top to bottom, gets 0 to 5 of them)
